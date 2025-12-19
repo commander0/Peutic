@@ -458,7 +458,7 @@ const MindfulMatchGame: React.FC<{ onWin?: () => void }> = ({ onWin }) => {
 // --- CLOUD HOP ---
 const CloudHopGame: React.FC = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const requestRef = useRef<number>();
+    const requestRef = useRef<number | null>(null);
     const [score, setScore] = useState(0);
     const [gameOver, setGameOver] = useState(false);
     const [gameStarted, setGameStarted] = useState(false);
@@ -954,7 +954,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   }, [user.id]);
 
   const handlePaymentSuccess = (minutesAdded: number, cost: number) => {
-      Database.topUpWallet(minutesAdded, cost);
+      Database.topUpWallet(minutesAdded, cost, user.id);
       setBalance(prev => prev + minutesAdded);
       setShowPayment(false);
       setPaymentError(undefined);
