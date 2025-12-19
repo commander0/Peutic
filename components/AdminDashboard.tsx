@@ -28,7 +28,7 @@ const StatCard = ({ title, value, icon: Icon, subValue, subLabel, progress }: an
       </div>
       {subValue && (
           <div className="flex items-center gap-2 text-xs">
-              <span className={`font-bold ${subValue.toString().includes('FULL') ? 'text-red-500' : subValue.toString().includes('+') ? 'text-green-500' : 'text-gray-300'}`}>{subValue}</span>
+              <span className={`font-bold ${subValue.toString().includes('FULL') || subValue.toString().includes('-') ? 'text-red-500' : subValue.toString().includes('+') ? 'text-green-500' : 'text-gray-300'}`}>{subValue}</span>
               <span className="text-gray-600">{subLabel}</span>
           </div>
       )}
@@ -125,6 +125,29 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   }, []);
 
   const totalRevenue = transactions.filter(t => t.amount > 0).reduce((acc, t) => acc + (t.cost || 0), 0);
+  
+  // Dynamic Revenue Growth Calculation
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const sixtyDaysAgo = new Date();
+  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+  const revenueLast30 = transactions
+    .filter(t => t.amount > 0 && new Date(t.date) >= thirtyDaysAgo)
+    .reduce((acc, t) => acc + (t.cost || 0), 0);
+    
+  const revenuePrev30 = transactions
+    .filter(t => t.amount > 0 && new Date(t.date) >= sixtyDaysAgo && new Date(t.date) < thirtyDaysAgo)
+    .reduce((acc, t) => acc + (t.cost || 0), 0);
+
+  let growth = 0;
+  if (revenuePrev30 === 0) {
+      growth = revenueLast30 > 0 ? 100 : 0;
+  } else {
+      growth = ((revenueLast30 - revenuePrev30) / revenuePrev30) * 100;
+  }
+  const growthStr = `${growth >= 0 ? '+' : ''}${growth.toFixed(1)}%`;
+
   const avgSatisfaction = feedback.length > 0 
       ? (feedback.reduce((acc, f) => acc + f.rating, 0) / feedback.length).toFixed(1) 
       : "5.0";
@@ -333,7 +356,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
           {activeTab === 'overview' && (
               <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                      <StatCard title="Lifetime Revenue" value={formatCurrency(totalRevenue)} icon={DollarSign} subValue="+12%" subLabel="vs last month" />
+                      <StatCard title="Lifetime Revenue" value={formatCurrency(totalRevenue)} icon={DollarSign} subValue={growthStr} subLabel="vs last 30d" />
                       
                       {/* LIVE QUEUE MONITOR */}
                       <StatCard 

@@ -382,7 +382,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         
         {/* --- HEADER OVERLAY --- */}
         <div className="absolute top-0 left-0 right-0 p-4 md:p-6 flex justify-between items-start z-20 pointer-events-none bg-gradient-to-b from-black/80 via-black/20 to-transparent pb-20 transition-opacity duration-500">
-            <div className="flex items-center gap-4 pointer-events-auto pl-16">
+            <div className="flex items-center gap-4 pointer-events-auto">
                 <div className={`bg-black/40 backdrop-blur-xl px-4 py-2 rounded-full border ${lowBalanceWarning ? 'border-red-500 animate-pulse' : 'border-white/10'} text-white font-mono shadow-xl flex items-center gap-3 transition-colors duration-500`}>
                     <div className={`w-2 h-2 rounded-full ${connectionState === 'CONNECTED' ? 'bg-red-500 animate-pulse' : 'bg-yellow-500'}`}></div>
                     <span className={`font-variant-numeric tabular-nums tracking-wide font-bold ${lowBalanceWarning ? 'text-red-400' : 'text-white'}`}>
