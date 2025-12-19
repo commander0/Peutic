@@ -82,7 +82,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                <div className="w-10 h-10 bg-[#FACC15] rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                    <Heart className="w-6 h-6 fill-black text-black" />
                </div>
-               <span className="text-2xl font-black tracking-tight uppercase">Peutic</span>
+               <span className="text-2xl font-black tracking-tight">Peutic</span>
             </div>
             
             <div className="hidden md:flex items-center gap-10">
@@ -281,9 +281,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                   <div className="md:col-span-5 space-y-8">
                       <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-yellow-500 rounded-xl flex items-center justify-center">
-                              <Heart className="w-5 h-5 fill-black text-black" />
+                              <Heart className="w-6 h-6 fill-black text-black" />
                           </div>
-                          <span className="text-2xl font-black tracking-tight uppercase">Peutic</span>
+                          <span className="text-2xl font-black tracking-tight">Peutic</span>
                       </div>
                       <p className="text-gray-500 text-lg leading-relaxed max-w-md">
                           Connecting the disconnected through elite-level human specialists and cutting-edge secure technology.
