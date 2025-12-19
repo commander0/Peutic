@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole, Companion } from './types';
 import LandingPage from './components/LandingPage';
@@ -6,12 +7,10 @@ import Dashboard from './components/Dashboard';
 import AdminDashboard from './components/AdminDashboard';
 import AdminLogin from './components/AdminLogin';
 import Auth from './components/Auth';
+import VideoRoom from './components/VideoRoom';
 import StaticPages from './components/StaticPages';
 import { Database } from './services/database';
-import { Wrench, Loader2 } from 'lucide-react';
-
-// Lazy Load Video Room for better initial performance
-const VideoRoom = React.lazy(() => import('./components/VideoRoom'));
+import { Wrench } from 'lucide-react';
 
 const MainApp: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -41,40 +40,26 @@ const MainApp: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Session Timeout Logic (Restored)
+  // Session Timeout Logic
   useEffect(() => {
     const updateActivity = () => { lastActivityRef.current = Date.now(); };
-    
-    // Listen for any user interaction
     const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
     events.forEach(event => document.addEventListener(event, updateActivity));
-    
-    // Check for timeout every minute
-    const checkTimeout = () => {
-      // If no user is logged in, or if they are currently in a call, DO NOT timeout.
-      if (!user || activeSessionCompanion) {
-          lastActivityRef.current = Date.now(); // Keep session alive if in call
-          return;
-      }
+    return () => events.forEach(event => document.removeEventListener(event, updateActivity));
+  }, []);
 
+  useEffect(() => {
+    const checkTimeout = () => {
+      if (!user || activeSessionCompanion) return;
       const now = Date.now();
       const elapsed = now - lastActivityRef.current;
-      
-      // 24 hours for Admin, 15 minutes for Users
       const timeoutLimit = user.role === UserRole.ADMIN ? 24 * 60 * 60 * 1000 : 15 * 60 * 1000;
-      
       if (elapsed > timeoutLimit) {
-        console.log("Session timed out due to inactivity.");
         handleLogout();
       }
     };
-
     const interval = setInterval(checkTimeout, 60 * 1000);
-    
-    return () => {
-        clearInterval(interval);
-        events.forEach(event => document.removeEventListener(event, updateActivity));
-    };
+    return () => clearInterval(interval);
   }, [user, activeSessionCompanion]);
 
   const handleLogin = (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email') => {
@@ -91,11 +76,17 @@ const MainApp: React.FC = () => {
         } else {
             // STRICT ADMIN CREATION LOGIC
             const adminExists = Database.hasAdmin();
+            
+            // Only grant ADMIN if:
+            // 1. No admin exists yet
+            // 2. The provider is specifically 'email' (Password based)
+            // OAuth logins (Google/FB/X) are NEVER admins automatically, even if they are the first user.
             let finalRole = UserRole.USER;
             
             if (!adminExists && provider === 'email') {
                 finalRole = UserRole.ADMIN;
             } else if (provider !== 'email') {
+                // Explicitly force USER role for OAuth
                 finalRole = UserRole.USER;
             }
 
@@ -104,6 +95,7 @@ const MainApp: React.FC = () => {
         }
     }
     
+    // NEW: Check and update streak on login
     currentUser = Database.checkAndIncrementStreak(currentUser);
 
     setUser(currentUser);
@@ -140,18 +132,7 @@ const MainApp: React.FC = () => {
   }
 
   if (activeSessionCompanion && user) {
-    return (
-        <Suspense fallback={
-            <div className="fixed inset-0 bg-black flex items-center justify-center">
-                <div className="text-center">
-                    <Loader2 className="w-12 h-12 text-yellow-500 animate-spin mx-auto mb-4" />
-                    <p className="text-white font-bold tracking-widest text-sm uppercase">Securing Connection...</p>
-                </div>
-            </div>
-        }>
-            <VideoRoom companion={activeSessionCompanion} onEndSession={() => setActiveSessionCompanion(null)} userName={user.name} userId={user.id} />
-        </Suspense>
-    );
+    return <VideoRoom companion={activeSessionCompanion} onEndSession={() => setActiveSessionCompanion(null)} userName={user.name} />;
   }
 
   return (
@@ -182,14 +163,6 @@ const MainApp: React.FC = () => {
         <Route path="/privacy" element={<StaticPages type="privacy" />} />
         <Route path="/terms" element={<StaticPages type="terms" />} />
         <Route path="/support" element={<StaticPages type="support" />} />
-        
-        {/* NEW FOOTER PAGES */}
-        <Route path="/about" element={<StaticPages type="about" />} />
-        <Route path="/careers" element={<StaticPages type="careers" />} />
-        <Route path="/press" element={<StaticPages type="press" />} />
-        <Route path="/safety" element={<StaticPages type="safety" />} />
-        <Route path="/crisis" element={<StaticPages type="crisis" />} />
-
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </>

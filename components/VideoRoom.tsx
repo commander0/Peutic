@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Companion } from '../types';
 import { 
     Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, 
-    Loader2, AlertCircle, RefreshCcw, Aperture, Star, CheckCircle, Users, Download, Share2, Lock, Settings
+    Loader2, AlertCircle, RefreshCcw, Aperture, Star, CheckCircle, Users, Download, Share2
 } from 'lucide-react';
 import { createTavusConversation, endTavusConversation } from '../services/tavusService';
 import { Database } from '../services/database';
@@ -11,7 +11,6 @@ interface VideoRoomProps {
   companion: Companion;
   onEndSession: () => void;
   userName: string;
-  userId: string;
 }
 
 // --- ARTIFACT GENERATOR ---
@@ -59,16 +58,8 @@ const renderSessionArtifact = (companionName: string, durationStr: string, dateS
     ctx.fillStyle = '#FFFFFF';
     ctx.shadowColor = "rgba(0,0,0,0.1)";
     ctx.shadowBlur = 30;
-
-    // Browser compatibility for roundRect
-    if (typeof ctx.roundRect === 'function') {
-        ctx.beginPath();
-        ctx.roundRect(140, 480, 800, 550, 50); 
-        ctx.fill();
-    } else {
-        // Fallback for older browsers
-        ctx.fillRect(140, 480, 800, 550);
-    }
+    ctx.roundRect(140, 480, 800, 550, 50); 
+    ctx.fill();
     ctx.shadowBlur = 0;
 
     // Inside Box Content
@@ -107,7 +98,7 @@ const renderSessionArtifact = (companionName: string, durationStr: string, dateS
     return canvas.toDataURL('image/png');
 };
 
-const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName, userId }) => {
+const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -115,7 +106,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [blurBackground, setBlurBackground] = useState(false);
-  const [permissionDenied, setPermissionDenied] = useState(false);
   
   // Session State
   const [duration, setDuration] = useState(0);
@@ -131,7 +121,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
   // Post Session State
   const [showSummary, setShowSummary] = useState(false);
-  const [summaryImage, setSummaryImage] = useState<string>(''); 
+  const [summaryImage, setSummaryImage] = useState<string>(''); // Artifact URL
   const [rating, setRating] = useState(0);
   const [feedbackTags, setFeedbackTags] = useState<string[]>([]);
 
@@ -139,26 +129,55 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   const [remainingMinutes, setRemainingMinutes] = useState(0);
   const [lowBalanceWarning, setLowBalanceWarning] = useState(false);
 
+  const userId = useRef(`user_${Date.now()}`).current;
   const conversationIdRef = useRef<string | null>(null);
+  
+  // GUARD: Prevent double initialization in React Strict Mode
   const connectionInitiated = useRef(false);
 
+  // --- Session Initialization ---
   useEffect(() => {
-    const joinQueue = async () => {
+    // 1. Join Queue (Async)
+    const initQueue = async () => {
         try {
+            // Join Queue
             const pos = await Database.joinQueue(userId);
             setQueuePos(pos);
             setEstWait(Database.getEstimatedWaitTime(pos));
+
+            // Instant Entry for #1 (Fix for "Stuck in Queue")
+            if (pos === 1) {
+                 startTavusConnection();
+            }
         } catch (error) {
             console.error("Queue Error:", error);
             setErrorMsg("Failed to join queue. Please retry.");
             setConnectionState('ERROR');
         }
     };
-    joinQueue();
 
+    // Polling Interval
+    const queueInterval = setInterval(async () => {
+        if (connectionState === 'QUEUED') {
+            const pos = await Database.getQueuePosition(userId);
+            setQueuePos(pos);
+            setEstWait(Database.getEstimatedWaitTime(pos));
+
+            if (pos === 1) {
+                clearInterval(queueInterval);
+                startTavusConnection();
+            }
+        }
+    }, 3000);
+
+    initQueue();
+
+    // CLEANUP: Kill session on unmount or refresh (API Usage Fix)
     const cleanup = async () => {
-        await Database.endSession(userId); 
+        clearInterval(queueInterval);
+        await Database.endSession(userId);
         if (conversationIdRef.current) {
+            // Uses keepalive: true in the service to ensure termination on tab close
             endTavusConversation(conversationIdRef.current);
         }
     };
@@ -172,48 +191,23 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
         window.removeEventListener('beforeunload', handleBeforeUnload);
         cleanup();
     };
-  }, []); 
-
-  useEffect(() => {
-    let intervalId: any;
-
-    if (connectionState === 'QUEUED') {
-        intervalId = setInterval(async () => {
-            const pos = await Database.getQueuePosition(userId);
-            setQueuePos(pos);
-            setEstWait(Database.getEstimatedWaitTime(pos));
-
-            if (pos === 1) {
-                const activeCount = await Database.getActiveSessionCount();
-                if (activeCount < 15) {
-                    startTavusConnection();
-                }
-            }
-        }, 3000);
-    }
-
-    return () => {
-        if (intervalId) clearInterval(intervalId);
-    };
-  }, [connectionState, userId]); 
+  }, []);
 
   const startTavusConnection = async () => {
+      // Prevent double calls (API Optimization)
       if (connectionInitiated.current) return;
       connectionInitiated.current = true;
 
       setConnectionState('CONNECTING');
       setErrorMsg('');
       
-      const entered = await Database.enterActiveSession(userId);
-      if (!entered) {
-          connectionInitiated.current = false;
-          setConnectionState('QUEUED'); 
-          return;
-      }
+      // Move to active list (Async)
+      await Database.enterActiveSession(userId);
 
       try {
           const user = Database.getUser();
@@ -238,15 +232,14 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
           }
 
       } catch (err: any) {
-          connectionInitiated.current = false;
-          await Database.endSession(userId);
-
+          connectionInitiated.current = false; // Reset on error
           if (err.message.includes("Insufficient Credits")) {
               alert("Your session ended because you are out of credits.");
               handleEndSession(); 
               return;
           }
           if (err.message.includes("out of credits") || err.message.includes("Billing") || err.message.includes("402")) {
+              console.warn("Protocol switch: High-Fidelity Simulation Mode active.");
               setConnectionState('DEMO_MODE');
               return;
           }
@@ -255,27 +248,23 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
       }
   };
 
+  // --- Webcam Logic ---
   useEffect(() => {
     let stream: MediaStream | null = null;
     const startVideo = async () => {
       try {
-        setPermissionDenied(false);
         stream = await navigator.mediaDevices.getUserMedia({ 
             video: { width: { ideal: 640 }, height: { ideal: 360 }, facingMode: "user" }, 
             audio: true 
         });
         if (videoRef.current) videoRef.current.srcObject = stream;
-      } catch (err: any) { 
-          console.error("Error accessing media devices", err); 
-          if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-              setPermissionDenied(true);
-          }
-      }
+      } catch (err) { console.error("Error accessing media devices", err); }
     };
     if (camOn && !showSummary) startVideo();
     return () => { if (stream) stream.getTracks().forEach(track => track.stop()); };
   }, [camOn, showSummary]);
 
+  // --- Timers & Credit Enforcement ---
   useEffect(() => {
     if (showSummary) return;
     if (connectionState !== 'CONNECTED' && connectionState !== 'DEMO_MODE') return;
@@ -325,6 +314,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   const settings = Database.getSettings();
   const cost = Math.ceil(duration / 60) * settings.pricePerMinute;
 
+  // --- HELPER: Pre-fill Name to Skip Input Screen ---
   const getIframeUrl = () => {
       if (!conversationUrl) return '';
       try {
@@ -336,6 +326,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
       }
   };
 
+  // --- RENDER ---
   if (showSummary) {
       return (
           <div className="fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
@@ -343,6 +334,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                   <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/50"><CheckCircle className="w-8 h-8 text-green-500" /></div>
                   <h2 className="text-2xl font-black text-white mb-6 tracking-tight">Session Complete</h2>
                   
+                  {/* ARTIFACT DISPLAY */}
                   {summaryImage && (
                       <div className="mb-6 relative group">
                           <img src={summaryImage} alt="Session Artifact" className="w-full rounded-xl shadow-lg border border-gray-700" />
@@ -374,9 +366,10 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   return (
     <div ref={containerRef} className="fixed inset-0 bg-black z-50 flex flex-col overflow-hidden select-none">
         
-        <div className="absolute top-0 left-0 right-0 p-4 md:p-6 flex justify-between items-start z-20 pointer-events-none bg-gradient-to-b from-black/80 via-black/20 to-transparent pb-20">
+        {/* --- HEADER OVERLAY --- */}
+        <div className="absolute top-0 left-0 right-0 p-4 md:p-6 flex justify-between items-start z-20 pointer-events-none bg-gradient-to-b from-black/80 via-black/20 to-transparent pb-20 transition-opacity duration-500">
             <div className="flex items-center gap-4 pointer-events-auto pl-16">
-                <div className={`bg-black/40 backdrop-blur-xl px-4 py-2 rounded-full border ${lowBalanceWarning ? 'border-red-500 animate-pulse' : 'border-white/10'} text-white font-mono shadow-xl flex items-center gap-3`}>
+                <div className={`bg-black/40 backdrop-blur-xl px-4 py-2 rounded-full border ${lowBalanceWarning ? 'border-red-500 animate-pulse' : 'border-white/10'} text-white font-mono shadow-xl flex items-center gap-3 transition-colors duration-500`}>
                     <div className={`w-2 h-2 rounded-full ${connectionState === 'CONNECTED' ? 'bg-red-500 animate-pulse' : 'bg-yellow-500'}`}></div>
                     <span className={`font-variant-numeric tabular-nums tracking-wide font-bold ${lowBalanceWarning ? 'text-red-400' : 'text-white'}`}>
                         {connectionState === 'CONNECTED' ? formatTime(duration) : connectionState === 'QUEUED' ? 'Waiting...' : 'Connecting...'}
@@ -384,6 +377,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 </div>
             </div>
             <div className="flex items-center gap-2 pointer-events-auto">
+                {/* Network Quality */}
                 <div className="flex gap-1 h-4 items-end">
                     {[1, 2, 3, 4].map(i => (
                         <div key={i} className={`w-1 rounded-sm ${i <= networkQuality ? 'bg-green-500' : 'bg-gray-600'}`} style={{ height: `${i * 25}%` }}></div>
@@ -392,22 +386,9 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             </div>
         </div>
 
+        {/* --- MAIN CONTENT AREA --- */}
         <div className="absolute inset-0 w-full h-full bg-gray-900 flex items-center justify-center">
-            {permissionDenied && (
-                <div className="absolute inset-0 z-40 bg-black flex items-center justify-center p-6 text-center">
-                    <div className="max-w-md">
-                        <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/20">
-                            <Lock className="w-10 h-10 text-red-500" />
-                        </div>
-                        <h2 className="text-2xl font-bold text-white mb-2">Camera Access Blocked</h2>
-                        <p className="text-gray-400 mb-8">Please enable camera and microphone access in your browser settings to connect with {companion.name}.</p>
-                        <button onClick={() => window.location.reload()} className="bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">
-                            Try Again
-                        </button>
-                    </div>
-                </div>
-            )}
-
+            {/* QUEUE SCREEN */}
             {connectionState === 'QUEUED' && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/95">
                     <div className="relative mb-8">
@@ -434,6 +415,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 </div>
             )}
             
+            {/* Error State */}
             {connectionState === 'ERROR' && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/95">
                     <div className="bg-red-500/10 border border-red-500/30 p-8 rounded-3xl max-w-md text-center backdrop-blur-md">
@@ -460,22 +442,21 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             )}
         </div>
 
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 w-20 md:w-40 aspect-[9/16] rounded-2xl overflow-hidden border border-white/20 shadow-2xl bg-black">
+        {/* --- USER PIP (Top Middle Fixed) --- */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 w-20 md:w-40 aspect-[9/16] rounded-2xl overflow-hidden border border-white/20 shadow-2xl bg-black transition-all duration-500">
             <div className="absolute inset-0 bg-black">
-                {camOn && !permissionDenied ? (
+                {camOn ? (
                     <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover transform scale-x-[-1]" />
                 ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 bg-gray-900">
-                        {permissionDenied ? <Lock className="w-6 h-6 mb-2 text-red-500" /> : <VideoOff className="w-8 h-8 mb-2 opacity-50" />}
-                        <span className="text-[8px] font-bold uppercase tracking-widest opacity-50">{permissionDenied ? "BLOCKED" : "OFF"}</span>
-                    </div>
+                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 bg-gray-900"><VideoOff className="w-8 h-8 mb-2 opacity-50" /><span className="text-[8px] font-bold uppercase tracking-widest opacity-50">Off</span></div>
                 )}
                 <div className="absolute bottom-2 right-2">
-                     <div className={`w-2 h-2 rounded-full ${micOn && !permissionDenied ? 'bg-green-500 shadow-[0_0_5px_#22c55e]' : 'bg-red-500'}`}></div>
+                     <div className={`w-2 h-2 rounded-full ${micOn ? 'bg-green-500 shadow-[0_0_5px_#22c55e]' : 'bg-red-500'}`}></div>
                 </div>
             </div>
         </div>
 
+        {/* --- VERTICAL CONTROLS (Top Left) --- */}
         <div className="absolute top-24 left-4 z-30 pointer-events-auto">
             <div className="flex flex-col items-center gap-3 bg-black/60 backdrop-blur-md px-3 py-5 rounded-full border border-white/10 shadow-2xl hover:bg-black/80 transition-all">
                 <button onClick={() => setMicOn(!micOn)} className={`p-3 rounded-full transition-all ${micOn ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-red-500 text-white'}`}>{micOn ? <Mic className="w-5 h-5"/> : <MicOff className="w-5 h-5"/>}</button>

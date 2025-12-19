@@ -1,5 +1,4 @@
 import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, ServerMetric, MoodEntry, JournalEntry, PromoCode, SessionMemory, GiftCard, ArtEntry, BreathLog } from '../types';
-import { supabase } from './supabaseClient';
 
 const DB_KEYS = {
   USER: 'peutic_db_current_user_v14',
@@ -12,6 +11,8 @@ const DB_KEYS = {
   JOURNALS: 'peutic_db_journals_v14',
   ART: 'peutic_db_art_v14',
   PROMOS: 'peutic_db_promos_v14',
+  QUEUE_LIST: 'peutic_db_queue_list_v15',
+  ACTIVE_SESSIONS_LIST: 'peutic_db_active_sessions_list_v15',
   ADMIN_ATTEMPTS: 'peutic_db_admin_attempts_v14',
   BREATHE_COOLDOWN: 'peutic_db_breathe_cooldown_v14',
   BREATHE_LOGS: 'peutic_db_breathe_logs_v14',
@@ -19,62 +20,43 @@ const DB_KEYS = {
   GIFTS: 'peutic_db_gifts_v14',
 };
 
-// CLEANED POOL: 50+ Unique, Friendly, High-Quality Portraits
 export const STABLE_AVATAR_POOL = [
-    "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800", // Ruby
-    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=800", // Carter
-    "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=800", // Anna
-    "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?auto=format&fit=crop&q=80&w=800", // James
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800", // Gloria
-    "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=800", // Danny
-    "https://images.unsplash.com/photo-1619895862022-09114b41f16f?auto=format&fit=crop&q=80&w=800", // Olivia
-    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=800", // Charlie
-    "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&q=80&w=800", // Luna
-    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=800", // Zane
-    "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=800", // Julia
-    "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800", // Owen
-    "https://images.unsplash.com/photo-1598550874175-4d7112ee7f41?auto=format&fit=crop&q=80&w=800", // Gabby
-    "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=800", // Male
-    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=800", // Katya
-    "https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?auto=format&fit=crop&q=80&w=800", // Ivy
-    "https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?auto=format&fit=crop&q=80&w=800", // Samantha
-    "https://images.unsplash.com/photo-1500048993953-d23a436266cf?auto=format&fit=crop&q=80&w=800", // Kai
-    "https://images.unsplash.com/photo-1554151228-14d9def656ec?auto=format&fit=crop&q=80&w=800", // Jakey
-    "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?auto=format&fit=crop&q=80&w=800", // Liam
-    "https://images.unsplash.com/photo-1530268729831-4b0b97f70be4?auto=format&fit=crop&q=80&w=800", // Beth
-    "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=800", // Mary
-    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=800", // Destiny
-    "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=800", // Rosalie
-    "https://images.unsplash.com/photo-1521119989659-a83eee488058?auto=format&fit=crop&q=80&w=800", // Raj
-    "https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?auto=format&fit=crop&q=80&w=800", // Ben
-    "https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?auto=format&fit=crop&q=80&w=800", // Steph
-    "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=800", // Extra 1
-    "https://images.unsplash.com/photo-1534751516642-a1af1ef26a56?auto=format&fit=crop&q=80&w=800", // Extra 2
-    "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=800", // Extra 3
-    "https://images.unsplash.com/photo-1520813792240-56fc4a3765a7?auto=format&fit=crop&q=80&w=800", // Extra 4
-    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=800", // Extra 5
-    "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=800", // Extra 6
-    "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?auto=format&fit=crop&q=80&w=800", // Extra 7
-    "https://images.unsplash.com/photo-1546961329-78bef0414d7c?auto=format&fit=crop&q=80&w=800", // Extra 8
-    "https://images.unsplash.com/photo-1509967419530-da842fe72305?auto=format&fit=crop&q=80&w=800", // Extra 9
-    "https://images.unsplash.com/photo-1557862921-37829c790f19?auto=format&fit=crop&q=80&w=800", // Extra 10
-    "https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&q=80&w=800", // Extra 11
-    "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=800", // Extra 12
-    "https://images.unsplash.com/photo-1517365830460-955ce3ccd263?auto=format&fit=crop&q=80&w=800", // Extra 13
-    "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?auto=format&fit=crop&q=80&w=800", // Extra 14
-    "https://images.unsplash.com/photo-1503467913725-deb546c1aa40?auto=format&fit=crop&q=80&w=800", // Extra 15
-    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=800", // Extra 16
-    "https://images.unsplash.com/photo-1628157588553-5eeea00af15c?auto=format&fit=crop&q=80&w=800", // Extra 17
-    "https://images.unsplash.com/photo-1581456495146-65a71b2c8e52?auto=format&fit=crop&q=80&w=800", // Extra 18
-    "https://images.unsplash.com/photo-1503104834685-7205e8607eb9?auto=format&fit=crop&q=80&w=800", // Extra 19
-    "https://images.unsplash.com/photo-1503185912284-5271ff81b9a8?auto=format&fit=crop&q=80&w=800", // Extra 20
-    "https://images.unsplash.com/photo-1505033575518-a36ea2ef75ae?auto=format&fit=crop&q=80&w=800", // Extra 21
-    "https://images.unsplash.com/photo-1503593245033-a040be3f3c82?auto=format&fit=crop&q=80&w=800", // Extra 22
-    "https://images.unsplash.com/photo-1504257432389-52343af06ae3?auto=format&fit=crop&q=80&w=800", // Extra 23
-    "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=800", // Extra 24
+    "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1619895862022-09114b41f16f?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1598550874175-4d7112ee7f41?auto=format&fit=crop&q=80&w=800", 
+    "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=800", 
+    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=800", 
+    "https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1500048993953-d23a436266cf?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1554151228-14d9def656ec?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1530268729831-4b0b97f70be4?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1521119989659-a83eee488058?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1534751516642-a1af1ef26a56?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1546539782-6fc531453083?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1589571894960-20bbe2815d22?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&q=80&w=800"
 ];
 
-// Ensure INITIAL_COMPANIONS uses distinct indices from 0 to N to guarantee no duplicates
 export const INITIAL_COMPANIONS: Companion[] = [
   { id: 'c1', name: 'Ruby', gender: 'Female', specialty: 'Anxiety & Panic', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[0], bio: 'Specializing in grounding techniques.', replicaId: 're3a705cf66a' },
   { id: 'c2', name: 'Carter', gender: 'Male', specialty: 'Life Coaching', status: 'AVAILABLE', rating: 4.8, imageUrl: STABLE_AVATAR_POOL[1], bio: 'Success roadmap planning.', replicaId: 'rca8a38779a8' },
@@ -90,7 +72,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
   { id: 'c12', name: 'Katya', gender: 'Female', specialty: 'Mindfulness', status: 'AVAILABLE', rating: 4.8, imageUrl: STABLE_AVATAR_POOL[14], bio: 'Guided meditation.', replicaId: 'r5791c5ab229' },
   { id: 'c13', name: 'Ivy', gender: 'Female', specialty: 'Youth Mentoring', status: 'AVAILABLE', rating: 4.7, imageUrl: STABLE_AVATAR_POOL[15], bio: 'Young adult guidance.', replicaId: 'r991fc9af2be' },
   { id: 'c14', name: 'Zane', gender: 'Male', specialty: 'Addiction', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[9], bio: 'Supportive accountability.', replicaId: 'r24efb3b9bef' },
-  { id: 'c15', name: 'Rose', gender: 'Female', specialty: 'Trauma', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[28], bio: 'Gentle processing.', replicaId: 'r3f8decedbd2' },
+  { id: 'c15', name: 'Rose', gender: 'Female', specialty: 'Trauma', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[0], bio: 'Gentle processing.', replicaId: 'r3f8decedbd2' },
   { id: 'c16', name: 'Owen', gender: 'Male', specialty: 'Career', status: 'AVAILABLE', rating: 4.8, imageUrl: STABLE_AVATAR_POOL[11], bio: 'Career pivots and growth.', replicaId: 'r9458111c64a' },
   { id: 'c17', name: 'Samantha', gender: 'Female', specialty: 'Divorce', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[16], bio: 'Separation support.', replicaId: 'rf6b1c8d5e9d' },
   { id: 'c18', name: 'Kai', gender: 'Male', specialty: 'LGBTQ+', status: 'AVAILABLE', rating: 5.0, imageUrl: STABLE_AVATAR_POOL[17], bio: 'Identity and acceptance.', replicaId: 'r31e11adf1d3' },
@@ -256,123 +238,83 @@ export class Database {
       logs.unshift(newLog); if (logs.length > 200) logs.pop(); localStorage.setItem(DB_KEYS.LOGS, JSON.stringify(logs));
   }
 
+  static getServerMetrics(): ServerMetric[] {
+      const now = new Date();
+      const active = this.getActiveSessionCount();
+      return Array.from({length: 10}, (_, i) => ({
+          time: new Date(now.getTime() - i * 5000).toLocaleTimeString(),
+          cpu: 20 + Math.random() * 30 + (active * 2),
+          memory: 30 + Math.random() * 20,
+          latency: 15 + Math.random() * 40,
+          activeSessions: active
+      })).reverse();
+  }
+  
   // ==========================================
-  // === QUEUE SYSTEM (SUPABASE) ===
+  // === QUEUE SYSTEM (REPAIRED) ===
   // ==========================================
   
-  static async getActiveSessionCount(): Promise<number> {
-      try {
-          const { count, error } = await supabase
-              .from('session_queue')
-              .select('*', { count: 'exact', head: true })
-              .eq('status', 'active');
-          if (error) throw error;
-          return count || 0;
-      } catch (e) {
-          console.warn("Supabase Queue Error (Count):", e);
-          return 0;
-      }
+  static getActiveSessionsList(): string[] {
+      return JSON.parse(localStorage.getItem(DB_KEYS.ACTIVE_SESSIONS_LIST) || '[]');
   }
 
+  static getQueueList(): string[] {
+      return JSON.parse(localStorage.getItem(DB_KEYS.QUEUE_LIST) || '[]');
+  }
+
+  static getActiveSessionCount(): number {
+      return this.getActiveSessionsList().length;
+  }
+
+  // --- REPAIRED JOIN QUEUE ---
   // Returns the queue position (1-based).
-  static async joinQueue(userId: string): Promise<number> {
-      try {
-          // 1. Check if user exists
-          const { data: existing, error: fetchError } = await supabase
-              .from('session_queue')
-              .select('status, created_at')
-              .eq('user_id', userId)
-              .single();
+  static joinQueue(userId: string): number {
+      let queue = this.getQueueList();
+      const active = this.getActiveSessionsList();
 
-          if (existing) {
-              if (existing.status === 'active') return 0; // Already active, no wait
-              
-              // Calculate position among waiting
-              const { count } = await supabase
-                  .from('session_queue')
-                  .select('*', { count: 'exact', head: true })
-                  .eq('status', 'waiting')
-                  .lt('created_at', existing.created_at);
-              
-              return (count || 0) + 1;
-          }
+      // If user is already active, they are not "waiting", return 0 to indicate they can enter
+      if (active.includes(userId)) return 0;
 
-          // 2. Insert new waiting user
-          // NOTE: We do NOT pass created_at here. We rely on the server default (now())
-          // to prevent client-side clock manipulation for queue jumping.
-          const { data: inserted, error: insertError } = await supabase
-              .from('session_queue')
-              .insert([{ user_id: userId, status: 'waiting' }])
-              .select()
-              .single();
-          
-          if (insertError) throw insertError;
+      // Add to queue if not present
+      if (!queue.includes(userId)) {
+          queue.push(userId);
+          localStorage.setItem(DB_KEYS.QUEUE_LIST, JSON.stringify(queue));
+      }
 
-          // 3. Return position
-          const { count } = await supabase
-              .from('session_queue')
-              .select('*', { count: 'exact', head: true })
-              .eq('status', 'waiting')
-              .lt('created_at', inserted.created_at);
-          
-          return (count || 0) + 1;
+      return queue.indexOf(userId) + 1;
+  }
 
-      } catch (e) {
-          console.error("Supabase Queue Join Failed:", e);
-          return 1; // Fail-open to allow usage if DB down, or handle gracefully
+  // --- MOVE TO ACTIVE ---
+  static enterActiveSession(userId: string) {
+      let active = this.getActiveSessionsList();
+      if (!active.includes(userId)) {
+          active.push(userId);
+          localStorage.setItem(DB_KEYS.ACTIVE_SESSIONS_LIST, JSON.stringify(active));
       }
   }
 
-  // Attempts to move user from Waiting -> Active
-  static async enterActiveSession(userId: string): Promise<boolean> {
-      try {
-          const activeCount = await this.getActiveSessionCount();
-          if (activeCount >= 15) return false;
-
-          const { error } = await supabase
-              .from('session_queue')
-              .update({ status: 'active' })
-              .eq('user_id', userId);
-          
-          return !error;
-      } catch (e) {
-          console.error("Enter Session Error:", e);
-          return false;
+  // --- REMOVE FROM QUEUE ---
+  static leaveQueue(userId: string) {
+      let queue = this.getQueueList();
+      if (queue.includes(userId)) {
+          queue = queue.filter(id => id !== userId);
+          localStorage.setItem(DB_KEYS.QUEUE_LIST, JSON.stringify(queue));
       }
   }
 
-  static async leaveQueue(userId: string) {
-      await this.endSession(userId);
+  // --- CLEANUP ---
+  static endSession(userId: string) {
+      let active = this.getActiveSessionsList();
+      if (active.includes(userId)) {
+          active = active.filter(id => id !== userId);
+          localStorage.setItem(DB_KEYS.ACTIVE_SESSIONS_LIST, JSON.stringify(active));
+      }
+      this.leaveQueue(userId);
   }
 
-  static async endSession(userId: string) {
-      try {
-          await supabase.from('session_queue').delete().eq('user_id', userId);
-      } catch (e) {
-          console.warn("End Session Error:", e);
-      }
-  }
-
-  static async getQueuePosition(userId: string): Promise<number> {
-      try {
-          const { data: userRecord } = await supabase
-              .from('session_queue')
-              .select('created_at, status')
-              .eq('user_id', userId)
-              .single();
-          
-          if (!userRecord || userRecord.status === 'active') return 0;
-
-          const { count } = await supabase
-              .from('session_queue')
-              .select('*', { count: 'exact', head: true })
-              .eq('status', 'waiting')
-              .lt('created_at', userRecord.created_at);
-          
-          return (count || 0) + 1;
-      } catch (e) {
-          return 1;
-      }
+  static getQueuePosition(userId: string): number {
+      const q = this.getQueueList();
+      return q.indexOf(userId) + 1; 
   }
 
   static getEstimatedWaitTime(position: number): number {

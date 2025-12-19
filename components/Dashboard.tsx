@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { User, Companion, Transaction, JournalEntry, ArtEntry } from '../types';
 import { 
-  Video, Clock, Settings, LogOut, 
-  LayoutDashboard, Plus, Search, Filter, X, Lock, CheckCircle, AlertTriangle, ShieldCheck, Heart,
-  Smile, Wind, BookOpen, Save, Sparkles, Activity, Info, Flame, Trophy, Target,
-  Sun, Cloud, Music, Feather, Anchor, Gamepad2, RefreshCw, Play, Zap, Star, Edit2, Users, Trash2, Bell,
-  CloudRain, Image as ImageIcon, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Shield, Moon,
-  Twitter, Instagram, Linkedin
+  Video, CreditCard, Clock, Settings, LogOut, 
+  LayoutDashboard, Plus, Search, Filter, X, Lock, CheckCircle, AlertTriangle, ShieldCheck, Heart, Calendar,
+  Smile, PenTool, Wind, BookOpen, Save, Sparkles, Activity, Info, Flame, Trophy, Target, Hourglass, Coffee,
+  Sun, Cloud, Umbrella, Music, Feather, Anchor, Gamepad2, RefreshCw, Play, Zap, Star, Ghost, Edit2, Camera, Droplets, Users, Trash2, Bell,
+  CloudRain, Image as ImageIcon, Wand2, Download, ChevronDown, ChevronUp, ChevronRight, Lightbulb, User as UserIcon, Shield, Moon
 } from 'lucide-react';
 import { Database, STABLE_AVATAR_POOL } from '../services/database';
 import { generateAffirmation } from '../services/geminiService';
@@ -18,8 +16,7 @@ interface DashboardProps {
   onStartSession: (companion: Companion) => void;
 }
 
-// PRODUCTION SECURITY: Use Environment Variable for Stripe
-const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_KEY || "pk_live_51MZuG0BUviiBIU4d81PC3BDlYgxuUszLu1InD0FFWOcGwQyNYgn5jjNOYi5a0uic9iuG8FdMjZBqpihTxK7oH0W600KfPZFZwp";
+const STRIPE_PUBLISHABLE_KEY = "pk_live_51MZuG0BUviiBIU4d81PC3BDlYgxuUszLu1InD0FFWOcGwQyNYgn5jjNOYi5a0uic9iuG8FdMjZBqpihTxK7oH0W600KfPZFZwp";
 
 declare global {
   interface Window {
@@ -27,6 +24,23 @@ declare global {
     webkitAudioContext?: typeof AudioContext;
   }
 }
+
+// --- HELPER: COLLAPSIBLE SECTION ---
+const CollapsibleSection: React.FC<{ title: string; icon?: React.ElementType; children: React.ReactNode; defaultOpen?: boolean }> = ({ title, icon: Icon, children, defaultOpen = false }) => {
+    const [isOpen, setIsOpen] = useState(defaultOpen);
+    return (
+        <div className="bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-sm transition-all mb-6">
+            <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-6 hover:bg-yellow-50 dark:hover:bg-gray-800 transition-colors">
+                <div className="flex items-center gap-3">
+                    {Icon && <div className="p-2 bg-yellow-100 dark:bg-gray-800 rounded-lg"><Icon className="w-5 h-5 text-yellow-700 dark:text-yellow-500" /></div>}
+                    <h3 className="font-bold text-lg text-gray-900 dark:text-white">{title}</h3>
+                </div>
+                {isOpen ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+            </button>
+            {isOpen && <div className="p-6 pt-0 animate-in slide-in-from-top-2 duration-300">{children}</div>}
+        </div>
+    );
+};
 
 // --- ROUND ROBIN AVATAR COMPONENT ---
 const AvatarImage: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className }) => {
@@ -50,23 +64,6 @@ const AvatarImage: React.FC<{ src: string; alt: string; className?: string }> = 
     }
 
     return <img src={imgSrc} alt={alt} className={className} onError={() => setHasError(true)} loading="lazy" />;
-};
-
-// --- COLLAPSIBLE SECTION COMPONENT ---
-const CollapsibleSection: React.FC<{ title: string; icon: any; children: React.ReactNode; defaultOpen?: boolean }> = ({ title, icon: Icon, children, defaultOpen = false }) => {
-    const [isOpen, setIsOpen] = useState(defaultOpen);
-    return (
-        <div className="bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-200 dark:border-gray-800 rounded-3xl overflow-hidden mb-6 transition-colors shadow-sm">
-            <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-6 hover:bg-yellow-50 dark:hover:bg-gray-800 transition-colors">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-yellow-100 dark:bg-gray-800 rounded-lg"><Icon className="w-5 h-5 text-yellow-600 dark:text-yellow-500" /></div>
-                    <span className="font-bold text-lg dark:text-white">{title}</span>
-                </div>
-                {isOpen ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
-            </button>
-            {isOpen && <div className="p-6 pt-0 border-t border-yellow-100 dark:border-gray-800 animate-in slide-in-from-top-2">{children}</div>}
-        </div>
-    );
 };
 
 // --- LOCAL WISDOM CARD GENERATOR (Canvas API) ---
@@ -425,7 +422,7 @@ const MindfulMatchGame: React.FC<{ onWin?: () => void }> = ({ onWin }) => {
     useEffect(() => { if (cards.length > 0 && solved.length === cards.length) { setWon(true); onWin?.(); } }, [solved]);
 
     return (
-        <div className="bg-gradient-to-br from-yellow-50/50 to-white dark:from-gray-800 dark:to-gray-900 w-full h-full flex flex-col rounded-2xl p-2 border border-yellow-100 dark:border-gray-700 overflow-hidden relative shadow-inner">
+        <div className="bg-gradient-to-br from-yellow-50/50 to-white dark:from-gray-800 dark:to-gray-900 h-full flex flex-col rounded-2xl p-1 border border-yellow-100 dark:border-gray-700 overflow-hidden relative shadow-inner">
             <div className="flex justify-between items-center mb-1 z-10 px-1 pt-1">
                 <h3 className="font-black text-sm text-yellow-900 dark:text-yellow-500 uppercase tracking-widest">Mindful Match</h3>
                 <button onClick={initGame} className="p-1 hover:bg-yellow-100 dark:hover:bg-gray-700 rounded-full transition-colors"><RefreshCw className="w-4 h-4 text-yellow-600 dark:text-yellow-400" /></button>
@@ -437,7 +434,7 @@ const MindfulMatchGame: React.FC<{ onWin?: () => void }> = ({ onWin }) => {
                     <button onClick={initGame} className="mt-4 bg-black dark:bg-white dark:text-black text-white px-6 py-2 rounded-full font-bold hover:scale-105 transition-transform">Replay</button>
                 </div>
             ) : (
-                <div className="grid grid-cols-4 grid-rows-4 gap-2 h-full p-0 flex-1">
+                <div className="grid grid-cols-4 grid-rows-4 gap-1 h-full p-0 flex-1">
                     {cards.map((card, i) => {
                         const isVisible = flipped.includes(i) || solved.includes(i);
                         const Icon = card.icon;
@@ -458,7 +455,6 @@ const MindfulMatchGame: React.FC<{ onWin?: () => void }> = ({ onWin }) => {
 // --- CLOUD HOP ---
 const CloudHopGame: React.FC = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const requestRef = useRef<number | null>(null);
     const [score, setScore] = useState(0);
     const [gameOver, setGameOver] = useState(false);
     const [gameStarted, setGameStarted] = useState(false);
@@ -473,6 +469,7 @@ const CloudHopGame: React.FC = () => {
 
         const GRAVITY = 0.4;
         let platforms = [{x: 0, y: 380, w: 400, h: 40, type: 'ground'}];
+        let req: number;
         
         let py = 300;
         while (py > -2000) {
@@ -489,12 +486,9 @@ const CloudHopGame: React.FC = () => {
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
 
-        // ERROR FIX: Removed roundRect as it's not supported in all browsers/webviews yet
         const drawCloud = (x: number, y: number, w: number, h: number) => {
              ctx.fillStyle = 'white';
-             // Fallback rectangle for base
-             ctx.fillRect(x, y, w, h);
-             // Circles for fluffy look
+             ctx.beginPath(); ctx.roundRect(x, y, w, h, 10); ctx.fill();
              ctx.beginPath(); ctx.arc(x+10, y, 15, 0, Math.PI*2); ctx.fill();
              ctx.beginPath(); ctx.arc(x+w-10, y, 15, 0, Math.PI*2); ctx.fill();
              ctx.beginPath(); ctx.arc(x+w/2, y-5, 20, 0, Math.PI*2); ctx.fill();
@@ -523,12 +517,7 @@ const CloudHopGame: React.FC = () => {
                 });
             }
 
-            if (p.y > 450) { 
-                setGameOver(true); 
-                setGameStarted(false); 
-                if (requestRef.current) cancelAnimationFrame(requestRef.current);
-                return; 
-            }
+            if (p.y > 450) { setGameOver(true); setGameStarted(false); cancelAnimationFrame(req); return; }
 
             const grad = ctx.createLinearGradient(0,0,0,400); grad.addColorStop(0,'#38bdf8'); grad.addColorStop(1,'#bae6fd');
             ctx.fillStyle = grad; ctx.fillRect(0,0,400,400);
@@ -548,12 +537,12 @@ const CloudHopGame: React.FC = () => {
             ctx.beginPath(); ctx.arc(p.x+10, p.y+12, 2, 0, Math.PI*2); ctx.fill();
             ctx.beginPath(); ctx.arc(p.x+20, p.y+12, 2, 0, Math.PI*2); ctx.fill();
 
-            requestRef.current = requestAnimationFrame(update);
+            req = requestAnimationFrame(update);
         };
         update();
 
         return () => { 
-            if (requestRef.current) cancelAnimationFrame(requestRef.current);
+            cancelAnimationFrame(req); 
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
@@ -576,7 +565,7 @@ const CloudHopGame: React.FC = () => {
             onTouchStart={handleTap} onTouchEnd={handleRelease}
         >
             <div className="absolute top-2 right-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full font-black text-white text-lg z-10">{score}m</div>
-            <canvas ref={canvasRef} width={400} height={400} className="w-full h-full object-contain" />
+            <canvas ref={canvasRef} width={400} height={400} className="w-full h-full" />
             {(!gameStarted || gameOver) && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20">
                     <button onClick={() => { setGameStarted(true); setGameOver(false); setScore(0); playerRef.current = {x:150,y:300,vx:0,vy:0}; }} className="bg-yellow-400 text-yellow-900 px-8 py-3 rounded-full font-black text-lg shadow-xl hover:scale-110 transition-transform flex items-center gap-2">
@@ -880,6 +869,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [companions, setCompanions] = useState<Companion[]>([]);
   const [loadingCompanions, setLoadingCompanions] = useState(true);
+  const [streak, setStreak] = useState(3);
   const [weeklyGoal, setWeeklyGoal] = useState(0);
   const [weeklyTarget, setWeeklyTarget] = useState(10);
   const [weeklyMessage, setWeeklyMessage] = useState("Start your journey.");
@@ -954,7 +944,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   }, [user.id]);
 
   const handlePaymentSuccess = (minutesAdded: number, cost: number) => {
-      Database.topUpWallet(minutesAdded, cost, user.id);
+      Database.topUpWallet(minutesAdded, cost);
       setBalance(prev => prev + minutesAdded);
       setShowPayment(false);
       setPaymentError(undefined);
@@ -997,7 +987,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   const progressPercent = Math.min(100, (weeklyGoal / weeklyTarget) * 100);
 
   return (
-    <div className="min-h-screen bg-[#FFFBEB] dark:bg-black font-sans text-gray-900 dark:text-gray-100 selection:bg-yellow-200 transition-colors duration-500 relative overflow-hidden flex flex-col">
+    <div className="min-h-screen bg-[#FFFBEB] dark:bg-black font-sans text-gray-900 dark:text-gray-100 selection:bg-yellow-200 transition-colors duration-500 relative overflow-hidden">
       <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-0" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
       
       {weather && <WeatherEffect type={weather} />}
@@ -1031,8 +1021,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
           </div>
       </nav>
 
-      {/* Main Container - FLEX 1 to push footer */}
-      <div className="max-w-7xl w-full mx-auto px-6 pt-6 md:px-10 md:pt-10 flex-1 flex flex-col md:flex-row gap-10 relative z-10">
+      <div className="max-w-7xl mx-auto p-6 md:p-10 flex flex-col md:flex-row gap-10 relative z-10">
           {/* Sidebar */}
           <div className="w-full md:w-72 space-y-6">
               <div className="bg-[#FFFBEB] dark:bg-gray-900 p-8 rounded-3xl text-center relative group shadow-sm border border-yellow-200 dark:border-gray-800 transition-colors">
@@ -1085,9 +1074,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 flex flex-col pb-10">
+          <div className="flex-1">
               {activeTab === 'hub' && (
-                  <div className="space-y-8 animate-in fade-in flex-1">
+                  <div className="space-y-8 animate-in fade-in">
                       {/* Insight */}
                       <div className="bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-200 dark:border-gray-800 p-8 rounded-3xl relative overflow-hidden group shadow-sm transition-colors">
                           <div className="absolute -right-10 -top-10 w-40 h-40 bg-yellow-300 dark:bg-yellow-600 rounded-full blur-[80px] opacity-50 group-hover:opacity-80 transition-opacity"></div>
@@ -1095,46 +1084,45 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                           <p className="text-gray-600 dark:text-gray-300 text-lg relative z-10 max-w-xl">"{dailyInsight}"</p>
                       </div>
 
-                      <CollapsibleSection title="Games & Tools" icon={Gamepad2}>
-                          <div className="space-y-4">
-                               {/* FIXED GAMES SECTION: 
-                                   - flex flex-col md:flex-row: Arrange items vertically on mobile and horizontally on desktop.
-                                   - items-start: Prevents components from stretching vertically to match each other.
-                                   - gap-6: Adds space between the games.
-                               */}
-                               <div className="flex flex-col md:flex-row gap-6 items-start">
-                                   
-                                   {/* Mindful Match */}
-                                   <div className="w-full md:w-[340px] aspect-square flex-shrink-0">
-                                       <MindfulMatchGame />
-                                   </div>
-
-                                   {/* Cloud Hop */}
-                                   <div className="w-full md:w-[340px] aspect-square flex-shrink-0">
-                                       <CloudHopGame />
-                                   </div>
+                      {/* Games & Tools - COLLAPSIBLE - DEFAULT CLOSED */}
+                      <CollapsibleSection title="Games & Tools" icon={Gamepad2} defaultOpen={false}>
+                          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                               {/* UPDATED: h-80 for compact flush fit */}
+                               <div className="lg:col-span-2 bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-200 dark:border-gray-700 p-1 rounded-3xl flex flex-col md:flex-row gap-1 h-auto md:h-80 shadow-sm overflow-hidden">
+                                    <div className="w-full md:flex-1 relative rounded-2xl overflow-hidden group border border-yellow-100 dark:border-gray-800 h-80 md:h-full">
+                                        <MindfulMatchGame />
+                                    </div>
+                                    <div className="w-full md:flex-1 relative rounded-2xl overflow-hidden group border border-yellow-100 dark:border-gray-800 h-80 md:h-full">
+                                        <CloudHopGame />
+                                    </div>
                                </div>
-
-                               <MoodTracker onMoodSelect={handleMoodSelect} />
-                               <div className="grid grid-cols-2 gap-2">
-                                   <button onClick={() => setShowBreathing(true)} className="w-full py-4 bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-200 dark:border-gray-700 rounded-xl flex flex-row items-center justify-center gap-2 hover:scale-[1.02] transition-transform cursor-pointer group hover:shadow-md">
-                                       <Wind className="w-4 h-4 text-blue-600 dark:text-blue-300" />
-                                       <span className="font-bold text-xs text-gray-900 dark:text-white">Breathe</span>
+                               <div className="space-y-4">
+                                   <MoodTracker onMoodSelect={handleMoodSelect} />
+                                   <button onClick={() => setShowBreathing(true)} className="w-full h-[100px] bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-200 dark:border-gray-700 p-6 rounded-3xl flex items-center gap-4 hover:scale-[1.02] transition-transform cursor-pointer group hover:shadow-md">
+                                       <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-colors shadow-sm"><Wind className="w-5 h-5 text-blue-600 dark:text-blue-300" /></div>
+                                       <div className="text-left">
+                                           <h4 className="font-bold text-md text-gray-900 dark:text-white">Breathe</h4>
+                                           <p className="text-xs text-gray-500 dark:text-gray-400">2 min reset</p>
+                                       </div>
                                    </button>
-                                   <button onClick={() => setShowJournal(true)} className="w-full py-4 bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-200 dark:border-gray-700 rounded-xl flex flex-row items-center justify-center gap-2 hover:scale-[1.02] transition-transform cursor-pointer group hover:shadow-md">
-                                       <BookOpen className="w-4 h-4 text-purple-600 dark:text-purple-300" />
-                                       <span className="font-bold text-xs text-gray-900 dark:text-white">Thoughts</span>
+                                   <button onClick={() => setShowJournal(true)} className="w-full h-[100px] bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-200 dark:border-gray-700 p-6 rounded-3xl flex items-center gap-4 hover:scale-[1.02] transition-transform cursor-pointer group hover:shadow-md">
+                                       <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white transition-colors shadow-sm"><BookOpen className="w-5 h-5 text-purple-600 dark:text-purple-300" /></div>
+                                       <div className="text-left">
+                                           <h4 className="font-bold text-md text-gray-900 dark:text-white">Journal</h4>
+                                           <p className="text-xs text-gray-500 dark:text-gray-400">Log thoughts</p>
+                                       </div>
                                    </button>
                                </div>
                           </div>
                       </CollapsibleSection>
 
                       {/* Specialists Grid */}
-                      <div className="relative">
+                      <div className="relative pb-20">
                           <div className="flex justify-between items-end mb-6 px-2">
                               <h3 className="font-black text-2xl text-gray-900 dark:text-white">Your Care Team</h3>
                               <span className="text-xs font-bold bg-white dark:bg-gray-800 dark:text-gray-300 px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700">Live 24/7</span>
                           </div>
+                          {/* 2 Cols Mobile, 3 Cols Desktop */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                               {loadingCompanions ? [1,2,3].map(i => <div key={i} className="h-72 bg-gray-200/50 dark:bg-gray-800 rounded-3xl animate-pulse"></div>) : (
                                   filteredCompanions.map(c => (
@@ -1155,6 +1143,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                   ))
                               )}
                           </div>
+                          
+                          {/* AVAILABILITY BANNER */}
                           <div className="mt-8 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl text-center animate-in slide-in-from-bottom-5 fade-in duration-700">
                               <div className="flex items-center justify-center gap-2 mb-1">
                                   <Info className="w-4 h-4 text-yellow-600 dark:text-yellow-500" />
@@ -1168,7 +1158,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                   </div>
               )}
               {activeTab === 'history' && (
-                  <div className="space-y-6 flex-1">
+                  <div className="space-y-6">
                       <h2 className="text-2xl font-black mb-6 dark:text-white">Transaction History</h2>
                       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-sm">
                           {transactions.length === 0 ? (
@@ -1199,7 +1189,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                   </div>
               )}
               {activeTab === 'settings' && (
-                  <div className="space-y-8 animate-in fade-in flex-1">
+                  <div className="space-y-8 animate-in fade-in">
                       <h2 className="text-2xl font-black mb-6 dark:text-white">Account Settings</h2>
                       
                       {/* Profile Card */}
@@ -1273,61 +1263,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
               )}
           </div>
       </div>
-
-      {/* FULL WIDTH STICKY FOOTER */}
-      <footer className="w-full bg-black text-white py-16 px-6 md:px-10 border-t border-gray-800 z-20">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
-              <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
-                          <Heart className="w-5 h-5 fill-black text-black" />
-                      </div>
-                      <span className="text-xl font-bold tracking-tight">Peutic</span>
-                  </div>
-                  <p className="text-gray-500 text-sm leading-relaxed">
-                      Pioneering the future of emotional support with human connection and AI precision. Secure, private, and always available.
-                  </p>
-                  <div className="flex gap-4">
-                      <button className="text-gray-500 hover:text-white transition-colors"><Twitter className="w-5 h-5"/></button>
-                      <button className="text-gray-500 hover:text-white transition-colors"><Instagram className="w-5 h-5"/></button>
-                      <button className="text-gray-500 hover:text-white transition-colors"><Linkedin className="w-5 h-5"/></button>
-                  </div>
-              </div>
-              
-              <div>
-                  <h4 className="font-bold mb-6 text-sm uppercase tracking-wider text-gray-400">Company</h4>
-                  <ul className="space-y-3 text-sm text-gray-500">
-                      <li><Link to="/about" className="hover:text-yellow-500 transition-colors">About Us</Link></li>
-                      <li><Link to="/press" className="hover:text-yellow-500 transition-colors">Press</Link></li>
-                  </ul>
-              </div>
-
-              <div>
-                  <h4 className="font-bold mb-6 text-sm uppercase tracking-wider text-gray-400">Support</h4>
-                  <ul className="space-y-3 text-sm text-gray-500">
-                      <li><Link to="/support" className="hover:text-yellow-500 transition-colors">Help Center</Link></li>
-                      <li><Link to="/safety" className="hover:text-yellow-500 transition-colors">Safety Standards</Link></li>
-                      <li><Link to="/crisis" className="hover:text-yellow-500 transition-colors text-red-500 font-bold">Crisis Resources</Link></li>
-                  </ul>
-              </div>
-
-              <div>
-                  <h4 className="font-bold mb-6 text-sm uppercase tracking-wider text-gray-400">Legal</h4>
-                  <ul className="space-y-3 text-sm text-gray-500">
-                      <li><Link to="/privacy" className="hover:text-yellow-500 transition-colors">Privacy Policy</Link></li>
-                      <li><Link to="/terms" className="hover:text-yellow-500 transition-colors">Terms of Service</Link></li>
-                  </ul>
-              </div>
-          </div>
-          
-          <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-gray-900 flex flex-col md:flex-row justify-between items-center text-xs text-gray-600">
-              <p>&copy; 2025 Peutic Inc. HIPAA Compliant.</p>
-              <div className="flex items-center gap-2 mt-4 md:mt-0">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span>Systems Operational</span>
-              </div>
-          </div>
-      </footer>
       
       {/* Modals - HIGHEST Z-INDEX */}
       {showPayment && <PaymentModal onClose={() => setShowPayment(false)} onSuccess={handlePaymentSuccess} initialError={paymentError} />}
