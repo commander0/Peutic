@@ -1,19 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
-import { Shield, Heart, Star, Clock, CheckCircle, ArrowRight, Lock, Globe, ChevronDown, Play, MessageCircle, Signal, Cookie, Award, CreditCard } from 'lucide-react';
+import { Shield, Heart, CheckCircle, ArrowRight, Star, Globe, ShieldCheck, Sparkles, Cookie, Instagram, Twitter, Linkedin, Play, MessageCircle } from 'lucide-react';
 import { LanguageCode, getTranslation } from '../services/i18n';
 import { Link } from 'react-router-dom';
 import { Database, STABLE_AVATAR_POOL, INITIAL_COMPANIONS } from '../services/database';
 import { Companion } from '../types';
 
-// --- STATIC SVG COMPONENTS ---
-const LogoTechCrunch = () => ( <svg viewBox="0 0 100 20" className="h-6 md:h-8 w-auto fill-current text-gray-400 hover:text-black transition-colors"><path d="M10,0 h10 v20 h-10 z M25,0 h5 v20 h-5 z M35,0 h15 v5 h-15 z M35,15 h15 v5 h-15 z" /><text x="60" y="16" fontFamily="sans-serif" fontWeight="bold" fontSize="16">TechCrunch</text></svg> );
-const LogoNYT = () => ( <svg viewBox="0 0 200 30" className="h-6 md:h-8 w-auto fill-current text-gray-400 hover:text-black transition-colors"><text x="0" y="22" fontFamily="serif" fontWeight="bold" fontSize="24">The New York Times</text></svg> );
-const LogoWired = () => ( <svg viewBox="0 0 100 30" className="h-6 md:h-8 w-auto fill-current text-gray-400 hover:text-black transition-colors"><path d="M0,10 h100 v10 h-100 z" fill="none" /><text x="0" y="22" fontFamily="monospace" fontWeight="bold" fontSize="24">WIRED</text></svg> );
-const LogoForbes = () => ( <svg viewBox="0 0 100 30" className="h-6 md:h-8 w-auto fill-current text-gray-400 hover:text-black transition-colors"><text x="0" y="22" fontFamily="serif" fontWeight="900" fontSize="24">Forbes</text></svg> );
-const LogoBloomberg = () => ( <svg viewBox="0 0 120 30" className="h-6 md:h-8 w-auto fill-current text-gray-400 hover:text-black transition-colors"><text x="0" y="22" fontFamily="sans-serif" fontWeight="bold" fontSize="20">Bloomberg</text></svg> );
-
-// --- ULTRA-ROBUST AVATAR COMPONENT ---
 const AvatarImage: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className }) => {
     const [imgSrc, setImgSrc] = useState(src);
     const [hasError, setHasError] = useState(false);
@@ -42,39 +33,26 @@ interface LandingPageProps {
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
-  const [lang, setLang] = useState<LanguageCode>('en');
-  const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [onlineCount, setOnlineCount] = useState(124);
   const [showCookies, setShowCookies] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [featuredSpecialists, setFeaturedSpecialists] = useState<Companion[]>([]);
-  const [saleMode, setSaleMode] = useState(true);
+  const settings = Database.getSettings();
 
   useEffect(() => {
-    // FIX: Ensure we get the latest settings for pricing
-    const settings = Database.getSettings();
-    setSaleMode(settings.saleMode);
-    
-    setOnlineCount(Math.floor(Math.random() * (300 - 80 + 1)) + 80);
+    setOnlineCount(Math.floor(Math.random() * (300 - 80 + 1)) + 142);
     const timer = setTimeout(() => {
         if (!localStorage.getItem('peutic_cookies_accepted')) {
             setShowCookies(true);
         }
     }, 2000);
 
-    const handleScroll = () => {
-        setScrolled(window.scrollY > 50);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
 
-    // FISHER-YATES SHUFFLE FOR UNIQUE SELECTION
     if (INITIAL_COMPANIONS && INITIAL_COMPANIONS.length > 0) {
-        const pool = [...INITIAL_COMPANIONS];
-        for (let i = pool.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [pool[i], pool[j]] = [pool[j], pool[i]];
-        }
-        setFeaturedSpecialists(pool.slice(0, 5));
+        const pool = [...INITIAL_COMPANIONS].sort(() => Math.random() - 0.5);
+        setFeaturedSpecialists(pool.slice(0, 6));
     }
 
     return () => {
@@ -88,99 +66,140 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
       setShowCookies(false);
   };
 
-  const pressLogos = [LogoTechCrunch, LogoNYT, LogoWired, LogoBloomberg, LogoForbes];
-
   return (
-    <div className="min-h-screen bg-[#FFFBEB] font-sans text-gray-900 overflow-x-hidden relative selection:bg-yellow-200">
-      {/* ... (Sunray & Nav remain the same) ... */}
-      <div className="fixed -top-20 -right-20 w-[800px] h-[800px] pointer-events-none z-0 overflow-hidden opacity-80 mix-blend-soft-light">
-          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-yellow-200 rounded-full blur-[60px] opacity-80"></div>
-          <div className="absolute top-0 right-0 w-full h-full bg-[conic-gradient(from_225deg_at_top_right,rgba(255,255,255,0.8)_0deg,transparent_15deg,rgba(255,223,0,0.3)_30deg,transparent_45deg)] blur-xl transform scale-150 origin-top-right"></div>
-          <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-yellow-400/40 via-orange-200/10 to-transparent"></div>
+    <div className="min-h-screen bg-[#FFFBEB] font-sans text-[#0A0A0A] selection:bg-yellow-200 selection:text-black">
+      
+      {/* Mesh Gradient Background Elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+          <div className="absolute -top-[10%] -right-[5%] w-[60%] h-[60%] bg-yellow-200/40 rounded-full blur-[120px] animate-pulse-slow"></div>
+          <div className="absolute top-[20%] -left-[10%] w-[40%] h-[40%] bg-orange-100/30 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
       </div>
 
-      <nav className={`fixed w-full z-50 border-b transition-all duration-500 ${scrolled ? 'bg-[#FFFBEB]/90 backdrop-blur-xl border-yellow-200/50 shadow-sm' : 'bg-transparent border-transparent'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center gap-6">
-                <div className="flex items-center gap-3">
-                   <div className="w-10 h-10 bg-[#FACC15] rounded-lg flex items-center justify-center shadow-lg shadow-yellow-200/50">
-                       <Heart className="w-6 h-6 fill-black text-black" />
-                   </div>
-                   <span className="text-2xl font-bold tracking-tight">Peutic</span>
-                </div>
-                {/* Lang menu omitted for brevity */}
+      {/* Navigation */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'py-4 bg-[#FFFBEB]/80 backdrop-blur-xl border-b border-yellow-200/30 shadow-sm' : 'py-8 bg-transparent border-transparent'}`}>
+        <div className="max-w-7xl mx-auto px-6 md:px-10 flex justify-between items-center">
+            <div className="flex items-center gap-3 group cursor-pointer">
+               <div className="w-10 h-10 bg-[#FACC15] rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                   <Heart className="w-6 h-6 fill-black text-black" />
+               </div>
+               <span className="text-2xl font-black tracking-tight">Peutic</span>
             </div>
+            
+            <div className="hidden md:flex items-center gap-10">
+                {['Features', 'Specialists', 'Pricing'].map(item => (
+                    <button key={item} className="text-sm font-bold text-gray-500 hover:text-black transition-colors uppercase tracking-widest">{item}</button>
+                ))}
+            </div>
+
             <div className="flex items-center gap-4">
-               <button onClick={() => onLoginClick(false)} className="text-sm font-bold hidden md:flex items-center gap-2 text-black hover:text-gray-600 transition-colors px-4 py-2 rounded-lg hover:bg-black/5">
-                 {getTranslation(lang, 'login')}
+               <button onClick={() => onLoginClick(false)} className="text-sm font-black uppercase tracking-widest hover:opacity-70 transition-opacity px-4">
+                 Sign In
                </button>
-               <button onClick={() => onLoginClick(true)} className="bg-[#FACC15] text-black px-6 py-3 rounded-full font-bold hover:bg-[#EAB308] transition-all hover:scale-105 shadow-lg flex items-center gap-2 active:scale-95">
-                  {getTranslation(lang, 'cta_start')} <ArrowRight className="w-4 h-4" />
+               <button onClick={() => onLoginClick(true)} className="bg-black text-white px-8 py-3.5 rounded-full font-black text-sm uppercase tracking-widest hover:bg-gray-800 transition-all hover:scale-105 active:scale-95 shadow-xl">
+                  Join Now
                </button>
             </div>
-          </div>
         </div>
       </nav>
 
-      {/* HERO - CENTERED */}
-      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="grid lg:grid-cols-2 gap-12 items-center">
-                  <div className="space-y-8 z-10 text-center animate-in slide-in-from-left-10 duration-700 fade-in relative lg:text-center">
-                      <div className="flex flex-wrap justify-center gap-3 mb-4">
-                          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-yellow-200 shadow-sm">
-                              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                              <span className="text-xs font-bold tracking-wide text-gray-600">{onlineCount} SPECIALISTS ONLINE</span>
-                          </div>
-                      </div>
-                      <div className="relative inline-block text-center w-full">
-                          <h1 className="text-4xl md:text-5xl lg:text-7xl font-black tracking-tighter leading-[1.1]">
-                              {getTranslation(lang, 'hero_title_1')} <br/>
-                              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-yellow-600 relative">
-                                  {getTranslation(lang, 'hero_title_2')}
-                              </span>
-                          </h1>
-                      </div>
-                      <p className="text-lg md:text-xl text-gray-600 max-w-lg mx-auto leading-relaxed text-center">
-                          {getTranslation(lang, 'hero_subtitle')}
-                      </p>
-                      <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                          <button onClick={() => onLoginClick(true)} className="px-8 py-4 bg-[#FACC15] text-black rounded-xl font-bold text-lg shadow-xl shadow-yellow-500/10 hover:bg-[#EAB308] transition-all hover:scale-105 flex items-center justify-center gap-3">
-                              <Play className="w-5 h-5 fill-black" /> {getTranslation(lang, 'cta_start')}
-                          </button>
-                      </div>
+      {/* Hero Section */}
+      <section className="relative pt-48 pb-24 md:pt-64 md:pb-40 px-6 z-10">
+          <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-16 items-center">
+              <div className="lg:col-span-7 space-y-10 text-center lg:text-left">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-yellow-200/50 rounded-full shadow-sm">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">{onlineCount} Specialists Ready</span>
                   </div>
-                  <div className="relative lg:h-[600px] w-full flex items-center justify-center mt-12 lg:mt-0 animate-in slide-in-from-right-10 duration-700 fade-in">
-                      <div className="relative w-[280px] md:w-[350px] h-[400px] md:h-[500px] bg-black rounded-[40px] border-8 border-white shadow-2xl overflow-hidden transform rotate-0 md:rotate-[-3deg] md:hover:rotate-0 transition-transform duration-500 z-20">
-                           <AvatarImage src={INITIAL_COMPANIONS[0].imageUrl} className="absolute inset-0 w-full h-full object-cover" alt="Specialist" />
-                           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60"></div>
-                           <div className="absolute top-6 left-6 right-6 flex justify-between items-center">
-                                <div className="bg-black/30 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-2 border border-white/10"><div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div><span className="text-[10px] text-white font-bold tracking-wider">LIVE</span></div>
+                  
+                  <h1 className="text-5xl md:text-7xl lg:text-8xl font-black leading-[1] tracking-tighter">
+                      Humanity <br/> 
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-orange-400">On Demand.</span>
+                  </h1>
+                  
+                  <p className="text-xl md:text-2xl text-gray-500 font-medium max-w-2xl leading-relaxed">
+                      Experience the gold standard in emotional support. Connect instantly via video with a dedicated specialist tailored to your journey.
+                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start pt-4">
+                      <button onClick={() => onLoginClick(true)} className="px-10 py-5 bg-[#FACC15] text-black rounded-full font-black text-lg uppercase tracking-widest shadow-[0_20px_40px_-15px_rgba(250,204,21,0.4)] hover:shadow-[0_25px_50px_-12px_rgba(250,204,21,0.5)] transition-all hover:-translate-y-1 flex items-center justify-center gap-3">
+                         <Play className="w-5 h-5 fill-black" /> Get Started
+                      </button>
+                      <button className="px-10 py-5 bg-white border border-yellow-200 rounded-full font-black text-lg uppercase tracking-widest hover:bg-yellow-50 transition-all flex items-center justify-center gap-3">
+                         View Team
+                      </button>
+                  </div>
+
+                  <div className="flex items-center justify-center lg:justify-start gap-8 pt-10 border-t border-yellow-200/30">
+                      <div className="flex -space-x-3">
+                          {STABLE_AVATAR_POOL.slice(0, 4).map((src, i) => (
+                              <img key={i} src={src} className="w-12 h-12 rounded-full border-4 border-[#FFFBEB] object-cover" alt="User" />
+                          ))}
+                      </div>
+                      <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Trusted by 1M+ Members</p>
+                  </div>
+              </div>
+
+              <div className="lg:col-span-5 relative">
+                  {/* HERO IMAGE CONTAINER: Fixed max-width, centered, subtle opposite slant (-1deg) */}
+                  <div className="relative w-full max-w-sm mx-auto -rotate-1 hover:rotate-0 transition-all duration-500">
+                      <div className="relative aspect-[4/5] bg-gray-900 rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white group">
+                           <img src={INITIAL_COMPANIONS[0].imageUrl} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Ruby" />
+                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20"></div>
+                           <div className="absolute top-8 left-8">
+                                <div className="bg-black/30 backdrop-blur-xl border border-white/20 px-4 py-1.5 rounded-full flex items-center gap-2">
+                                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-white">Live Link Active</span>
+                                </div>
                            </div>
-                           <div className="absolute bottom-8 left-6 right-6">
-                                <h3 className="text-white font-bold text-2xl">Ruby</h3>
-                                <p className="text-gray-300 text-sm">Anxiety Specialist • <span className="text-green-400">Available</span></p>
+                           <div className="absolute bottom-10 left-10 right-10">
+                                <p className="text-yellow-400 text-xs font-black uppercase tracking-[0.3em] mb-2">Primary Specialist</p>
+                                <h3 className="text-white text-4xl font-black mb-1">Ruby</h3>
+                                <p className="text-gray-300 font-medium italic">Anxiety & Emotional Regulation</p>
                            </div>
+                      </div>
+                      {/* Decorative Floating Elements */}
+                      <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-3xl shadow-xl border border-yellow-100 animate-float z-20">
+                          <div className="flex items-center gap-3">
+                              <div className="p-3 bg-green-50 rounded-xl"><CheckCircle className="w-6 h-6 text-green-500" /></div>
+                              <div>
+                                  <p className="text-xs font-black uppercase tracking-widest text-gray-400">Connection</p>
+                                  <p className="text-lg font-black">100% Secure</p>
+                              </div>
+                          </div>
                       </div>
                   </div>
               </div>
           </div>
       </section>
 
-      {/* SPECIALIST ROTATION */}
-      <section className="py-24 bg-[#FFFBEB] z-10 relative">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
-                  <div><h2 className="text-3xl md:text-4xl font-black mb-4">Meet some of the team</h2><p className="text-gray-600 max-w-xl">Real humans. Real empathy.</p></div>
-                  <button onClick={() => onLoginClick(true)} className="flex items-center gap-2 font-bold hover:gap-3 transition-all">View All <ArrowRight className="w-4 h-4" /></button>
+      {/* Featured Specialists Section */}
+      <section className="py-32 px-6 bg-white">
+          <div className="max-w-7xl mx-auto">
+              <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
+                  <div className="max-w-xl text-center md:text-left">
+                      <p className="text-yellow-600 font-black uppercase tracking-[0.4em] text-xs mb-4">The Care Team</p>
+                      <h2 className="text-4xl md:text-6xl font-black leading-[1.1] tracking-tight">Vetted Expertise. <br/> Unmatched Empathy.</h2>
+                  </div>
+                  <button onClick={() => onLoginClick(true)} className="flex items-center gap-3 font-black uppercase tracking-widest text-sm hover:gap-5 transition-all">
+                      Browse Full Roster <ArrowRight className="w-5 h-5 text-[#FACC15]" />
+                  </button>
               </div>
-              <div className="flex flex-wrap justify-center gap-6">
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
                   {featuredSpecialists.map((spec, i) => (
-                      <div key={i} className="w-full sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] bg-white p-4 rounded-3xl shadow-sm border border-yellow-100 hover:shadow-xl transition-all group cursor-pointer transform hover:scale-[1.02]" onClick={() => onLoginClick(true)}>
-                          <div className="aspect-square rounded-2xl overflow-hidden mb-4 relative">
-                              <AvatarImage src={spec.imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={spec.name} />
-                              <div className={`absolute top-3 right-3 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md ${spec.status === 'AVAILABLE' ? 'bg-green-500/80' : 'bg-yellow-500/80'}`}>{spec.status}</div>
+                      <div key={i} onClick={() => onLoginClick(true)} className="group bg-[#FFFBEB] rounded-[2.5rem] p-6 border border-yellow-100 hover:border-yellow-400 hover:shadow-2xl hover:-translate-y-2 transition-all cursor-pointer">
+                          <div className="aspect-square rounded-[1.8rem] overflow-hidden mb-6 shadow-lg">
+                              <AvatarImage src={spec.imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={spec.name} />
+                          </div>
+                          <div className="flex justify-between items-start px-2">
+                              <div>
+                                  <h3 className="text-2xl font-black mb-1">{spec.name}</h3>
+                                  <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">{spec.specialty}</p>
+                              </div>
+                              <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full border border-yellow-100">
+                                  <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                                  <span className="text-xs font-black">{spec.rating}</span>
+                              </div>
                           </div>
                       </div>
                   ))}
@@ -188,43 +207,146 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
           </div>
       </section>
 
-      {/* PRICING */}
-      <section className="py-24 bg-[#FFFBEB] text-center z-10 relative">
-          <div className="max-w-4xl mx-auto px-4">
-              <h2 className="text-4xl md:text-5xl font-black mb-8 tracking-tight">Simple, Transparent Pricing.</h2>
-              <div className="bg-white rounded-3xl p-8 md:p-12 inline-block max-w-lg w-full relative overflow-hidden shadow-xl border border-yellow-200">
-                  {saleMode && <div className="inline-block bg-red-600 text-white px-4 py-1.5 rounded-full text-xs font-black mb-6 animate-pulse tracking-widest">LIFETIME RATE LOCKED IN</div>}
-                  <p className="text-gray-500 font-bold uppercase tracking-widest mb-4">{getTranslation(lang, 'pricing_title')}</p>
-                  
-                  {saleMode ? (
-                       <div className="flex items-baseline justify-center gap-4 mb-4">
-                           <span className="text-3xl text-gray-400 font-bold line-through decoration-red-500 decoration-2 opacity-70">$1.99</span>
-                           <div className="text-6xl md:text-7xl font-black text-black flex items-start gap-1"><span className="text-3xl mt-2">$</span>1.49<span className="text-xl text-gray-400 mt-8">/min</span></div>
-                       </div>
-                  ) : (
-                       <div className="flex items-baseline justify-center gap-4 mb-4">
-                           <div className="text-6xl md:text-7xl font-black text-black flex items-start gap-1"><span className="text-3xl mt-2">$</span>1.99<span className="text-xl text-gray-400 mt-8">/min</span></div>
-                       </div>
-                  )}
-
-                  <p className="text-gray-500 mb-8">{saleMode ? "Sign up today to grandfather this exclusive rate forever." : "Premium quality, affordable care."}</p>
-                  <ul className="text-left space-y-3 mb-8 max-w-xs mx-auto text-gray-600">
-                      <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-green-500" /> <span>No subscription fees</span></li>
-                      <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-green-500" /> <span>HD Video & Audio</span></li>
-                      <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-green-500" /> <span>24/7 Availability</span></li>
-                  </ul>
-                  <button onClick={() => onLoginClick(true)} className="w-full bg-[#FACC15] text-black py-4 rounded-xl font-bold hover:bg-[#EAB308] transition-transform hover:scale-105 shadow-lg shadow-yellow-500/20">
-                      {saleMode ? "Lock In $1.49 Rate Now" : "Get Started"}
-                  </button>
+      {/* Trust & Security Banner */}
+      <section className="py-20 bg-black text-white relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
+          <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-12 text-center md:text-left">
+              <div className="flex items-center gap-6">
+                  <ShieldCheck className="w-16 h-16 text-yellow-500" />
+                  <div>
+                      <h3 className="text-2xl font-black tracking-tight mb-2">HIPAA Compliant Infrastructure</h3>
+                      <p className="text-gray-500 font-medium">End-to-end 256-bit encryption. Your sessions belong to you alone.</p>
+                  </div>
+              </div>
+              <div className="flex gap-12">
+                  <div className="text-center">
+                      <p className="text-3xl font-black mb-1">99.9%</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-600">Uptime</p>
+                  </div>
+                  <div className="text-center">
+                      <p className="text-3xl font-black mb-1">0%</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-600">Data Sharing</p>
+                  </div>
+                  <div className="text-center">
+                      <p className="text-3xl font-black mb-1">AES</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-600">Encrypted</p>
+                  </div>
               </div>
           </div>
       </section>
 
-      {/* Footer & Cookies remain similar */}
+      {/* Pricing Section */}
+      <section className="py-32 px-6">
+          <div className="max-w-5xl mx-auto">
+              <div className="bg-black text-white rounded-[4rem] p-12 md:p-24 text-center relative overflow-hidden shadow-2xl">
+                  {/* Mesh Gradient Inside Black Box */}
+                  <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-yellow-500/10 blur-[80px] pointer-events-none"></div>
+                  
+                  <div className="relative z-10 space-y-8">
+                      <p className="text-yellow-500 font-black uppercase tracking-[0.4em] text-xs">Premium Access</p>
+                      <h2 className="text-5xl md:text-7xl font-black tracking-tighter">Pay only for clarity.</h2>
+                      
+                      <div className="flex flex-col items-center justify-center gap-4 py-8">
+                           {settings.saleMode ? (
+                               <div className="flex items-baseline gap-6">
+                                   <span className="text-4xl text-gray-600 font-black line-through opacity-50 decoration-red-500">$1.99</span>
+                                   <div className="text-8xl md:text-9xl font-black text-white flex items-start gap-2">
+                                      <span className="text-4xl mt-6">$</span>1.49<span className="text-2xl text-gray-500 mt-20">/min</span>
+                                   </div>
+                               </div>
+                           ) : (
+                               <div className="text-8xl md:text-9xl font-black text-white flex items-start gap-2">
+                                  <span className="text-4xl mt-6">$</span>1.99<span className="text-2xl text-gray-500 mt-20">/min</span>
+                               </div>
+                           )}
+                           {settings.saleMode && <div className="bg-yellow-500 text-black px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest animate-pulse">Lifetime Rate Locked</div>}
+                      </div>
+
+                      <p className="text-gray-400 text-lg max-w-xl mx-auto font-medium">
+                          No subscriptions. No hidden fees. Instant access to the world's most elite specialists 24/7.
+                      </p>
+
+                      <button onClick={() => onLoginClick(true)} className="bg-white text-black px-12 py-5 rounded-full font-black text-xl uppercase tracking-widest hover:bg-yellow-500 transition-all hover:scale-105 shadow-2xl">
+                          Start Session Now
+                      </button>
+                  </div>
+              </div>
+          </div>
+      </section>
+
+      {/* High-End Footer */}
+      <footer className="bg-[#0A0A0A] text-white py-24 px-6 md:px-10 border-t border-gray-900 relative z-20">
+          <div className="max-w-7xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-16 mb-20">
+                  <div className="md:col-span-5 space-y-8">
+                      <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-yellow-500 rounded-xl flex items-center justify-center">
+                              <Heart className="w-6 h-6 fill-black text-black" />
+                          </div>
+                          <span className="text-2xl font-black tracking-tight">Peutic</span>
+                      </div>
+                      <p className="text-gray-500 text-lg leading-relaxed max-w-md">
+                          Connecting the disconnected through elite-level human specialists and cutting-edge secure technology.
+                      </p>
+                      <div className="flex gap-6">
+                          {[Twitter, Instagram, Linkedin].map((Icon, i) => (
+                              <button key={i} className="text-gray-500 hover:text-white transition-colors hover:scale-110 transform"><Icon className="w-6 h-6"/></button>
+                          ))}
+                      </div>
+                  </div>
+                  
+                  <div className="md:col-span-2">
+                      <h4 className="font-black mb-8 text-[10px] uppercase tracking-[0.3em] text-gray-600">Global</h4>
+                      <ul className="space-y-4 text-sm font-bold text-gray-400">
+                          <li><Link to="/about" className="hover:text-yellow-500 transition-colors">About</Link></li>
+                          <li><Link to="/press" className="hover:text-yellow-500 transition-colors">Media</Link></li>
+                      </ul>
+                  </div>
+
+                  <div className="md:col-span-2">
+                      <h4 className="font-black mb-8 text-[10px] uppercase tracking-[0.3em] text-gray-600">Support</h4>
+                      <ul className="space-y-4 text-sm font-bold text-gray-400">
+                          <li><Link to="/support" className="hover:text-yellow-500 transition-colors">Help Center</Link></li>
+                          <li><Link to="/safety" className="hover:text-yellow-500 transition-colors">Safety Standards</Link></li>
+                          <li><Link to="/crisis" className="text-red-500 hover:text-red-400 transition-colors">Crisis Hub</Link></li>
+                      </ul>
+                  </div>
+
+                  <div className="md:col-span-3">
+                      <h4 className="font-black mb-8 text-[10px] uppercase tracking-[0.3em] text-gray-600">Regulatory</h4>
+                      <ul className="space-y-4 text-sm font-bold text-gray-400">
+                          <li><Link to="/privacy" className="hover:text-yellow-500 transition-colors">Privacy Policy</Link></li>
+                          <li><Link to="/terms" className="hover:text-yellow-500 transition-colors">Terms of Service</Link></li>
+                          <li><button onClick={() => setShowCookies(true)} className="hover:text-yellow-500 transition-colors">Cookie Controls</button></li>
+                      </ul>
+                  </div>
+              </div>
+              
+              <div className="pt-10 border-t border-gray-900 flex flex-col md:flex-row justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] text-gray-600">
+                  <p>&copy; 2025 Peutic Global Inc. | ISO 27001 Certified</p>
+                  <div className="flex items-center gap-3 mt-4 md:mt-0">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span>Network Optimal</span>
+                  </div>
+              </div>
+          </div>
+      </footer>
+
+      {showCookies && (
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-2xl bg-black text-white p-6 z-[100] rounded-[2rem] border border-gray-800 shadow-2xl animate-in slide-in-from-bottom-5">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                  <div className="flex items-center gap-4">
+                      <Cookie className="w-10 h-10 text-yellow-500" />
+                      <p className="text-xs font-bold text-gray-400 leading-relaxed uppercase tracking-wider">Secure connectivity cookies are active to ensure low-latency video. <Link to="/privacy" className="text-white underline">Policy</Link></p>
+                  </div>
+                  <div className="flex gap-4">
+                      <button onClick={acceptCookies} className="px-8 py-3 bg-white text-black rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-yellow-50 transition-all">Accept</button>
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 };
-
-function CreditCardIcon(props: any) { return <svg {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>; }
 
 export default LandingPage;
