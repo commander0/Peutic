@@ -1,0 +1,8 @@
+{
+  "name": "Peutic",
+  "description": "A premium, 24/7 virtual companion platform providing tailored human-like connection and support.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

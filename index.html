@@ -1,1 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="referrer" content="origin-when-cross-origin" />
+    
+    <!-- SEO & Social Media Metadata -->
+    <title>Peutic | Premium Human Connection</title>
+    <meta name="description" content="Experience the gold standard in emotional support. Connect instantly via video with a dedicated specialist tailored just for you. 24/7 Availability." />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23FACC15'/%3E%3Cpath d='M50 85 C50 85 20 58 20 38 C20 22 38 18 50 30 C62 18 80 22 80 38 C80 58 50 85 50 85 Z' fill='%23000000'/%3E%3C/svg%3E" />
 
+    <!-- External Scripts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Manrope', 'sans-serif'],
+            },
+            colors: {
+              peutic: {
+                gold: '#FFD700',
+                yellow: '#FACC15',
+                black: '#0A0A0A',
+                charcoal: '#171717',
+                gray: '#262626',
+              }
+            },
+            animation: {
+              'float': 'float 6s ease-in-out infinite',
+              'pulse-glow': 'pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'marquee': 'marquee 25s linear infinite',
+              'slow-spin': 'spin 20s linear infinite',
+              'breathe': 'breathe 8s ease-in-out infinite',
+              'in': 'in 0.5s ease-out',
+              'fade-in': 'fade-in 0.5s ease-out',
+              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            },
+            keyframes: {
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
+              },
+              'pulse-glow': {
+                '0%, 100%': { opacity: '1', boxShadow: '0 0 0 0px rgba(250, 204, 21, 0.7)' },
+                '50%': { opacity: '.8', boxShadow: '0 0 0 10px rgba(250, 204, 21, 0)' },
+              },
+              marquee: {
+                '0%': { transform: 'translateX(0%)' },
+                '100%': { transform: 'translateX(-100%)' },
+              },
+              breathe: {
+                '0%, 100%': { transform: 'scale(1)', opacity: '0.6' },
+                '50%': { transform: 'scale(1.5)', opacity: '0.3' },
+              },
+              in: {
+                  '0%': { opacity: '0', transform: 'translateY(20px)' },
+                  '100%': { opacity: '1', transform: 'translateY(0)' }
+              },
+              'fade-in': {
+                  '0%': { opacity: '0' },
+                  '100%': { opacity: '1' }
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        background-color: #FFFBEB;
+        color: #0A0A0A;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+      .dark body {
+        background-color: #0A0A0A;
+        color: #F3F4F6;
+      }
+      .StripeElement {
+        width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 0.75rem; background-color: white;
+      }
+    </style>
+    <link rel="stylesheet" href="/index.css">
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.11.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "recharts": "https://esm.sh/recharts@^3.6.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+    "vite": "https://esm.sh/vite@^7.3.0",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.89.0"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
