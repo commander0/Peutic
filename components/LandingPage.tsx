@@ -140,7 +140,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
               </div>
 
               <div className="lg:col-span-5 relative">
-                  <div className="relative w-[85%] mx-auto rotate-3 hover:rotate-0 transition-all duration-500">
+                  {/* HERO IMAGE CONTAINER: Fixed max-width, centered, subtle opposite slant (-1deg) */}
+                  <div className="relative w-full max-w-sm mx-auto -rotate-1 hover:rotate-0 transition-all duration-500">
                       <div className="relative aspect-[4/5] bg-gray-900 rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white group">
                            <img src={INITIAL_COMPANIONS[0].imageUrl} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Ruby" />
                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20"></div>
@@ -280,7 +281,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                   <div className="md:col-span-5 space-y-8">
                       <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-yellow-500 rounded-xl flex items-center justify-center">
-                              <Heart className="w-6 h-6 fill-black text-black" />
+                              <Heart className="w-5 h-5 fill-black text-black" />
                           </div>
                           <span className="text-2xl font-black tracking-tight uppercase">Peutic</span>
                       </div>
@@ -339,7 +340,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                       <p className="text-xs font-bold text-gray-400 leading-relaxed uppercase tracking-wider">Secure connectivity cookies are active to ensure low-latency video. <Link to="/privacy" className="text-white underline">Policy</Link></p>
                   </div>
                   <div className="flex gap-4">
-                      <button onClick={acceptCookies} className="px-8 py-3 bg-white text-black rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-yellow-500 transition-all">Accept</button>
+                      <button onClick={acceptCookies} className="px-8 py-3 bg-white text-black rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-yellow-50 transition-all">Accept</button>
                   </div>
               </div>
           </div>
