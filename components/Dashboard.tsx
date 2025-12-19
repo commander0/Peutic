@@ -10,7 +10,7 @@ import {
   Twitter, Instagram, Linkedin
 } from 'lucide-react';
 import { Database, STABLE_AVATAR_POOL } from '../services/database';
-import { generateAffirmation } from '../services/geminiService';
+import { generateAffirmation, generateDailyInsight } from '../services/geminiService';
 
 interface DashboardProps {
   user: User;
@@ -141,7 +141,7 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [gallery, setGallery] = useState<ArtEntry[]>([]);
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(true); // DEFAULT OPEN
 
     useEffect(() => {
         setGallery(Database.getUserArt(userId));
@@ -426,7 +426,7 @@ const MindfulMatchGame: React.FC<{ onWin?: () => void }> = ({ onWin }) => {
 
     return (
         <div className="bg-gradient-to-br from-yellow-50/50 to-white dark:from-gray-800 dark:to-gray-900 w-full h-full flex flex-col rounded-2xl p-2 border border-yellow-100 dark:border-gray-700 overflow-hidden relative shadow-inner">
-            <div className="flex justify-between items-center mb-1 z-10 px-1 pt-1">
+            <div className="flex justify-between items-center mb-2 z-10 px-2 pt-1 shrink-0">
                 <h3 className="font-black text-sm text-yellow-900 dark:text-yellow-500 uppercase tracking-widest">Mindful Match</h3>
                 <button onClick={initGame} className="p-1 hover:bg-yellow-100 dark:hover:bg-gray-700 rounded-full transition-colors"><RefreshCw className="w-4 h-4 text-yellow-600 dark:text-yellow-400" /></button>
             </div>
@@ -437,18 +437,20 @@ const MindfulMatchGame: React.FC<{ onWin?: () => void }> = ({ onWin }) => {
                     <button onClick={initGame} className="mt-4 bg-black dark:bg-white dark:text-black text-white px-6 py-2 rounded-full font-bold hover:scale-105 transition-transform">Replay</button>
                 </div>
             ) : (
-                <div className="grid grid-cols-4 grid-rows-4 gap-2 h-full p-0 flex-1">
-                    {cards.map((card, i) => {
-                        const isVisible = flipped.includes(i) || solved.includes(i);
-                        const Icon = card.icon;
-                        return (
-                            <div key={i} className="w-full h-full">
-                                <button onClick={() => handleCardClick(i)} className={`w-full h-full rounded-lg flex items-center justify-center transition-all duration-300 ${isVisible ? 'bg-white dark:bg-gray-700 border-2 border-yellow-400 shadow-lg' : 'bg-gray-900 dark:bg-gray-800 shadow-md'}`}>
-                                    {isVisible && <Icon className="w-6 h-6 text-yellow-500 animate-in zoom-in" />}
-                                </button>
-                            </div>
-                        );
-                    })}
+                <div className="flex-1 flex items-center justify-center min-h-0">
+                    <div className="grid grid-cols-4 grid-rows-4 gap-2 w-full aspect-square">
+                        {cards.map((card, i) => {
+                            const isVisible = flipped.includes(i) || solved.includes(i);
+                            const Icon = card.icon;
+                            return (
+                                <div key={i} className="w-full h-full">
+                                    <button onClick={() => handleCardClick(i)} className={`w-full h-full rounded-lg flex items-center justify-center transition-all duration-300 ${isVisible ? 'bg-white dark:bg-gray-700 border-2 border-yellow-400 shadow-lg' : 'bg-gray-900 dark:bg-gray-800 shadow-md'}`}>
+                                        {isVisible && <Icon className="w-5 h-5 text-yellow-500 animate-in zoom-in" />}
+                                    </button>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             )}
         </div>
@@ -458,7 +460,7 @@ const MindfulMatchGame: React.FC<{ onWin?: () => void }> = ({ onWin }) => {
 // --- CLOUD HOP ---
 const CloudHopGame: React.FC = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const requestRef = useRef<number>();
+    const requestRef = useRef<number | undefined>(undefined);
     const [score, setScore] = useState(0);
     const [gameOver, setGameOver] = useState(false);
     const [gameStarted, setGameStarted] = useState(false);
@@ -489,12 +491,9 @@ const CloudHopGame: React.FC = () => {
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
 
-        // ERROR FIX: Removed roundRect as it's not supported in all browsers/webviews yet
         const drawCloud = (x: number, y: number, w: number, h: number) => {
              ctx.fillStyle = 'white';
-             // Fallback rectangle for base
              ctx.fillRect(x, y, w, h);
-             // Circles for fluffy look
              ctx.beginPath(); ctx.arc(x+10, y, 15, 0, Math.PI*2); ctx.fill();
              ctx.beginPath(); ctx.arc(x+w-10, y, 15, 0, Math.PI*2); ctx.fill();
              ctx.beginPath(); ctx.arc(x+w/2, y-5, 20, 0, Math.PI*2); ctx.fill();
@@ -526,7 +525,7 @@ const CloudHopGame: React.FC = () => {
             if (p.y > 450) { 
                 setGameOver(true); 
                 setGameStarted(false); 
-                if (requestRef.current) cancelAnimationFrame(requestRef.current);
+                if (requestRef.current !== undefined) cancelAnimationFrame(requestRef.current);
                 return; 
             }
 
@@ -553,7 +552,7 @@ const CloudHopGame: React.FC = () => {
         update();
 
         return () => { 
-            if (requestRef.current) cancelAnimationFrame(requestRef.current);
+            if (requestRef.current !== undefined) cancelAnimationFrame(requestRef.current);
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
@@ -594,9 +593,11 @@ const BreathingExercise: React.FC<{ onClose: () => void; userId: string }> = ({ 
     const [timeLeft, setTimeLeft] = useState(120); 
     const [isPlaying, setIsPlaying] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);
-    const [duration, setDuration] = useState(0); // Track session length
+    const [duration, setDuration] = useState(0); 
     
-    // Stable, high-quality ambient track from Mixkit CDN
+    // Use refs for closure-safe access inside intervals
+    const stateRef = useRef({ timeLeft: 120, duration: 0 });
+    
     const AMBIENT_SONG_URL = "https://assets.mixkit.co/active_storage/sfx/1196/1196-preview.mp3"; 
 
     useEffect(() => {
@@ -607,7 +608,7 @@ const BreathingExercise: React.FC<{ onClose: () => void; userId: string }> = ({ 
                 playPromise
                     .then(() => setIsPlaying(true))
                     .catch(error => {
-                        console.log("Autoplay blocked, waiting for interaction", error);
+                        console.log("Autoplay blocked", error);
                         setIsPlaying(false);
                     });
             }
@@ -621,14 +622,20 @@ const BreathingExercise: React.FC<{ onClose: () => void; userId: string }> = ({ 
         }, 4000);
 
         const timer = setInterval(() => {
-            setDuration(d => d + 1);
-            setTimeLeft(p => { 
-                if (p <= 1) { 
-                    handleFinish();
-                    return 0; 
-                } 
-                return p - 1; 
-            });
+            stateRef.current.duration += 1;
+            setDuration(stateRef.current.duration);
+            
+            stateRef.current.timeLeft -= 1;
+            setTimeLeft(stateRef.current.timeLeft);
+
+            if (stateRef.current.timeLeft <= 0) {
+                // Finish Logic Inlined
+                Database.recordBreathSession(userId, 120 - stateRef.current.timeLeft + stateRef.current.duration);
+                Database.setBreathingCooldown(Date.now() + 5 * 60 * 1000); 
+                clearInterval(loop);
+                clearInterval(timer);
+                onClose();
+            }
         }, 1000);
 
         return () => { 
@@ -639,18 +646,18 @@ const BreathingExercise: React.FC<{ onClose: () => void; userId: string }> = ({ 
                 audioRef.current.currentTime = 0;
             }
         };
-    }, []);
-
-    const handleFinish = () => {
-        Database.recordBreathSession(userId, 120 - timeLeft + duration);
-        Database.setBreathingCooldown(Date.now() + 5 * 60 * 1000); 
-        onClose();
-    };
+    }, []); 
 
     const manualPlay = () => {
         if (audioRef.current) {
             audioRef.current.play().then(() => setIsPlaying(true));
         }
+    };
+    
+    const finishEarly = () => {
+         Database.recordBreathSession(userId, 120 - stateRef.current.timeLeft + stateRef.current.duration);
+         Database.setBreathingCooldown(Date.now() + 5 * 60 * 1000); 
+         onClose();
     };
 
     return (
@@ -658,9 +665,9 @@ const BreathingExercise: React.FC<{ onClose: () => void; userId: string }> = ({ 
              <audio ref={audioRef} src={AMBIENT_SONG_URL} loop />
 
              <div className="relative w-full max-w-md aspect-square flex items-center justify-center flex-col">
-                <button onClick={handleFinish} className="absolute top-0 right-0 text-white/50 hover:text-white"><X className="w-8 h-8" /></button>
-                <div className="absolute inset-0 bg-peutic-yellow/20 rounded-full animate-breathe"></div>
-                <div className="absolute inset-12 bg-peutic-yellow/40 rounded-full animate-breathe" style={{ animationDelay: '1s' }}></div>
+                <button onClick={finishEarly} className="absolute top-0 right-0 text-white/50 hover:text-white"><X className="w-8 h-8" /></button>
+                <div className="absolute inset-0 bg-yellow-400/20 dark:bg-yellow-500/20 rounded-full animate-breathe"></div>
+                <div className="absolute inset-12 bg-yellow-400/40 dark:bg-yellow-500/40 rounded-full animate-breathe" style={{ animationDelay: '1s' }}></div>
                 <div className="relative z-10 text-center text-white">
                     <h2 className="text-4xl font-bold mb-2">{text}</h2>
                     <div className="inline-block px-4 py-1 rounded-full bg-white/10 border border-white/20 text-sm font-mono">{Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</div>
@@ -732,6 +739,13 @@ const PaymentModal: React.FC<{ onClose: () => void; onSuccess: (amount: number, 
         setProcessing(true);
         setError(null);
         if (!amount || amount <= 0) { setError("Please enter a valid amount."); setProcessing(false); return; }
+        
+        if (!stripeRef.current || !cardElementRef.current) {
+            setError("Stripe not initialized.");
+            setProcessing(false);
+            return;
+        }
+
         try {
             const result = await stripeRef.current.createToken(cardElementRef.current);
             if (result.error) { setError(result.error.message); setProcessing(false); } else {
@@ -924,34 +938,43 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     if (dbUser) { setBalance(dbUser.balance); setDashboardUser(dbUser); }
     
     // Refresh Transactions
-    const txs = Database.getUserTransactions(user.id);
-    setTransactions(txs);
+    // Check if user.id is valid
+    if (user && user.id) {
+        const txs = Database.getUserTransactions(user.id);
+        setTransactions(txs);
 
-    // Refresh Weekly Progress
-    const progress = Database.getWeeklyProgress(user.id);
-    setWeeklyGoal(progress.current);
-    setWeeklyTarget(progress.target);
-    setWeeklyMessage(progress.message);
+        // Refresh Weekly Progress
+        const progress = Database.getWeeklyProgress(user.id);
+        setWeeklyGoal(progress.current);
+        setWeeklyTarget(progress.target);
+        setWeeklyMessage(progress.message);
+    }
 
     setCompanions(Database.getCompanions());
   };
   
   useEffect(() => {
       refreshData();
-      const interval = setInterval(refreshData, 5000);
-      setTimeout(() => setLoadingCompanions(false), 1000);
+      const interval = setInterval(() => refreshData(), 5000);
+      const timer = setTimeout(() => setLoadingCompanions(false), 1000);
       
-      const insights = [
-          "Take a moment to breathe today.",
-          "You are stronger than you think.",
-          "Clarity comes in moments of calm.",
-          "Your journey is valid.",
-          "We are here for you, 24/7."
-      ];
-      setDailyInsight(insights[Math.floor(Math.random() * insights.length)]);
+      const fetchInsight = async () => {
+        try {
+            if (user && user.name) {
+                const insight = await generateDailyInsight(user.name);
+                setDailyInsight(insight);
+            }
+        } catch (e) {
+            setDailyInsight("We are here for you.");
+        }
+      };
+      fetchInsight();
 
-      return () => clearInterval(interval);
-  }, [user.id]);
+      return () => {
+          clearInterval(interval);
+          clearTimeout(timer);
+      };
+  }, [user.id, user.name]);
 
   const handlePaymentSuccess = (minutesAdded: number, cost: number) => {
       Database.topUpWallet(minutesAdded, cost);
@@ -1034,7 +1057,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
       {/* Main Container - FLEX 1 to push footer */}
       <div className="max-w-7xl w-full mx-auto px-6 pt-6 md:px-10 md:pt-10 flex-1 flex flex-col md:flex-row gap-10 relative z-10">
           {/* Sidebar */}
-          <div className="w-full md:w-72 space-y-6">
+          <div className="w-full md:w-72 shrink-0 space-y-6">
               <div className="bg-[#FFFBEB] dark:bg-gray-900 p-8 rounded-3xl text-center relative group shadow-sm border border-yellow-200 dark:border-gray-800 transition-colors">
                   <button onClick={() => setShowProfile(true)} className="absolute top-4 right-4 p-2 bg-yellow-100 dark:bg-gray-800 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm hover:scale-110"><Edit2 className="w-3 h-3 dark:text-white" /></button>
                   <div className="w-24 h-24 mx-auto mb-4 rounded-full p-1 bg-gradient-to-br from-yellow-400 to-orange-300 shadow-lg">
@@ -1085,7 +1108,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 flex flex-col pb-10">
+          <div className="flex-1 min-w-0 flex flex-col pb-10">
               {activeTab === 'hub' && (
                   <div className="space-y-8 animate-in fade-in flex-1">
                       {/* Insight */}
@@ -1097,20 +1120,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                       <CollapsibleSection title="Games & Tools" icon={Gamepad2}>
                           <div className="space-y-4">
-                               {/* FIXED GAMES SECTION: 
-                                   - flex flex-col md:flex-row: Arrange items vertically on mobile and horizontally on desktop.
-                                   - items-start: Prevents components from stretching vertically to match each other.
-                                   - gap-6: Adds space between the games.
-                               */}
-                               <div className="flex flex-col md:flex-row gap-6 items-start">
-                                   
-                                   {/* Mindful Match */}
-                                   <div className="w-full md:w-[340px] aspect-square flex-shrink-0">
+                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 justify-center items-start">
+                                   {/* Mindful Match - Removed max-w constraint to fill grid cell properly */}
+                                   <div className="w-full aspect-square mx-auto relative rounded-2xl overflow-hidden border border-yellow-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
                                        <MindfulMatchGame />
                                    </div>
 
                                    {/* Cloud Hop */}
-                                   <div className="w-full md:w-[340px] aspect-square flex-shrink-0">
+                                   <div className="w-full aspect-square mx-auto relative rounded-2xl overflow-hidden border border-yellow-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
                                        <CloudHopGame />
                                    </div>
                                </div>
@@ -1188,7 +1205,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                               <td className="p-4 text-sm font-bold dark:text-gray-300">{new Date(t.date).toLocaleDateString()}</td>
                                               <td className="p-4 text-sm text-gray-600 dark:text-gray-400">{t.description}</td>
                                               <td className={`p-4 text-sm font-bold text-right font-mono ${t.amount > 0 ? 'text-green-600' : 'text-gray-900 dark:text-white'}`}>
-                                                  {t.amount > 0 ? '+' : ''}{t.amount}m {t.cost ? `($${t.cost.toFixed(2)})` : ''}
+                                                  {t.amount > 0 ? '+' : ''}{t.amount}m {t.cost ? `(${t.cost.toFixed(2)})` : ''}
                                               </td>
                                           </tr>
                                       ))}
@@ -1275,52 +1292,52 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
       </div>
 
       {/* FULL WIDTH STICKY FOOTER */}
-      <footer className="w-full bg-black text-white py-16 px-6 md:px-10 border-t border-gray-800 z-20">
+      <footer className="w-full bg-[#FFFBEB] dark:bg-black text-black dark:text-white py-16 px-6 md:px-10 border-t border-yellow-200 dark:border-gray-800 z-20">
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
               <div className="space-y-4">
                   <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
-                          <Heart className="w-5 h-5 fill-black text-black" />
+                      <div className="w-8 h-8 bg-black dark:bg-yellow-500 rounded-lg flex items-center justify-center">
+                          <Heart className="w-5 h-5 fill-[#FACC15] text-[#FACC15] dark:fill-black dark:text-black" />
                       </div>
                       <span className="text-xl font-bold tracking-tight">Peutic</span>
                   </div>
-                  <p className="text-gray-500 text-sm leading-relaxed">
+                  <p className="text-gray-800 dark:text-gray-500 text-sm leading-relaxed">
                       Pioneering the future of emotional support with human connection and AI precision. Secure, private, and always available.
                   </p>
                   <div className="flex gap-4">
-                      <button className="text-gray-500 hover:text-white transition-colors"><Twitter className="w-5 h-5"/></button>
-                      <button className="text-gray-500 hover:text-white transition-colors"><Instagram className="w-5 h-5"/></button>
-                      <button className="text-gray-500 hover:text-white transition-colors"><Linkedin className="w-5 h-5"/></button>
+                      <button className="text-gray-800 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors"><Twitter className="w-5 h-5"/></button>
+                      <button className="text-gray-800 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors"><Instagram className="w-5 h-5"/></button>
+                      <button className="text-gray-800 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors"><Linkedin className="w-5 h-5"/></button>
                   </div>
               </div>
               
               <div>
-                  <h4 className="font-bold mb-6 text-sm uppercase tracking-wider text-gray-400">Company</h4>
-                  <ul className="space-y-3 text-sm text-gray-500">
-                      <li><Link to="/about" className="hover:text-yellow-500 transition-colors">About Us</Link></li>
-                      <li><Link to="/press" className="hover:text-yellow-500 transition-colors">Press</Link></li>
+                  <h4 className="font-bold mb-6 text-sm uppercase tracking-wider text-gray-700 dark:text-gray-400">Company</h4>
+                  <ul className="space-y-3 text-sm text-gray-800 dark:text-gray-500">
+                      <li><Link to="/about" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">About Us</Link></li>
+                      <li><Link to="/press" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Press</Link></li>
                   </ul>
               </div>
 
               <div>
-                  <h4 className="font-bold mb-6 text-sm uppercase tracking-wider text-gray-400">Support</h4>
-                  <ul className="space-y-3 text-sm text-gray-500">
-                      <li><Link to="/support" className="hover:text-yellow-500 transition-colors">Help Center</Link></li>
-                      <li><Link to="/safety" className="hover:text-yellow-500 transition-colors">Safety Standards</Link></li>
-                      <li><Link to="/crisis" className="hover:text-yellow-500 transition-colors text-red-500 font-bold">Crisis Resources</Link></li>
+                  <h4 className="font-bold mb-6 text-sm uppercase tracking-wider text-gray-700 dark:text-gray-400">Support</h4>
+                  <ul className="space-y-3 text-sm text-gray-800 dark:text-gray-500">
+                      <li><Link to="/support" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Help Center</Link></li>
+                      <li><Link to="/safety" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Safety Standards</Link></li>
+                      <li><Link to="/crisis" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors text-red-600 dark:text-red-500 font-bold">Crisis Resources</Link></li>
                   </ul>
               </div>
 
               <div>
-                  <h4 className="font-bold mb-6 text-sm uppercase tracking-wider text-gray-400">Legal</h4>
-                  <ul className="space-y-3 text-sm text-gray-500">
-                      <li><Link to="/privacy" className="hover:text-yellow-500 transition-colors">Privacy Policy</Link></li>
-                      <li><Link to="/terms" className="hover:text-yellow-500 transition-colors">Terms of Service</Link></li>
+                  <h4 className="font-bold mb-6 text-sm uppercase tracking-wider text-gray-700 dark:text-gray-400">Legal</h4>
+                  <ul className="space-y-3 text-sm text-gray-800 dark:text-gray-500">
+                      <li><Link to="/privacy" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Privacy Policy</Link></li>
+                      <li><Link to="/terms" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Terms of Service</Link></li>
                   </ul>
               </div>
           </div>
           
-          <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-gray-900 flex flex-col md:flex-row justify-between items-center text-xs text-gray-600">
+          <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-black/10 dark:border-gray-900 flex flex-col md:flex-row justify-between items-center text-xs text-gray-700 dark:text-gray-600 font-bold uppercase tracking-widest">
               <p>&copy; 2025 Peutic Inc. HIPAA Compliant.</p>
               <div className="flex items-center gap-2 mt-4 md:mt-0">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>

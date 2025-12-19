@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Companion } from '../types';
+import { Companion, SessionFeedback } from '../types';
 import { 
     Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, 
     Loader2, AlertCircle, RefreshCcw, Aperture, Star, CheckCircle, Users, Download, Share2
@@ -299,12 +299,26 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
   const submitFeedbackAndClose = () => {
       const minutesUsed = Math.ceil(duration / 60);
-      if (minutesUsed > 0) {
+      const user = Database.getUser();
+      if (minutesUsed > 0 && user) {
         Database.deductBalance(minutesUsed);
         Database.addTransaction({
             id: `sess_${Date.now()}`, userName: userName, date: new Date().toISOString(),
             amount: -minutesUsed, description: `Session with ${companion.name}`, status: 'COMPLETED'
         });
+        
+        // NEW: Save Feedback for Admin Review
+        const feedback: SessionFeedback = {
+            id: `fb_${Date.now()}`,
+            userId: user.id,
+            userName: userName,
+            companionName: companion.name,
+            rating: rating,
+            tags: feedbackTags,
+            date: new Date().toISOString(),
+            duration: minutesUsed
+        };
+        Database.saveFeedback(feedback);
       }
       onEndSession();
   };

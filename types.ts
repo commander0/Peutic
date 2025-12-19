@@ -115,6 +115,17 @@ export interface PromoCode {
   active: boolean;
 }
 
+export interface SessionFeedback {
+  id: string;
+  userId: string;
+  userName: string;
+  companionName: string;
+  rating: number;
+  tags: string[];
+  date: string;
+  duration: number;
+}
+
 export interface SessionMemory {
   id: string;
   userId: string;

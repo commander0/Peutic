@@ -160,6 +160,11 @@ const MainApp: React.FC = () => {
         } />
 
         {/* Static Pages */}
+        <Route path="/about" element={<StaticPages type="about" />} />
+        <Route path="/press" element={<StaticPages type="press" />} />
+        <Route path="/safety" element={<StaticPages type="safety" />} />
+        <Route path="/crisis" element={<StaticPages type="crisis" />} />
+        
         <Route path="/privacy" element={<StaticPages type="privacy" />} />
         <Route path="/terms" element={<StaticPages type="terms" />} />
         <Route path="/support" element={<StaticPages type="support" />} />

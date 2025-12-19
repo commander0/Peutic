@@ -8,10 +8,11 @@ import {
     Search, Edit2, Ban, Zap, ShieldAlert, 
     Terminal, Globe, AlertOctagon, Megaphone, Menu, X, Gift, Download, Tag,
     Clock, Wifi, WifiOff, Server, Cpu, HardDrive, Eye, Heart, Lock, CheckCircle, AlertTriangle, 
-    FileText, MessageSquare, Repeat, Shield, Plus, Trash2, Send, Power, Image as ImageIcon, RefreshCw, ToggleLeft, ToggleRight
+    FileText, MessageSquare, Repeat, Shield, Plus, Trash2, Send, Power, Image as ImageIcon, RefreshCw, ToggleLeft, ToggleRight,
+    Star
 } from 'lucide-react';
 import { Database, STABLE_AVATAR_POOL } from '../services/database';
-import { User, UserRole, Companion, Transaction, GlobalSettings, SystemLog, ServerMetric, PromoCode } from '../types';
+import { User, UserRole, Companion, Transaction, GlobalSettings, SystemLog, ServerMetric, PromoCode, SessionFeedback } from '../types';
 
 // --- STAT CARD COMPONENT ---
 const StatCard = ({ title, value, icon: Icon, subValue, subLabel, progress }: any) => (
@@ -27,7 +28,7 @@ const StatCard = ({ title, value, icon: Icon, subValue, subLabel, progress }: an
       </div>
       {subValue && (
           <div className="flex items-center gap-2 text-xs">
-              <span className={`font-bold ${subValue.includes('FULL') ? 'text-red-500' : 'text-green-500'}`}>{subValue}</span>
+              <span className={`font-bold ${subValue.toString().includes('FULL') ? 'text-red-500' : subValue.toString().includes('+') ? 'text-green-500' : 'text-gray-300'}`}>{subValue}</span>
               <span className="text-gray-600">{subLabel}</span>
           </div>
       )}
@@ -68,7 +69,7 @@ const AvatarImage: React.FC<{ src: string; alt: string; className?: string }> = 
 };
 
 const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'specialists' | 'financials' | 'marketing' | 'settings' | 'security'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'specialists' | 'financials' | 'marketing' | 'settings' | 'security' | 'quality'>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Real Data States
@@ -78,11 +79,11 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const [settings, setSettings] = useState<GlobalSettings>(Database.getSettings());
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [promos, setPromos] = useState<PromoCode[]>([]);
-  const [metrics, setMetrics] = useState<ServerMetric[]>([]);
+  const [feedback, setFeedback] = useState<SessionFeedback[]>([]);
+  const [queue, setQueue] = useState<string[]>([]);
   
   // Concurrency States
   const [activeCount, setActiveCount] = useState(0);
-  const [queueLength, setQueueLength] = useState(0);
   
   // UI States
   const [searchTerm, setSearchTerm] = useState('');
@@ -114,12 +115,9 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         setSettings(Database.getSettings());
         setLogs(Database.getSystemLogs());
         setPromos(Database.getPromoCodes());
-        
-        // Async Supabase Stats
-        const active = await Database.getActiveSessionCount();
-        // Note: You might need to add getQueueLength to Database class if not present,
-        // or just use a placeholder/estimate for now.
-        setActiveCount(active); 
+        setFeedback(Database.getAllFeedback());
+        setQueue(Database.getQueueList());
+        setActiveCount(Database.getActiveSessionCount());
     };
     refresh();
     const interval = setInterval(refresh, 2000); // 2s refresh for live monitoring
@@ -127,6 +125,9 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   }, []);
 
   const totalRevenue = transactions.filter(t => t.amount > 0).reduce((acc, t) => acc + (t.cost || 0), 0);
+  const avgSatisfaction = feedback.length > 0 
+      ? (feedback.reduce((acc, f) => acc + f.rating, 0) / feedback.length).toFixed(1) 
+      : "5.0";
   
   // LIVE Queue Calculations
   const capacityPercentage = (activeCount / MAX_CONCURRENT_CAPACITY) * 100;
@@ -238,7 +239,10 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
       setBroadcastSubject('');
       setBroadcastBody('');
       
-      setTimeout(() => setBroadcastSent(false), 3000);
+      setTimeout(() => {
+          setBroadcastSent(false);
+          alert(`Simulated email blast sent to ${recipientCount} users.`);
+      }, 1000);
   };
 
   const handleMassReset = () => {
@@ -248,8 +252,11 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
       }
   };
 
-  const handleExportData = (type: 'USERS' | 'LOGS') => {
-      Database.exportData(type);
+  const handleRemoveFromQueue = (userId: string) => {
+      if(confirm("Remove this user from the waiting room?")) {
+          Database.leaveQueue(userId);
+          setQueue(Database.getQueueList());
+      }
   };
 
   const filteredUsers = users.filter(u => {
@@ -284,6 +291,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
           <div className="flex-1 py-6 space-y-1 px-3">
               {[
                   { id: 'overview', icon: Activity, label: 'Mission Control' },
+                  { id: 'quality', icon: Star, label: 'Quality Control' },
                   { id: 'users', icon: Users, label: 'User Database' },
                   { id: 'specialists', icon: Video, label: 'Specialist Ops' },
                   { id: 'financials', icon: DollarSign, label: 'Financials' },
@@ -338,12 +346,84 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                       />
                       
                       <StatCard title="Total Users" value={users.length} icon={Users} subValue={`+${users.filter(u => new Date(u.joinedAt).getDate() === new Date().getDate()).length}`} subLabel="today" />
-                      <StatCard title="System Health" value="99.9%" icon={Server} />
+                      <StatCard title="Avg Satisfaction" value={avgSatisfaction} icon={Star} subValue={avgSatisfaction >= "4.5" ? "EXCELLENT" : "GOOD"} subLabel="Rating" />
+                  </div>
+
+                  {/* QUEUE MANAGEMENT */}
+                  <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                      <h3 className="font-bold text-white text-xl mb-4 flex items-center gap-2"><Clock className="w-5 h-5 text-yellow-500" /> Live Waiting Room</h3>
+                      {queue.length === 0 ? (
+                          <div className="p-8 text-center text-gray-500 text-sm bg-black rounded-xl border border-gray-800 border-dashed">
+                              Waiting Room Empty.
+                          </div>
+                      ) : (
+                          <div className="overflow-x-auto">
+                              <table className="w-full text-left">
+                                  <thead className="bg-black/50 text-gray-500 text-xs uppercase font-bold">
+                                      <tr>
+                                          <th className="p-3">Pos</th>
+                                          <th className="p-3">User ID</th>
+                                          <th className="p-3">Est. Wait</th>
+                                          <th className="p-3 text-right">Actions</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-gray-800 text-sm">
+                                      {queue.map((uid, index) => (
+                                          <tr key={uid}>
+                                              <td className="p-3 font-mono font-bold text-yellow-500">#{index + 1}</td>
+                                              <td className="p-3 text-gray-300 font-mono text-xs">{uid}</td>
+                                              <td className="p-3 text-gray-400">~{index * 3} mins</td>
+                                              <td className="p-3 text-right">
+                                                  <button onClick={() => handleRemoveFromQueue(uid)} className="text-red-500 hover:text-white text-xs font-bold bg-red-900/20 px-2 py-1 rounded">Remove</button>
+                                              </td>
+                                          </tr>
+                                      ))}
+                                  </tbody>
+                              </table>
+                          </div>
+                      )}
                   </div>
               </div>
           )}
 
-          {/* ... (Rest of dashboard remains similar) ... */}
+          {activeTab === 'quality' && (
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                  <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+                      <h3 className="font-bold text-white text-xl">Recent Session Feedback</h3>
+                      <div className="text-xs text-gray-500 font-bold uppercase tracking-wider">Last 50 Sessions</div>
+                  </div>
+                  {feedback.length === 0 ? (
+                      <div className="p-12 text-center text-gray-500">No session feedback recorded yet.</div>
+                  ) : (
+                      <div className="divide-y divide-gray-800">
+                          {feedback.map(item => (
+                              <div key={item.id} className="p-6 hover:bg-black/20 transition-colors">
+                                  <div className="flex justify-between items-start mb-2">
+                                      <div>
+                                          <div className="flex items-center gap-2">
+                                              <span className="font-bold text-white">{item.userName}</span>
+                                              <span className="text-gray-500 text-xs">with</span>
+                                              <span className="font-bold text-yellow-500">{item.companionName}</span>
+                                          </div>
+                                          <div className="text-xs text-gray-500 mt-1">{new Date(item.date).toLocaleString()} • {item.duration} mins</div>
+                                      </div>
+                                      <div className="flex items-center gap-1 bg-gray-800 px-3 py-1 rounded-full">
+                                          <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                                          <span className="font-bold text-white">{item.rating}</span>
+                                      </div>
+                                  </div>
+                                  <div className="flex gap-2 flex-wrap">
+                                      {item.tags.map(tag => (
+                                          <span key={tag} className="text-[10px] font-bold px-2 py-1 bg-gray-800 text-gray-300 rounded-md border border-gray-700">{tag}</span>
+                                      ))}
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+                  )}
+              </div>
+          )}
+
           {activeTab === 'users' && (
               <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
                   <div className="p-4 border-b border-gray-800 flex gap-4">

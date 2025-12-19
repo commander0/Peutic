@@ -1,4 +1,4 @@
-import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, ServerMetric, MoodEntry, JournalEntry, PromoCode, SessionMemory, GiftCard, ArtEntry, BreathLog } from '../types';
+import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, ServerMetric, MoodEntry, JournalEntry, PromoCode, SessionMemory, GiftCard, ArtEntry, BreathLog, SessionFeedback } from '../types';
 
 const DB_KEYS = {
   USER: 'peutic_db_current_user_v14',
@@ -18,6 +18,7 @@ const DB_KEYS = {
   BREATHE_LOGS: 'peutic_db_breathe_logs_v14',
   MEMORIES: 'peutic_db_memories_v14',
   GIFTS: 'peutic_db_gifts_v14',
+  FEEDBACK: 'peutic_db_feedback_v14',
 };
 
 export const STABLE_AVATAR_POOL = [
@@ -319,6 +320,18 @@ export class Database {
 
   static getEstimatedWaitTime(position: number): number {
       return Math.max(0, (position - 1) * 3); // Approx 3 mins per person ahead
+  }
+
+  // NEW: Feedback Storage
+  static saveFeedback(feedback: SessionFeedback) {
+      const list = this.getAllFeedback();
+      list.unshift(feedback);
+      if (list.length > 200) list.pop();
+      localStorage.setItem(DB_KEYS.FEEDBACK, JSON.stringify(list));
+  }
+
+  static getAllFeedback(): SessionFeedback[] {
+      return JSON.parse(localStorage.getItem(DB_KEYS.FEEDBACK) || '[]');
   }
 
   static saveJournal(entry: JournalEntry) { const j = JSON.parse(localStorage.getItem(DB_KEYS.JOURNALS) || '[]'); j.push(entry); localStorage.setItem(DB_KEYS.JOURNALS, JSON.stringify(j)); }

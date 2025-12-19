@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Shield, Lock, FileText, Mail, Send, MessageCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Shield, Lock, FileText, Mail, Send, MessageCircle, CheckCircle, Heart, Globe, Users, Phone, AlertTriangle, Play, Award, Star, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { STABLE_AVATAR_POOL } from '../services/database';
 
 interface StaticPageProps {
-  type: 'privacy' | 'terms' | 'support';
+  type: 'privacy' | 'terms' | 'support' | 'about' | 'press' | 'safety' | 'crisis';
 }
 
 const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
@@ -19,9 +20,206 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
 
   const renderContent = () => {
     switch (type) {
+      case 'about':
+        return (
+          <div className="space-y-12 animate-in fade-in duration-500">
+            <div className="text-center pb-8 border-b border-yellow-200">
+                <Heart className="w-16 h-16 text-yellow-500 fill-yellow-500 mx-auto mb-4 animate-pulse" />
+                <h1 className="text-5xl font-black text-gray-900 mb-4 tracking-tight">Humanity On Demand</h1>
+                <p className="text-xl text-gray-600 max-w-2xl mx-auto">We are building the future of emotional support by combining the warmth of human connection with the accessibility of modern technology.</p>
+            </div>
+
+            <section className="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h2 className="text-3xl font-black mb-4">Our Mission</h2>
+                    <p className="text-gray-700 leading-relaxed mb-4 text-lg">
+                        Loneliness is a global epidemic. Traditional therapy is often inaccessible, expensive, or bound by waitlists. 
+                        Peutic was born from a simple belief: <span className="font-bold bg-yellow-100 px-1">everyone deserves to be heard, instantly.</span>
+                    </p>
+                    <p className="text-gray-700 leading-relaxed text-lg">
+                        We connect you with empathetic, verified specialists in seconds. No judgment. No stigma. Just pure, unfiltered human connection when you need it most.
+                    </p>
+                </div>
+                <div className="relative">
+                    <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=800&auto=format&fit=crop" className="rounded-3xl shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500" alt="Team meeting" />
+                    <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-2xl shadow-xl border border-yellow-100">
+                        <p className="font-black text-4xl text-yellow-500">1M+</p>
+                        <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Sessions Completed</p>
+                    </div>
+                </div>
+            </section>
+
+            <section className="bg-yellow-50 rounded-3xl p-10 border border-yellow-100">
+                <h2 className="text-3xl font-black mb-8 text-center">Our Core Values</h2>
+                <div className="grid md:grid-cols-3 gap-8">
+                    <div className="text-center">
+                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-yellow-200"><Globe className="w-6 h-6 text-yellow-600"/></div>
+                        <h3 className="font-bold text-lg mb-2">Universal Access</h3>
+                        <p className="text-sm text-gray-600">Democratizing mental wellness for every time zone and budget.</p>
+                    </div>
+                    <div className="text-center">
+                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-yellow-200"><Shield className="w-6 h-6 text-yellow-600"/></div>
+                        <h3 className="font-bold text-lg mb-2"> radical Privacy</h3>
+                        <p className="text-sm text-gray-600">What happens in a session, stays in a session. Cryptographically guaranteed.</p>
+                    </div>
+                    <div className="text-center">
+                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-yellow-200"><Users className="w-6 h-6 text-yellow-600"/></div>
+                        <h3 className="font-bold text-lg mb-2">Human First</h3>
+                        <p className="text-sm text-gray-600">Technology connects us, but empathy heals us.</p>
+                    </div>
+                </div>
+            </section>
+          </div>
+        );
+
+      case 'press':
+        return (
+          <div className="space-y-12 animate-in fade-in duration-500">
+             <div className="text-center pb-8 border-b border-yellow-200">
+                <div className="inline-flex items-center gap-2 bg-black text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
+                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500"/> Impact Report
+                </div>
+                <h1 className="text-5xl font-black text-gray-900 mb-4">Lives Changed</h1>
+                <p className="text-xl text-gray-600 max-w-2xl mx-auto">Real stories from the Peutic community. See how instant connection is transforming mental wellness.</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[
+                    { img: STABLE_AVATAR_POOL[10], name: "Sarah J.", role: "Architect", quote: "I used to wait weeks for a therapy appointment. With Peutic, I found calm before my big presentation in minutes. It's a game changer." },
+                    { img: STABLE_AVATAR_POOL[15], name: "Michael R.", role: "Student", quote: "Exam stress was eating me alive. Connecting with a specialist at 3 AM saved my semester. I felt understood." },
+                    { img: STABLE_AVATAR_POOL[20], name: "Elena G.", role: "New Mom", quote: "Postpartum loneliness is real. Having a friendly face just a click away made me feel human again." },
+                    { img: STABLE_AVATAR_POOL[5], name: "David K.", role: "Veteran", quote: "Traditional settings felt too clinical. Here, I can just talk. It feels like talking to a wise friend." },
+                    { img: STABLE_AVATAR_POOL[8], name: "Priya M.", role: "Founder", quote: "Founder burnout is real. Peutic helps me reset my mindset between high-stakes meetings." },
+                    { img: STABLE_AVATAR_POOL[25], name: "James L.", role: "Musician", quote: "I use it to clear creative blocks. The specialists ask the right questions to get me unstuck." }
+                ].map((story, i) => (
+                    <div key={i} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
+                        <div className="flex items-center gap-4 mb-4">
+                            <img src={story.img} alt={story.name} className="w-14 h-14 rounded-full object-cover border-2 border-yellow-200" />
+                            <div>
+                                <h3 className="font-bold text-gray-900">{story.name}</h3>
+                                <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">{story.role}</p>
+                            </div>
+                        </div>
+                        <p className="text-gray-600 italic leading-relaxed">"{story.quote}"</p>
+                        <div className="mt-4 flex gap-1">
+                            {[1,2,3,4,5].map(s => <Star key={s} className="w-4 h-4 text-yellow-400 fill-yellow-400" />)}
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="bg-black text-white rounded-3xl p-10 text-center relative overflow-hidden">
+                <div className="relative z-10">
+                    <h2 className="text-3xl font-black mb-6">Media Inquiries</h2>
+                    <p className="text-gray-400 mb-8 max-w-xl mx-auto">Writing a story about the future of mental health? We'd love to chat.</p>
+                    <a href="mailto:press@peutic.com" className="inline-flex items-center gap-2 bg-white text-black px-8 py-4 rounded-xl font-bold hover:bg-yellow-400 transition-colors">
+                        <Mail className="w-5 h-5"/> Contact Press Team
+                    </a>
+                </div>
+            </div>
+          </div>
+        );
+
+      case 'safety':
+        return (
+          <div className="space-y-12 animate-in fade-in duration-500">
+             <div className="text-center pb-8 border-b border-yellow-200">
+                <ShieldCheck className="w-16 h-16 text-green-600 mx-auto mb-4" />
+                <h1 className="text-5xl font-black text-gray-900 mb-4">Safety Standards</h1>
+                <p className="text-xl text-gray-600 max-w-2xl mx-auto">Your safety and privacy are the foundation of our platform. We go beyond industry standards.</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+                <div className="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm">
+                    <h3 className="text-2xl font-bold mb-4 flex items-center gap-2"><Lock className="w-6 h-6 text-green-600"/> Military-Grade Encryption</h3>
+                    <p className="text-gray-600 leading-relaxed">
+                        Every video packet is encrypted using AES-256 standards. Our architecture is Peer-to-Peer (P2P) focused, meaning video data flows directly between you and the specialist whenever possible, bypassing central servers entirely.
+                    </p>
+                </div>
+                <div className="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm">
+                    <h3 className="text-2xl font-bold mb-4 flex items-center gap-2"><Award className="w-6 h-6 text-yellow-600"/> Specialist Vetting</h3>
+                    <p className="text-gray-600 leading-relaxed">
+                        We accept less than 1% of applicants. Every specialist undergoes a vigorous 5-step background check, credential verification, and emotional resonance testing before they ever speak to a user.
+                    </p>
+                </div>
+                <div className="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm">
+                    <h3 className="text-2xl font-bold mb-4 flex items-center gap-2"><AlertTriangle className="w-6 h-6 text-orange-600"/> Real-time Moderation AI</h3>
+                    <p className="text-gray-600 leading-relaxed">
+                        Our passive safety AI monitors for signs of abuse or harassment to protect both users and specialists. If a violation is detected, the session is flagged for immediate human review.
+                    </p>
+                </div>
+                <div className="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm">
+                    <h3 className="text-2xl font-bold mb-4 flex items-center gap-2"><FileText className="w-6 h-6 text-blue-600"/> Zero-Knowledge Storage</h3>
+                    <p className="text-gray-600 leading-relaxed">
+                        We do not store video recordings of your sessions unless you explicitly opt-in for therapeutic review. Your journal entries are encrypted at rest with a key derived from your password.
+                    </p>
+                </div>
+            </div>
+          </div>
+        );
+
+      case 'crisis':
+        return (
+          <div className="space-y-12 animate-in fade-in duration-500">
+             <div className="text-center pb-8 border-b border-red-200">
+                <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <AlertTriangle className="w-10 h-10 text-red-600" />
+                </div>
+                <h1 className="text-5xl font-black text-gray-900 mb-4">Crisis Resources</h1>
+                <p className="text-xl text-red-600 font-bold max-w-2xl mx-auto">Peutic is not a replacement for emergency services.</p>
+                <p className="text-gray-600 mt-4 max-w-2xl mx-auto">If you or someone you know is in immediate danger, please use the following resources immediately.</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+                <div className="bg-red-50 p-8 rounded-3xl border border-red-100 text-center">
+                    <h3 className="text-2xl font-black text-red-700 mb-2">Emergency Services</h3>
+                    <p className="text-red-600 mb-6">Immediate Police/Ambulance Assistance</p>
+                    <a href="tel:911" className="inline-flex items-center gap-2 bg-red-600 text-white px-8 py-4 rounded-xl font-black text-2xl hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20">
+                        <Phone className="w-6 h-6"/> Call 911
+                    </a>
+                    <p className="text-xs text-red-400 mt-4 font-bold uppercase tracking-widest">In the United States</p>
+                </div>
+
+                <div className="bg-blue-50 p-8 rounded-3xl border border-blue-100 text-center">
+                    <h3 className="text-2xl font-black text-blue-700 mb-2">Suicide & Crisis Lifeline</h3>
+                    <p className="text-blue-600 mb-6">24/7 Free & Confidential Support</p>
+                    <a href="tel:988" className="inline-flex items-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-xl font-black text-2xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">
+                        <Phone className="w-6 h-6"/> Call 988
+                    </a>
+                    <p className="text-xs text-blue-400 mt-4 font-bold uppercase tracking-widest">Available Nationwide</p>
+                </div>
+            </div>
+
+            <div className="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm">
+                <h3 className="text-2xl font-bold mb-6">International Resources</h3>
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div className="flex justify-between p-4 bg-gray-50 rounded-xl">
+                        <span className="font-bold text-gray-700">United Kingdom</span>
+                        <a href="tel:111" className="font-bold text-blue-600">111 / 999</a>
+                    </div>
+                    <div className="flex justify-between p-4 bg-gray-50 rounded-xl">
+                        <span className="font-bold text-gray-700">Canada</span>
+                        <a href="tel:988" className="font-bold text-blue-600">988</a>
+                    </div>
+                    <div className="flex justify-between p-4 bg-gray-50 rounded-xl">
+                        <span className="font-bold text-gray-700">Australia</span>
+                        <a href="tel:000" className="font-bold text-blue-600">000</a>
+                    </div>
+                    <div className="flex justify-between p-4 bg-gray-50 rounded-xl">
+                        <span className="font-bold text-gray-700">Europe (General)</span>
+                        <a href="tel:112" className="font-bold text-blue-600">112</a>
+                    </div>
+                </div>
+                <div className="mt-6 text-center">
+                    <a href="https://www.befrienders.org/" target="_blank" rel="noreferrer" className="text-gray-500 font-bold underline hover:text-black">Find a helpline in your country</a>
+                </div>
+            </div>
+          </div>
+        );
+
       case 'privacy':
         return (
-          <div className="space-y-8">
+          <div className="space-y-8 animate-in fade-in duration-300">
             <div className="border-b border-yellow-200 pb-6">
               <h1 className="text-4xl font-black text-gray-900 mb-2">Privacy Policy</h1>
               <p className="text-gray-600">Last Updated: October 24, 2025</p>
@@ -61,7 +259,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
 
       case 'terms':
         return (
-          <div className="space-y-8">
+          <div className="space-y-8 animate-in fade-in duration-300">
             <div className="border-b border-yellow-200 pb-6">
               <h1 className="text-4xl font-black text-gray-900 mb-2">Terms of Service</h1>
               <p className="text-gray-600">Effective Date: October 24, 2025</p>
@@ -100,7 +298,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
 
       case 'support':
         return (
-          <div className="space-y-8">
+          <div className="space-y-8 animate-in fade-in duration-300">
             <div className="border-b border-yellow-200 pb-6">
               <h1 className="text-4xl font-black text-gray-900 mb-2">Support Center</h1>
               <p className="text-gray-600">We are here to help, 24/7.</p>

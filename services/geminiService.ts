@@ -1,7 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 
-const apiKey = process.env.API_KEY || 'test_key'; 
-const ai = new GoogleGenAI({ apiKey });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || 'test_key' });
 
 // --- EXPANDED LOCAL FALLBACK DATA (WISDOM ENGINE) ---
 const LOCAL_AFFIRMATIONS = {
@@ -98,11 +97,10 @@ const LOCAL_AFFIRMATIONS = {
 
 export const generateDailyInsight = async (userName: string): Promise<string> => {
   try {
-    if (apiKey === 'test_key') throw new Error("Simulation Mode");
+    if (!process.env.API_KEY || process.env.API_KEY === 'test_key') throw new Error("Simulation Mode");
 
-    const model = ai.models;
-    const response = await model.generateContent({
-      model: 'gemini-2.5-flash',
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
       contents: `Write a short, warm, human-like daily greeting and mental wellness tip for a user named ${userName}. Do not sound like a robot. Keep it under 30 words. Make it unique every time.`,
     });
     return response.text || "Welcome back. Remember to take a deep breath today.";
@@ -121,10 +119,10 @@ export const generateDailyInsight = async (userName: string): Promise<string> =>
 
 export const analyzeSessionMood = async (notes: string): Promise<string> => {
     // Simple local fallback for mood analysis
-    if (apiKey === 'test_key') return "Reflective";
+    if (!process.env.API_KEY || process.env.API_KEY === 'test_key') return "Reflective";
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: `Analyze the sentiment: "${notes}". Return one word.`
         });
         return response.text?.trim() || "Neutral";
@@ -134,13 +132,13 @@ export const analyzeSessionMood = async (notes: string): Promise<string> => {
 };
 
 // NEW: Text-Based Wisdom Generator (Replaces Image Gen)
-export const generateAffirmation = async (struggle: string): Promise<string> => {
+export const generateAffirmation = async (struggle: string = "general"): Promise<string> => {
     try {
-        if (!apiKey || apiKey === 'test_key') throw new Error("Use Local");
+        if (!process.env.API_KEY || process.env.API_KEY === 'test_key') throw new Error("Use Local");
 
         // Added "Make it unique" and "metaphorical" to prompt to increase variety
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: `The user is feeling: "${struggle}". Write a unique, powerful, metaphorical, and soothing affirmation (max 12 words) to help them reframe this thought. Do not use quotes. Avoid generic clichés.`
         });
         return response.text?.trim() || "Peace comes from within.";
