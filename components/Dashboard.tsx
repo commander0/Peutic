@@ -1120,14 +1120,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                       <CollapsibleSection title="Games & Tools" icon={Gamepad2}>
                           <div className="space-y-4">
-                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 justify-center items-start">
-                                   {/* Mindful Match - Removed max-w constraint to fill grid cell properly */}
-                                   <div className="w-full aspect-square mx-auto relative rounded-2xl overflow-hidden border border-yellow-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                   <div className="w-full aspect-square shadow-xl hover:scale-[1.02] transition-transform duration-300 rounded-2xl">
                                        <MindfulMatchGame />
                                    </div>
-
-                                   {/* Cloud Hop */}
-                                   <div className="w-full aspect-square mx-auto relative rounded-2xl overflow-hidden border border-yellow-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+                                   <div className="w-full aspect-square shadow-xl hover:scale-[1.02] transition-transform duration-300 rounded-2xl">
                                        <CloudHopGame />
                                    </div>
                                </div>
