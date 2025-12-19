@@ -116,8 +116,16 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         setLogs(Database.getSystemLogs());
         setPromos(Database.getPromoCodes());
         setFeedback(Database.getAllFeedback());
-        setQueue(Database.getQueueList());
-        setActiveCount(Database.getActiveSessionCount());
+        
+        // Await async queue methods
+        try {
+            const queueList = await Database.getQueueList();
+            setQueue(queueList);
+            const count = await Database.getActiveSessionCount();
+            setActiveCount(count);
+        } catch (error) {
+            console.warn("Queue sync error:", error);
+        }
     };
     refresh();
     const interval = setInterval(refresh, 2000); // 2s refresh for live monitoring
@@ -275,10 +283,11 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
       }
   };
 
-  const handleRemoveFromQueue = (userId: string) => {
+  const handleRemoveFromQueue = async (userId: string) => {
       if(confirm("Remove this user from the waiting room?")) {
-          Database.leaveQueue(userId);
-          setQueue(Database.getQueueList());
+          await Database.leaveQueue(userId);
+          const queueList = await Database.getQueueList();
+          setQueue(queueList);
       }
   };
 

@@ -140,14 +140,15 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
     // 1. Join Queue (Async)
     const initQueue = async () => {
         try {
-            // Join Queue
+            // Join Queue (Remote)
             const pos = await Database.joinQueue(userId);
             setQueuePos(pos);
             setEstWait(Database.getEstimatedWaitTime(pos));
 
-            // Instant Entry for #1 (Fix for "Stuck in Queue")
-            if (pos === 1) {
-                 startTavusConnection();
+            // If we are #1 or inactive (pos 0 implies potential active state in some logics, but mostly 1)
+            // Note: DB returns 0 if active, 1+ if waiting.
+            if (pos === 1 || pos === 0) {
+                 await tryStart();
             }
         } catch (error) {
             console.error("Queue Error:", error);
@@ -156,7 +157,15 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         }
     };
 
-    // Polling Interval
+    const tryStart = async () => {
+        // Attempt to claim spot securely via Supabase
+        const canEnter = await Database.claimActiveSpot(userId);
+        if (canEnter) {
+            startTavusConnection();
+        }
+    };
+
+    // Polling Interval for Queue Position
     const queueInterval = setInterval(async () => {
         if (connectionState === 'QUEUED') {
             const pos = await Database.getQueuePosition(userId);
@@ -164,9 +173,12 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             setEstWait(Database.getEstimatedWaitTime(pos));
 
             if (pos === 1) {
-                clearInterval(queueInterval);
-                startTavusConnection();
+                // We are next in line, try to enter
+                await tryStart();
             }
+        } else if (connectionState === 'CONNECTED') {
+            // Send Keep Alive ping to DB so we don't get garbage collected
+            Database.sendKeepAlive(userId);
         }
     }, 3000);
 
@@ -206,9 +218,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
       setConnectionState('CONNECTING');
       setErrorMsg('');
       
-      // Move to active list (Async)
-      await Database.enterActiveSession(userId);
-
       try {
           const user = Database.getUser();
           if (!user || user.balance <= 0) {

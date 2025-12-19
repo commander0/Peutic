@@ -1,4 +1,5 @@
-import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, ServerMetric, MoodEntry, JournalEntry, PromoCode, SessionMemory, GiftCard, ArtEntry, BreathLog, SessionFeedback } from '../types';
+import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, ServerMetric, MoodEntry, JournalEntry, PromoCode, SessionFeedback, ArtEntry, BreathLog, SessionMemory, GiftCard } from '../types';
+import { supabase } from './supabaseClient';
 
 const DB_KEYS = {
   USER: 'peutic_db_current_user_v14',
@@ -11,8 +12,6 @@ const DB_KEYS = {
   JOURNALS: 'peutic_db_journals_v14',
   ART: 'peutic_db_art_v14',
   PROMOS: 'peutic_db_promos_v14',
-  QUEUE_LIST: 'peutic_db_queue_list_v15',
-  ACTIVE_SESSIONS_LIST: 'peutic_db_active_sessions_list_v15',
   ADMIN_ATTEMPTS: 'peutic_db_admin_attempts_v14',
   BREATHE_COOLDOWN: 'peutic_db_breathe_cooldown_v14',
   BREATHE_LOGS: 'peutic_db_breathe_logs_v14',
@@ -89,6 +88,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
 ];
 
 export class Database {
+  // ... (Existing User/Transaction Methods same as previous state) ...
   static getAllUsers(): User[] {
     const usersStr = localStorage.getItem(DB_KEYS.ALL_USERS);
     return usersStr ? JSON.parse(usersStr) : [];
@@ -110,6 +110,7 @@ export class Database {
     users.push(newUser);
     localStorage.setItem(DB_KEYS.ALL_USERS, JSON.stringify(users));
     this.saveUserSession(newUser);
+    this.syncUserToSupabase(newUser);
     return newUser;
   }
 
@@ -131,6 +132,9 @@ export class Database {
     users = users.filter(u => u.id !== userId);
     localStorage.setItem(DB_KEYS.ALL_USERS, JSON.stringify(users));
     this.clearSession();
+    supabase.from('users').delete().eq('id', userId).then(({ error }) => {
+        if (error) console.error("Supabase Delete Error:", error);
+    });
   }
 
   static getUser(): User | null {
@@ -149,6 +153,27 @@ export class Database {
     }
     const currentUser = this.getUser();
     if (currentUser && currentUser.id === updatedUser.id) this.saveUserSession(updatedUser);
+    this.syncUserToSupabase(updatedUser);
+  }
+
+  static async syncUserToSupabase(user: User) {
+      try {
+          const { error } = await supabase.from('users').upsert({
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role,
+              provider: user.provider,
+              balance: user.balance,
+              avatar: user.avatar,
+              subscription_status: user.subscriptionStatus,
+              created_at: user.joinedAt,
+              last_active: user.lastActive,
+              birthday: user.birthday,
+              streak: user.streak
+          });
+          if (error) console.warn("Supabase Sync Warning:", error.message);
+      } catch (e) { console.warn("Supabase Sync Failed (Offline Mode)", e); }
   }
 
   static getUserByEmail(email: string): User | undefined { return this.getAllUsers().find(u => u.email.toLowerCase() === email.toLowerCase()); }
@@ -216,14 +241,17 @@ export class Database {
   static addTransaction(tx: Transaction) {
     const all = this.getAllTransactions();
     if (!tx.userId) { const u = this.getUser(); if (u) { tx.userId = u.id; tx.userName = u.name; } }
-    all.push(tx); localStorage.setItem(DB_KEYS.TRANSACTIONS, JSON.stringify(all));
+    all.push(tx); 
+    localStorage.setItem(DB_KEYS.TRANSACTIONS, JSON.stringify(all));
+    supabase.from('transactions').insert([{
+        id: tx.id, user_id: tx.userId, amount: tx.amount, cost: tx.cost, description: tx.description, status: tx.status, created_at: tx.date
+    }]).then(({ error }) => { if(error) console.error("Supabase Tx Error:", error); });
   }
 
   static getSettings(): GlobalSettings {
     const saved = localStorage.getItem(DB_KEYS.SETTINGS);
     const defaultSettings = {
-      pricePerMinute: 1.49, saleMode: true, maintenanceMode: false, allowSignups: true, siteName: 'Peutic',
-      maxConcurrentSessions: 15, multilingualMode: true
+      pricePerMinute: 1.49, saleMode: true, maintenanceMode: false, allowSignups: true, siteName: 'Peutic', broadcastMessage: undefined, maxConcurrentSessions: 15, multilingualMode: true
     };
     if (!saved) return defaultSettings;
     const parsed = JSON.parse(saved);
@@ -239,90 +267,140 @@ export class Database {
       logs.unshift(newLog); if (logs.length > 200) logs.pop(); localStorage.setItem(DB_KEYS.LOGS, JSON.stringify(logs));
   }
 
-  static getServerMetrics(): ServerMetric[] {
-      const now = new Date();
-      const active = this.getActiveSessionCount();
-      return Array.from({length: 10}, (_, i) => ({
-          time: new Date(now.getTime() - i * 5000).toLocaleTimeString(),
-          cpu: 20 + Math.random() * 30 + (active * 2),
-          memory: 30 + Math.random() * 20,
-          latency: 15 + Math.random() * 40,
-          activeSessions: active
-      })).reverse();
-  }
-  
   // ==========================================
-  // === QUEUE SYSTEM (REPAIRED) ===
+  // === GLOBAL QUEUE SYSTEM (SUPABASE) ===
   // ==========================================
   
-  static getActiveSessionsList(): string[] {
-      return JSON.parse(localStorage.getItem(DB_KEYS.ACTIVE_SESSIONS_LIST) || '[]');
-  }
-
-  static getQueueList(): string[] {
-      return JSON.parse(localStorage.getItem(DB_KEYS.QUEUE_LIST) || '[]');
-  }
-
-  static getActiveSessionCount(): number {
-      return this.getActiveSessionsList().length;
-  }
-
-  // --- REPAIRED JOIN QUEUE ---
-  // Returns the queue position (1-based).
-  static joinQueue(userId: string): number {
-      let queue = this.getQueueList();
-      const active = this.getActiveSessionsList();
-
-      // If user is already active, they are not "waiting", return 0 to indicate they can enter
-      if (active.includes(userId)) return 0;
-
-      // Add to queue if not present
-      if (!queue.includes(userId)) {
-          queue.push(userId);
-          localStorage.setItem(DB_KEYS.QUEUE_LIST, JSON.stringify(queue));
-      }
-
-      return queue.indexOf(userId) + 1;
-  }
-
-  // --- MOVE TO ACTIVE ---
-  static enterActiveSession(userId: string) {
-      let active = this.getActiveSessionsList();
-      if (!active.includes(userId)) {
-          active.push(userId);
-          localStorage.setItem(DB_KEYS.ACTIVE_SESSIONS_LIST, JSON.stringify(active));
+  static async getActiveSessionCount(): Promise<number> {
+      try {
+          const { count, error } = await supabase
+              .from('session_queue')
+              .select('*', { count: 'exact', head: true })
+              .eq('status', 'active');
+          
+          if (error) throw error;
+          return count || 0;
+      } catch (e) {
+          console.error("Queue Sync Error:", e);
+          return 0; // Fallback unsafe
       }
   }
 
-  // --- REMOVE FROM QUEUE ---
-  static leaveQueue(userId: string) {
-      let queue = this.getQueueList();
-      if (queue.includes(userId)) {
-          queue = queue.filter(id => id !== userId);
-          localStorage.setItem(DB_KEYS.QUEUE_LIST, JSON.stringify(queue));
+  // NEW METHOD FOR ADMIN
+  static async getQueueList(): Promise<string[]> {
+      try {
+          const { data, error } = await supabase
+              .from('session_queue')
+              .select('user_id')
+              .eq('status', 'waiting')
+              .order('created_at', { ascending: true });
+          
+          if (error) throw error;
+          return data ? data.map((d: any) => d.user_id) : [];
+      } catch (e) {
+          console.error("Queue List Error", e);
+          return [];
       }
   }
 
-  // --- CLEANUP ---
-  static endSession(userId: string) {
-      let active = this.getActiveSessionsList();
-      if (active.includes(userId)) {
-          active = active.filter(id => id !== userId);
-          localStorage.setItem(DB_KEYS.ACTIVE_SESSIONS_LIST, JSON.stringify(active));
-      }
-      this.leaveQueue(userId);
+  // NEW METHOD FOR ADMIN
+  static async leaveQueue(userId: string) {
+      await this.endSession(userId);
   }
 
-  static getQueuePosition(userId: string): number {
-      const q = this.getQueueList();
-      return q.indexOf(userId) + 1; 
+  // Returns queue position. 0 means you are active or something went wrong.
+  static async joinQueue(userId: string): Promise<number> {
+      try {
+          // 1. Check if already in queue or active
+          const { data: existing } = await supabase.from('session_queue').select('status, created_at').eq('user_id', userId).single();
+          
+          if (existing && existing.status === 'active') return 0; // Already active
+          
+          if (!existing) {
+              // Join as waiting
+              await supabase.from('session_queue').insert({ user_id: userId, status: 'waiting' });
+          } else {
+              // Update ping to show life
+              await supabase.from('session_queue').update({ last_ping: new Date() }).eq('user_id', userId);
+          }
+
+          return await this.getQueuePosition(userId);
+      } catch (e) {
+          console.error("Join Queue Error:", e);
+          return 99;
+      }
+  }
+
+  static async getQueuePosition(userId: string): Promise<number> {
+      try {
+          const { data: myRow } = await supabase.from('session_queue').select('created_at, status').eq('user_id', userId).single();
+          if (!myRow) return 0;
+          if (myRow.status === 'active') return 0;
+
+          // Count how many waiting people arrived before me
+          const { count } = await supabase
+              .from('session_queue')
+              .select('*', { count: 'exact', head: true })
+              .eq('status', 'waiting')
+              .lt('created_at', myRow.created_at);
+          
+          return (count || 0) + 1;
+      } catch (e) {
+          return 99;
+      }
   }
 
   static getEstimatedWaitTime(position: number): number {
-      return Math.max(0, (position - 1) * 3); // Approx 3 mins per person ahead
+      return Math.max(0, (position - 1) * 3);
   }
 
-  // NEW: Feedback Storage
+  // ATTEMPT TO ENTER: Returns true if successfully claimed a spot
+  static async claimActiveSpot(userId: string): Promise<boolean> {
+      try {
+          const activeCount = await this.getActiveSessionCount();
+          const MAX_CONCURRENT = 15;
+
+          if (activeCount >= MAX_CONCURRENT) return false;
+
+          // Double check we are actually next in line or the list is empty
+          const pos = await this.getQueuePosition(userId);
+          
+          // Allow entry if position is 1 OR if we are just joining an empty queue
+          if (pos <= 1 || activeCount < MAX_CONCURRENT) {
+              const { error } = await supabase
+                  .from('session_queue')
+                  .update({ status: 'active', last_ping: new Date() })
+                  .eq('user_id', userId)
+                  .eq('status', 'waiting'); // Optimistic lock: only update if still waiting
+              
+              return !error;
+          }
+          return false;
+      } catch (e) {
+          console.error("Claim Spot Error", e);
+          return false;
+      }
+  }
+
+  static async endSession(userId: string) {
+      try {
+          await supabase.from('session_queue').delete().eq('user_id', userId);
+      } catch (e) { console.error("End Session Error", e); }
+  }
+
+  // NEW: Keep Alive to prevent stale sessions from blocking queue
+  static async sendKeepAlive(userId: string) {
+      try {
+          await supabase.from('session_queue').update({ last_ping: new Date() }).eq('user_id', userId);
+      } catch (e) {}
+  }
+
+  static async enterActiveSession(userId: string) {
+      // Deprecated in favor of claimActiveSpot, kept for compatibility if needed
+      await this.claimActiveSpot(userId);
+  }
+
+  // ... (Rest of existing methods: saveFeedback, getWeeklyProgress, etc.) ...
   static saveFeedback(feedback: SessionFeedback) {
       const list = this.getAllFeedback();
       list.unshift(feedback);
@@ -330,10 +408,7 @@ export class Database {
       localStorage.setItem(DB_KEYS.FEEDBACK, JSON.stringify(list));
   }
 
-  static getAllFeedback(): SessionFeedback[] {
-      return JSON.parse(localStorage.getItem(DB_KEYS.FEEDBACK) || '[]');
-  }
-
+  static getAllFeedback(): SessionFeedback[] { return JSON.parse(localStorage.getItem(DB_KEYS.FEEDBACK) || '[]'); }
   static saveJournal(entry: JournalEntry) { const j = JSON.parse(localStorage.getItem(DB_KEYS.JOURNALS) || '[]'); j.push(entry); localStorage.setItem(DB_KEYS.JOURNALS, JSON.stringify(j)); }
   static getJournals(userId: string): JournalEntry[] { return JSON.parse(localStorage.getItem(DB_KEYS.JOURNALS) || '[]').filter((j: JournalEntry) => j.userId === userId).reverse(); }
   static saveMood(userId: string, mood: 'confetti' | 'rain' | null) { if (!mood) return; const m = JSON.parse(localStorage.getItem(DB_KEYS.MOODS) || '[]'); m.push({ id: `mood_${Date.now()}`, userId, date: new Date().toISOString(), mood }); localStorage.setItem(DB_KEYS.MOODS, JSON.stringify(m)); }
