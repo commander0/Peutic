@@ -324,34 +324,45 @@ export class Database {
   }
 
   // Returns queue position. 0 means you are active or something went wrong.
+  // Updated to use secure RPC call
   static async joinQueue(userId: string): Promise<number> {
-      if (this.isOfflineMode) return 1; // Auto-pass in offline mode
+      if (this.isOfflineMode) return 1; 
       try {
-          // 1. Check if already in queue or active
-          const { data: existing, error } = await supabase.from('session_queue').select('status, created_at').eq('user_id', userId).single();
+          // Use secure RPC to prevent race conditions and "mutable search_path" warnings from raw sql usage
+          const { data, error } = await supabase.rpc('join_queue', { user_id_input: userId });
           
-          if (error && error.code !== 'PGRST116') throw error; 
-
-          if (existing && existing.status === 'active') return 0; // Already active
-          
-          if (!existing) {
-              // Join as waiting
-              const { error: insertError } = await supabase.from('session_queue').insert({ user_id: userId, status: 'waiting' });
-              if (insertError) throw insertError;
-          } else {
-              // Update ping to show life
-              await supabase.from('session_queue').update({ last_ping: new Date() }).eq('user_id', userId);
+          if (error) {
+              // Fallback to old method if function missing (for backward compatibility)
+              if (error.message?.includes("function not found")) {
+                  return await this.fallbackJoinQueue(userId);
+              }
+              throw error;
           }
-
-          return await this.getQueuePosition(userId);
+          return data as number;
       } catch (e: any) {
           if (e.message?.includes("Could not find the table")) {
               this.isOfflineMode = true;
-              return 1; // Immediate access
+              return 1; 
           }
           console.error("Join Queue Error:", e);
           return 99;
       }
+  }
+
+  // Fallback for when RPC is missing
+  static async fallbackJoinQueue(userId: string): Promise<number> {
+      const { data: existing, error } = await supabase.from('session_queue').select('status, created_at').eq('user_id', userId).single();
+      if (error && error.code !== 'PGRST116') throw error; 
+
+      if (existing && existing.status === 'active') return 0;
+      
+      if (!existing) {
+          const { error: insertError } = await supabase.from('session_queue').insert({ user_id: userId, status: 'waiting' });
+          if (insertError) throw insertError;
+      } else {
+          await supabase.from('session_queue').update({ last_ping: new Date() }).eq('user_id', userId);
+      }
+      return await this.getQueuePosition(userId);
   }
 
   static async getQueuePosition(userId: string): Promise<number> {
@@ -361,7 +372,6 @@ export class Database {
           if (!myRow) return 0;
           if (myRow.status === 'active') return 0;
 
-          // Count how many waiting people arrived before me
           const { count } = await supabase
               .from('session_queue')
               .select('*', { count: 'exact', head: true })
@@ -380,20 +390,18 @@ export class Database {
 
   // ATTEMPT TO ENTER: Returns true if successfully claimed a spot
   static async claimActiveSpot(userId: string): Promise<boolean> {
-      if (this.isOfflineMode) return true; // Auto-claim in offline mode
+      if (this.isOfflineMode) return true; 
       
       try {
-          // 1. PREFERRED: Server-Side Atomic RPC Function
-          // This prevents race conditions where 16 users attempt to enter at once.
           const { data, error } = await supabase.rpc('claim_session_spot', { user_id_input: userId });
           
           if (!error) {
-              return !!data; // True if claimed, False if queue full or not turn
+              return !!data;
           } else {
               console.warn("RPC Failed (using fallback):", error.message);
           }
 
-          // 2. FALLBACK: Client-Side Logic (Race conditions possible but rare with low traffic)
+          // Fallback Logic
           const activeCount = await this.getActiveSessionCount();
           const MAX_CONCURRENT = 15;
 
@@ -401,7 +409,6 @@ export class Database {
 
           const pos = await this.getQueuePosition(userId);
           
-          // Allow entry if position is 1 OR if we are just joining an empty queue
           if (pos <= 1 || activeCount < MAX_CONCURRENT) {
               const { error } = await supabase
                   .from('session_queue')
@@ -425,11 +432,15 @@ export class Database {
       } catch (e) { console.error("End Session Error", e); }
   }
 
+  // Updated to use secure RPC
   static async sendKeepAlive(userId: string) {
       if (this.isOfflineMode) return;
       try {
-          await supabase.from('session_queue').update({ last_ping: new Date() }).eq('user_id', userId);
-      } catch (e) {}
+          await supabase.rpc('heartbeat', { user_id_input: userId });
+      } catch (e) {
+          // Fallback
+          try { await supabase.from('session_queue').update({ last_ping: new Date() }).eq('user_id', userId); } catch (err) {}
+      }
   }
 
   static async enterActiveSession(userId: string) {
