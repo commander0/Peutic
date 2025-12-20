@@ -298,7 +298,10 @@ export class Database {
           if (error) throw error;
           return count || 0;
       } catch (e: any) {
-          if (e.message?.includes("Could not find the table") || e.code === '42P01') this.isOfflineMode = true;
+          if (e.message?.includes("Could not find the table") || e.code === '42P01') {
+             this.isOfflineMode = true;
+             console.warn("Queue Tables Missing. Switching to Offline Mode.");
+          }
           return 0; // Fallback unsafe
       }
   }
@@ -336,11 +339,16 @@ export class Database {
               if (error.message?.includes("function not found")) {
                   return await this.fallbackJoinQueue(userId);
               }
+              // If table is missing, switch to offline mode immediately
+              if (error.message?.includes("relation") || error.code === '42P01') {
+                 this.isOfflineMode = true;
+                 return 1;
+              }
               throw error;
           }
           return data as number;
       } catch (e: any) {
-          if (e.message?.includes("Could not find the table")) {
+          if (e.message?.includes("Could not find the table") || e.code === '42P01') {
               this.isOfflineMode = true;
               return 1; 
           }
@@ -398,6 +406,12 @@ export class Database {
           if (!error) {
               return !!data;
           } else {
+              if (error.message?.includes("function not found")) {
+                  // RPC missing, use fallback
+              } else if (error.message?.includes("relation") || error.code === '42P01') {
+                   this.isOfflineMode = true;
+                   return true;
+              }
               console.warn("RPC Failed (using fallback):", error.message);
           }
 
@@ -421,7 +435,8 @@ export class Database {
           return false;
       } catch (e) {
           console.error("Claim Spot Error", e);
-          return false;
+          // If totally broken, allow entry to avoid bad UX
+          return true;
       }
   }
 
@@ -436,7 +451,8 @@ export class Database {
   static async sendKeepAlive(userId: string) {
       if (this.isOfflineMode) return;
       try {
-          await supabase.rpc('heartbeat', { user_id_input: userId });
+          const { error } = await supabase.rpc('heartbeat', { user_id_input: userId });
+          if (error) throw error;
       } catch (e) {
           // Fallback
           try { await supabase.from('session_queue').update({ last_ping: new Date() }).eq('user_id', userId); } catch (err) {}
