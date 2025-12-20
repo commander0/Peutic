@@ -236,7 +236,7 @@ export class Database {
     let user = targetUserId ? this.getAllUsers().find(u => u.id === targetUserId) || null : this.getUser();
     if (user) {
       user.balance += minutes;
-      this.updateUser(user);
+      this.updateUser(user); // Triggers sync to Supabase Users table
       this.addTransaction({
         id: `tx_${Date.now()}`, userId: user.id, userName: user.name,
         date: new Date().toISOString(), amount: minutes, cost: cost, description: 'Wallet Top-up', status: 'COMPLETED'
@@ -298,12 +298,11 @@ export class Database {
           if (error) throw error;
           return count || 0;
       } catch (e: any) {
-          if (e.message?.includes("Could not find the table")) this.isOfflineMode = true;
+          if (e.message?.includes("Could not find the table") || e.code === '42P01') this.isOfflineMode = true;
           return 0; // Fallback unsafe
       }
   }
 
-  // NEW METHOD FOR ADMIN
   static async getQueueList(): Promise<string[]> {
       if (this.isOfflineMode) return [];
       try {
@@ -316,12 +315,10 @@ export class Database {
           if (error) throw error;
           return data ? data.map((d: any) => d.user_id) : [];
       } catch (e) {
-          console.error("Queue List Error", e);
           return [];
       }
   }
 
-  // NEW METHOD FOR ADMIN
   static async leaveQueue(userId: string) {
       await this.endSession(userId);
   }
@@ -333,7 +330,7 @@ export class Database {
           // 1. Check if already in queue or active
           const { data: existing, error } = await supabase.from('session_queue').select('status, created_at').eq('user_id', userId).single();
           
-          if (error && error.code !== 'PGRST116') throw error; // PGRST116 is Row not found, which is fine
+          if (error && error.code !== 'PGRST116') throw error; 
 
           if (existing && existing.status === 'active') return 0; // Already active
           
@@ -384,13 +381,24 @@ export class Database {
   // ATTEMPT TO ENTER: Returns true if successfully claimed a spot
   static async claimActiveSpot(userId: string): Promise<boolean> {
       if (this.isOfflineMode) return true; // Auto-claim in offline mode
+      
       try {
+          // 1. PREFERRED: Server-Side Atomic RPC Function
+          // This prevents race conditions where 16 users attempt to enter at once.
+          const { data, error } = await supabase.rpc('claim_session_spot', { user_id_input: userId });
+          
+          if (!error) {
+              return !!data; // True if claimed, False if queue full or not turn
+          } else {
+              console.warn("RPC Failed (using fallback):", error.message);
+          }
+
+          // 2. FALLBACK: Client-Side Logic (Race conditions possible but rare with low traffic)
           const activeCount = await this.getActiveSessionCount();
           const MAX_CONCURRENT = 15;
 
           if (activeCount >= MAX_CONCURRENT) return false;
 
-          // Double check we are actually next in line or the list is empty
           const pos = await this.getQueuePosition(userId);
           
           // Allow entry if position is 1 OR if we are just joining an empty queue
@@ -399,7 +407,7 @@ export class Database {
                   .from('session_queue')
                   .update({ status: 'active', last_ping: new Date() })
                   .eq('user_id', userId)
-                  .eq('status', 'waiting'); // Optimistic lock: only update if still waiting
+                  .eq('status', 'waiting');
               
               return !error;
           }
@@ -417,7 +425,6 @@ export class Database {
       } catch (e) { console.error("End Session Error", e); }
   }
 
-  // NEW: Keep Alive to prevent stale sessions from blocking queue
   static async sendKeepAlive(userId: string) {
       if (this.isOfflineMode) return;
       try {
@@ -426,18 +433,29 @@ export class Database {
   }
 
   static async enterActiveSession(userId: string) {
-      // Deprecated in favor of claimActiveSpot, kept for compatibility if needed
       await this.claimActiveSpot(userId);
   }
 
-  // ... (Rest of existing methods: saveFeedback, getWeeklyProgress, etc.) ...
   static saveFeedback(feedback: SessionFeedback) {
       const list = this.getAllFeedback();
       list.unshift(feedback);
       if (list.length > 200) list.pop();
       localStorage.setItem(DB_KEYS.FEEDBACK, JSON.stringify(list));
+      
+      if (!this.isOfflineMode) {
+          supabase.from('session_feedback').insert([{
+              id: feedback.id, 
+              user_id: feedback.userId, 
+              companion_name: feedback.companionName,
+              rating: feedback.rating,
+              tags: feedback.tags,
+              duration: feedback.duration,
+              created_at: feedback.date
+          }]).then(({ error }) => { if(error) console.error("Supabase Feedback Error:", error); });
+      }
   }
 
+  // ... (Rest of existing methods unchanged) ...
   static getAllFeedback(): SessionFeedback[] { return JSON.parse(localStorage.getItem(DB_KEYS.FEEDBACK) || '[]'); }
   static saveJournal(entry: JournalEntry) { const j = JSON.parse(localStorage.getItem(DB_KEYS.JOURNALS) || '[]'); j.push(entry); localStorage.setItem(DB_KEYS.JOURNALS, JSON.stringify(j)); }
   static getJournals(userId: string): JournalEntry[] { return JSON.parse(localStorage.getItem(DB_KEYS.JOURNALS) || '[]').filter((j: JournalEntry) => j.userId === userId).reverse(); }
