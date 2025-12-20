@@ -88,7 +88,9 @@ export const INITIAL_COMPANIONS: Companion[] = [
 ];
 
 export class Database {
-  // ... (Existing User/Transaction Methods same as previous state) ...
+  // Static flag to handle graceful degradation when Supabase is not fully configured
+  static isOfflineMode = false;
+
   static getAllUsers(): User[] {
     const usersStr = localStorage.getItem(DB_KEYS.ALL_USERS);
     return usersStr ? JSON.parse(usersStr) : [];
@@ -132,9 +134,12 @@ export class Database {
     users = users.filter(u => u.id !== userId);
     localStorage.setItem(DB_KEYS.ALL_USERS, JSON.stringify(users));
     this.clearSession();
-    supabase.from('users').delete().eq('id', userId).then(({ error }) => {
-        if (error) console.error("Supabase Delete Error:", error);
-    });
+    
+    if (!this.isOfflineMode) {
+        supabase.from('users').delete().eq('id', userId).then(({ error }) => {
+            if (error) console.error("Supabase Delete Error:", error);
+        });
+    }
   }
 
   static getUser(): User | null {
@@ -157,6 +162,7 @@ export class Database {
   }
 
   static async syncUserToSupabase(user: User) {
+      if (this.isOfflineMode) return;
       try {
           const { error } = await supabase.from('users').upsert({
               id: user.id,
@@ -172,7 +178,14 @@ export class Database {
               birthday: user.birthday,
               streak: user.streak
           });
-          if (error) console.warn("Supabase Sync Warning:", error.message);
+          if (error) {
+              if (error.message.includes("Could not find the table") || error.code === '42P01') {
+                  console.warn("Supabase tables missing. Switching to Local-Only Mode.");
+                  this.isOfflineMode = true;
+              } else {
+                  console.warn("Supabase Sync Warning:", error.message);
+              }
+          }
       } catch (e) { console.warn("Supabase Sync Failed (Offline Mode)", e); }
   }
 
@@ -243,9 +256,12 @@ export class Database {
     if (!tx.userId) { const u = this.getUser(); if (u) { tx.userId = u.id; tx.userName = u.name; } }
     all.push(tx); 
     localStorage.setItem(DB_KEYS.TRANSACTIONS, JSON.stringify(all));
-    supabase.from('transactions').insert([{
-        id: tx.id, user_id: tx.userId, amount: tx.amount, cost: tx.cost, description: tx.description, status: tx.status, created_at: tx.date
-    }]).then(({ error }) => { if(error) console.error("Supabase Tx Error:", error); });
+    
+    if (!this.isOfflineMode) {
+        supabase.from('transactions').insert([{
+            id: tx.id, user_id: tx.userId, amount: tx.amount, cost: tx.cost, description: tx.description, status: tx.status, created_at: tx.date
+        }]).then(({ error }) => { if(error) console.error("Supabase Tx Error:", error); });
+    }
   }
 
   static getSettings(): GlobalSettings {
@@ -272,6 +288,7 @@ export class Database {
   // ==========================================
   
   static async getActiveSessionCount(): Promise<number> {
+      if (this.isOfflineMode) return 0; // Fallback: 0 active sessions implies "Available"
       try {
           const { count, error } = await supabase
               .from('session_queue')
@@ -280,14 +297,15 @@ export class Database {
           
           if (error) throw error;
           return count || 0;
-      } catch (e) {
-          console.error("Queue Sync Error:", e);
+      } catch (e: any) {
+          if (e.message?.includes("Could not find the table")) this.isOfflineMode = true;
           return 0; // Fallback unsafe
       }
   }
 
   // NEW METHOD FOR ADMIN
   static async getQueueList(): Promise<string[]> {
+      if (this.isOfflineMode) return [];
       try {
           const { data, error } = await supabase
               .from('session_queue')
@@ -310,28 +328,37 @@ export class Database {
 
   // Returns queue position. 0 means you are active or something went wrong.
   static async joinQueue(userId: string): Promise<number> {
+      if (this.isOfflineMode) return 1; // Auto-pass in offline mode
       try {
           // 1. Check if already in queue or active
-          const { data: existing } = await supabase.from('session_queue').select('status, created_at').eq('user_id', userId).single();
+          const { data: existing, error } = await supabase.from('session_queue').select('status, created_at').eq('user_id', userId).single();
           
+          if (error && error.code !== 'PGRST116') throw error; // PGRST116 is Row not found, which is fine
+
           if (existing && existing.status === 'active') return 0; // Already active
           
           if (!existing) {
               // Join as waiting
-              await supabase.from('session_queue').insert({ user_id: userId, status: 'waiting' });
+              const { error: insertError } = await supabase.from('session_queue').insert({ user_id: userId, status: 'waiting' });
+              if (insertError) throw insertError;
           } else {
               // Update ping to show life
               await supabase.from('session_queue').update({ last_ping: new Date() }).eq('user_id', userId);
           }
 
           return await this.getQueuePosition(userId);
-      } catch (e) {
+      } catch (e: any) {
+          if (e.message?.includes("Could not find the table")) {
+              this.isOfflineMode = true;
+              return 1; // Immediate access
+          }
           console.error("Join Queue Error:", e);
           return 99;
       }
   }
 
   static async getQueuePosition(userId: string): Promise<number> {
+      if (this.isOfflineMode) return 1;
       try {
           const { data: myRow } = await supabase.from('session_queue').select('created_at, status').eq('user_id', userId).single();
           if (!myRow) return 0;
@@ -356,6 +383,7 @@ export class Database {
 
   // ATTEMPT TO ENTER: Returns true if successfully claimed a spot
   static async claimActiveSpot(userId: string): Promise<boolean> {
+      if (this.isOfflineMode) return true; // Auto-claim in offline mode
       try {
           const activeCount = await this.getActiveSessionCount();
           const MAX_CONCURRENT = 15;
@@ -383,6 +411,7 @@ export class Database {
   }
 
   static async endSession(userId: string) {
+      if (this.isOfflineMode) return;
       try {
           await supabase.from('session_queue').delete().eq('user_id', userId);
       } catch (e) { console.error("End Session Error", e); }
@@ -390,6 +419,7 @@ export class Database {
 
   // NEW: Keep Alive to prevent stale sessions from blocking queue
   static async sendKeepAlive(userId: string) {
+      if (this.isOfflineMode) return;
       try {
           await supabase.from('session_queue').update({ last_ping: new Date() }).eq('user_id', userId);
       } catch (e) {}
