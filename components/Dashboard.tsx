@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Database, STABLE_AVATAR_POOL } from '../services/database';
 import { generateAffirmation, generateDailyInsight } from '../services/geminiService';
+import TechCheck from './TechCheck'; // NEW IMPORT
 
 interface DashboardProps {
   user: User;
@@ -908,6 +909,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   const [nameEditMode, setNameEditMode] = useState(false);
   const [tempName, setTempName] = useState(user.name);
   const [weather, setWeather] = useState<'confetti' | 'rain' | null>(null);
+  
+  // NEW: Tech Check State
+  const [showTechCheck, setShowTechCheck] = useState(false);
+  const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
 
   // Dark Mode Initialization
   useEffect(() => {
@@ -991,7 +996,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
           setShowPayment(true);
           return; 
       } 
-      onStartSession(companion);
+      // Open Tech Check instead of immediately starting session
+      setPendingCompanion(companion);
+      setShowTechCheck(true);
+  };
+
+  const confirmSessionStart = () => {
+      if (pendingCompanion) {
+          setShowTechCheck(false);
+          onStartSession(pendingCompanion);
+          setPendingCompanion(null);
+      }
   };
 
   const handleMoodSelect = (mood: 'confetti' | 'rain' | null) => {
@@ -1344,6 +1359,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
       </footer>
       
       {/* Modals - HIGHEST Z-INDEX */}
+      {showTechCheck && <TechCheck onConfirm={confirmSessionStart} onCancel={() => { setShowTechCheck(false); setPendingCompanion(null); }} />}
       {showPayment && <PaymentModal onClose={() => setShowPayment(false)} onSuccess={handlePaymentSuccess} initialError={paymentError} />}
       {showBreathing && <BreathingExercise userId={dashboardUser.id} onClose={() => setShowBreathing(false)} />}
       {showProfile && <ProfileModal user={dashboardUser} onClose={() => setShowProfile(false)} onUpdate={refreshData} />}

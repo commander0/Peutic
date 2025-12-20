@@ -195,6 +195,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         }
     };
 
+    // HANDLE MOBILE & DESKTOP TAB CLOSE
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
         if (conversationIdRef.current) {
              endTavusConversation(conversationIdRef.current);
@@ -203,10 +204,19 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         }
     };
 
+    // CRITICAL FIX FOR MOBILE SAFARI which ignores beforeunload
+    const handlePageHide = () => {
+        if (conversationIdRef.current) {
+             endTavusConversation(conversationIdRef.current);
+        }
+    };
+
     window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('pagehide', handlePageHide);
 
     return () => {
         window.removeEventListener('beforeunload', handleBeforeUnload);
+        window.removeEventListener('pagehide', handlePageHide);
         cleanup();
     };
   }, []);
