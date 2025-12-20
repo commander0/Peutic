@@ -2,22 +2,22 @@ import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, Serv
 import { supabase } from './supabaseClient';
 
 const DB_KEYS = {
-  USER: 'peutic_db_current_user_v14',
-  ALL_USERS: 'peutic_db_users_v14', 
-  COMPANIONS: 'peutic_db_companions_v14',
-  TRANSACTIONS: 'peutic_db_transactions_v14',
-  SETTINGS: 'peutic_db_settings_v14',
-  LOGS: 'peutic_db_logs_v14',
-  MOODS: 'peutic_db_moods_v14',
-  JOURNALS: 'peutic_db_journals_v14',
-  ART: 'peutic_db_art_v14',
-  PROMOS: 'peutic_db_promos_v14',
-  ADMIN_ATTEMPTS: 'peutic_db_admin_attempts_v14',
-  BREATHE_COOLDOWN: 'peutic_db_breathe_cooldown_v14',
-  BREATHE_LOGS: 'peutic_db_breathe_logs_v14',
-  MEMORIES: 'peutic_db_memories_v14',
-  GIFTS: 'peutic_db_gifts_v14',
-  FEEDBACK: 'peutic_db_feedback_v14',
+  USER: 'peutic_db_current_user_v16',
+  ALL_USERS: 'peutic_db_users_v16', 
+  COMPANIONS: 'peutic_db_companions_v16',
+  TRANSACTIONS: 'peutic_db_transactions_v16',
+  SETTINGS: 'peutic_db_settings_v16',
+  LOGS: 'peutic_db_logs_v16',
+  MOODS: 'peutic_db_moods_v16',
+  JOURNALS: 'peutic_db_journals_v16',
+  ART: 'peutic_db_art_v16',
+  PROMOS: 'peutic_db_promos_v16',
+  ADMIN_ATTEMPTS: 'peutic_db_admin_attempts_v16',
+  BREATHE_COOLDOWN: 'peutic_db_breathe_cooldown_v16',
+  BREATHE_LOGS: 'peutic_db_breathe_logs_v16',
+  MEMORIES: 'peutic_db_memories_v16',
+  GIFTS: 'peutic_db_gifts_v16',
+  FEEDBACK: 'peutic_db_feedback_v16',
 };
 
 export const STABLE_AVATAR_POOL = [
@@ -64,7 +64,27 @@ export const INITIAL_COMPANIONS: Companion[] = [
   { id: 'c4', name: 'Danny', gender: 'Male', specialty: 'Grief Support', status: 'AVAILABLE', rating: 5.0, imageUrl: STABLE_AVATAR_POOL[5], bio: 'Walking beside you in grief.', replicaId: 'r62baeccd777', licenseNumber: 'LPC-OH-5510', degree: 'MA, Counseling', stateOfPractice: 'OH', yearsExperience: 9 },
   { id: 'c5', name: 'Anna', gender: 'Female', specialty: 'Family Dynamics', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[2], bio: 'Navigating complex relationships.', replicaId: 'r6ae5b6efc9d', licenseNumber: 'LMFT-CA-9901', degree: 'MS, Family Therapy', stateOfPractice: 'CA', yearsExperience: 11 },
   { id: 'c6', name: 'Gloria', gender: 'Female', specialty: 'Elder Care', status: 'AVAILABLE', rating: 5.0, imageUrl: STABLE_AVATAR_POOL[4], bio: 'Support for caregivers.', replicaId: 'r4317e64d25a', licenseNumber: 'BSW-FL-3321', degree: 'BSW, Gerontology', stateOfPractice: 'FL', yearsExperience: 20 },
-  { id: 'c7', name: 'Olivia', gender: 'Female', specialty: 'Workplace Stress', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[6], bio: 'Burnout prevention strategies.', replicaId: 'rc2146c13e81', licenseNumber: 'PsyD-NY-1102', degree: 'PsyD, Org Psychology', stateOfPractice: 'NY', yearsExperience: 7 }
+  { id: 'c7', name: 'Olivia', gender: 'Female', specialty: 'Workplace Stress', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[6], bio: 'Burnout prevention strategies.', replicaId: 'rc2146c13e81', licenseNumber: 'PsyD-NY-1102', degree: 'PsyD, Org Psychology', stateOfPractice: 'NY', yearsExperience: 7 },
+  { id: 'c8', name: 'Marcus', gender: 'Male', specialty: 'Addiction Recovery', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[7], bio: 'One day at a time.', replicaId: 'r_marcus', licenseNumber: 'LAC-NJ-8821', degree: 'MA, Addiction Counseling', stateOfPractice: 'NJ', yearsExperience: 14 },
+  { id: 'c9', name: 'Elena', gender: 'Female', specialty: 'Postpartum Support', status: 'AVAILABLE', rating: 5.0, imageUrl: STABLE_AVATAR_POOL[8], bio: 'Supporting new mothers.', replicaId: 'r_elena', licenseNumber: 'LCSW-TX-3321', degree: 'MSW, Clinical Social Work', stateOfPractice: 'TX', yearsExperience: 6 },
+  { id: 'c10', name: 'Dr. Chen', gender: 'Male', specialty: 'Executive Burnout', status: 'BUSY', rating: 5.0, imageUrl: STABLE_AVATAR_POOL[9], bio: 'High performance sustainability.', replicaId: 'r_chen', licenseNumber: 'PsyD-CA-9921', degree: 'PsyD, Org Psychology', stateOfPractice: 'CA', yearsExperience: 18 },
+  { id: 'c11', name: 'Sarah', gender: 'Female', specialty: 'Eating Disorders', status: 'AVAILABLE', rating: 4.8, imageUrl: STABLE_AVATAR_POOL[10], bio: 'Building a healthy relationship with food.', replicaId: 'r_sarah', licenseNumber: 'RD-NY-4421', degree: 'MS, Nutrition & Psychology', stateOfPractice: 'NY', yearsExperience: 9 },
+  { id: 'c12', name: 'Malik', gender: 'Male', specialty: 'Trauma & PTSD', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[11], bio: 'Healing the past.', replicaId: 'r_malik', licenseNumber: 'LPC-IL-2210', degree: 'PhD, Clinical Psychology', stateOfPractice: 'IL', yearsExperience: 11 },
+  { id: 'c13', name: 'Zoe', gender: 'Female', specialty: 'LGBTQ+ Issues', status: 'AVAILABLE', rating: 5.0, imageUrl: STABLE_AVATAR_POOL[12], bio: 'Affirming and inclusive care.', replicaId: 'r_zoe', licenseNumber: 'LMFT-OR-5521', degree: 'MA, Counseling Psychology', stateOfPractice: 'OR', yearsExperience: 5 },
+  { id: 'c14', name: 'Liam', gender: 'Male', specialty: 'Anger Management', status: 'AVAILABLE', rating: 4.7, imageUrl: STABLE_AVATAR_POOL[13], bio: 'Constructive expression.', replicaId: 'r_liam', licenseNumber: 'LCSW-MA-8812', degree: 'MSW, Social Work', stateOfPractice: 'MA', yearsExperience: 13 },
+  { id: 'c15', name: 'Aisha', gender: 'Female', specialty: 'Cultural Identity', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[14], bio: 'Navigating dual identities.', replicaId: 'r_aisha', licenseNumber: 'LPC-GA-3321', degree: 'MA, Multicultural Counseling', stateOfPractice: 'GA', yearsExperience: 7 },
+  { id: 'c16', name: 'Noah', gender: 'Male', specialty: 'Teen Anxiety', status: 'AVAILABLE', rating: 4.8, imageUrl: STABLE_AVATAR_POOL[15], bio: 'Helping teens navigate pressure.', replicaId: 'r_noah', licenseNumber: 'LMFT-WA-9921', degree: 'MA, Family Therapy', stateOfPractice: 'WA', yearsExperience: 6 },
+  { id: 'c17', name: 'Dr. Patel', gender: 'Female', specialty: 'Sleep Insomnia', status: 'AVAILABLE', rating: 5.0, imageUrl: STABLE_AVATAR_POOL[16], bio: 'Restoring natural rhythms.', replicaId: 'r_patel', licenseNumber: 'MD-NY-1102', degree: 'MD, Psychiatry', stateOfPractice: 'NY', yearsExperience: 22 },
+  { id: 'c18', name: 'Sofia', gender: 'Female', specialty: 'Chronic Pain', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[17], bio: 'Mind-body healing.', replicaId: 'r_sofia', licenseNumber: 'PhD-CA-1123', degree: 'PhD, Health Psychology', stateOfPractice: 'CA', yearsExperience: 12 },
+  { id: 'c19', name: 'Jackson', gender: 'Male', specialty: 'Sports Psychology', status: 'AVAILABLE', rating: 4.8, imageUrl: STABLE_AVATAR_POOL[18], bio: 'Peak performance mindset.', replicaId: 'r_jackson', licenseNumber: 'PsyD-FL-4421', degree: 'PsyD, Sports Psychology', stateOfPractice: 'FL', yearsExperience: 8 },
+  { id: 'c20', name: 'Emma', gender: 'Female', specialty: 'Relationship Counseling', status: 'AVAILABLE', rating: 5.0, imageUrl: STABLE_AVATAR_POOL[19], bio: 'Building stronger bonds.', replicaId: 'r_emma', licenseNumber: 'LMFT-TX-8821', degree: 'MA, Marriage & Family', stateOfPractice: 'TX', yearsExperience: 10 },
+  { id: 'c21', name: 'Lucas', gender: 'Male', specialty: 'Digital Addiction', status: 'AVAILABLE', rating: 4.7, imageUrl: STABLE_AVATAR_POOL[20], bio: 'Unplugging for mental health.', replicaId: 'r_lucas', licenseNumber: 'LCSW-NY-3321', degree: 'MSW, Social Work', stateOfPractice: 'NY', yearsExperience: 6 },
+  { id: 'c22', name: 'Mia', gender: 'Female', specialty: 'Self-Esteem', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[21], bio: 'Finding your inner voice.', replicaId: 'r_mia', licenseNumber: 'LPC-CO-9921', degree: 'MA, Counseling', stateOfPractice: 'CO', yearsExperience: 9 },
+  { id: 'c23', name: 'William', gender: 'Male', specialty: 'Divorce Recovery', status: 'AVAILABLE', rating: 4.8, imageUrl: STABLE_AVATAR_POOL[22], bio: 'Navigating life transitions.', replicaId: 'r_william', licenseNumber: 'LMFT-IL-5521', degree: 'MA, Family Therapy', stateOfPractice: 'IL', yearsExperience: 15 },
+  { id: 'c24', name: 'Ava', gender: 'Female', specialty: 'Social Anxiety', status: 'AVAILABLE', rating: 5.0, imageUrl: STABLE_AVATAR_POOL[23], bio: 'Building confidence socially.', replicaId: 'r_ava', licenseNumber: 'PsyD-MA-1123', degree: 'PsyD, Clinical Psychology', stateOfPractice: 'MA', yearsExperience: 7 },
+  { id: 'c25', name: 'Benjamin', gender: 'Male', specialty: 'Fatherhood', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[24], bio: 'Supporting new dads.', replicaId: 'r_benjamin', licenseNumber: 'LCSW-WA-4421', degree: 'MSW, Social Work', stateOfPractice: 'WA', yearsExperience: 11 },
+  { id: 'c26', name: 'Charlotte', gender: 'Female', specialty: 'Art Therapy', status: 'AVAILABLE', rating: 5.0, imageUrl: STABLE_AVATAR_POOL[25], bio: 'Healing through creativity.', replicaId: 'r_charlotte', licenseNumber: 'ATR-BC-NY-8821', degree: 'MA, Art Therapy', stateOfPractice: 'NY', yearsExperience: 14 },
+  { id: 'c27', name: 'Henry', gender: 'Male', specialty: 'Financial Stress', status: 'AVAILABLE', rating: 4.8, imageUrl: STABLE_AVATAR_POOL[26], bio: 'Managing money mindset.', replicaId: 'r_henry', licenseNumber: 'LPC-OH-3321', degree: 'MA, Counseling', stateOfPractice: 'OH', yearsExperience: 13 }
 ];
 
 export class Database {
