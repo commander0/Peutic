@@ -224,13 +224,13 @@ const MindfulMatchGame: React.FC<{ onWin?: () => void }> = ({ onWin }) => {
     };
     useEffect(() => { if (cards.length > 0 && solved.length === cards.length) { setWon(true); onWin?.(); } }, [solved]);
     return (
-        <div className="bg-gradient-to-br from-yellow-50/50 to-white dark:from-gray-800 dark:to-gray-900 w-full h-full flex flex-col rounded-2xl p-2 md:p-1 lg:p-2 border border-yellow-100 dark:border-gray-700 overflow-hidden relative shadow-inner">
+        <div className="bg-gradient-to-br from-yellow-50/50 to-white dark:from-gray-800 dark:to-gray-900 w-full h-full flex flex-col rounded-2xl p-2 md:p-0.5 lg:p-2 border border-yellow-100 dark:border-gray-700 overflow-hidden relative shadow-inner">
             {/* Header Text Removed, Refresh button moved to absolute overlay */}
             <button onClick={initGame} className="absolute top-2 right-2 p-1.5 hover:bg-yellow-100 dark:hover:bg-gray-700 rounded-full transition-colors z-20">
                 <RefreshCw className="w-3 h-3 md:w-4 md:h-4 text-yellow-600 dark:text-yellow-400" />
             </button>
             
-            {won ? <div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in"><Trophy className="w-12 h-12 md:w-16 md:h-16 text-yellow-500 mb-2 animate-bounce" /><p className="font-black text-lg md:text-2xl text-yellow-900 dark:text-white">Zen Master!</p><button onClick={initGame} className="mt-4 bg-black dark:bg-white dark:text-black text-white px-4 py-1.5 md:px-6 md:py-2 rounded-full font-bold text-xs md:text-sm hover:scale-105 transition-transform">Replay</button></div> : <div className="flex-1 flex items-center justify-center min-h-0"><div className="grid grid-cols-4 grid-rows-4 gap-1.5 md:gap-1 lg:gap-2 w-full aspect-square">{cards.map((card, i) => { const isVisible = flipped.includes(i) || solved.includes(i); const Icon = card.icon; return (<div key={i} className="w-full h-full"><button onClick={() => handleCardClick(i)} className={`w-full h-full rounded-md md:rounded-lg flex items-center justify-center transition-all duration-300 ${isVisible ? 'bg-white dark:bg-gray-700 border-2 border-yellow-400 shadow-lg' : 'bg-gray-900 dark:bg-gray-800 shadow-md'}`}>{isVisible && <Icon className="w-8 h-8 md:w-12 md:h-12 text-yellow-500 animate-in zoom-in" />}</button></div>); })}</div></div>}
+            {won ? <div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in"><Trophy className="w-12 h-12 md:w-16 md:h-16 text-yellow-500 mb-2 animate-bounce" /><p className="font-black text-lg md:text-2xl text-yellow-900 dark:text-white">Zen Master!</p><button onClick={initGame} className="mt-4 bg-black dark:bg-white dark:text-black text-white px-4 py-1.5 md:px-6 md:py-2 rounded-full font-bold text-xs md:text-sm hover:scale-105 transition-transform">Replay</button></div> : <div className="flex-1 flex items-center justify-center min-h-0"><div className="grid grid-cols-4 grid-rows-4 gap-1.5 md:gap-0.5 lg:gap-2 w-full aspect-square">{cards.map((card, i) => { const isVisible = flipped.includes(i) || solved.includes(i); const Icon = card.icon; return (<div key={i} className="w-full h-full"><button onClick={() => handleCardClick(i)} className={`w-full h-full rounded-md md:rounded-lg flex items-center justify-center transition-all duration-300 ${isVisible ? 'bg-white dark:bg-gray-700 border-2 border-yellow-400 shadow-lg' : 'bg-gray-900 dark:bg-gray-800 shadow-md'}`}>{isVisible && <Icon className="w-8 h-8 md:w-14 md:h-14 text-yellow-500 animate-in zoom-in" />}</button></div>); })}</div></div>}
         </div>
     );
 };
@@ -464,7 +464,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
           </div>
 
           <div className="flex items-center gap-3 md:gap-4">
-              <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors md:ml-8 lg:ml-2">
+              <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors md:ml-24 lg:ml-2">
                   {darkMode ? <Sun className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" /> : <Moon className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />}
               </button>
 
