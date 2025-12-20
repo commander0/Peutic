@@ -35,6 +35,11 @@ export interface Companion {
   bio: string;
   replicaId: string;
   gender: 'Male' | 'Female';
+  // Trust Signals
+  licenseNumber: string;
+  degree: string;
+  stateOfPractice: string;
+  yearsExperience: number;
 }
 
 export interface Transaction {

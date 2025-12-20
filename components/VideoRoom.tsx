@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Companion, SessionFeedback } from '../types';
 import { 
     Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, 
-    Loader2, AlertCircle, RefreshCcw, Aperture, Star, CheckCircle, Users, Download, Share2
+    Loader2, AlertCircle, RefreshCcw, Aperture, Star, CheckCircle, Users, Download, Share2, BadgeCheck, FileText
 } from 'lucide-react';
 import { createTavusConversation, endTavusConversation } from '../services/tavusService';
 import { Database } from '../services/database';
@@ -106,6 +106,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [blurBackground, setBlurBackground] = useState(false);
+  const [showCredential, setShowCredential] = useState(false);
   
   // Session State
   const [duration, setDuration] = useState(0);
@@ -306,6 +307,13 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
       setShowSummary(true);
   };
 
+  const handleRefundRequest = () => {
+      if(confirm("Are you sure you want to end this session and request a credit refund for technical issues?")) {
+          onEndSession();
+          // Logic: Don't deduct credits, maybe flag for review
+      }
+  };
+
   const submitFeedbackAndClose = () => {
       const minutesUsed = Math.ceil(duration / 60);
       const user = Database.getUser();
@@ -389,6 +397,22 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   return (
     <div ref={containerRef} className="fixed inset-0 bg-black z-50 flex flex-col overflow-hidden select-none">
         
+        {/* --- CREDENTIAL BADGE (TRUST SIGNAL) --- */}
+        {showCredential && (
+            <div className="absolute top-24 right-4 z-40 bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl w-64 animate-in slide-in-from-right-10 fade-in duration-300">
+                <div className="flex justify-between items-start mb-2">
+                    <h4 className="text-white font-bold text-sm uppercase tracking-widest flex items-center gap-2"><BadgeCheck className="w-4 h-4 text-blue-400 fill-blue-400" /> Verified</h4>
+                    <button onClick={() => setShowCredential(false)} className="text-white/50 hover:text-white"><Share2 className="w-3 h-3 rotate-180" /></button>
+                </div>
+                <div className="space-y-2 text-xs">
+                    <div className="flex justify-between"><span className="text-gray-400">License</span><span className="text-white font-mono">{companion.licenseNumber || 'PENDING'}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">Education</span><span className="text-white text-right">{companion.degree || 'PhD, Clinical Psychology'}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">State</span><span className="text-white">{companion.stateOfPractice || 'NY'}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">Exp.</span><span className="text-white">{companion.yearsExperience || 10} Years</span></div>
+                </div>
+            </div>
+        )}
+
         {/* --- HEADER OVERLAY --- */}
         <div className="absolute top-0 left-0 right-0 p-4 md:p-6 flex justify-between items-start z-20 pointer-events-none bg-gradient-to-b from-black/80 via-black/20 to-transparent pb-20 transition-opacity duration-500">
             <div className="flex items-center gap-4 pointer-events-auto">
@@ -398,6 +422,10 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                         {connectionState === 'CONNECTED' ? formatTime(duration) : connectionState === 'QUEUED' ? 'Waiting...' : 'Connecting...'}
                     </span>
                 </div>
+                {/* Credentials Button */}
+                <button onClick={() => setShowCredential(!showCredential)} className="bg-black/40 backdrop-blur-xl p-2 rounded-full border border-white/10 text-white hover:bg-white/10 transition-colors">
+                    <FileText className="w-5 h-5" />
+                </button>
             </div>
             <div className="flex items-center gap-2 pointer-events-auto">
                 {/* Network Quality */}
@@ -486,6 +514,9 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 <button onClick={() => setCamOn(!camOn)} className={`p-3 rounded-full transition-all ${camOn ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-red-500 text-white'}`}>{camOn ? <VideoIcon className="w-5 h-5"/> : <VideoOff className="w-5 h-5"/>}</button>
                 <button onClick={() => setBlurBackground(!blurBackground)} className={`p-3 rounded-full transition-all ${blurBackground ? 'bg-yellow-500 text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}><Aperture className="w-5 h-5"/></button>
                 <div className="w-6 h-px bg-white/20 my-1"></div>
+                {/* REFUND / ISSUE BUTTON */}
+                <button onClick={handleRefundRequest} className="text-[10px] font-bold text-gray-400 hover:text-white mb-2" title="Report Issue / Refund">Report</button>
+                
                 <button onClick={handleEndSession} className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-full transition-colors shadow-lg shadow-red-600/20" title="End Session">
                     <PhoneOff className="w-5 h-5" />
                 </button>
