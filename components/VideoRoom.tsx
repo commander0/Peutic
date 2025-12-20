@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Companion, SessionFeedback } from '../types';
 import { 
     Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, 
-    Loader2, AlertCircle, RefreshCcw, Aperture, Star, CheckCircle, Users, Download, Share2, BadgeCheck, FileText, MessageSquare, Sparkles, ChevronRight, X
+    Loader2, AlertCircle, RefreshCcw, Aperture, Star, CheckCircle, Users, Download, Share2, BadgeCheck, FileText
 } from 'lucide-react';
 import { createTavusConversation, endTavusConversation } from '../services/tavusService';
 import { Database } from '../services/database';
@@ -12,20 +12,6 @@ interface VideoRoomProps {
   onEndSession: () => void;
   userName: string;
 }
-
-// --- ICEBREAKER DATA ---
-const ICEBREAKERS = [
-    "What is one small win you had this week?",
-    "If you could teleport anywhere right now, where would you go?",
-    "What comfort food do you crave when you're stressed?",
-    "What's a sound or smell that instantly relaxes you?",
-    "Who is someone that makes you feel safe?",
-    "What's the best advice you've ever received?",
-    "If you had an extra hour in the day, how would you spend it?",
-    "What is something you are grateful for today?",
-    "Describe your perfect calm morning.",
-    "What is a hobby you've always wanted to try?"
-];
 
 // --- ARTIFACT GENERATOR ---
 const renderSessionArtifact = (companionName: string, durationStr: string, dateStr: string): string => {
@@ -122,10 +108,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   const [blurBackground, setBlurBackground] = useState(false);
   const [showCredential, setShowCredential] = useState(false);
   
-  // Icebreaker State
-  const [showIcebreaker, setShowIcebreaker] = useState(false);
-  const [currentTopicIndex, setCurrentTopicIndex] = useState(0);
-
   // Session State
   const [duration, setDuration] = useState(0);
   const [connectionState, setConnectionState] = useState<'QUEUED' | 'CONNECTING' | 'CONNECTED' | 'ERROR' | 'DEMO_MODE'>('QUEUED');
@@ -213,7 +195,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         }
     };
 
-    // HANDLE MOBILE & DESKTOP TAB CLOSE
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
         if (conversationIdRef.current) {
              endTavusConversation(conversationIdRef.current);
@@ -222,19 +203,10 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         }
     };
 
-    // CRITICAL FIX FOR MOBILE SAFARI which ignores beforeunload
-    const handlePageHide = () => {
-        if (conversationIdRef.current) {
-             endTavusConversation(conversationIdRef.current);
-        }
-    };
-
     window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('pagehide', handlePageHide);
 
     return () => {
         window.removeEventListener('beforeunload', handleBeforeUnload);
-        window.removeEventListener('pagehide', handlePageHide);
         cleanup();
     };
   }, []);
@@ -385,10 +357,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
       }
   };
 
-  const nextIcebreaker = () => {
-      setCurrentTopicIndex((prev) => (prev + 1) % ICEBREAKERS.length);
-  };
-
   // --- RENDER ---
   if (showSummary) {
       return (
@@ -442,25 +410,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                     <div className="flex justify-between"><span className="text-gray-400">State</span><span className="text-white">{companion.stateOfPractice || 'NY'}</span></div>
                     <div className="flex justify-between"><span className="text-gray-400">Exp.</span><span className="text-white">{companion.yearsExperience || 10} Years</span></div>
                 </div>
-            </div>
-        )}
-
-        {/* --- ICEBREAKER OVERLAY --- */}
-        {showIcebreaker && (
-            <div className="absolute bottom-24 right-4 z-40 bg-white/10 backdrop-blur-xl border border-white/20 p-6 rounded-3xl w-72 md:w-80 shadow-2xl animate-in slide-in-from-bottom-10 fade-in duration-500">
-                <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-yellow-400 fill-yellow-400 animate-pulse" />
-                        <span className="text-xs font-black text-white uppercase tracking-widest">Conversation Spark</span>
-                    </div>
-                    <button onClick={() => setShowIcebreaker(false)} className="text-white/50 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
-                </div>
-                <p className="text-white font-medium text-lg leading-relaxed mb-6">
-                    "{ICEBREAKERS[currentTopicIndex]}"
-                </p>
-                <button onClick={nextIcebreaker} className="w-full bg-white text-black py-3 rounded-xl font-bold text-sm hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2">
-                    Next Topic <ChevronRight className="w-4 h-4" />
-                </button>
             </div>
         )}
 
@@ -564,12 +513,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 <button onClick={() => setMicOn(!micOn)} className={`p-3 rounded-full transition-all ${micOn ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-red-500 text-white'}`}>{micOn ? <Mic className="w-5 h-5"/> : <MicOff className="w-5 h-5"/>}</button>
                 <button onClick={() => setCamOn(!camOn)} className={`p-3 rounded-full transition-all ${camOn ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-red-500 text-white'}`}>{camOn ? <VideoIcon className="w-5 h-5"/> : <VideoOff className="w-5 h-5"/>}</button>
                 <button onClick={() => setBlurBackground(!blurBackground)} className={`p-3 rounded-full transition-all ${blurBackground ? 'bg-yellow-500 text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}><Aperture className="w-5 h-5"/></button>
-                
-                {/* NEW: Icebreaker Button */}
-                <button onClick={() => setShowIcebreaker(!showIcebreaker)} className={`p-3 rounded-full transition-all ${showIcebreaker ? 'bg-blue-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`} title="Conversation Spark">
-                    <MessageSquare className="w-5 h-5" />
-                </button>
-
                 <div className="w-6 h-px bg-white/20 my-1"></div>
                 {/* REFUND / ISSUE BUTTON */}
                 <button onClick={handleRefundRequest} className="text-[10px] font-bold text-gray-400 hover:text-white mb-2" title="Report Issue / Refund">Report</button>

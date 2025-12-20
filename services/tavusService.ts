@@ -1,6 +1,5 @@
 const TAVUS_API_URL = 'https://tavusapi.com/v2';
-// Prioritize Environment Variables
-const API_KEY = process.env.VITE_TAVUS_API_KEY || 'ae15b9c744264844a555049b576094d8';
+const API_KEY = 'ae15b9c744264844a555049b576094d8';
 
 export interface TavusConversationResponse {
   conversation_id: string;

@@ -7,12 +7,10 @@ import {
   Smile, Wind, BookOpen, Save, Sparkles, Activity, Info, Flame, Trophy, Target,
   Sun, Cloud, Music, Feather, Anchor, Gamepad2, RefreshCw, Play, Zap, Star, Edit2, Users, Trash2, Bell,
   CloudRain, Image as ImageIcon, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Shield, Moon,
-  Twitter, Instagram, Linkedin, LifeBuoy
+  Twitter, Instagram, Linkedin
 } from 'lucide-react';
 import { Database, STABLE_AVATAR_POOL } from '../services/database';
 import { generateAffirmation, generateDailyInsight } from '../services/geminiService';
-import TechCheck from './TechCheck'; 
-import GroundingMode from './GroundingMode';
 
 interface DashboardProps {
   user: User;
@@ -891,7 +889,7 @@ const JournalModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 // --- DASHBOARD MAIN ---
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession }) => {
   const [activeTab, setActiveTab] = useState<'hub' | 'history' | 'settings'>('hub');
-  const [darkMode, setDarkMode] = useState(false); 
+  const [darkMode, setDarkMode] = useState(false); // DEFAULT FALSE (Light Mode)
   const [balance, setBalance] = useState(user.balance);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [companions, setCompanions] = useState<Companion[]>([]);
@@ -910,13 +908,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   const [nameEditMode, setNameEditMode] = useState(false);
   const [tempName, setTempName] = useState(user.name);
   const [weather, setWeather] = useState<'confetti' | 'rain' | null>(null);
-  
-  // NEW: Tech Check & Grounding State
-  const [showTechCheck, setShowTechCheck] = useState(false);
-  const [showGrounding, setShowGrounding] = useState(false); // NEW STATE
-  const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
 
-  // ... (Effects and Helper functions remain unchanged) ...
+  // Dark Mode Initialization
   useEffect(() => {
       const savedTheme = localStorage.getItem('peutic_theme');
       if (savedTheme === 'dark') {
@@ -943,14 +936,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   const refreshData = () => {
     const dbUser = Database.getUser();
     if (dbUser) { setBalance(dbUser.balance); setDashboardUser(dbUser); }
+    
+    // Refresh Transactions
+    // Check if user.id is valid
     if (user && user.id) {
         const txs = Database.getUserTransactions(user.id);
         setTransactions(txs);
+
+        // Refresh Weekly Progress
         const progress = Database.getWeeklyProgress(user.id);
         setWeeklyGoal(progress.current);
         setWeeklyTarget(progress.target);
         setWeeklyMessage(progress.message);
     }
+
     setCompanions(Database.getCompanions());
   };
   
@@ -958,6 +957,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
       refreshData();
       const interval = setInterval(() => refreshData(), 5000);
       const timer = setTimeout(() => setLoadingCompanions(false), 1000);
+      
       const fetchInsight = async () => {
         try {
             if (user && user.name) {
@@ -969,7 +969,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         }
       };
       fetchInsight();
-      return () => { clearInterval(interval); clearTimeout(timer); };
+
+      return () => {
+          clearInterval(interval);
+          clearTimeout(timer);
+      };
   }, [user.id, user.name]);
 
   const handlePaymentSuccess = (minutesAdded: number, cost: number) => {
@@ -978,6 +982,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
       setShowPayment(false);
       setPaymentError(undefined);
       setWeather('confetti');
+      // Auto-clear handled by effect
   };
 
   const handleConnectRequest = (companion: Companion) => {
@@ -986,20 +991,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
           setShowPayment(true);
           return; 
       } 
-      setPendingCompanion(companion);
-      setShowTechCheck(true);
-  };
-
-  const confirmSessionStart = () => {
-      if (pendingCompanion) {
-          setShowTechCheck(false);
-          onStartSession(pendingCompanion);
-          setPendingCompanion(null);
-      }
+      onStartSession(companion);
   };
 
   const handleMoodSelect = (mood: 'confetti' | 'rain' | null) => {
       setWeather(mood);
+      // Persist mood to database so it counts towards goals
       Database.saveMood(user.id, mood);
   };
 
@@ -1018,6 +1015,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   }
 
   const filteredCompanions = companions.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.specialty.toLowerCase().includes(searchTerm.toLowerCase()));
+
   const isGoalMet = weeklyGoal >= weeklyTarget;
   const progressPercent = Math.min(100, (weeklyGoal / weeklyTarget) * 100);
 
@@ -1035,14 +1033,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
               <span className="font-black text-lg md:text-xl tracking-tight dark:text-white">Peutic</span>
           </div>
           <div className="flex items-center gap-3 md:gap-4">
-              {/* SOS BUTTON */}
-              <button 
-                  onClick={() => setShowGrounding(true)} 
-                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-full font-black text-[10px] md:text-xs uppercase tracking-widest animate-pulse shadow-lg flex items-center gap-2"
-              >
-                  <LifeBuoy className="w-3 h-3 md:w-4 md:h-4" /> Panic Relief
-              </button>
-
+              {/* Dark Mode Toggle */}
               <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
                   {darkMode ? <Sun className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" /> : <Moon className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />}
               </button>
@@ -1065,7 +1056,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
       {/* Main Container - FLEX 1 to push footer */}
       <div className="max-w-7xl w-full mx-auto px-4 pt-4 md:px-6 md:pt-6 lg:px-10 lg:pt-10 flex-1 flex flex-col md:flex-row gap-6 md:gap-10 relative z-10">
-          {/* Sidebar ... (unchanged) */}
+          {/* Sidebar */}
           <div className="w-full md:w-72 shrink-0 space-y-4 md:space-y-6">
               <div className="bg-[#FFFBEB] dark:bg-gray-900 p-6 md:p-8 rounded-3xl text-center relative group shadow-sm border border-yellow-200 dark:border-gray-800 transition-colors">
                   <button onClick={() => setShowProfile(true)} className="absolute top-4 right-4 p-2 bg-yellow-100 dark:bg-gray-800 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm hover:scale-110"><Edit2 className="w-3 h-3 dark:text-white" /></button>
@@ -1077,7 +1068,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                   <h3 className="font-black text-xl md:text-2xl dark:text-white">{dashboardUser.name}</h3>
                   <p className="text-[10px] md:text-xs font-bold text-yellow-600 uppercase tracking-widest mb-6">Premium Member</p>
                   
-                  {/* WEEKLY GOAL CARD */}
+                  {/* WEEKLY GOAL CARD - ENHANCED */}
                   <div className={`p-4 md:p-6 rounded-3xl text-left border shadow-inner transition-all duration-500 relative overflow-hidden ${isGoalMet ? 'bg-white dark:bg-gray-800 border-blue-200 dark:border-blue-900 shadow-[0_0_20px_rgba(59,130,246,0.15)]' : 'bg-white dark:bg-gray-800 border-yellow-100 dark:border-gray-700'}`}>
                       {isGoalMet && <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-purple-500"></div>}
                       
@@ -1112,6 +1103,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                   ))}
               </div>
 
+              {/* NEW AI IMAGE GENERATOR WIDGET */}
               <WisdomGenerator userId={dashboardUser.id} />
           </div>
 
@@ -1352,8 +1344,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
       </footer>
       
       {/* Modals - HIGHEST Z-INDEX */}
-      {showGrounding && <GroundingMode onClose={() => setShowGrounding(false)} />}
-      {showTechCheck && <TechCheck onConfirm={confirmSessionStart} onCancel={() => { setShowTechCheck(false); setPendingCompanion(null); }} />}
       {showPayment && <PaymentModal onClose={() => setShowPayment(false)} onSuccess={handlePaymentSuccess} initialError={paymentError} />}
       {showBreathing && <BreathingExercise userId={dashboardUser.id} onClose={() => setShowBreathing(false)} />}
       {showProfile && <ProfileModal user={dashboardUser} onClose={() => setShowProfile(false)} onUpdate={refreshData} />}
