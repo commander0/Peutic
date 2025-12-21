@@ -62,49 +62,46 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
 
   const startAmbientSong = () => {
       const ctx = initAudioContext();
-      // Prevent duplicates
       if (musicNodesRef.current.length > 0) return;
 
       const masterGain = ctx.createGain();
-      masterGain.gain.value = 0.15; // Gentle background volume
+      masterGain.gain.value = 0.2;
       masterGain.connect(ctx.destination);
       musicNodesRef.current.push(masterGain);
 
-      // Chords: Cmaj7 (C E G B), Fmaj7 (F A C E)
-      const chords = [
-          [261.63, 329.63, 392.00, 493.88], // C4
-          [174.61, 220.00, 261.63, 329.63]  // F3
-      ];
+      // Gentle C Major Pentatonic Arpeggio
+      // C4, E4, G4, A4, C5
+      const notes = [261.63, 329.63, 392.00, 440.00, 523.25];
+      const melodySequence = [0, 1, 2, 4, 2, 1, 0, 3, 2, 0, 1, 2]; // Index pattern
+      
+      const noteDuration = 0.8; // Seconds
+      const totalLoops = 30; // About 4-5 mins of music
 
       const now = ctx.currentTime;
-      const duration = 8; // seconds per chord
 
-      // Schedule loops for 2 minutes
-      for(let i=0; i<16; i++) {
-          const chord = chords[i % 2];
-          const startTime = now + (i * duration);
-          
-          chord.forEach((freq, index) => {
+      for (let loop = 0; loop < totalLoops; loop++) {
+          melodySequence.forEach((noteIndex, i) => {
+              const time = now + (loop * melodySequence.length * noteDuration) + (i * noteDuration);
+              
+              // Oscillator (Sine + Triangle blend for "Piano-ish" warmth)
               const osc = ctx.createOscillator();
-              osc.type = index % 2 === 0 ? 'sine' : 'triangle';
-              osc.frequency.value = freq;
+              osc.type = 'triangle';
+              osc.frequency.value = notes[noteIndex];
 
-              const gain = ctx.createGain();
-              gain.gain.setValueAtTime(0, startTime);
-              gain.gain.linearRampToValueAtTime(0.05, startTime + 2); // Slow attack
-              gain.gain.setValueAtTime(0.05, startTime + duration - 2);
-              gain.gain.linearRampToValueAtTime(0, startTime + duration); // Slow release
-
-              // Slight detune for warmth
-              osc.detune.value = Math.random() * 10 - 5;
-
-              osc.connect(gain);
-              gain.connect(masterGain);
+              const noteGain = ctx.createGain();
               
-              osc.start(startTime);
-              osc.stop(startTime + duration);
+              // ADSR Envelope
+              noteGain.gain.setValueAtTime(0, time);
+              noteGain.gain.linearRampToValueAtTime(0.1, time + 0.05); // Attack
+              noteGain.gain.exponentialRampToValueAtTime(0.001, time + noteDuration + 0.5); // Long Decay/Release
+
+              osc.connect(noteGain);
+              noteGain.connect(masterGain);
               
-              musicNodesRef.current.push(osc, gain);
+              osc.start(time);
+              osc.stop(time + noteDuration + 1); // Allow tail
+              
+              musicNodesRef.current.push(osc, noteGain);
           });
       }
   };

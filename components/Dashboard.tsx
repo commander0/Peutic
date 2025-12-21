@@ -167,13 +167,13 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
 };
 
 // --- GENERATIVE AUDIO ENGINE ---
+// Organic Sound Synthesis for Soundscape
 const SoundscapePlayer: React.FC = () => {
     const [playing, setPlaying] = useState(false);
     const [volume, setVolume] = useState(0.4);
     const [track, setTrack] = useState('rain');
     const [minimized, setMinimized] = useState(false);
     
-    // Audio Context References
     const ctxRef = useRef<AudioContext | null>(null);
     const gainRef = useRef<GainNode | null>(null);
     const nodesRef = useRef<AudioNode[]>([]);
@@ -184,13 +184,14 @@ const SoundscapePlayer: React.FC = () => {
         const output = buffer.getChannelData(0);
 
         for (let i = 0; i < bufferSize; i++) {
+            const white = Math.random() * 2 - 1;
             if (type === 'white') {
-                output[i] = Math.random() * 2 - 1;
+                output[i] = white;
             } else if (type === 'pink') {
-                const white = Math.random() * 2 - 1;
+                // Pink noise approx (-3dB/octave)
                 output[i] = (0.99886 * (output[i-1] || 0) + white * 0.0555179); 
             } else if (type === 'brown') {
-                const white = Math.random() * 2 - 1;
+                // Brown noise approx (-6dB/octave)
                 output[i] = (output[i-1] || 0) + (0.02 * white);
                 output[i] /= 3.5; 
             }
@@ -210,10 +211,9 @@ const SoundscapePlayer: React.FC = () => {
     };
 
     const playSound = () => {
-        stopAudio(); // Clear previous
+        stopAudio();
         if (!playing) return;
 
-        // Init Context if needed
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (!ctxRef.current) ctxRef.current = new AudioCtx();
         if (ctxRef.current.state === 'suspended') ctxRef.current.resume();
@@ -225,62 +225,63 @@ const SoundscapePlayer: React.FC = () => {
         gainRef.current = masterGain;
 
         if (track === 'rain') {
-            // Rain: Pink noise filtered low to sound like steady rain
-            const noise = createNoise(ctx, 'pink');
+            // RAIN: White Noise + Lowpass (800Hz)
+            // Creates a consistent, crisp "rainfall" sound.
+            const noise = createNoise(ctx, 'white'); 
             const filter = ctx.createBiquadFilter();
             filter.type = 'lowpass';
-            filter.frequency.value = 800; // Muffled steady rain
+            filter.frequency.value = 800;
+            
             noise.connect(filter);
             filter.connect(masterGain);
             noise.start();
             nodesRef.current.push(noise, filter);
         } 
         else if (track === 'forest') { 
-            // Wind (Forest): Pink Noise + Bandpass with Volume Swell
-            const noise = createNoise(ctx, 'pink');
+            // WIND: Pink Noise + Bandpass Filter + Frequency Modulation
+            // We modulate the filter frequency to create the "whooshing" sound of wind.
+            const noise = createNoise(ctx, 'pink'); 
             const filter = ctx.createBiquadFilter();
             filter.type = 'bandpass';
             filter.frequency.value = 400; 
-            filter.Q.value = 0.5; // Wide band
-
+            filter.Q.value = 0.6;
+            
+            // LFO for "Whoosh" (Modulates Filter Frequency)
             const lfo = ctx.createOscillator();
             lfo.type = 'sine';
-            lfo.frequency.value = 0.15; // Slow swell
-
-            const modGain = ctx.createGain();
-            modGain.gain.value = 0.4; // Modulation depth
-
-            const vca = ctx.createGain();
-            vca.gain.value = 0.6; 
+            lfo.frequency.value = 0.15; // Slow sweep
+            
+            const lfoGain = ctx.createGain();
+            lfoGain.gain.value = 150; // Sweep range (+- 150Hz)
+            
+            lfo.connect(lfoGain);
+            lfoGain.connect(filter.frequency);
 
             noise.connect(filter);
-            filter.connect(vca);
-            vca.connect(masterGain);
-
-            lfo.connect(modGain);
-            modGain.connect(vca.gain);
+            filter.connect(masterGain);
             
-            lfo.start();
             noise.start();
-            nodesRef.current.push(noise, filter, lfo, modGain, vca);
+            lfo.start();
+            nodesRef.current.push(noise, filter, lfo, lfoGain);
         }
         else if (track === 'ocean') {
-            // Ocean: Brown noise (deep) + Wave modulation
+            // OCEAN: Brown Noise + Lowpass + Slow Volume Swell
+            // Uses deep Brown noise and modulates volume to mimic waves crashing.
             const noise = createNoise(ctx, 'brown');
             const filter = ctx.createBiquadFilter();
             filter.type = 'lowpass';
-            filter.frequency.value = 400;
+            filter.frequency.value = 400; // Deep water sound
             
             const waveLfo = ctx.createOscillator();
             waveLfo.type = 'sine';
-            waveLfo.frequency.value = 0.2; // Slow waves
+            waveLfo.frequency.value = 0.1; // 10 second wave cycle
             
             const waveGain = ctx.createGain();
-            waveGain.gain.value = 0.5;
+            waveGain.gain.value = 0.6;
             
             const modStrength = ctx.createGain();
             modStrength.gain.value = 0.4;
-
+            
             noise.connect(filter);
             filter.connect(waveGain);
             waveGain.connect(masterGain);
@@ -293,30 +294,46 @@ const SoundscapePlayer: React.FC = () => {
             nodesRef.current.push(noise, filter, waveLfo, waveGain, modStrength);
         }
         else if (track === 'fire') {
-            // Fire: Brown noise Highpass + Crackles
+            // FIRE: Brown Noise (Highpass) + Random Clicks (Crackle)
             const noise = createNoise(ctx, 'brown');
             const filter = ctx.createBiquadFilter();
             filter.type = 'highpass';
-            filter.frequency.value = 150;
+            filter.frequency.value = 150; // Removes deep rumble, keeps roar
             
-            // Crackle simulation
-            const bufferSize = ctx.sampleRate * 2;
+            const roarGain = ctx.createGain();
+            roarGain.gain.value = 0.8;
+
+            noise.connect(filter);
+            filter.connect(roarGain);
+            roarGain.connect(masterGain);
+            
+            // Crackle Generator (Random Impulse)
+            const bufferSize = ctx.sampleRate * 3; // 3 seconds loop
             const crackleBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
             const crackleData = crackleBuffer.getChannelData(0);
             for(let i=0; i<bufferSize; i++) {
-                if (Math.random() > 0.992) crackleData[i] = (Math.random() * 2 - 1) * 0.5;
+                // Occasional high amplitude click
+                if (Math.random() > 0.9992) {
+                    crackleData[i] = (Math.random() * 2 - 1) * 0.9;
+                } else {
+                    crackleData[i] = 0;
+                }
             }
             const crackle = ctx.createBufferSource();
             crackle.buffer = crackleBuffer;
             crackle.loop = true;
+            
+            // Sharp filter for clicks
+            const crackleFilter = ctx.createBiquadFilter();
+            crackleFilter.type = 'highpass';
+            crackleFilter.frequency.value = 1200;
 
-            noise.connect(filter);
-            filter.connect(masterGain);
-            crackle.connect(masterGain);
+            crackle.connect(crackleFilter);
+            crackleFilter.connect(masterGain);
             
             noise.start();
             crackle.start();
-            nodesRef.current.push(noise, filter, crackle);
+            nodesRef.current.push(noise, filter, roarGain, crackle, crackleFilter);
         }
     };
 
@@ -473,49 +490,48 @@ const BreathingExercise: React.FC<{ userId: string; onClose: () => void }> = ({ 
     
     // Web Audio Refs for Breath Sound
     const audioCtxRef = useRef<AudioContext | null>(null);
-    const nodeRef = useRef<AudioNode | null>(null);
-    const filterRef = useRef<BiquadFilterNode | null>(null);
+    const nodesRef = useRef<AudioNode[]>([]);
     const gainRef = useRef<GainNode | null>(null);
 
     const toggleSound = () => {
         if (isPlaying) {
-            if (nodeRef.current) {
-                try { (nodeRef.current as any).stop(); } catch(e) {}
-                nodeRef.current.disconnect();
-            }
-            nodeRef.current = null;
+            nodesRef.current.forEach(node => {
+                try { (node as any).stop(); } catch(e) {}
+                try { node.disconnect(); } catch(e) {}
+            });
+            nodesRef.current = [];
             setIsPlaying(false);
         } else {
-            // New "Breath" sound using Filtered Noise
+            // Updated: Ethereal "Choir Pad" Sound
             const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
             audioCtxRef.current = ctx;
             
-            // White noise buffer
-            const bufferSize = ctx.sampleRate * 2;
-            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-            const output = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-                output[i] = Math.random() * 2 - 1;
-            }
-            const noise = ctx.createBufferSource();
-            noise.buffer = buffer;
-            noise.loop = true;
+            const masterGain = ctx.createGain();
+            masterGain.gain.value = 0;
+            masterGain.connect(ctx.destination);
+            gainRef.current = masterGain;
 
-            const filter = ctx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.value = 100; // Start closed
-
-            const gain = ctx.createGain();
-            gain.gain.value = 0; // Start silent
-
-            noise.connect(filter);
-            filter.connect(gain);
-            gain.connect(ctx.destination);
-            noise.start();
+            // 3 Oscillators for rich texture (Chord/Pad)
+            const freqs = [196.00, 246.94, 293.66]; // G3, B3, D4 (G Major chord)
             
-            nodeRef.current = noise;
-            filterRef.current = filter;
-            gainRef.current = gain;
+            freqs.forEach((freq, i) => {
+                const osc = ctx.createOscillator();
+                osc.type = i === 0 ? 'sine' : 'triangle';
+                osc.frequency.value = freq;
+                
+                // Slight detune for thickness
+                osc.detune.value = Math.random() * 10 - 5; 
+
+                const oscGain = ctx.createGain();
+                oscGain.gain.value = 0.15;
+
+                osc.connect(oscGain);
+                oscGain.connect(masterGain);
+                osc.start();
+                nodesRef.current.push(osc, oscGain);
+            });
+            nodesRef.current.push(masterGain);
+            
             setIsPlaying(true);
         }
     };
@@ -526,28 +542,21 @@ const BreathingExercise: React.FC<{ userId: string; onClose: () => void }> = ({ 
             setTotalSeconds(s => s + 1);
         }, 1000);
         
-        // Modulate Breath Sound (Filtered Noise)
-        if (gainRef.current && filterRef.current && audioCtxRef.current) {
+        // Modulate Breath Sound (Pad Swell)
+        if (gainRef.current && audioCtxRef.current) {
             const now = audioCtxRef.current.currentTime;
             
             if (phase === 'Inhale') {
-                // Open filter, increase volume
-                filterRef.current.frequency.cancelScheduledValues(now);
-                filterRef.current.frequency.linearRampToValueAtTime(1200, now + 4);
-                
+                // Swell Up
                 gainRef.current.gain.cancelScheduledValues(now);
-                gainRef.current.gain.linearRampToValueAtTime(0.3, now + 4);
+                gainRef.current.gain.linearRampToValueAtTime(0.4, now + 4);
             } else if (phase === 'Hold') {
                 // Sustain
-                filterRef.current.frequency.setTargetAtTime(1000, now, 0.1);
-                gainRef.current.gain.setTargetAtTime(0.1, now, 0.5);
+                gainRef.current.gain.setTargetAtTime(0.35, now, 0.5);
             } else if (phase === 'Exhale') {
-                // Close filter, decrease volume
-                filterRef.current.frequency.cancelScheduledValues(now);
-                filterRef.current.frequency.linearRampToValueAtTime(100, now + 4);
-                
+                // Fade Down
                 gainRef.current.gain.cancelScheduledValues(now);
-                gainRef.current.gain.linearRampToValueAtTime(0, now + 4);
+                gainRef.current.gain.linearRampToValueAtTime(0.05, now + 4);
             }
         }
 
@@ -556,7 +565,7 @@ const BreathingExercise: React.FC<{ userId: string; onClose: () => void }> = ({ 
 
     useEffect(() => {
         return () => {
-            if (nodeRef.current) { try { (nodeRef.current as any).stop(); } catch(e) {} }
+            nodesRef.current.forEach(node => { try{ (node as any).stop() }catch(e){} node.disconnect() });
             if (audioCtxRef.current) audioCtxRef.current.close();
         }
     }, []);
