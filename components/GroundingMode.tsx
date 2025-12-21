@@ -29,7 +29,7 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
   const voiceSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const audioCache = useRef<Map<string, AudioBuffer>>(new Map());
   const lastRequestId = useRef<number>(0);
-  const ambientNodeRef = useRef<AudioNode | null>(null);
+  const musicNodesRef = useRef<AudioNode[]>([]);
 
   const currentStep = STEPS[stepIndex];
   const progress = ((stepIndex) / (STEPS.length - 1)) * 100;
@@ -45,10 +45,8 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
       const channelData = buffer.getChannelData(0);
       
       for (let i = 0; i < frameCount; i++) {
-          // Normalize Int16 to Float32
           channelData[i] = pcmData[i] / 32768.0;
       }
-      
       return buffer;
   };
 
@@ -62,44 +60,58 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
       return audioContextRef.current;
   };
 
-  const startAmbientDrone = () => {
+  const startAmbientSong = () => {
       const ctx = initAudioContext();
       // Prevent duplicates
-      if (ambientNodeRef.current) return;
+      if (musicNodesRef.current.length > 0) return;
 
-      // Brown Noise Generator for Deep Calm
-      const bufferSize = 2 * ctx.sampleRate;
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const output = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-          const white = Math.random() * 2 - 1;
-          output[i] = (output[i-1] || 0) + (0.02 * white);
-          output[i] /= 3.5; 
+      const masterGain = ctx.createGain();
+      masterGain.gain.value = 0.15; // Gentle background volume
+      masterGain.connect(ctx.destination);
+      musicNodesRef.current.push(masterGain);
+
+      // Chords: Cmaj7 (C E G B), Fmaj7 (F A C E)
+      const chords = [
+          [261.63, 329.63, 392.00, 493.88], // C4
+          [174.61, 220.00, 261.63, 329.63]  // F3
+      ];
+
+      const now = ctx.currentTime;
+      const duration = 8; // seconds per chord
+
+      // Schedule loops for 2 minutes
+      for(let i=0; i<16; i++) {
+          const chord = chords[i % 2];
+          const startTime = now + (i * duration);
+          
+          chord.forEach((freq, index) => {
+              const osc = ctx.createOscillator();
+              osc.type = index % 2 === 0 ? 'sine' : 'triangle';
+              osc.frequency.value = freq;
+
+              const gain = ctx.createGain();
+              gain.gain.setValueAtTime(0, startTime);
+              gain.gain.linearRampToValueAtTime(0.05, startTime + 2); // Slow attack
+              gain.gain.setValueAtTime(0.05, startTime + duration - 2);
+              gain.gain.linearRampToValueAtTime(0, startTime + duration); // Slow release
+
+              // Slight detune for warmth
+              osc.detune.value = Math.random() * 10 - 5;
+
+              osc.connect(gain);
+              gain.connect(masterGain);
+              
+              osc.start(startTime);
+              osc.stop(startTime + duration);
+              
+              musicNodesRef.current.push(osc, gain);
+          });
       }
-
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-      noise.loop = true;
-      
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.value = 200; // Deep rumble
-
-      const gain = ctx.createGain();
-      gain.gain.value = 0.15; // Subtle background
-
-      noise.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
-      noise.start();
-      
-      ambientNodeRef.current = noise;
   };
 
   const playBuffer = (buffer: AudioBuffer) => {
       const ctx = initAudioContext();
       
-      // Stop previous
       if (voiceSourceRef.current) {
           try { voiceSourceRef.current.stop(); } catch(e) {}
       }
@@ -115,27 +127,23 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
   const playAiVoice = async (text: string) => {
       if (!voiceEnabled) return;
       
-      // Stop immediately to prevent overlap/lag
       if (voiceSourceRef.current) {
           try { voiceSourceRef.current.stop(); } catch(e) {}
           voiceSourceRef.current = null;
       }
       window.speechSynthesis.cancel(); 
 
-      // Check Cache
       if (audioCache.current.has(text)) {
           playBuffer(audioCache.current.get(text)!);
           return;
       }
 
-      // Generation
       const requestId = Date.now();
       lastRequestId.current = requestId;
       setLoadingVoice(true);
 
       const data = await generateSpeech(text);
       
-      // Only play if the user is still on the same request (avoid playing old requests)
       if (lastRequestId.current === requestId && data) {
           try {
               const ctx = initAudioContext();
@@ -147,7 +155,6 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
               fallbackSpeak(text);
           }
       } else if (!data) {
-          // Fallback if API fails
           if (lastRequestId.current === requestId) fallbackSpeak(text);
       }
       
@@ -165,7 +172,6 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
       window.speechSynthesis.speak(utterance);
   };
 
-  // Preloading Logic
   useEffect(() => {
       const preloadNext = async () => {
           const nextStep = STEPS[stepIndex + 1];
@@ -181,12 +187,11 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
   }, [stepIndex]);
 
   useEffect(() => {
-      // Intro Message
       initAudioContext();
       playAiVoice(STEPS[0].narration);
       
       try {
-        startAmbientDrone();
+        startAmbientSong();
       } catch (e) {
         console.warn("Autoplay prevented");
         setAudioBlocked(true);
@@ -195,11 +200,11 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
       return () => {
           if (voiceSourceRef.current) { try { voiceSourceRef.current.stop(); } catch(e) {} }
           window.speechSynthesis.cancel();
-          if (ambientNodeRef.current) {
-              try { (ambientNodeRef.current as any).stop(); } catch(e) {}
-              try { ambientNodeRef.current.disconnect(); } catch(e) {}
-              ambientNodeRef.current = null;
-          }
+          musicNodesRef.current.forEach(node => {
+              try { (node as any).stop && (node as any).stop(); } catch(e) {}
+              try { node.disconnect(); } catch(e) {}
+          });
+          musicNodesRef.current = [];
           if (audioContextRef.current) {
               audioContextRef.current.close();
               audioContextRef.current = null;
@@ -215,7 +220,7 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
 
   const handleStartAudio = () => {
       setAudioBlocked(false);
-      startAmbientDrone();
+      startAmbientSong();
       playAiVoice(currentStep.narration || "");
   };
 
@@ -235,10 +240,9 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
       setStepIndex(i => i + 1);
       setCounter(0);
       setIsTransitioning(false);
-    }, 200); // Faster transition for snappiness
+    }, 200); 
   };
 
-  // Breathing Timer for first step
   useEffect(() => {
     if (currentStep.id === 'breathe') {
       const timer = setTimeout(() => {
