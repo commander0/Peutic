@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Mic, MicOff, Video, VideoOff, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
 
@@ -63,14 +64,36 @@ const TechCheck: React.FC<TechCheckProps> = ({ onConfirm, onCancel }) => {
 
     startStream();
 
+    // CLEANUP FUNCTION: IMPORTANT
+    // This runs when the component unmounts (e.g. when transitioning to VideoRoom)
     return () => {
       if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
+        videoStream.getTracks().forEach(track => {
+            track.stop();
+            console.log("TechCheck: Camera track stopped.");
+        });
       }
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
-      if (audioContextRef.current) audioContextRef.current.close();
+      if (audioContextRef.current) {
+          audioContextRef.current.close();
+      }
     };
-  }, []);
+  }, []); // Empty dependency array means this only runs once on mount, and cleanup on unmount
+
+  // Manual handler to ensure stream stop before state transition if needed
+  const handleConfirm = () => {
+      if (videoStream) {
+          videoStream.getTracks().forEach(t => t.stop());
+      }
+      onConfirm();
+  };
+
+  const handleCancel = () => {
+      if (videoStream) {
+          videoStream.getTracks().forEach(t => t.stop());
+      }
+      onCancel();
+  };
 
   return (
     <div className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
@@ -91,7 +114,7 @@ const TechCheck: React.FC<TechCheckProps> = ({ onConfirm, onCancel }) => {
                 </div>
                 <h3 className="font-bold text-white text-lg mb-2">Access Denied</h3>
                 <p className="text-gray-400 text-sm mb-6">We couldn't access your camera or microphone. Please allow permissions in your browser settings to continue.</p>
-                <button onClick={onCancel} className="bg-gray-800 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-700">Go Back</button>
+                <button onClick={handleCancel} className="bg-gray-800 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-700">Go Back</button>
             </div>
         )}
 
@@ -123,10 +146,10 @@ const TechCheck: React.FC<TechCheckProps> = ({ onConfirm, onCancel }) => {
                 </div>
 
                 <div className="flex gap-4 pt-2">
-                    <button onClick={onCancel} className="flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl font-bold transition-colors">
+                    <button onClick={handleCancel} className="flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl font-bold transition-colors">
                         Cancel
                     </button>
-                    <button onClick={onConfirm} className="flex-1 py-3 bg-yellow-500 hover:bg-yellow-400 text-black rounded-xl font-bold shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
+                    <button onClick={handleConfirm} className="flex-1 py-3 bg-yellow-500 hover:bg-yellow-400 text-black rounded-xl font-bold shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
                         <CheckCircle className="w-5 h-5" /> Join Session
                     </button>
                 </div>

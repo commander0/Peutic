@@ -119,6 +119,9 @@ const renderSessionArtifact = (companionName: string, durationStr: string, dateS
 const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Track specific stream reference for cleanup
+  const localStreamRef = useRef<MediaStream | null>(null);
 
   // Media State
   const [micOn, setMicOn] = useState(true);
@@ -168,7 +171,13 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
           conversationIdRef.current = null;
       }
 
-      // 2. Update Database state
+      // 2. Stop Local Camera
+      if (localStreamRef.current) {
+          localStreamRef.current.getTracks().forEach(t => t.stop());
+          localStreamRef.current = null;
+      }
+
+      // 3. Update Database state
       Database.endSession(userId);
   }, [userId]);
 
@@ -224,12 +233,10 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
     // HANDLE MOBILE & DESKTOP TAB CLOSE / REFRESH
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
         performCleanup();
-        // Modern browsers don't allow custom messages, but setting returnValue triggers the prompt
         e.preventDefault(); 
         e.returnValue = '';
     };
 
-    // CRITICAL FIX FOR MOBILE SAFARI which ignores beforeunload
     const handlePageHide = () => {
         performCleanup();
     };
@@ -294,42 +301,67 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
   // --- Webcam Logic (Self-View) ---
   useEffect(() => {
-    let stream: MediaStream | null = null;
+    let isMounted = true;
 
     const startCamera = async () => {
-        if (!camOn || showSummary) return;
+        if (!camOn || showSummary) {
+            // Stop logic
+            if (localStreamRef.current) {
+                localStreamRef.current.getTracks().forEach(track => track.stop());
+                localStreamRef.current = null;
+            }
+            if (videoRef.current) {
+                videoRef.current.srcObject = null;
+            }
+            return;
+        }
+
+        // --- CRITICAL FIX ---
+        // TechCheck often holds the camera lock too long. We wait 800ms to allow the browser to release the hardware.
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        if (!isMounted) return;
 
         try {
-            // Explicitly requesting new stream to ensure we get a fresh one
-            stream = await navigator.mediaDevices.getUserMedia({ 
+            console.log("VideoRoom: Requesting Camera...");
+            const stream = await navigator.mediaDevices.getUserMedia({ 
                 video: { 
-                    width: 320, 
-                    height: 180, 
-                    facingMode: 'user'
+                    width: { ideal: 320 }, 
+                    height: { ideal: 180 }, 
+                    facingMode: 'user',
+                    frameRate: { ideal: 24 }
                 }, 
-                audio: false // Critical: No audio to prevent echo
+                audio: false // STRICTLY FALSE for self-view to prevent feedback loops
             });
             
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                // Wait for metadata to load before playing
-                videoRef.current.onloadedmetadata = () => {
-                    videoRef.current?.play().catch(e => console.warn("Video play interrupted:", e));
-                };
+            if (isMounted) {
+                localStreamRef.current = stream;
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    // Force play
+                    await videoRef.current.play().catch(e => console.warn("Autoplay block:", e));
+                }
+            } else {
+                // Component unmounted during await
+                stream.getTracks().forEach(t => t.stop());
             }
         } catch (err) {
-            console.error("Error accessing webcam:", err);
+            console.error("VideoRoom Camera Error:", err);
+            // Retry once if "NotReadableError" (hardware busy)
+            if ((err as any).name === 'NotReadableError' && isMounted) {
+                 console.log("Retrying camera access in 1s...");
+                 setTimeout(startCamera, 1000);
+            }
         }
     };
 
     startCamera();
 
     return () => {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-        }
-        if (videoRef.current) {
-            videoRef.current.srcObject = null;
+        isMounted = false;
+        if (localStreamRef.current) {
+            localStreamRef.current.getTracks().forEach(track => track.stop());
+            localStreamRef.current = null;
         }
     };
   }, [camOn, showSummary]);
@@ -372,7 +404,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
       if(confirm("Are you sure you want to end this session and request a credit refund for technical issues?")) {
           performCleanup();
           onEndSession();
-          // Logic: Don't deduct credits, maybe flag for review
       }
   };
 
@@ -386,7 +417,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             amount: -minutesUsed, description: `Session with ${companion.name}`, status: 'COMPLETED'
         });
         
-        // NEW: Save Feedback for Admin Review
         const feedback: SessionFeedback = {
             id: `fb_${Date.now()}`,
             userId: user.id,
