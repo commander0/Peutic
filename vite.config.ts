@@ -5,7 +5,9 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   define: {
-    'process.env': {}
+    // This allows access to process.env in client-side code if needed, but primarily 
+    // we use import.meta.env. This shim prevents crashes if libraries access process.env.
+    'process.env': {} 
   },
   build: {
     chunkSizeWarningLimit: 1000,
