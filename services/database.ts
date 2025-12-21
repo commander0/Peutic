@@ -1,3 +1,4 @@
+
 import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, ServerMetric, MoodEntry, JournalEntry, PromoCode, SessionFeedback, ArtEntry, BreathLog, SessionMemory, GiftCard } from '../types';
 import { supabase } from './supabaseClient';
 
@@ -482,7 +483,6 @@ export class Database {
       }
   }
 
-  // ... (Rest of existing methods unchanged) ...
   static getAllFeedback(): SessionFeedback[] { return JSON.parse(localStorage.getItem(DB_KEYS.FEEDBACK) || '[]'); }
   static saveJournal(entry: JournalEntry) { const j = JSON.parse(localStorage.getItem(DB_KEYS.JOURNALS) || '[]'); j.push(entry); localStorage.setItem(DB_KEYS.JOURNALS, JSON.stringify(j)); }
   static getJournals(userId: string): JournalEntry[] { return JSON.parse(localStorage.getItem(DB_KEYS.JOURNALS) || '[]').filter((j: JournalEntry) => j.userId === userId).reverse(); }
@@ -493,14 +493,37 @@ export class Database {
   
   static saveArt(entry: ArtEntry) {
       let art = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]');
-      art.push(entry);
-      try { localStorage.setItem(DB_KEYS.ART, JSON.stringify(art)); } 
+      
+      // Filter out this user's art to manage their limit separately
+      const userArt = art.filter((a: ArtEntry) => a.userId === entry.userId);
+      const otherArt = art.filter((a: ArtEntry) => a.userId !== entry.userId);
+      
+      userArt.push(entry);
+      
+      // Enforce strict limit of 5 to prevent storage bloat
+      while (userArt.length > 5) {
+          userArt.shift(); // Remove oldest
+      }
+      
+      const newArt = [...otherArt, ...userArt];
+
+      try { 
+          localStorage.setItem(DB_KEYS.ART, JSON.stringify(newArt)); 
+      } 
       catch (e: any) {
           if (e.name === 'QuotaExceededError' || e.code === 22) {
-              while (art.length > 1) { art.shift(); try { localStorage.setItem(DB_KEYS.ART, JSON.stringify(art)); break; } catch (r) {} }
+              // Emergency cleanup if still hitting quota
+              while (newArt.length > 1) { 
+                  newArt.shift(); 
+                  try { 
+                      localStorage.setItem(DB_KEYS.ART, JSON.stringify(newArt)); 
+                      break; 
+                  } catch (r) {} 
+              }
           }
       }
   }
+
   static getUserArt(userId: string): ArtEntry[] { return JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]').filter((a: ArtEntry) => a.userId === userId).reverse(); }
   static deleteArt(artId: string) { let art = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]'); art = art.filter((a: ArtEntry) => a.id !== artId); localStorage.setItem(DB_KEYS.ART, JSON.stringify(art)); }
   static getBreathingCooldown(): number | null { const cd = localStorage.getItem(DB_KEYS.BREATHE_COOLDOWN); return cd ? parseInt(cd, 10) : null; }
