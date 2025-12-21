@@ -166,67 +166,163 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
     );
 };
 
-// --- SOUNDSCAPE PLAYER (RESTORED LARGE DESIGN & YELLOW THEME) ---
+// --- GENERATIVE AUDIO ENGINE ---
+// Replaces external files with Web Audio API synthesis for 100% reliability
 const SoundscapePlayer: React.FC = () => {
     const [playing, setPlaying] = useState(false);
     const [volume, setVolume] = useState(0.4);
     const [track, setTrack] = useState('rain');
     const [minimized, setMinimized] = useState(false);
-    const audioRef = useRef<HTMLAudioElement | null>(null);
     
-    // RELIABLE AUDIO SOURCES (Pixabay CDN - MP3 Format)
-    const TRACKS = { 
-        rain: { url: "https://cdn.pixabay.com/audio/2022/05/17/audio_2069695d7e.mp3", label: "Rain", icon: CloudRain }, 
-        forest: { url: "https://cdn.pixabay.com/audio/2021/08/09/audio_03e620579b.mp3", label: "Forest", icon: Feather }, 
-        ocean: { url: "https://cdn.pixabay.com/audio/2022/02/07/audio_5500c60967.mp3", label: "Ocean", icon: Anchor },
-        fire: { url: "https://cdn.pixabay.com/audio/2022/08/03/audio_54ca0ffa52.mp3", label: "Fire", icon: Fire } 
+    // Audio Context References
+    const ctxRef = useRef<AudioContext | null>(null);
+    const gainRef = useRef<GainNode | null>(null);
+    const nodesRef = useRef<AudioNode[]>([]);
+
+    const createNoise = (ctx: AudioContext, type: 'white' | 'pink' | 'brown') => {
+        const bufferSize = 2 * ctx.sampleRate;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const output = buffer.getChannelData(0);
+
+        for (let i = 0; i < bufferSize; i++) {
+            if (type === 'white') {
+                output[i] = Math.random() * 2 - 1;
+            } else if (type === 'pink') {
+                const white = Math.random() * 2 - 1;
+                output[i] = (0.99886 * (output[i-1] || 0) + white * 0.0555179); // Approximate Pink
+            } else if (type === 'brown') {
+                const white = Math.random() * 2 - 1;
+                output[i] = (output[i-1] || 0) + (0.02 * white);
+                output[i] /= 3.5; 
+            }
+        }
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        noise.loop = true;
+        return noise;
+    };
+
+    const stopAudio = () => {
+        nodesRef.current.forEach(node => {
+            try { (node as any).stop && (node as any).stop(); } catch(e) {}
+            try { node.disconnect(); } catch(e) {}
+        });
+        nodesRef.current = [];
+    };
+
+    const playSound = () => {
+        stopAudio(); // Clear previous
+        if (!playing) return;
+
+        // Init Context if needed
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!ctxRef.current) ctxRef.current = new AudioCtx();
+        if (ctxRef.current.state === 'suspended') ctxRef.current.resume();
+
+        const ctx = ctxRef.current;
+        const masterGain = ctx.createGain();
+        masterGain.gain.value = volume;
+        masterGain.connect(ctx.destination);
+        gainRef.current = masterGain;
+
+        // Generators
+        if (track === 'rain') {
+            const noise = createNoise(ctx, 'pink');
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 800;
+            noise.connect(filter);
+            filter.connect(masterGain);
+            noise.start();
+            nodesRef.current.push(noise, filter);
+        } 
+        else if (track === 'forest') { 
+            // Synthesized Wind/Stream
+            const noise = createNoise(ctx, 'white');
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.value = 500;
+            filter.Q.value = 0.5;
+            
+            // LFO for wind swish
+            const lfo = ctx.createOscillator();
+            lfo.type = 'sine';
+            lfo.frequency.value = 0.1;
+            const lfoGain = ctx.createGain();
+            lfoGain.gain.value = 200;
+            lfo.connect(lfoGain);
+            lfoGain.connect(filter.frequency);
+
+            noise.connect(filter);
+            filter.connect(masterGain);
+            noise.start();
+            lfo.start();
+            nodesRef.current.push(noise, filter, lfo, lfoGain);
+        }
+        else if (track === 'ocean') {
+            const noise = createNoise(ctx, 'pink');
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 400;
+            
+            // Wave modulation
+            const waveLfo = ctx.createOscillator();
+            waveLfo.type = 'sine';
+            waveLfo.frequency.value = 0.15; // Slow waves
+            const waveGain = ctx.createGain();
+            waveGain.gain.value = 0.5;
+            
+            noise.connect(filter);
+            filter.connect(waveGain);
+            waveGain.connect(masterGain);
+            
+            // Modulate volume
+            const modGain = ctx.createGain();
+            modGain.gain.value = 0.4;
+            waveLfo.connect(modGain);
+            modGain.connect(waveGain.gain);
+
+            noise.start();
+            waveLfo.start();
+            nodesRef.current.push(noise, filter, waveLfo, waveGain, modGain);
+        }
+        else if (track === 'fire') {
+            const noise = createNoise(ctx, 'brown');
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'highpass';
+            filter.frequency.value = 150;
+            
+            // Crackle simulation (Random clicks)
+            const bufferSize = ctx.sampleRate * 2;
+            const crackleBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const crackleData = crackleBuffer.getChannelData(0);
+            for(let i=0; i<bufferSize; i++) {
+                if (Math.random() > 0.999) crackleData[i] = (Math.random() * 2 - 1) * 0.8;
+            }
+            const crackle = ctx.createBufferSource();
+            crackle.buffer = crackleBuffer;
+            crackle.loop = true;
+
+            noise.connect(filter);
+            filter.connect(masterGain);
+            crackle.connect(masterGain);
+            
+            noise.start();
+            crackle.start();
+            nodesRef.current.push(noise, filter, crackle);
+        }
     };
 
     useEffect(() => {
-        if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ""; }
-        const audio = new Audio(); 
-        audio.src = TRACKS[track as keyof typeof TRACKS].url; 
-        audio.loop = true; 
-        audio.volume = volume;
-        audio.crossOrigin = "anonymous";
+        if (playing) playSound();
+        else stopAudio();
         
-        audio.onerror = (e) => { 
-            if (typeof e === 'string') {
-                console.error("Soundscape Error:", e);
-            } else {
-                const target = e.target as HTMLAudioElement;
-                console.error("Soundscape Error:", target.error?.message || "Load failed", target.src); 
-            }
-            setPlaying(false); 
-        };
-        
-        audioRef.current = audio;
-        if (playing) { 
-            const playPromise = audio.play(); 
-            if (playPromise !== undefined) { 
-                playPromise.catch(error => { 
-                    console.warn("Auto-play blocked:", error); 
-                    setPlaying(false); 
-                }); 
-            } 
-        }
-        return () => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; } };
-    }, [track]);
+        return () => stopAudio();
+    }, [playing, track]);
 
-    useEffect(() => { if (audioRef.current) audioRef.current.volume = volume; }, [volume]);
-    
-    const togglePlay = () => { 
-        if (!audioRef.current) return; 
-        if (playing) { 
-            audioRef.current.pause(); 
-            setPlaying(false); 
-        } else { 
-            const playPromise = audioRef.current.play(); 
-            if (playPromise !== undefined) { 
-                playPromise.then(() => setPlaying(true)).catch(e => { console.error("Play failed:", e); setPlaying(false); }); 
-            } 
-        } 
-    };
+    useEffect(() => {
+        if (gainRef.current) gainRef.current.gain.setTargetAtTime(volume, ctxRef.current?.currentTime || 0, 0.1);
+    }, [volume]);
 
     return (
         <div className={`fixed bottom-6 right-6 z-[80] transition-all duration-500 ease-in-out bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-300 dark:border-yellow-600 shadow-2xl overflow-hidden ${minimized ? 'w-12 h-12 rounded-full' : 'w-72 rounded-3xl p-4'}`}>
@@ -249,12 +345,17 @@ const SoundscapePlayer: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-4 gap-2">
-                        {Object.entries(TRACKS).map(([key, data]) => {
-                            const isActive = track === key;
+                        {[
+                            { key: 'rain', label: 'Rain', icon: CloudRain },
+                            { key: 'forest', label: 'Wind', icon: Feather }, // Relabeled for accuracy
+                            { key: 'ocean', label: 'Ocean', icon: Anchor },
+                            { key: 'fire', label: 'Fire', icon: Fire }
+                        ].map((item) => {
+                            const isActive = track === item.key;
                             return (
-                                <button key={key} onClick={() => setTrack(key)} className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${isActive ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg scale-105' : 'bg-white dark:bg-gray-800 text-gray-500 hover:bg-yellow-100 dark:hover:bg-gray-700 border border-yellow-100 dark:border-gray-700'}`}>
-                                    <data.icon className={`w-4 h-4 mb-1 ${isActive ? 'text-yellow-400 dark:text-yellow-600' : ''}`} />
-                                    <span className="text-[9px] font-bold uppercase">{data.label}</span>
+                                <button key={item.key} onClick={() => setTrack(item.key)} className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${isActive ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg scale-105' : 'bg-white dark:bg-gray-800 text-gray-500 hover:bg-yellow-100 dark:hover:bg-gray-700 border border-yellow-100 dark:border-gray-700'}`}>
+                                    <item.icon className={`w-4 h-4 mb-1 ${isActive ? 'text-yellow-400 dark:text-yellow-600' : ''}`} />
+                                    <span className="text-[9px] font-bold uppercase">{item.label}</span>
                                 </button>
                             )
                         })}
@@ -262,7 +363,7 @@ const SoundscapePlayer: React.FC = () => {
 
                     <div className="flex items-center gap-3">
                         <button 
-                            onClick={togglePlay} 
+                            onClick={() => setPlaying(!playing)} 
                             className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-md ${playing ? 'bg-yellow-500 text-black hover:bg-yellow-400' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300'}`}
                             title={playing ? "Pause Audio" : "Play Audio"}
                         >
@@ -363,51 +464,77 @@ const BreathingExercise: React.FC<{ userId: string; onClose: () => void }> = ({ 
     const [secondsLeft, setSecondsLeft] = useState(4);
     const [totalSeconds, setTotalSeconds] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
-    const audioRef = useRef<HTMLAudioElement>(null);
-    const AUDIO_URL = "https://cdn.pixabay.com/audio/2022/08/02/audio_884fe92c21.mp3";
+    
+    // Web Audio Refs for Breath Sound
+    const audioCtxRef = useRef<AudioContext | null>(null);
+    const oscRef = useRef<OscillatorNode | null>(null);
+    const gainRef = useRef<GainNode | null>(null);
+
+    const toggleSound = () => {
+        if (isPlaying) {
+            oscRef.current?.stop();
+            oscRef.current = null;
+            setIsPlaying(false);
+        } else {
+            // Synth Breath Sound
+            const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            audioCtxRef.current = ctx;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.value = 200;
+            gain.gain.value = 0.1;
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            
+            oscRef.current = osc;
+            gainRef.current = gain;
+            setIsPlaying(true);
+        }
+    };
 
     useEffect(() => {
-        // Safe Autoplay
-        if (audioRef.current) {
-            audioRef.current.volume = 0.5;
-            audioRef.current.play()
-                .then(() => setIsPlaying(true))
-                .catch(() => setIsPlaying(false)); // Silent fail is fine, we show button
-        }
-        
-        // Add error listener
-        if (audioRef.current) {
-            audioRef.current.onerror = (e) => {
-                if (typeof e !== 'string') {
-                    const target = e.target as HTMLAudioElement;
-                    console.warn("Breathing Audio Error:", target.error?.message);
-                } else {
-                    console.warn("Breathing Audio Error:", e);
-                }
-                setIsPlaying(false);
-            };
-        }
-
         const timer = setInterval(() => {
             setSecondsLeft(prev => { if (prev <= 1) { if (phase === 'Inhale') { setPhase('Hold'); return 4; } if (phase === 'Hold') { setPhase('Exhale'); return 4; } if (phase === 'Exhale') { setPhase('Inhale'); return 4; } } return prev - 1; });
             setTotalSeconds(s => s + 1);
         }, 1000);
+        
+        // Modulate pitch/volume based on phase
+        if (gainRef.current && oscRef.current && audioCtxRef.current) {
+            const now = audioCtxRef.current.currentTime;
+            if (phase === 'Inhale') {
+                oscRef.current.frequency.linearRampToValueAtTime(300, now + 4);
+                gainRef.current.gain.linearRampToValueAtTime(0.3, now + 4);
+            } else if (phase === 'Exhale') {
+                oscRef.current.frequency.linearRampToValueAtTime(150, now + 4);
+                gainRef.current.gain.linearRampToValueAtTime(0.1, now + 4);
+            }
+        }
+
         return () => clearInterval(timer);
     }, [phase]);
 
-    const handleManualPlay = () => { if (audioRef.current) { audioRef.current.play(); setIsPlaying(true); } };
+    useEffect(() => {
+        return () => {
+            if (oscRef.current) oscRef.current.stop();
+            if (audioCtxRef.current) audioCtxRef.current.close();
+        }
+    }, []);
+
     const handleFinish = () => { Database.recordBreathSession(userId, totalSeconds); Database.setBreathingCooldown(Date.now() + 5 * 60 * 1000); onClose(); };
 
     return (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
-             <audio ref={audioRef} src={AUDIO_URL} loop crossOrigin="anonymous" />
              <button onClick={handleFinish} className="absolute top-6 right-6 text-white/50 hover:text-white p-2 rounded-full hover:bg-white/10"><X className="w-8 h-8"/></button>
              <div className="flex flex-col items-center">
                  <div className={`relative w-64 h-64 rounded-full flex items-center justify-center transition-all duration-[4000ms] ease-in-out border-4 border-white/20 mb-8 ${phase === 'Inhale' ? 'scale-125 bg-blue-500/30 shadow-[0_0_50px_rgba(59,130,246,0.5)]' : phase === 'Exhale' ? 'scale-75 bg-blue-900/30' : 'scale-100 bg-blue-400/30'}`}>
                      <div className="text-center relative z-10"><div className="text-3xl font-black text-white mb-2">{phase}</div><div className="text-xl font-mono text-blue-200">{secondsLeft}s</div></div>
                      <div className="absolute inset-0 rounded-full animate-spin-slow border-t-2 border-white/20"></div>
                  </div>
-                 {!isPlaying && (<button onClick={handleManualPlay} className="mb-6 px-4 py-2 bg-yellow-500 text-black font-bold rounded-full text-xs animate-pulse hover:bg-yellow-400">Tap to Start Audio</button>)}
+                 <button onClick={toggleSound} className={`mb-6 px-4 py-2 font-bold rounded-full text-xs animate-pulse transition-colors ${isPlaying ? 'bg-white text-black' : 'bg-yellow-500 text-black'}`}>{isPlaying ? 'Mute Guide' : 'Play Guide Sound'}</button>
                  <p className="text-gray-400 text-sm font-medium tracking-wider uppercase">Session Time: {Math.floor(totalSeconds / 60)}:{String(totalSeconds % 60).padStart(2, '0')}</p>
                  <button onClick={handleFinish} className="mt-8 px-8 py-3 bg-white/10 hover:bg-white/20 rounded-full text-white font-bold transition-colors">End Session</button>
              </div>

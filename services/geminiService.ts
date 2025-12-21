@@ -106,19 +106,23 @@ const LOCAL_AFFIRMATIONS = {
     ]
 };
 
+const getLocalFallback = (type: string, name: string) => {
+    if (type === 'insight') {
+        const backups = [
+            `Welcome back, ${name}. Peace begins with a single breath.`,
+            `Hello, ${name}. You are capable of amazing things today.`,
+            `Hi ${name}. Remember to be kind to yourself today.`,
+            `Welcome back, ${name}. Your calm presence is your power.`,
+            `Good to see you, ${name}. Trust the timing of your life.`
+        ];
+        return backups[Math.floor(Math.random() * backups.length)];
+    }
+    return "Peace comes from within.";
+};
+
 export const generateDailyInsight = async (userName: string): Promise<string> => {
   const ai = getAi();
-  if (!ai) {
-      // Fallback if API key missing
-      const backups = [
-       `Welcome back, ${userName}. Peace begins with a single breath.`,
-       `Hello, ${userName}. You are capable of amazing things today.`,
-       `Hi ${userName}. Remember to be kind to yourself today.`,
-       `Welcome back, ${userName}. Your calm presence is your power.`,
-       `Good to see you, ${userName}. Trust the timing of your life.`
-      ];
-      return backups[Math.floor(Math.random() * backups.length)];
-  }
+  if (!ai) return getLocalFallback('insight', userName);
 
   try {
     const response = await ai.models.generateContent({
@@ -126,8 +130,13 @@ export const generateDailyInsight = async (userName: string): Promise<string> =>
       contents: `Write a short, warm, human-like daily greeting and mental wellness tip for a user named ${userName}. Do not sound like a robot. Keep it under 30 words. Make it unique every time.`,
     });
     return response.text || "Welcome back. Remember to take a deep breath today.";
-  } catch (error) {
-    return `Welcome back, ${userName}. Peace begins with a single breath.`;
+  } catch (error: any) {
+    if (error.status === 429 || error.message?.includes('429') || error.message?.includes('quota')) {
+        console.warn("Gemini Quota Exceeded (Insight). Using fallback.");
+        return getLocalFallback('insight', userName);
+    }
+    console.error("Gemini Insight Error:", error);
+    return getLocalFallback('insight', userName);
   }
 };
 
@@ -140,12 +149,14 @@ export const generateAffirmation = async (struggle: string = "general"): Promise
                 contents: `The user is feeling: "${struggle}". Write a unique, powerful, metaphorical, and soothing affirmation (max 12 words) to help them reframe this thought. Do not use quotes. Avoid generic clichés.`
             });
             return response.text?.trim() || "Peace comes from within.";
-        } catch (e) {
-            console.log("Gemini API Error, using fallback.");
+        } catch (e: any) {
+            // Silently fail to local logic on quota error
+            if (e.status !== 429 && !e.message?.includes('429')) {
+                console.warn("Gemini Affirmation Error:", e);
+            }
         }
     }
 
-    console.log("Using Local Affirmation Logic");
     const lower = struggle.toLowerCase();
     let category = 'general';
     
@@ -186,7 +197,11 @@ export const generateSpeech = async (text: string): Promise<Uint8Array | null> =
         return bytes;
     }
     return null;
-  } catch (e) {
+  } catch (e: any) {
+    if (e.status === 429 || e.message?.includes('429') || e.message?.includes('quota')) {
+        console.warn("Gemini TTS Quota Exceeded. Falling back to browser speech.");
+        return null; // Triggers fallbackSpeak in component
+    }
     console.error("TTS Error", e);
     return null;
   }

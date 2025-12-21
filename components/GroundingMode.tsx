@@ -27,12 +27,9 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const voiceSourceRef = useRef<AudioBufferSourceNode | null>(null);
-  const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
   const audioCache = useRef<Map<string, AudioBuffer>>(new Map());
   const lastRequestId = useRef<number>(0);
-  
-  // Ambient Drone for Calmness (Pixabay - Zen River)
-  const AMBIENT_URL = "https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3"; 
+  const ambientNodeRef = useRef<AudioNode | null>(null);
 
   const currentStep = STEPS[stepIndex];
   const progress = ((stepIndex) / (STEPS.length - 1)) * 100;
@@ -63,6 +60,40 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
           audioContextRef.current.resume();
       }
       return audioContextRef.current;
+  };
+
+  const startAmbientDrone = () => {
+      const ctx = initAudioContext();
+      // Prevent duplicates
+      if (ambientNodeRef.current) return;
+
+      // Brown Noise Generator for Deep Calm
+      const bufferSize = 2 * ctx.sampleRate;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const output = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          output[i] = (output[i-1] || 0) + (0.02 * white);
+          output[i] /= 3.5; 
+      }
+
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      noise.loop = true;
+      
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 200; // Deep rumble
+
+      const gain = ctx.createGain();
+      gain.gain.value = 0.15; // Subtle background
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      noise.start();
+      
+      ambientNodeRef.current = noise;
   };
 
   const playBuffer = (buffer: AudioBuffer) => {
@@ -153,25 +184,21 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
       // Intro Message
       initAudioContext();
       playAiVoice(STEPS[0].narration);
-
-      // Setup Ambient Audio
-      if (!ambientAudioRef.current) {
-          const audio = new Audio(AMBIENT_URL);
-          audio.loop = true;
-          audio.volume = 0.2;
-          audio.crossOrigin = "anonymous";
-          ambientAudioRef.current = audio;
-          audio.play().catch(e => {
-              console.log("Ambient Autoplay prevented", e);
-          });
+      
+      try {
+        startAmbientDrone();
+      } catch (e) {
+        console.warn("Autoplay prevented");
+        setAudioBlocked(true);
       }
 
       return () => {
           if (voiceSourceRef.current) { try { voiceSourceRef.current.stop(); } catch(e) {} }
           window.speechSynthesis.cancel();
-          if (ambientAudioRef.current) {
-              ambientAudioRef.current.pause();
-              ambientAudioRef.current = null;
+          if (ambientNodeRef.current) {
+              try { (ambientNodeRef.current as any).stop(); } catch(e) {}
+              try { ambientNodeRef.current.disconnect(); } catch(e) {}
+              ambientNodeRef.current = null;
           }
           if (audioContextRef.current) {
               audioContextRef.current.close();
@@ -188,8 +215,7 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
 
   const handleStartAudio = () => {
       setAudioBlocked(false);
-      initAudioContext();
-      if (ambientAudioRef.current) ambientAudioRef.current.play();
+      startAmbientDrone();
       playAiVoice(currentStep.narration || "");
   };
 
