@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Companion, SessionFeedback } from '../types';
 import { 
@@ -24,7 +25,10 @@ const ICEBREAKERS = [
     "If you had an extra hour in the day, how would you spend it?",
     "What is something you are grateful for today?",
     "Describe your perfect calm morning.",
-    "What is a hobby you've always wanted to try?"
+    "What is a hobby you've always wanted to try?",
+    "What book or movie has had a big impact on you?",
+    "If you could have dinner with anyone, living or dead, who would it be?",
+    "What's a song that always lifts your mood?"
 ];
 
 // --- ARTIFACT GENERATOR ---
@@ -286,20 +290,42 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
       }
   };
 
-  // --- Webcam Logic ---
+  // --- Webcam Logic (FIXED) ---
   useEffect(() => {
     let stream: MediaStream | null = null;
+    let mounted = true;
+
     const startVideo = async () => {
       try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            console.error("Media Devices API not supported.");
+            return;
+        }
+
+        // We request video only for the self-view to avoid audio feedback/conflict with the Tavus iframe.
         stream = await navigator.mediaDevices.getUserMedia({ 
             video: { width: { ideal: 640 }, height: { ideal: 360 }, facingMode: "user" }, 
-            audio: true 
+            audio: false 
         });
-        if (videoRef.current) videoRef.current.srcObject = stream;
-      } catch (err) { console.error("Error accessing media devices", err); }
+        
+        if (mounted && videoRef.current) {
+            videoRef.current.srcObject = stream;
+            // Explicitly play to avoid 'autoplaying' blocks in some browsers
+            await videoRef.current.play().catch(e => console.warn("Video play error:", e));
+        }
+      } catch (err) { 
+          console.error("Error accessing media devices", err); 
+      }
     };
-    if (camOn && !showSummary) startVideo();
-    return () => { if (stream) stream.getTracks().forEach(track => track.stop()); };
+
+    if (camOn && !showSummary) {
+        startVideo();
+    }
+
+    return () => { 
+        mounted = false;
+        if (stream) stream.getTracks().forEach(track => track.stop()); 
+    };
   }, [camOn, showSummary]);
 
   // --- Timers & Credit Enforcement ---
@@ -451,13 +477,15 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-yellow-400 fill-yellow-400 animate-pulse" />
-                        <span className="text-xs font-black text-white uppercase tracking-widest">Conversation Spark</span>
+                        <span className="text-xs font-black text-white uppercase tracking-widest">Conversation Sparks</span>
                     </div>
                     <button onClick={() => setShowIcebreaker(false)} className="text-white/50 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
                 </div>
-                <p className="text-white font-medium text-lg leading-relaxed mb-6">
-                    "{ICEBREAKERS[currentTopicIndex]}"
-                </p>
+                <div className="min-h-[80px] flex items-center justify-center">
+                    <p className="text-white font-medium text-lg leading-relaxed mb-6 text-center animate-in fade-in duration-500 key={currentTopicIndex}">
+                        "{ICEBREAKERS[currentTopicIndex]}"
+                    </p>
+                </div>
                 <button onClick={nextIcebreaker} className="w-full bg-white text-black py-3 rounded-xl font-bold text-sm hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2">
                     Next Topic <ChevronRight className="w-4 h-4" />
                 </button>
@@ -565,9 +593,10 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 <button onClick={() => setCamOn(!camOn)} className={`p-3 rounded-full transition-all ${camOn ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-red-500 text-white'}`}>{camOn ? <VideoIcon className="w-5 h-5"/> : <VideoOff className="w-5 h-5"/>}</button>
                 <button onClick={() => setBlurBackground(!blurBackground)} className={`p-3 rounded-full transition-all ${blurBackground ? 'bg-yellow-500 text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}><Aperture className="w-5 h-5"/></button>
                 
-                {/* NEW: Icebreaker Button */}
-                <button onClick={() => setShowIcebreaker(!showIcebreaker)} className={`p-3 rounded-full transition-all ${showIcebreaker ? 'bg-blue-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`} title="Conversation Spark">
+                {/* NEW: Icebreaker Button - Enhanced Visibility */}
+                <button onClick={() => setShowIcebreaker(!showIcebreaker)} className={`p-3 rounded-full transition-all relative ${showIcebreaker ? 'bg-blue-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`} title="Conversation Sparks">
                     <MessageSquare className="w-5 h-5" />
+                    {!showIcebreaker && <span className="absolute top-0 right-0 w-3 h-3 bg-yellow-500 rounded-full border-2 border-black"></span>}
                 </button>
 
                 <div className="w-6 h-px bg-white/20 my-1"></div>
