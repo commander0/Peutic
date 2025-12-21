@@ -7,7 +7,7 @@ import {
   Wind, BookOpen, Save, Sparkles, Activity, Info, Flame, Trophy, Target,
   Sun, Cloud, Feather, Anchor, Gamepad2, RefreshCw, Play, Zap, Star, Edit2, Trash2, Bell,
   CloudRain, Image as ImageIcon, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Shield, Moon,
-  Twitter, Instagram, Linkedin, LifeBuoy, Volume2, VolumeX, Minimize2, Maximize2, Music
+  Twitter, Instagram, Linkedin, LifeBuoy, Volume2, VolumeX, Minimize2, Maximize2, Music, Radio, Flame as Fire
 } from 'lucide-react';
 import { Database, STABLE_AVATAR_POOL } from '../services/database';
 import { generateAffirmation, generateDailyInsight } from '../services/geminiService';
@@ -166,20 +166,20 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
     );
 };
 
-// --- SOUNDSCAPE PLAYER ---
+// --- SOUNDSCAPE PLAYER (RESTORED LARGE DESIGN & YELLOW THEME) ---
 const SoundscapePlayer: React.FC = () => {
     const [playing, setPlaying] = useState(false);
     const [volume, setVolume] = useState(0.4);
     const [track, setTrack] = useState('rain');
-    const [minimized, setMinimized] = useState(true);
+    const [minimized, setMinimized] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     
-    // CORRECTED TRACK URLS AND LABELS
+    // RELIABLE AUDIO SOURCES (Pixabay CDN - MP3 Format)
     const TRACKS = { 
-        rain: { url: "https://assets.mixkit.co/active_storage/sfx/2393/2393-preview.mp3", label: "Rain" }, 
-        forest: { url: "https://assets.mixkit.co/active_storage/sfx/2434/2434-preview.mp3", label: "Nature" }, 
-        white: { url: "https://assets.mixkit.co/active_storage/sfx/2513/2513-preview.mp3", label: "White Noise" }, 
-        lofi: { url: "https://assets.mixkit.co/active_storage/sfx/1196/1196-preview.mp3", label: "Lofi" } 
+        rain: { url: "https://cdn.pixabay.com/audio/2022/05/17/audio_2069695d7e.mp3", label: "Rain", icon: CloudRain }, 
+        forest: { url: "https://cdn.pixabay.com/audio/2021/08/09/audio_03e620579b.mp3", label: "Forest", icon: Feather }, 
+        ocean: { url: "https://cdn.pixabay.com/audio/2022/02/07/audio_5500c60967.mp3", label: "Ocean", icon: Anchor },
+        fire: { url: "https://cdn.pixabay.com/audio/2022/08/03/audio_54ca0ffa52.mp3", label: "Fire", icon: Fire } 
     };
 
     useEffect(() => {
@@ -188,12 +188,26 @@ const SoundscapePlayer: React.FC = () => {
         audio.src = TRACKS[track as keyof typeof TRACKS].url; 
         audio.loop = true; 
         audio.volume = volume;
-        audio.onerror = (e) => { console.error("Audio Load Error:", e); setPlaying(false); };
+        audio.crossOrigin = "anonymous";
+        
+        audio.onerror = (e) => { 
+            if (typeof e === 'string') {
+                console.error("Soundscape Error:", e);
+            } else {
+                const target = e.target as HTMLAudioElement;
+                console.error("Soundscape Error:", target.error?.message || "Load failed", target.src); 
+            }
+            setPlaying(false); 
+        };
+        
         audioRef.current = audio;
         if (playing) { 
             const playPromise = audio.play(); 
             if (playPromise !== undefined) { 
-                playPromise.catch(error => { console.warn("Auto-play blocked:", error); setPlaying(false); }); 
+                playPromise.catch(error => { 
+                    console.warn("Auto-play blocked:", error); 
+                    setPlaying(false); 
+                }); 
             } 
         }
         return () => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; } };
@@ -203,37 +217,69 @@ const SoundscapePlayer: React.FC = () => {
     
     const togglePlay = () => { 
         if (!audioRef.current) return; 
-        if (playing) { audioRef.current.pause(); setPlaying(false); } 
-        else { const playPromise = audioRef.current.play(); if (playPromise !== undefined) { playPromise.then(() => setPlaying(true)).catch(e => { console.error("Play failed:", e); setPlaying(false); }); } } 
+        if (playing) { 
+            audioRef.current.pause(); 
+            setPlaying(false); 
+        } else { 
+            const playPromise = audioRef.current.play(); 
+            if (playPromise !== undefined) { 
+                playPromise.then(() => setPlaying(true)).catch(e => { console.error("Play failed:", e); setPlaying(false); }); 
+            } 
+        } 
     };
 
     return (
-        <div className={`fixed bottom-6 right-6 z-[80] transition-all duration-500 ease-in-out bg-yellow-500/90 dark:bg-yellow-600/90 backdrop-blur-md rounded-3xl border border-yellow-300 dark:border-yellow-500 shadow-2xl overflow-hidden ${minimized ? 'w-12 h-12 p-0 rounded-full' : 'w-64 p-4'}`}>
-            <div className={`flex items-center ${minimized ? 'justify-center h-full w-full' : 'justify-between mb-4'}`}>
-                <button onClick={togglePlay} className={`rounded-full transition-colors ${minimized ? 'text-black dark:text-white' : 'p-2 bg-black text-white hover:bg-gray-800'}`}>
-                    {playing ? <Volume2 className={`${minimized ? 'w-5 h-5 animate-pulse' : 'w-4 h-4'}`} /> : <VolumeX className={`${minimized ? 'w-5 h-5' : 'w-4 h-4'}`} />}
+        <div className={`fixed bottom-6 right-6 z-[80] transition-all duration-500 ease-in-out bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-300 dark:border-yellow-600 shadow-2xl overflow-hidden ${minimized ? 'w-12 h-12 rounded-full' : 'w-72 rounded-3xl p-4'}`}>
+            {minimized ? (
+                <button onClick={() => setMinimized(false)} className="w-full h-full flex items-center justify-center bg-yellow-500 text-black hover:scale-110 transition-transform">
+                    <Music className="w-5 h-5 animate-pulse" />
                 </button>
-                {!minimized && <span className="text-xs font-black text-black dark:text-white uppercase tracking-widest">Soundscape</span>}
-                <button onClick={() => setMinimized(!minimized)} className="text-black/50 hover:text-black dark:text-white/50 dark:hover:text-white">
-                    {minimized ? <Maximize2 className="w-3 h-3" /> : <Minimize2 className="w-4 h-4" />}
-                </button>
-            </div>
-            
-            {!minimized && (
-                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-                    <div className="flex gap-2 bg-black/10 p-1 rounded-lg flex-wrap">
-                        {Object.entries(TRACKS).map(([key, data]) => (
-                            <button key={key} onClick={() => setTrack(key)} className={`flex-1 py-1.5 px-2 rounded-md text-[10px] font-bold uppercase transition-all whitespace-nowrap ${track === key ? 'bg-white text-black shadow-sm' : 'text-black/60 hover:text-black'}`}>
-                                {data.label}
-                            </button>
-                        ))}
+            ) : (
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-yellow-400 dark:bg-yellow-600 rounded-lg flex items-center justify-center shadow-sm">
+                                <Music className="w-4 h-4 text-black dark:text-white" />
+                            </div>
+                            <span className="font-black text-sm text-gray-900 dark:text-white tracking-tight">SOUNDSCAPE</span>
+                        </div>
+                        <button onClick={() => setMinimized(true)} className="text-gray-400 hover:text-black dark:hover:text-white transition-colors">
+                            <Minimize2 className="w-4 h-4" />
+                        </button>
                     </div>
-                    <div>
-                        <input type="range" min="0" max="1" step="0.01" value={volume} onChange={e => setVolume(parseFloat(e.target.value))} className="w-full h-1.5 bg-black/20 rounded-lg appearance-none cursor-pointer accent-black" />
+
+                    <div className="grid grid-cols-4 gap-2">
+                        {Object.entries(TRACKS).map(([key, data]) => {
+                            const isActive = track === key;
+                            return (
+                                <button key={key} onClick={() => setTrack(key)} className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${isActive ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg scale-105' : 'bg-white dark:bg-gray-800 text-gray-500 hover:bg-yellow-100 dark:hover:bg-gray-700 border border-yellow-100 dark:border-gray-700'}`}>
+                                    <data.icon className={`w-4 h-4 mb-1 ${isActive ? 'text-yellow-400 dark:text-yellow-600' : ''}`} />
+                                    <span className="text-[9px] font-bold uppercase">{data.label}</span>
+                                </button>
+                            )
+                        })}
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={togglePlay} 
+                            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-md ${playing ? 'bg-yellow-500 text-black hover:bg-yellow-400' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300'}`}
+                            title={playing ? "Pause Audio" : "Play Audio"}
+                        >
+                            {playing ? <Volume2 className="w-6 h-6" /> : <Play className="w-5 h-5 ml-1" />}
+                        </button>
+                        <input 
+                            type="range" 
+                            min="0" 
+                            max="1" 
+                            step="0.01" 
+                            value={volume} 
+                            onChange={e => setVolume(parseFloat(e.target.value))} 
+                            className="flex-1 h-2 bg-yellow-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-black dark:accent-yellow-500" 
+                        />
                     </div>
                 </div>
             )}
-            {minimized && <button className="absolute inset-0 z-10" onClick={() => setMinimized(false)}></button>}
         </div>
     );
 };
@@ -318,7 +364,7 @@ const BreathingExercise: React.FC<{ userId: string; onClose: () => void }> = ({ 
     const [totalSeconds, setTotalSeconds] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);
-    const AUDIO_URL = "https://assets.mixkit.co/active_storage/sfx/1196/1196-preview.mp3";
+    const AUDIO_URL = "https://cdn.pixabay.com/audio/2022/08/02/audio_884fe92c21.mp3";
 
     useEffect(() => {
         // Safe Autoplay
@@ -328,6 +374,20 @@ const BreathingExercise: React.FC<{ userId: string; onClose: () => void }> = ({ 
                 .then(() => setIsPlaying(true))
                 .catch(() => setIsPlaying(false)); // Silent fail is fine, we show button
         }
+        
+        // Add error listener
+        if (audioRef.current) {
+            audioRef.current.onerror = (e) => {
+                if (typeof e !== 'string') {
+                    const target = e.target as HTMLAudioElement;
+                    console.warn("Breathing Audio Error:", target.error?.message);
+                } else {
+                    console.warn("Breathing Audio Error:", e);
+                }
+                setIsPlaying(false);
+            };
+        }
+
         const timer = setInterval(() => {
             setSecondsLeft(prev => { if (prev <= 1) { if (phase === 'Inhale') { setPhase('Hold'); return 4; } if (phase === 'Hold') { setPhase('Exhale'); return 4; } if (phase === 'Exhale') { setPhase('Inhale'); return 4; } } return prev - 1; });
             setTotalSeconds(s => s + 1);
@@ -340,7 +400,7 @@ const BreathingExercise: React.FC<{ userId: string; onClose: () => void }> = ({ 
 
     return (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
-             <audio ref={audioRef} src={AUDIO_URL} loop />
+             <audio ref={audioRef} src={AUDIO_URL} loop crossOrigin="anonymous" />
              <button onClick={handleFinish} className="absolute top-6 right-6 text-white/50 hover:text-white p-2 rounded-full hover:bg-white/10"><X className="w-8 h-8"/></button>
              <div className="flex flex-col items-center">
                  <div className={`relative w-64 h-64 rounded-full flex items-center justify-center transition-all duration-[4000ms] ease-in-out border-4 border-white/20 mb-8 ${phase === 'Inhale' ? 'scale-125 bg-blue-500/30 shadow-[0_0_50px_rgba(59,130,246,0.5)]' : phase === 'Exhale' ? 'scale-75 bg-blue-900/30' : 'scale-100 bg-blue-400/30'}`}>

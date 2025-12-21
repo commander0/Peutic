@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { X, Eye, Hand, Ear, Coffee, Wind, CheckCircle, ArrowRight, Heart } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Eye, Hand, Ear, Coffee, Wind, CheckCircle, ArrowRight, Heart, Volume2, VolumeX, Loader2, Play } from 'lucide-react';
+import { generateSpeech } from '../services/geminiService';
 
 interface GroundingModeProps {
   onClose: () => void;
 }
 
 const STEPS = [
-  { id: 'breathe', title: "Let's Pause.", subtitle: "Match your breath to the circle.", color: "bg-blue-600", icon: Wind },
-  { id: 'sight', count: 5, title: "5 Things You See", subtitle: "Look around. Tap the button for each item you identify.", color: "bg-indigo-600", icon: Eye },
-  { id: 'touch', count: 4, title: "4 Things You Feel", subtitle: "The fabric of your chair, your feet on the floor...", color: "bg-purple-600", icon: Hand },
-  { id: 'sound', count: 3, title: "3 Things You Hear", subtitle: "A car outside, a fan, your own breath...", color: "bg-pink-600", icon: Ear },
-  { id: 'smell', count: 2, title: "2 Things You Smell", subtitle: "Or your favorite scents you can imagine.", color: "bg-orange-600", icon: Coffee },
-  { id: 'taste', count: 1, title: "1 Good Thing", subtitle: "Name one thing you like about yourself.", color: "bg-green-600", icon: Heart },
-  { id: 'complete', title: "You Are Here.", subtitle: "You are safe. You are grounded.", color: "bg-teal-700", icon: CheckCircle }
+  { id: 'breathe', title: "Let's Pause.", subtitle: "Match your breath to the circle.", color: "bg-blue-600", icon: Wind, narration: "You are safe. Everything is going to be okay. Just breathe with me, and let's take this one step at a time." },
+  { id: 'sight', count: 5, title: "5 Things You See", subtitle: "Look around. Tap the button for each item you identify.", color: "bg-indigo-600", icon: Eye, narration: "Look around you. Find 5 things you can see." },
+  { id: 'touch', count: 4, title: "4 Things You Feel", subtitle: "The fabric of your chair, your feet on the floor...", color: "bg-purple-600", icon: Hand, narration: "Now, notice 4 things you can feel physically." },
+  { id: 'sound', count: 3, title: "3 Things You Hear", subtitle: "A car outside, a fan, your own breath...", color: "bg-pink-600", icon: Ear, narration: "Listen closely. Name 3 things you can hear." },
+  { id: 'smell', count: 2, title: "2 Things You Smell", subtitle: "Or your favorite scents you can imagine.", color: "bg-orange-600", icon: Coffee, narration: "Identify 2 things you can smell, or imagine your favorite scent." },
+  { id: 'taste', count: 1, title: "1 Good Thing", subtitle: "Name one thing you like about yourself.", color: "bg-green-600", icon: Heart, narration: "Finally, name one thing you like about yourself." },
+  { id: 'complete', title: "You Are Here.", subtitle: "You are safe. You are grounded.", color: "bg-teal-700", icon: CheckCircle, narration: "You did great. You are safe here." }
 ];
 
 const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
@@ -20,9 +21,177 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
   const [counter, setCounter] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [breathText, setBreathText] = useState("Breathe In");
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [loadingVoice, setLoadingVoice] = useState(false);
+  const [audioBlocked, setAudioBlocked] = useState(false);
+  
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const voiceSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
+  const audioCache = useRef<Map<string, AudioBuffer>>(new Map());
+  const lastRequestId = useRef<number>(0);
+  
+  // Ambient Drone for Calmness (Pixabay - Zen River)
+  const AMBIENT_URL = "https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3"; 
 
   const currentStep = STEPS[stepIndex];
   const progress = ((stepIndex) / (STEPS.length - 1)) * 100;
+
+  // Manual PCM Decode (Gemini returns 24kHz raw PCM usually)
+  const pcmToAudioBuffer = (chunk: Uint8Array, ctx: AudioContext): AudioBuffer => {
+      const pcmData = new Int16Array(chunk.buffer);
+      const numChannels = 1;
+      const sampleRate = 24000; 
+      const frameCount = pcmData.length;
+      
+      const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
+      const channelData = buffer.getChannelData(0);
+      
+      for (let i = 0; i < frameCount; i++) {
+          // Normalize Int16 to Float32
+          channelData[i] = pcmData[i] / 32768.0;
+      }
+      
+      return buffer;
+  };
+
+  const initAudioContext = () => {
+      if (!audioContextRef.current) {
+          audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      if (audioContextRef.current.state === 'suspended') {
+          audioContextRef.current.resume();
+      }
+      return audioContextRef.current;
+  };
+
+  const playBuffer = (buffer: AudioBuffer) => {
+      const ctx = initAudioContext();
+      
+      // Stop previous
+      if (voiceSourceRef.current) {
+          try { voiceSourceRef.current.stop(); } catch(e) {}
+      }
+
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.onended = () => setLoadingVoice(false);
+      source.start(0);
+      voiceSourceRef.current = source;
+  };
+
+  const playAiVoice = async (text: string) => {
+      if (!voiceEnabled) return;
+      
+      // Stop immediately to prevent overlap/lag
+      if (voiceSourceRef.current) {
+          try { voiceSourceRef.current.stop(); } catch(e) {}
+          voiceSourceRef.current = null;
+      }
+      window.speechSynthesis.cancel(); 
+
+      // Check Cache
+      if (audioCache.current.has(text)) {
+          playBuffer(audioCache.current.get(text)!);
+          return;
+      }
+
+      // Generation
+      const requestId = Date.now();
+      lastRequestId.current = requestId;
+      setLoadingVoice(true);
+
+      const data = await generateSpeech(text);
+      
+      // Only play if the user is still on the same request (avoid playing old requests)
+      if (lastRequestId.current === requestId && data) {
+          try {
+              const ctx = initAudioContext();
+              const buffer = pcmToAudioBuffer(data, ctx);
+              audioCache.current.set(text, buffer);
+              playBuffer(buffer);
+          } catch (e) {
+              console.error("Audio conversion failed", e);
+              fallbackSpeak(text);
+          }
+      } else if (!data) {
+          // Fallback if API fails
+          if (lastRequestId.current === requestId) fallbackSpeak(text);
+      }
+      
+      if (lastRequestId.current === requestId) setLoadingVoice(false);
+  };
+
+  const fallbackSpeak = (text: string) => {
+      if (!voiceEnabled) return;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9; 
+      utterance.volume = 1;
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find(v => v.name.includes("Samantha") || v.lang === "en-US");
+      if (preferredVoice) utterance.voice = preferredVoice;
+      window.speechSynthesis.speak(utterance);
+  };
+
+  // Preloading Logic
+  useEffect(() => {
+      const preloadNext = async () => {
+          const nextStep = STEPS[stepIndex + 1];
+          if (nextStep && nextStep.narration && !audioCache.current.has(nextStep.narration)) {
+              const data = await generateSpeech(nextStep.narration);
+              if (data && audioContextRef.current) {
+                  const buffer = pcmToAudioBuffer(data, audioContextRef.current);
+                  audioCache.current.set(nextStep.narration, buffer);
+              }
+          }
+      };
+      preloadNext();
+  }, [stepIndex]);
+
+  useEffect(() => {
+      // Intro Message
+      initAudioContext();
+      playAiVoice(STEPS[0].narration);
+
+      // Setup Ambient Audio
+      if (!ambientAudioRef.current) {
+          const audio = new Audio(AMBIENT_URL);
+          audio.loop = true;
+          audio.volume = 0.2;
+          audio.crossOrigin = "anonymous";
+          ambientAudioRef.current = audio;
+          audio.play().catch(e => {
+              console.log("Ambient Autoplay prevented", e);
+          });
+      }
+
+      return () => {
+          if (voiceSourceRef.current) { try { voiceSourceRef.current.stop(); } catch(e) {} }
+          window.speechSynthesis.cancel();
+          if (ambientAudioRef.current) {
+              ambientAudioRef.current.pause();
+              ambientAudioRef.current = null;
+          }
+          if (audioContextRef.current) {
+              audioContextRef.current.close();
+              audioContextRef.current = null;
+          }
+      };
+  }, []);
+
+  useEffect(() => {
+      if (stepIndex > 0) {
+          playAiVoice(currentStep.narration || "");
+      }
+  }, [stepIndex]);
+
+  const handleStartAudio = () => {
+      setAudioBlocked(false);
+      initAudioContext();
+      if (ambientAudioRef.current) ambientAudioRef.current.play();
+      playAiVoice(currentStep.narration || "");
+  };
 
   const handleTap = () => {
     if (currentStep.count) {
@@ -40,7 +209,7 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
       setStepIndex(i => i + 1);
       setCounter(0);
       setIsTransitioning(false);
-    }, 500);
+    }, 200); // Faster transition for snappiness
   };
 
   // Breathing Timer for first step
@@ -48,9 +217,8 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
     if (currentStep.id === 'breathe') {
       const timer = setTimeout(() => {
         nextStep();
-      }, 16000); // 16s breathing intro (2 full cycles)
+      }, 16000); 
       
-      // Text sync with CSS animation (8s cycle: 3s in, 2s hold, 3s out)
       const textCycle = () => {
           setBreathText("Inhale...");
           setTimeout(() => setBreathText("Hold..."), 3500);
@@ -68,18 +236,30 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
   }, [stepIndex]);
 
   return (
-    <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center text-white transition-colors duration-1000 ${currentStep.color}`}>
+    <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center text-white transition-colors duration-500 ${currentStep.color}`}>
       <style>{`
         @keyframes deep-breathe {
           0% { transform: scale(1); opacity: 0.6; }
-          45% { transform: scale(1.6); opacity: 0.9; } /* Inhale Expansion */
-          55% { transform: scale(1.6); opacity: 0.9; } /* Hold */
-          100% { transform: scale(1); opacity: 0.6; } /* Exhale Contraction */
+          45% { transform: scale(1.6); opacity: 0.9; }
+          55% { transform: scale(1.6); opacity: 0.9; }
+          100% { transform: scale(1); opacity: 0.6; }
         }
         .animate-deep-breathe {
           animation: deep-breathe 8s ease-in-out infinite;
         }
       `}</style>
+
+      {/* Blocked Audio Overlay */}
+      {audioBlocked && (
+          <div className="absolute inset-0 z-[110] bg-black/80 flex items-center justify-center backdrop-blur-sm">
+              <button 
+                  onClick={handleStartAudio}
+                  className="bg-white text-black px-8 py-4 rounded-full font-bold text-xl flex items-center gap-3 hover:scale-105 transition-transform shadow-2xl animate-pulse"
+              >
+                  <Play className="w-6 h-6 fill-black" /> Start Session Audio
+              </button>
+          </div>
+      )}
 
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/60 pointer-events-none"></div>
@@ -87,16 +267,21 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
           <div className="absolute -top-[20%] -left-[20%] w-[140%] h-[140%] bg-white/5 rounded-full blur-[100px] animate-pulse-slow"></div>
       </div>
 
-      <button onClick={onClose} className="absolute top-6 right-6 p-4 bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-md transition-all z-20">
-        <X className="w-6 h-6" />
-      </button>
+      <div className="absolute top-6 right-6 flex items-center gap-4 z-20">
+          <button onClick={() => setVoiceEnabled(!voiceEnabled)} className="p-3 bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-md transition-all">
+              {loadingVoice ? <Loader2 className="w-5 h-5 animate-spin"/> : (voiceEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />)}
+          </button>
+          <button onClick={onClose} className="p-3 bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-md transition-all">
+            <X className="w-5 h-5" />
+          </button>
+      </div>
 
       {/* Progress Bar */}
       <div className="absolute top-0 left-0 h-2 bg-black/20 w-full">
-        <div className="h-full bg-white/50 transition-all duration-1000 ease-out" style={{ width: `${progress}%` }}></div>
+        <div className="h-full bg-white/50 transition-all duration-500 ease-out" style={{ width: `${progress}%` }}></div>
       </div>
 
-      <div className={`relative z-10 max-w-md w-full px-8 text-center transition-all duration-500 transform ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+      <div className={`relative z-10 max-w-md w-full px-8 text-center transition-all duration-300 transform ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
         
         {/* Icon Header */}
         <div className="mb-8 flex justify-center">
@@ -111,9 +296,7 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
         {/* Dynamic Content Area */}
         {currentStep.id === 'breathe' && (
            <div className="relative w-48 h-48 mx-auto mb-12 flex items-center justify-center">
-               {/* Outer pulsing ring */}
                <div className="absolute inset-0 bg-white/20 rounded-full animate-deep-breathe"></div>
-               {/* Inner distinct circle */}
                <div className="absolute inset-8 bg-white/30 rounded-full backdrop-blur-sm border border-white/40 shadow-inner flex items-center justify-center transition-all duration-[4000ms] ease-in-out">
                    <span className="font-bold tracking-widest text-lg uppercase drop-shadow-md">{breathText}</span>
                </div>

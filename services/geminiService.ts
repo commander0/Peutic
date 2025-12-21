@@ -158,6 +158,40 @@ export const generateAffirmation = async (struggle: string = "general"): Promise
     return list[randomIndex];
 };
 
+export const generateSpeech = async (text: string): Promise<Uint8Array | null> => {
+  const ai = getAi();
+  if (!ai) return null;
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-preview-tts",
+      contents: [{ parts: [{ text }] }],
+      config: {
+        responseModalities: ["AUDIO"], 
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: 'Zephyr' }, 
+          },
+        },
+      },
+    });
+    
+    const base64 = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (base64) {
+        const binaryString = atob(base64);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes;
+    }
+    return null;
+  } catch (e) {
+    console.error("TTS Error", e);
+    return null;
+  }
+};
+
 export const generateWellnessImage = async (prompt: string): Promise<string | null> => {
     return null; 
 };
