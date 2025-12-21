@@ -119,6 +119,7 @@ const renderSessionArtifact = (companionName: string, durationStr: string, dateS
 const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
 
   // Media State
   const [micOn, setMicOn] = useState(true);
@@ -157,6 +158,30 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   
   // GUARD: Prevent double initialization in React Strict Mode
   const connectionInitiated = useRef(false);
+
+  // --- Strict Resource Cleanup ---
+  const performCleanup = () => {
+      // 1. Stop all local media tracks immediately
+      if (localStreamRef.current) {
+          localStreamRef.current.getTracks().forEach(track => track.stop());
+          localStreamRef.current = null;
+      }
+      
+      // 2. Kill the video element source
+      if (videoRef.current) {
+          videoRef.current.srcObject = null;
+      }
+
+      // 3. Terminate API session rigorously
+      if (conversationIdRef.current) {
+          endTavusConversation(conversationIdRef.current);
+          // Redundant check: ensure we don't try to end it twice
+          conversationIdRef.current = null;
+      }
+
+      // 4. Update Database state
+      Database.endSession(userId);
+  };
 
   // --- Session Initialization ---
   useEffect(() => {
@@ -207,39 +232,26 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
     initQueue();
 
-    // CLEANUP: Kill session on unmount or refresh (API Usage Fix)
-    const cleanup = async () => {
-        clearInterval(queueInterval);
-        await Database.endSession(userId);
-        if (conversationIdRef.current) {
-            // Uses keepalive: true in the service to ensure termination on tab close
-            endTavusConversation(conversationIdRef.current);
-        }
-    };
-
-    // HANDLE MOBILE & DESKTOP TAB CLOSE
+    // HANDLE MOBILE & DESKTOP TAB CLOSE / REFRESH
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-        if (conversationIdRef.current) {
-             endTavusConversation(conversationIdRef.current);
-             e.preventDefault();
-             e.returnValue = '';
-        }
+        performCleanup();
+        e.preventDefault();
+        e.returnValue = '';
     };
 
     // CRITICAL FIX FOR MOBILE SAFARI which ignores beforeunload
     const handlePageHide = () => {
-        if (conversationIdRef.current) {
-             endTavusConversation(conversationIdRef.current);
-        }
+        performCleanup();
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('pagehide', handlePageHide);
 
     return () => {
+        clearInterval(queueInterval);
         window.removeEventListener('beforeunload', handleBeforeUnload);
         window.removeEventListener('pagehide', handlePageHide);
-        cleanup();
+        performCleanup();
     };
   }, []);
 
@@ -290,55 +302,52 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
       }
   };
 
-  // --- Webcam Logic (ROBUST FIXED) ---
+  // --- Webcam Logic (Self-View) ---
   useEffect(() => {
-    if (!camOn || showSummary) return;
-
-    let activeStream: MediaStream | null = null;
-    let isMounted = true;
-
-    const startVideo = async () => {
-      try {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            console.error("Media Devices API not supported.");
-            return;
+    // Only initialize camera if enabled and not in summary mode
+    if (!camOn || showSummary) {
+        if (localStreamRef.current) {
+            localStreamRef.current.getTracks().forEach(t => t.stop());
+            localStreamRef.current = null;
         }
+        return;
+    }
 
-        // We request video only for the self-view to avoid audio feedback/conflict with the Tavus iframe.
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
-                width: { ideal: 640 }, 
-                height: { ideal: 360 }, 
-                facingMode: "user" 
-            }, 
-            audio: false // IMPORTANT: Prevent echo
-        });
-        
-        activeStream = stream;
+    const initCamera = async () => {
+        try {
+            // Check if we already have a stream to prevent flickering
+            if (localStreamRef.current && localStreamRef.current.active) {
+                if (videoRef.current && videoRef.current.srcObject !== localStreamRef.current) {
+                    videoRef.current.srcObject = localStreamRef.current;
+                    videoRef.current.play().catch(e => console.error("Video play failed", e));
+                }
+                return;
+            }
 
-        if (isMounted && videoRef.current) {
-            videoRef.current.srcObject = stream;
-            // Explicitly play to avoid 'autoplaying' blocks in some browsers
-            // Muted is required for autoplay in many contexts
-            videoRef.current.muted = true; 
-            await videoRef.current.play().catch(e => console.warn("Video play error:", e));
-        }
-      } catch (err) { 
-          console.error("Error accessing media devices", err); 
-      }
-    };
-
-    startVideo();
-
-    return () => { 
-        isMounted = false;
-        if (activeStream) {
-            activeStream.getTracks().forEach(track => track.stop()); 
-        }
-        if (videoRef.current) {
-            videoRef.current.srcObject = null;
+            // Request new stream
+            // NOTE: audio: false for self-view loopback to prevent feedback. 
+            // The iframe handles the actual audio transmission.
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { width: 640, height: 360, facingMode: 'user' }, 
+                audio: false 
+            });
+            
+            localStreamRef.current = stream;
+            
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                videoRef.current.onloadedmetadata = () => {
+                    videoRef.current?.play().catch(e => console.error("Play error", e));
+                };
+            }
+        } catch (err) {
+            console.error("Camera Init Error:", err);
         }
     };
+
+    initCamera();
+
+    // Cleanup logic for camera is handled in the main shutdown or when camOn changes
   }, [camOn, showSummary]);
 
   // --- Timers & Credit Enforcement ---
@@ -352,7 +361,12 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             if (newDuration % 60 === 0) {
                 setRemainingMinutes(prev => {
                     const nextVal = prev - 1;
-                    if (nextVal <= 0) { handleEndSession(); return 0; }
+                    if (nextVal <= 0) { 
+                        // STRICT CUTOFF
+                        performCleanup();
+                        handleEndSession(); 
+                        return 0; 
+                    }
                     return nextVal;
                 });
             }
@@ -365,17 +379,14 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   }, [showSummary, remainingMinutes, connectionState]);
 
   const handleEndSession = () => {
-      if (activeConversationId) {
-          endTavusConversation(activeConversationId);
-          setActiveConversationId(null);
-          conversationIdRef.current = null;
-      }
+      performCleanup(); // Strict API cutoff
       setSummaryImage(renderSessionArtifact(companion.name, formatTime(duration), new Date().toLocaleDateString()));
       setShowSummary(true);
   };
 
   const handleRefundRequest = () => {
       if(confirm("Are you sure you want to end this session and request a credit refund for technical issues?")) {
+          performCleanup();
           onEndSession();
           // Logic: Don't deduct credits, maybe flag for review
       }
@@ -468,28 +479,28 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   return (
     <div ref={containerRef} className="fixed inset-0 bg-black z-50 flex flex-col overflow-hidden select-none">
         
-        {/* --- USER PIP (Top Middle Fixed - CUTOUT STYLE) --- */}
-        {/* Increased Z-Index to 100 to stay above headers. Rounded-2rem for pill shape. */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] w-28 md:w-48 aspect-[9/16] rounded-[2rem] overflow-hidden border-2 border-white/20 shadow-2xl bg-black transition-all duration-500 pointer-events-none">
-            <div className="absolute inset-0 bg-black">
+        {/* --- DYNAMIC ISLAND SELF-VIEW (TOP CENTER) --- */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] w-32 md:w-48 aspect-[16/9] md:aspect-video rounded-[2rem] overflow-hidden border-2 border-white/10 bg-black shadow-2xl transition-all duration-300 group">
+            <div className="absolute inset-0 bg-black flex items-center justify-center">
                 {camOn ? (
                     <video 
                         ref={videoRef} 
                         autoPlay 
                         muted 
                         playsInline 
-                        className="w-full h-full object-cover transform scale-x-[-1] opacity-100" 
+                        className="w-full h-full object-cover transform scale-x-[-1]" 
                     />
                 ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 bg-gray-900"><VideoOff className="w-8 h-8 mb-2 opacity-50" /><span className="text-[8px] font-bold uppercase tracking-widest opacity-50">Off</span></div>
+                    <VideoOff className="w-6 h-6 text-gray-700" />
                 )}
-                <div className="absolute bottom-2 right-2">
-                     <div className={`w-2 h-2 rounded-full ${micOn ? 'bg-green-500 shadow-[0_0_5px_#22c55e]' : 'bg-red-500'}`}></div>
-                </div>
+            </div>
+            {/* Status Indicators inside the "Island" */}
+            <div className="absolute bottom-2 right-3 flex gap-1.5">
+                 <div className={`w-1.5 h-1.5 rounded-full ${micOn ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-red-500'}`}></div>
             </div>
         </div>
 
-        {/* --- CREDENTIAL BADGE (TRUST SIGNAL) --- */}
+        {/* --- CREDENTIAL BADGE --- */}
         {showCredential && (
             <div className="absolute top-24 right-4 z-40 bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl w-64 animate-in slide-in-from-right-10 fade-in duration-300">
                 <div className="flex justify-between items-start mb-2">
@@ -526,7 +537,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             </div>
         )}
 
-        {/* --- HEADER OVERLAY --- */}
+        {/* --- HEADER OVERLAY (Under Island) --- */}
         <div className="absolute top-0 left-0 right-0 p-4 md:p-6 flex justify-between items-start z-20 pointer-events-none bg-gradient-to-b from-black/80 via-black/20 to-transparent pb-20 transition-opacity duration-500">
             <div className="flex items-center gap-4 pointer-events-auto">
                 <div className={`bg-black/40 backdrop-blur-xl px-4 py-2 rounded-full border ${lowBalanceWarning ? 'border-red-500 animate-pulse' : 'border-white/10'} text-white font-mono shadow-xl flex items-center gap-3 transition-colors duration-500`}>
@@ -535,13 +546,11 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                         {connectionState === 'CONNECTED' ? formatTime(duration) : connectionState === 'QUEUED' ? 'Waiting...' : 'Connecting...'}
                     </span>
                 </div>
-                {/* Credentials Button */}
                 <button onClick={() => setShowCredential(!showCredential)} className="bg-black/40 backdrop-blur-xl p-2 rounded-full border border-white/10 text-white hover:bg-white/10 transition-colors">
                     <FileText className="w-5 h-5" />
                 </button>
             </div>
             <div className="flex items-center gap-2 pointer-events-auto">
-                {/* Network Quality */}
                 <div className="flex gap-1 h-4 items-end">
                     {[1, 2, 3, 4].map(i => (
                         <div key={i} className={`w-1 rounded-sm ${i <= networkQuality ? 'bg-green-500' : 'bg-gray-600'}`} style={{ height: `${i * 25}%` }}></div>
@@ -613,14 +622,12 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 <button onClick={() => setCamOn(!camOn)} className={`p-3 rounded-full transition-all ${camOn ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-red-500 text-white'}`}>{camOn ? <VideoIcon className="w-5 h-5"/> : <VideoOff className="w-5 h-5"/>}</button>
                 <button onClick={() => setBlurBackground(!blurBackground)} className={`p-3 rounded-full transition-all ${blurBackground ? 'bg-yellow-500 text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}><Aperture className="w-5 h-5"/></button>
                 
-                {/* NEW: Icebreaker Button - Enhanced Visibility */}
                 <button onClick={() => setShowIcebreaker(!showIcebreaker)} className={`p-3 rounded-full transition-all relative ${showIcebreaker ? 'bg-blue-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`} title="Conversation Sparks">
                     <MessageSquare className="w-5 h-5" />
                     {!showIcebreaker && <span className="absolute top-0 right-0 w-3 h-3 bg-yellow-500 rounded-full border-2 border-black"></span>}
                 </button>
 
                 <div className="w-6 h-px bg-white/20 my-1"></div>
-                {/* REFUND / ISSUE BUTTON */}
                 <button onClick={handleRefundRequest} className="text-[10px] font-bold text-gray-400 hover:text-white mb-2" title="Report Issue / Refund">Report</button>
                 
                 <button onClick={handleEndSession} className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-full transition-colors shadow-lg shadow-red-600/20" title="End Session">
