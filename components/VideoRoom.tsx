@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Companion, SessionFeedback } from '../types';
 import { 
     Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, 
-    Loader2, AlertCircle, RefreshCcw, Aperture, Star, CheckCircle, Users, Download, Share2, BadgeCheck, FileText, MessageSquare, Sparkles, ChevronRight, X
+    Loader2, AlertCircle, RefreshCcw, Aperture, Star, CheckCircle, Users, Download, Share2, BadgeCheck, FileText, MessageSquare, Sparkles, ChevronRight, X, Eye
 } from 'lucide-react';
 import { createTavusConversation, endTavusConversation } from '../services/tavusService';
 import { Database } from '../services/database';
@@ -128,6 +128,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   const [camOn, setCamOn] = useState(true);
   const [blurBackground, setBlurBackground] = useState(false);
   const [showCredential, setShowCredential] = useState(false);
+  const [cameraAccessBlocked, setCameraAccessBlocked] = useState(false);
   
   // Icebreaker State
   const [showIcebreaker, setShowIcebreaker] = useState(false);
@@ -302,69 +303,72 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   // --- Webcam Logic (Self-View) ---
   useEffect(() => {
     let isMounted = true;
+    let timerId: ReturnType<typeof setTimeout>;
 
     const startCamera = async () => {
+        // Cleanup existing tracks first
+        if (localStreamRef.current) {
+            localStreamRef.current.getTracks().forEach(track => track.stop());
+            localStreamRef.current = null;
+        }
+
         if (!camOn || showSummary) {
-            // Stop logic
-            if (localStreamRef.current) {
-                localStreamRef.current.getTracks().forEach(track => track.stop());
-                localStreamRef.current = null;
-            }
-            if (videoRef.current) {
-                videoRef.current.srcObject = null;
-            }
+            if (videoRef.current) videoRef.current.srcObject = null;
             return;
         }
 
-        // --- CRITICAL FIX ---
-        // TechCheck often holds the camera lock too long. We wait 800ms to allow the browser to release the hardware.
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        if (!isMounted) return;
-
-        try {
-            console.log("VideoRoom: Requesting Camera...");
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { 
-                    width: { ideal: 320 }, 
-                    height: { ideal: 180 }, 
-                    facingMode: 'user',
-                    frameRate: { ideal: 24 }
-                }, 
-                audio: false // STRICTLY FALSE for self-view to prevent feedback loops
-            });
-            
-            if (isMounted) {
-                localStreamRef.current = stream;
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream;
-                    // Force play
-                    await videoRef.current.play().catch(e => console.warn("Autoplay block:", e));
-                }
-            } else {
-                // Component unmounted during await
-                stream.getTracks().forEach(t => t.stop());
-            }
-        } catch (err) {
-            console.error("VideoRoom Camera Error:", err);
-            // Retry once if "NotReadableError" (hardware busy)
-            if ((err as any).name === 'NotReadableError' && isMounted) {
-                 console.log("Retrying camera access in 1s...");
-                 setTimeout(startCamera, 1000);
-            }
+        // --- PRIORITY LOGIC ---
+        // If connected, we wait to give Tavus priority.
+        // If not connected yet (or connecting), we don't grab camera to avoid busy signal for Tavus.
+        if (connectionState !== 'CONNECTED' && connectionState !== 'DEMO_MODE') {
+            return; 
         }
+
+        // Delay 2.5s to let the Iframe fully acquire the camera lock
+        timerId = setTimeout(async () => {
+            if (!isMounted) return;
+            try {
+                console.log("VideoRoom: Attempting Self-View stream...");
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 320 }, 
+                        height: { ideal: 180 }, 
+                        facingMode: 'user',
+                        frameRate: { ideal: 24 }
+                    }, 
+                    audio: false // STRICTLY FALSE for self-view
+                });
+                
+                if (isMounted) {
+                    localStreamRef.current = stream;
+                    setCameraAccessBlocked(false);
+                    if (videoRef.current) {
+                        videoRef.current.srcObject = stream;
+                        await videoRef.current.play().catch(e => console.warn("Autoplay block:", e));
+                    }
+                } else {
+                    stream.getTracks().forEach(t => t.stop());
+                }
+            } catch (err) {
+                console.warn("Camera busy (Tavus Priority Active):", err);
+                // If we can't get the camera because Tavus has it, show the "Active" indicator
+                // instead of a broken video. This is the correct behavior for safety.
+                if (isMounted) setCameraAccessBlocked(true);
+            }
+        }, 2500);
     };
 
     startCamera();
 
     return () => {
         isMounted = false;
+        clearTimeout(timerId);
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach(track => track.stop());
             localStreamRef.current = null;
         }
     };
-  }, [camOn, showSummary]);
+  }, [camOn, showSummary, connectionState]); // Re-run when connection state changes to CONNECTED
 
   // --- Timers & Credit Enforcement ---
   useEffect(() => {
@@ -497,7 +501,15 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         {/* Z-Index 100 to float above Tavus iframe and header overlays */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] w-32 md:w-48 aspect-[16/9] md:aspect-video rounded-[2rem] overflow-hidden border-2 border-white/20 bg-black shadow-2xl transition-all duration-300 pointer-events-none">
             <div className="absolute inset-0 bg-black flex items-center justify-center">
-                {camOn ? (
+                {cameraAccessBlocked ? (
+                    <div className="flex flex-col items-center justify-center h-full bg-gray-900/90 text-center p-2">
+                        <div className="relative mb-2">
+                            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-[0_0_15px_#22c55e]"></div>
+                            <div className="absolute top-0 left-0 w-3 h-3 bg-green-500 rounded-full animate-ping opacity-75"></div>
+                        </div>
+                        <span className="text-[7px] text-green-400 font-bold uppercase tracking-widest leading-tight">AI Vision<br/>Active</span>
+                    </div>
+                ) : camOn ? (
                     <video 
                         ref={videoRef} 
                         autoPlay 
@@ -619,7 +631,12 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             )}
 
             {connectionState === 'CONNECTED' && conversationUrl && (
-                <iframe src={getIframeUrl()} className="absolute inset-0 w-full h-full border-0" allow="microphone; camera; autoplay; fullscreen" title="Tavus Session" />
+                <iframe 
+                    src={getIframeUrl()} 
+                    className="absolute inset-0 w-full h-full border-0" 
+                    allow="microphone *; camera *; autoplay; fullscreen; display-capture" 
+                    title="Tavus Session" 
+                />
             )}
 
             {connectionState === 'DEMO_MODE' && (
