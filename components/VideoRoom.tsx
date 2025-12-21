@@ -290,10 +290,12 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
       }
   };
 
-  // --- Webcam Logic (FIXED) ---
+  // --- Webcam Logic (ROBUST FIXED) ---
   useEffect(() => {
-    let stream: MediaStream | null = null;
-    let mounted = true;
+    if (!camOn || showSummary) return;
+
+    let activeStream: MediaStream | null = null;
+    let isMounted = true;
 
     const startVideo = async () => {
       try {
@@ -303,14 +305,22 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         }
 
         // We request video only for the self-view to avoid audio feedback/conflict with the Tavus iframe.
-        stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { width: { ideal: 640 }, height: { ideal: 360 }, facingMode: "user" }, 
-            audio: false 
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                width: { ideal: 640 }, 
+                height: { ideal: 360 }, 
+                facingMode: "user" 
+            }, 
+            audio: false // IMPORTANT: Prevent echo
         });
         
-        if (mounted && videoRef.current) {
+        activeStream = stream;
+
+        if (isMounted && videoRef.current) {
             videoRef.current.srcObject = stream;
             // Explicitly play to avoid 'autoplaying' blocks in some browsers
+            // Muted is required for autoplay in many contexts
+            videoRef.current.muted = true; 
             await videoRef.current.play().catch(e => console.warn("Video play error:", e));
         }
       } catch (err) { 
@@ -318,13 +328,16 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
       }
     };
 
-    if (camOn && !showSummary) {
-        startVideo();
-    }
+    startVideo();
 
     return () => { 
-        mounted = false;
-        if (stream) stream.getTracks().forEach(track => track.stop()); 
+        isMounted = false;
+        if (activeStream) {
+            activeStream.getTracks().forEach(track => track.stop()); 
+        }
+        if (videoRef.current) {
+            videoRef.current.srcObject = null;
+        }
     };
   }, [camOn, showSummary]);
 
@@ -455,6 +468,27 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   return (
     <div ref={containerRef} className="fixed inset-0 bg-black z-50 flex flex-col overflow-hidden select-none">
         
+        {/* --- USER PIP (Top Middle Fixed - CUTOUT STYLE) --- */}
+        {/* Increased Z-Index to 100 to stay above headers. Rounded-2rem for pill shape. */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] w-28 md:w-48 aspect-[9/16] rounded-[2rem] overflow-hidden border-2 border-white/20 shadow-2xl bg-black transition-all duration-500 pointer-events-none">
+            <div className="absolute inset-0 bg-black">
+                {camOn ? (
+                    <video 
+                        ref={videoRef} 
+                        autoPlay 
+                        muted 
+                        playsInline 
+                        className="w-full h-full object-cover transform scale-x-[-1] opacity-100" 
+                    />
+                ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 bg-gray-900"><VideoOff className="w-8 h-8 mb-2 opacity-50" /><span className="text-[8px] font-bold uppercase tracking-widest opacity-50">Off</span></div>
+                )}
+                <div className="absolute bottom-2 right-2">
+                     <div className={`w-2 h-2 rounded-full ${micOn ? 'bg-green-500 shadow-[0_0_5px_#22c55e]' : 'bg-red-500'}`}></div>
+                </div>
+            </div>
+        </div>
+
         {/* --- CREDENTIAL BADGE (TRUST SIGNAL) --- */}
         {showCredential && (
             <div className="absolute top-24 right-4 z-40 bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl w-64 animate-in slide-in-from-right-10 fade-in duration-300">
@@ -570,20 +604,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                     </div>
                 </div>
             )}
-        </div>
-
-        {/* --- USER PIP (Top Middle Fixed) --- */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 w-20 md:w-40 aspect-[9/16] rounded-2xl overflow-hidden border border-white/20 shadow-2xl bg-black transition-all duration-500">
-            <div className="absolute inset-0 bg-black">
-                {camOn ? (
-                    <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover transform scale-x-[-1]" />
-                ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 bg-gray-900"><VideoOff className="w-8 h-8 mb-2 opacity-50" /><span className="text-[8px] font-bold uppercase tracking-widest opacity-50">Off</span></div>
-                )}
-                <div className="absolute bottom-2 right-2">
-                     <div className={`w-2 h-2 rounded-full ${micOn ? 'bg-green-500 shadow-[0_0_5px_#22c55e]' : 'bg-red-500'}`}></div>
-                </div>
-            </div>
         </div>
 
         {/* --- VERTICAL CONTROLS (Top Left) --- */}
