@@ -166,192 +166,89 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
     );
 };
 
-// --- GENERATIVE AUDIO ENGINE ---
-// Organic Sound Synthesis for Soundscape
+// --- SOUNDSCAPE PLAYER ---
 const SoundscapePlayer: React.FC = () => {
     const [playing, setPlaying] = useState(false);
     const [volume, setVolume] = useState(0.4);
-    const [track, setTrack] = useState('rain');
-    const [minimized, setMinimized] = useState(false);
+    const [track, setTrack] = useState<'rain' | 'forest' | 'ocean' | 'fire'>('rain');
+    const [minimized, setMinimized] = useState(true);
     
-    const ctxRef = useRef<AudioContext | null>(null);
-    const gainRef = useRef<GainNode | null>(null);
-    const nodesRef = useRef<AudioNode[]>([]);
+    // Use an explicit audio element ref for standard HTML5 Audio
+    const audioRef = useRef<HTMLAudioElement>(null);
 
-    const createNoise = (ctx: AudioContext, type: 'white' | 'pink' | 'brown') => {
-        const bufferSize = 2 * ctx.sampleRate;
-        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const output = buffer.getChannelData(0);
-
-        for (let i = 0; i < bufferSize; i++) {
-            const white = Math.random() * 2 - 1;
-            if (type === 'white') {
-                output[i] = white;
-            } else if (type === 'pink') {
-                // Pink noise approx (-3dB/octave)
-                output[i] = (0.99886 * (output[i-1] || 0) + white * 0.0555179); 
-            } else if (type === 'brown') {
-                // Brown noise approx (-6dB/octave)
-                output[i] = (output[i-1] || 0) + (0.02 * white);
-                output[i] /= 3.5; 
-            }
-        }
-        const noise = ctx.createBufferSource();
-        noise.buffer = buffer;
-        noise.loop = true;
-        return noise;
+    // Reliable MP3 Sources
+    // Note: Removed crossOrigin attribute to allow opaque responses which fixes "no supported sources" on some CDNs
+    const SOUND_URLS = {
+        rain: 'https://www.soundjay.com/nature/sounds/rain-01.mp3',
+        forest: 'https://www.soundjay.com/nature/sounds/forest-wind-and-birds-1.mp3',
+        ocean: 'https://www.soundjay.com/nature/sounds/ocean-wave-1.mp3',
+        fire: 'https://www.soundjay.com/nature/sounds/campfire-1.mp3'
     };
 
-    const stopAudio = () => {
-        nodesRef.current.forEach(node => {
-            try { (node as any).stop && (node as any).stop(); } catch(e) {}
-            try { node.disconnect(); } catch(e) {}
-        });
-        nodesRef.current = [];
-    };
-
-    const playSound = () => {
-        stopAudio();
-        if (!playing) return;
-
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!ctxRef.current) ctxRef.current = new AudioCtx();
-        if (ctxRef.current.state === 'suspended') ctxRef.current.resume();
-
-        const ctx = ctxRef.current;
-        const masterGain = ctx.createGain();
-        masterGain.gain.value = volume;
-        masterGain.connect(ctx.destination);
-        gainRef.current = masterGain;
-
-        if (track === 'rain') {
-            // RAIN: White Noise + Lowpass (800Hz)
-            // Creates a consistent, crisp "rainfall" sound.
-            const noise = createNoise(ctx, 'white'); 
-            const filter = ctx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.value = 800;
-            
-            noise.connect(filter);
-            filter.connect(masterGain);
-            noise.start();
-            nodesRef.current.push(noise, filter);
-        } 
-        else if (track === 'forest') { 
-            // WIND: Pink Noise + Bandpass Filter + Frequency Modulation
-            // We modulate the filter frequency to create the "whooshing" sound of wind.
-            const noise = createNoise(ctx, 'pink'); 
-            const filter = ctx.createBiquadFilter();
-            filter.type = 'bandpass';
-            filter.frequency.value = 400; 
-            filter.Q.value = 0.6;
-            
-            // LFO for "Whoosh" (Modulates Filter Frequency)
-            const lfo = ctx.createOscillator();
-            lfo.type = 'sine';
-            lfo.frequency.value = 0.15; // Slow sweep
-            
-            const lfoGain = ctx.createGain();
-            lfoGain.gain.value = 150; // Sweep range (+- 150Hz)
-            
-            lfo.connect(lfoGain);
-            lfoGain.connect(filter.frequency);
-
-            noise.connect(filter);
-            filter.connect(masterGain);
-            
-            noise.start();
-            lfo.start();
-            nodesRef.current.push(noise, filter, lfo, lfoGain);
-        }
-        else if (track === 'ocean') {
-            // OCEAN: Brown Noise + Lowpass + Slow Volume Swell
-            // Uses deep Brown noise and modulates volume to mimic waves crashing.
-            const noise = createNoise(ctx, 'brown');
-            const filter = ctx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.value = 400; // Deep water sound
-            
-            const waveLfo = ctx.createOscillator();
-            waveLfo.type = 'sine';
-            waveLfo.frequency.value = 0.1; // 10 second wave cycle
-            
-            const waveGain = ctx.createGain();
-            waveGain.gain.value = 0.6;
-            
-            const modStrength = ctx.createGain();
-            modStrength.gain.value = 0.4;
-            
-            noise.connect(filter);
-            filter.connect(waveGain);
-            waveGain.connect(masterGain);
-            
-            waveLfo.connect(modStrength);
-            modStrength.connect(waveGain.gain);
-
-            noise.start();
-            waveLfo.start();
-            nodesRef.current.push(noise, filter, waveLfo, waveGain, modStrength);
-        }
-        else if (track === 'fire') {
-            // FIRE: Brown Noise (Highpass) + Random Clicks (Crackle)
-            const noise = createNoise(ctx, 'brown');
-            const filter = ctx.createBiquadFilter();
-            filter.type = 'highpass';
-            filter.frequency.value = 150; // Removes deep rumble, keeps roar
-            
-            const roarGain = ctx.createGain();
-            roarGain.gain.value = 0.8;
-
-            noise.connect(filter);
-            filter.connect(roarGain);
-            roarGain.connect(masterGain);
-            
-            // Crackle Generator (Random Impulse)
-            const bufferSize = ctx.sampleRate * 3; // 3 seconds loop
-            const crackleBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-            const crackleData = crackleBuffer.getChannelData(0);
-            for(let i=0; i<bufferSize; i++) {
-                // Occasional high amplitude click
-                if (Math.random() > 0.9992) {
-                    crackleData[i] = (Math.random() * 2 - 1) * 0.9;
-                } else {
-                    crackleData[i] = 0;
-                }
-            }
-            const crackle = ctx.createBufferSource();
-            crackle.buffer = crackleBuffer;
-            crackle.loop = true;
-            
-            // Sharp filter for clicks
-            const crackleFilter = ctx.createBiquadFilter();
-            crackleFilter.type = 'highpass';
-            crackleFilter.frequency.value = 1200;
-
-            crackle.connect(crackleFilter);
-            crackleFilter.connect(masterGain);
-            
-            noise.start();
-            crackle.start();
-            nodesRef.current.push(noise, filter, roarGain, crackle, crackleFilter);
-        }
-    };
-
+    // Effect to handle Volume updates
     useEffect(() => {
-        if (playing) playSound();
-        else stopAudio();
-        return () => stopAudio();
-    }, [playing, track]);
-
-    useEffect(() => {
-        if (gainRef.current) gainRef.current.gain.setTargetAtTime(volume, ctxRef.current?.currentTime || 0, 0.1);
+        if (audioRef.current) {
+            audioRef.current.volume = volume;
+        }
     }, [volume]);
+
+    // Effect to handle Play/Pause state
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        if (playing) {
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.warn("Autoplay prevented or load failed:", error);
+                    // Don't auto-reset playing state here to allow retry on user interaction or load completion
+                });
+            }
+        } else {
+            audio.pause();
+        }
+    }, [playing]);
+
+    // Effect to handle Track changes
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        // Force reload when track changes to ensure new source is picked up
+        audio.load(); 
+        
+        if (playing) {
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.warn("Playback interrupted during track change:", error);
+                });
+            }
+        }
+    }, [track]);
 
     return (
         <div className={`fixed bottom-6 right-6 z-[80] transition-all duration-500 ease-in-out bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-300 dark:border-yellow-600 shadow-2xl overflow-hidden ${minimized ? 'w-12 h-12 rounded-full' : 'w-72 rounded-3xl p-4'}`}>
+            
+            {/* Hidden Audio Element - Removed crossOrigin to fix CORS blocking */}
+            <audio 
+                ref={audioRef}
+                src={SOUND_URLS[track]}
+                loop
+                onError={(e) => {
+                    const err = e.currentTarget.error;
+                    console.error("Audio Load Error:", err ? `Code: ${err.code}, Message: ${err.message}` : "Unknown error");
+                    setPlaying(false);
+                }}
+                onEnded={() => {
+                    if(playing && audioRef.current) audioRef.current.play();
+                }}
+            />
+
             {minimized ? (
-                <button onClick={() => setMinimized(false)} className="w-full h-full flex items-center justify-center bg-yellow-500 text-black hover:scale-110 transition-transform">
-                    <Music className="w-5 h-5 animate-pulse" />
+                <button onClick={() => setMinimized(false)} className={`w-full h-full flex items-center justify-center text-black hover:scale-110 transition-transform ${playing ? 'bg-yellow-400 animate-pulse' : 'bg-yellow-500'}`}>
+                    <Music className="w-5 h-5" />
                 </button>
             ) : (
                 <div className="space-y-4">
@@ -376,7 +273,7 @@ const SoundscapePlayer: React.FC = () => {
                         ].map((item) => {
                             const isActive = track === item.key;
                             return (
-                                <button key={item.key} onClick={() => setTrack(item.key)} className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${isActive ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg scale-105' : 'bg-white dark:bg-gray-800 text-gray-500 hover:bg-yellow-100 dark:hover:bg-gray-700 border border-yellow-100 dark:border-gray-700'}`}>
+                                <button key={item.key} onClick={() => setTrack(item.key as any)} className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${isActive ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg scale-105' : 'bg-white dark:bg-gray-800 text-gray-500 hover:bg-yellow-100 dark:hover:bg-gray-700 border border-yellow-100 dark:border-gray-700'}`}>
                                     <item.icon className={`w-4 h-4 mb-1 ${isActive ? 'text-yellow-400 dark:text-yellow-600' : ''}`} />
                                     <span className="text-[9px] font-bold uppercase">{item.label}</span>
                                 </button>
