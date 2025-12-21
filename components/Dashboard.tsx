@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Companion, Transaction, JournalEntry, ArtEntry } from '../types';
@@ -123,7 +122,7 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
                 const imageUrl = canvas.toDataURL('image/png');
                 const newEntry: ArtEntry = { id: `wisdom_${Date.now()}`, userId: userId, imageUrl: imageUrl, prompt: input, createdAt: new Date().toISOString(), title: "Wisdom Card" };
                 Database.saveArt(newEntry);
-                setGallery(prev => [newEntry, ...prev].slice(0, 5));
+                setGallery(prev => [newEntry, ...prev]);
                 
                 const link = document.createElement('a'); link.href = imageUrl; link.download = `peutic_wisdom_${Date.now()}.png`; document.body.appendChild(link); link.click(); document.body.removeChild(link);
                 setInput('');
@@ -152,7 +151,7 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
                         <div className="mt-6 space-y-4">
                             <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Your Cards</h4>
                             <div className="flex flex-col gap-4">
-                                {gallery.slice(0, 5).map((art) => (
+                                {gallery.slice(0, 3).map((art) => (
                                     <div key={art.id} className="bg-gray-50 dark:bg-gray-800 p-2 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm relative group">
                                         <img src={art.imageUrl} alt="Wisdom Card" className="w-full rounded-xl shadow-sm" />
                                         <div className="absolute top-3 right-3 flex gap-2"><button onClick={(e) => handleDelete(e, art.id)} className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-colors" title="Delete"><Trash2 className="w-3 h-3"/></button></div>
@@ -486,6 +485,7 @@ const BreathingExercise: React.FC<{ userId: string; onClose: () => void }> = ({ 
     );
 }
 
+// ... (Rest of file unchanged) ...
 // --- MOOD TRACKER ---
 const MoodTracker: React.FC<{ onMoodSelect: (mood: 'confetti' | 'rain' | null) => void }> = ({ onMoodSelect }) => {
     return (
