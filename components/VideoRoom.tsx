@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Companion, SessionFeedback } from '../types';
 import { 
     Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, 
@@ -119,7 +119,6 @@ const renderSessionArtifact = (companionName: string, durationStr: string, dateS
 const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const localStreamRef = useRef<MediaStream | null>(null);
 
   // Media State
   const [micOn, setMicOn] = useState(true);
@@ -160,28 +159,18 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   const connectionInitiated = useRef(false);
 
   // --- Strict Resource Cleanup ---
-  const performCleanup = () => {
-      // 1. Stop all local media tracks immediately
-      if (localStreamRef.current) {
-          localStreamRef.current.getTracks().forEach(track => track.stop());
-          localStreamRef.current = null;
-      }
+  const performCleanup = useCallback(() => {
+      console.log("Terminating session resources...");
       
-      // 2. Kill the video element source
-      if (videoRef.current) {
-          videoRef.current.srcObject = null;
-      }
-
-      // 3. Terminate API session rigorously
+      // 1. Terminate API session rigorously
       if (conversationIdRef.current) {
           endTavusConversation(conversationIdRef.current);
-          // Redundant check: ensure we don't try to end it twice
           conversationIdRef.current = null;
       }
 
-      // 4. Update Database state
+      // 2. Update Database state
       Database.endSession(userId);
-  };
+  }, [userId]);
 
   // --- Session Initialization ---
   useEffect(() => {
@@ -235,7 +224,8 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
     // HANDLE MOBILE & DESKTOP TAB CLOSE / REFRESH
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
         performCleanup();
-        e.preventDefault();
+        // Modern browsers don't allow custom messages, but setting returnValue triggers the prompt
+        e.preventDefault(); 
         e.returnValue = '';
     };
 
@@ -253,7 +243,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         window.removeEventListener('pagehide', handlePageHide);
         performCleanup();
     };
-  }, []);
+  }, [performCleanup]);
 
   const startTavusConnection = async () => {
       // Prevent double calls (API Optimization)
@@ -304,50 +294,44 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
   // --- Webcam Logic (Self-View) ---
   useEffect(() => {
-    // Only initialize camera if enabled and not in summary mode
-    if (!camOn || showSummary) {
-        if (localStreamRef.current) {
-            localStreamRef.current.getTracks().forEach(t => t.stop());
-            localStreamRef.current = null;
-        }
-        return;
-    }
+    let stream: MediaStream | null = null;
 
-    const initCamera = async () => {
+    const startCamera = async () => {
+        if (!camOn || showSummary) return;
+
         try {
-            // Check if we already have a stream to prevent flickering
-            if (localStreamRef.current && localStreamRef.current.active) {
-                if (videoRef.current && videoRef.current.srcObject !== localStreamRef.current) {
-                    videoRef.current.srcObject = localStreamRef.current;
-                    videoRef.current.play().catch(e => console.error("Video play failed", e));
-                }
-                return;
-            }
-
-            // Request new stream
-            // NOTE: audio: false for self-view loopback to prevent feedback. 
-            // The iframe handles the actual audio transmission.
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { width: 640, height: 360, facingMode: 'user' }, 
-                audio: false 
+            // Explicitly requesting new stream to ensure we get a fresh one
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    width: 320, 
+                    height: 180, 
+                    facingMode: 'user'
+                }, 
+                audio: false // Critical: No audio to prevent echo
             });
-            
-            localStreamRef.current = stream;
             
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
+                // Wait for metadata to load before playing
                 videoRef.current.onloadedmetadata = () => {
-                    videoRef.current?.play().catch(e => console.error("Play error", e));
+                    videoRef.current?.play().catch(e => console.warn("Video play interrupted:", e));
                 };
             }
         } catch (err) {
-            console.error("Camera Init Error:", err);
+            console.error("Error accessing webcam:", err);
         }
     };
 
-    initCamera();
+    startCamera();
 
-    // Cleanup logic for camera is handled in the main shutdown or when camOn changes
+    return () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+        if (videoRef.current) {
+            videoRef.current.srcObject = null;
+        }
+    };
   }, [camOn, showSummary]);
 
   // --- Timers & Credit Enforcement ---
@@ -376,7 +360,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         if (Math.random() > 0.9) setNetworkQuality(Math.max(2, Math.floor(Math.random() * 3) + 2)); 
     }, 1000);
     return () => clearInterval(interval);
-  }, [showSummary, remainingMinutes, connectionState]);
+  }, [showSummary, remainingMinutes, connectionState, performCleanup]);
 
   const handleEndSession = () => {
       performCleanup(); // Strict API cutoff
@@ -480,7 +464,8 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
     <div ref={containerRef} className="fixed inset-0 bg-black z-50 flex flex-col overflow-hidden select-none">
         
         {/* --- DYNAMIC ISLAND SELF-VIEW (TOP CENTER) --- */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] w-32 md:w-48 aspect-[16/9] md:aspect-video rounded-[2rem] overflow-hidden border-2 border-white/10 bg-black shadow-2xl transition-all duration-300 group">
+        {/* Z-Index 100 to float above Tavus iframe and header overlays */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] w-32 md:w-48 aspect-[16/9] md:aspect-video rounded-[2rem] overflow-hidden border-2 border-white/20 bg-black shadow-2xl transition-all duration-300 pointer-events-none">
             <div className="absolute inset-0 bg-black flex items-center justify-center">
                 {camOn ? (
                     <video 
@@ -491,7 +476,10 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                         className="w-full h-full object-cover transform scale-x-[-1]" 
                     />
                 ) : (
-                    <VideoOff className="w-6 h-6 text-gray-700" />
+                    <div className="flex flex-col items-center gap-1">
+                        <VideoOff className="w-5 h-5 text-gray-700" />
+                        <span className="text-[8px] text-gray-700 font-bold uppercase tracking-wider">Camera Off</span>
+                    </div>
                 )}
             </div>
             {/* Status Indicators inside the "Island" */}
