@@ -377,14 +377,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
       </footer>
 
       {showCookies && (
-          <div className="fixed bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-2xl bg-black text-white p-4 md:p-6 z-[100] rounded-2xl md:rounded-[2rem] border border-gray-800 shadow-2xl animate-in slide-in-from-bottom-5">
+          <div className="fixed bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-2xl bg-[#FFFBEB] text-black p-4 md:p-6 z-[100] rounded-2xl md:rounded-[2rem] border-2 border-yellow-400 shadow-2xl animate-in slide-in-from-bottom-5">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 text-center md:text-left">
                   <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
-                      <Cookie className="w-8 h-8 md:w-10 md:h-10 text-yellow-500" />
-                      <p className="text-[10px] md:text-xs font-bold text-gray-400 leading-relaxed uppercase tracking-wider">Secure connectivity cookies are active to ensure low-latency video. <Link to="/privacy" className="text-white underline">Policy</Link></p>
+                      <Cookie className="w-8 h-8 md:w-10 md:h-10 text-yellow-600" />
+                      <p className="text-[10px] md:text-xs font-bold text-black leading-relaxed uppercase tracking-wider">Secure connectivity cookies are active to ensure low-latency video. <Link to="/privacy" className="text-black underline">Policy</Link></p>
                   </div>
                   <div className="flex gap-4">
-                      <button onClick={acceptCookies} className="px-6 py-2 md:px-8 md:py-3 bg-white text-black rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-widest hover:bg-yellow-50 transition-all">Accept</button>
+                      <button onClick={acceptCookies} className="px-6 py-2 md:px-8 md:py-3 bg-black text-white rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-widest hover:bg-gray-800 transition-all">Accept</button>
                   </div>
               </div>
           </div>

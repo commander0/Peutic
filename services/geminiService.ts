@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || 'test_key' });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 // --- EXPANDED LOCAL FALLBACK DATA (WISDOM ENGINE) ---
 const LOCAL_AFFIRMATIONS = {
