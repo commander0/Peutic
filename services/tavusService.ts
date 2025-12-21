@@ -1,6 +1,5 @@
 const TAVUS_API_URL = 'https://tavusapi.com/v2';
-// Prioritize Environment Variables
-const API_KEY = process.env.VITE_TAVUS_API_KEY || 'ae15b9c744264844a555049b576094d8';
+const API_KEY = process.env.VITE_TAVUS_API_KEY;
 
 export interface TavusConversationResponse {
   conversation_id: string;
@@ -10,7 +9,7 @@ export interface TavusConversationResponse {
 
 export const createTavusConversation = async (replicaId: string, userName: string, context?: string): Promise<TavusConversationResponse> => {
   if (!API_KEY) {
-    throw new Error("Configuration Error: Missing Tavus API Key");
+    throw new Error("Configuration Error: Missing Tavus API Key. Please check settings.");
   }
 
   // --- SAFETY PROTOCOL INJECTION ---
@@ -83,12 +82,10 @@ export const createTavusConversation = async (replicaId: string, userName: strin
   }
 };
 
-// OPTIMIZED: Explicit Session Termination with keepalive to prevent ghost sessions
 export const endTavusConversation = async (conversationId: string): Promise<void> => {
   if (!conversationId || !API_KEY) return;
 
   try {
-    // 'keepalive: true' ensures the request completes even if the page unloads
     await fetch(`${TAVUS_API_URL}/conversations/${conversationId}/end`, {
       method: 'POST',
       headers: {
@@ -103,6 +100,7 @@ export const endTavusConversation = async (conversationId: string): Promise<void
 };
 
 export const listReplicas = async (): Promise<any[]> => {
+  if (!API_KEY) return [];
   try {
     const response = await fetch(`${TAVUS_API_URL}/replicas`, {
       method: 'GET',

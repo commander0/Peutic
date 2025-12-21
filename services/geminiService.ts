@@ -1,6 +1,17 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Lazy initialization to prevent crash on module load if env vars are missing
+let aiInstance: GoogleGenAI | null = null;
+
+const getAi = () => {
+    if (!aiInstance) {
+        const key = process.env.API_KEY;
+        if (key && key !== 'test_key' && !key.includes('placeholder')) {
+            aiInstance = new GoogleGenAI({ apiKey: key });
+        }
+    }
+    return aiInstance;
+};
 
 // --- EXPANDED LOCAL FALLBACK DATA (WISDOM ENGINE) ---
 const LOCAL_AFFIRMATIONS = {
@@ -9,12 +20,12 @@ const LOCAL_AFFIRMATIONS = {
         "I breathe in peace, I breathe out tension.",
         "I am stronger than my anxious thoughts.",
         "I control my breathing, I control my calm.",
-        "Peace is the result of retraining your mind to process life as it is, rather than as you think it should be.",
+        "Peace is the result of retraining your mind to process life as it is.",
         "You don't have to control your thoughts. You just have to stop letting them control you.",
-        "Breathe. You’re going to be okay. Breathe and remember that you’ve been in this place before.",
+        "Breathe. You’re going to be okay.",
         "Present moment, wonderful moment.",
-        "My anxiety does not define me. It is just a cloud passing through the sky of my mind.",
-        "I am anchored in the present, safe from the storms of the future.",
+        "My anxiety does not define me. It is just a cloud passing through.",
+        "I am anchored in the present.",
         "Worrying does not empty tomorrow of its sorrow, it empties today of its strength.",
         "I release the need to know every answer right now.",
         "I am grounded. I am stable. I am here.",
@@ -32,7 +43,7 @@ const LOCAL_AFFIRMATIONS = {
         "One step at a time. One breath at a time.",
         "I release the need to control the outcome.",
         "Tension is who you think you should be. Relaxation is who you are.",
-        "Nothing is worth your health. Nothing is worth poisoning yourself into stress.",
+        "Nothing is worth your health.",
         "Slow down and everything you are chasing will come around and catch you.",
         "I simply do not have to do it all today.",
         "I am doing my best, and that is enough.",
@@ -91,77 +102,62 @@ const LOCAL_AFFIRMATIONS = {
         "The best way to predict the future is to create it.",
         "You are enough just as you are.",
         "Gratitude turns what we have into enough.",
-        "Growth is a spiral process, doubling back on itself, reassessing and regrouping."
+        "Growth is a spiral process, doubling back on itself."
     ]
 };
 
 export const generateDailyInsight = async (userName: string): Promise<string> => {
-  try {
-    if (!process.env.API_KEY || process.env.API_KEY === 'test_key') throw new Error("Simulation Mode");
+  const ai = getAi();
+  if (!ai) {
+      // Fallback if API key missing
+      const backups = [
+       `Welcome back, ${userName}. Peace begins with a single breath.`,
+       `Hello, ${userName}. You are capable of amazing things today.`,
+       `Hi ${userName}. Remember to be kind to yourself today.`,
+       `Welcome back, ${userName}. Your calm presence is your power.`,
+       `Good to see you, ${userName}. Trust the timing of your life.`
+      ];
+      return backups[Math.floor(Math.random() * backups.length)];
+  }
 
+  try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `Write a short, warm, human-like daily greeting and mental wellness tip for a user named ${userName}. Do not sound like a robot. Keep it under 30 words. Make it unique every time.`,
     });
     return response.text || "Welcome back. Remember to take a deep breath today.";
   } catch (error) {
-    const backups = [
-       `Welcome back, ${userName}. Peace begins with a single breath.`,
-       `Hello, ${userName}. You are capable of amazing things today.`,
-       `Hi ${userName}. Remember to be kind to yourself today.`,
-       `Welcome back, ${userName}. Your calm presence is your power.`,
-       `Good to see you, ${userName}. Trust the timing of your life.`,
-       `Hello ${userName}. Small steps lead to big changes.`
-    ];
-    return backups[Math.floor(Math.random() * backups.length)];
+    return `Welcome back, ${userName}. Peace begins with a single breath.`;
   }
 };
 
-export const analyzeSessionMood = async (notes: string): Promise<string> => {
-    // Simple local fallback for mood analysis
-    if (!process.env.API_KEY || process.env.API_KEY === 'test_key') return "Reflective";
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: `Analyze the sentiment: "${notes}". Return one word.`
-        });
-        return response.text?.trim() || "Neutral";
-    } catch {
-        return "Stable";
-    }
-};
-
-// NEW: Text-Based Wisdom Generator (Replaces Image Gen)
 export const generateAffirmation = async (struggle: string = "general"): Promise<string> => {
-    try {
-        if (!process.env.API_KEY || process.env.API_KEY === 'test_key') throw new Error("Use Local");
-
-        // Added "Make it unique" and "metaphorical" to prompt to increase variety
-        const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: `The user is feeling: "${struggle}". Write a unique, powerful, metaphorical, and soothing affirmation (max 12 words) to help them reframe this thought. Do not use quotes. Avoid generic clichés.`
-        });
-        return response.text?.trim() || "Peace comes from within.";
-
-    } catch (e) {
-        console.log("Using Local Affirmation Logic");
-        // Advanced keyword matching for local fallback
-        const lower = struggle.toLowerCase();
-        let category = 'general';
-        
-        if (lower.match(/(anxi|fear|scared|panic|nervous|worry|dread)/)) category = 'anxiety';
-        else if (lower.match(/(work|stress|busy|overwhelm|pressure|tired|exhaust|burnout)/)) category = 'stress';
-        else if (lower.match(/(sad|lonely|depress|hurt|cry|grief|loss|pain|breakup)/)) category = 'sadness';
-
-        const list = LOCAL_AFFIRMATIONS[category as keyof typeof LOCAL_AFFIRMATIONS];
-        
-        // Use time-based seeding to ensure it feels random but consistent for a moment
-        const randomIndex = Math.floor(Math.random() * list.length);
-        return list[randomIndex];
+    const ai = getAi();
+    if (ai) {
+        try {
+            const response = await ai.models.generateContent({
+                model: 'gemini-3-flash-preview',
+                contents: `The user is feeling: "${struggle}". Write a unique, powerful, metaphorical, and soothing affirmation (max 12 words) to help them reframe this thought. Do not use quotes. Avoid generic clichés.`
+            });
+            return response.text?.trim() || "Peace comes from within.";
+        } catch (e) {
+            console.log("Gemini API Error, using fallback.");
+        }
     }
+
+    console.log("Using Local Affirmation Logic");
+    const lower = struggle.toLowerCase();
+    let category = 'general';
+    
+    if (lower.match(/(anxi|fear|scared|panic|nervous|worry|dread)/)) category = 'anxiety';
+    else if (lower.match(/(work|stress|busy|overwhelm|pressure|tired|exhaust|burnout)/)) category = 'stress';
+    else if (lower.match(/(sad|lonely|depress|hurt|cry|grief|loss|pain|breakup)/)) category = 'sadness';
+
+    const list = LOCAL_AFFIRMATIONS[category as keyof typeof LOCAL_AFFIRMATIONS];
+    const randomIndex = Math.floor(Math.random() * list.length);
+    return list[randomIndex];
 };
 
-// Deprecated but kept for compatibility signature
 export const generateWellnessImage = async (prompt: string): Promise<string | null> => {
     return null; 
 };
