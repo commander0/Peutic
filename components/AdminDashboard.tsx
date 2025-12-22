@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -163,6 +164,15 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
           Database.logSystemEvent('WARNING', 'Admin Grant', `Granted ${fundAmount}m to ${selectedUser.email}`);
           setShowUserModal(false);
           setFundAmount(0);
+      }
+  };
+
+  const handleDeleteUser = (userId: string) => {
+      if (confirm("Are you sure you want to permanently delete this user? This action cannot be undone.")) {
+          Database.deleteUser(userId);
+          // Instant optimistic UI update
+          setUsers(prevUsers => prevUsers.filter(u => u.id !== userId));
+          Database.logSystemEvent('WARNING', 'User Deleted', `User ${userId} was removed by admin.`);
       }
   };
 
@@ -399,7 +409,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                               <div className="flex justify-end gap-2">
                                                   <button onClick={() => { setSelectedUser(user); setShowUserModal(true); }} className="p-2 bg-gray-800 hover:bg-green-900/30 text-green-500 rounded-lg transition-colors" title="Grant Credits"><Plus className="w-4 h-4"/></button>
                                                   <button onClick={() => { if(confirm("Ban/Unban User?")) { const s = user.subscriptionStatus === 'BANNED' ? 'ACTIVE' : 'BANNED'; Database.updateUser({...user, subscriptionStatus: s as any}); }}} className="p-2 bg-gray-800 hover:bg-yellow-900/30 text-yellow-500 rounded-lg transition-colors"><ShieldAlert className="w-4 h-4"/></button>
-                                                  <button onClick={() => Database.deleteUser(user.id)} className="p-2 bg-gray-800 hover:bg-red-900/30 text-red-500 rounded-lg transition-colors"><Trash2 className="w-4 h-4"/></button>
+                                                  <button onClick={() => handleDeleteUser(user.id)} className="p-2 bg-gray-800 hover:bg-red-900/30 text-red-500 rounded-lg transition-colors"><Trash2 className="w-4 h-4"/></button>
                                               </div>
                                           </td>
                                       </tr>
