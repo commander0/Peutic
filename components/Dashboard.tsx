@@ -918,6 +918,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   };
 
   const handleStartConnection = (c: Companion) => {
+      if (dashboardUser.balance <= 0) {
+          setPaymentError("Insufficient credits. Please add funds to start a session.");
+          setShowPayment(true);
+          return;
+      }
       setPendingCompanion(c);
       setShowTechCheck(true);
   };

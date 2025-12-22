@@ -178,6 +178,16 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
       if(confirm("Are you sure you want to permanently delete this user? This cannot be undone.")) {
           Database.deleteUser(id);
           setUsers(Database.getAllUsers());
+          setShowUserModal(false);
+      }
+  };
+
+  const handlePurgeUsers = () => {
+      if (confirm("WARNING: You are about to delete ALL non-admin users. This action is irreversible. Proceed?")) {
+          const usersToDelete = users.filter(u => u.role !== UserRole.ADMIN);
+          usersToDelete.forEach(u => Database.deleteUser(u.id));
+          setUsers(Database.getAllUsers());
+          Database.logSystemEvent('WARNING', 'Bulk Purge', `Admin purged ${usersToDelete.length} users.`);
       }
   };
 
@@ -330,6 +340,9 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                   <button onClick={() => Database.setAllCompanionsStatus('AVAILABLE')} className="w-full py-4 bg-gray-800 hover:bg-gray-700 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors border border-gray-700">
                                       <RefreshCw className="w-4 h-4" /> Reset All Specialists
                                   </button>
+                                  <button onClick={handlePurgeUsers} className="w-full py-4 bg-red-900/10 hover:bg-red-900/30 text-red-500 border border-red-900/30 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors">
+                                      <Trash2 className="w-4 h-4" /> Purge Inactive Users
+                                  </button>
                                   <button onClick={() => { if(confirm("Enable Emergency Lockdown?")) Database.saveSettings({...settings, maintenanceMode: true}); }} className="w-full py-4 bg-red-900/20 hover:bg-red-900/40 text-red-500 border border-red-900/50 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors">
                                       <ShieldAlert className="w-4 h-4" /> Enable Lockdown
                                   </button>
@@ -404,7 +417,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                           </td>
                                           <td className="p-4 text-right">
                                               <div className="flex justify-end gap-2">
-                                                  <button onClick={() => { setSelectedUser(user); setShowUserModal(true); }} className="p-2 bg-gray-800 hover:bg-green-900/30 text-green-500 rounded-lg transition-colors" title="Grant Credits"><Plus className="w-4 h-4"/></button>
+                                                  <button onClick={() => { setSelectedUser(user); setShowUserModal(true); }} className="p-2 bg-gray-800 hover:bg-green-900/30 text-green-500 rounded-lg transition-colors" title="Manage User"><Plus className="w-4 h-4"/></button>
                                                   <button onClick={() => { if(confirm("Ban/Unban User?")) { const s = user.subscriptionStatus === 'BANNED' ? 'ACTIVE' : 'BANNED'; Database.updateUser({...user, subscriptionStatus: s as any}); }}} className="p-2 bg-gray-800 hover:bg-yellow-900/30 text-yellow-500 rounded-lg transition-colors"><ShieldAlert className="w-4 h-4"/></button>
                                                   {user.role !== UserRole.ADMIN && (
                                                       <button onClick={() => handleDeleteUser(user.id)} className="p-2 bg-gray-800 hover:bg-red-900/30 text-red-500 rounded-lg transition-colors" title="Delete User"><Trash2 className="w-4 h-4"/></button>
@@ -544,12 +557,26 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
       {showUserModal && selectedUser && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in zoom-in duration-200">
               <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-sm w-full shadow-2xl">
-                   <h3 className="text-xl font-bold text-white mb-2">Admin Grant</h3>
-                   <p className="text-gray-400 text-sm mb-6">Adding credits to <span className="text-yellow-500">{selectedUser.email}</span></p>
+                   <h3 className="text-xl font-bold text-white mb-2">Manage User</h3>
+                   <p className="text-gray-400 text-sm mb-6"><span className="text-yellow-500">{selectedUser.email}</span></p>
+                   
+                   <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Grant Credits</label>
                    <input type="number" className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white text-xl font-mono mb-6 focus:border-green-500 outline-none" value={fundAmount} onChange={e => setFundAmount(parseInt(e.target.value) || 0)} placeholder="0" />
-                   <div className="flex gap-3">
-                       <button onClick={() => setShowUserModal(false)} className="flex-1 py-3 bg-gray-800 rounded-xl font-bold text-gray-400 hover:bg-gray-700">Cancel</button>
-                       <button onClick={handleFundUser} className="flex-1 py-3 bg-green-600 rounded-xl font-bold text-white hover:bg-green-500">Confirm</button>
+                   
+                   <div className="flex flex-col gap-3">
+                       <div className="flex gap-3">
+                           <button onClick={() => setShowUserModal(false)} className="flex-1 py-3 bg-gray-800 rounded-xl font-bold text-gray-400 hover:bg-gray-700">Cancel</button>
+                           <button onClick={handleFundUser} className="flex-1 py-3 bg-green-600 rounded-xl font-bold text-white hover:bg-green-500">Confirm Grant</button>
+                       </div>
+                       
+                       {selectedUser.role !== UserRole.ADMIN && (
+                           <button 
+                               onClick={() => handleDeleteUser(selectedUser.id)} 
+                               className="w-full py-3 border border-red-900/50 text-red-500 hover:bg-red-900/20 rounded-xl font-bold text-xs uppercase tracking-widest mt-2 flex items-center justify-center gap-2"
+                           >
+                               <Trash2 className="w-4 h-4" /> Delete User Permanently
+                           </button>
+                       )}
                    </div>
               </div>
           </div>
