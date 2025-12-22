@@ -116,12 +116,8 @@ const renderSessionArtifact = (companionName: string, durationStr: string, dateS
 };
 
 const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // Track specific stream reference for cleanup
-  const localStreamRef = useRef<MediaStream | null>(null);
-
   // Media State
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
@@ -170,13 +166,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
           conversationIdRef.current = null;
       }
 
-      // 2. Stop Local Camera
-      if (localStreamRef.current) {
-          localStreamRef.current.getTracks().forEach(t => t.stop());
-          localStreamRef.current = null;
-      }
-
-      // 3. Update Database state
+      // 2. Update Database state
       Database.endSession(userId);
   }, [userId]);
 
@@ -297,73 +287,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
           setErrorMsg(err.message || "Failed to establish secure connection.");
       }
   };
-
-  // --- Webcam Logic (Self-View) ---
-  useEffect(() => {
-    let isMounted = true;
-    let timerId: ReturnType<typeof setTimeout>;
-
-    const startCamera = async () => {
-        // Cleanup existing tracks first
-        if (localStreamRef.current) {
-            localStreamRef.current.getTracks().forEach(track => track.stop());
-            localStreamRef.current = null;
-        }
-
-        if (!camOn || showSummary) {
-            if (videoRef.current) videoRef.current.srcObject = null;
-            return;
-        }
-
-        // --- PRIORITY LOGIC ---
-        // If connected, we wait to give Tavus priority.
-        // If not connected yet (or connecting), we don't grab camera to avoid busy signal for Tavus.
-        if (connectionState !== 'CONNECTED' && connectionState !== 'DEMO_MODE') {
-            return; 
-        }
-
-        // Delay 2.5s to let the Iframe fully acquire the camera lock
-        timerId = setTimeout(async () => {
-            if (!isMounted) return;
-            try {
-                console.log("VideoRoom: Attempting Self-View stream...");
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        width: { ideal: 320 }, 
-                        height: { ideal: 180 }, 
-                        facingMode: 'user',
-                        frameRate: { ideal: 24 }
-                    }, 
-                    audio: false // STRICTLY FALSE for self-view
-                });
-                
-                if (isMounted) {
-                    localStreamRef.current = stream;
-                    if (videoRef.current) {
-                        videoRef.current.srcObject = stream;
-                        await videoRef.current.play().catch(e => console.warn("Autoplay block:", e));
-                    }
-                } else {
-                    stream.getTracks().forEach(t => t.stop());
-                }
-            } catch (err) {
-                console.warn("Camera busy (Tavus Priority Active):", err);
-                // Camera busy is expected, we just won't show self view
-            }
-        }, 2500);
-    };
-
-    startCamera();
-
-    return () => {
-        isMounted = false;
-        clearTimeout(timerId);
-        if (localStreamRef.current) {
-            localStreamRef.current.getTracks().forEach(track => track.stop());
-            localStreamRef.current = null;
-        }
-    };
-  }, [camOn, showSummary, connectionState]); // Re-run when connection state changes to CONNECTED
 
   // --- Timers & Credit Enforcement ---
   useEffect(() => {
@@ -492,34 +415,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   return (
     <div ref={containerRef} className="fixed inset-0 bg-black z-50 flex flex-col overflow-hidden select-none">
         
-        {/* --- DYNAMIC ISLAND SELF-VIEW (TOP RIGHT) --- */}
-        {/* Z-Index 100 to float above Tavus iframe and header overlays */}
-        {/* Changed from left-1/2 to right-4 top-4 to avoid covering main subject */}
-        <div className="absolute top-4 right-4 z-[100] w-32 md:w-48 aspect-[16/9] md:aspect-video rounded-[2rem] overflow-hidden border-2 border-white/20 bg-black shadow-2xl transition-all duration-300 pointer-events-none">
-            <div className="absolute inset-0 bg-black flex items-center justify-center">
-                {camOn ? (
-                    <video 
-                        ref={videoRef} 
-                        autoPlay 
-                        muted 
-                        playsInline 
-                        className="w-full h-full object-cover transform scale-x-[-1]" 
-                    />
-                ) : (
-                    <div className="flex flex-col items-center gap-1">
-                        <VideoOff className="w-5 h-5 text-gray-700" />
-                        <span className="text-[8px] text-gray-700 font-bold uppercase tracking-wider">Camera Off</span>
-                    </div>
-                )}
-            </div>
-            {/* Status Indicators inside the "Island" */}
-            <div className="absolute bottom-2 right-3 flex gap-1.5">
-                 <div className={`w-1.5 h-1.5 rounded-full ${micOn ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-red-500'}`}></div>
-            </div>
-        </div>
-
         {/* --- CREDENTIAL BADGE --- */}
-        {/* Moved down to top-36 to clear self-view video */}
         {showCredential && (
             <div className="absolute top-36 right-4 z-40 bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl w-64 animate-in slide-in-from-right-10 fade-in duration-300">
                 <div className="flex justify-between items-start mb-2">
@@ -556,7 +452,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             </div>
         )}
 
-        {/* --- HEADER OVERLAY (Under Island) --- */}
+        {/* --- HEADER OVERLAY --- */}
         <div className="absolute top-0 left-0 right-0 p-4 md:p-6 flex justify-between items-start z-20 pointer-events-none bg-gradient-to-b from-black/80 via-black/20 to-transparent pb-20 transition-opacity duration-500">
             <div className="flex items-center gap-4 pointer-events-auto">
                 <div className={`bg-black/40 backdrop-blur-xl px-4 py-2 rounded-full border ${lowBalanceWarning ? 'border-red-500 animate-pulse' : 'border-white/10'} text-white font-mono shadow-xl flex items-center gap-3 transition-colors duration-500`}>
