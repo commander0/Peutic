@@ -172,6 +172,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
       if (newPromo.code && newPromo.discount) {
           Database.createPromoCode(newPromo.code, newPromo.discount);
           setNewPromo({ code: '', discount: 10 });
+          setPromos(Database.getPromoCodes()); // Immediate update
       }
   };
 
@@ -497,6 +498,179 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                       <Area type="monotone" dataKey="value" stroke="#FACC15" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
                                   </AreaChart>
                               </ResponsiveContainer>
+                          </div>
+                      </div>
+                  </div>
+              )}
+
+              {/* --- MARKETING TAB --- */}
+              {activeTab === 'marketing' && (
+                  <div className="space-y-8 animate-in fade-in duration-500">
+                      <div>
+                          <h2 className="text-3xl font-black tracking-tight mb-1">Marketing Operations</h2>
+                          <p className="text-gray-500 text-sm">Manage campaigns, discounts, and user communication.</p>
+                      </div>
+
+                      <div className="grid lg:grid-cols-3 gap-8">
+                          {/* LEFT COLUMN */}
+                          <div className="lg:col-span-2 space-y-8">
+                              
+                              {/* Promo Code Manager */}
+                              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                                  <div className="flex justify-between items-center mb-6">
+                                      <h3 className="font-bold text-white flex items-center gap-2"><Tag className="w-5 h-5 text-yellow-500"/> Active Campaigns</h3>
+                                      <span className="text-xs bg-yellow-500/10 text-yellow-500 px-3 py-1 rounded-full font-bold">{promos.filter(p => p.active).length} Active</span>
+                                  </div>
+
+                                  {/* Creator */}
+                                  <form onSubmit={handleCreatePromo} className="flex gap-4 mb-8 bg-black p-4 rounded-xl border border-gray-800">
+                                      <div className="flex-1">
+                                          <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Promo Code</label>
+                                          <input 
+                                              className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white font-mono text-sm focus:border-yellow-500 outline-none uppercase"
+                                              placeholder="SUMMER2025"
+                                              value={newPromo.code}
+                                              onChange={e => setNewPromo({...newPromo, code: e.target.value.toUpperCase()})}
+                                          />
+                                      </div>
+                                      <div className="w-24">
+                                          <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Discount %</label>
+                                          <input 
+                                              type="number"
+                                              className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white font-mono text-sm focus:border-yellow-500 outline-none"
+                                              placeholder="10"
+                                              value={newPromo.discount}
+                                              onChange={e => setNewPromo({...newPromo, discount: parseInt(e.target.value) || 0})}
+                                          />
+                                      </div>
+                                      <div className="flex items-end">
+                                          <button className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold p-2.5 rounded-lg transition-colors flex items-center gap-2">
+                                              <Plus className="w-4 h-4" /> Create
+                                          </button>
+                                      </div>
+                                  </form>
+
+                                  {/* List */}
+                                  <div className="space-y-3">
+                                      {promos.length === 0 ? (
+                                          <div className="text-center py-8 text-gray-600 text-sm">No active campaigns.</div>
+                                      ) : (
+                                          promos.map(promo => (
+                                              <div key={promo.id} className="flex items-center justify-between bg-black border border-gray-800 p-4 rounded-xl group hover:border-gray-700 transition-colors">
+                                                  <div className="flex items-center gap-4">
+                                                      <div className="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center border border-gray-800">
+                                                          <Gift className="w-5 h-5 text-gray-400" />
+                                                      </div>
+                                                      <div>
+                                                          <p className="font-bold text-white text-lg tracking-wider font-mono">{promo.code}</p>
+                                                          <p className="text-xs text-gray-500">{promo.discountPercentage}% Discount • {promo.uses} Redemptions</p>
+                                                      </div>
+                                                  </div>
+                                                  <button 
+                                                      onClick={() => { Database.deletePromoCode(promo.id); setPromos(Database.getPromoCodes()); }}
+                                                      className="p-2 text-gray-600 hover:text-red-500 hover:bg-red-900/10 rounded-lg transition-colors"
+                                                  >
+                                                      <Trash2 className="w-4 h-4" />
+                                                  </button>
+                                              </div>
+                                          ))
+                                      )}
+                                  </div>
+                              </div>
+
+                              {/* System Broadcast */}
+                              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                                  <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Megaphone className="w-5 h-5 text-blue-500"/> System Broadcast</h3>
+                                  <p className="text-gray-500 text-xs mb-4">Send a global notification to all active user dashboards.</p>
+                                  <div className="flex gap-4">
+                                      <input 
+                                          className="flex-1 bg-black border border-gray-800 rounded-xl p-4 text-white text-sm focus:border-blue-500 outline-none"
+                                          placeholder="e.g., 'Maintenance scheduled for 3AM EST'"
+                                          defaultValue={settings.broadcastMessage}
+                                          onBlur={(e) => Database.saveSettings({...settings, broadcastMessage: e.target.value})}
+                                      />
+                                      <button 
+                                          onClick={() => {
+                                              setBroadcastSent(true);
+                                              setTimeout(() => setBroadcastSent(false), 2000);
+                                          }}
+                                          className={`px-6 rounded-xl font-bold text-sm transition-all ${broadcastSent ? 'bg-green-500 text-white' : 'bg-blue-600 text-white hover:bg-blue-500'}`}
+                                      >
+                                          {broadcastSent ? 'Sent!' : 'Broadcast'}
+                                      </button>
+                                  </div>
+                              </div>
+                          </div>
+
+                          {/* RIGHT COLUMN */}
+                          <div className="space-y-8">
+                              {/* Acquisition Chart */}
+                              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                                  <h3 className="font-bold text-white mb-6 flex items-center gap-2"><Globe className="w-5 h-5 text-green-500"/> Acquisition Source</h3>
+                                  <div className="h-64 w-full relative">
+                                      <ResponsiveContainer width="100%" height="100%">
+                                          <PieChart>
+                                              <Pie
+                                                  data={[
+                                                      { name: 'Organic', value: 400 },
+                                                      { name: 'Referral', value: 300 },
+                                                      { name: 'Social', value: 300 },
+                                                      { name: 'Direct', value: 200 },
+                                                  ]}
+                                                  cx="50%"
+                                                  cy="50%"
+                                                  innerRadius={60}
+                                                  outerRadius={80}
+                                                  paddingAngle={5}
+                                                  dataKey="value"
+                                              >
+                                                  {['#FACC15', '#22C55E', '#3B82F6', '#EF4444'].map((color, index) => (
+                                                      <Cell key={`cell-${index}`} fill={color} stroke="none" />
+                                                  ))}
+                                              </Pie>
+                                              <Tooltip 
+                                                  contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '12px' }} 
+                                                  itemStyle={{ color: '#fff' }}
+                                              />
+                                          </PieChart>
+                                      </ResponsiveContainer>
+                                      {/* Center Text */}
+                                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                          <div className="text-center">
+                                              <p className="text-2xl font-black text-white">1.2k</p>
+                                              <p className="text-[10px] uppercase text-gray-500 font-bold">Total Visits</p>
+                                          </div>
+                                      </div>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-4 mt-6">
+                                      <div className="flex items-center gap-2">
+                                          <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                          <span className="text-xs text-gray-400">Organic (33%)</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                                          <span className="text-xs text-gray-400">Referral (25%)</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                          <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                          <span className="text-xs text-gray-400">Social (25%)</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                          <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                                          <span className="text-xs text-gray-400">Direct (17%)</span>
+                                      </div>
+                                  </div>
+                              </div>
+
+                              {/* Viral Coefficient */}
+                              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                                  <h3 className="font-bold text-white mb-2 flex items-center gap-2"><Users className="w-5 h-5 text-purple-500"/> Viral Coefficient</h3>
+                                  <p className="text-4xl font-black text-white mb-1">1.24</p>
+                                  <p className="text-xs text-gray-500">Each user invites ~1.24 new friends.</p>
+                                  <div className="w-full bg-gray-800 h-1.5 rounded-full mt-4 overflow-hidden">
+                                      <div className="bg-purple-500 h-full w-[62%]"></div>
+                                  </div>
+                              </div>
                           </div>
                       </div>
                   </div>
