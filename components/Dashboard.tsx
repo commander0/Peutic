@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Companion, Transaction, JournalEntry, ArtEntry } from '../types';
+import { User, Companion, Transaction, JournalEntry, ArtEntry, BreathLog, MoodEntry } from '../types';
 import { 
   Video, Clock, Settings, LogOut, 
   LayoutDashboard, Plus, Search, X, Lock, CheckCircle, AlertTriangle, ShieldCheck, Heart,
@@ -9,7 +9,7 @@ import {
   Sun, Cloud, Feather, Anchor, Gamepad2, RefreshCw, Play, Zap, Star, Edit2, Trash2, Bell,
   CloudRain, Image as ImageIcon, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Shield, Moon,
   Twitter, Instagram, Linkedin, LifeBuoy, Volume2, VolumeX, Minimize2, Maximize2, Music, Radio, Flame as Fire, Smile, Trees,
-  Mail, Smartphone, Globe, CreditCard, ToggleLeft, ToggleRight
+  Mail, Smartphone, Globe, CreditCard, ToggleLeft, ToggleRight, StopCircle
 } from 'lucide-react';
 import { Database, STABLE_AVATAR_POOL } from '../services/database';
 import { generateAffirmation, generateDailyInsight } from '../services/geminiService';
@@ -91,7 +91,7 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [gallery, setGallery] = useState<ArtEntry[]>([]);
-    const [isOpen, setIsOpen] = useState(true);
+    const [isOpen, setIsOpen] = useState(false);
 
     const refreshGallery = async () => {
         const art = await Database.getUserArt(userId);
@@ -139,7 +139,6 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
                 await Database.saveArt(newEntry);
                 await refreshGallery();
                 
-                // Auto-download option could be added here
                 setInput('');
             }
         } catch (e) { console.error("Generation Error:", e); } finally { setLoading(false); }
@@ -192,6 +191,7 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
 
 // --- SOUNDSCAPE PLAYER ---
 const SoundscapePlayer: React.FC = () => {
+    // ... (No changes to soundscape logic)
     const [playing, setPlaying] = useState(false);
     const [volume, setVolume] = useState(0.4);
     const [track, setTrack] = useState<'rain' | 'forest' | 'ocean' | 'fire'>('rain');
@@ -199,7 +199,6 @@ const SoundscapePlayer: React.FC = () => {
     
     const audioRef = useRef<HTMLAudioElement>(null);
 
-    // High Compatibility MP3 Links (Direct CDN)
     const SOUND_URLS = {
         rain: 'https://assets.mixkit.co/active_storage/sfx/2393/2393-preview.mp3',
         forest: 'https://assets.mixkit.co/active_storage/sfx/1210/1210-preview.mp3',
@@ -219,9 +218,8 @@ const SoundscapePlayer: React.FC = () => {
 
         if (playing) {
             audio.play().catch((e) => {
-                console.warn("Audio Play Error (Autoplay Blocked?):", e);
+                console.warn("Audio Play Error:", e);
                 setPlaying(false);
-                alert("Please interact with the page to enable audio.");
             });
         } else {
             audio.pause();
@@ -299,6 +297,7 @@ const SoundscapePlayer: React.FC = () => {
 
 // --- WEATHER ENGINE ---
 const WeatherEffect: React.FC<{ type: 'confetti' | 'rain' }> = ({ type }) => {
+    // ... (No changes to weather effect)
     const canvasRef = useRef<HTMLCanvasElement>(null);
     useEffect(() => {
         const canvas = canvasRef.current; if (!canvas) return; const ctx = canvas.getContext('2d'); if (!ctx) return;
@@ -336,10 +335,14 @@ const MindfulMatchGame: React.FC = () => {
     const handleCardClick = (index: number) => { if (flipped.length === 2 || solved.includes(index) || flipped.includes(index)) return; const newFlipped = [...flipped, index]; setFlipped(newFlipped); if (newFlipped.length === 2) { setMoves(m => m + 1); const card1 = cards[newFlipped[0]]; const card2 = cards[newFlipped[1]]; if (card1.icon === card2.icon) { setSolved([...solved, newFlipped[0], newFlipped[1]]); setFlipped([]); } else { setTimeout(() => setFlipped([]), 1000); } } };
     useEffect(() => { if (cards.length > 0 && solved.length === cards.length) { setWon(true); if (bestScore === 0 || moves < bestScore) { setBestScore(moves); localStorage.setItem('mindful_best', moves.toString()); } } }, [solved]);
     return (
-        <div className="bg-gradient-to-br from-yellow-50/50 to-white dark:from-gray-800 dark:to-gray-900 w-full h-full flex flex-col rounded-2xl p-2 md:p-2 border border-yellow-100 dark:border-gray-700 overflow-hidden relative shadow-inner">
-            <div className="absolute top-2 left-2 z-20 flex gap-2"><span className="text-[10px] font-bold bg-white/50 px-2 py-1 rounded-full text-gray-500">Moves: {moves}</span>{bestScore > 0 && <span className="text-[10px] font-bold bg-yellow-100 px-2 py-1 rounded-full text-yellow-700">Best: {bestScore}</span>}</div>
-            <button onClick={initGame} className="absolute top-2 right-2 p-1.5 hover:bg-yellow-100 dark:hover:bg-gray-700 rounded-full transition-colors z-20"><RefreshCw className="w-3 h-3 md:w-4 md:h-4 text-yellow-600 dark:text-yellow-400" /></button>
-            {won ? (<div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in"><Trophy className="w-12 h-12 md:w-16 md:h-16 text-yellow-500 mb-2 animate-bounce" /><p className="font-black text-lg md:text-2xl text-yellow-900 dark:text-white">Zen Master!</p><p className="text-xs text-gray-500 mb-4">Completed in {moves} moves</p><button onClick={initGame} className="mt-2 bg-black dark:bg-white dark:text-black text-white px-4 py-1.5 md:px-6 md:py-2 rounded-full font-bold text-xs md:text-sm hover:scale-105 transition-transform">Replay</button></div>) : (<div className="flex-1 flex items-center justify-center min-h-0"><div className="grid grid-cols-4 grid-rows-4 gap-1 md:gap-2 w-full h-full p-2">{cards.map((card, i) => { const isVisible = flipped.includes(i) || solved.includes(i); const Icon = card.icon; return (<div key={i} className="w-full h-full perspective-1000"><button onClick={() => handleCardClick(i)} className={`w-full h-full rounded-md md:rounded-lg flex items-center justify-center transition-all duration-500 transform-style-3d ${isVisible ? 'bg-white dark:bg-gray-700 border-2 border-yellow-400 shadow-lg rotate-y-180' : 'bg-gray-900 dark:bg-gray-800 shadow-md'}`}>{isVisible ? <Icon className="w-4 h-4 md:w-6 md:h-6 lg:w-8 lg:h-8 text-yellow-500 animate-in zoom-in" /> : <div className="w-2 h-2 bg-gray-700 rounded-full"></div>}</button></div>); })}</div></div>)}
+        <div className="bg-gradient-to-br from-yellow-50/50 to-white dark:from-gray-800 dark:to-gray-900 w-full h-full flex flex-col rounded-2xl p-4 border border-yellow-100 dark:border-gray-700 overflow-hidden relative shadow-inner items-center justify-center">
+            <div className="absolute top-3 left-4 z-20 flex gap-2"><span className="text-[10px] font-bold bg-white/50 dark:bg-black/50 px-2 py-1 rounded-full text-gray-500">Moves: {moves}</span>{bestScore > 0 && <span className="text-[10px] font-bold bg-yellow-100 dark:bg-yellow-900/50 px-2 py-1 rounded-full text-yellow-700 dark:text-yellow-500">Best: {bestScore}</span>}</div>
+            <button onClick={initGame} className="absolute top-3 right-3 p-2 hover:bg-yellow-100 dark:hover:bg-gray-700 rounded-full transition-colors z-20"><RefreshCw className="w-4 h-4 text-yellow-600 dark:text-yellow-400" /></button>
+            {won ? (<div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in"><Trophy className="w-16 h-16 text-yellow-500 mb-4 animate-bounce" /><p className="font-black text-2xl text-yellow-900 dark:text-white">Zen Master!</p><p className="text-sm text-gray-500 mb-6">Completed in {moves} moves</p><button onClick={initGame} className="bg-black dark:bg-white dark:text-black text-white px-8 py-3 rounded-full font-bold text-sm hover:scale-105 transition-transform">Replay</button></div>) : (
+                <div className="w-full h-full grid grid-cols-4 grid-rows-4 gap-2 md:gap-3 p-2">
+                    {cards.map((card, i) => { const isVisible = flipped.includes(i) || solved.includes(i); const Icon = card.icon; return (<div key={i} className="perspective-1000 w-full h-full"><button onClick={() => handleCardClick(i)} className={`w-full h-full rounded-xl flex items-center justify-center transition-all duration-500 transform-style-3d ${isVisible ? 'bg-white dark:bg-gray-700 border-2 border-yellow-400 shadow-lg rotate-y-180' : 'bg-gray-900 dark:bg-gray-800 shadow-md'}`}>{isVisible ? <Icon className="w-5 h-5 md:w-8 md:h-8 text-yellow-500 animate-in zoom-in" /> : <div className="w-2 h-2 bg-gray-700 rounded-full"></div>}</button></div>); })}
+                </div>
+            )}
         </div>
     );
 };
@@ -356,15 +359,27 @@ const CloudHopGame: React.FC = () => {
     const playerRef = useRef({ x: 150, y: 300, vx: 0, vy: 0, width: 30, height: 30 }); 
     const platformsRef = useRef<any[]>([]);
     
-    // Responsive Canvas Handling
+    // Responsive Canvas Handling with DPI fix
     useEffect(() => {
         const resizeCanvas = () => {
             const canvas = canvasRef.current;
             if (canvas && canvas.parentElement) {
-                canvas.width = canvas.parentElement.clientWidth;
-                canvas.height = canvas.parentElement.clientHeight;
+                const dpr = window.devicePixelRatio || 1;
+                const rect = canvas.parentElement.getBoundingClientRect();
                 
-                // Keep game stopped on resize to prevent physics glitches, prompt restart
+                // Set Display Size (CSS Pixels)
+                canvas.style.width = `${rect.width}px`;
+                canvas.style.height = `${rect.height}px`;
+                
+                // Set Actual Memory Size (Physical Pixels)
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+                
+                // Scale Context
+                const ctx = canvas.getContext('2d');
+                if (ctx) ctx.scale(dpr, dpr);
+                
+                // Keep game stopped on resize to prevent physics glitches
                 if (gameStarted) {
                     setGameOver(true);
                     setGameStarted(false);
@@ -372,7 +387,8 @@ const CloudHopGame: React.FC = () => {
             }
         };
         window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+        // Delay initial resize slightly to ensure container is ready
+        setTimeout(resizeCanvas, 100);
         return () => window.removeEventListener('resize', resizeCanvas);
     }, []);
 
@@ -380,13 +396,15 @@ const CloudHopGame: React.FC = () => {
         const canvas = canvasRef.current; 
         if (!canvas) return; 
         
-        const W = canvas.width;
-        const H = canvas.height;
+        // Use logical width/height (CSS pixels), derived from physical size / dpr
+        const dpr = window.devicePixelRatio || 1;
+        const W = canvas.width / dpr;
+        const H = canvas.height / dpr;
         const isMobile = W < 600;
 
-        // Dynamic Sizing based on canvas width
-        const pSize = isMobile ? 18 : 30; // Smaller player on mobile
-        const basePlatW = isMobile ? 50 : 70;
+        // Adjusted sizing for "zoomed out" feel
+        const pSize = isMobile ? 24 : 32; 
+        const basePlatW = isMobile ? 60 : 80;
 
         // Reset Logic
         platformsRef.current = [{x: 0, y: H - 30, w: W, h: 30, type: 'ground'}]; 
@@ -400,8 +418,8 @@ const CloudHopGame: React.FC = () => {
                 type: Math.random() > 0.9 ? 'moving' : 'cloud', 
                 vx: Math.random() > 0.5 ? 1 : -1 
             }); 
-            // Increased spacing on mobile to reduce crowding
-            py -= (isMobile ? 90 : 70) + Math.random() * 40; 
+            // Better spacing
+            py -= (isMobile ? 100 : 90) + Math.random() * 40; 
         }
         
         // Spawn player
@@ -415,14 +433,15 @@ const CloudHopGame: React.FC = () => {
         if (!gameStarted) return; 
         const canvas = canvasRef.current; if (!canvas) return; const ctx = canvas.getContext('2d'); if (!ctx) return;
         
-        const W = canvas.width;
-        const H = canvas.height;
+        const dpr = window.devicePixelRatio || 1;
+        const W = canvas.width / dpr;
+        const H = canvas.height / dpr;
         const isMobile = W < 600;
         
         // Physics constants relative to size
-        const GRAVITY = H > 400 ? 0.4 : 0.3; 
-        const JUMP_FORCE = H > 400 ? -9 : -7.5; 
-        const MOVE_SPEED = isMobile ? 3 : 4;
+        const GRAVITY = H > 400 ? 0.4 : 0.35; 
+        const JUMP_FORCE = H > 400 ? -9 : -8; 
+        const MOVE_SPEED = isMobile ? 3.5 : 4.5;
 
         const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'ArrowLeft') playerRef.current.vx = -MOVE_SPEED; if (e.key === 'ArrowRight') playerRef.current.vx = MOVE_SPEED; }; const handleKeyUp = () => { playerRef.current.vx = 0; }; window.addEventListener('keydown', handleKeyDown); window.addEventListener('keyup', handleKeyUp);
         
@@ -431,7 +450,6 @@ const CloudHopGame: React.FC = () => {
             if (type === 'moving') ctx.shadowColor = '#38BDF8'; 
             ctx.fillRect(x, y, w, h); 
             
-            // Simplified drawing for mobile performance and cleaner look
             const bumpSize = h * 0.8;
             ctx.beginPath(); ctx.arc(x + 10, y, bumpSize, 0, Math.PI*2); ctx.fill(); 
             ctx.beginPath(); ctx.arc(x + w - 10, y, bumpSize, 0, Math.PI*2); ctx.fill(); 
@@ -503,37 +521,54 @@ const CloudHopGame: React.FC = () => {
     return (<div className="relative h-full w-full bg-sky-300 overflow-hidden rounded-2xl border-4 border-white dark:border-gray-700 shadow-inner cursor-pointer" onMouseDown={handleTap} onMouseUp={handleRelease} onTouchStart={handleTap} onTouchEnd={handleRelease}><div className="absolute top-2 right-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full font-black text-white text-base md:text-lg z-10">{score}m</div><canvas ref={canvasRef} className="w-full h-full block" />{(!gameStarted || gameOver) && (<div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20 animate-in fade-in"><div className="text-center">{gameOver && <p className="text-white font-black text-2xl mb-4 drop-shadow-md">Fall!</p>}<button onClick={initGame} className="bg-yellow-400 text-yellow-900 px-6 py-2 md:px-8 md:py-3 rounded-full font-black text-sm md:text-lg shadow-xl hover:scale-110 transition-transform flex items-center gap-2"><Play className="w-4 h-4 md:w-5 md:h-5 fill-current" /> {gameOver ? 'Try Again' : 'Play'}</button></div></div>)}</div>);
 };
 
-// --- MOOD TRACKER ---
-const MoodTracker: React.FC<{ onMoodSelect: (mood: 'confetti' | 'rain' | null) => void }> = ({ onMoodSelect }) => {
+// ==========================================
+// MISSING COMPONENTS IMPLEMENTATION
+// ==========================================
+
+const MoodTracker: React.FC<{ onMoodSelect: (m: 'confetti' | 'rain' | null) => void }> = ({ onMoodSelect }) => {
     return (
-        <div className="bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-200 dark:border-gray-800 p-4 md:p-6 rounded-3xl mb-4 hover:shadow-md transition-all">
-            <h4 className="font-bold text-base md:text-lg text-gray-900 dark:text-white mb-2 flex items-center gap-2"><Activity className="w-4 h-4 md:w-5 md:h-5 text-yellow-600 dark:text-yellow-500"/> How are you feeling?</h4>
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm flex flex-col justify-between">
+            <div>
+                <h3 className="font-bold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-1">Current Vibe</h3>
+                <p className="text-gray-900 dark:text-white font-bold text-lg mb-4">How does the world feel?</p>
+            </div>
             <div className="flex gap-2">
-                <button onClick={() => onMoodSelect('confetti')} className="flex-1 py-3 bg-yellow-100 dark:bg-yellow-900/30 hover:bg-yellow-300 rounded-xl flex items-center justify-center transition-colors group"><Sun className="w-5 h-5 md:w-6 md:h-6 text-yellow-600 dark:text-yellow-400 group-hover:rotate-180 transition-transform" /></button>
-                <button onClick={() => onMoodSelect(null)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors"><div className="w-3 h-3 md:w-4 md:h-4 bg-gray-400 rounded-full"></div></button>
-                <button onClick={() => onMoodSelect('rain')} className="flex-1 py-3 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-300 rounded-xl flex items-center justify-center transition-colors group"><CloudRain className="w-5 h-5 md:w-6 md:h-6 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" /></button>
+                <button onClick={() => onMoodSelect('confetti')} className="flex-1 py-3 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 text-yellow-600 dark:text-yellow-400 rounded-xl font-bold text-sm transition-colors flex flex-col items-center gap-1 group">
+                    <Sun className="w-4 h-4 group-hover:rotate-180 transition-transform" /> Celebration
+                </button>
+                <button onClick={() => onMoodSelect(null)} className="py-3 px-4 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition-colors flex items-center justify-center group" title="Reset">
+                    <StopCircle className="w-5 h-5 text-gray-500 group-hover:text-black dark:group-hover:text-white" />
+                </button>
+                <button onClick={() => onMoodSelect('rain')} className="flex-1 py-3 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl font-bold text-sm transition-colors flex flex-col items-center gap-1 group">
+                    <CloudRain className="w-4 h-4 group-hover:scale-110 transition-transform" /> Melancholy
+                </button>
             </div>
         </div>
     );
 };
 
-// --- INLINE JOURNAL SECTION ---
 const JournalSection: React.FC<{ user: User }> = ({ user }) => {
-    const [content, setContent] = useState(''); 
-    const [saved, setSaved] = useState(false); 
-    const [history, setHistory] = useState<JournalEntry[]>([]);
+    const [entries, setEntries] = useState<JournalEntry[]>([]);
+    const [content, setContent] = useState('');
+    const [saved, setSaved] = useState(false);
     
-    const refreshHistory = () => { setHistory(Database.getJournals(user.id)); };
-    useEffect(() => { refreshHistory(); }, [user.id]);
+    useEffect(() => {
+        setEntries(Database.getJournals(user.id));
+    }, [user.id]);
 
-    const handleSave = () => { 
-        if (!content.trim()) return; 
-        const entry: JournalEntry = { id: `j_${Date.now()}`, userId: user.id, date: new Date().toISOString(), content }; 
-        Database.saveJournal(entry); 
-        refreshHistory(); 
-        setContent(''); 
-        setSaved(true); 
-        setTimeout(() => setSaved(false), 2000); 
+    const handleSave = () => {
+        if (!content.trim()) return;
+        const entry: JournalEntry = {
+            id: `j_${Date.now()}`,
+            userId: user.id,
+            date: new Date().toISOString(),
+            content: content
+        };
+        Database.saveJournal(entry);
+        setEntries([entry, ...entries]);
+        setContent('');
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
     };
 
     return (
@@ -565,16 +600,16 @@ const JournalSection: React.FC<{ user: User }> = ({ user }) => {
                 <div className="flex flex-col h-full bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
                     <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex justify-between items-center">
                         <h3 className="font-bold text-gray-500 text-xs uppercase tracking-wider flex items-center gap-2"><Clock className="w-3 h-3"/> Timeline</h3>
-                        <span className="text-[10px] font-bold bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full text-gray-600 dark:text-gray-300">{history.length} Entries</span>
+                        <span className="text-[10px] font-bold bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full text-gray-600 dark:text-gray-300">{entries.length} Entries</span>
                     </div>
                     <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-yellow-200 dark:scrollbar-thumb-gray-700">
-                        {history.length === 0 && (
+                        {entries.length === 0 && (
                             <div className="h-full flex flex-col items-center justify-center text-gray-400 opacity-50">
                                 <BookOpen className="w-12 h-12 mb-2 stroke-1"/>
                                 <p className="text-sm">Your story begins here.</p>
                             </div>
                         )}
-                        {history.map(entry => (
+                        {entries.map(entry => (
                             <div key={entry.id} className="group p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all cursor-default shadow-sm hover:shadow-md">
                                 <div className="flex justify-between items-start mb-2">
                                     <span className="text-[10px] font-black text-yellow-600 dark:text-yellow-500 uppercase tracking-wide bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-md">{new Date(entry.date).toLocaleDateString()}</span>
@@ -590,73 +625,206 @@ const JournalSection: React.FC<{ user: User }> = ({ user }) => {
     );
 };
 
-// --- PAYMENT MODAL (Z-9999) ---
-const PaymentModal: React.FC<{ onClose: () => void; onSuccess: (amount: number, cost: number) => void; initialError?: string }> = ({ onClose, onSuccess, initialError }) => {
-    const [amount, setAmount] = useState(20); const [isCustom, setIsCustom] = useState(false); const [processing, setProcessing] = useState(false); const [error, setError] = useState<string | null>(initialError || null);
-    const stripeRef = useRef<any>(null); const elementsRef = useRef<any>(null); const cardElementRef = useRef<any>(null); const mountNodeRef = useRef<HTMLDivElement>(null); const settings = Database.getSettings(); const pricePerMin = settings.pricePerMinute;
-    useEffect(() => { if (!window.Stripe) { setError("Stripe failed to load. Please refresh."); return; } if (!stripeRef.current) { stripeRef.current = window.Stripe(STRIPE_PUBLISHABLE_KEY); elementsRef.current = stripeRef.current.elements(); const style = { base: { color: "#32325d", fontFamily: '"Manrope", sans-serif', fontSmoothing: "antialiased", fontSize: "16px", "::placeholder": { color: "#aab7c4" } } }; if (!cardElementRef.current) { cardElementRef.current = elementsRef.current.create("card", { style: style, hidePostalCode: true }); setTimeout(() => { if (mountNodeRef.current) cardElementRef.current.mount(mountNodeRef.current); }, 100); } } }, []);
-    const handleSubmit = async (e: React.FormEvent) => { e.preventDefault(); setProcessing(true); setError(null); if (!amount || amount <= 0) { setError("Please enter a valid amount."); setProcessing(false); return; } if (!stripeRef.current || !cardElementRef.current) { setError("Stripe not initialized."); setProcessing(false); return; } try { const result = await stripeRef.current.createToken(cardElementRef.current); if (result.error) { setError(result.error.message); setProcessing(false); } else { setTimeout(() => { setProcessing(false); const minutesAdded = Math.floor(amount / pricePerMin); onSuccess(minutesAdded, amount); }, 1500); } } catch (err: any) { setError(err.message || "Payment failed."); setProcessing(false); } };
-    return (<div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4"><div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in duration-300 border border-gray-100 dark:border-gray-800"><div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800"><div className="flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-green-600" /><span className="font-bold text-gray-700 dark:text-white">Secure Checkout</span></div><button onClick={onClose} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition"><X className="w-5 h-5 dark:text-white" /></button></div><div className="p-8"><div className="mb-8 text-center"><p className="text-gray-500 dark:text-gray-400 text-sm mb-4 font-medium">Select Amount to Add</p>{!isCustom && <h2 className="text-5xl font-extrabold tracking-tight mb-6 dark:text-white">${amount.toFixed(2)}</h2>}<div className="flex justify-center gap-2 mb-6 flex-wrap">{[20, 50, 100, 250].map((val) => (<button key={val} type="button" onClick={() => { setAmount(val); setIsCustom(false); }} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${!isCustom && amount === val ? 'bg-black dark:bg-white dark:text-black text-white shadow-lg transform scale-105' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>${val}</button>))} <button type="button" onClick={() => { setIsCustom(true); setAmount(0); }} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${isCustom ? 'bg-black dark:bg-white dark:text-black text-white shadow-lg transform scale-105' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>Custom</button></div>{isCustom && (<div className="mb-6 animate-in fade-in zoom-in duration-300"><div className="relative max-w-[180px] mx-auto"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-lg">$</span><input type="number" min="1" step="1" value={amount === 0 ? '' : amount} onChange={(e) => setAmount(parseFloat(e.target.value) || 0)} className="w-full pl-8 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none text-2xl font-bold text-center" placeholder="0.00" autoFocus /></div></div>)}<p className="text-xs text-gray-400 mt-2">Adds approx. <span className="font-bold text-black dark:text-white">{Math.floor((amount || 0) / pricePerMin)} mins</span> of talk time.</p></div>{error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 text-sm rounded-lg flex items-center gap-2"><AlertTriangle className="w-4 h-4 flex-shrink-0" /><span>{error}</span></div>}<form onSubmit={handleSubmit} className="space-y-6"><div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700"><div ref={mountNodeRef} className="p-2" /></div><button type="submit" disabled={processing || !window.Stripe || (amount <= 0)} className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2 ${processing || (amount <= 0) ? 'bg-gray-800 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-yellow-500 text-black hover:bg-yellow-400 hover:scale-[1.02]'}`}>{processing ? <span className="animate-pulse">Processing Securely...</span> : <><Lock className="w-5 h-5" /> Pay ${(amount || 0).toFixed(2)}</>}</button></form></div></div></div>);
+const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, cost: number) => void, initialError?: string }> = ({ onClose, onSuccess, initialError }) => {
+    const [amount, setAmount] = useState(20); 
+    const [isCustom, setIsCustom] = useState(false);
+    const [processing, setProcessing] = useState(false);
+    const [error, setError] = useState(initialError || '');
+    
+    // In a real app, you'd fetch price from settings
+    const pricePerMin = 1.49;
+    const stripeRef = useRef<any>(null); 
+    const elementsRef = useRef<any>(null); 
+    const cardElementRef = useRef<any>(null); 
+    const mountNodeRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => { 
+        if (!window.Stripe) { setError("Stripe failed to load. Please refresh."); return; } 
+        if (!stripeRef.current) { 
+            stripeRef.current = window.Stripe(STRIPE_PUBLISHABLE_KEY); 
+            elementsRef.current = stripeRef.current.elements(); 
+            const style = { base: { color: "#32325d", fontFamily: '"Manrope", sans-serif', fontSmoothing: "antialiased", fontSize: "16px", "::placeholder": { color: "#aab7c4" } } }; 
+            if (!cardElementRef.current) { 
+                cardElementRef.current = elementsRef.current.create("card", { style: style, hidePostalCode: true }); 
+                setTimeout(() => { if (mountNodeRef.current) cardElementRef.current.mount(mountNodeRef.current); }, 100); 
+            } 
+        } 
+    }, []);
+
+    const handleSubmit = async (e: React.FormEvent) => { 
+        e.preventDefault(); 
+        setProcessing(true); 
+        setError(''); 
+        if (!amount || amount <= 0) { setError("Please enter a valid amount."); setProcessing(false); return; } 
+        if (!stripeRef.current || !cardElementRef.current) { setError("Stripe not initialized."); setProcessing(false); return; } 
+        try { 
+            const result = await stripeRef.current.createToken(cardElementRef.current); 
+            if (result.error) { 
+                setError(result.error.message); 
+                setProcessing(false); 
+            } else { 
+                setTimeout(() => { 
+                    setProcessing(false); 
+                    const minutesAdded = Math.floor(amount / pricePerMin); 
+                    onSuccess(minutesAdded, amount); 
+                }, 1500); 
+            } 
+        } catch (err: any) { 
+            setError(err.message || "Payment failed."); 
+            setProcessing(false); 
+        } 
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in duration-300 border border-gray-100 dark:border-gray-800">
+                <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800">
+                    <div className="flex items-center gap-2">
+                        <ShieldCheck className="w-5 h-5 text-green-600" />
+                        <span className="font-bold text-gray-700 dark:text-white">Secure Checkout</span>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition"><X className="w-5 h-5 dark:text-white" /></button>
+                </div>
+                <div className="p-8">
+                    <div className="mb-8 text-center">
+                        <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 font-medium">Select Amount to Add</p>
+                        {!isCustom && <h2 className="text-5xl font-extrabold tracking-tight mb-6 dark:text-white">${amount.toFixed(2)}</h2>}
+                        <div className="flex justify-center gap-2 mb-6 flex-wrap">
+                            {[20, 50, 100, 250].map((val) => (
+                                <button key={val} type="button" onClick={() => { setAmount(val); setIsCustom(false); }} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${!isCustom && amount === val ? 'bg-black dark:bg-white dark:text-black text-white shadow-lg transform scale-105' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>${val}</button>
+                            ))} 
+                            <button type="button" onClick={() => { setIsCustom(true); setAmount(0); }} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${isCustom ? 'bg-black dark:bg-white dark:text-black text-white shadow-lg transform scale-105' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>Custom</button>
+                        </div>
+                        {isCustom && (
+                            <div className="mb-6 animate-in fade-in zoom-in duration-300">
+                                <div className="relative max-w-[180px] mx-auto">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-lg">$</span>
+                                    <input type="number" min="1" step="1" value={amount === 0 ? '' : amount} onChange={(e) => setAmount(parseFloat(e.target.value) || 0)} className="w-full pl-8 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none text-2xl font-bold text-center" placeholder="0.00" autoFocus />
+                                </div>
+                            </div>
+                        )}
+                        <p className="text-xs text-gray-400 mt-2">Adds approx. <span className="font-bold text-black dark:text-white">{Math.floor((amount || 0) / pricePerMin)} mins</span> of talk time.</p>
+                    </div>
+                    {error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 text-sm rounded-lg flex items-center gap-2"><AlertTriangle className="w-4 h-4 flex-shrink-0" /><span>{error}</span></div>}
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700"><div ref={mountNodeRef} className="p-2" /></div>
+                        <button type="submit" disabled={processing || !window.Stripe || (amount <= 0)} className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2 ${processing || (amount <= 0) ? 'bg-gray-800 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-yellow-500 text-black hover:bg-yellow-400 hover:scale-[1.02]'}`}>
+                            {processing ? <span className="animate-pulse">Processing Securely...</span> : <><Lock className="w-5 h-5" /> Pay ${(amount || 0).toFixed(2)}</>}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    );
 };
 
-// --- PROFILE MODAL (Z-9999) ---
-const ProfileModal: React.FC<{ user: User; onClose: () => void; onUpdate: () => void }> = ({ user, onClose, onUpdate }) => {
-    const [url, setUrl] = useState(user.avatar || ''); const [name, setName] = useState(user.name);
-    const save = () => { if (url) { const u = Database.getUser(); if (u) { u.avatar = url; u.name = name; Database.updateUser(u); onUpdate(); onClose(); } } };
-    return (<div className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4"><div className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-sm text-center border border-gray-100 dark:border-gray-800"><h3 className="font-bold text-lg mb-4 dark:text-white">Update Profile</h3><div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-4 border-yellow-400"><AvatarImage src={url} alt="Preview" className="w-full h-full object-cover" isUser={true} /></div><input className="w-full p-3 border rounded-xl mb-4 dark:bg-gray-800 dark:border-gray-700 dark:text-white" placeholder="Display Name" value={name} onChange={e => setName(e.target.value)} /><input className="w-full p-3 border rounded-xl mb-4 dark:bg-gray-800 dark:border-gray-700 dark:text-white" placeholder="Avatar URL..." value={url} onChange={e => setUrl(e.target.value)} /><div className="flex gap-2"><button onClick={onClose} className="flex-1 py-2 border rounded font-bold dark:border-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800">Cancel</button><button onClick={save} className="flex-1 py-2 bg-black dark:bg-white dark:text-black text-white rounded font-bold hover:opacity-80">Save</button></div></div></div>);
-};
-
-// --- BREATHING EXERCISE ---
-const BreathingExercise: React.FC<{ userId: string; onClose: () => void }> = ({ userId, onClose }) => {
-    const [phase, setPhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
-    const [timeLeft, setTimeLeft] = useState(4);
-    const [totalTime, setTotalTime] = useState(0);
+const BreathingExercise: React.FC<{ userId: string, onClose: () => void }> = ({ userId, onClose }) => {
+    const [phase, setPhase] = useState<'Inhale' | 'Hold' | 'Exhale'>('Inhale');
+    const [timeLeft, setTimeLeft] = useState(60); 
     const [isActive, setIsActive] = useState(true);
 
     useEffect(() => {
         if (!isActive) return;
-        const interval = setInterval(() => {
-            setTimeLeft((prev) => {
-                if (prev <= 1) {
-                    if (phase === 'inhale') { setPhase('hold'); return 7; }
-                    if (phase === 'hold') { setPhase('exhale'); return 8; }
-                    if (phase === 'exhale') { setPhase('inhale'); return 4; }
+        
+        const timer = setInterval(() => {
+            setTimeLeft(t => {
+                if (t <= 1) {
+                    setIsActive(false);
+                    Database.recordBreathSession(userId, 60);
+                    return 0;
                 }
-                return prev - 1;
+                return t - 1;
             });
-            setTotalTime(t => t + 1);
         }, 1000);
-        return () => clearInterval(interval);
-    }, [phase, isActive]);
 
-    const handleClose = () => {
-        setIsActive(false);
-        if (totalTime > 10) {
-            Database.recordBreathSession(userId, totalTime);
-        }
-        onClose();
+        const cycle = setInterval(() => {
+            setPhase(p => {
+                if (p === 'Inhale') return 'Hold';
+                if (p === 'Hold') return 'Exhale';
+                return 'Inhale';
+            });
+        }, 4000);
+
+        return () => {
+            clearInterval(timer);
+            clearInterval(cycle);
+        };
+    }, [isActive, userId]);
+
+    return (
+        <div className="fixed inset-0 bg-black/90 z-[70] flex flex-col items-center justify-center backdrop-blur-md animate-in fade-in">
+            <button onClick={onClose} className="absolute top-6 right-6 text-white/50 hover:text-white"><X className="w-6 h-6"/></button>
+            
+            {timeLeft > 0 ? (
+                <>
+                    <div className="relative mb-12">
+                        <div className={`w-64 h-64 rounded-full border-4 border-white/20 flex items-center justify-center transition-all duration-[4000ms] ease-in-out ${phase === 'Inhale' ? 'scale-125 bg-white/10' : phase === 'Exhale' ? 'scale-75 bg-transparent' : 'scale-100 bg-white/5'}`}>
+                            <span className="text-3xl font-black text-white tracking-widest uppercase">{phase}</span>
+                        </div>
+                        <div className="absolute inset-0 rounded-full border border-white/10 animate-ping opacity-20"></div>
+                    </div>
+                    <div className="text-center">
+                        <p className="text-gray-400 text-sm font-bold uppercase tracking-widest mb-2">Time Remaining</p>
+                        <p className="text-4xl font-mono text-white">{timeLeft}s</p>
+                    </div>
+                </>
+            ) : (
+                <div className="text-center animate-in zoom-in">
+                    <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-6" />
+                    <h2 className="text-3xl font-black text-white mb-2">Session Complete</h2>
+                    <p className="text-gray-400 mb-8">You've centered your mind.</p>
+                    <button onClick={onClose} className="bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">Return</button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const ProfileModal: React.FC<{ user: User, onClose: () => void, onUpdate: () => void }> = ({ user, onClose, onUpdate }) => {
+    const [name, setName] = useState(user.name);
+    const [loading, setLoading] = useState(false);
+
+    const handleSave = () => {
+        setLoading(true);
+        setTimeout(() => {
+            Database.updateUser({ ...user, name });
+            onUpdate();
+            onClose();
+        }, 500);
     };
 
     return (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in">
-            <div className="relative max-w-sm w-full bg-gray-900 rounded-3xl p-8 text-center border border-gray-800 shadow-2xl">
-                <button onClick={handleClose} className="absolute top-4 right-4 text-gray-500 hover:text-white"><X className="w-6 h-6" /></button>
-                <h3 className="text-2xl font-black text-white mb-8">4-7-8 Breathing</h3>
+        <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl p-8 border border-yellow-200 dark:border-gray-800 shadow-2xl relative">
+                <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-black dark:hover:text-white"><X className="w-5 h-5"/></button>
+                <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-6">Edit Profile</h2>
                 
-                <div className="relative w-64 h-64 mx-auto mb-8 flex items-center justify-center">
-                    <div className={`absolute inset-0 rounded-full border-4 border-blue-500/30 transition-all duration-[4000ms] ease-in-out ${phase === 'inhale' ? 'scale-100' : phase === 'hold' ? 'scale-110' : 'scale-90'}`}></div>
-                    <div className={`absolute inset-0 bg-blue-500/20 rounded-full blur-xl transition-all duration-[4000ms] ease-in-out ${phase === 'inhale' ? 'scale-110 opacity-100' : phase === 'hold' ? 'scale-110 opacity-80' : 'scale-90 opacity-40'}`}></div>
-                    
-                    <div className="relative z-10">
-                        <p className={`text-sm font-bold uppercase tracking-widest mb-2 ${phase === 'inhale' ? 'text-blue-400' : phase === 'hold' ? 'text-purple-400' : 'text-green-400'}`}>
-                            {phase === 'inhale' ? 'Inhale' : phase === 'hold' ? 'Hold' : 'Exhale'}
-                        </p>
-                        <p className="text-6xl font-black text-white font-mono">{timeLeft}</p>
+                <div className="space-y-4 mb-8">
+                    <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Display Name</label>
+                        <input 
+                            className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none dark:text-white"
+                            value={name}
+                            onChange={e => setName(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Email</label>
+                        <input 
+                            className="w-full p-3 bg-gray-100 dark:bg-gray-800/50 border border-transparent rounded-xl text-gray-500 cursor-not-allowed"
+                            value={user.email}
+                            disabled
+                        />
                     </div>
                 </div>
 
-                <p className="text-gray-400 text-sm mb-6">Inhale for 4s, hold for 7s, exhale for 8s.</p>
-                <button onClick={handleClose} className="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-gray-200 transition-colors">End Session</button>
+                <button 
+                    onClick={handleSave} 
+                    disabled={loading}
+                    className="w-full py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:opacity-80 transition-opacity"
+                >
+                    {loading ? 'Saving...' : 'Save Changes'}
+                </button>
             </div>
         </div>
     );
@@ -684,39 +852,26 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   const [showProfile, setShowProfile] = useState(false);
   const [showGrounding, setShowGrounding] = useState(false);
   const [mood, setMood] = useState<'confetti' | 'rain' | null>(null);
-  
-  // Settings State
   const [emailNotifications, setEmailNotifications] = useState(user.emailPreferences?.updates ?? true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editName, setEditName] = useState(user.name);
   const [editEmail, setEditEmail] = useState(user.email);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
-
-  // Tech Check & Connection State
   const [showTechCheck, setShowTechCheck] = useState(false);
   const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
 
-  // Initial Data Fetch
   useEffect(() => {
-    // Sync Theme
     const savedTheme = localStorage.getItem('peutic_theme');
     if (savedTheme === 'dark') {
         setDarkMode(true);
         document.documentElement.classList.add('dark');
     }
-
     refreshData();
-    
-    // Generate Insight
     generateDailyInsight(user.name).then(setDailyInsight);
-
-    // Companions with slight delay for effect
     setTimeout(() => {
         setCompanions(Database.getCompanions());
         setLoadingCompanions(false);
     }, 500);
-
-    // Periodic Refresh
     const interval = setInterval(refreshData, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -754,9 +909,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
       setMood(m);
       if (m) {
           Database.saveMood(user.id, m);
-          if (m === 'confetti') {
-              // Confetti logic handled by Effect component
-          }
       }
   };
 
@@ -801,15 +953,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   return (
     <div className={`min-h-screen transition-colors duration-500 font-sans ${darkMode ? 'dark bg-[#0A0A0A] text-white' : 'bg-[#FFFBEB] text-black'}`}>
       
-      {/* Global Effects */}
       {mood && <WeatherEffect type={mood} />}
       <SoundscapePlayer />
 
       {/* --- MOBILE TOP BAR --- */}
       <div className="md:hidden sticky top-0 bg-[#FFFBEB]/90 dark:bg-black/90 backdrop-blur-md border-b border-yellow-200 dark:border-gray-800 p-4 flex justify-between items-center z-40">
           <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-yellow-400 dark:bg-yellow-600 rounded-lg flex items-center justify-center shadow-md">
-                  <Heart className="w-5 h-5 text-black dark:text-white fill-black dark:fill-white" />
+              <div className="w-8 h-8 bg-yellow-400 rounded-lg flex items-center justify-center shadow-md">
+                  <Heart className="w-5 h-5 text-black fill-black" />
               </div>
               <span className="font-black tracking-tight text-lg">Peutic</span>
           </div>
@@ -823,6 +974,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
               <button onClick={() => setShowPayment(true)} className="bg-black dark:bg-white text-white dark:text-black px-3 py-1.5 rounded-full text-xs font-bold shadow-md">{balance}m</button>
               <button onClick={() => setShowProfile(true)} className="w-8 h-8 rounded-full overflow-hidden border border-gray-300 dark:border-gray-700">
                   <AvatarImage src={dashboardUser.avatar || ''} alt="User" className="w-full h-full object-cover" isUser={true} />
+              </button>
+              <button onClick={onLogout} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors" title="Sign Out">
+                  <LogOut className="w-4 h-4" />
               </button>
           </div>
       </div>
@@ -917,15 +1071,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                   {weeklyGoal >= weeklyTarget ? (
                                       <div className="absolute top-0 right-0 p-4 z-20">
                                           <div className="relative flex items-center justify-center">
-                                              {/* Rotating Ring */}
                                               <div className="absolute w-24 h-24 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-                                              {/* Outer Glow Ring */}
                                               <div className="absolute w-20 h-20 bg-blue-500/30 rounded-full blur-xl animate-pulse"></div>
-                                              {/* Shockwave */}
                                               <div className="absolute w-full h-full bg-blue-400/10 rounded-full animate-ping"></div>
-                                              {/* Core Glow */}
                                               <div className="absolute w-12 h-12 bg-blue-400/50 rounded-full blur-lg animate-pulse"></div>
-                                              {/* Icon */}
                                               <Flame className="w-14 h-14 text-blue-500 fill-blue-500 drop-shadow-[0_0_20px_rgba(59,130,246,1)] animate-bounce relative z-10" />
                                           </div>
                                       </div>
@@ -948,27 +1097,24 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                               <MoodTracker onMoodSelect={handleMoodSelect} />
                           </div>
 
-                          {/* Journal Section (Replaces old grid) */}
                           <JournalSection user={user} />
-
-                          {/* Wisdom Generator */}
                           <WisdomGenerator userId={user.id} />
 
-                          {/* Consolidated Mindful Arcade - Stacked on Mobile, Side-by-Side on Desktop */}
+                          {/* Consolidated Mindful Arcade */}
                           <CollapsibleSection title="Mindful Arcade" icon={Gamepad2}>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                                  {/* Mindful Match - Height adjusted for mobile/desktop using aspect ratios and min-height to avoid squishing */}
-                                  <div className="relative rounded-2xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-inner flex flex-col bg-sky-300/10 min-h-[400px] aspect-square md:aspect-video">
-                                       <div className="absolute top-2 left-0 right-0 text-center z-10 pointer-events-none">
-                                           <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400 bg-white/80 dark:bg-black/80 px-2 py-1 rounded-full">Mindful Match</span>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                                  {/* Mindful Match */}
+                                  <div className="relative w-full h-[350px] md:h-[400px] xl:h-[450px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col bg-sky-50 dark:bg-gray-800">
+                                       <div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none">
+                                           <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 bg-white/90 dark:bg-black/90 px-3 py-1.5 rounded-full shadow-sm">Mindful Match</span>
                                        </div>
                                        <MindfulMatchGame />
                                   </div>
                                   
-                                  {/* Cloud Hop - Height adjusted for mobile/desktop using aspect ratios and min-height */}
-                                  <div className="relative rounded-2xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-inner flex flex-col min-h-[400px] aspect-square md:aspect-video">
-                                       <div className="absolute top-2 left-0 right-0 text-center z-10 pointer-events-none">
-                                           <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400 bg-white/80 dark:bg-black/80 px-2 py-1 rounded-full">Cloud Hop</span>
+                                  {/* Cloud Hop */}
+                                  <div className="relative w-full h-[350px] md:h-[400px] xl:h-[450px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col">
+                                       <div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none">
+                                           <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 bg-white/90 dark:bg-black/90 px-3 py-1.5 rounded-full shadow-sm">Cloud Hop</span>
                                        </div>
                                        <CloudHopGame />
                                   </div>
@@ -997,27 +1143,29 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                           <div 
                                               key={companion.id} 
                                               onClick={() => handleStartConnection(companion)}
-                                              className="group relative bg-white dark:bg-gray-900 rounded-[2rem] overflow-hidden border border-yellow-100 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all duration-300 hover:shadow-2xl cursor-pointer"
+                                              className="group relative bg-white dark:bg-gray-900 rounded-[2rem] overflow-hidden border border-yellow-100 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all duration-300 hover:shadow-2xl cursor-pointer flex flex-col"
                                           >
-                                              <div className="aspect-[4/5] relative overflow-hidden">
+                                              {/* Image Section - Top */}
+                                              <div className="aspect-square relative overflow-hidden bg-gray-100 dark:bg-gray-800">
                                                   <AvatarImage src={companion.imageUrl} alt={companion.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
+                                                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                                                   
                                                   <div className="absolute top-3 left-3 flex gap-2">
-                                                      <div className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md ${companion.status === 'AVAILABLE' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'}`}>
+                                                      <div className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md ${companion.status === 'AVAILABLE' ? 'bg-green-500/90 text-white shadow-lg shadow-green-500/20' : 'bg-gray-500/90 text-white'}`}>
                                                           {companion.status === 'AVAILABLE' ? 'Online' : 'Busy'}
                                                       </div>
                                                   </div>
                                               </div>
                                               
-                                              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 translate-y-2 group-hover:translate-y-0 transition-transform">
-                                                  <p className="text-yellow-400 text-[10px] font-black uppercase tracking-widest mb-1">{companion.specialty}</p>
-                                                  <h3 className="text-white text-xl md:text-2xl font-black mb-1">{companion.name}</h3>
-                                                  <div className="flex items-center gap-1 mb-3 opacity-0 group-hover:opacity-100 transition-opacity delay-100">
+                                              {/* Info Section - Bottom */}
+                                              <div className="p-4 md:p-5 flex-1 flex flex-col justify-end bg-white dark:bg-gray-900 border-t border-yellow-50 dark:border-gray-800">
+                                                  <p className="text-yellow-600 dark:text-yellow-500 text-[10px] font-black uppercase tracking-widest mb-1.5 line-clamp-1">{companion.specialty}</p>
+                                                  {/* NAME REMOVED AS REQUESTED */}
+                                                  <div className="flex items-center gap-1 mb-4">
                                                       <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                                                      <span className="text-white text-xs font-bold">{companion.rating}</span>
+                                                      <span className="text-gray-500 dark:text-gray-400 text-xs font-bold">{companion.rating}</span>
                                                   </div>
-                                                  <button className="w-full py-3 bg-white text-black rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-yellow-400 transition-colors opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 duration-300">
+                                                  <button className="w-full py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-yellow-500 dark:hover:bg-yellow-400 hover:text-black transition-all shadow-sm">
                                                       Start Session
                                                   </button>
                                               </div>
@@ -1029,6 +1177,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                       </div>
                   )}
 
+                  {/* ... History and Settings tabs logic remains ... */}
                   {activeTab === 'history' && (
                       <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-500">
                           <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-100 dark:border-gray-800 overflow-hidden">
@@ -1160,7 +1309,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                           onClick={() => {
                                               const newVal = !emailNotifications;
                                               setEmailNotifications(newVal);
-                                              // Auto-save this preference immediately
                                               const updated = { ...dashboardUser, emailPreferences: { ...dashboardUser.emailPreferences, updates: newVal } };
                                               Database.updateUser(updated);
                                           }}
@@ -1206,6 +1354,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                       </div>
                   )}
               </div>
+              
+              {/* Disclaimer Banner */}
+              <div className="mt-8 mb-4 max-w-4xl mx-auto px-4">
+                  <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30 p-4 rounded-xl text-center">
+                      <p className="text-[10px] md:text-xs font-bold text-yellow-800 dark:text-yellow-500 uppercase tracking-wide leading-relaxed">
+                          Note: Specialist availability is subject to change frequently due to high demand. 
+                          If your selected specialist is unavailable, a specialist of equal or greater qualifications 
+                          will be automatically substituted to ensure immediate support.
+                      </p>
+                  </div>
+              </div>
           </main>
       </div>
 
@@ -1213,7 +1372,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
       {showPayment && <PaymentModal onClose={() => { setShowPayment(false); setPaymentError(undefined); }} onSuccess={handlePaymentSuccess} initialError={paymentError} />}
       {showBreathing && <BreathingExercise userId={user.id} onClose={() => setShowBreathing(false)} />}
       {showProfile && <ProfileModal user={dashboardUser} onClose={() => setShowProfile(false)} onUpdate={refreshData} />}
-      {/* JournalModal removed as it is now inline */}
       {showGrounding && <GroundingMode onClose={() => setShowGrounding(false)} />}
       
       {/* TECH CHECK OVERLAY */}

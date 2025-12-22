@@ -10,7 +10,7 @@ import Auth from './components/Auth';
 import VideoRoom from './components/VideoRoom';
 import StaticPages from './components/StaticPages';
 import { Database } from './services/database';
-import { Wrench } from 'lucide-react';
+import { Wrench, AlertTriangle, Clock } from 'lucide-react';
 
 const MainApp: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -19,6 +19,8 @@ const MainApp: React.FC = () => {
   const [activeSessionCompanion, setActiveSessionCompanion] = useState<Companion | null>(null);
   const [isRestoring, setIsRestoring] = useState(true);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
+  
   const lastActivityRef = useRef<number>(Date.now());
   const location = useLocation();
   const navigate = useNavigate();
@@ -42,11 +44,14 @@ const MainApp: React.FC = () => {
 
   // Session Timeout Logic
   useEffect(() => {
-    const updateActivity = () => { lastActivityRef.current = Date.now(); };
+    const updateActivity = () => { 
+        lastActivityRef.current = Date.now(); 
+        if (showTimeoutWarning) setShowTimeoutWarning(false);
+    };
     const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
     events.forEach(event => document.addEventListener(event, updateActivity));
     return () => events.forEach(event => document.removeEventListener(event, updateActivity));
-  }, []);
+  }, [showTimeoutWarning]);
 
   useEffect(() => {
     const checkTimeout = () => {
@@ -54,11 +59,18 @@ const MainApp: React.FC = () => {
       const now = Date.now();
       const elapsed = now - lastActivityRef.current;
       const timeoutLimit = user.role === UserRole.ADMIN ? 24 * 60 * 60 * 1000 : 15 * 60 * 1000;
+      
+      // Warn 1 minute before
+      if (elapsed > timeoutLimit - 60000 && elapsed < timeoutLimit) {
+          setShowTimeoutWarning(true);
+      }
+      
       if (elapsed > timeoutLimit) {
+        setShowTimeoutWarning(false);
         handleLogout();
       }
     };
-    const interval = setInterval(checkTimeout, 60 * 1000);
+    const interval = setInterval(checkTimeout, 5000); // Check more frequently
     return () => clearInterval(interval);
   }, [user, activeSessionCompanion]);
 
@@ -76,17 +88,10 @@ const MainApp: React.FC = () => {
         } else {
             // STRICT ADMIN CREATION LOGIC
             const adminExists = Database.hasAdmin();
-            
-            // Only grant ADMIN if:
-            // 1. No admin exists yet
-            // 2. The provider is specifically 'email' (Password based)
-            // OAuth logins (Google/FB/X) are NEVER admins automatically, even if they are the first user.
             let finalRole = UserRole.USER;
-            
             if (!adminExists && provider === 'email') {
                 finalRole = UserRole.ADMIN;
             } else if (provider !== 'email') {
-                // Explicitly force USER role for OAuth
                 finalRole = UserRole.USER;
             }
 
@@ -95,7 +100,6 @@ const MainApp: React.FC = () => {
         }
     }
     
-    // NEW: Check and update streak on login
     currentUser = Database.checkAndIncrementStreak(currentUser);
 
     setUser(currentUser);
@@ -138,6 +142,26 @@ const MainApp: React.FC = () => {
   return (
     <>
       {showAuth && <Auth onLogin={handleLogin} onCancel={() => setShowAuth(false)} initialMode={authMode} />}
+      
+      {/* TIMEOUT WARNING MODAL */}
+      {showTimeoutWarning && (
+          <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+              <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl border border-yellow-500">
+                  <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Clock className="w-8 h-8 text-yellow-600 dark:text-yellow-500" />
+                  </div>
+                  <h3 className="text-2xl font-black mb-2 dark:text-white">Are you still there?</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">Your secure session will time out in 60 seconds to protect your privacy.</p>
+                  <button 
+                      onClick={() => { lastActivityRef.current = Date.now(); setShowTimeoutWarning(false); }}
+                      className="w-full py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:scale-105 transition-transform"
+                  >
+                      I'm still here
+                  </button>
+              </div>
+          </div>
+      )}
+
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={
