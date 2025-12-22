@@ -530,14 +530,16 @@ const MoodTracker: React.FC<{ onMoodSelect: (m: 'confetti' | 'rain' | null) => v
                 <p className="text-gray-900 dark:text-white font-bold text-lg mb-4">How does the world feel?</p>
             </div>
             <div className="flex gap-2">
-                <button onClick={() => onMoodSelect('confetti')} className="flex-1 py-3 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 text-yellow-600 dark:text-yellow-400 rounded-xl font-bold text-sm transition-colors flex flex-col items-center gap-1 group">
-                    <Sun className="w-4 h-4 group-hover:rotate-180 transition-transform" /> Celebration
+                <button onClick={() => onMoodSelect('confetti')} className="flex-1 py-3 md:py-2 lg:py-3 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 text-yellow-600 dark:text-yellow-400 rounded-xl font-bold text-sm transition-colors flex flex-col items-center justify-center gap-1 group">
+                    <Sun className="w-4 h-4 group-hover:rotate-180 transition-transform" /> 
+                    <span className="md:hidden lg:inline">Celebration</span>
                 </button>
                 <button onClick={() => onMoodSelect(null)} className="py-3 px-4 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition-colors flex items-center justify-center group" title="Reset">
                     <StopCircle className="w-5 h-5 text-gray-500 group-hover:text-black dark:group-hover:text-white" />
                 </button>
-                <button onClick={() => onMoodSelect('rain')} className="flex-1 py-3 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl font-bold text-sm transition-colors flex flex-col items-center gap-1 group">
-                    <CloudRain className="w-4 h-4 group-hover:scale-110 transition-transform" /> Melancholy
+                <button onClick={() => onMoodSelect('rain')} className="flex-1 py-3 md:py-2 lg:py-3 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl font-bold text-sm transition-colors flex flex-col items-center justify-center gap-1 group">
+                    <CloudRain className="w-4 h-4 group-hover:scale-110 transition-transform" /> 
+                    <span className="md:hidden lg:inline">Melancholy</span>
                 </button>
             </div>
         </div>
