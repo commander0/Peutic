@@ -114,6 +114,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const [newPromo, setNewPromo] = useState({ code: '', discount: 10 });
   const [broadcastSent, setBroadcastSent] = useState(false);
 
+  const currentUser = Database.getUser();
   const MAX_CONCURRENT_CAPACITY = 15;
 
   // Real-time Data Sync
@@ -419,9 +420,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                               <div className="flex justify-end gap-2">
                                                   <button onClick={() => { setSelectedUser(user); setShowUserModal(true); }} className="p-2 bg-gray-800 hover:bg-green-900/30 text-green-500 rounded-lg transition-colors" title="Manage User"><Plus className="w-4 h-4"/></button>
                                                   <button onClick={() => { if(confirm("Ban/Unban User?")) { const s = user.subscriptionStatus === 'BANNED' ? 'ACTIVE' : 'BANNED'; Database.updateUser({...user, subscriptionStatus: s as any}); }}} className="p-2 bg-gray-800 hover:bg-yellow-900/30 text-yellow-500 rounded-lg transition-colors"><ShieldAlert className="w-4 h-4"/></button>
-                                                  {user.role !== UserRole.ADMIN && (
-                                                      <button onClick={() => handleDeleteUser(user.id)} className="p-2 bg-gray-800 hover:bg-red-900/30 text-red-500 rounded-lg transition-colors" title="Delete User"><Trash2 className="w-4 h-4"/></button>
-                                                  )}
+                                                  <button onClick={() => handleDeleteUser(user.id)} disabled={user.id === currentUser?.id} className={`p-2 rounded-lg transition-colors ${user.id === currentUser?.id ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-gray-800 hover:bg-red-900/30 text-red-500'}`} title="Delete User"><Trash2 className="w-4 h-4"/></button>
                                               </div>
                                           </td>
                                       </tr>
@@ -569,14 +568,13 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                            <button onClick={handleFundUser} className="flex-1 py-3 bg-green-600 rounded-xl font-bold text-white hover:bg-green-500">Confirm Grant</button>
                        </div>
                        
-                       {selectedUser.role !== UserRole.ADMIN && (
-                           <button 
-                               onClick={() => handleDeleteUser(selectedUser.id)} 
-                               className="w-full py-3 border border-red-900/50 text-red-500 hover:bg-red-900/20 rounded-xl font-bold text-xs uppercase tracking-widest mt-2 flex items-center justify-center gap-2"
-                           >
-                               <Trash2 className="w-4 h-4" /> Delete User Permanently
-                           </button>
-                       )}
+                       <button 
+                           onClick={() => handleDeleteUser(selectedUser.id)} 
+                           disabled={selectedUser.id === currentUser?.id}
+                           className={`w-full py-3 border rounded-xl font-bold text-xs uppercase tracking-widest mt-2 flex items-center justify-center gap-2 ${selectedUser.id === currentUser?.id ? 'border-gray-700 text-gray-600 cursor-not-allowed' : 'border-red-900/50 text-red-500 hover:bg-red-900/20'}`}
+                       >
+                           <Trash2 className="w-4 h-4" /> Delete User Permanently
+                       </button>
                    </div>
               </div>
           </div>
