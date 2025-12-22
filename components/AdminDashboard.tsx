@@ -379,55 +379,61 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                           </div>
                       </div>
 
-                      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                          <table className="w-full text-left">
-                              <thead className="bg-black text-gray-500 text-xs uppercase font-bold">
-                                  <tr>
-                                      <th className="p-4">User Identity</th>
-                                      <th className="p-4">Role</th>
-                                      <th className="p-4">Credits</th>
-                                      <th className="p-4">Status</th>
-                                      <th className="p-4 text-right">Controls</th>
-                                  </tr>
-                              </thead>
-                              <tbody className="divide-y divide-gray-800">
-                                  {filteredUsers.map(user => (
-                                      <tr key={user.id} className="hover:bg-gray-800/50 transition-colors">
-                                          <td className="p-4">
-                                              <div className="flex items-center gap-3">
-                                                  <div className="w-10 h-10 rounded-full bg-black overflow-hidden border border-gray-700">
-                                                      <AvatarImage src={user.avatar || ''} alt={user.name} className="w-full h-full object-cover" />
-                                                  </div>
-                                                  <div>
-                                                      <p className="font-bold text-white text-sm">{user.name}</p>
-                                                      <p className="text-gray-500 text-xs">{user.email}</p>
-                                                  </div>
-                                              </div>
-                                          </td>
-                                          <td className="p-4">
-                                              <span className={`text-[10px] font-bold px-2 py-1 rounded border ${user.role === UserRole.ADMIN ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30' : 'bg-gray-800 text-gray-400 border-gray-700'}`}>
-                                                  {user.role}
-                                              </span>
-                                          </td>
-                                          <td className="p-4 font-mono text-sm text-green-400 font-bold">{user.balance}m</td>
-                                          <td className="p-4">
-                                              {user.subscriptionStatus === 'BANNED' 
-                                                  ? <span className="text-red-500 text-xs font-bold flex items-center gap-1"><Ban className="w-3 h-3"/> BANNED</span> 
-                                                  : <span className="text-green-500 text-xs font-bold flex items-center gap-1"><CheckCircle className="w-3 h-3"/> ACTIVE</span>
-                                              }
-                                          </td>
-                                          <td className="p-4 text-right">
-                                              <div className="flex justify-end gap-2">
-                                                  <button onClick={() => { setSelectedUser(user); setShowUserModal(true); }} className="p-2 bg-gray-800 hover:bg-green-900/30 text-green-500 rounded-lg transition-colors" title="Manage User"><Plus className="w-4 h-4"/></button>
-                                                  <button onClick={() => { if(confirm("Ban/Unban User?")) { const s = user.subscriptionStatus === 'BANNED' ? 'ACTIVE' : 'BANNED'; Database.updateUser({...user, subscriptionStatus: s as any}); }}} className="p-2 bg-gray-800 hover:bg-yellow-900/30 text-yellow-500 rounded-lg transition-colors"><ShieldAlert className="w-4 h-4"/></button>
-                                                  <button onClick={() => handleDeleteUser(user.id)} disabled={user.id === currentUser?.id} className={`p-2 rounded-lg transition-colors ${user.id === currentUser?.id ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-gray-800 hover:bg-red-900/30 text-red-500'}`} title="Delete User"><Trash2 className="w-4 h-4"/></button>
-                                              </div>
-                                          </td>
+                      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden flex flex-col h-[65vh]">
+                          <div className="overflow-auto flex-1 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+                              <table className="w-full text-left border-collapse relative">
+                                  <thead className="bg-black text-gray-500 text-xs uppercase font-bold sticky top-0 z-10 shadow-lg">
+                                      <tr>
+                                          <th className="p-4 bg-black">User Identity</th>
+                                          <th className="p-4 bg-black">Role</th>
+                                          <th className="p-4 bg-black">Credits</th>
+                                          <th className="p-4 bg-black">Status</th>
+                                          <th className="p-4 text-right bg-black">Controls</th>
                                       </tr>
-                                  ))}
-                              </tbody>
-                          </table>
-                          {filteredUsers.length === 0 && <div className="p-12 text-center text-gray-500 text-sm">No users found.</div>}
+                                  </thead>
+                                  <tbody className="divide-y divide-gray-800">
+                                      {filteredUsers.map(user => (
+                                          <tr key={user.id} className="hover:bg-gray-800/50 transition-colors">
+                                              <td className="p-4">
+                                                  <div className="flex items-center gap-3">
+                                                      <div className="w-10 h-10 rounded-full bg-black overflow-hidden border border-gray-700">
+                                                          <AvatarImage src={user.avatar || ''} alt={user.name} className="w-full h-full object-cover" />
+                                                      </div>
+                                                      <div>
+                                                          <p className="font-bold text-white text-sm">{user.name}</p>
+                                                          <p className="text-gray-500 text-xs">{user.email}</p>
+                                                      </div>
+                                                  </div>
+                                              </td>
+                                              <td className="p-4">
+                                                  <span className={`text-[10px] font-bold px-2 py-1 rounded border ${user.role === UserRole.ADMIN ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30' : 'bg-gray-800 text-gray-400 border-gray-700'}`}>
+                                                      {user.role}
+                                                  </span>
+                                              </td>
+                                              <td className="p-4 font-mono text-sm text-green-400 font-bold">{user.balance}m</td>
+                                              <td className="p-4">
+                                                  {user.subscriptionStatus === 'BANNED' 
+                                                      ? <span className="text-red-500 text-xs font-bold flex items-center gap-1"><Ban className="w-3 h-3"/> BANNED</span> 
+                                                      : <span className="text-green-500 text-xs font-bold flex items-center gap-1"><CheckCircle className="w-3 h-3"/> ACTIVE</span>
+                                                  }
+                                              </td>
+                                              <td className="p-4 text-right whitespace-nowrap">
+                                                  <div className="flex justify-end gap-2">
+                                                      <button onClick={() => { setSelectedUser(user); setShowUserModal(true); }} className="p-2 bg-gray-800 hover:bg-green-900/30 text-green-500 rounded-lg transition-colors" title="Manage User"><Plus className="w-4 h-4"/></button>
+                                                      <button onClick={() => { if(confirm("Ban/Unban User?")) { const s = user.subscriptionStatus === 'BANNED' ? 'ACTIVE' : 'BANNED'; Database.updateUser({...user, subscriptionStatus: s as any}); }}} className="p-2 bg-gray-800 hover:bg-yellow-900/30 text-yellow-500 rounded-lg transition-colors"><ShieldAlert className="w-4 h-4"/></button>
+                                                      <button onClick={() => handleDeleteUser(user.id)} disabled={user.id === currentUser?.id} className={`p-2 rounded-lg transition-colors ${user.id === currentUser?.id ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-gray-800 hover:bg-red-900/30 text-red-500'}`} title="Delete User"><Trash2 className="w-4 h-4"/></button>
+                                                  </div>
+                                              </td>
+                                          </tr>
+                                      ))}
+                                  </tbody>
+                              </table>
+                              {filteredUsers.length === 0 && <div className="p-12 text-center text-gray-500 text-sm">No users found.</div>}
+                          </div>
+                          <div className="p-4 bg-black border-t border-gray-800 text-xs text-gray-500 font-mono flex justify-between items-center">
+                              <span>Total Records: {filteredUsers.length}</span>
+                              <span>Scroll for more ↓</span>
+                          </div>
                       </div>
                   </div>
               )}
