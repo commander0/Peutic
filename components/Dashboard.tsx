@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Companion, Transaction, JournalEntry, ArtEntry } from '../types';
@@ -122,7 +123,8 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
                 const imageUrl = canvas.toDataURL('image/png');
                 const newEntry: ArtEntry = { id: `wisdom_${Date.now()}`, userId: userId, imageUrl: imageUrl, prompt: input, createdAt: new Date().toISOString(), title: "Wisdom Card" };
                 Database.saveArt(newEntry);
-                setGallery(prev => [newEntry, ...prev]);
+                // Update local state by re-fetching to ensure sync with DB filter logic
+                setGallery(Database.getUserArt(userId));
                 
                 const link = document.createElement('a'); link.href = imageUrl; link.download = `peutic_wisdom_${Date.now()}.png`; document.body.appendChild(link); link.click(); document.body.removeChild(link);
                 setInput('');
@@ -149,10 +151,10 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
                     </button>
                     {gallery.length > 0 && (
                         <div className="mt-6 space-y-4">
-                            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Your Cards</h4>
+                            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Your Cards ({gallery.length})</h4>
                             <div className="flex flex-col gap-4">
-                                {gallery.slice(0, 3).map((art) => (
-                                    <div key={art.id} className="bg-gray-50 dark:bg-gray-800 p-2 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm relative group">
+                                {gallery.slice(0, 5).map((art) => (
+                                    <div key={art.id} className="bg-gray-50 dark:bg-gray-800 p-2 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm relative group animate-in slide-in-from-top-2 fade-in">
                                         <img src={art.imageUrl} alt="Wisdom Card" className="w-full rounded-xl shadow-sm" />
                                         <div className="absolute top-3 right-3 flex gap-2"><button onClick={(e) => handleDelete(e, art.id)} className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-colors" title="Delete"><Trash2 className="w-3 h-3"/></button></div>
                                     </div>
@@ -176,11 +178,10 @@ const SoundscapePlayer: React.FC = () => {
     // Use an explicit audio element ref for standard HTML5 Audio
     const audioRef = useRef<HTMLAudioElement>(null);
 
-    // Reliable MP3 Sources
-    // Note: Removed crossOrigin attribute to allow opaque responses which fixes "no supported sources" on some CDNs
+    // More Reliable MP3 Sources - Swapped forest for a better wind sound
     const SOUND_URLS = {
         rain: 'https://www.soundjay.com/nature/sounds/rain-01.mp3',
-        forest: 'https://www.soundjay.com/nature/sounds/forest-wind-and-birds-1.mp3',
+        forest: 'https://www.soundjay.com/nature/sounds/wind-howl-01.mp3', // Updated to simple wind howl
         ocean: 'https://www.soundjay.com/nature/sounds/ocean-wave-1.mp3',
         fire: 'https://www.soundjay.com/nature/sounds/campfire-1.mp3'
     };

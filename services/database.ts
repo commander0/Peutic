@@ -1,3 +1,4 @@
+
 import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, ServerMetric, MoodEntry, JournalEntry, PromoCode, SessionFeedback, ArtEntry, BreathLog, SessionMemory, GiftCard } from '../types';
 import { supabase } from './supabaseClient';
 
@@ -482,7 +483,6 @@ export class Database {
       }
   }
 
-  // ... (Rest of existing methods unchanged) ...
   static getAllFeedback(): SessionFeedback[] { return JSON.parse(localStorage.getItem(DB_KEYS.FEEDBACK) || '[]'); }
   static saveJournal(entry: JournalEntry) { const j = JSON.parse(localStorage.getItem(DB_KEYS.JOURNALS) || '[]'); j.push(entry); localStorage.setItem(DB_KEYS.JOURNALS, JSON.stringify(j)); }
   static getJournals(userId: string): JournalEntry[] { return JSON.parse(localStorage.getItem(DB_KEYS.JOURNALS) || '[]').filter((j: JournalEntry) => j.userId === userId).reverse(); }
@@ -492,16 +492,47 @@ export class Database {
   static getBreathLogs(userId: string): BreathLog[] { return JSON.parse(localStorage.getItem(DB_KEYS.BREATHE_LOGS) || '[]').filter((l: BreathLog) => l.userId === userId); }
   
   static saveArt(entry: ArtEntry) {
-      let art = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]');
-      art.push(entry);
-      try { localStorage.setItem(DB_KEYS.ART, JSON.stringify(art)); } 
+      let art: ArtEntry[] = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]');
+      
+      // Remove any existing entry with same ID (if update)
+      art = art.filter(a => a.id !== entry.id);
+      
+      // Separate current user's art
+      let myArt = art.filter(a => a.userId === entry.userId);
+      const otherArt = art.filter(a => a.userId !== entry.userId);
+      
+      // Add new
+      myArt.push(entry);
+      
+      // Sort newest to oldest
+      myArt.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      // Keep strictly top 5 newest
+      const keptArt = myArt.slice(0, 5);
+      
+      // Merge back (reversing the 'kept' to maintain correct storage order if needed, but simple concat works if we rely on createdAt for sorting display)
+      // Since getUserArt reverses, we want them stored oldest -> newest in the array usually, 
+      // but consistent sorting is safer.
+      
+      // Storing all oldest -> newest for general consistency
+      const combined = [...otherArt, ...keptArt.reverse()]; 
+      
+      try { localStorage.setItem(DB_KEYS.ART, JSON.stringify(combined)); } 
       catch (e: any) {
           if (e.name === 'QuotaExceededError' || e.code === 22) {
-              while (art.length > 1) { art.shift(); try { localStorage.setItem(DB_KEYS.ART, JSON.stringify(art)); break; } catch (r) {} }
+              // Emergency Cleanup
+              const sl = combined.slice(combined.length - 10);
+              localStorage.setItem(DB_KEYS.ART, JSON.stringify(sl));
           }
       }
   }
-  static getUserArt(userId: string): ArtEntry[] { return JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]').filter((a: ArtEntry) => a.userId === userId).reverse(); }
+
+  static getUserArt(userId: string): ArtEntry[] { 
+      const art = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]').filter((a: ArtEntry) => a.userId === userId);
+      // Return Newest First
+      return art.sort((a: ArtEntry, b: ArtEntry) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
   static deleteArt(artId: string) { let art = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]'); art = art.filter((a: ArtEntry) => a.id !== artId); localStorage.setItem(DB_KEYS.ART, JSON.stringify(art)); }
   static getBreathingCooldown(): number | null { const cd = localStorage.getItem(DB_KEYS.BREATHE_COOLDOWN); return cd ? parseInt(cd, 10) : null; }
   static setBreathingCooldown(timestamp: number) { localStorage.setItem(DB_KEYS.BREATHE_COOLDOWN, timestamp.toString()); }

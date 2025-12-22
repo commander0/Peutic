@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 
 // Lazy initialization to prevent crash on module load if env vars are missing
@@ -131,8 +132,8 @@ export const generateDailyInsight = async (userName: string): Promise<string> =>
     });
     return response.text || "Welcome back. Remember to take a deep breath today.";
   } catch (error: any) {
-    if (error.status === 429 || error.message?.includes('429') || error.message?.includes('quota')) {
-        console.warn("Gemini Quota Exceeded (Insight). Using fallback.");
+    if (error.status === 403 || error.status === 429 || error.message?.includes('429') || error.message?.includes('403') || error.message?.includes('quota') || error.message?.includes('PERMISSION_DENIED')) {
+        console.warn("Gemini Insight Access Issue. Using local fallback.");
         return getLocalFallback('insight', userName);
     }
     console.error("Gemini Insight Error:", error);
@@ -150,8 +151,10 @@ export const generateAffirmation = async (struggle: string = "general"): Promise
             });
             return response.text?.trim() || "Peace comes from within.";
         } catch (e: any) {
-            // Silently fail to local logic on quota error
-            if (e.status !== 429 && !e.message?.includes('429')) {
+            // Permission Denied or Quota
+            if (e.status === 403 || e.message?.includes('403') || e.message?.includes('PERMISSION_DENIED')) {
+                console.warn("Gemini Access Denied. Using local affirmation engine.");
+            } else if (e.status !== 429) {
                 console.warn("Gemini Affirmation Error:", e);
             }
         }
@@ -198,9 +201,13 @@ export const generateSpeech = async (text: string): Promise<Uint8Array | null> =
     }
     return null;
   } catch (e: any) {
+    if (e.status === 403 || e.message?.includes('403') || e.message?.includes('PERMISSION_DENIED')) {
+        console.warn("Gemini TTS Access Denied. Fallback to browser speech.");
+        return null;
+    }
     if (e.status === 429 || e.message?.includes('429') || e.message?.includes('quota')) {
         console.warn("Gemini TTS Quota Exceeded. Falling back to browser speech.");
-        return null; // Triggers fallbackSpeak in component
+        return null; 
     }
     console.error("TTS Error", e);
     return null;
