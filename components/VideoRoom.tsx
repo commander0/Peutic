@@ -497,9 +497,10 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   return (
     <div ref={containerRef} className="fixed inset-0 bg-black z-50 flex flex-col overflow-hidden select-none">
         
-        {/* --- DYNAMIC ISLAND SELF-VIEW (TOP CENTER) --- */}
+        {/* --- DYNAMIC ISLAND SELF-VIEW (TOP RIGHT) --- */}
         {/* Z-Index 100 to float above Tavus iframe and header overlays */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] w-32 md:w-48 aspect-[16/9] md:aspect-video rounded-[2rem] overflow-hidden border-2 border-white/20 bg-black shadow-2xl transition-all duration-300 pointer-events-none">
+        {/* Changed from left-1/2 to right-4 top-4 to avoid covering main subject */}
+        <div className="absolute top-4 right-4 z-[100] w-32 md:w-48 aspect-[16/9] md:aspect-video rounded-[2rem] overflow-hidden border-2 border-white/20 bg-black shadow-2xl transition-all duration-300 pointer-events-none">
             <div className="absolute inset-0 bg-black flex items-center justify-center">
                 {cameraAccessBlocked ? (
                     <div className="flex flex-col items-center justify-center h-full bg-gray-900/90 text-center p-2">
@@ -531,8 +532,9 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         </div>
 
         {/* --- CREDENTIAL BADGE --- */}
+        {/* Moved down to top-36 to clear self-view video */}
         {showCredential && (
-            <div className="absolute top-24 right-4 z-40 bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl w-64 animate-in slide-in-from-right-10 fade-in duration-300">
+            <div className="absolute top-36 right-4 z-40 bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl w-64 animate-in slide-in-from-right-10 fade-in duration-300">
                 <div className="flex justify-between items-start mb-2">
                     <h4 className="text-white font-bold text-sm uppercase tracking-widest flex items-center gap-2"><BadgeCheck className="w-4 h-4 text-blue-400 fill-blue-400" /> Verified</h4>
                     <button onClick={() => setShowCredential(false)} className="text-white/50 hover:text-white"><Share2 className="w-3 h-3 rotate-180" /></button>
@@ -589,7 +591,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             </div>
         </div>
 
-        {/* --- MAIN CONTENT AREA --- */}
+        {/* --- MAIN CONTENT --- */}
         <div className="absolute inset-0 w-full h-full bg-gray-900 flex items-center justify-center">
             {/* QUEUE SCREEN */}
             {connectionState === 'QUEUED' && (

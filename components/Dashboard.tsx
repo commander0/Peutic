@@ -8,7 +8,8 @@ import {
   Wind, BookOpen, Save, Sparkles, Activity, Info, Flame, Trophy, Target,
   Sun, Cloud, Feather, Anchor, Gamepad2, RefreshCw, Play, Zap, Star, Edit2, Trash2, Bell,
   CloudRain, Image as ImageIcon, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Shield, Moon,
-  Twitter, Instagram, Linkedin, LifeBuoy, Volume2, VolumeX, Minimize2, Maximize2, Music, Radio, Flame as Fire
+  Twitter, Instagram, Linkedin, LifeBuoy, Volume2, VolumeX, Minimize2, Maximize2, Music, Radio, Flame as Fire, Smile, Trees,
+  Mail, Smartphone, Globe, CreditCard, ToggleLeft, ToggleRight
 } from 'lucide-react';
 import { Database, STABLE_AVATAR_POOL } from '../services/database';
 import { generateAffirmation, generateDailyInsight } from '../services/geminiService';
@@ -35,7 +36,7 @@ declare global {
 // UTILITY COMPONENTS
 // ==========================================
 
-const AvatarImage: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className }) => {
+const AvatarImage: React.FC<{ src: string; alt: string; className?: string; isUser?: boolean }> = ({ src, alt, className, isUser = false }) => {
     const [imgSrc, setImgSrc] = useState(src);
     const [hasError, setHasError] = useState(false);
 
@@ -49,6 +50,13 @@ const AvatarImage: React.FC<{ src: string; alt: string; className?: string }> = 
     }, [src]);
 
     if (hasError || !imgSrc) {
+        if (isUser) {
+            return (
+                <div className={`bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center ${className}`}>
+                    <Smile className="w-3/5 h-3/5 text-yellow-600 dark:text-yellow-400" />
+                </div>
+            );
+        }
         let hash = 0;
         for (let i = 0; i < alt.length; i++) hash = alt.charCodeAt(i) + ((hash << 5) - hash);
         const index = Math.abs(hash) % STABLE_AVATAR_POOL.length;
@@ -163,11 +171,14 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
                     {gallery.length > 0 && (
                         <div className="mt-6 space-y-4">
                             <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Your Cards ({gallery.length})</h4>
-                            <div className="flex flex-col gap-4">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 {gallery.map((art) => (
-                                    <div key={art.id} className="bg-gray-50 dark:bg-gray-800 p-2 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm relative group animate-in slide-in-from-top-2 fade-in">
-                                        <img src={art.imageUrl} alt="Wisdom Card" className="w-full rounded-xl shadow-sm" />
-                                        <div className="absolute top-3 right-3 flex gap-2"><button onClick={(e) => handleDelete(e, art.id)} className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-colors" title="Delete"><Trash2 className="w-3 h-3"/></button></div>
+                                    <div key={art.id} className="relative group aspect-square bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm animate-in zoom-in duration-300">
+                                        <img src={art.imageUrl} alt="Wisdom Card" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                            <button onClick={(e) => handleDelete(e, art.id)} className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-colors" title="Delete"><Trash2 className="w-3 h-3"/></button>
+                                            <a href={art.imageUrl} download={`wisdom-${art.id}.jpg`} onClick={(e) => e.stopPropagation()} className="p-2 bg-white hover:bg-gray-100 text-black rounded-full shadow-lg transition-colors" title="Download"><Download className="w-3 h-3"/></a>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -188,11 +199,12 @@ const SoundscapePlayer: React.FC = () => {
     
     const audioRef = useRef<HTMLAudioElement>(null);
 
+    // High Compatibility MP3 Links (Direct CDN)
     const SOUND_URLS = {
-        rain: 'https://assets.mixkit.co/active_storage/sfx/2496/2496-preview.mp3',
-        forest: 'https://assets.mixkit.co/active_storage/sfx/1483/1483-preview.mp3',
-        ocean: 'https://assets.mixkit.co/active_storage/sfx/1194/1194-preview.mp3',
-        fire: 'https://assets.mixkit.co/active_storage/sfx/1169/1169-preview.mp3'
+        rain: 'https://assets.mixkit.co/active_storage/sfx/2393/2393-preview.mp3',
+        forest: 'https://assets.mixkit.co/active_storage/sfx/1210/1210-preview.mp3',
+        ocean: 'https://assets.mixkit.co/active_storage/sfx/1196/1196-preview.mp3',
+        fire: 'https://assets.mixkit.co/active_storage/sfx/1330/1330-preview.mp3'
     };
 
     useEffect(() => {
@@ -206,7 +218,11 @@ const SoundscapePlayer: React.FC = () => {
         if (!audio) return;
 
         if (playing) {
-            audio.play().catch(console.warn);
+            audio.play().catch((e) => {
+                console.warn("Audio Play Error (Autoplay Blocked?):", e);
+                setPlaying(false);
+                alert("Please interact with the page to enable audio.");
+            });
         } else {
             audio.pause();
         }
@@ -243,7 +259,7 @@ const SoundscapePlayer: React.FC = () => {
                     <div className="grid grid-cols-4 gap-2">
                         {[
                             { key: 'rain', label: 'Rain', icon: CloudRain },
-                            { key: 'forest', label: 'Wind', icon: Feather }, 
+                            { key: 'forest', label: 'Nature', icon: Trees }, 
                             { key: 'ocean', label: 'Ocean', icon: Anchor },
                             { key: 'fire', label: 'Fire', icon: Fire }
                         ].map((item) => {
@@ -320,147 +336,172 @@ const MindfulMatchGame: React.FC = () => {
     const handleCardClick = (index: number) => { if (flipped.length === 2 || solved.includes(index) || flipped.includes(index)) return; const newFlipped = [...flipped, index]; setFlipped(newFlipped); if (newFlipped.length === 2) { setMoves(m => m + 1); const card1 = cards[newFlipped[0]]; const card2 = cards[newFlipped[1]]; if (card1.icon === card2.icon) { setSolved([...solved, newFlipped[0], newFlipped[1]]); setFlipped([]); } else { setTimeout(() => setFlipped([]), 1000); } } };
     useEffect(() => { if (cards.length > 0 && solved.length === cards.length) { setWon(true); if (bestScore === 0 || moves < bestScore) { setBestScore(moves); localStorage.setItem('mindful_best', moves.toString()); } } }, [solved]);
     return (
-        <div className="bg-gradient-to-br from-yellow-50/50 to-white dark:from-gray-800 dark:to-gray-900 w-full h-full flex flex-col rounded-2xl p-2 md:p-0.5 lg:p-2 border border-yellow-100 dark:border-gray-700 overflow-hidden relative shadow-inner">
+        <div className="bg-gradient-to-br from-yellow-50/50 to-white dark:from-gray-800 dark:to-gray-900 w-full h-full flex flex-col rounded-2xl p-2 md:p-2 border border-yellow-100 dark:border-gray-700 overflow-hidden relative shadow-inner">
             <div className="absolute top-2 left-2 z-20 flex gap-2"><span className="text-[10px] font-bold bg-white/50 px-2 py-1 rounded-full text-gray-500">Moves: {moves}</span>{bestScore > 0 && <span className="text-[10px] font-bold bg-yellow-100 px-2 py-1 rounded-full text-yellow-700">Best: {bestScore}</span>}</div>
             <button onClick={initGame} className="absolute top-2 right-2 p-1.5 hover:bg-yellow-100 dark:hover:bg-gray-700 rounded-full transition-colors z-20"><RefreshCw className="w-3 h-3 md:w-4 md:h-4 text-yellow-600 dark:text-yellow-400" /></button>
-            {won ? (<div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in"><Trophy className="w-12 h-12 md:w-16 md:h-16 text-yellow-500 mb-2 animate-bounce" /><p className="font-black text-lg md:text-2xl text-yellow-900 dark:text-white">Zen Master!</p><p className="text-xs text-gray-500 mb-4">Completed in {moves} moves</p><button onClick={initGame} className="mt-2 bg-black dark:bg-white dark:text-black text-white px-4 py-1.5 md:px-6 md:py-2 rounded-full font-bold text-xs md:text-sm hover:scale-105 transition-transform">Replay</button></div>) : (<div className="flex-1 flex items-center justify-center min-h-0"><div className="grid grid-cols-4 grid-rows-4 gap-1.5 md:gap-0.5 lg:gap-2 w-full aspect-square p-2">{cards.map((card, i) => { const isVisible = flipped.includes(i) || solved.includes(i); const Icon = card.icon; return (<div key={i} className="w-full h-full perspective-1000"><button onClick={() => handleCardClick(i)} className={`w-full h-full rounded-md md:rounded-lg flex items-center justify-center transition-all duration-500 transform-style-3d ${isVisible ? 'bg-white dark:bg-gray-700 border-2 border-yellow-400 shadow-lg rotate-y-180' : 'bg-gray-900 dark:bg-gray-800 shadow-md'}`}>{isVisible ? <Icon className="w-6 h-6 md:w-10 md:h-10 text-yellow-500 animate-in zoom-in" /> : <div className="w-2 h-2 bg-gray-700 rounded-full"></div>}</button></div>); })}</div></div>)}
+            {won ? (<div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in"><Trophy className="w-12 h-12 md:w-16 md:h-16 text-yellow-500 mb-2 animate-bounce" /><p className="font-black text-lg md:text-2xl text-yellow-900 dark:text-white">Zen Master!</p><p className="text-xs text-gray-500 mb-4">Completed in {moves} moves</p><button onClick={initGame} className="mt-2 bg-black dark:bg-white dark:text-black text-white px-4 py-1.5 md:px-6 md:py-2 rounded-full font-bold text-xs md:text-sm hover:scale-105 transition-transform">Replay</button></div>) : (<div className="flex-1 flex items-center justify-center min-h-0"><div className="grid grid-cols-4 grid-rows-4 gap-1 md:gap-2 w-full h-full p-2">{cards.map((card, i) => { const isVisible = flipped.includes(i) || solved.includes(i); const Icon = card.icon; return (<div key={i} className="w-full h-full perspective-1000"><button onClick={() => handleCardClick(i)} className={`w-full h-full rounded-md md:rounded-lg flex items-center justify-center transition-all duration-500 transform-style-3d ${isVisible ? 'bg-white dark:bg-gray-700 border-2 border-yellow-400 shadow-lg rotate-y-180' : 'bg-gray-900 dark:bg-gray-800 shadow-md'}`}>{isVisible ? <Icon className="w-4 h-4 md:w-6 md:h-6 lg:w-8 lg:h-8 text-yellow-500 animate-in zoom-in" /> : <div className="w-2 h-2 bg-gray-700 rounded-full"></div>}</button></div>); })}</div></div>)}
         </div>
     );
 };
 
 // --- CLOUD HOP GAME ---
 const CloudHopGame: React.FC = () => {
-    const canvasRef = useRef<HTMLCanvasElement>(null); const requestRef = useRef<number | undefined>(undefined); const [score, setScore] = useState(0); const [gameOver, setGameOver] = useState(false); const [gameStarted, setGameStarted] = useState(false); 
-    const GRAVITY = 0.4; const JUMP_FORCE = -9; const MOVE_SPEED = 4; const playerRef = useRef({ x: 150, y: 300, vx: 0, vy: 0, width: 30, height: 30 }); const platformsRef = useRef<any[]>([]);
+    const canvasRef = useRef<HTMLCanvasElement>(null); 
+    const requestRef = useRef<number | undefined>(undefined); 
+    const [score, setScore] = useState(0); 
+    const [gameOver, setGameOver] = useState(false); 
+    const [gameStarted, setGameStarted] = useState(false); 
+    
+    // Player State
+    const playerRef = useRef({ x: 150, y: 300, vx: 0, vy: 0, width: 30, height: 30 }); 
+    const platformsRef = useRef<any[]>([]);
+    
+    // Responsive Canvas Handling
     useEffect(() => {
-        if (!gameStarted) return; const canvas = canvasRef.current; if (!canvas) return; const ctx = canvas.getContext('2d'); if (!ctx) return;
-        platformsRef.current = [{x: 0, y: 380, w: 400, h: 40, type: 'ground'}]; let py = 300; while (py > -2000) { platformsRef.current.push({ x: Math.random() * 300, y: py, w: 70 + Math.random() * 30, h: 15, type: Math.random() > 0.9 ? 'moving' : 'cloud', vx: Math.random() > 0.5 ? 1 : -1 }); py -= 70 + Math.random() * 40; }
+        const resizeCanvas = () => {
+            const canvas = canvasRef.current;
+            if (canvas && canvas.parentElement) {
+                canvas.width = canvas.parentElement.clientWidth;
+                canvas.height = canvas.parentElement.clientHeight;
+                
+                // Keep game stopped on resize to prevent physics glitches, prompt restart
+                if (gameStarted) {
+                    setGameOver(true);
+                    setGameStarted(false);
+                }
+            }
+        };
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        return () => window.removeEventListener('resize', resizeCanvas);
+    }, []);
+
+    const initGame = () => {
+        const canvas = canvasRef.current; 
+        if (!canvas) return; 
+        
+        const W = canvas.width;
+        const H = canvas.height;
+        const isMobile = W < 600;
+
+        // Dynamic Sizing based on canvas width
+        const pSize = isMobile ? 18 : 30; // Smaller player on mobile
+        const basePlatW = isMobile ? 50 : 70;
+
+        // Reset Logic
+        platformsRef.current = [{x: 0, y: H - 30, w: W, h: 30, type: 'ground'}]; 
+        let py = H - 80; 
+        while (py > -2000) { 
+            platformsRef.current.push({ 
+                x: Math.random() * (W - basePlatW), 
+                y: py, 
+                w: basePlatW + Math.random() * (isMobile ? 20 : 30), 
+                h: isMobile ? 12 : 15, 
+                type: Math.random() > 0.9 ? 'moving' : 'cloud', 
+                vx: Math.random() > 0.5 ? 1 : -1 
+            }); 
+            // Increased spacing on mobile to reduce crowding
+            py -= (isMobile ? 90 : 70) + Math.random() * 40; 
+        }
+        
+        // Spawn player
+        playerRef.current = { x: W / 2 - (pSize/2), y: H - 80, vx: 0, vy: 0, width: pSize, height: pSize };
+        setScore(0);
+        setGameOver(false);
+        setGameStarted(true);
+    };
+
+    useEffect(() => {
+        if (!gameStarted) return; 
+        const canvas = canvasRef.current; if (!canvas) return; const ctx = canvas.getContext('2d'); if (!ctx) return;
+        
+        const W = canvas.width;
+        const H = canvas.height;
+        const isMobile = W < 600;
+        
+        // Physics constants relative to size
+        const GRAVITY = H > 400 ? 0.4 : 0.3; 
+        const JUMP_FORCE = H > 400 ? -9 : -7.5; 
+        const MOVE_SPEED = isMobile ? 3 : 4;
+
         const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'ArrowLeft') playerRef.current.vx = -MOVE_SPEED; if (e.key === 'ArrowRight') playerRef.current.vx = MOVE_SPEED; }; const handleKeyUp = () => { playerRef.current.vx = 0; }; window.addEventListener('keydown', handleKeyDown); window.addEventListener('keyup', handleKeyUp);
-        const drawCloud = (x: number, y: number, w: number, h: number, type: string) => { ctx.fillStyle = type === 'moving' ? '#E0F2FE' : 'white'; if (type === 'moving') ctx.shadowColor = '#38BDF8'; ctx.fillRect(x, y, w, h); ctx.beginPath(); ctx.arc(x+10, y, 15, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(x+w-10, y, 15, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(x+w/2, y-5, 20, 0, Math.PI*2); ctx.fill(); ctx.shadowColor = 'transparent'; };
+        
+        const drawCloud = (x: number, y: number, w: number, h: number, type: string) => { 
+            ctx.fillStyle = type === 'moving' ? '#E0F2FE' : 'white'; 
+            if (type === 'moving') ctx.shadowColor = '#38BDF8'; 
+            ctx.fillRect(x, y, w, h); 
+            
+            // Simplified drawing for mobile performance and cleaner look
+            const bumpSize = h * 0.8;
+            ctx.beginPath(); ctx.arc(x + 10, y, bumpSize, 0, Math.PI*2); ctx.fill(); 
+            ctx.beginPath(); ctx.arc(x + w - 10, y, bumpSize, 0, Math.PI*2); ctx.fill(); 
+            ctx.beginPath(); ctx.arc(x + w / 2, y - 5, bumpSize * 1.2, 0, Math.PI*2); ctx.fill(); 
+            ctx.shadowColor = 'transparent'; 
+        };
+        
         const update = () => {
-            const p = playerRef.current; p.x += p.vx; if (p.x < -p.width) p.x = 400; if (p.x > 400) p.x = -p.width; p.vy += GRAVITY; p.y += p.vy;
-            if (p.y < 200) { const diff = 200 - p.y; p.y = 200; setScore(s => s + Math.floor(diff)); platformsRef.current.forEach(pl => { pl.y += diff; if (pl.y > 450) { pl.y = -20; pl.x = Math.random() * 340; pl.type = Math.random() > 0.85 ? 'moving' : 'cloud'; } }); }
-            if (p.vy > 0) { platformsRef.current.forEach(pl => { if (p.y + p.height > pl.y && p.y + p.height < pl.y + 40 && p.x + p.width > pl.x && p.x < pl.x + pl.w) { p.vy = JUMP_FORCE; } }); }
-            platformsRef.current.forEach(pl => { if (pl.type === 'moving') { pl.x += pl.vx; if (pl.x < 0 || pl.x + pl.w > 400) pl.vx *= -1; } });
-            if (p.y > 450) { setGameOver(true); setGameStarted(false); if (requestRef.current !== undefined) cancelAnimationFrame(requestRef.current); return; }
-            const grad = ctx.createLinearGradient(0,0,0,400); grad.addColorStop(0,'#0EA5E9'); grad.addColorStop(1,'#BAE6FD'); ctx.fillStyle = grad; ctx.fillRect(0,0,400,400); ctx.fillStyle = 'rgba(255,255,255,0.3)'; for(let i=0; i<10; i++) ctx.fillRect((i*50 + Date.now()/50)%400, (i*30 + Date.now()/20)%400, 2, 2);
+            const p = playerRef.current; 
+            p.x += p.vx; 
+            if (p.x < -p.width) p.x = W; if (p.x > W) p.x = -p.width; 
+            p.vy += GRAVITY; 
+            p.y += p.vy;
+            
+            // Scrolling
+            if (p.y < H / 2) { 
+                const diff = (H / 2) - p.y; 
+                p.y = H / 2; 
+                setScore(s => s + Math.floor(diff)); 
+                platformsRef.current.forEach(pl => { 
+                    pl.y += diff; 
+                    if (pl.y > H + 50) { 
+                        pl.y = -20; 
+                        pl.x = Math.random() * (W - (isMobile ? 50 : 70)); 
+                        pl.type = Math.random() > 0.85 ? 'moving' : 'cloud'; 
+                    } 
+                }); 
+            }
+
+            // Collision
+            if (p.vy > 0) { 
+                platformsRef.current.forEach(pl => { 
+                    if (p.y + p.height > pl.y && p.y + p.height < pl.y + 40 && p.x + p.width > pl.x && p.x < pl.x + pl.w) { 
+                        p.vy = JUMP_FORCE; 
+                    } 
+                }); 
+            }
+
+            platformsRef.current.forEach(pl => { if (pl.type === 'moving') { pl.x += pl.vx; if (pl.x < 0 || pl.x + pl.w > W) pl.vx *= -1; } });
+            
+            // Death Check
+            if (p.y > H + 50) { 
+                setGameOver(true); 
+                setGameStarted(false); 
+                if (requestRef.current !== undefined) cancelAnimationFrame(requestRef.current); 
+                return; 
+            }
+
+            const grad = ctx.createLinearGradient(0,0,0,H); grad.addColorStop(0,'#0EA5E9'); grad.addColorStop(1,'#BAE6FD'); ctx.fillStyle = grad; ctx.fillRect(0,0,W,H); ctx.fillStyle = 'rgba(255,255,255,0.3)'; for(let i=0; i<10; i++) ctx.fillRect((i*50 + Date.now()/50)%W, (i*30 + Date.now()/20)%H, 2, 2);
             platformsRef.current.forEach(pl => { if(pl.type==='ground') { ctx.fillStyle='#4ade80'; ctx.fillRect(pl.x, pl.y, pl.w, pl.h); } else { drawCloud(pl.x, pl.y, pl.w, pl.h, pl.type); } });
-            ctx.shadowBlur = 15; ctx.shadowColor = 'white'; ctx.fillStyle = '#FACC15'; ctx.beginPath(); ctx.arc(p.x+15, p.y+15, 15, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0; ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(p.x+10, p.y+12, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(p.x+20, p.y+12, 2, 0, Math.PI*2); ctx.fill();
+            
+            // Draw Player
+            ctx.shadowBlur = 10; ctx.shadowColor = 'white'; ctx.fillStyle = '#FACC15'; 
+            ctx.beginPath(); ctx.arc(p.x + p.width/2, p.y + p.height/2, p.width/2, 0, Math.PI*2); ctx.fill(); 
+            ctx.shadowBlur = 0; ctx.fillStyle = 'black'; 
+            // Eyes
+            const eyeOff = p.width * 0.2;
+            const eyeSize = p.width * 0.1;
+            ctx.beginPath(); ctx.arc(p.x + p.width/2 - eyeOff, p.y + p.height/2 - eyeOff, eyeSize, 0, Math.PI*2); ctx.fill(); 
+            ctx.beginPath(); ctx.arc(p.x + p.width/2 + eyeOff, p.y + p.height/2 - eyeOff, eyeSize, 0, Math.PI*2); ctx.fill();
+            
             requestRef.current = requestAnimationFrame(update);
         }; update();
         return () => { if (requestRef.current !== undefined) cancelAnimationFrame(requestRef.current); window.removeEventListener('keydown', handleKeyDown); window.removeEventListener('keyup', handleKeyUp); };
     }, [gameStarted]);
-    const handleTap = (e: React.MouseEvent | React.TouchEvent) => { if (!canvasRef.current) return; const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX; const rect = canvasRef.current.getBoundingClientRect(); if (clientX - rect.left < rect.width / 2) playerRef.current.vx = -MOVE_SPEED; else playerRef.current.vx = MOVE_SPEED; }; const handleRelease = () => { playerRef.current.vx = 0; };
-    return (<div className="relative h-full w-full bg-sky-300 overflow-hidden rounded-2xl border-4 border-white dark:border-gray-700 shadow-inner cursor-pointer" onMouseDown={handleTap} onMouseUp={handleRelease} onTouchStart={handleTap} onTouchEnd={handleRelease}><div className="absolute top-2 right-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full font-black text-white text-base md:text-lg z-10">{score}m</div><canvas ref={canvasRef} width={400} height={400} className="w-full h-full object-contain" />{(!gameStarted || gameOver) && (<div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20 animate-in fade-in"><div className="text-center">{gameOver && <p className="text-white font-black text-2xl mb-4 drop-shadow-md">Fall!</p>}<button onClick={() => { setGameStarted(true); setGameOver(false); setScore(0); playerRef.current = {x:150,y:300,vx:0,vy:0,width:30,height:30}; }} className="bg-yellow-400 text-yellow-900 px-6 py-2 md:px-8 md:py-3 rounded-full font-black text-sm md:text-lg shadow-xl hover:scale-110 transition-transform flex items-center gap-2"><Play className="w-4 h-4 md:w-5 md:h-5 fill-current" /> {gameOver ? 'Try Again' : 'Play'}</button></div></div>)}</div>);
-};
-
-// --- BREATHING EXERCISE ---
-const BreathingExercise: React.FC<{ userId: string; onClose: () => void }> = ({ userId, onClose }) => {
-    const [phase, setPhase] = useState('Inhale');
-    const [secondsLeft, setSecondsLeft] = useState(4);
-    const [totalSeconds, setTotalSeconds] = useState(0);
-    const [isPlaying, setIsPlaying] = useState(false);
     
-    // Web Audio Refs for Breath Sound
-    const audioCtxRef = useRef<AudioContext | null>(null);
-    const nodesRef = useRef<AudioNode[]>([]);
-    const gainRef = useRef<GainNode | null>(null);
-
-    const toggleSound = () => {
-        if (isPlaying) {
-            nodesRef.current.forEach(node => {
-                try { (node as any).stop(); } catch(e) {}
-                try { node.disconnect(); } catch(e) {}
-            });
-            nodesRef.current = [];
-            setIsPlaying(false);
-        } else {
-            // Updated: Ethereal "Choir Pad" Sound
-            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-            const ctx = new AudioContextClass();
-            audioCtxRef.current = ctx;
-            
-            const masterGain = ctx.createGain();
-            masterGain.gain.value = 0;
-            masterGain.connect(ctx.destination);
-            gainRef.current = masterGain;
-
-            // 3 Oscillators for rich texture (Chord/Pad)
-            const freqs = [196.00, 246.94, 293.66]; // G3, B3, D4 (G Major chord)
-            
-            freqs.forEach((freq, i) => {
-                const osc = ctx.createOscillator();
-                osc.type = i === 0 ? 'sine' : 'triangle';
-                osc.frequency.value = freq;
-                
-                // Slight detune for thickness
-                osc.detune.value = Math.random() * 10 - 5; 
-
-                const oscGain = ctx.createGain();
-                oscGain.gain.value = 0.15;
-
-                osc.connect(oscGain);
-                oscGain.connect(masterGain);
-                osc.start();
-                nodesRef.current.push(osc, oscGain);
-            });
-            nodesRef.current.push(masterGain);
-            
-            setIsPlaying(true);
-        }
-    };
-
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setSecondsLeft(prev => { if (prev <= 1) { if (phase === 'Inhale') { setPhase('Hold'); return 4; } if (phase === 'Hold') { setPhase('Exhale'); return 4; } if (phase === 'Exhale') { setPhase('Inhale'); return 4; } } return prev - 1; });
-            setTotalSeconds(s => s + 1);
-        }, 1000);
-        
-        // Modulate Breath Sound (Pad Swell)
-        if (gainRef.current && audioCtxRef.current) {
-            const now = audioCtxRef.current.currentTime;
-            
-            if (phase === 'Inhale') {
-                // Swell Up
-                gainRef.current.gain.cancelScheduledValues(now);
-                gainRef.current.gain.linearRampToValueAtTime(0.4, now + 4);
-            } else if (phase === 'Hold') {
-                // Sustain
-                gainRef.current.gain.setTargetAtTime(0.35, now, 0.5);
-            } else if (phase === 'Exhale') {
-                // Fade Down
-                gainRef.current.gain.cancelScheduledValues(now);
-                gainRef.current.gain.linearRampToValueAtTime(0.05, now + 4);
-            }
-        }
-
-        return () => clearInterval(timer);
-    }, [phase]);
-
-    useEffect(() => {
-        return () => {
-            nodesRef.current.forEach(node => { try{ (node as any).stop() }catch(e){} node.disconnect() });
-            if (audioCtxRef.current) audioCtxRef.current.close();
-        }
-    }, []);
-
-    const handleFinish = () => { Database.recordBreathSession(userId, totalSeconds); Database.setBreathingCooldown(Date.now() + 5 * 60 * 1000); onClose(); };
-
-    return (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
-             <button onClick={handleFinish} className="absolute top-6 right-6 text-white/50 hover:text-white p-2 rounded-full hover:bg-white/10"><X className="w-8 h-8"/></button>
-             <div className="flex flex-col items-center">
-                 <div className={`relative w-64 h-64 rounded-full flex items-center justify-center transition-all duration-[4000ms] ease-in-out border-4 border-white/20 mb-8 ${phase === 'Inhale' ? 'scale-125 bg-blue-500/30 shadow-[0_0_50px_rgba(59,130,246,0.5)]' : phase === 'Exhale' ? 'scale-75 bg-blue-900/30' : 'scale-100 bg-blue-400/30'}`}>
-                     <div className="text-center relative z-10"><div className="text-3xl font-black text-white mb-2">{phase}</div><div className="text-xl font-mono text-blue-200">{secondsLeft}s</div></div>
-                     <div className="absolute inset-0 rounded-full animate-spin-slow border-t-2 border-white/20"></div>
-                 </div>
-                 <button onClick={toggleSound} className={`mb-6 px-4 py-2 font-bold rounded-full text-xs animate-pulse transition-colors ${isPlaying ? 'bg-white text-black' : 'bg-yellow-500 text-black'}`}>{isPlaying ? 'Mute Guide' : 'Play Guide Sound'}</button>
-                 <p className="text-gray-400 text-sm font-medium tracking-wider uppercase">Session Time: {Math.floor(totalSeconds / 60)}:{String(totalSeconds % 60).padStart(2, '0')}</p>
-                 <button onClick={handleFinish} className="mt-8 px-8 py-3 bg-white/10 hover:bg-white/20 rounded-full text-white font-bold transition-colors">End Session</button>
-             </div>
-        </div>
-    );
-}
+    const handleTap = (e: React.MouseEvent | React.TouchEvent) => { if (!canvasRef.current) return; const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX; const rect = canvasRef.current.getBoundingClientRect(); if (clientX - rect.left < rect.width / 2) playerRef.current.vx = -3; else playerRef.current.vx = 3; }; const handleRelease = () => { playerRef.current.vx = 0; };
+    
+    return (<div className="relative h-full w-full bg-sky-300 overflow-hidden rounded-2xl border-4 border-white dark:border-gray-700 shadow-inner cursor-pointer" onMouseDown={handleTap} onMouseUp={handleRelease} onTouchStart={handleTap} onTouchEnd={handleRelease}><div className="absolute top-2 right-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full font-black text-white text-base md:text-lg z-10">{score}m</div><canvas ref={canvasRef} className="w-full h-full block" />{(!gameStarted || gameOver) && (<div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20 animate-in fade-in"><div className="text-center">{gameOver && <p className="text-white font-black text-2xl mb-4 drop-shadow-md">Fall!</p>}<button onClick={initGame} className="bg-yellow-400 text-yellow-900 px-6 py-2 md:px-8 md:py-3 rounded-full font-black text-sm md:text-lg shadow-xl hover:scale-110 transition-transform flex items-center gap-2"><Play className="w-4 h-4 md:w-5 md:h-5 fill-current" /> {gameOver ? 'Try Again' : 'Play'}</button></div></div>)}</div>);
+};
 
 // --- MOOD TRACKER ---
 const MoodTracker: React.FC<{ onMoodSelect: (mood: 'confetti' | 'rain' | null) => void }> = ({ onMoodSelect }) => {
@@ -473,6 +514,79 @@ const MoodTracker: React.FC<{ onMoodSelect: (mood: 'confetti' | 'rain' | null) =
                 <button onClick={() => onMoodSelect('rain')} className="flex-1 py-3 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-300 rounded-xl flex items-center justify-center transition-colors group"><CloudRain className="w-5 h-5 md:w-6 md:h-6 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" /></button>
             </div>
         </div>
+    );
+};
+
+// --- INLINE JOURNAL SECTION ---
+const JournalSection: React.FC<{ user: User }> = ({ user }) => {
+    const [content, setContent] = useState(''); 
+    const [saved, setSaved] = useState(false); 
+    const [history, setHistory] = useState<JournalEntry[]>([]);
+    
+    const refreshHistory = () => { setHistory(Database.getJournals(user.id)); };
+    useEffect(() => { refreshHistory(); }, [user.id]);
+
+    const handleSave = () => { 
+        if (!content.trim()) return; 
+        const entry: JournalEntry = { id: `j_${Date.now()}`, userId: user.id, date: new Date().toISOString(), content }; 
+        Database.saveJournal(entry); 
+        refreshHistory(); 
+        setContent(''); 
+        setSaved(true); 
+        setTimeout(() => setSaved(false), 2000); 
+    };
+
+    return (
+        <CollapsibleSection title="Live Journal" icon={BookOpen}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 h-[500px]">
+                {/* Editor Side */}
+                <div className="flex flex-col h-full bg-[#fdfbf7] dark:bg-[#1a1a1a] rounded-2xl p-6 border border-yellow-200 dark:border-gray-800 shadow-inner relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-yellow-400 opacity-50"></div>
+                    <div className="flex items-center justify-between mb-4">
+                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Entry: {new Date().toLocaleDateString()}</span>
+                        <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                    </div>
+                    <textarea 
+                        className="flex-1 w-full bg-transparent dark:text-gray-200 p-0 border-none focus:ring-0 outline-none resize-none text-lg leading-relaxed placeholder:text-gray-300 dark:placeholder:text-gray-700 font-medium" 
+                        placeholder="What's on your mind today? Start writing..." 
+                        value={content} 
+                        onChange={e => setContent(e.target.value)}
+                        style={{ backgroundImage: 'linear-gradient(transparent 95%, #e5e7eb 95%)', backgroundSize: '100% 2rem', lineHeight: '2rem' }}
+                    ></textarea>
+                    <div className="mt-4 flex justify-end">
+                        <button onClick={handleSave} className={`bg-black dark:bg-white text-white dark:text-black px-6 py-2 rounded-full font-bold text-sm hover:scale-105 transition-all shadow-lg flex items-center gap-2 ${!content.trim() ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={!content.trim()}>
+                            {saved ? <CheckCircle className="w-4 h-4 text-green-500"/> : <Save className="w-4 h-4"/>}
+                            {saved ? "Saved" : "Save Note"}
+                        </button>
+                    </div>
+                </div>
+
+                {/* History Side */}
+                <div className="flex flex-col h-full bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+                    <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex justify-between items-center">
+                        <h3 className="font-bold text-gray-500 text-xs uppercase tracking-wider flex items-center gap-2"><Clock className="w-3 h-3"/> Timeline</h3>
+                        <span className="text-[10px] font-bold bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full text-gray-600 dark:text-gray-300">{history.length} Entries</span>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-yellow-200 dark:scrollbar-thumb-gray-700">
+                        {history.length === 0 && (
+                            <div className="h-full flex flex-col items-center justify-center text-gray-400 opacity-50">
+                                <BookOpen className="w-12 h-12 mb-2 stroke-1"/>
+                                <p className="text-sm">Your story begins here.</p>
+                            </div>
+                        )}
+                        {history.map(entry => (
+                            <div key={entry.id} className="group p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all cursor-default shadow-sm hover:shadow-md">
+                                <div className="flex justify-between items-start mb-2">
+                                    <span className="text-[10px] font-black text-yellow-600 dark:text-yellow-500 uppercase tracking-wide bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-md">{new Date(entry.date).toLocaleDateString()}</span>
+                                    <span className="text-[10px] text-gray-400 font-mono">{new Date(entry.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                </div>
+                                <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3 leading-relaxed font-medium group-hover:text-black dark:group-hover:text-white transition-colors">{entry.content}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </CollapsibleSection>
     );
 };
 
@@ -489,15 +603,63 @@ const PaymentModal: React.FC<{ onClose: () => void; onSuccess: (amount: number, 
 const ProfileModal: React.FC<{ user: User; onClose: () => void; onUpdate: () => void }> = ({ user, onClose, onUpdate }) => {
     const [url, setUrl] = useState(user.avatar || ''); const [name, setName] = useState(user.name);
     const save = () => { if (url) { const u = Database.getUser(); if (u) { u.avatar = url; u.name = name; Database.updateUser(u); onUpdate(); onClose(); } } };
-    return (<div className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4"><div className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-sm text-center border border-gray-100 dark:border-gray-800"><h3 className="font-bold text-lg mb-4 dark:text-white">Update Profile</h3><div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-4 border-yellow-400"><AvatarImage src={url} alt="Preview" className="w-full h-full object-cover" /></div><input className="w-full p-3 border rounded-xl mb-4 dark:bg-gray-800 dark:border-gray-700 dark:text-white" placeholder="Display Name" value={name} onChange={e => setName(e.target.value)} /><input className="w-full p-3 border rounded-xl mb-4 dark:bg-gray-800 dark:border-gray-700 dark:text-white" placeholder="Avatar URL..." value={url} onChange={e => setUrl(e.target.value)} /><div className="flex gap-2"><button onClick={onClose} className="flex-1 py-2 border rounded font-bold dark:border-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800">Cancel</button><button onClick={save} className="flex-1 py-2 bg-black dark:bg-white dark:text-black text-white rounded font-bold hover:opacity-80">Save</button></div></div></div>);
+    return (<div className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4"><div className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-sm text-center border border-gray-100 dark:border-gray-800"><h3 className="font-bold text-lg mb-4 dark:text-white">Update Profile</h3><div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-4 border-yellow-400"><AvatarImage src={url} alt="Preview" className="w-full h-full object-cover" isUser={true} /></div><input className="w-full p-3 border rounded-xl mb-4 dark:bg-gray-800 dark:border-gray-700 dark:text-white" placeholder="Display Name" value={name} onChange={e => setName(e.target.value)} /><input className="w-full p-3 border rounded-xl mb-4 dark:bg-gray-800 dark:border-gray-700 dark:text-white" placeholder="Avatar URL..." value={url} onChange={e => setUrl(e.target.value)} /><div className="flex gap-2"><button onClick={onClose} className="flex-1 py-2 border rounded font-bold dark:border-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800">Cancel</button><button onClick={save} className="flex-1 py-2 bg-black dark:bg-white dark:text-black text-white rounded font-bold hover:opacity-80">Save</button></div></div></div>);
 };
 
-// --- LIVE JOURNAL MODAL (Z-9999) ---
-const JournalModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-    const [content, setContent] = useState(''); const [saved, setSaved] = useState(false); const [history, setHistory] = useState<JournalEntry[]>([]);
-    useEffect(() => { const u = Database.getUser(); if (u) setHistory(Database.getJournals(u.id)); }, []);
-    const handleSave = () => { if (!content.trim()) return; const u = Database.getUser(); if (u) { const entry: JournalEntry = { id: `j_${Date.now()}`, userId: u.id, date: new Date().toISOString(), content }; Database.saveJournal(entry); setHistory([entry, ...history]); setContent(''); setSaved(true); setTimeout(() => setSaved(false), 2000); } };
-    return (<div className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4"><div className="bg-[#FFFBEB] dark:bg-gray-900 rounded-3xl w-full max-w-3xl h-[700px] flex flex-col shadow-2xl relative border-4 border-white dark:border-gray-800 overflow-hidden"><div className="bg-yellow-400 dark:bg-yellow-600 p-4 md:p-6 flex justify-between items-center"><h2 className="text-xl md:text-2xl font-black text-black flex items-center gap-2"><BookOpen className="w-5 h-5 md:w-6 md:h-6"/> Live Journal</h2><button onClick={onClose} className="p-2 hover:bg-black/10 rounded-full"><X className="w-6 h-6 text-black"/></button></div><div className="flex-1 flex flex-col md:flex-row overflow-hidden"><div className="flex-1 p-4 md:p-6 flex flex-col border-r border-yellow-200 dark:border-gray-800"><textarea className="flex-1 w-full bg-white dark:bg-gray-800 dark:text-white p-4 rounded-xl border border-yellow-200 dark:border-gray-700 focus:border-yellow-500 outline-none resize-none shadow-inner text-sm md:text-base leading-relaxed" placeholder="Write your thoughts freely. Everything is encrypted locally..." value={content} onChange={e => setContent(e.target.value)}></textarea><button onClick={handleSave} className="mt-4 w-full bg-black dark:bg-white dark:text-black text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">{saved ? <CheckCircle className="w-5 h-5 text-green-500"/> : <Save className="w-5 h-5"/>}{saved ? "Entry Secured" : "Save Entry"}</button></div><div className="w-full md:w-80 bg-white dark:bg-gray-800 p-6 overflow-y-auto hidden md:block border-l border-gray-100 dark:border-gray-700"><h3 className="font-bold text-gray-400 text-xs uppercase mb-4 tracking-wider">Previous Entries</h3><div className="space-y-4">{history.length === 0 && <p className="text-gray-400 text-sm">No entries yet.</p>}{history.map(entry => (<div key={entry.id} className="p-4 bg-yellow-50 dark:bg-gray-700/50 rounded-xl border border-yellow-100 dark:border-gray-600 hover:border-yellow-300 transition-colors cursor-default"><p className="text-xs text-gray-400 font-bold mb-2 uppercase tracking-wide">{new Date(entry.date).toLocaleDateString()} • {new Date(entry.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p><p className="text-sm text-gray-700 dark:text-gray-200 line-clamp-4 leading-relaxed font-medium">{entry.content}</p></div>))}</div></div></div></div></div>);
+// --- BREATHING EXERCISE ---
+const BreathingExercise: React.FC<{ userId: string; onClose: () => void }> = ({ userId, onClose }) => {
+    const [phase, setPhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
+    const [timeLeft, setTimeLeft] = useState(4);
+    const [totalTime, setTotalTime] = useState(0);
+    const [isActive, setIsActive] = useState(true);
+
+    useEffect(() => {
+        if (!isActive) return;
+        const interval = setInterval(() => {
+            setTimeLeft((prev) => {
+                if (prev <= 1) {
+                    if (phase === 'inhale') { setPhase('hold'); return 7; }
+                    if (phase === 'hold') { setPhase('exhale'); return 8; }
+                    if (phase === 'exhale') { setPhase('inhale'); return 4; }
+                }
+                return prev - 1;
+            });
+            setTotalTime(t => t + 1);
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [phase, isActive]);
+
+    const handleClose = () => {
+        setIsActive(false);
+        if (totalTime > 10) {
+            Database.recordBreathSession(userId, totalTime);
+        }
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in">
+            <div className="relative max-w-sm w-full bg-gray-900 rounded-3xl p-8 text-center border border-gray-800 shadow-2xl">
+                <button onClick={handleClose} className="absolute top-4 right-4 text-gray-500 hover:text-white"><X className="w-6 h-6" /></button>
+                <h3 className="text-2xl font-black text-white mb-8">4-7-8 Breathing</h3>
+                
+                <div className="relative w-64 h-64 mx-auto mb-8 flex items-center justify-center">
+                    <div className={`absolute inset-0 rounded-full border-4 border-blue-500/30 transition-all duration-[4000ms] ease-in-out ${phase === 'inhale' ? 'scale-100' : phase === 'hold' ? 'scale-110' : 'scale-90'}`}></div>
+                    <div className={`absolute inset-0 bg-blue-500/20 rounded-full blur-xl transition-all duration-[4000ms] ease-in-out ${phase === 'inhale' ? 'scale-110 opacity-100' : phase === 'hold' ? 'scale-110 opacity-80' : 'scale-90 opacity-40'}`}></div>
+                    
+                    <div className="relative z-10">
+                        <p className={`text-sm font-bold uppercase tracking-widest mb-2 ${phase === 'inhale' ? 'text-blue-400' : phase === 'hold' ? 'text-purple-400' : 'text-green-400'}`}>
+                            {phase === 'inhale' ? 'Inhale' : phase === 'hold' ? 'Hold' : 'Exhale'}
+                        </p>
+                        <p className="text-6xl font-black text-white font-mono">{timeLeft}</p>
+                    </div>
+                </div>
+
+                <p className="text-gray-400 text-sm mb-6">Inhale for 4s, hold for 7s, exhale for 8s.</p>
+                <button onClick={handleClose} className="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-gray-200 transition-colors">End Session</button>
+            </div>
+        </div>
+    );
 };
 
 // ==========================================
@@ -520,9 +682,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   const [paymentError, setPaymentError] = useState<string | undefined>(undefined);
   const [showBreathing, setShowBreathing] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [showJournal, setShowJournal] = useState(false);
   const [showGrounding, setShowGrounding] = useState(false);
   const [mood, setMood] = useState<'confetti' | 'rain' | null>(null);
+  
+  // Settings State
+  const [emailNotifications, setEmailNotifications] = useState(user.emailPreferences?.updates ?? true);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [editName, setEditName] = useState(user.name);
+  const [editEmail, setEditEmail] = useState(user.email);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   // Tech Check & Connection State
   const [showTechCheck, setShowTechCheck] = useState(false);
@@ -563,8 +731,23 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
           const prog = Database.getWeeklyProgress(u.id);
           setWeeklyGoal(prog.current);
           setWeeklyMessage(prog.message);
+          setEditName(u.name);
+          setEditEmail(u.email);
+          setEmailNotifications(u.emailPreferences?.updates ?? true);
       }
       setCompanions(Database.getCompanions());
+  };
+
+  const toggleDarkMode = () => {
+      if (darkMode) {
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('peutic_theme', 'light');
+          setDarkMode(false);
+      } else {
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('peutic_theme', 'dark');
+          setDarkMode(true);
+      }
   };
 
   const handleMoodSelect = (m: 'confetti' | 'rain' | null) => {
@@ -595,6 +778,26 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
       }
   };
 
+  const saveProfileChanges = () => {
+      setIsSavingProfile(true);
+      setTimeout(() => {
+          const updatedUser = { 
+              ...dashboardUser, 
+              name: editName, 
+              email: editEmail,
+              emailPreferences: { ...dashboardUser.emailPreferences, updates: emailNotifications } 
+          };
+          Database.updateUser(updatedUser);
+          setDashboardUser(updatedUser);
+          setIsSavingProfile(false);
+      }, 500);
+  };
+
+  const handleDeleteAccount = () => {
+      Database.deleteUser(user.id);
+      onLogout();
+  };
+
   return (
     <div className={`min-h-screen transition-colors duration-500 font-sans ${darkMode ? 'dark bg-[#0A0A0A] text-white' : 'bg-[#FFFBEB] text-black'}`}>
       
@@ -611,9 +814,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
               <span className="font-black tracking-tight text-lg">Peutic</span>
           </div>
           <div className="flex items-center gap-3">
+              <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+                  {darkMode ? <Sun className="w-4 h-4 text-yellow-400" /> : <Moon className="w-4 h-4 text-gray-600" />}
+              </button>
+              <button onClick={() => setShowGrounding(true)} className="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors animate-pulse" title="Panic Relief">
+                  <LifeBuoy className="w-4 h-4" />
+              </button>
               <button onClick={() => setShowPayment(true)} className="bg-black dark:bg-white text-white dark:text-black px-3 py-1.5 rounded-full text-xs font-bold shadow-md">{balance}m</button>
               <button onClick={() => setShowProfile(true)} className="w-8 h-8 rounded-full overflow-hidden border border-gray-300 dark:border-gray-700">
-                  <AvatarImage src={dashboardUser.avatar || ''} alt="User" className="w-full h-full object-cover" />
+                  <AvatarImage src={dashboardUser.avatar || ''} alt="User" className="w-full h-full object-cover" isUser={true} />
               </button>
           </div>
       </div>
@@ -660,11 +869,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                   
                   {/* --- HEADER SECTION --- */}
                   <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-                      <div>
+                      <div className="flex-1">
                           <p className="text-gray-500 dark:text-gray-400 font-bold text-xs uppercase tracking-widest mb-1">{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-                          <h1 className="text-3xl md:text-5xl font-black tracking-tight dark:text-white">
-                              {activeTab === 'hub' ? `Hello, ${user.name.split(' ')[0]}.` : activeTab === 'history' ? 'Your Journey' : 'Settings'}
-                          </h1>
+                          <div className="flex flex-col md:flex-row md:items-center gap-4 mb-2">
+                              <h1 className="text-3xl md:text-5xl font-black tracking-tight dark:text-white">
+                                  {activeTab === 'hub' ? `Hello, ${user.name.split(' ')[0]}.` : activeTab === 'history' ? 'Your Journey' : 'Settings'}
+                              </h1>
+                              {activeTab === 'hub' && (
+                                <button onClick={() => setShowGrounding(true)} className="hidden md:flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 px-4 py-2 rounded-full font-bold text-sm transition-all hover:scale-105 animate-pulse">
+                                    <LifeBuoy className="w-4 h-4" /> Panic Relief
+                                </button>
+                              )}
+                          </div>
                           {activeTab === 'hub' && dailyInsight && (
                               <p className="text-gray-600 dark:text-gray-400 mt-2 max-w-lg text-sm md:text-base font-medium leading-relaxed border-l-4 border-yellow-400 pl-4 italic">
                                   "{dailyInsight}"
@@ -673,6 +889,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                       </div>
 
                       <div className="hidden md:flex items-center gap-4">
+                          <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+                              {darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-600" />}
+                          </button>
                           <button 
                               onClick={() => setShowPayment(true)}
                               className={`px-6 py-3 rounded-2xl font-black shadow-lg transition-transform hover:scale-105 flex items-center gap-2 ${balance < 10 ? 'bg-red-500 text-white animate-pulse' : 'bg-black dark:bg-white text-white dark:text-black'}`}
@@ -682,7 +901,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                              <Plus className="w-4 h-4 ml-1 opacity-50" />
                           </button>
                           <button onClick={() => setShowProfile(true)} className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-yellow-400 shadow-xl hover:rotate-3 transition-transform">
-                              <AvatarImage src={dashboardUser.avatar || ''} alt={dashboardUser.name} className="w-full h-full object-cover" />
+                              <AvatarImage src={dashboardUser.avatar || ''} alt={dashboardUser.name} className="w-full h-full object-cover" isUser={true} />
                           </button>
                       </div>
                   </header>
@@ -695,7 +914,25 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                           {/* Top Row: Weekly Progress & Mood */}
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                               <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm col-span-1 md:col-span-2 relative overflow-hidden group">
-                                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy className="w-24 h-24 text-yellow-500" /></div>
+                                  {weeklyGoal >= weeklyTarget ? (
+                                      <div className="absolute top-0 right-0 p-4 z-20">
+                                          <div className="relative flex items-center justify-center">
+                                              {/* Rotating Ring */}
+                                              <div className="absolute w-24 h-24 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+                                              {/* Outer Glow Ring */}
+                                              <div className="absolute w-20 h-20 bg-blue-500/30 rounded-full blur-xl animate-pulse"></div>
+                                              {/* Shockwave */}
+                                              <div className="absolute w-full h-full bg-blue-400/10 rounded-full animate-ping"></div>
+                                              {/* Core Glow */}
+                                              <div className="absolute w-12 h-12 bg-blue-400/50 rounded-full blur-lg animate-pulse"></div>
+                                              {/* Icon */}
+                                              <Flame className="w-14 h-14 text-blue-500 fill-blue-500 drop-shadow-[0_0_20px_rgba(59,130,246,1)] animate-bounce relative z-10" />
+                                          </div>
+                                      </div>
+                                  ) : (
+                                      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy className="w-24 h-24 text-yellow-500" /></div>
+                                  )}
+                                  
                                   <div className="relative z-10">
                                       <h3 className="font-bold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3>
                                       <div className="flex items-end gap-2 mb-4">
@@ -703,47 +940,40 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                           <span className="text-gray-400 text-sm font-bold mb-1">/ {weeklyTarget} activities</span>
                                       </div>
                                       <div className="w-full h-3 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-3">
-                                          <div className="h-full bg-yellow-400 rounded-full transition-all duration-1000 ease-out" style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}></div>
+                                          <div className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= weeklyTarget ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-pulse' : 'bg-yellow-400'}`} style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}></div>
                                       </div>
-                                      <p className="text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyMessage}</p>
+                                      <p className="text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}</p>
                                   </div>
                               </div>
                               <MoodTracker onMoodSelect={handleMoodSelect} />
                           </div>
 
-                          {/* Tools Grid */}
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                              <button onClick={() => setShowBreathing(true)} className="p-4 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-2xl border border-blue-100 dark:border-blue-900/50 transition-all text-left group">
-                                  <Wind className="w-6 h-6 text-blue-500 mb-3 group-hover:scale-110 transition-transform" />
-                                  <p className="font-bold text-sm dark:text-blue-100">Breathe</p>
-                              </button>
-                              <button onClick={() => setShowGrounding(true)} className="p-4 bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/40 rounded-2xl border border-teal-100 dark:border-teal-900/50 transition-all text-left group">
-                                  <Anchor className="w-6 h-6 text-teal-500 mb-3 group-hover:scale-110 transition-transform" />
-                                  <p className="font-bold text-sm dark:text-teal-100">Grounding</p>
-                              </button>
-                              <button onClick={() => setShowJournal(true)} className="p-4 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 rounded-2xl border border-yellow-100 dark:border-yellow-900/50 transition-all text-left group">
-                                  <BookOpen className="w-6 h-6 text-yellow-600 mb-3 group-hover:scale-110 transition-transform" />
-                                  <p className="font-bold text-sm dark:text-yellow-100">Journal</p>
-                              </button>
-                              <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-2xl border border-purple-100 dark:border-purple-900/50 text-left relative overflow-hidden">
-                                  <Gamepad2 className="w-6 h-6 text-purple-500 mb-3" />
-                                  <p className="font-bold text-sm dark:text-purple-100">Mini Games</p>
-                                  <span className="absolute top-2 right-2 text-[8px] font-black bg-purple-200 dark:bg-purple-800 text-purple-800 dark:text-white px-1.5 py-0.5 rounded">BETA</span>
-                              </div>
-                          </div>
+                          {/* Journal Section (Replaces old grid) */}
+                          <JournalSection user={user} />
 
                           {/* Wisdom Generator */}
                           <WisdomGenerator userId={user.id} />
 
-                          {/* Mini Games Section */}
-                          <div className="grid md:grid-cols-2 gap-6">
-                              <CollapsibleSection title="Mindful Match" icon={Gamepad2}>
-                                  <div className="h-64 md:h-80 w-full"><MindfulMatchGame /></div>
-                              </CollapsibleSection>
-                              <CollapsibleSection title="Cloud Hop" icon={Cloud}>
-                                  <div className="h-64 md:h-80 w-full"><CloudHopGame /></div>
-                              </CollapsibleSection>
-                          </div>
+                          {/* Consolidated Mindful Arcade - Stacked on Mobile, Side-by-Side on Desktop */}
+                          <CollapsibleSection title="Mindful Arcade" icon={Gamepad2}>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                  {/* Mindful Match - Height adjusted for mobile/desktop using aspect ratios and min-height to avoid squishing */}
+                                  <div className="relative rounded-2xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-inner flex flex-col bg-sky-300/10 min-h-[400px] aspect-square md:aspect-video">
+                                       <div className="absolute top-2 left-0 right-0 text-center z-10 pointer-events-none">
+                                           <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400 bg-white/80 dark:bg-black/80 px-2 py-1 rounded-full">Mindful Match</span>
+                                       </div>
+                                       <MindfulMatchGame />
+                                  </div>
+                                  
+                                  {/* Cloud Hop - Height adjusted for mobile/desktop using aspect ratios and min-height */}
+                                  <div className="relative rounded-2xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-inner flex flex-col min-h-[400px] aspect-square md:aspect-video">
+                                       <div className="absolute top-2 left-0 right-0 text-center z-10 pointer-events-none">
+                                           <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400 bg-white/80 dark:bg-black/80 px-2 py-1 rounded-full">Cloud Hop</span>
+                                       </div>
+                                       <CloudHopGame />
+                                  </div>
+                              </div>
+                          </CollapsibleSection>
 
                           {/* COMPANION GRID */}
                           <div>
@@ -837,23 +1067,142 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                   )}
 
                   {activeTab === 'settings' && (
-                      <div className="grid md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-right-5 duration-500">
-                          <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl border border-yellow-100 dark:border-gray-800 space-y-6">
-                              <h3 className="font-bold text-lg dark:text-white mb-4">Preferences</h3>
-                              <div className="flex items-center justify-between">
-                                  <span className="text-gray-600 dark:text-gray-400 font-medium">Dark Mode</span>
-                                  <button onClick={() => { setDarkMode(!darkMode); if(!darkMode) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); localStorage.setItem('peutic_theme', !darkMode ? 'dark' : 'light'); }} className={`w-12 h-6 rounded-full relative transition-colors ${darkMode ? 'bg-yellow-500' : 'bg-gray-300'}`}>
-                                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${darkMode ? 'left-7' : 'left-1'}`}></div>
-                                  </button>
+                      <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-right-5 duration-500">
+                          
+                          {/* Profile Card */}
+                          <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
+                              <div className="p-6 md:p-8 border-b border-yellow-100 dark:border-gray-800">
+                                  <h3 className="font-black text-xl md:text-2xl dark:text-white mb-2">Profile & Identity</h3>
+                                  <p className="text-gray-500 text-sm">Manage your personal information.</p>
                               </div>
-                              <div className="flex items-center justify-between">
-                                  <span className="text-gray-600 dark:text-gray-400 font-medium">Email Notifications</span>
-                                  <button className="w-12 h-6 rounded-full relative bg-yellow-500"><div className="absolute top-1 right-1 w-4 h-4 bg-white rounded-full shadow-sm"></div></button>
-                              </div>
-                              <div className="pt-6 border-t border-gray-100 dark:border-gray-800">
-                                  <button className="text-red-500 font-bold text-sm hover:text-red-600">Delete Account Data</button>
+                              <div className="p-6 md:p-8 space-y-6">
+                                  <div className="flex items-center gap-6">
+                                      <div className="relative">
+                                          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-yellow-100 dark:border-gray-800">
+                                              <AvatarImage src={dashboardUser.avatar || ''} alt="Profile" className="w-full h-full object-cover" isUser={true} />
+                                          </div>
+                                          <button onClick={() => setShowProfile(true)} className="absolute bottom-0 right-0 p-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors shadow-lg">
+                                              <Edit2 className="w-3 h-3" />
+                                          </button>
+                                      </div>
+                                      <div className="flex-1 space-y-4">
+                                          <div>
+                                              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Display Name</label>
+                                              <div className="relative">
+                                                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                  <input 
+                                                      type="text" 
+                                                      value={editName}
+                                                      onChange={(e) => setEditName(e.target.value)}
+                                                      className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none transition-colors text-sm font-bold dark:text-white"
+                                                  />
+                                              </div>
+                                          </div>
+                                          <div>
+                                              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Email Address</label>
+                                              <div className="relative">
+                                                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                  <input 
+                                                      type="email" 
+                                                      value={editEmail}
+                                                      onChange={(e) => setEditEmail(e.target.value)}
+                                                      className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none transition-colors text-sm font-bold dark:text-white"
+                                                  />
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </div>
+                                  <div className="flex justify-end pt-4">
+                                      <button 
+                                          onClick={saveProfileChanges}
+                                          disabled={isSavingProfile}
+                                          className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-bold text-sm hover:opacity-80 transition-opacity flex items-center gap-2"
+                                      >
+                                          {isSavingProfile ? <RefreshCw className="w-4 h-4 animate-spin"/> : <Save className="w-4 h-4"/>}
+                                          Save Changes
+                                      </button>
+                                  </div>
                               </div>
                           </div>
+
+                          {/* Preferences Card */}
+                          <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
+                              <div className="p-6 md:p-8 border-b border-yellow-100 dark:border-gray-800">
+                                  <h3 className="font-black text-xl md:text-2xl dark:text-white mb-2">Preferences</h3>
+                                  <p className="text-gray-500 text-sm">Customize your sanctuary experience.</p>
+                              </div>
+                              <div className="p-6 md:p-8 space-y-6">
+                                  <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3">
+                                          <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Moon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></div>
+                                          <div>
+                                              <p className="font-bold text-gray-900 dark:text-white text-sm">Dark Mode</p>
+                                              <p className="text-xs text-gray-500">Reduce eye strain.</p>
+                                          </div>
+                                      </div>
+                                      <button 
+                                          onClick={toggleDarkMode}
+                                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${darkMode ? 'bg-yellow-500' : 'bg-gray-200'}`}
+                                      >
+                                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${darkMode ? 'translate-x-6' : 'translate-x-1'}`} />
+                                      </button>
+                                  </div>
+
+                                  <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3">
+                                          <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" /></div>
+                                          <div>
+                                              <p className="font-bold text-gray-900 dark:text-white text-sm">Email Notifications</p>
+                                              <p className="text-xs text-gray-500">Weekly insights and receipts.</p>
+                                          </div>
+                                      </div>
+                                      <button 
+                                          onClick={() => {
+                                              const newVal = !emailNotifications;
+                                              setEmailNotifications(newVal);
+                                              // Auto-save this preference immediately
+                                              const updated = { ...dashboardUser, emailPreferences: { ...dashboardUser.emailPreferences, updates: newVal } };
+                                              Database.updateUser(updated);
+                                          }}
+                                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${emailNotifications ? 'bg-yellow-500' : 'bg-gray-200'}`}
+                                      >
+                                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${emailNotifications ? 'translate-x-6' : 'translate-x-1'}`} />
+                                      </button>
+                                  </div>
+                              </div>
+                          </div>
+
+                          {/* Data & Privacy Card (Danger Zone) */}
+                          <div className="bg-red-50 dark:bg-red-950/20 rounded-3xl border border-red-100 dark:border-red-900 overflow-hidden shadow-sm">
+                              <div className="p-6 md:p-8 border-b border-red-100 dark:border-red-900">
+                                  <h3 className="font-black text-xl md:text-2xl text-red-900 dark:text-red-400 mb-2">Danger Zone</h3>
+                                  <p className="text-red-600/70 dark:text-red-400/60 text-sm">Permanent actions for your data.</p>
+                              </div>
+                              <div className="p-6 md:p-8">
+                                  {showDeleteConfirm ? (
+                                      <div className="bg-white dark:bg-black p-6 rounded-2xl border border-red-200 dark:border-red-900 text-center animate-in zoom-in duration-200">
+                                          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                                          <h4 className="font-bold text-lg mb-2 dark:text-white">Are you absolutely sure?</h4>
+                                          <p className="text-gray-500 text-sm mb-6">This action cannot be undone. This will permanently delete your account, journal entries, and remaining balance.</p>
+                                          <div className="flex gap-3 justify-center">
+                                              <button onClick={() => setShowDeleteConfirm(false)} className="px-6 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg font-bold text-sm hover:bg-gray-200">Cancel</button>
+                                              <button onClick={handleDeleteAccount} className="px-6 py-2 bg-red-600 text-white rounded-lg font-bold text-sm hover:bg-red-700 shadow-lg">Yes, Delete Everything</button>
+                                          </div>
+                                      </div>
+                                  ) : (
+                                      <div className="flex items-center justify-between">
+                                          <div>
+                                              <p className="font-bold text-red-900 dark:text-red-400 text-sm">Delete Account</p>
+                                              <p className="text-xs text-red-700/60 dark:text-red-400/50">Remove all data and access.</p>
+                                          </div>
+                                          <button onClick={() => setShowDeleteConfirm(true)} className="px-6 py-3 bg-white dark:bg-transparent border border-red-200 dark:border-red-800 text-red-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                              Delete Account
+                                          </button>
+                                      </div>
+                                  )}
+                              </div>
+                          </div>
+
                       </div>
                   )}
               </div>
@@ -864,7 +1213,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
       {showPayment && <PaymentModal onClose={() => { setShowPayment(false); setPaymentError(undefined); }} onSuccess={handlePaymentSuccess} initialError={paymentError} />}
       {showBreathing && <BreathingExercise userId={user.id} onClose={() => setShowBreathing(false)} />}
       {showProfile && <ProfileModal user={dashboardUser} onClose={() => setShowProfile(false)} onUpdate={refreshData} />}
-      {showJournal && <JournalModal onClose={() => setShowJournal(false)} />}
+      {/* JournalModal removed as it is now inline */}
       {showGrounding && <GroundingMode onClose={() => setShowGrounding(false)} />}
       
       {/* TECH CHECK OVERLAY */}

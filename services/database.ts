@@ -134,7 +134,7 @@ export class Database {
     return newUser;
   }
 
-  static updateUser(user: User) {
+  static async updateUser(user: User) {
     const users = this.getAllUsers();
     const index = users.findIndex(u => u.id === user.id);
     if (index !== -1) {
@@ -145,14 +145,44 @@ export class Database {
     if (currentUser && currentUser.id === user.id) {
         this.saveUserSession(user);
     }
+    
+    // Attempt remote sync if connected
+    if (!this.isOfflineMode) {
+        try {
+            await supabase.from('users').update({
+                name: user.name,
+                email: user.email,
+                balance: user.balance,
+                last_login_date: user.lastLoginDate,
+                email_preferences: user.emailPreferences
+            }).eq('id', user.id);
+        } catch (e) {
+            // Silent fail for offline/local mode
+        }
+    }
   }
 
-  static deleteUser(id: string) {
+  static async deleteUser(id: string) {
+      // 1. Local Cleanup
       const users = this.getAllUsers().filter(u => u.id !== id);
       localStorage.setItem(DB_KEYS.ALL_USERS, JSON.stringify(users));
       const currentUser = this.getUser();
       if(currentUser && currentUser.id === id) {
           this.clearSession();
+      }
+
+      // 2. Remote Cleanup (Supabase)
+      if (!this.isOfflineMode) {
+          try {
+              // Delete user data. Relying on CASCADE delete in SQL for related tables
+              await supabase.from('users').delete().eq('id', id);
+              
+              // If using Supabase Auth (not simulated), you would also call deleteUser() on the auth admin client
+              // But since this app uses simulated ID or potential custom auth:
+              console.log(`User ${id} deleted from remote DB`);
+          } catch (e) {
+              console.warn("Failed to delete from remote DB (likely local-only mode)", e);
+          }
       }
   }
 
