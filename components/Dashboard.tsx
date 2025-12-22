@@ -125,16 +125,19 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
                 lines.forEach(line => { ctx.fillText(line, 540, y); y += lineHeight; });
                 ctx.font = '500 30px Manrope, sans-serif'; ctx.fillStyle = '#666'; ctx.fillText('PEUTIC • DAILY WISDOM', 540, 980);
                 
-                const imageUrl = canvas.toDataURL('image/png');
+                // Use JPEG with 0.6 quality for efficient storage (Critical Fix)
+                const imageUrl = canvas.toDataURL('image/jpeg', 0.6);
                 const newEntry: ArtEntry = { id: `wisdom_${Date.now()}`, userId: userId, imageUrl: imageUrl, prompt: input, createdAt: new Date().toISOString(), title: "Wisdom Card" };
                 
                 await Database.saveArt(newEntry);
                 await refreshGallery();
                 
-                const link = document.createElement('a'); link.href = imageUrl; link.download = `peutic_wisdom_${Date.now()}.png`; document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                // Download original High Quality
+                const downloadUrl = canvas.toDataURL('image/png');
+                const link = document.createElement('a'); link.href = downloadUrl; link.download = `peutic_wisdom_${Date.now()}.png`; document.body.appendChild(link); link.click(); document.body.removeChild(link);
                 setInput('');
             }
-        } catch (e) { console.error(e); } finally { setLoading(false); }
+        } catch (e) { console.error("Generation Error:", e); } finally { setLoading(false); }
     };
 
     const handleDelete = async (e: React.MouseEvent, id: string) => { 
@@ -315,7 +318,6 @@ const SoundscapePlayer: React.FC = () => {
     );
 };
 
-// ... (Rest of file remains unchanged) ...
 // --- WEATHER ENGINE ---
 const WeatherEffect: React.FC<{ type: 'confetti' | 'rain' }> = ({ type }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);

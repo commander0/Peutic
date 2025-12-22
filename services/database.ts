@@ -462,19 +462,35 @@ export class Database {
 
   static saveArtLocal(entry: ArtEntry) {
       let art = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]');
+      // Filter out this user's art to manage their limit separately
       const userArt = art.filter((a: ArtEntry) => a.userId === entry.userId);
       const otherArt = art.filter((a: ArtEntry) => a.userId !== entry.userId);
       
-      userArt.unshift(entry);
+      userArt.unshift(entry); // Add new to start
       
+      // Enforce strict limit of 5
       while (userArt.length > 5) {
-          userArt.pop();
+          userArt.pop(); // Remove oldest
       }
       
-      const newArt = [...otherArt, ...userArt];
+      let newArt = [...otherArt, ...userArt];
       try { 
           localStorage.setItem(DB_KEYS.ART, JSON.stringify(newArt)); 
-      } catch (e) {}
+      } catch (e: any) {
+          // QUOTA HANDLING
+          if (e.name === 'QuotaExceededError' || e.code === 22) {
+              console.warn("Storage Quota Exceeded. Cleaning up old art...");
+              // Drastic measure: Keep only 1 item per user or empty otherArt
+              // Just try to keep the user's current 5 items
+              try {
+                  localStorage.setItem(DB_KEYS.ART, JSON.stringify(userArt));
+              } catch (retryE) {
+                  // Still failing? Keep only 2 latest
+                  const emergency = userArt.slice(0, 2);
+                  localStorage.setItem(DB_KEYS.ART, JSON.stringify(emergency));
+              }
+          }
+      }
   }
 
   static async getUserArt(userId: string): Promise<ArtEntry[]> { 
