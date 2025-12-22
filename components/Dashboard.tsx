@@ -125,16 +125,13 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
                 lines.forEach(line => { ctx.fillText(line, 540, y); y += lineHeight; });
                 ctx.font = '500 30px Manrope, sans-serif'; ctx.fillStyle = '#666'; ctx.fillText('PEUTIC • DAILY WISDOM', 540, 980);
                 
-                // Use JPEG with 0.6 quality for efficient storage (Critical Fix)
-                const imageUrl = canvas.toDataURL('image/jpeg', 0.6);
+                const imageUrl = canvas.toDataURL('image/jpeg', 0.4);
                 const newEntry: ArtEntry = { id: `wisdom_${Date.now()}`, userId: userId, imageUrl: imageUrl, prompt: input, createdAt: new Date().toISOString(), title: "Wisdom Card" };
                 
                 await Database.saveArt(newEntry);
                 await refreshGallery();
                 
-                // Download original High Quality
-                const downloadUrl = canvas.toDataURL('image/png');
-                const link = document.createElement('a'); link.href = downloadUrl; link.download = `peutic_wisdom_${Date.now()}.png`; document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                // Auto-download option could be added here
                 setInput('');
             }
         } catch (e) { console.error("Generation Error:", e); } finally { setLoading(false); }
@@ -191,74 +188,40 @@ const SoundscapePlayer: React.FC = () => {
     
     const audioRef = useRef<HTMLAudioElement>(null);
 
-    // Reliable MP3 Sources (Mixkit Free Assets)
     const SOUND_URLS = {
         rain: 'https://assets.mixkit.co/active_storage/sfx/2496/2496-preview.mp3',
-        forest: 'https://assets.mixkit.co/active_storage/sfx/1483/1483-preview.mp3', // Wind
+        forest: 'https://assets.mixkit.co/active_storage/sfx/1483/1483-preview.mp3',
         ocean: 'https://assets.mixkit.co/active_storage/sfx/1194/1194-preview.mp3',
         fire: 'https://assets.mixkit.co/active_storage/sfx/1169/1169-preview.mp3'
     };
 
-    // Effect to handle Volume updates
     useEffect(() => {
         if (audioRef.current) {
             audioRef.current.volume = volume;
         }
     }, [volume]);
 
-    // Effect to handle Play/Pause state
     useEffect(() => {
         const audio = audioRef.current;
         if (!audio) return;
 
         if (playing) {
-            const playPromise = audio.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.warn("Autoplay prevented or load failed:", error);
-                });
-            }
+            audio.play().catch(console.warn);
         } else {
             audio.pause();
         }
     }, [playing]);
 
-    // Effect to handle Track changes
     useEffect(() => {
         const audio = audioRef.current;
         if (!audio) return;
-
-        // Force reload when track changes to ensure new source is picked up
         audio.load(); 
-        
-        if (playing) {
-            const playPromise = audio.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.warn("Playback interrupted during track change:", error);
-                });
-            }
-        }
+        if (playing) audio.play().catch(console.warn);
     }, [track]);
 
     return (
         <div className={`fixed bottom-6 right-6 z-[80] transition-all duration-500 ease-in-out bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-300 dark:border-yellow-600 shadow-2xl overflow-hidden ${minimized ? 'w-12 h-12 rounded-full' : 'w-72 rounded-3xl p-4'}`}>
-            
-            <audio 
-                ref={audioRef}
-                src={SOUND_URLS[track]}
-                loop
-                crossOrigin="anonymous" // Attempt to fix CORS if server allows, otherwise fallback handles it
-                onError={(e) => {
-                    const err = e.currentTarget.error;
-                    console.error("Audio Load Error:", err ? `Code: ${err.code}, Message: ${err.message}` : "Unknown error");
-                    setPlaying(false);
-                }}
-                onEnded={() => {
-                    if(playing && audioRef.current) audioRef.current.play();
-                }}
-            />
-
+            <audio ref={audioRef} src={SOUND_URLS[track]} loop crossOrigin="anonymous" onEnded={() => { if(playing && audioRef.current) audioRef.current.play(); }} />
             {minimized ? (
                 <button onClick={() => setMinimized(false)} className={`w-full h-full flex items-center justify-center text-black hover:scale-110 transition-transform ${playing ? 'bg-yellow-400 animate-pulse' : 'bg-yellow-500'}`}>
                     <Music className="w-5 h-5" />
@@ -413,7 +376,8 @@ const BreathingExercise: React.FC<{ userId: string; onClose: () => void }> = ({ 
             setIsPlaying(false);
         } else {
             // Updated: Ethereal "Choir Pad" Sound
-            const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+            const ctx = new AudioContextClass();
             audioCtxRef.current = ctx;
             
             const masterGain = ctx.createGain();
@@ -498,7 +462,6 @@ const BreathingExercise: React.FC<{ userId: string; onClose: () => void }> = ({ 
     );
 }
 
-// ... (Rest of file unchanged) ...
 // --- MOOD TRACKER ---
 const MoodTracker: React.FC<{ onMoodSelect: (mood: 'confetti' | 'rain' | null) => void }> = ({ onMoodSelect }) => {
     return (
@@ -519,7 +482,7 @@ const PaymentModal: React.FC<{ onClose: () => void; onSuccess: (amount: number, 
     const stripeRef = useRef<any>(null); const elementsRef = useRef<any>(null); const cardElementRef = useRef<any>(null); const mountNodeRef = useRef<HTMLDivElement>(null); const settings = Database.getSettings(); const pricePerMin = settings.pricePerMinute;
     useEffect(() => { if (!window.Stripe) { setError("Stripe failed to load. Please refresh."); return; } if (!stripeRef.current) { stripeRef.current = window.Stripe(STRIPE_PUBLISHABLE_KEY); elementsRef.current = stripeRef.current.elements(); const style = { base: { color: "#32325d", fontFamily: '"Manrope", sans-serif', fontSmoothing: "antialiased", fontSize: "16px", "::placeholder": { color: "#aab7c4" } } }; if (!cardElementRef.current) { cardElementRef.current = elementsRef.current.create("card", { style: style, hidePostalCode: true }); setTimeout(() => { if (mountNodeRef.current) cardElementRef.current.mount(mountNodeRef.current); }, 100); } } }, []);
     const handleSubmit = async (e: React.FormEvent) => { e.preventDefault(); setProcessing(true); setError(null); if (!amount || amount <= 0) { setError("Please enter a valid amount."); setProcessing(false); return; } if (!stripeRef.current || !cardElementRef.current) { setError("Stripe not initialized."); setProcessing(false); return; } try { const result = await stripeRef.current.createToken(cardElementRef.current); if (result.error) { setError(result.error.message); setProcessing(false); } else { setTimeout(() => { setProcessing(false); const minutesAdded = Math.floor(amount / pricePerMin); onSuccess(minutesAdded, amount); }, 1500); } } catch (err: any) { setError(err.message || "Payment failed."); setProcessing(false); } };
-    return (<div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4"><div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in duration-300 border border-gray-100 dark:border-gray-800"><div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800"><div className="flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-green-600" /><span className="font-bold text-gray-700 dark:text-white">Secure Checkout</span></div><button onClick={onClose} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition"><X className="w-5 h-5 dark:text-white" /></button></div><div className="p-8"><div className="mb-8 text-center"><p className="text-gray-500 dark:text-gray-400 text-sm mb-4 font-medium">Select Amount to Add</p>{!isCustom && <h2 className="text-5xl font-extrabold tracking-tight mb-6 dark:text-white">${amount.toFixed(2)}</h2>}<div className="flex justify-center gap-2 mb-6 flex-wrap">{[20, 50, 100, 250].map((val) => (<button key={val} type="button" onClick={() => { setAmount(val); setIsCustom(false); }} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${!isCustom && amount === val ? 'bg-black dark:bg-white dark:text-black text-white shadow-lg transform scale-105' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>${val}</button>))} <button type="button" onClick={() => { setIsCustom(true); setAmount(0); }} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${isCustom ? 'bg-black dark:bg-white dark:text-black text-white shadow-lg transform scale-105' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>Custom</button></div>{isCustom && (<div className="mb-6 animate-in fade-in zoom-in duration-300"><div className="relative max-w-[180px] mx-auto"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-lg">$</span><input type="number" min="1" step="1" value={amount === 0 ? '' : amount} onChange={(e) => setAmount(parseFloat(e.target.value) || 0)} className="w-full pl-8 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:border-peutic-yellow focus:ring-1 focus:ring-peutic-yellow outline-none text-2xl font-bold text-center" placeholder="0.00" autoFocus /></div></div>)}<p className="text-xs text-gray-400 mt-2">Adds approx. <span className="font-bold text-black dark:text-white">{Math.floor((amount || 0) / pricePerMin)} mins</span> of talk time.</p></div>{error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 text-sm rounded-lg flex items-center gap-2"><AlertTriangle className="w-4 h-4 flex-shrink-0" /><span>{error}</span></div>}<form onSubmit={handleSubmit} className="space-y-6"><div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700"><div ref={mountNodeRef} className="p-2" /></div><button type="submit" disabled={processing || !window.Stripe || (amount <= 0)} className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2 ${processing || (amount <= 0) ? 'bg-gray-800 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-peutic-yellow text-black hover:bg-yellow-400 hover:scale-[1.02]'}`}>{processing ? <span className="animate-pulse">Processing Securely...</span> : <><Lock className="w-5 h-5" /> Pay ${(amount || 0).toFixed(2)}</>}</button></form></div></div></div>);
+    return (<div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4"><div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in duration-300 border border-gray-100 dark:border-gray-800"><div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800"><div className="flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-green-600" /><span className="font-bold text-gray-700 dark:text-white">Secure Checkout</span></div><button onClick={onClose} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition"><X className="w-5 h-5 dark:text-white" /></button></div><div className="p-8"><div className="mb-8 text-center"><p className="text-gray-500 dark:text-gray-400 text-sm mb-4 font-medium">Select Amount to Add</p>{!isCustom && <h2 className="text-5xl font-extrabold tracking-tight mb-6 dark:text-white">${amount.toFixed(2)}</h2>}<div className="flex justify-center gap-2 mb-6 flex-wrap">{[20, 50, 100, 250].map((val) => (<button key={val} type="button" onClick={() => { setAmount(val); setIsCustom(false); }} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${!isCustom && amount === val ? 'bg-black dark:bg-white dark:text-black text-white shadow-lg transform scale-105' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>${val}</button>))} <button type="button" onClick={() => { setIsCustom(true); setAmount(0); }} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${isCustom ? 'bg-black dark:bg-white dark:text-black text-white shadow-lg transform scale-105' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>Custom</button></div>{isCustom && (<div className="mb-6 animate-in fade-in zoom-in duration-300"><div className="relative max-w-[180px] mx-auto"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-lg">$</span><input type="number" min="1" step="1" value={amount === 0 ? '' : amount} onChange={(e) => setAmount(parseFloat(e.target.value) || 0)} className="w-full pl-8 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none text-2xl font-bold text-center" placeholder="0.00" autoFocus /></div></div>)}<p className="text-xs text-gray-400 mt-2">Adds approx. <span className="font-bold text-black dark:text-white">{Math.floor((amount || 0) / pricePerMin)} mins</span> of talk time.</p></div>{error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 text-sm rounded-lg flex items-center gap-2"><AlertTriangle className="w-4 h-4 flex-shrink-0" /><span>{error}</span></div>}<form onSubmit={handleSubmit} className="space-y-6"><div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700"><div ref={mountNodeRef} className="p-2" /></div><button type="submit" disabled={processing || !window.Stripe || (amount <= 0)} className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2 ${processing || (amount <= 0) ? 'bg-gray-800 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-yellow-500 text-black hover:bg-yellow-400 hover:scale-[1.02]'}`}>{processing ? <span className="animate-pulse">Processing Securely...</span> : <><Lock className="w-5 h-5" /> Pay ${(amount || 0).toFixed(2)}</>}</button></form></div></div></div>);
 };
 
 // --- PROFILE MODAL (Z-9999) ---
@@ -558,472 +521,360 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   const [showBreathing, setShowBreathing] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showJournal, setShowJournal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [nameEditMode, setNameEditMode] = useState(false);
-  const [tempName, setTempName] = useState(user.name);
-  const [weather, setWeather] = useState<'confetti' | 'rain' | null>(null);
-  
-  // NEW: Tech Check & Grounding State
+  const [showGrounding, setShowGrounding] = useState(false);
+  const [mood, setMood] = useState<'confetti' | 'rain' | null>(null);
+
+  // Tech Check & Connection State
   const [showTechCheck, setShowTechCheck] = useState(false);
-  const [showGrounding, setShowGrounding] = useState(false); 
   const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
 
-  // Theme Init
+  // Initial Data Fetch
   useEffect(() => {
-      const savedTheme = localStorage.getItem('peutic_theme');
-      if (savedTheme === 'dark') {
-          setDarkMode(true);
-          document.documentElement.classList.add('dark');
-      } else {
-          setDarkMode(false);
-          document.documentElement.classList.remove('dark');
-      }
+    // Sync Theme
+    const savedTheme = localStorage.getItem('peutic_theme');
+    if (savedTheme === 'dark') {
+        setDarkMode(true);
+        document.documentElement.classList.add('dark');
+    }
+
+    refreshData();
+    
+    // Generate Insight
+    generateDailyInsight(user.name).then(setDailyInsight);
+
+    // Companions with slight delay for effect
+    setTimeout(() => {
+        setCompanions(Database.getCompanions());
+        setLoadingCompanions(false);
+    }, 500);
+
+    // Periodic Refresh
+    const interval = setInterval(refreshData, 5000);
+    return () => clearInterval(interval);
   }, []);
 
-  const toggleDarkMode = () => {
-      if (darkMode) {
-          document.documentElement.classList.remove('dark');
-          localStorage.setItem('peutic_theme', 'light');
-          setDarkMode(false);
-      } else {
-          document.documentElement.classList.add('dark');
-          localStorage.setItem('peutic_theme', 'dark');
-          setDarkMode(true);
+  const refreshData = () => {
+      const u = Database.getUser();
+      if (u) {
+          setDashboardUser(u);
+          setBalance(u.balance);
+          const txs = Database.getUserTransactions(u.id);
+          setTransactions(txs);
+          const prog = Database.getWeeklyProgress(u.id);
+          setWeeklyGoal(prog.current);
+          setWeeklyMessage(prog.message);
+      }
+      setCompanions(Database.getCompanions());
+  };
+
+  const handleMoodSelect = (m: 'confetti' | 'rain' | null) => {
+      setMood(m);
+      if (m) {
+          Database.saveMood(user.id, m);
+          if (m === 'confetti') {
+              // Confetti logic handled by Effect component
+          }
       }
   };
 
-  const refreshData = () => {
-    const dbUser = Database.getUser();
-    if (dbUser) { setBalance(dbUser.balance); setDashboardUser(dbUser); }
-    if (user && user.id) {
-        const txs = Database.getUserTransactions(user.id);
-        setTransactions(txs);
-        const progress = Database.getWeeklyProgress(user.id);
-        setWeeklyGoal(progress.current);
-        setWeeklyTarget(progress.target);
-        setWeeklyMessage(progress.message);
-    }
-    setCompanions(Database.getCompanions());
-  };
-  
-  useEffect(() => {
-      refreshData();
-      const interval = setInterval(() => refreshData(), 5000);
-      const timer = setTimeout(() => setLoadingCompanions(false), 1000);
-      const fetchInsight = async () => {
-        try {
-            if (user && user.name) {
-                const insight = await generateDailyInsight(user.name);
-                setDailyInsight(insight);
-            }
-        } catch (e) {
-            setDailyInsight("We are here for you.");
-        }
-      };
-      fetchInsight();
-      return () => { clearInterval(interval); clearTimeout(timer); };
-  }, [user.id, user.name]);
-
   const handlePaymentSuccess = (minutesAdded: number, cost: number) => {
-      Database.topUpWallet(minutesAdded, cost);
-      setBalance(prev => prev + minutesAdded);
+      Database.topUpWallet(minutesAdded, cost, user.id);
+      refreshData();
       setShowPayment(false);
-      setPaymentError(undefined);
-      setWeather('confetti');
-      setTimeout(() => setWeather(null), 5000); // Clear confetti after 5s
   };
 
-  const handleConnectRequest = (companion: Companion) => {
-      if (balance <= 0) { 
-          setPaymentError("Please add funds to connect."); 
-          setShowPayment(true);
-          return; 
-      } 
-      setPendingCompanion(companion);
+  const handleStartConnection = (c: Companion) => {
+      setPendingCompanion(c);
       setShowTechCheck(true);
   };
 
-  const confirmSessionStart = () => {
+  const confirmSession = () => {
+      setShowTechCheck(false);
       if (pendingCompanion) {
-          setShowTechCheck(false);
           onStartSession(pendingCompanion);
-          setPendingCompanion(null);
       }
   };
-
-  const handleMoodSelect = (mood: 'confetti' | 'rain' | null) => {
-      setWeather(mood);
-      Database.saveMood(user.id, mood);
-      if (mood === 'confetti') setTimeout(() => setWeather(null), 5000);
-  };
-
-  const handleDeleteAccount = () => {
-      if (window.confirm("ARE YOU SURE? This will permanently delete your account and all remaining credits. This cannot be undone.")) {
-          Database.deleteUser(dashboardUser.id);
-          onLogout();
-      }
-  };
-
-  const handleSaveName = () => {
-    const updated = { ...dashboardUser, name: tempName };
-    Database.updateUser(updated);
-    setDashboardUser(updated);
-    setNameEditMode(false);
-  }
-
-  const filteredCompanions = companions.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.specialty.toLowerCase().includes(searchTerm.toLowerCase()));
-  const isGoalMet = weeklyGoal >= weeklyTarget;
-  const progressPercent = Math.min(100, (weeklyGoal / weeklyTarget) * 100);
 
   return (
-    <div className="min-h-screen bg-[#FFFBEB] dark:bg-black font-sans text-gray-900 dark:text-gray-100 selection:bg-yellow-200 transition-colors duration-500 relative overflow-hidden flex flex-col">
-      <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-0" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
+    <div className={`min-h-screen transition-colors duration-500 font-sans ${darkMode ? 'dark bg-[#0A0A0A] text-white' : 'bg-[#FFFBEB] text-black'}`}>
       
-      {weather && <WeatherEffect type={weather} />}
+      {/* Global Effects */}
+      {mood && <WeatherEffect type={mood} />}
       <SoundscapePlayer />
-      
-      {/* Navbar */}
-      <nav className="bg-[#FFFBEB]/80 dark:bg-black/80 backdrop-blur-xl border-b border-yellow-100 dark:border-gray-800 sticky top-0 z-30 px-4 py-3 md:px-6 md:py-4 flex justify-between items-center shadow-sm transition-colors relative">
+
+      {/* --- MOBILE TOP BAR --- */}
+      <div className="md:hidden sticky top-0 bg-[#FFFBEB]/90 dark:bg-black/90 backdrop-blur-md border-b border-yellow-200 dark:border-gray-800 p-4 flex justify-between items-center z-40">
+          <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-yellow-400 dark:bg-yellow-600 rounded-lg flex items-center justify-center shadow-md">
+                  <Heart className="w-5 h-5 text-black dark:text-white fill-black dark:fill-white" />
+              </div>
+              <span className="font-black tracking-tight text-lg">Peutic</span>
+          </div>
           <div className="flex items-center gap-3">
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg shadow-yellow-400/20"><Heart className="fill-black w-5 h-5 md:w-6 md:h-6 text-black" /></div>
-              <span className="font-black text-lg md:text-xl tracking-tight dark:text-white">Peutic</span>
-          </div>
-
-          {/* PANIC BUTTON: Centered Absolute on Desktop */}
-          <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 justify-center z-40">
-              <button 
-                  onClick={() => setShowGrounding(true)} 
-                  className="bg-yellow-500 hover:bg-yellow-400 text-black px-6 py-2.5 rounded-full font-black text-sm uppercase tracking-widest animate-pulse shadow-xl shadow-yellow-500/20 flex items-center gap-2 hover:scale-105 transition-transform whitespace-nowrap"
-              >
-                  <LifeBuoy className="w-5 h-5" /> Panic Relief
+              <button onClick={() => setShowPayment(true)} className="bg-black dark:bg-white text-white dark:text-black px-3 py-1.5 rounded-full text-xs font-bold shadow-md">{balance}m</button>
+              <button onClick={() => setShowProfile(true)} className="w-8 h-8 rounded-full overflow-hidden border border-gray-300 dark:border-gray-700">
+                  <AvatarImage src={dashboardUser.avatar || ''} alt="User" className="w-full h-full object-cover" />
               </button>
-          </div>
-
-          <div className="flex items-center gap-2 md:gap-4">
-              {/* Mobile Panic Button - Now positioned relative in flex container to avoid overlap */}
-              <button 
-                  onClick={() => setShowGrounding(true)} 
-                  className="md:hidden bg-yellow-500 text-black p-2 rounded-full shadow-lg animate-pulse hover:bg-yellow-400 transition-colors"
-                  title="Panic Relief"
-              >
-                  <LifeBuoy className="w-5 h-5" />
-              </button>
-
-              <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
-                  {darkMode ? <Sun className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" /> : <Moon className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />}
-              </button>
-
-              {/* STREAK INDICATOR - Hidden on mobile to save space */}
-              <div className="hidden lg:flex items-center gap-2 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30 px-4 py-2 rounded-full border border-orange-100 dark:border-orange-900/50 shadow-sm">
-                  <div className="p-1 bg-orange-500 rounded-full">
-                      <Flame className="w-3 h-3 text-white fill-white animate-pulse" /> 
-                  </div>
-                  <span className="text-xs font-black text-orange-600 dark:text-orange-400 tracking-wide">{dashboardUser.streak || 1} Day Streak</span>
-              </div>
-              
-              <div className="flex items-center gap-2 bg-black dark:bg-white text-white dark:text-black px-3 py-1.5 md:px-5 md:py-2.5 rounded-full shadow-xl hover:scale-105 transition-transform cursor-pointer" onClick={() => setShowPayment(true)}>
-                  <span className="font-mono font-bold text-xs md:text-sm text-yellow-400 dark:text-yellow-600">{Math.floor(balance)}m</span>
-                  <Plus className="w-3 h-3 md:w-4 md:h-4" />
-              </div>
-              <button onClick={onLogout} className="p-2 hover:bg-yellow-100 dark:hover:bg-gray-800 rounded-full transition-colors"><LogOut className="w-4 h-4 md:w-5 md:h-5 dark:text-gray-400" /></button>
-          </div>
-      </nav>
-
-      {/* Main Container - FLEX 1 to push footer */}
-      <div className="max-w-7xl w-full mx-auto px-4 pt-4 md:px-6 md:pt-6 lg:px-10 lg:pt-10 flex-1 flex flex-col md:flex-row gap-6 md:gap-10 relative z-10 no-scrollbar overflow-y-auto">
-          {/* Sidebar */}
-          <div className="w-full md:w-72 shrink-0 space-y-4 md:space-y-6">
-              <div className="bg-[#FFFBEB] dark:bg-gray-900 p-6 md:p-8 rounded-3xl text-center relative group shadow-sm border border-yellow-200 dark:border-gray-800 transition-colors">
-                  <button onClick={() => setShowProfile(true)} className="absolute top-4 right-4 p-2 bg-yellow-100 dark:bg-gray-800 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm hover:scale-110"><Edit2 className="w-3 h-3 dark:text-white" /></button>
-                  <div className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 rounded-full p-1 bg-gradient-to-br from-yellow-400 to-orange-300 shadow-lg">
-                      <div className="w-full h-full rounded-full overflow-hidden border-4 border-white dark:border-gray-800">
-                          <AvatarImage src={dashboardUser.avatar || ''} alt={dashboardUser.name} className="w-full h-full object-cover" />
-                      </div>
-                  </div>
-                  <h3 className="font-black text-xl md:text-2xl dark:text-white">{dashboardUser.name}</h3>
-                  <p className="text-[10px] md:text-xs font-bold text-yellow-600 uppercase tracking-widest mb-6">Premium Member</p>
-                  
-                  {/* WEEKLY GOAL CARD */}
-                  <div className={`p-4 md:p-6 rounded-3xl text-left border shadow-inner transition-all duration-500 relative overflow-hidden ${isGoalMet ? 'bg-white dark:bg-gray-800 border-blue-200 dark:border-blue-900 shadow-[0_0_20px_rgba(59,130,246,0.15)]' : 'bg-white dark:bg-gray-800 border-yellow-100 dark:border-gray-700'}`}>
-                      {isGoalMet && <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-purple-500"></div>}
-                      
-                      <div className="flex justify-between text-xs font-bold text-gray-500 dark:text-gray-400 mb-3 z-10 relative">
-                          <span className="flex items-center gap-1">{isGoalMet ? <Trophy className="w-3 h-3 text-blue-500"/> : <Target className="w-3 h-3"/>} Weekly Goal</span>
-                          <span className={`font-black ${isGoalMet ? 'text-blue-600 dark:text-blue-400' : 'text-black dark:text-white'}`}>{weeklyGoal}/{weeklyTarget}</span>
-                      </div>
-                      
-                      <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-visible mb-3 relative">
-                          <div 
-                             className={`absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ${isGoalMet ? 'bg-gradient-to-r from-blue-400 to-blue-600 shadow-[0_0_10px_#3b82f6]' : 'bg-green-500'}`} 
-                             style={{ width: `${progressPercent}%` }}
-                          >
-                             {isGoalMet && (
-                                <div className="absolute -right-2 -top-3 filter drop-shadow-md z-20">
-                                    <Flame className="w-6 h-6 text-blue-500 fill-blue-400 animate-bounce" />
-                                </div>
-                             )}
-                          </div>
-                      </div>
-                      <p className={`text-[10px] font-bold text-center italic transition-colors ${isGoalMet ? 'text-blue-500' : 'text-gray-400'}`}>
-                          {isGoalMet ? "🔥 Goal Crushed! Amazing Work! 🔥" : weeklyMessage}
-                      </p>
-                  </div>
-              </div>
-
-              <div className="bg-white dark:bg-gray-900 rounded-3xl overflow-hidden p-2 space-y-1 shadow-sm border border-yellow-100 dark:border-gray-800 transition-colors">
-                  {[{ id: 'hub', icon: LayoutDashboard, label: 'Wellness Hub' }, { id: 'history', icon: Clock, label: 'History' }, { id: 'settings', icon: Settings, label: 'Settings' }].map(item => (
-                      <button key={item.id} onClick={() => setActiveTab(item.id as any)} className={`w-full flex items-center gap-4 p-3 md:p-4 rounded-2xl font-bold transition-all text-sm md:text-base ${activeTab === item.id ? 'bg-black dark:bg-white text-white dark:text-black shadow-lg' : 'text-gray-500 dark:text-gray-400 hover:bg-yellow-100 dark:hover:bg-gray-800'}`}>
-                          <item.icon className="w-4 h-4 md:w-5 md:h-5" /> {item.label}
-                      </button>
-                  ))}
-              </div>
-
-              <WisdomGenerator userId={dashboardUser.id} />
-          </div>
-
-          {/* Main Content */}
-          <div className="flex-1 min-w-0 flex flex-col pb-10">
-              {activeTab === 'hub' && (
-                  <div className="space-y-6 md:space-y-8 animate-in fade-in flex-1">
-                      {/* Insight */}
-                      <div className="bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-200 dark:border-gray-800 p-6 md:p-8 rounded-3xl relative overflow-hidden group shadow-sm transition-colors">
-                          <div className="absolute -right-10 -top-10 w-40 h-40 bg-yellow-300 dark:bg-yellow-600 rounded-full blur-[80px] opacity-50 group-hover:opacity-80 transition-opacity"></div>
-                          <h2 className="text-2xl md:text-3xl font-black mb-2 text-gray-900 dark:text-white relative z-10">Hello, {dashboardUser.name.split(' ')[0]}.</h2>
-                          <p className="text-gray-600 dark:text-gray-300 text-base md:text-lg relative z-10 max-w-xl">"{dailyInsight}"</p>
-                      </div>
-
-                      <CollapsibleSection title="Games & Tools" icon={Gamepad2}>
-                          <div className="space-y-4">
-                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                                   <div className="w-full aspect-square shadow-xl hover:scale-[1.02] transition-transform duration-300 rounded-2xl">
-                                       <MindfulMatchGame />
-                                   </div>
-                                   <div className="w-full aspect-square shadow-xl hover:scale-[1.02] transition-transform duration-300 rounded-2xl">
-                                       <CloudHopGame />
-                                   </div>
-                               </div>
-
-                               <MoodTracker onMoodSelect={handleMoodSelect} />
-                               <div className="grid grid-cols-2 gap-2">
-                                   <button onClick={() => setShowBreathing(true)} className="w-full py-3 md:py-4 bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-200 dark:border-gray-700 rounded-xl flex flex-row items-center justify-center gap-2 hover:scale-[1.02] transition-transform cursor-pointer group hover:shadow-md">
-                                       <Wind className="w-4 h-4 text-blue-600 dark:text-blue-300" />
-                                       <span className="font-bold text-xs text-gray-900 dark:text-white">Breathe</span>
-                                   </button>
-                                   <button onClick={() => setShowJournal(true)} className="w-full py-3 md:py-4 bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-200 dark:border-gray-700 rounded-xl flex flex-row items-center justify-center gap-2 hover:scale-[1.02] transition-transform cursor-pointer group hover:shadow-md">
-                                       <BookOpen className="w-4 h-4 text-purple-600 dark:text-purple-300" />
-                                       <span className="font-bold text-xs text-gray-900 dark:text-white">Thoughts</span>
-                                   </button>
-                               </div>
-                          </div>
-                      </CollapsibleSection>
-
-                      {/* Specialists Grid */}
-                      <div className="relative">
-                          <div className="flex justify-between items-end mb-4 md:mb-6 px-2">
-                              <h3 className="font-black text-xl md:text-2xl text-gray-900 dark:text-white">Your Care Team</h3>
-                              <span className="text-[10px] md:text-xs font-bold bg-white dark:bg-gray-800 dark:text-gray-300 px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700">Live 24/7</span>
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
-                              {loadingCompanions ? [1,2,3].map(i => <div key={i} className="h-72 bg-gray-200/50 dark:bg-gray-800 rounded-3xl animate-pulse"></div>) : (
-                                  filteredCompanions.map(c => (
-                                      <div key={c.id} onClick={() => handleConnectRequest(c)} className="bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-200 dark:border-gray-800 p-4 rounded-3xl hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden z-0">
-                                          <div className="aspect-square rounded-2xl overflow-hidden mb-4 relative bg-gray-100 dark:bg-gray-800 shadow-inner">
-                                              <AvatarImage src={c.imageUrl} alt={c.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                              <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-white backdrop-blur-md ${c.status === 'AVAILABLE' ? 'bg-green-500' : 'bg-gray-500'}`}>{c.status}</div>
-                                          </div>
-                                          <div className="flex justify-between items-center px-2">
-                                              <div>
-                                                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">{c.specialty}</p>
-                                              </div>
-                                              <div className="w-8 h-8 md:w-10 md:h-10 bg-black dark:bg-white text-white dark:text-black rounded-full flex items-center justify-center group-hover:bg-yellow-400 group-hover:text-black transition-colors shadow-lg">
-                                                  <Video className="w-4 h-4 md:w-5 md:h-5" />
-                                              </div>
-                                          </div>
-                                      </div>
-                                  ))
-                              )}
-                          </div>
-                          <div className="mt-8 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl text-center animate-in slide-in-from-bottom-5 fade-in duration-700">
-                              <div className="flex items-center justify-center gap-2 mb-1">
-                                  <Info className="w-3 h-3 md:w-4 md:h-4 text-yellow-600 dark:text-yellow-500" />
-                                  <span className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Service Notice</span>
-                              </div>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed max-w-2xl mx-auto">
-                                  Due to high demand, your chosen specialist may be assisting another member. If unavailable, we will instantly connect you with a specialist of equal or greater experience to ensure you receive support without delay.
-                              </p>
-                          </div>
-                      </div>
-                  </div>
-              )}
-              {activeTab === 'history' && (
-                  <div className="space-y-6 flex-1">
-                      <h2 className="text-xl md:text-2xl font-black mb-6 dark:text-white">Transaction History</h2>
-                      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-sm">
-                          {transactions.length === 0 ? (
-                              <div className="p-8 text-center text-gray-400">No transactions yet.</div>
-                          ) : (
-                              <table className="w-full text-left">
-                                  <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
-                                      <tr>
-                                          <th className="p-4 text-[10px] md:text-xs font-bold text-gray-500 uppercase">Date</th>
-                                          <th className="p-4 text-[10px] md:text-xs font-bold text-gray-500 uppercase">Description</th>
-                                          <th className="p-4 text-[10px] md:text-xs font-bold text-gray-500 uppercase text-right">Amount</th>
-                                      </tr>
-                                  </thead>
-                                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                                      {transactions.map(t => (
-                                          <tr key={t.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                              <td className="p-4 text-xs md:text-sm font-bold dark:text-gray-300">{new Date(t.date).toLocaleDateString()}</td>
-                                              <td className="p-4 text-xs md:text-sm text-gray-600 dark:text-gray-400">{t.description}</td>
-                                              <td className={`p-4 text-xs md:text-sm font-bold text-right font-mono ${t.amount > 0 ? 'text-green-600' : 'text-gray-900 dark:text-white'}`}>
-                                                  {t.amount > 0 ? '+' : ''}{t.amount}m {t.cost ? `(${t.cost.toFixed(2)})` : ''}
-                                              </td>
-                                          </tr>
-                                      ))}
-                                  </tbody>
-                              </table>
-                          )}
-                      </div>
-                  </div>
-              )}
-              {activeTab === 'settings' && (
-                  <div className="space-y-6 md:space-y-8 animate-in fade-in flex-1">
-                      <h2 className="text-xl md:text-2xl font-black mb-6 dark:text-white">Account Settings</h2>
-                      
-                      {/* Profile Card */}
-                      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 md:p-8 shadow-sm">
-                          <div className="flex justify-between items-center mb-6">
-                              <h3 className="font-bold text-lg flex items-center gap-2 dark:text-white"><UserIcon className="w-5 h-5"/> Profile</h3>
-                              {!nameEditMode ? (
-                                  <button onClick={() => setNameEditMode(true)} className="text-xs font-bold text-yellow-600 hover:text-yellow-700">Edit</button>
-                              ) : (
-                                  <button onClick={handleSaveName} className="text-xs font-bold text-green-600 hover:text-green-700">Save</button>
-                              )}
-                          </div>
-                          <div className="space-y-4">
-                               <div>
-                                  <label className="text-xs font-bold text-gray-400 uppercase">Display Name</label>
-                                  {nameEditMode ? (
-                                      <input className="w-full p-2 border border-gray-200 rounded-lg mt-1 focus:outline-none focus:border-yellow-400 transition-colors dark:bg-gray-800 dark:text-white dark:border-gray-700" value={tempName} onChange={e => setTempName(e.target.value)} />
-                                  ) : (
-                                      <p className="font-bold text-gray-900 dark:text-gray-200 text-sm md:text-base">{dashboardUser.name}</p>
-                                  )}
-                               </div>
-                               <div>
-                                  <label className="text-xs font-bold text-gray-400 uppercase">Email</label>
-                                  <p className="font-bold text-gray-900 dark:text-gray-200 text-sm md:text-base">{dashboardUser.email}</p>
-                                </div>
-                               <div>
-                                  <label className="text-xs font-bold text-gray-400 uppercase">Member ID</label>
-                                  <p className="font-mono text-xs text-gray-500">{dashboardUser.id}</p>
-                               </div>
-                          </div>
-                      </div>
-
-                      {/* Privacy Card */}
-                      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 md:p-8 shadow-sm">
-                           <h3 className="font-bold text-lg mb-6 flex items-center gap-2 dark:text-white"><Shield className="w-5 h-5"/> Privacy & Data</h3>
-                           <div className="flex justify-between items-center mb-4">
-                                <div>
-                                    <p className="font-bold text-gray-900 dark:text-gray-200 text-sm md:text-base">Export Personal Data</p>
-                                    <p className="text-[10px] md:text-xs text-gray-500">Download a copy of your journal and session history.</p>
-                                </div>
-                                <button onClick={() => Database.exportData('USERS')} className="px-3 py-1.5 md:px-4 md:py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors dark:text-white">
-                                    <Download className="w-3 h-3"/> Export JSON
-                                </button>
-                           </div>
-                      </div>
-
-                      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 md:p-8 shadow-sm">
-                          <h3 className="font-bold text-lg mb-4 flex items-center gap-2 dark:text-white"><Bell className="w-5 h-5"/> Notifications</h3>
-                          <div className="space-y-4">
-                              <div className="flex justify-between items-center">
-                                  <span className="text-gray-600 dark:text-gray-400 text-sm md:text-base">Email Marketing</span>
-                                  <div className="w-12 h-6 bg-green-500 rounded-full relative cursor-pointer"><div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div></div>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                  <span className="text-gray-600 dark:text-gray-400 text-sm md:text-base">Session Reminders</span>
-                                  <div className="w-12 h-6 bg-green-500 rounded-full relative cursor-pointer"><div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div></div>
-                              </div>
-                          </div>
-                      </div>
-
-                      <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-3xl p-6 md:p-8 shadow-sm">
-                          <h3 className="font-bold text-red-600 dark:text-red-400 text-lg mb-4 flex items-center gap-2"><AlertTriangle className="w-5 h-5"/> Danger Zone</h3>
-                          <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">
-                              Deleting your account is permanent. Any remaining credits ({Math.floor(balance)}m) will be lost immediately and cannot be refunded.
-                          </p>
-                          <button onClick={handleDeleteAccount} className="px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 flex items-center gap-2 text-sm md:text-base">
-                              <Trash2 className="w-4 h-4"/> Delete Account
-                          </button>
-                      </div>
-                  </div>
-              )}
           </div>
       </div>
 
-      {/* FULL WIDTH STICKY FOOTER */}
-      <footer className="w-full bg-[#FFFBEB] dark:bg-black text-black dark:text-white py-10 md:py-16 px-6 md:px-10 border-t border-yellow-200 dark:border-gray-800 z-20">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
-              <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-black dark:bg-yellow-500 rounded-lg flex items-center justify-center">
-                          <Heart className="w-5 h-5 fill-[#FACC15] text-[#FACC15] dark:fill-black dark:text-black" />
-                      </div>
-                      <span className="text-xl font-bold tracking-tight">Peutic</span>
-                  </div>
-                  <p className="text-gray-800 dark:text-gray-500 text-xs md:text-sm leading-relaxed">
-                      Pioneering the future of emotional support with human connection and AI precision. Secure, private, and always available.
-                  </p>
-                  <div className="flex gap-4">
-                      <button className="text-gray-800 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors"><Twitter className="w-5 h-5"/></button>
-                      <button className="text-gray-800 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors"><Instagram className="w-5 h-5"/></button>
-                      <button className="text-gray-800 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors"><Linkedin className="w-5 h-5"/></button>
-                  </div>
-              </div>
-              
-              <div>
-                  <h4 className="font-bold mb-4 md:mb-6 text-xs md:text-sm uppercase tracking-wider text-gray-700 dark:text-gray-400">Company</h4>
-                  <ul className="space-y-2 md:space-y-3 text-xs md:text-sm text-gray-800 dark:text-gray-500">
-                      <li><Link to="/about" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">About Us</Link></li>
-                      <li><Link to="/press" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Press</Link></li>
-                  </ul>
-              </div>
-
-              <div>
-                  <h4 className="font-bold mb-4 md:mb-6 text-xs md:text-sm uppercase tracking-wider text-gray-700 dark:text-gray-400">Support</h4>
-                  <ul className="space-y-2 md:space-y-3 text-xs md:text-sm text-gray-800 dark:text-gray-500">
-                      <li><Link to="/support" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Help Center</Link></li>
-                      <li><Link to="/safety" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Safety Standards</Link></li>
-                      <li><Link to="/crisis" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors text-red-600 dark:text-red-500 font-bold">Crisis Resources</Link></li>
-                  </ul>
-              </div>
-
-              <div>
-                  <h4 className="font-bold mb-4 md:mb-6 text-xs md:text-sm uppercase tracking-wider text-gray-700 dark:text-gray-400">Legal</h4>
-                  <ul className="space-y-2 md:space-y-3 text-xs md:text-sm text-gray-800 dark:text-gray-500">
-                      <li><Link to="/privacy" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Privacy Policy</Link></li>
-                      <li><Link to="/terms" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Terms of Service</Link></li>
-                  </ul>
-              </div>
-          </div>
+      <div className="flex h-screen overflow-hidden pt-[60px] md:pt-0">
           
-          <div className="max-w-7xl mx-auto mt-10 md:mt-16 pt-8 border-t border-black/10 dark:border-gray-900 flex flex-col md:flex-row justify-between items-center text-[10px] md:text-xs text-gray-700 dark:text-gray-600 font-bold uppercase tracking-widest gap-4 md:gap-0">
-              <p>&copy; 2025 Peutic Inc. HIPAA Compliant.</p>
-              <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span>Systems Operational</span>
+          {/* --- SIDEBAR (Desktop) --- */}
+          <aside className="hidden md:flex w-24 lg:w-72 flex-col border-r border-yellow-200 dark:border-gray-800 bg-[#FFFBEB]/50 dark:bg-black/50 backdrop-blur-xl">
+              <div className="p-6 lg:p-8 flex items-center justify-center lg:justify-start gap-3">
+                  <div className="w-10 h-10 bg-yellow-400 dark:bg-yellow-600 rounded-xl flex items-center justify-center shadow-lg group hover:scale-110 transition-transform">
+                      <Heart className="w-6 h-6 text-black dark:text-white fill-black dark:fill-white" />
+                  </div>
+                  <span className="hidden lg:block text-2xl font-black tracking-tight">Peutic</span>
               </div>
-          </div>
-      </footer>
-      
-      {/* Modals - HIGHEST Z-INDEX */}
-      {showGrounding && <GroundingMode onClose={() => setShowGrounding(false)} />}
-      {showTechCheck && <TechCheck onConfirm={confirmSessionStart} onCancel={() => { setShowTechCheck(false); setPendingCompanion(null); }} />}
-      {showPayment && <PaymentModal onClose={() => setShowPayment(false)} onSuccess={handlePaymentSuccess} initialError={paymentError} />}
-      {showBreathing && <BreathingExercise userId={dashboardUser.id} onClose={() => setShowBreathing(false)} />}
+
+              <nav className="flex-1 px-4 py-8 space-y-4">
+                  {[
+                      { id: 'hub', icon: LayoutDashboard, label: 'Sanctuary' },
+                      { id: 'history', icon: Clock, label: 'Journey' },
+                      { id: 'settings', icon: Settings, label: 'Config' }
+                  ].map((item) => (
+                      <button 
+                          key={item.id}
+                          onClick={() => setActiveTab(item.id as any)}
+                          className={`w-full flex items-center justify-center lg:justify-start gap-4 p-4 rounded-2xl transition-all duration-300 group ${activeTab === item.id ? 'bg-black text-white dark:bg-white dark:text-black shadow-xl' : 'text-gray-500 hover:bg-yellow-100 dark:hover:bg-gray-800 dark:text-gray-400'}`}
+                      >
+                          <item.icon className={`w-6 h-6 ${activeTab === item.id ? 'text-yellow-400 dark:text-yellow-600' : 'group-hover:text-yellow-600 dark:group-hover:text-white'}`} />
+                          <span className="hidden lg:block font-bold text-sm tracking-wide">{item.label}</span>
+                      </button>
+                  ))}
+              </nav>
+
+              <div className="p-4 lg:p-8 border-t border-yellow-200 dark:border-gray-800">
+                  <button onClick={onLogout} className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-bold text-sm">
+                      <LogOut className="w-5 h-5" />
+                      <span className="hidden lg:block">Disconnect</span>
+                  </button>
+              </div>
+          </aside>
+
+          {/* --- MAIN CONTENT --- */}
+          <main className="flex-1 overflow-y-auto relative scroll-smooth">
+              <div className="max-w-7xl mx-auto p-4 md:p-8 lg:p-12 pb-32">
+                  
+                  {/* --- HEADER SECTION --- */}
+                  <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                      <div>
+                          <p className="text-gray-500 dark:text-gray-400 font-bold text-xs uppercase tracking-widest mb-1">{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                          <h1 className="text-3xl md:text-5xl font-black tracking-tight dark:text-white">
+                              {activeTab === 'hub' ? `Hello, ${user.name.split(' ')[0]}.` : activeTab === 'history' ? 'Your Journey' : 'Settings'}
+                          </h1>
+                          {activeTab === 'hub' && dailyInsight && (
+                              <p className="text-gray-600 dark:text-gray-400 mt-2 max-w-lg text-sm md:text-base font-medium leading-relaxed border-l-4 border-yellow-400 pl-4 italic">
+                                  "{dailyInsight}"
+                              </p>
+                          )}
+                      </div>
+
+                      <div className="hidden md:flex items-center gap-4">
+                          <button 
+                              onClick={() => setShowPayment(true)}
+                              className={`px-6 py-3 rounded-2xl font-black shadow-lg transition-transform hover:scale-105 flex items-center gap-2 ${balance < 10 ? 'bg-red-500 text-white animate-pulse' : 'bg-black dark:bg-white text-white dark:text-black'}`}
+                          >
+                             <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                             {balance} mins
+                             <Plus className="w-4 h-4 ml-1 opacity-50" />
+                          </button>
+                          <button onClick={() => setShowProfile(true)} className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-yellow-400 shadow-xl hover:rotate-3 transition-transform">
+                              <AvatarImage src={dashboardUser.avatar || ''} alt={dashboardUser.name} className="w-full h-full object-cover" />
+                          </button>
+                      </div>
+                  </header>
+
+                  {/* --- TAB CONTENT --- */}
+                  
+                  {activeTab === 'hub' && (
+                      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-500">
+                          
+                          {/* Top Row: Weekly Progress & Mood */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                              <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm col-span-1 md:col-span-2 relative overflow-hidden group">
+                                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy className="w-24 h-24 text-yellow-500" /></div>
+                                  <div className="relative z-10">
+                                      <h3 className="font-bold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3>
+                                      <div className="flex items-end gap-2 mb-4">
+                                          <span className="text-4xl font-black dark:text-white">{weeklyGoal}</span>
+                                          <span className="text-gray-400 text-sm font-bold mb-1">/ {weeklyTarget} activities</span>
+                                      </div>
+                                      <div className="w-full h-3 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-3">
+                                          <div className="h-full bg-yellow-400 rounded-full transition-all duration-1000 ease-out" style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}></div>
+                                      </div>
+                                      <p className="text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyMessage}</p>
+                                  </div>
+                              </div>
+                              <MoodTracker onMoodSelect={handleMoodSelect} />
+                          </div>
+
+                          {/* Tools Grid */}
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <button onClick={() => setShowBreathing(true)} className="p-4 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-2xl border border-blue-100 dark:border-blue-900/50 transition-all text-left group">
+                                  <Wind className="w-6 h-6 text-blue-500 mb-3 group-hover:scale-110 transition-transform" />
+                                  <p className="font-bold text-sm dark:text-blue-100">Breathe</p>
+                              </button>
+                              <button onClick={() => setShowGrounding(true)} className="p-4 bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/40 rounded-2xl border border-teal-100 dark:border-teal-900/50 transition-all text-left group">
+                                  <Anchor className="w-6 h-6 text-teal-500 mb-3 group-hover:scale-110 transition-transform" />
+                                  <p className="font-bold text-sm dark:text-teal-100">Grounding</p>
+                              </button>
+                              <button onClick={() => setShowJournal(true)} className="p-4 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 rounded-2xl border border-yellow-100 dark:border-yellow-900/50 transition-all text-left group">
+                                  <BookOpen className="w-6 h-6 text-yellow-600 mb-3 group-hover:scale-110 transition-transform" />
+                                  <p className="font-bold text-sm dark:text-yellow-100">Journal</p>
+                              </button>
+                              <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-2xl border border-purple-100 dark:border-purple-900/50 text-left relative overflow-hidden">
+                                  <Gamepad2 className="w-6 h-6 text-purple-500 mb-3" />
+                                  <p className="font-bold text-sm dark:text-purple-100">Mini Games</p>
+                                  <span className="absolute top-2 right-2 text-[8px] font-black bg-purple-200 dark:bg-purple-800 text-purple-800 dark:text-white px-1.5 py-0.5 rounded">BETA</span>
+                              </div>
+                          </div>
+
+                          {/* Wisdom Generator */}
+                          <WisdomGenerator userId={user.id} />
+
+                          {/* Mini Games Section */}
+                          <div className="grid md:grid-cols-2 gap-6">
+                              <CollapsibleSection title="Mindful Match" icon={Gamepad2}>
+                                  <div className="h-64 md:h-80 w-full"><MindfulMatchGame /></div>
+                              </CollapsibleSection>
+                              <CollapsibleSection title="Cloud Hop" icon={Cloud}>
+                                  <div className="h-64 md:h-80 w-full"><CloudHopGame /></div>
+                              </CollapsibleSection>
+                          </div>
+
+                          {/* COMPANION GRID */}
+                          <div>
+                              <div className="flex justify-between items-end mb-6">
+                                  <div>
+                                      <h2 className="text-2xl font-black dark:text-white">Available Specialists</h2>
+                                      <p className="text-gray-500 text-sm">Select a guide to begin your session.</p>
+                                  </div>
+                                  <div className="flex gap-2">
+                                      <button className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"><Search className="w-4 h-4 text-gray-500"/></button>
+                                  </div>
+                              </div>
+
+                              {loadingCompanions ? (
+                                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                      {[1,2,3,4].map(i => <div key={i} className="h-64 bg-gray-100 dark:bg-gray-900 rounded-3xl animate-pulse"></div>)}
+                                  </div>
+                              ) : (
+                                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                                      {companions.map((companion) => (
+                                          <div 
+                                              key={companion.id} 
+                                              onClick={() => handleStartConnection(companion)}
+                                              className="group relative bg-white dark:bg-gray-900 rounded-[2rem] overflow-hidden border border-yellow-100 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all duration-300 hover:shadow-2xl cursor-pointer"
+                                          >
+                                              <div className="aspect-[4/5] relative overflow-hidden">
+                                                  <AvatarImage src={companion.imageUrl} alt={companion.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
+                                                  
+                                                  <div className="absolute top-3 left-3 flex gap-2">
+                                                      <div className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md ${companion.status === 'AVAILABLE' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'}`}>
+                                                          {companion.status === 'AVAILABLE' ? 'Online' : 'Busy'}
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                              
+                                              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 translate-y-2 group-hover:translate-y-0 transition-transform">
+                                                  <p className="text-yellow-400 text-[10px] font-black uppercase tracking-widest mb-1">{companion.specialty}</p>
+                                                  <h3 className="text-white text-xl md:text-2xl font-black mb-1">{companion.name}</h3>
+                                                  <div className="flex items-center gap-1 mb-3 opacity-0 group-hover:opacity-100 transition-opacity delay-100">
+                                                      <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                                                      <span className="text-white text-xs font-bold">{companion.rating}</span>
+                                                  </div>
+                                                  <button className="w-full py-3 bg-white text-black rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-yellow-400 transition-colors opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 duration-300">
+                                                      Start Session
+                                                  </button>
+                                              </div>
+                                          </div>
+                                      ))}
+                                  </div>
+                              )}
+                          </div>
+                      </div>
+                  )}
+
+                  {activeTab === 'history' && (
+                      <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-500">
+                          <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-100 dark:border-gray-800 overflow-hidden">
+                              <table className="w-full text-left">
+                                  <thead className="bg-gray-50 dark:bg-gray-800 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                      <tr>
+                                          <th className="p-4 md:p-6">Date</th>
+                                          <th className="p-4 md:p-6">Description</th>
+                                          <th className="p-4 md:p-6 text-right">Amount</th>
+                                          <th className="p-4 md:p-6 text-right">Status</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                      {transactions.length === 0 ? (
+                                          <tr><td colSpan={4} className="p-8 text-center text-gray-400">No history found.</td></tr>
+                                      ) : (
+                                          transactions.map((tx) => (
+                                              <tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                                  <td className="p-4 md:p-6 text-sm dark:text-gray-300 font-mono">{new Date(tx.date).toLocaleDateString()}</td>
+                                                  <td className="p-4 md:p-6 text-sm font-bold dark:text-white">{tx.description}</td>
+                                                  <td className={`p-4 md:p-6 text-sm text-right font-mono font-bold ${tx.amount > 0 ? 'text-green-500' : 'text-gray-900 dark:text-white'}`}>
+                                                      {tx.amount > 0 ? '+' : ''}{tx.amount}m
+                                                  </td>
+                                                  <td className="p-4 md:p-6 text-right">
+                                                      <span className="px-2 py-1 rounded text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 uppercase tracking-wide">
+                                                          {tx.status}
+                                                      </span>
+                                                  </td>
+                                              </tr>
+                                          ))
+                                      )}
+                                  </tbody>
+                              </table>
+                          </div>
+                      </div>
+                  )}
+
+                  {activeTab === 'settings' && (
+                      <div className="grid md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-right-5 duration-500">
+                          <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl border border-yellow-100 dark:border-gray-800 space-y-6">
+                              <h3 className="font-bold text-lg dark:text-white mb-4">Preferences</h3>
+                              <div className="flex items-center justify-between">
+                                  <span className="text-gray-600 dark:text-gray-400 font-medium">Dark Mode</span>
+                                  <button onClick={() => { setDarkMode(!darkMode); if(!darkMode) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); localStorage.setItem('peutic_theme', !darkMode ? 'dark' : 'light'); }} className={`w-12 h-6 rounded-full relative transition-colors ${darkMode ? 'bg-yellow-500' : 'bg-gray-300'}`}>
+                                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${darkMode ? 'left-7' : 'left-1'}`}></div>
+                                  </button>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                  <span className="text-gray-600 dark:text-gray-400 font-medium">Email Notifications</span>
+                                  <button className="w-12 h-6 rounded-full relative bg-yellow-500"><div className="absolute top-1 right-1 w-4 h-4 bg-white rounded-full shadow-sm"></div></button>
+                              </div>
+                              <div className="pt-6 border-t border-gray-100 dark:border-gray-800">
+                                  <button className="text-red-500 font-bold text-sm hover:text-red-600">Delete Account Data</button>
+                              </div>
+                          </div>
+                      </div>
+                  )}
+              </div>
+          </main>
+      </div>
+
+      {/* MODALS */}
+      {showPayment && <PaymentModal onClose={() => { setShowPayment(false); setPaymentError(undefined); }} onSuccess={handlePaymentSuccess} initialError={paymentError} />}
+      {showBreathing && <BreathingExercise userId={user.id} onClose={() => setShowBreathing(false)} />}
       {showProfile && <ProfileModal user={dashboardUser} onClose={() => setShowProfile(false)} onUpdate={refreshData} />}
       {showJournal && <JournalModal onClose={() => setShowJournal(false)} />}
+      {showGrounding && <GroundingMode onClose={() => setShowGrounding(false)} />}
+      
+      {/* TECH CHECK OVERLAY */}
+      {showTechCheck && (
+          <TechCheck 
+              onConfirm={confirmSession}
+              onCancel={() => setShowTechCheck(false)}
+          />
+      )}
+
     </div>
   );
 };

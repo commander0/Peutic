@@ -431,7 +431,9 @@ export class Database {
               });
 
               if (error) {
-                  if (error.code === '42P01') {
+                  // Only treat missing table or connection failure as "offline mode" trigger
+                  if (error.code === '42P01' || error.message.includes('fetch')) {
+                      console.warn("Supabase Offline/Config Error:", error);
                       this.isOfflineMode = true;
                       this.saveArtLocal(entry);
                       return;
@@ -468,26 +470,38 @@ export class Database {
       
       userArt.unshift(entry); // Add new to start
       
-      // Enforce strict limit of 15
+      // Attempt to save with limit 15 first
       while (userArt.length > 15) {
-          userArt.pop(); // Remove oldest
+          userArt.pop(); 
       }
       
       let newArt = [...otherArt, ...userArt];
+      
       try { 
           localStorage.setItem(DB_KEYS.ART, JSON.stringify(newArt)); 
       } catch (e: any) {
           // QUOTA HANDLING
           if (e.name === 'QuotaExceededError' || e.code === 22) {
-              console.warn("Storage Quota Exceeded. Cleaning up old art...");
-              // Drastic measure: Keep only 1 item per user or empty otherArt
-              // Just try to keep the user's current 15 items
+              console.warn("Storage Quota Exceeded. Trimming local art gallery...");
+              
+              // Smart cleanup: Iteratively remove oldest items until it fits
+              // We want to preserve the NEWEST one at minimum.
+              while (userArt.length > 1) {
+                  userArt.pop(); // Remove oldest
+                  try {
+                      const retryArt = [...otherArt, ...userArt];
+                      localStorage.setItem(DB_KEYS.ART, JSON.stringify(retryArt));
+                      return; // Success
+                  } catch (retryE) {
+                      continue; // Still too big, loop again
+                  }
+              }
+              
+              // Last resort: Save just the single new item (dropping even other users if shared browser)
               try {
                   localStorage.setItem(DB_KEYS.ART, JSON.stringify(userArt));
-              } catch (retryE) {
-                  // Still failing? Keep only 2 latest
-                  const emergency = userArt.slice(0, 2);
-                  localStorage.setItem(DB_KEYS.ART, JSON.stringify(emergency));
+              } catch (finalE) {
+                  console.error("Critical Storage Error: Cannot save even 1 item.");
               }
           }
       }
