@@ -89,58 +89,12 @@ export const INITIAL_COMPANIONS: Companion[] = [
 ];
 
 export class Database {
-  // Static flag to handle graceful degradation when Supabase is not fully configured
   static isOfflineMode = false;
 
+  // --- USER MANAGEMENT ---
   static getAllUsers(): User[] {
     const usersStr = localStorage.getItem(DB_KEYS.ALL_USERS);
     return usersStr ? JSON.parse(usersStr) : [];
-  }
-
-  static createUser(name: string, email: string, provider: 'email' | 'google' | 'facebook' | 'x', birthday?: string, role: UserRole = UserRole.USER): User {
-    const users = this.getAllUsers();
-    if (role === UserRole.ADMIN && provider !== 'email') role = UserRole.USER; 
-    const defaultAvatar = "https://images.unsplash.com/photo-1618331835717-801e976710b2?q=80&w=800";
-    const today = new Date().toISOString().split('T')[0];
-    const newUser: User = {
-      id: `u_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      name, email, role, provider, balance: 0, avatar: defaultAvatar, 
-      subscriptionStatus: 'ACTIVE', joinedAt: new Date().toISOString(),
-      lastActive: new Date().toISOString(), birthday,
-      emailPreferences: { marketing: true, updates: true },
-      streak: 1, lastLoginDate: today
-    };
-    users.push(newUser);
-    localStorage.setItem(DB_KEYS.ALL_USERS, JSON.stringify(users));
-    this.saveUserSession(newUser);
-    this.syncUserToSupabase(newUser);
-    return newUser;
-  }
-
-  static checkAndIncrementStreak(user: User): User {
-      const today = new Date().toISOString().split('T')[0];
-      const lastLogin = user.lastLoginDate ? user.lastLoginDate.split('T')[0] : null;
-      if (lastLogin === today) return user;
-      const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
-      let newStreak = user.streak || 0;
-      if (lastLogin === yesterdayStr) newStreak += 1; else newStreak = 1;
-      const updatedUser = { ...user, streak: newStreak, lastLoginDate: today, lastActive: new Date().toISOString() };
-      this.updateUser(updatedUser);
-      return updatedUser;
-  }
-
-  static deleteUser(userId: string) {
-    let users = this.getAllUsers();
-    users = users.filter(u => u.id !== userId);
-    localStorage.setItem(DB_KEYS.ALL_USERS, JSON.stringify(users));
-    this.clearSession();
-    
-    if (!this.isOfflineMode) {
-        supabase.from('users').delete().eq('id', userId).then(({ error }) => {
-            if (error) console.error("Supabase Delete Error:", error);
-        });
-    }
   }
 
   static getUser(): User | null {
@@ -148,392 +102,434 @@ export class Database {
     return userStr ? JSON.parse(userStr) : null;
   }
 
-  static saveUserSession(user: User) { localStorage.setItem(DB_KEYS.USER, JSON.stringify(user)); }
-  static clearSession() { localStorage.removeItem(DB_KEYS.USER); }
-  static updateUser(updatedUser: User) {
+  static saveUserSession(user: User) {
+    localStorage.setItem(DB_KEYS.USER, JSON.stringify(user));
+  }
+
+  static clearSession() {
+    localStorage.removeItem(DB_KEYS.USER);
+  }
+
+  static getUserByEmail(email: string): User | undefined {
+    return this.getAllUsers().find(u => u.email === email);
+  }
+
+  static createUser(name: string, email: string, provider: 'email' | 'google' | 'facebook' | 'x', birthday?: string, role: UserRole = UserRole.USER): User {
+    const newUser: User = {
+      id: `u_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name,
+      email,
+      role,
+      balance: 0, 
+      subscriptionStatus: 'ACTIVE',
+      joinedAt: new Date().toISOString(),
+      lastLoginDate: new Date().toISOString(),
+      streak: 0,
+      provider,
+      birthday
+    };
     const users = this.getAllUsers();
-    const index = users.findIndex(u => u.id === updatedUser.id);
+    users.push(newUser);
+    localStorage.setItem(DB_KEYS.ALL_USERS, JSON.stringify(users));
+    return newUser;
+  }
+
+  static updateUser(user: User) {
+    const users = this.getAllUsers();
+    const index = users.findIndex(u => u.id === user.id);
     if (index !== -1) {
-      users[index] = updatedUser;
+      users[index] = user;
       localStorage.setItem(DB_KEYS.ALL_USERS, JSON.stringify(users));
     }
     const currentUser = this.getUser();
-    if (currentUser && currentUser.id === updatedUser.id) this.saveUserSession(updatedUser);
-    this.syncUserToSupabase(updatedUser);
+    if (currentUser && currentUser.id === user.id) {
+        this.saveUserSession(user);
+    }
   }
 
-  static async syncUserToSupabase(user: User) {
-      if (this.isOfflineMode) return;
-      try {
-          const { error } = await supabase.from('users').upsert({
-              id: user.id,
-              email: user.email,
-              name: user.name,
-              role: user.role,
-              provider: user.provider,
-              balance: user.balance,
-              avatar: user.avatar,
-              subscription_status: user.subscriptionStatus,
-              created_at: user.joinedAt,
-              last_active: user.lastActive,
-              birthday: user.birthday,
-              streak: user.streak
-          });
-          if (error) {
-              if (error.message.includes("Could not find the table") || error.code === '42P01') {
-                  console.warn("Supabase tables missing. Switching to Local-Only Mode.");
-                  this.isOfflineMode = true;
-              } else {
-                  console.warn("Supabase Sync Warning:", error.message);
-              }
-          }
-      } catch (e) { console.warn("Supabase Sync Failed (Offline Mode)", e); }
-  }
-
-  static getUserByEmail(email: string): User | undefined { return this.getAllUsers().find(u => u.email.toLowerCase() === email.toLowerCase()); }
-  static hasAdmin(): boolean { return this.getAllUsers().some(u => u.role === UserRole.ADMIN); }
-
-  static checkAdminLockout(): number | null {
-      const attemptsStr = localStorage.getItem(DB_KEYS.ADMIN_ATTEMPTS);
-      if (!attemptsStr) return null;
-      const data = JSON.parse(attemptsStr);
-      if (data.count >= 5) {
-          const now = Date.now();
-          const diff = now - data.lastAttempt;
-          if (diff < 24 * 60 * 60 * 1000) return Math.ceil((24 * 60 * 60 * 1000 - diff) / (60 * 1000)); 
-          else { localStorage.removeItem(DB_KEYS.ADMIN_ATTEMPTS); return null; }
+  static deleteUser(id: string) {
+      const users = this.getAllUsers().filter(u => u.id !== id);
+      localStorage.setItem(DB_KEYS.ALL_USERS, JSON.stringify(users));
+      const currentUser = this.getUser();
+      if(currentUser && currentUser.id === id) {
+          this.clearSession();
       }
-      return null;
   }
 
-  static recordAdminFailure() {
-      const attemptsStr = localStorage.getItem(DB_KEYS.ADMIN_ATTEMPTS);
-      let data = attemptsStr ? JSON.parse(attemptsStr) : { count: 0, lastAttempt: Date.now() };
-      data.count += 1; data.lastAttempt = Date.now();
-      localStorage.setItem(DB_KEYS.ADMIN_ATTEMPTS, JSON.stringify(data));
+  static hasAdmin(): boolean {
+    return this.getAllUsers().some(u => u.role === UserRole.ADMIN);
   }
 
-  static resetAdminFailure() { localStorage.removeItem(DB_KEYS.ADMIN_ATTEMPTS); }
+  static checkAndIncrementStreak(user: User): User {
+      const today = new Date().toDateString();
+      const lastLogin = new Date(user.lastLoginDate).toDateString();
+      
+      if (today !== lastLogin) {
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          
+          if (new Date(user.lastLoginDate).toDateString() === yesterday.toDateString()) {
+              user.streak += 1;
+          } else {
+              user.streak = 1;
+          }
+          user.lastLoginDate = new Date().toISOString();
+          this.updateUser(user);
+      }
+      return user;
+  }
 
+  // --- SETTINGS ---
+  static getSettings(): GlobalSettings {
+    const defaultSettings: GlobalSettings = {
+        pricePerMinute: 1.49,
+        saleMode: true,
+        maintenanceMode: false,
+        allowSignups: true,
+        siteName: 'Peutic',
+        maxConcurrentSessions: 15,
+        multilingualMode: true
+    };
+    const saved = localStorage.getItem(DB_KEYS.SETTINGS);
+    return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
+  }
+
+  static saveSettings(settings: GlobalSettings) {
+      localStorage.setItem(DB_KEYS.SETTINGS, JSON.stringify(settings));
+  }
+
+  // --- COMPANIONS ---
   static getCompanions(): Companion[] {
-    const saved = localStorage.getItem(DB_KEYS.COMPANIONS);
-    if (!saved) { localStorage.setItem(DB_KEYS.COMPANIONS, JSON.stringify(INITIAL_COMPANIONS)); return INITIAL_COMPANIONS; }
-    return JSON.parse(saved);
+      const saved = localStorage.getItem(DB_KEYS.COMPANIONS);
+      if (!saved) {
+          localStorage.setItem(DB_KEYS.COMPANIONS, JSON.stringify(INITIAL_COMPANIONS));
+          return INITIAL_COMPANIONS;
+      }
+      return JSON.parse(saved);
   }
 
-  static updateCompanion(updated: Companion) {
+  static updateCompanion(companion: Companion) {
       const list = this.getCompanions();
-      const idx = list.findIndex(c => c.id === updated.id);
-      if (idx !== -1) { list[idx] = updated; localStorage.setItem(DB_KEYS.COMPANIONS, JSON.stringify(list)); }
+      const index = list.findIndex(c => c.id === companion.id);
+      if (index !== -1) {
+          list[index] = companion;
+          localStorage.setItem(DB_KEYS.COMPANIONS, JSON.stringify(list));
+      }
   }
 
   static setAllCompanionsStatus(status: 'AVAILABLE' | 'BUSY' | 'OFFLINE') {
-      const list = this.getCompanions();
-      const updatedList = list.map(c => ({ ...c, status }));
-      localStorage.setItem(DB_KEYS.COMPANIONS, JSON.stringify(updatedList));
+      const list = this.getCompanions().map(c => ({...c, status}));
+      localStorage.setItem(DB_KEYS.COMPANIONS, JSON.stringify(list));
   }
 
-  static topUpWallet(minutes: number, cost: number, targetUserId?: string) {
-    let user = targetUserId ? this.getAllUsers().find(u => u.id === targetUserId) || null : this.getUser();
-    if (user) {
-      user.balance += minutes;
-      this.updateUser(user); // Triggers sync to Supabase Users table
-      this.addTransaction({
-        id: `tx_${Date.now()}`, userId: user.id, userName: user.name,
-        date: new Date().toISOString(), amount: minutes, cost: cost, description: 'Wallet Top-up', status: 'COMPLETED'
-      });
-    }
+  // --- TRANSACTIONS ---
+  static getAllTransactions(): Transaction[] {
+      return JSON.parse(localStorage.getItem(DB_KEYS.TRANSACTIONS) || '[]');
   }
 
-  static deductBalance(minutes: number) {
-    const user = this.getUser();
-    if (user) { user.balance = Math.max(0, user.balance - minutes); this.updateUser(user); }
+  static getUserTransactions(userId: string): Transaction[] {
+      return this.getAllTransactions().filter(t => t.userId === userId).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
 
-  static getAllTransactions(): Transaction[] { return JSON.parse(localStorage.getItem(DB_KEYS.TRANSACTIONS) || '[]'); }
-  static getUserTransactions(userId: string): Transaction[] { return this.getAllTransactions().filter(tx => tx.userId === userId).reverse(); }
   static addTransaction(tx: Transaction) {
-    const all = this.getAllTransactions();
-    if (!tx.userId) { const u = this.getUser(); if (u) { tx.userId = u.id; tx.userName = u.name; } }
-    all.push(tx); 
-    localStorage.setItem(DB_KEYS.TRANSACTIONS, JSON.stringify(all));
-    
-    if (!this.isOfflineMode) {
-        supabase.from('transactions').insert([{
-            id: tx.id, user_id: tx.userId, amount: tx.amount, cost: tx.cost, description: tx.description, status: tx.status, created_at: tx.date
-        }]).then(({ error }) => { if(error) console.error("Supabase Tx Error:", error); });
-    }
+      const list = this.getAllTransactions();
+      list.unshift(tx);
+      localStorage.setItem(DB_KEYS.TRANSACTIONS, JSON.stringify(list));
   }
 
-  static getSettings(): GlobalSettings {
-    const saved = localStorage.getItem(DB_KEYS.SETTINGS);
-    const defaultSettings = {
-      pricePerMinute: 1.49, saleMode: true, maintenanceMode: false, allowSignups: true, siteName: 'Peutic', broadcastMessage: undefined, maxConcurrentSessions: 15, multilingualMode: true
-    };
-    if (!saved) return defaultSettings;
-    const parsed = JSON.parse(saved);
-    if (parsed.maxConcurrentSessions !== 15) { parsed.maxConcurrentSessions = 15; localStorage.setItem(DB_KEYS.SETTINGS, JSON.stringify(parsed)); }
-    return parsed;
+  static topUpWallet(amount: number, cost: number, userId?: string) {
+      const targetUser = userId ? this.getAllUsers().find(u => u.id === userId) : this.getUser();
+      if (targetUser) {
+          targetUser.balance += amount;
+          this.updateUser(targetUser);
+          this.addTransaction({
+              id: `tx_${Date.now()}`,
+              userId: targetUser.id,
+              userName: targetUser.name,
+              date: new Date().toISOString(),
+              amount: amount,
+              cost: cost,
+              description: cost > 0 ? 'Credit Purchase' : 'Admin Grant',
+              status: 'COMPLETED'
+          });
+      }
   }
 
-  static saveSettings(s: GlobalSettings) { localStorage.setItem(DB_KEYS.SETTINGS, JSON.stringify(s)); }
-  static getSystemLogs(): SystemLog[] { return JSON.parse(localStorage.getItem(DB_KEYS.LOGS) || '[]'); }
+  static deductBalance(amount: number) {
+      const user = this.getUser();
+      if (user) {
+          user.balance = Math.max(0, user.balance - amount);
+          this.updateUser(user);
+      }
+  }
+
+  // --- SYSTEM LOGS ---
+  static getSystemLogs(): SystemLog[] {
+      return JSON.parse(localStorage.getItem(DB_KEYS.LOGS) || '[]');
+  }
+
   static logSystemEvent(type: 'INFO' | 'WARNING' | 'ERROR' | 'SUCCESS' | 'SECURITY', event: string, details: string) {
       const logs = this.getSystemLogs();
-      const newLog: SystemLog = { id: `log_${Date.now()}_${Math.random()}`, timestamp: new Date().toISOString(), type, event, details };
-      logs.unshift(newLog); if (logs.length > 200) logs.pop(); localStorage.setItem(DB_KEYS.LOGS, JSON.stringify(logs));
+      logs.unshift({
+          id: `log_${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          type,
+          event,
+          details
+      });
+      if (logs.length > 500) logs.pop(); 
+      localStorage.setItem(DB_KEYS.LOGS, JSON.stringify(logs));
   }
 
-  // ==========================================
-  // === GLOBAL QUEUE SYSTEM (SUPABASE) ===
-  // ==========================================
-  
-  static async getActiveSessionCount(): Promise<number> {
-      if (this.isOfflineMode) return 0; // Fallback: 0 active sessions implies "Available"
-      try {
-          const { count, error } = await supabase
-              .from('session_queue')
-              .select('*', { count: 'exact', head: true })
-              .eq('status', 'active');
-          
-          if (error) throw error;
-          return count || 0;
-      } catch (e: any) {
-          if (e.message?.includes("Could not find the table") || e.code === '42P01') {
-             this.isOfflineMode = true;
-             console.warn("Queue Tables Missing. Switching to Offline Mode.");
-          }
-          return 0; // Fallback unsafe
-      }
-  }
-
-  static async getQueueList(): Promise<string[]> {
-      if (this.isOfflineMode) return [];
-      try {
-          const { data, error } = await supabase
-              .from('session_queue')
-              .select('user_id')
-              .eq('status', 'waiting')
-              .order('created_at', { ascending: true });
-          
-          if (error) throw error;
-          return data ? data.map((d: any) => d.user_id) : [];
-      } catch (e) {
-          return [];
-      }
-  }
-
-  static async leaveQueue(userId: string) {
-      await this.endSession(userId);
-  }
-
-  // Returns queue position. 0 means you are active or something went wrong.
-  // Updated to use secure RPC call
-  static async joinQueue(userId: string): Promise<number> {
-      if (this.isOfflineMode) return 1; 
-      try {
-          // Use secure RPC to prevent race conditions and "mutable search_path" warnings from raw sql usage
-          const { data, error } = await supabase.rpc('join_queue', { user_id_input: userId });
-          
-          if (error) {
-              // Fallback to old method if function missing (for backward compatibility)
-              if (error.message?.includes("function not found")) {
-                  return await this.fallbackJoinQueue(userId);
-              }
-              // If table is missing, switch to offline mode immediately
-              if (error.message?.includes("relation") || error.code === '42P01') {
-                 this.isOfflineMode = true;
-                 return 1;
-              }
-              throw error;
-          }
-          return data as number;
-      } catch (e: any) {
-          if (e.message?.includes("Could not find the table") || e.code === '42P01') {
-              this.isOfflineMode = true;
-              return 1; 
-          }
-          console.error("Join Queue Error:", e);
-          return 99;
-      }
-  }
-
-  // Fallback for when RPC is missing
-  static async fallbackJoinQueue(userId: string): Promise<number> {
-      const { data: existing, error } = await supabase.from('session_queue').select('status, created_at').eq('user_id', userId).single();
-      if (error && error.code !== 'PGRST116') throw error; 
-
-      if (existing && existing.status === 'active') return 0;
-      
-      if (!existing) {
-          const { error: insertError } = await supabase.from('session_queue').insert({ user_id: userId, status: 'waiting' });
-          if (insertError) throw insertError;
-      } else {
-          await supabase.from('session_queue').update({ last_ping: new Date() }).eq('user_id', userId);
-      }
-      return await this.getQueuePosition(userId);
-  }
-
-  static async getQueuePosition(userId: string): Promise<number> {
-      if (this.isOfflineMode) return 1;
-      try {
-          const { data: myRow } = await supabase.from('session_queue').select('created_at, status').eq('user_id', userId).single();
-          if (!myRow) return 0;
-          if (myRow.status === 'active') return 0;
-
-          const { count } = await supabase
-              .from('session_queue')
-              .select('*', { count: 'exact', head: true })
-              .eq('status', 'waiting')
-              .lt('created_at', myRow.created_at);
-          
-          return (count || 0) + 1;
-      } catch (e) {
-          return 99;
-      }
-  }
-
-  static getEstimatedWaitTime(position: number): number {
-      return Math.max(0, (position - 1) * 3);
-  }
-
-  // ATTEMPT TO ENTER: Returns true if successfully claimed a spot
-  static async claimActiveSpot(userId: string): Promise<boolean> {
-      if (this.isOfflineMode) return true; 
-      
-      try {
-          const { data, error } = await supabase.rpc('claim_session_spot', { user_id_input: userId });
-          
-          if (!error) {
-              return !!data;
-          } else {
-              if (error.message?.includes("function not found")) {
-                  // RPC missing, use fallback
-              } else if (error.message?.includes("relation") || error.code === '42P01') {
-                   this.isOfflineMode = true;
-                   return true;
-              }
-              console.warn("RPC Failed (using fallback):", error.message);
-          }
-
-          // Fallback Logic
-          const activeCount = await this.getActiveSessionCount();
-          const MAX_CONCURRENT = 15;
-
-          if (activeCount >= MAX_CONCURRENT) return false;
-
-          const pos = await this.getQueuePosition(userId);
-          
-          if (pos <= 1 || activeCount < MAX_CONCURRENT) {
-              const { error } = await supabase
-                  .from('session_queue')
-                  .update({ status: 'active', last_ping: new Date() })
-                  .eq('user_id', userId)
-                  .eq('status', 'waiting');
-              
-              return !error;
-          }
-          return false;
-      } catch (e) {
-          console.error("Claim Spot Error", e);
-          // If totally broken, allow entry to avoid bad UX
-          return true;
-      }
-  }
-
-  static async endSession(userId: string) {
-      if (this.isOfflineMode) return;
-      try {
-          await supabase.from('session_queue').delete().eq('user_id', userId);
-      } catch (e) { console.error("End Session Error", e); }
-  }
-
-  // Updated to use secure RPC
-  static async sendKeepAlive(userId: string) {
-      if (this.isOfflineMode) return;
-      try {
-          const { error } = await supabase.rpc('heartbeat', { user_id_input: userId });
-          if (error) throw error;
-      } catch (e) {
-          // Fallback
-          try { await supabase.from('session_queue').update({ last_ping: new Date() }).eq('user_id', userId); } catch (err) {}
-      }
-  }
-
-  static async enterActiveSession(userId: string) {
-      await this.claimActiveSpot(userId);
+  // --- FEEDBACK ---
+  static getAllFeedback(): SessionFeedback[] {
+      return JSON.parse(localStorage.getItem(DB_KEYS.FEEDBACK) || '[]');
   }
 
   static saveFeedback(feedback: SessionFeedback) {
       const list = this.getAllFeedback();
       list.unshift(feedback);
-      if (list.length > 200) list.pop();
       localStorage.setItem(DB_KEYS.FEEDBACK, JSON.stringify(list));
+  }
+
+  // --- QUEUE & SESSIONS ---
+  static async joinQueue(userId: string): Promise<number> {
+      let queue = JSON.parse(localStorage.getItem('peutic_queue_v1') || '[]');
+      if (!queue.includes(userId)) {
+          queue.push(userId);
+          localStorage.setItem('peutic_queue_v1', JSON.stringify(queue));
+      }
+      return queue.indexOf(userId) + 1;
+  }
+
+  static async leaveQueue(userId: string) {
+      let queue = JSON.parse(localStorage.getItem('peutic_queue_v1') || '[]');
+      queue = queue.filter((id: string) => id !== userId);
+      localStorage.setItem('peutic_queue_v1', JSON.stringify(queue));
+  }
+
+  static async getQueueList(): Promise<string[]> {
+      return JSON.parse(localStorage.getItem('peutic_queue_v1') || '[]');
+  }
+
+  static async getQueuePosition(userId: string): Promise<number> {
+      const queue = await this.getQueueList();
+      const index = queue.indexOf(userId);
+      return index === -1 ? 0 : index + 1;
+  }
+
+  static async getActiveSessionCount(): Promise<number> {
+      const sessions = JSON.parse(localStorage.getItem('peutic_active_sessions') || '[]');
+      return sessions.length;
+  }
+
+  static getEstimatedWaitTime(pos: number): number {
+      return Math.max(0, (pos - 1) * 2);
+  }
+
+  static async claimActiveSpot(userId: string): Promise<boolean> {
+      let sessions = JSON.parse(localStorage.getItem('peutic_active_sessions') || '[]');
+      const settings = this.getSettings();
       
+      if (sessions.includes(userId)) return true;
+
+      if (sessions.length < settings.maxConcurrentSessions) {
+          sessions.push(userId);
+          localStorage.setItem('peutic_active_sessions', JSON.stringify(sessions));
+          await this.leaveQueue(userId);
+          return true;
+      }
+      return false;
+  }
+
+  static sendKeepAlive(userId: string) {}
+
+  static endSession(userId: string) {
+      let sessions = JSON.parse(localStorage.getItem('peutic_active_sessions') || '[]');
+      sessions = sessions.filter((id: string) => id !== userId);
+      localStorage.setItem('peutic_active_sessions', JSON.stringify(sessions));
+  }
+
+  // --- ADMIN SECURITY ---
+  static checkAdminLockout(): number | null {
+     const lockoutStr = localStorage.getItem(DB_KEYS.ADMIN_ATTEMPTS);
+     if (!lockoutStr) return null;
+     const { attempts, timestamp } = JSON.parse(lockoutStr);
+     if (attempts >= 5) {
+         const diff = Date.now() - timestamp;
+         const lockoutTime = 15 * 60 * 1000; // 15 mins
+         if (diff < lockoutTime) {
+             return Math.ceil((lockoutTime - diff) / 60000);
+         }
+         this.resetAdminFailure();
+     }
+     return null;
+  }
+
+  static recordAdminFailure() {
+      const lockoutStr = localStorage.getItem(DB_KEYS.ADMIN_ATTEMPTS);
+      let data = lockoutStr ? JSON.parse(lockoutStr) : { attempts: 0, timestamp: Date.now() };
+      if (Date.now() - data.timestamp > 30 * 60 * 1000) {
+          data = { attempts: 0, timestamp: Date.now() };
+      }
+      data.attempts += 1;
+      data.timestamp = Date.now();
+      localStorage.setItem(DB_KEYS.ADMIN_ATTEMPTS, JSON.stringify(data));
+  }
+
+  static resetAdminFailure() {
+      localStorage.removeItem(DB_KEYS.ADMIN_ATTEMPTS);
+  }
+
+  // --- USER DATA ---
+  static getJournals(userId: string): JournalEntry[] {
+      const all = JSON.parse(localStorage.getItem(DB_KEYS.JOURNALS) || '[]');
+      return all.filter((j: JournalEntry) => j.userId === userId).sort((a: any,b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }
+
+  static saveJournal(entry: JournalEntry) {
+      const all = JSON.parse(localStorage.getItem(DB_KEYS.JOURNALS) || '[]');
+      all.unshift(entry);
+      localStorage.setItem(DB_KEYS.JOURNALS, JSON.stringify(all));
+  }
+
+  static getMoods(userId: string): MoodEntry[] {
+      const all = JSON.parse(localStorage.getItem(DB_KEYS.MOODS) || '[]');
+      return all.filter((m: MoodEntry) => m.userId === userId);
+  }
+
+  static saveMood(userId: string, mood: 'confetti' | 'rain' | null) {
+      if (mood === null) return;
+      const all = JSON.parse(localStorage.getItem(DB_KEYS.MOODS) || '[]');
+      const entry: MoodEntry = { id: `m_${Date.now()}`, userId, date: new Date().toISOString(), mood };
+      all.push(entry);
+      localStorage.setItem(DB_KEYS.MOODS, JSON.stringify(all));
+  }
+
+  static getBreathLogs(userId: string): BreathLog[] {
+      const all = JSON.parse(localStorage.getItem(DB_KEYS.BREATHE_LOGS) || '[]');
+      return all.filter((b: BreathLog) => b.userId === userId);
+  }
+
+  static recordBreathSession(userId: string, duration: number) {
+      if (duration < 10) return;
+      const all = JSON.parse(localStorage.getItem(DB_KEYS.BREATHE_LOGS) || '[]');
+      all.push({ id: `b_${Date.now()}`, userId, date: new Date().toISOString(), durationSeconds: duration });
+      localStorage.setItem(DB_KEYS.BREATHE_LOGS, JSON.stringify(all));
+  }
+
+  static async saveArt(entry: ArtEntry) {
       if (!this.isOfflineMode) {
-          supabase.from('session_feedback').insert([{
-              id: feedback.id, 
-              user_id: feedback.userId, 
-              companion_name: feedback.companionName,
-              rating: feedback.rating,
-              tags: feedback.tags,
-              duration: feedback.duration,
-              created_at: feedback.date
-          }]).then(({ error }) => { if(error) console.error("Supabase Feedback Error:", error); });
+          try {
+              const { error } = await supabase.from('user_art').insert({
+                  id: entry.id,
+                  user_id: entry.userId,
+                  image_url: entry.imageUrl,
+                  prompt: entry.prompt,
+                  title: entry.title,
+                  created_at: entry.createdAt
+              });
+
+              if (error) {
+                  if (error.code === '42P01') {
+                      this.isOfflineMode = true;
+                      this.saveArtLocal(entry);
+                      return;
+                  }
+                  console.error("Supabase Save Art Error:", error);
+              }
+
+              const { data: allArt } = await supabase
+                  .from('user_art')
+                  .select('id, created_at')
+                  .eq('user_id', entry.userId)
+                  .order('created_at', { ascending: false });
+
+              if (allArt && allArt.length > 5) {
+                  const idsToDelete = allArt.slice(5).map((a: any) => a.id);
+                  if (idsToDelete.length > 0) {
+                      await supabase.from('user_art').delete().in('id', idsToDelete);
+                  }
+              }
+          } catch (e) {
+              console.error("Art Save Exception:", e);
+              this.saveArtLocal(entry);
+          }
+      } else {
+          this.saveArtLocal(entry);
       }
   }
 
-  static getAllFeedback(): SessionFeedback[] { return JSON.parse(localStorage.getItem(DB_KEYS.FEEDBACK) || '[]'); }
-  static saveJournal(entry: JournalEntry) { const j = JSON.parse(localStorage.getItem(DB_KEYS.JOURNALS) || '[]'); j.push(entry); localStorage.setItem(DB_KEYS.JOURNALS, JSON.stringify(j)); }
-  static getJournals(userId: string): JournalEntry[] { return JSON.parse(localStorage.getItem(DB_KEYS.JOURNALS) || '[]').filter((j: JournalEntry) => j.userId === userId).reverse(); }
-  static saveMood(userId: string, mood: 'confetti' | 'rain' | null) { if (!mood) return; const m = JSON.parse(localStorage.getItem(DB_KEYS.MOODS) || '[]'); m.push({ id: `mood_${Date.now()}`, userId, date: new Date().toISOString(), mood }); localStorage.setItem(DB_KEYS.MOODS, JSON.stringify(m)); }
-  static getMoods(userId: string): MoodEntry[] { return JSON.parse(localStorage.getItem(DB_KEYS.MOODS) || '[]').filter((m: MoodEntry) => m.userId === userId).reverse(); }
-  static recordBreathSession(userId: string, durationSeconds: number) { const l = JSON.parse(localStorage.getItem(DB_KEYS.BREATHE_LOGS) || '[]'); l.push({ id: `breath_${Date.now()}`, userId, date: new Date().toISOString(), durationSeconds }); localStorage.setItem(DB_KEYS.BREATHE_LOGS, JSON.stringify(l)); }
-  static getBreathLogs(userId: string): BreathLog[] { return JSON.parse(localStorage.getItem(DB_KEYS.BREATHE_LOGS) || '[]').filter((l: BreathLog) => l.userId === userId); }
-  
-  static saveArt(entry: ArtEntry) {
-      let art: ArtEntry[] = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]');
+  static saveArtLocal(entry: ArtEntry) {
+      let art = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]');
+      const userArt = art.filter((a: ArtEntry) => a.userId === entry.userId);
+      const otherArt = art.filter((a: ArtEntry) => a.userId !== entry.userId);
       
-      // Remove any existing entry with same ID (if update)
-      art = art.filter(a => a.id !== entry.id);
+      userArt.unshift(entry);
       
-      // Separate current user's art
-      let myArt = art.filter(a => a.userId === entry.userId);
-      const otherArt = art.filter(a => a.userId !== entry.userId);
+      while (userArt.length > 5) {
+          userArt.pop();
+      }
       
-      // Add new
-      myArt.push(entry);
-      
-      // Sort newest to oldest
-      myArt.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      
-      // Keep strictly top 5 newest
-      const keptArt = myArt.slice(0, 5);
-      
-      // Merge back (reversing the 'kept' to maintain correct storage order if needed, but simple concat works if we rely on createdAt for sorting display)
-      // Since getUserArt reverses, we want them stored oldest -> newest in the array usually, 
-      // but consistent sorting is safer.
-      
-      // Storing all oldest -> newest for general consistency
-      const combined = [...otherArt, ...keptArt.reverse()]; 
-      
-      try { localStorage.setItem(DB_KEYS.ART, JSON.stringify(combined)); } 
-      catch (e: any) {
-          if (e.name === 'QuotaExceededError' || e.code === 22) {
-              // Emergency Cleanup
-              const sl = combined.slice(combined.length - 10);
-              localStorage.setItem(DB_KEYS.ART, JSON.stringify(sl));
+      const newArt = [...otherArt, ...userArt];
+      try { 
+          localStorage.setItem(DB_KEYS.ART, JSON.stringify(newArt)); 
+      } catch (e) {}
+  }
+
+  static async getUserArt(userId: string): Promise<ArtEntry[]> { 
+      if (!this.isOfflineMode) {
+          try {
+              const { data, error } = await supabase
+                  .from('user_art')
+                  .select('*')
+                  .eq('user_id', userId)
+                  .order('created_at', { ascending: false })
+                  .limit(5);
+              
+              if (error) {
+                  if (error.code === '42P01') {
+                      this.isOfflineMode = true;
+                      return this.getUserArtLocal(userId);
+                  }
+                  throw error;
+              }
+              
+              return data.map((d: any) => ({
+                  id: d.id,
+                  userId: d.user_id,
+                  imageUrl: d.image_url,
+                  prompt: d.prompt,
+                  title: d.title,
+                  createdAt: d.created_at
+              }));
+          } catch (e) {
+              console.warn("Supabase Art Fetch Failed, using local:", e);
+              return this.getUserArtLocal(userId);
           }
       }
+      return this.getUserArtLocal(userId);
   }
 
-  static getUserArt(userId: string): ArtEntry[] { 
-      const art = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]').filter((a: ArtEntry) => a.userId === userId);
-      // Return Newest First
-      return art.sort((a: ArtEntry, b: ArtEntry) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  static getUserArtLocal(userId: string): ArtEntry[] {
+      const art = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]');
+      return art
+          .filter((a: ArtEntry) => a.userId === userId)
+          .sort((a: ArtEntry, b: ArtEntry) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 5);
   }
 
-  static deleteArt(artId: string) { let art = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]'); art = art.filter((a: ArtEntry) => a.id !== artId); localStorage.setItem(DB_KEYS.ART, JSON.stringify(art)); }
+  static async deleteArt(artId: string) { 
+      if (!this.isOfflineMode) {
+          try {
+              await supabase.from('user_art').delete().eq('id', artId);
+          } catch (e) {}
+      }
+      let art = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]'); 
+      art = art.filter((a: ArtEntry) => a.id !== artId); 
+      localStorage.setItem(DB_KEYS.ART, JSON.stringify(art)); 
+  }
+
   static getBreathingCooldown(): number | null { const cd = localStorage.getItem(DB_KEYS.BREATHE_COOLDOWN); return cd ? parseInt(cd, 10) : null; }
   static setBreathingCooldown(timestamp: number) { localStorage.setItem(DB_KEYS.BREATHE_COOLDOWN, timestamp.toString()); }
 
@@ -541,7 +537,7 @@ export class Database {
       const now = new Date(); const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const tx = this.getUserTransactions(userId).filter(t => new Date(t.date) > oneWeekAgo && t.amount < 0);
       const j = this.getJournals(userId).filter(j => new Date(j.date) > oneWeekAgo);
-      const a = this.getUserArt(userId).filter(a => new Date(a.createdAt) > oneWeekAgo);
+      const a = this.getUserArtLocal(userId).filter(a => new Date(a.createdAt) > oneWeekAgo);
       const m = this.getMoods(userId).filter(m => new Date(m.date) > oneWeekAgo);
       const b = this.getBreathLogs(userId).filter(b => new Date(b.date) > oneWeekAgo);
       const score = (tx.length * 3) + (j.length * 1) + (a.length * 1) + (b.length * 1) + (m.length * 0.5);

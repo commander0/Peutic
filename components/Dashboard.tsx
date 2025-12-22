@@ -85,8 +85,13 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
     const [gallery, setGallery] = useState<ArtEntry[]>([]);
     const [isOpen, setIsOpen] = useState(true);
 
+    const refreshGallery = async () => {
+        const art = await Database.getUserArt(userId);
+        setGallery(art);
+    };
+
     useEffect(() => {
-        setGallery(Database.getUserArt(userId));
+        refreshGallery();
     }, [userId]);
 
     const handleGenerate = async () => {
@@ -122,9 +127,9 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
                 
                 const imageUrl = canvas.toDataURL('image/png');
                 const newEntry: ArtEntry = { id: `wisdom_${Date.now()}`, userId: userId, imageUrl: imageUrl, prompt: input, createdAt: new Date().toISOString(), title: "Wisdom Card" };
-                Database.saveArt(newEntry);
-                // Update local state by re-fetching to ensure sync with DB filter logic
-                setGallery(Database.getUserArt(userId));
+                
+                await Database.saveArt(newEntry);
+                await refreshGallery();
                 
                 const link = document.createElement('a'); link.href = imageUrl; link.download = `peutic_wisdom_${Date.now()}.png`; document.body.appendChild(link); link.click(); document.body.removeChild(link);
                 setInput('');
@@ -132,7 +137,13 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
         } catch (e) { console.error(e); } finally { setLoading(false); }
     };
 
-    const handleDelete = (e: React.MouseEvent, id: string) => { e.stopPropagation(); if(confirm("Delete this card?")) { Database.deleteArt(id); setGallery(prev => prev.filter(g => g.id !== id)); } };
+    const handleDelete = async (e: React.MouseEvent, id: string) => { 
+        e.stopPropagation(); 
+        if(confirm("Delete this card?")) { 
+            await Database.deleteArt(id); 
+            await refreshGallery();
+        } 
+    };
 
     return (
         <div className="bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-sm border border-yellow-100 dark:border-gray-800 mb-6">
@@ -153,7 +164,7 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
                         <div className="mt-6 space-y-4">
                             <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Your Cards ({gallery.length})</h4>
                             <div className="flex flex-col gap-4">
-                                {gallery.slice(0, 5).map((art) => (
+                                {gallery.map((art) => (
                                     <div key={art.id} className="bg-gray-50 dark:bg-gray-800 p-2 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm relative group animate-in slide-in-from-top-2 fade-in">
                                         <img src={art.imageUrl} alt="Wisdom Card" className="w-full rounded-xl shadow-sm" />
                                         <div className="absolute top-3 right-3 flex gap-2"><button onClick={(e) => handleDelete(e, art.id)} className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-colors" title="Delete"><Trash2 className="w-3 h-3"/></button></div>
@@ -175,15 +186,14 @@ const SoundscapePlayer: React.FC = () => {
     const [track, setTrack] = useState<'rain' | 'forest' | 'ocean' | 'fire'>('rain');
     const [minimized, setMinimized] = useState(true);
     
-    // Use an explicit audio element ref for standard HTML5 Audio
     const audioRef = useRef<HTMLAudioElement>(null);
 
-    // More Reliable MP3 Sources - Swapped forest for a better wind sound
+    // Reliable MP3 Sources (Mixkit Free Assets)
     const SOUND_URLS = {
-        rain: 'https://www.soundjay.com/nature/sounds/rain-01.mp3',
-        forest: 'https://www.soundjay.com/nature/sounds/wind-howl-01.mp3', // Updated to simple wind howl
-        ocean: 'https://www.soundjay.com/nature/sounds/ocean-wave-1.mp3',
-        fire: 'https://www.soundjay.com/nature/sounds/campfire-1.mp3'
+        rain: 'https://assets.mixkit.co/active_storage/sfx/2496/2496-preview.mp3',
+        forest: 'https://assets.mixkit.co/active_storage/sfx/1483/1483-preview.mp3', // Wind
+        ocean: 'https://assets.mixkit.co/active_storage/sfx/1194/1194-preview.mp3',
+        fire: 'https://assets.mixkit.co/active_storage/sfx/1169/1169-preview.mp3'
     };
 
     // Effect to handle Volume updates
@@ -203,7 +213,6 @@ const SoundscapePlayer: React.FC = () => {
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
                     console.warn("Autoplay prevented or load failed:", error);
-                    // Don't auto-reset playing state here to allow retry on user interaction or load completion
                 });
             }
         } else {
@@ -232,11 +241,11 @@ const SoundscapePlayer: React.FC = () => {
     return (
         <div className={`fixed bottom-6 right-6 z-[80] transition-all duration-500 ease-in-out bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-300 dark:border-yellow-600 shadow-2xl overflow-hidden ${minimized ? 'w-12 h-12 rounded-full' : 'w-72 rounded-3xl p-4'}`}>
             
-            {/* Hidden Audio Element - Removed crossOrigin to fix CORS blocking */}
             <audio 
                 ref={audioRef}
                 src={SOUND_URLS[track]}
                 loop
+                crossOrigin="anonymous" // Attempt to fix CORS if server allows, otherwise fallback handles it
                 onError={(e) => {
                     const err = e.currentTarget.error;
                     console.error("Audio Load Error:", err ? `Code: ${err.code}, Message: ${err.message}` : "Unknown error");
@@ -306,6 +315,7 @@ const SoundscapePlayer: React.FC = () => {
     );
 };
 
+// ... (Rest of file remains unchanged) ...
 // --- WEATHER ENGINE ---
 const WeatherEffect: React.FC<{ type: 'confetti' | 'rain' }> = ({ type }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
