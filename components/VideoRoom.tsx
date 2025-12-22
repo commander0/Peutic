@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Companion, SessionFeedback } from '../types';
 import { 
@@ -128,7 +127,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   const [camOn, setCamOn] = useState(true);
   const [blurBackground, setBlurBackground] = useState(false);
   const [showCredential, setShowCredential] = useState(false);
-  const [cameraAccessBlocked, setCameraAccessBlocked] = useState(false);
   
   // Icebreaker State
   const [showIcebreaker, setShowIcebreaker] = useState(false);
@@ -341,7 +339,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 
                 if (isMounted) {
                     localStreamRef.current = stream;
-                    setCameraAccessBlocked(false);
                     if (videoRef.current) {
                         videoRef.current.srcObject = stream;
                         await videoRef.current.play().catch(e => console.warn("Autoplay block:", e));
@@ -351,9 +348,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 }
             } catch (err) {
                 console.warn("Camera busy (Tavus Priority Active):", err);
-                // If we can't get the camera because Tavus has it, show the "Active" indicator
-                // instead of a broken video. This is the correct behavior for safety.
-                if (isMounted) setCameraAccessBlocked(true);
+                // Camera busy is expected, we just won't show self view
             }
         }, 2500);
     };
@@ -502,15 +497,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         {/* Changed from left-1/2 to right-4 top-4 to avoid covering main subject */}
         <div className="absolute top-4 right-4 z-[100] w-32 md:w-48 aspect-[16/9] md:aspect-video rounded-[2rem] overflow-hidden border-2 border-white/20 bg-black shadow-2xl transition-all duration-300 pointer-events-none">
             <div className="absolute inset-0 bg-black flex items-center justify-center">
-                {cameraAccessBlocked ? (
-                    <div className="flex flex-col items-center justify-center h-full bg-gray-900/90 text-center p-2">
-                        <div className="relative mb-2">
-                            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-[0_0_15px_#22c55e]"></div>
-                            <div className="absolute top-0 left-0 w-3 h-3 bg-green-500 rounded-full animate-ping opacity-75"></div>
-                        </div>
-                        <span className="text-[7px] text-green-400 font-bold uppercase tracking-widest leading-tight">AI Vision<br/>Active</span>
-                    </div>
-                ) : camOn ? (
+                {camOn ? (
                     <video 
                         ref={videoRef} 
                         autoPlay 

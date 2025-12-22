@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Companion, Transaction, JournalEntry, ArtEntry, BreathLog, MoodEntry } from '../types';
@@ -191,7 +190,6 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
 
 // --- SOUNDSCAPE PLAYER ---
 const SoundscapePlayer: React.FC = () => {
-    // ... (No changes to soundscape logic)
     const [playing, setPlaying] = useState(false);
     const [volume, setVolume] = useState(0.4);
     const [track, setTrack] = useState<'rain' | 'forest' | 'ocean' | 'fire'>('rain');
@@ -297,7 +295,6 @@ const SoundscapePlayer: React.FC = () => {
 
 // --- WEATHER ENGINE ---
 const WeatherEffect: React.FC<{ type: 'confetti' | 'rain' }> = ({ type }) => {
-    // ... (No changes to weather effect)
     const canvasRef = useRef<HTMLCanvasElement>(null);
     useEffect(() => {
         const canvas = canvasRef.current; if (!canvas) return; const ctx = canvas.getContext('2d'); if (!ctx) return;
@@ -404,7 +401,7 @@ const CloudHopGame: React.FC = () => {
 
         // Adjusted sizing for "zoomed out" feel
         const pSize = isMobile ? 24 : 32; 
-        const basePlatW = isMobile ? 60 : 80;
+        const basePlatW = isMobile ? 80 : 100;
 
         // Reset Logic
         platformsRef.current = [{x: 0, y: H - 30, w: W, h: 30, type: 'ground'}]; 
@@ -418,8 +415,8 @@ const CloudHopGame: React.FC = () => {
                 type: Math.random() > 0.9 ? 'moving' : 'cloud', 
                 vx: Math.random() > 0.5 ? 1 : -1 
             }); 
-            // Better spacing
-            py -= (isMobile ? 100 : 90) + Math.random() * 40; 
+            // Better spacing - Reduced vertical gap for easier jumps
+            py -= (isMobile ? 60 : 70) + Math.random() * 25; 
         }
         
         // Spawn player
