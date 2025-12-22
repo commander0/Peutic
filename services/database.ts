@@ -445,8 +445,8 @@ export class Database {
                   .eq('user_id', entry.userId)
                   .order('created_at', { ascending: false });
 
-              if (allArt && allArt.length > 5) {
-                  const idsToDelete = allArt.slice(5).map((a: any) => a.id);
+              if (allArt && allArt.length > 15) {
+                  const idsToDelete = allArt.slice(15).map((a: any) => a.id);
                   if (idsToDelete.length > 0) {
                       await supabase.from('user_art').delete().in('id', idsToDelete);
                   }
@@ -468,8 +468,8 @@ export class Database {
       
       userArt.unshift(entry); // Add new to start
       
-      // Enforce strict limit of 5
-      while (userArt.length > 5) {
+      // Enforce strict limit of 15
+      while (userArt.length > 15) {
           userArt.pop(); // Remove oldest
       }
       
@@ -481,7 +481,7 @@ export class Database {
           if (e.name === 'QuotaExceededError' || e.code === 22) {
               console.warn("Storage Quota Exceeded. Cleaning up old art...");
               // Drastic measure: Keep only 1 item per user or empty otherArt
-              // Just try to keep the user's current 5 items
+              // Just try to keep the user's current 15 items
               try {
                   localStorage.setItem(DB_KEYS.ART, JSON.stringify(userArt));
               } catch (retryE) {
@@ -501,7 +501,7 @@ export class Database {
                   .select('*')
                   .eq('user_id', userId)
                   .order('created_at', { ascending: false })
-                  .limit(5);
+                  .limit(15);
               
               if (error) {
                   if (error.code === '42P01') {
@@ -532,7 +532,7 @@ export class Database {
       return art
           .filter((a: ArtEntry) => a.userId === userId)
           .sort((a: ArtEntry, b: ArtEntry) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .slice(0, 5);
+          .slice(0, 15);
   }
 
   static async deleteArt(artId: string) { 
