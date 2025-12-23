@@ -590,6 +590,35 @@ export class Database {
       localStorage.setItem(DB_KEYS.ART, JSON.stringify(art)); 
   }
 
+  static getReportData(userId: string) {
+      const now = new Date();
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      
+      const moods = this.getMoods(userId).filter(m => new Date(m.date) > oneWeekAgo);
+      const art = this.getUserArtLocal(userId).filter(a => new Date(a.createdAt) > oneWeekAgo);
+      const breath = this.getBreathLogs(userId).filter(b => new Date(b.date) > oneWeekAgo);
+      const feedback = this.getAllFeedback().filter(f => f.userId === userId && new Date(f.date) > oneWeekAgo);
+      
+      const txs = this.getUserTransactions(userId);
+      const sessions = txs.filter(t => new Date(t.date) > oneWeekAgo && t.amount < 0);
+      const topups = txs.filter(t => new Date(t.date) > oneWeekAgo && t.amount > 0);
+      
+      const totalSessionMinutes = sessions.reduce((acc, t) => acc + Math.abs(t.amount), 0);
+      
+      const eligible = sessions.length > 0 || topups.length > 0 || moods.length > 0 || art.length > 0;
+      
+      return {
+          eligible,
+          dateStart: oneWeekAgo.toLocaleDateString(),
+          dateEnd: now.toLocaleDateString(),
+          moods,
+          panic: breath,
+          art,
+          totalSessionMinutes,
+          feedback
+      };
+  }
+
   static getBreathingCooldown(): number | null { const cd = localStorage.getItem(DB_KEYS.BREATHE_COOLDOWN); return cd ? parseInt(cd, 10) : null; }
   static setBreathingCooldown(timestamp: number) { localStorage.setItem(DB_KEYS.BREATHE_COOLDOWN, timestamp.toString()); }
 
