@@ -8,14 +8,12 @@ import {
   Sun, Cloud, Feather, Anchor, Gamepad2, RefreshCw, Play, Zap, Star, Edit2, Trash2, Bell,
   CloudRain, Image as ImageIcon, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Shield, Moon,
   Twitter, Instagram, Linkedin, LifeBuoy, Volume2, VolumeX, Minimize2, Maximize2, Music, Radio, Flame as Fire, Smile, Trees,
-  Mail, Smartphone, Globe, CreditCard, ToggleLeft, ToggleRight, StopCircle, ArrowRight, FileText
+  Mail, Smartphone, Globe, CreditCard, ToggleLeft, ToggleRight, StopCircle, ArrowRight
 } from 'lucide-react';
 import { Database, STABLE_AVATAR_POOL } from '../services/database';
 import { generateAffirmation, generateDailyInsight } from '../services/geminiService';
 import TechCheck from './TechCheck'; 
 import GroundingMode from './GroundingMode';
-// @ts-ignore
-import { jsPDF } from 'jspdf';
 
 interface DashboardProps {
   user: User;
@@ -86,195 +84,6 @@ const CollapsibleSection: React.FC<{ title: string; icon: any; children: React.R
 // ==========================================
 // FEATURE COMPONENTS
 // ==========================================
-
-// --- WEEKLY REPORT GENERATOR ---
-const WeeklyReportCard: React.FC<{ user: User }> = ({ user }) => {
-    const [loading, setLoading] = useState(false);
-    const [status, setStatus] = useState<'IDLE' | 'GENERATING' | 'LOCKED'>('IDLE');
-    const [data, setData] = useState<any>(null);
-
-    useEffect(() => {
-        const reportData = Database.getReportData(user.id);
-        if (reportData.eligible) {
-            setData(reportData);
-            setStatus('IDLE');
-        } else {
-            setStatus('LOCKED');
-        }
-    }, [user.id]);
-
-    const generatePDF = () => {
-        if (!data) return;
-        setLoading(true);
-        setStatus('GENERATING');
-
-        setTimeout(() => {
-            try {
-                const doc = new jsPDF();
-                const width = doc.internal.pageSize.getWidth();
-                const height = doc.internal.pageSize.getHeight();
-                const yellow = '#FACC15';
-                const black = '#1a1a1a';
-                const grey = '#6B7280';
-
-                // --- PAGE 1 BACKGROUND ---
-                doc.setFillColor("#FFFBEB");
-                doc.rect(0, 0, width, height, "F");
-
-                // Header
-                doc.setFillColor(yellow);
-                doc.rect(0, 0, width, 40, "F");
-                
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(24);
-                doc.setTextColor(black);
-                doc.text("WEEKLY MIND & SOUL REPORT", 20, 25);
-                
-                doc.setFontSize(10);
-                doc.setFont("helvetica", "normal");
-                doc.text("CONFIDENTIAL ANALYSIS", width - 60, 25);
-
-                // Meta Info
-                doc.setFontSize(14);
-                doc.setTextColor(black);
-                doc.text(`Prepared for: ${user.name}`, 20, 60);
-                doc.setFontSize(10);
-                doc.setTextColor(grey);
-                doc.text(`Period: ${data.dateStart} - ${data.dateEnd}`, 20, 68);
-
-                // --- SECTION 1: EMOTIONAL CLIMATE ---
-                let y = 90;
-                doc.setDrawColor(yellow);
-                doc.setLineWidth(1);
-                doc.line(20, y, width - 20, y);
-                y += 15;
-
-                doc.setFontSize(16);
-                doc.setTextColor(black);
-                doc.setFont("helvetica", "bold");
-                doc.text("1. Emotional Climate", 20, y);
-                
-                y += 15;
-                const moodCounts = { confetti: 0, rain: 0 };
-                data.moods.forEach((m: any) => {
-                    if (m.mood === 'confetti') moodCounts.confetti++;
-                    if (m.mood === 'rain') moodCounts.rain++;
-                });
-                
-                doc.setFontSize(12);
-                doc.setFont("helvetica", "normal");
-                doc.text(`Celebration Moments: ${moodCounts.confetti}`, 20, y);
-                doc.text(`Melancholy Moments: ${moodCounts.rain}`, 100, y);
-                
-                // Visual Bar
-                y += 10;
-                const totalMoods = moodCounts.confetti + moodCounts.rain || 1;
-                const confettiW = (moodCounts.confetti / totalMoods) * 160;
-                const rainW = (moodCounts.rain / totalMoods) * 160;
-                
-                if (moodCounts.confetti > 0) {
-                    doc.setFillColor("#F59E0B"); // Orange/Yellow
-                    doc.rect(20, y, confettiW, 10, "F");
-                }
-                if (moodCounts.rain > 0) {
-                    doc.setFillColor("#3B82F6"); // Blue
-                    doc.rect(20 + confettiW, y, rainW, 10, "F");
-                }
-
-                // --- SECTION 2: RESILIENCE & CLARITY ---
-                y += 30;
-                doc.line(20, y, width - 20, y);
-                y += 15;
-                
-                doc.setFontSize(16);
-                doc.setTextColor(black);
-                doc.setFont("helvetica", "bold");
-                doc.text("2. Resilience & Clarity", 20, y);
-                
-                y += 15;
-                doc.setFontSize(12);
-                doc.setFont("helvetica", "normal");
-                doc.text(`Panic Relief Activations: ${data.panic.length}`, 20, y);
-                
-                y += 10;
-                doc.text("Recent Clarity Prompts:", 20, y);
-                y += 8;
-                doc.setFontSize(10);
-                doc.setTextColor(grey);
-                data.art.slice(0, 3).forEach((a: any) => {
-                    doc.text(`• "${a.prompt.substring(0, 70)}${a.prompt.length > 70 ? '...' : ''}"`, 25, y);
-                    y += 6;
-                });
-
-                // --- SECTION 3: SESSION HIGHLIGHTS ---
-                y += 15;
-                doc.setDrawColor(yellow);
-                doc.line(20, y, width - 20, y);
-                y += 15;
-
-                doc.setFontSize(16);
-                doc.setTextColor(black);
-                doc.setFont("helvetica", "bold");
-                doc.text("3. Connection Highlights", 20, y);
-                
-                y += 15;
-                doc.setFontSize(12);
-                doc.setFont("helvetica", "normal");
-                doc.text(`Total Therapy Time: ${data.totalSessionMinutes} minutes`, 20, y);
-                
-                if (data.feedback.length > 0) {
-                    const avgRating = (data.feedback.reduce((acc: number, f: any) => acc + f.rating, 0) / data.feedback.length).toFixed(1);
-                    y += 10;
-                    doc.text(`Average Session Rating: ${avgRating} / 5.0`, 20, y);
-                }
-
-                // Footer
-                doc.setFontSize(8);
-                doc.setTextColor(grey);
-                doc.text("Generated by Peutic Intelligence Engine. Private & Confidential.", width / 2, height - 10, { align: "center" });
-
-                doc.save(`peutic_weekly_report_${new Date().toISOString().split('T')[0]}.pdf`);
-                setLoading(false);
-                setStatus('IDLE');
-            } catch (e) {
-                console.error("PDF Gen Error", e);
-                setLoading(false);
-            }
-        }, 1000);
-    };
-
-    return (
-        <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 p-6 shadow-sm flex items-center justify-between">
-            <div className="flex-1">
-                <h3 className="font-black text-xl text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-yellow-500" /> Weekly Insight Report
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md">
-                    Get a beautiful PDF summary of your emotional climate, resilience metrics, and clarity journey from the past 7 days.
-                </p>
-                {status === 'LOCKED' && (
-                    <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs font-bold text-gray-500">
-                        <Lock className="w-3 h-3" /> Requires 1+ Top-up & Session this week
-                    </div>
-                )}
-            </div>
-            <div>
-                <button 
-                    onClick={generatePDF} 
-                    disabled={status === 'LOCKED' || loading}
-                    className={`px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all ${
-                        status === 'LOCKED' 
-                        ? 'bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed' 
-                        : 'bg-black dark:bg-white text-white dark:text-black hover:scale-105 shadow-lg'
-                    }`}
-                >
-                    {loading ? <RefreshCw className="w-4 h-4 animate-spin"/> : <Download className="w-4 h-4"/>}
-                    {loading ? 'Creating...' : 'Download PDF'}
-                </button>
-            </div>
-        </div>
-    );
-};
 
 // --- WISDOM GENERATOR ---
 const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
@@ -1372,11 +1181,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                       </div>
                   )}
 
+                  {/* ... History and Settings tabs logic remains ... */}
                   {activeTab === 'history' && (
                       <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-500">
-                          {/* WEEKLY REPORT GENERATOR */}
-                          <WeeklyReportCard user={user} />
-
                           <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-100 dark:border-gray-800 overflow-hidden">
                               <table className="w-full text-left">
                                   <thead className="bg-gray-50 dark:bg-gray-800 text-xs font-bold text-gray-500 uppercase tracking-wider">
