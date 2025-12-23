@@ -1,5 +1,5 @@
 
-import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, ServerMetric, MoodEntry, JournalEntry, PromoCode, SessionFeedback, ArtEntry, BreathLog, SessionMemory, GiftCard } from '../types';
+import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, ServerMetric, MoodEntry, JournalEntry, PromoCode, SessionFeedback, ArtEntry, BreathLog, PanicLog, SessionMemory, GiftCard } from '../types';
 import { supabase } from './supabaseClient';
 
 const DB_KEYS = {
@@ -16,6 +16,7 @@ const DB_KEYS = {
   ADMIN_ATTEMPTS: 'peutic_db_admin_attempts_v16',
   BREATHE_COOLDOWN: 'peutic_db_breathe_cooldown_v16',
   BREATHE_LOGS: 'peutic_db_breathe_logs_v16',
+  PANIC_LOGS: 'peutic_db_panic_logs_v16',
   MEMORIES: 'peutic_db_memories_v16',
   GIFTS: 'peutic_db_gifts_v16',
   FEEDBACK: 'peutic_db_feedback_v16',
@@ -448,6 +449,17 @@ export class Database {
       localStorage.setItem(DB_KEYS.BREATHE_LOGS, JSON.stringify(all));
   }
 
+  static getPanicLogs(userId: string): PanicLog[] {
+      const all = JSON.parse(localStorage.getItem(DB_KEYS.PANIC_LOGS) || '[]');
+      return all.filter((p: PanicLog) => p.userId === userId);
+  }
+
+  static recordPanicUse(userId: string) {
+      const all = JSON.parse(localStorage.getItem(DB_KEYS.PANIC_LOGS) || '[]');
+      all.push({ id: `p_${Date.now()}`, userId, date: new Date().toISOString() });
+      localStorage.setItem(DB_KEYS.PANIC_LOGS, JSON.stringify(all));
+  }
+
   static async saveArt(entry: ArtEntry) {
       if (!this.isOfflineMode) {
           try {
@@ -606,6 +618,41 @@ export class Database {
       const pct = score / target;
       if (pct > 0 && pct < 0.3) message = "Great start!"; else if (pct >= 0.3 && pct < 0.6) message = "Building momentum!"; else if (pct >= 0.6 && pct < 1) message = "Almost there!"; else if (pct >= 1) message = "Goal Crushed! 🌟";
       return { current: score, target, message };
+  }
+
+  static getReportData(userId: string) {
+      const now = new Date();
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      
+      const transactions = this.getUserTransactions(userId);
+      // Top ups (cost > 0)
+      const hasToppedUp = transactions.some(t => t.cost && t.cost > 0);
+      // Session this week (amount < 0, recent)
+      const sessions = transactions.filter(t => t.amount < 0 && new Date(t.date) > oneWeekAgo);
+      const hasSessionThisWeek = sessions.length > 0;
+      const totalSessionMinutes = sessions.reduce((acc, t) => acc + Math.abs(t.amount), 0);
+
+      if (!hasToppedUp || !hasSessionThisWeek) {
+          return { eligible: false };
+      }
+
+      const moods = this.getMoods(userId).filter(m => new Date(m.date) > oneWeekAgo);
+      const journals = this.getJournals(userId).filter(j => new Date(j.date) > oneWeekAgo);
+      const art = this.getUserArtLocal(userId).filter(a => new Date(a.createdAt) > oneWeekAgo);
+      const panic = this.getPanicLogs(userId).filter(p => new Date(p.date) > oneWeekAgo);
+      const feedback = this.getAllFeedback().filter(f => f.userId === userId && new Date(f.date) > oneWeekAgo);
+
+      return {
+          eligible: true,
+          dateStart: oneWeekAgo.toLocaleDateString(),
+          dateEnd: now.toLocaleDateString(),
+          moods,
+          journals,
+          art,
+          panic,
+          feedback,
+          totalSessionMinutes
+      };
   }
 
   static getPromoCodes(): PromoCode[] { return JSON.parse(localStorage.getItem(DB_KEYS.PROMOS) || '[]'); }

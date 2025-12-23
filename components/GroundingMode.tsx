@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Eye, Hand, Ear, Coffee, Wind, CheckCircle, ArrowRight, Heart, Volume2, VolumeX, Loader2, Play } from 'lucide-react';
 import { generateSpeech } from '../services/geminiService';
+import { Database } from '../services/database';
 
 interface GroundingModeProps {
   onClose: () => void;
@@ -33,6 +34,14 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
 
   const currentStep = STEPS[stepIndex];
   const progress = ((stepIndex) / (STEPS.length - 1)) * 100;
+
+  useEffect(() => {
+      // Log usage for weekly report
+      const user = Database.getUser();
+      if (user) {
+          Database.recordPanicUse(user.id);
+      }
+  }, []);
 
   // Manual PCM Decode (Gemini returns 24kHz raw PCM usually)
   const pcmToAudioBuffer = (chunk: Uint8Array, ctx: AudioContext): AudioBuffer => {

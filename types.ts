@@ -112,6 +112,12 @@ export interface BreathLog {
   durationSeconds: number;
 }
 
+export interface PanicLog {
+  id: string;
+  userId: string;
+  date: string;
+}
+
 export interface PromoCode {
   id: string;
   code: string;
