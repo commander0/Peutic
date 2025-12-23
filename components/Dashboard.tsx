@@ -281,6 +281,7 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [gallery, setGallery] = useState<ArtEntry[]>([]);
+    const [isOpen, setIsOpen] = useState(false);
 
     const refreshGallery = async () => {
         const art = await Database.getUserArt(userId);
@@ -342,33 +343,38 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
     };
 
     return (
-        <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-100 dark:border-gray-800 p-4 md:p-6 shadow-sm">
-             <div className="flex items-center gap-2 mb-4">
-                <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg"><Lightbulb className="w-4 h-4 text-purple-600 dark:text-purple-400" /></div>
-                <h3 className="font-bold text-gray-900 dark:text-white text-sm">Get Clarity</h3>
-             </div>
-            <div className="space-y-4">
-                <textarea className="w-full h-24 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 text-sm focus:border-purple-400 dark:text-white outline-none resize-none transition-all" placeholder="What's weighing on your mind?" value={input} onChange={(e) => setInput(e.target.value)} />
-                <button onClick={handleGenerate} disabled={loading || !input} className={`w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${loading || !input ? 'bg-gray-100 dark:bg-gray-800 text-gray-400' : 'bg-purple-600 text-white hover:bg-purple-500 hover:shadow-md'}`}>
-                    {loading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />} {loading ? 'Finding Clarity...' : 'Reframe Thought'}
-                </button>
-                {gallery.length > 0 && (
-                    <div className="mt-6 space-y-4">
-                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Your Cards ({gallery.length})</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            {gallery.map((art) => (
-                                <div key={art.id} className="relative group aspect-square bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm animate-in zoom-in duration-300">
-                                    <img src={art.imageUrl} alt="Wisdom Card" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                        <button onClick={(e) => handleDelete(e, art.id)} className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-colors" title="Delete"><Trash2 className="w-3 h-3"/></button>
-                                        <a href={art.imageUrl} download={`wisdom-${art.id}.jpg`} onClick={(e) => e.stopPropagation()} className="p-2 bg-white hover:bg-gray-100 text-black rounded-full shadow-lg transition-colors" title="Download"><Download className="w-3 h-3"/></a>
+        <div className="bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-sm border border-yellow-100 dark:border-gray-800 mb-6">
+            <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                 <div className="flex items-center gap-2">
+                    <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg"><Lightbulb className="w-4 h-4 text-purple-600 dark:text-purple-400" /></div>
+                    <h3 className="font-bold text-gray-900 dark:text-white text-sm">Get Clarity</h3>
+                 </div>
+                 {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+            </button>
+            {isOpen && (
+                <div className="p-4 pt-0">
+                    <textarea className="w-full h-20 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 text-sm focus:border-purple-400 dark:text-white outline-none resize-none transition-all mb-2" placeholder="What's weighing on your mind?" value={input} onChange={(e) => setInput(e.target.value)} />
+                    <button onClick={handleGenerate} disabled={loading || !input} className={`w-full py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${loading || !input ? 'bg-gray-100 dark:bg-gray-800 text-gray-400' : 'bg-purple-600 text-white hover:bg-purple-500 hover:shadow-md'}`}>
+                        {loading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />} {loading ? 'Finding Clarity...' : 'Reframe Thought'}
+                    </button>
+                    {gallery.length > 0 && (
+                        <div className="mt-6 space-y-4">
+                            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Your Cards ({gallery.length})</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                {gallery.map((art) => (
+                                    <div key={art.id} className="relative group aspect-square bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm animate-in zoom-in duration-300">
+                                        <img src={art.imageUrl} alt="Wisdom Card" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                            <button onClick={(e) => handleDelete(e, art.id)} className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-colors" title="Delete"><Trash2 className="w-3 h-3"/></button>
+                                            <a href={art.imageUrl} download={`wisdom-${art.id}.jpg`} onClick={(e) => e.stopPropagation()} className="p-2 bg-white hover:bg-gray-100 text-black rounded-full shadow-lg transition-colors" title="Download"><Download className="w-3 h-3"/></a>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                )}
-            </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 };
@@ -756,54 +762,56 @@ const JournalSection: React.FC<{ user: User }> = ({ user }) => {
     };
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 h-[500px]">
-            {/* Editor Side */}
-            <div className="flex flex-col h-full bg-[#fdfbf7] dark:bg-[#1a1a1a] rounded-2xl p-6 border border-yellow-200 dark:border-gray-800 shadow-inner relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-full h-1 bg-yellow-400 opacity-50"></div>
-                <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Entry: {new Date().toLocaleDateString()}</span>
-                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+        <CollapsibleSection title="Live Journal" icon={BookOpen}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 h-[500px]">
+                {/* Editor Side */}
+                <div className="flex flex-col h-full bg-[#fdfbf7] dark:bg-[#1a1a1a] rounded-2xl p-6 border border-yellow-200 dark:border-gray-800 shadow-inner relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-yellow-400 opacity-50"></div>
+                    <div className="flex items-center justify-between mb-4">
+                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Entry: {new Date().toLocaleDateString()}</span>
+                        <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                    </div>
+                    <textarea 
+                        className="flex-1 w-full bg-transparent dark:text-gray-200 p-0 border-none focus:ring-0 outline-none resize-none text-lg leading-relaxed placeholder:text-gray-300 dark:placeholder:text-gray-700 font-medium" 
+                        placeholder="What's on your mind today? Start writing..." 
+                        value={content} 
+                        onChange={e => setContent(e.target.value)}
+                        style={{ backgroundImage: 'linear-gradient(transparent 95%, #e5e7eb 95%)', backgroundSize: '100% 2rem', lineHeight: '2rem' }}
+                    ></textarea>
+                    <div className="mt-4 flex justify-end">
+                        <button onClick={handleSave} className={`bg-black dark:bg-white text-white dark:text-black px-6 py-2 rounded-full font-bold text-sm hover:scale-105 transition-all shadow-lg flex items-center gap-2 ${!content.trim() ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={!content.trim()}>
+                            {saved ? <CheckCircle className="w-4 h-4 text-green-500"/> : <Save className="w-4 h-4"/>}
+                            {saved ? "Saved" : "Save Note"}
+                        </button>
+                    </div>
                 </div>
-                <textarea 
-                    className="flex-1 w-full bg-transparent dark:text-gray-200 p-0 border-none focus:ring-0 outline-none resize-none text-lg leading-relaxed placeholder:text-gray-300 dark:placeholder:text-gray-700 font-medium" 
-                    placeholder="What's on your mind today? Start writing..." 
-                    value={content} 
-                    onChange={e => setContent(e.target.value)}
-                    style={{ backgroundImage: 'linear-gradient(transparent 95%, #e5e7eb 95%)', backgroundSize: '100% 2rem', lineHeight: '2rem' }}
-                ></textarea>
-                <div className="mt-4 flex justify-end">
-                    <button onClick={handleSave} className={`bg-black dark:bg-white text-white dark:text-black px-6 py-2 rounded-full font-bold text-sm hover:scale-105 transition-all shadow-lg flex items-center gap-2 ${!content.trim() ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={!content.trim()}>
-                        {saved ? <CheckCircle className="w-4 h-4 text-green-500"/> : <Save className="w-4 h-4"/>}
-                        {saved ? "Saved" : "Save Note"}
-                    </button>
-                </div>
-            </div>
 
-            {/* History Side */}
-            <div className="flex flex-col h-full bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-                <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex justify-between items-center">
-                    <h3 className="font-bold text-gray-500 text-xs uppercase tracking-wider flex items-center gap-2"><Clock className="w-3 h-3"/> Timeline</h3>
-                    <span className="text-[10px] font-bold bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full text-gray-600 dark:text-gray-300">{entries.length} Entries</span>
-                </div>
-                <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-yellow-200 dark:scrollbar-thumb-gray-700">
-                    {entries.length === 0 && (
-                        <div className="h-full flex flex-col items-center justify-center text-gray-400 opacity-50">
-                            <BookOpen className="w-12 h-12 mb-2 stroke-1"/>
-                            <p className="text-sm">Your story begins here.</p>
-                        </div>
-                    )}
-                    {entries.map(entry => (
-                        <div key={entry.id} className="group p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all cursor-default shadow-sm hover:shadow-md">
-                            <div className="flex justify-between items-start mb-2">
-                                <span className="text-[10px] font-black text-yellow-600 dark:text-yellow-500 uppercase tracking-wide bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-md">{new Date(entry.date).toLocaleDateString()}</span>
-                                <span className="text-[10px] text-gray-400 font-mono">{new Date(entry.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                {/* History Side */}
+                <div className="flex flex-col h-full bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+                    <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex justify-between items-center">
+                        <h3 className="font-bold text-gray-500 text-xs uppercase tracking-wider flex items-center gap-2"><Clock className="w-3 h-3"/> Timeline</h3>
+                        <span className="text-[10px] font-bold bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full text-gray-600 dark:text-gray-300">{entries.length} Entries</span>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-yellow-200 dark:scrollbar-thumb-gray-700">
+                        {entries.length === 0 && (
+                            <div className="h-full flex flex-col items-center justify-center text-gray-400 opacity-50">
+                                <BookOpen className="w-12 h-12 mb-2 stroke-1"/>
+                                <p className="text-sm">Your story begins here.</p>
                             </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3 leading-relaxed font-medium group-hover:text-black dark:group-hover:text-white transition-colors">{entry.content}</p>
-                        </div>
-                    ))}
+                        )}
+                        {entries.map(entry => (
+                            <div key={entry.id} className="group p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all cursor-default shadow-sm hover:shadow-md">
+                                <div className="flex justify-between items-start mb-2">
+                                    <span className="text-[10px] font-black text-yellow-600 dark:text-yellow-500 uppercase tracking-wide bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-md">{new Date(entry.date).toLocaleDateString()}</span>
+                                    <span className="text-[10px] text-gray-400 font-mono">{new Date(entry.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                </div>
+                                <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3 leading-relaxed font-medium group-hover:text-black dark:group-hover:text-white transition-colors">{entry.content}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
-        </div>
+        </CollapsibleSection>
     );
 };
 
@@ -1284,9 +1292,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                               <MoodTracker onMoodSelect={handleMoodSelect} />
                           </div>
 
-                          {/* Mindful Arcade - Moved Up */}
+                          <JournalSection user={user} />
+                          <WisdomGenerator userId={user.id} />
+
+                          {/* Consolidated Mindful Arcade */}
                           <CollapsibleSection title="Mindful Arcade" icon={Gamepad2}>
-                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
                                   {/* Mindful Match */}
                                   <div className="relative w-full h-[350px] md:h-[400px] xl:h-[450px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col bg-sky-50 dark:bg-gray-800">
                                        <div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none">
@@ -1303,15 +1314,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                        <CloudHopGame />
                                   </div>
                               </div>
-                          </CollapsibleSection>
-
-                          {/* Unified Hub: Inner Sanctuary */}
-                          <CollapsibleSection title="Inner Sanctuary" icon={Feather}>
-                               <div className="space-y-8">
-                                   <JournalSection user={user} />
-                                   <div className="border-t border-dashed border-yellow-200 dark:border-gray-700" />
-                                   <WisdomGenerator userId={user.id} />
-                               </div>
                           </CollapsibleSection>
 
                           {/* COMPANION GRID */}
