@@ -153,7 +153,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                       </button>
                   </div>
 
-                  <div className="flex items-center justify-center gap-4 md:gap-8 pt-6 md:pt-10 border-t border-yellow-200/30 dark:border-gray-800">
+                  <div className="flex items-center justify-center gap-4 md:gap-8 pt-4 md:pt-6">
                       <div className="flex -space-x-3">
                           {STABLE_AVATAR_POOL.slice(0, 4).map((src, i) => (
                               <img key={i} src={src} className="w-10 h-10 md:w-12 md:h-12 rounded-full border-4 border-[#FFFBEB] dark:border-black object-cover" alt="User" />
@@ -245,7 +245,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                                   <AvatarImage src={spec.imageUrl} className="w-full h-full object-cover" alt={spec.name} />
                                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                               </div>
-                              <div className="h-[25%] md:h-[20%] bg-[#FFFBEB] dark:bg-gray-900 p-2 md:p-3 flex flex-col justify-center items-center text-center border-t border-yellow-100/50 dark:border-gray-800 relative z-10 transition-colors">
+                              <div className="h-[25%] md:h-[20%] bg-[#FFFBEB] dark:bg-gray-900 p-2 md:p-3 flex flex-col justify-center items-center text-center relative z-10 transition-colors">
                                   <p className="text-[10px] md:text-xs font-black text-gray-800 dark:text-gray-200 uppercase tracking-widest line-clamp-1">{spec.specialty}</p>
                               </div>
                           </div>
@@ -264,7 +264,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                                   <AvatarImage src={spec.imageUrl} className="w-full h-full object-cover" alt={spec.name} />
                                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                               </div>
-                              <div className="h-[25%] md:h-[20%] bg-[#FFFBEB] dark:bg-gray-900 p-2 md:p-3 flex flex-col justify-center items-center text-center border-t border-yellow-100/50 dark:border-gray-800 relative z-10 transition-colors">
+                              <div className="h-[25%] md:h-[20%] bg-[#FFFBEB] dark:bg-gray-900 p-2 md:p-3 flex flex-col justify-center items-center text-center relative z-10 transition-colors">
                                   <p className="text-[10px] md:text-xs font-black text-gray-800 dark:text-gray-200 uppercase tracking-widest line-clamp-1">{spec.specialty}</p>
                               </div>
                           </div>
@@ -342,7 +342,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
       </section>
 
       {/* High-End Footer - BLENDED */}
-      <footer className="bg-[#FFFBEB] dark:bg-[#0A0A0A] text-black dark:text-white py-16 md:py-24 px-6 md:px-10 border-t border-yellow-200 dark:border-gray-900 relative z-20 transition-colors">
+      <footer className="bg-[#FFFBEB] dark:bg-[#0A0A0A] text-black dark:text-white py-16 md:py-24 px-6 md:px-10 relative z-20 transition-colors">
           <div className="max-w-7xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-16 mb-12 md:mb-20">
                   <div className="md:col-span-5 space-y-6 md:space-y-8">
@@ -393,7 +393,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                   </div>
               </div>
               
-              <div className="pt-8 md:pt-10 border-t border-black/10 dark:border-gray-900 flex flex-col md:flex-row justify-between items-center text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-gray-700 dark:text-gray-600 gap-4 md:gap-0">
+              <div className="pt-8 md:pt-10 flex flex-col md:flex-row justify-between items-center text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-gray-700 dark:text-gray-600 gap-4 md:gap-0">
                   <p>&copy; 2025 Peutic Global Inc. | ISO 27001 Certified</p>
                   <div className="flex items-center gap-3">
                       <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-green-500 rounded-full animate-pulse"></div>
