@@ -88,7 +88,6 @@ const CollapsibleSection: React.FC<{ title: string; icon: any; children: React.R
 
 // --- WISDOM GENERATOR ---
 const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
-    // ... (No changes to logic, keeping existing)
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [gallery, setGallery] = useState<ArtEntry[]>([]);
@@ -184,7 +183,6 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
     );
 };
 
-// ... (Other internal components: SoundscapePlayer, WeatherEffect, MindfulMatchGame, CloudHopGame, MoodTracker, JournalSection, PaymentModal, BreathingExercise, ProfileModal are preserved exactly as is)
 const SoundscapePlayer: React.FC = () => {
     const [playing, setPlaying] = useState(false);
     const [volume, setVolume] = useState(0.4);
@@ -330,7 +328,8 @@ const MindfulMatchGame: React.FC = () => {
             <div className="absolute top-3 left-4 z-20 flex gap-2"><span className="text-[10px] font-bold bg-white/50 dark:bg-black/50 px-2 py-1 rounded-full text-gray-500">Moves: {moves}</span>{bestScore > 0 && <span className="text-[10px] font-bold bg-yellow-100 dark:bg-yellow-900/50 px-2 py-1 rounded-full text-yellow-700 dark:text-yellow-500">Best: {bestScore}</span>}</div>
             <button onClick={initGame} className="absolute top-3 right-3 p-2 hover:bg-yellow-100 dark:hover:bg-gray-700 rounded-full transition-colors z-20"><RefreshCw className="w-4 h-4 text-yellow-600 dark:text-yellow-400" /></button>
             {won ? (<div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in"><Trophy className="w-16 h-16 text-yellow-500 mb-4 animate-bounce" /><p className="font-black text-2xl text-yellow-900 dark:text-white">Zen Master!</p><p className="text-sm text-gray-500 mb-6">Completed in {moves} moves</p><button onClick={initGame} className="bg-black dark:bg-white dark:text-black text-white px-8 py-3 rounded-full font-bold text-sm hover:scale-105 transition-transform">Replay</button></div>) : (
-                <div className="w-full h-full grid grid-cols-4 grid-rows-4 gap-2 md:gap-3 p-2">
+                // CHANGED GAP FROM gap-2 to gap-px (1px) TO MAKE TILES THICKER
+                <div className="w-full h-full grid grid-cols-4 grid-rows-4 gap-px p-0.5">
                     {cards.map((card, i) => { const isVisible = flipped.includes(i) || solved.includes(i); const Icon = card.icon; return (<div key={i} className="perspective-1000 w-full h-full"><button onClick={() => handleCardClick(i)} className={`w-full h-full rounded-xl flex items-center justify-center transition-all duration-500 transform-style-3d ${isVisible ? 'bg-white dark:bg-gray-700 border-2 border-yellow-400 shadow-lg rotate-y-180' : 'bg-gray-900 dark:bg-gray-800 shadow-md'}`}>{isVisible ? <Icon className="w-5 h-5 md:w-8 md:h-8 text-yellow-500 animate-in zoom-in" /> : <div className="w-2 h-2 bg-gray-700 rounded-full"></div>}</button></div>); })}
                 </div>
             )}
@@ -1073,19 +1072,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                               <MoodTracker onMoodSelect={handleMoodSelect} />
                           </div>
 
-                          {/* Mindful Arcade - Moved Up */}
+                          {/* Mindful Arcade - Moved Up - COMPRESSED HEIGHT FOR TABLET */}
                           <CollapsibleSection title="Mindful Arcade" icon={Gamepad2}>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                                  {/* Mindful Match */}
-                                  <div className="relative w-full h-[350px] md:h-[400px] xl:h-[450px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col bg-sky-50 dark:bg-gray-800">
+                                  {/* Mindful Match - Height adjusted to md:h-[340px] */}
+                                  <div className="relative w-full h-[350px] md:h-[340px] xl:h-[400px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col bg-sky-50 dark:bg-gray-800">
                                        <div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none">
                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 bg-white/90 dark:bg-black/90 px-3 py-1.5 rounded-full shadow-sm">Mindful Match</span>
                                        </div>
                                        <MindfulMatchGame />
                                   </div>
                                   
-                                  {/* Cloud Hop */}
-                                  <div className="relative w-full h-[350px] md:h-[400px] xl:h-[450px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col">
+                                  {/* Cloud Hop - Height adjusted to md:h-[340px] */}
+                                  <div className="relative w-full h-[350px] md:h-[340px] xl:h-[400px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col">
                                        <div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none">
                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 bg-white/90 dark:bg-black/90 px-3 py-1.5 rounded-full shadow-sm">Cloud Hop</span>
                                        </div>
@@ -1310,7 +1309,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                           <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" /></div>
                                           <div>
                                               <p className="font-bold text-gray-900 dark:text-white text-sm">Email Notifications</p>
-                                              <p className="text-xs text-gray-500">Weekly insights and receipts.</p>
+                                              <p className="text-xs text-gray-500">Receive session summaries and insights.</p>
                                           </div>
                                       </div>
                                       <button 

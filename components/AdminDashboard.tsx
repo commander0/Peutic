@@ -8,7 +8,7 @@ import {
     Users, DollarSign, Activity, LogOut, Settings, Video, 
     Search, Edit2, Ban, Zap, ShieldAlert, 
     Terminal, Globe, Megaphone, Menu, X, Gift, Download, Tag,
-    Clock, Server, Star, LayoutGrid, List, Heart, TrendingUp, AlertTriangle, UserCheck, Shield, Eye
+    Clock, Server, Star, LayoutGrid, List, Heart, TrendingUp, AlertTriangle, UserCheck, Shield, Eye, Trash2
 } from 'lucide-react';
 import { Database, STABLE_AVATAR_POOL } from '../services/database';
 import { User, UserRole, Companion, Transaction, GlobalSettings, SystemLog, PromoCode, SessionFeedback, MoodEntry } from '../types';
@@ -64,23 +64,18 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [promos, setPromos] = useState<PromoCode[]>([]);
   const [feedback, setFeedback] = useState<SessionFeedback[]>([]);
-  const [moods, setMoods] = useState<MoodEntry[]>([]); // Need to fetch all moods logic
+  const [moods, setMoods] = useState<MoodEntry[]>([]); 
   const [activeCount, setActiveCount] = useState(0);
   
   // UI States
   const [searchTerm, setSearchTerm] = useState('');
   const [specialistView, setSpecialistView] = useState<'grid' | 'list'>('list');
-  const [showUserModal, setShowUserModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   
   // Computed
   const MAX_CONCURRENT_CAPACITY = 15;
   const totalRevenue = transactions.filter(t => t.amount > 0).reduce((acc, t) => acc + (t.cost || 0), 0);
-  const avgSatisfaction = feedback.length > 0 ? (feedback.reduce((acc, f) => acc + f.rating, 0) / feedback.length).toFixed(1) : "5.0";
   
-  // Mock Mood Data Aggregation (In real app, fetch from DB)
-  // Since Database.getMoods takes userId, we need a way to get ALL moods. 
-  // For this demo, we will simulate global mood data based on individual fetches or just mock it for the chart.
+  // Mock Mood Data
   const moodData = [
       { name: 'Mon', positive: 65, negative: 35 },
       { name: 'Tue', positive: 59, negative: 41 },
@@ -116,6 +111,13 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
       if (comp) {
           const next = current === 'AVAILABLE' ? 'BUSY' : current === 'BUSY' ? 'OFFLINE' : 'AVAILABLE';
           Database.updateCompanion({...comp, status: next as any});
+      }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+      if (window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
+          await Database.deleteUser(userId);
+          setUsers(users.filter(u => u.id !== userId));
       }
   };
 
@@ -190,9 +192,9 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                          <StatCard title="Active Members" value={users.length} icon={Users} subValue="+12" subLabel="Today" color="blue" />
+                          <StatCard title="Active Sessions" value={activeCount} icon={Video} subValue={`${MAX_CONCURRENT_CAPACITY} Max`} subLabel="Capacity" progress={(activeCount / MAX_CONCURRENT_CAPACITY) * 100} color="purple" />
                           <StatCard title="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon={DollarSign} subValue="+8.4%" subLabel="MoM" color="green" />
-                          <StatCard title="Crisis Alerts" value="0" icon={ShieldAlert} subValue="NORMAL" subLabel="No active threats" color="green" />
+                          <StatCard title="Total Users" value={users.length} icon={Users} subValue="+12" subLabel="Today" color="blue" />
                           <StatCard title="User Happiness" value="87%" icon={Heart} subValue="+2%" subLabel="Sentiment Score" color="pink" />
                       </div>
 
@@ -409,6 +411,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                       <th className="p-4">Role</th>
                                       <th className="p-4">Credits</th>
                                       <th className="p-4 text-right">Joined</th>
+                                      <th className="p-4 text-right">Actions</th>
                                   </tr>
                               </thead>
                               <tbody className="divide-y divide-gray-800">
@@ -418,6 +421,11 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                           <td className="p-4 text-xs text-gray-400">{user.role}</td>
                                           <td className="p-4 text-green-400 font-mono font-bold text-sm">{user.balance}m</td>
                                           <td className="p-4 text-right text-gray-500 text-xs font-mono">{new Date(user.joinedAt).toLocaleDateString()}</td>
+                                          <td className="p-4 text-right">
+                                              <button onClick={() => handleDeleteUser(user.id)} className="text-red-500 hover:text-red-400 p-2 transition-colors" title="Delete User">
+                                                  <Trash2 className="w-4 h-4"/>
+                                              </button>
+                                          </td>
                                       </tr>
                                   ))}
                               </tbody>
@@ -438,6 +446,15 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                               </div>
                               <button onClick={() => Database.saveSettings({...settings, maintenanceMode: !settings.maintenanceMode})} className={`w-12 h-6 rounded-full relative transition-colors ${settings.maintenanceMode ? 'bg-red-500' : 'bg-gray-700'}`}>
                                   <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${settings.maintenanceMode ? 'left-7' : 'left-1'}`}></div>
+                              </button>
+                          </div>
+                          <div className="flex items-center justify-between p-4 bg-black rounded-xl border border-gray-800">
+                              <div>
+                                  <p className="font-bold text-white">Sale Pricing Mode</p>
+                                  <p className="text-xs text-gray-500">Toggle between $1.49 (On) and $1.99 (Off).</p>
+                              </div>
+                              <button onClick={() => Database.saveSettings({...settings, saleMode: !settings.saleMode})} className={`w-12 h-6 rounded-full relative transition-colors ${settings.saleMode ? 'bg-green-500' : 'bg-gray-700'}`}>
+                                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${settings.saleMode ? 'left-7' : 'left-1'}`}></div>
                               </button>
                           </div>
                       </div>
