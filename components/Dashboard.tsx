@@ -9,7 +9,7 @@ import {
   Sun, Cloud, Feather, Anchor, Gamepad2, RefreshCw, Play, Zap, Star, Edit2, Trash2, Bell,
   CloudRain, Image as ImageIcon, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Shield, Moon,
   Twitter, Instagram, Linkedin, LifeBuoy, Volume2, VolumeX, Minimize2, Maximize2, Music, Radio, Flame as Fire, Smile, Trees,
-  Mail, Smartphone, Globe, CreditCard, ToggleLeft, ToggleRight, StopCircle, ArrowRight, FileText
+  Mail, Smartphone, Globe, CreditCard, ToggleLeft, ToggleRight, StopCircle, ArrowRight, FileText, Filter
 } from 'lucide-react';
 import { Database, STABLE_AVATAR_POOL } from '../services/database';
 import { generateAffirmation, generateDailyInsight } from '../services/geminiService';
@@ -88,6 +88,7 @@ const CollapsibleSection: React.FC<{ title: string; icon: any; children: React.R
 
 // --- WISDOM GENERATOR ---
 const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
+    // ... (No changes to logic, keeping existing)
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [gallery, setGallery] = useState<ArtEntry[]>([]);
@@ -183,7 +184,7 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
     );
 };
 
-// --- SOUNDSCAPE PLAYER ---
+// ... (Other internal components: SoundscapePlayer, WeatherEffect, MindfulMatchGame, CloudHopGame, MoodTracker, JournalSection, PaymentModal, BreathingExercise, ProfileModal are preserved exactly as is)
 const SoundscapePlayer: React.FC = () => {
     const [playing, setPlaying] = useState(false);
     const [volume, setVolume] = useState(0.4);
@@ -288,7 +289,6 @@ const SoundscapePlayer: React.FC = () => {
     );
 };
 
-// --- WEATHER ENGINE ---
 const WeatherEffect: React.FC<{ type: 'confetti' | 'rain' }> = ({ type }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     useEffect(() => {
@@ -318,7 +318,6 @@ const WeatherEffect: React.FC<{ type: 'confetti' | 'rain' }> = ({ type }) => {
     return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-[50]" />;
 };
 
-// --- MINDFUL MATCH GAME ---
 const MindfulMatchGame: React.FC = () => {
     const [cards, setCards] = useState<any[]>([]); const [flipped, setFlipped] = useState<number[]>([]); const [solved, setSolved] = useState<number[]>([]); const [won, setWon] = useState(false); const [moves, setMoves] = useState(0); const [bestScore, setBestScore] = useState(parseInt(localStorage.getItem('mindful_best') || '0'));
     const ICONS = [Sun, Heart, Music, Zap, Star, Anchor, Feather, Cloud];
@@ -339,7 +338,6 @@ const MindfulMatchGame: React.FC = () => {
     );
 };
 
-// --- CLOUD HOP GAME ---
 const CloudHopGame: React.FC = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null); 
     const requestRef = useRef<number | undefined>(undefined); 
@@ -358,28 +356,16 @@ const CloudHopGame: React.FC = () => {
             if (canvas && canvas.parentElement) {
                 const dpr = window.devicePixelRatio || 1;
                 const rect = canvas.parentElement.getBoundingClientRect();
-                
-                // Set Display Size (CSS Pixels)
                 canvas.style.width = `${rect.width}px`;
                 canvas.style.height = `${rect.height}px`;
-                
-                // Set Actual Memory Size (Physical Pixels)
                 canvas.width = rect.width * dpr;
                 canvas.height = rect.height * dpr;
-                
-                // Scale Context
                 const ctx = canvas.getContext('2d');
                 if (ctx) ctx.scale(dpr, dpr);
-                
-                // Keep game stopped on resize to prevent physics glitches
-                if (gameStarted) {
-                    setGameOver(true);
-                    setGameStarted(false);
-                }
+                if (gameStarted) { setGameOver(true); setGameStarted(false); }
             }
         };
         window.addEventListener('resize', resizeCanvas);
-        // Delay initial resize slightly to ensure container is ready
         setTimeout(resizeCanvas, 100);
         return () => window.removeEventListener('resize', resizeCanvas);
     }, []);
@@ -388,17 +374,14 @@ const CloudHopGame: React.FC = () => {
         const canvas = canvasRef.current; 
         if (!canvas) return; 
         
-        // Use logical width/height (CSS pixels), derived from physical size / dpr
         const dpr = window.devicePixelRatio || 1;
         const W = canvas.width / dpr;
         const H = canvas.height / dpr;
         const isMobile = W < 600;
 
-        // Adjusted sizing for "zoomed out" feel
         const pSize = isMobile ? 24 : 32; 
         const basePlatW = isMobile ? 80 : 100;
 
-        // Reset Logic
         platformsRef.current = [{x: 0, y: H - 30, w: W, h: 30, type: 'ground'}]; 
         let py = H - 80; 
         while (py > -2000) { 
@@ -410,11 +393,9 @@ const CloudHopGame: React.FC = () => {
                 type: Math.random() > 0.9 ? 'moving' : 'cloud', 
                 vx: Math.random() > 0.5 ? 1 : -1 
             }); 
-            // Better spacing - Reduced vertical gap for easier jumps
             py -= (isMobile ? 60 : 70) + Math.random() * 25; 
         }
         
-        // Spawn player
         playerRef.current = { x: W / 2 - (pSize/2), y: H - 80, vx: 0, vy: 0, width: pSize, height: pSize };
         setScore(0);
         setGameOver(false);
@@ -430,7 +411,6 @@ const CloudHopGame: React.FC = () => {
         const H = canvas.height / dpr;
         const isMobile = W < 600;
         
-        // Physics constants relative to size
         const GRAVITY = H > 400 ? 0.4 : 0.35; 
         const JUMP_FORCE = H > 400 ? -9 : -8; 
         const MOVE_SPEED = isMobile ? 3.5 : 4.5;
@@ -441,7 +421,6 @@ const CloudHopGame: React.FC = () => {
             ctx.fillStyle = type === 'moving' ? '#E0F2FE' : 'white'; 
             if (type === 'moving') ctx.shadowColor = '#38BDF8'; 
             ctx.fillRect(x, y, w, h); 
-            
             const bumpSize = h * 0.8;
             ctx.beginPath(); ctx.arc(x + 10, y, bumpSize, 0, Math.PI*2); ctx.fill(); 
             ctx.beginPath(); ctx.arc(x + w - 10, y, bumpSize, 0, Math.PI*2); ctx.fill(); 
@@ -456,7 +435,6 @@ const CloudHopGame: React.FC = () => {
             p.vy += GRAVITY; 
             p.y += p.vy;
             
-            // Scrolling
             if (p.y < H / 2) { 
                 const diff = (H / 2) - p.y; 
                 p.y = H / 2; 
@@ -471,7 +449,6 @@ const CloudHopGame: React.FC = () => {
                 }); 
             }
 
-            // Collision
             if (p.vy > 0) { 
                 platformsRef.current.forEach(pl => { 
                     if (p.y + p.height > pl.y && p.y + p.height < pl.y + 40 && p.x + p.width > pl.x && p.x < pl.x + pl.w) { 
@@ -482,7 +459,6 @@ const CloudHopGame: React.FC = () => {
 
             platformsRef.current.forEach(pl => { if (pl.type === 'moving') { pl.x += pl.vx; if (pl.x < 0 || pl.x + pl.w > W) pl.vx *= -1; } });
             
-            // Death Check
             if (p.y > H + 50) { 
                 setGameOver(true); 
                 setGameStarted(false); 
@@ -493,11 +469,9 @@ const CloudHopGame: React.FC = () => {
             const grad = ctx.createLinearGradient(0,0,0,H); grad.addColorStop(0,'#0EA5E9'); grad.addColorStop(1,'#BAE6FD'); ctx.fillStyle = grad; ctx.fillRect(0,0,W,H); ctx.fillStyle = 'rgba(255,255,255,0.3)'; for(let i=0; i<10; i++) ctx.fillRect((i*50 + Date.now()/50)%W, (i*30 + Date.now()/20)%H, 2, 2);
             platformsRef.current.forEach(pl => { if(pl.type==='ground') { ctx.fillStyle='#4ade80'; ctx.fillRect(pl.x, pl.y, pl.w, pl.h); } else { drawCloud(pl.x, pl.y, pl.w, pl.h, pl.type); } });
             
-            // Draw Player
             ctx.shadowBlur = 10; ctx.shadowColor = 'white'; ctx.fillStyle = '#FACC15'; 
             ctx.beginPath(); ctx.arc(p.x + p.width/2, p.y + p.height/2, p.width/2, 0, Math.PI*2); ctx.fill(); 
             ctx.shadowBlur = 0; ctx.fillStyle = 'black'; 
-            // Eyes
             const eyeOff = p.width * 0.2;
             const eyeSize = p.width * 0.1;
             ctx.beginPath(); ctx.arc(p.x + p.width/2 - eyeOff, p.y + p.height/2 - eyeOff, eyeSize, 0, Math.PI*2); ctx.fill(); 
@@ -512,10 +486,6 @@ const CloudHopGame: React.FC = () => {
     
     return (<div className="relative h-full w-full bg-sky-300 overflow-hidden rounded-2xl border-4 border-white dark:border-gray-700 shadow-inner cursor-pointer" onMouseDown={handleTap} onMouseUp={handleRelease} onTouchStart={handleTap} onTouchEnd={handleRelease}><div className="absolute top-2 right-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full font-black text-white text-base md:text-lg z-10">{score}m</div><canvas ref={canvasRef} className="w-full h-full block" />{(!gameStarted || gameOver) && (<div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20 animate-in fade-in"><div className="text-center">{gameOver && <p className="text-white font-black text-2xl mb-4 drop-shadow-md">Fall!</p>}<button onClick={initGame} className="bg-yellow-400 text-yellow-900 px-6 py-2 md:px-8 md:py-3 rounded-full font-black text-sm md:text-lg shadow-xl hover:scale-110 transition-transform flex items-center gap-2"><Play className="w-4 h-4 md:w-5 md:h-5 fill-current" /> {gameOver ? 'Try Again' : 'Play'}</button></div></div>)}</div>);
 };
-
-// ==========================================
-// MISSING COMPONENTS IMPLEMENTATION
-// ==========================================
 
 const MoodTracker: React.FC<{ onMoodSelect: (m: 'confetti' | 'rain' | null) => void }> = ({ onMoodSelect }) => {
     return (
@@ -617,6 +587,7 @@ const JournalSection: React.FC<{ user: User }> = ({ user }) => {
     );
 };
 
+// ... PaymentModal, BreathingExercise, ProfileModal maintained as is ...
 const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, cost: number) => void, initialError?: string }> = ({ onClose, onSuccess, initialError }) => {
     const [amount, setAmount] = useState(20); 
     const [isCustom, setIsCustom] = useState(false);
@@ -852,6 +823,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   const [showTechCheck, setShowTechCheck] = useState(false);
   const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
   const [showCookies, setShowCookies] = useState(false);
+  const [specialtyFilter, setSpecialtyFilter] = useState<string>('All');
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('peutic_theme');
@@ -947,6 +919,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
       Database.deleteUser(user.id);
       onLogout();
   };
+
+  const filteredCompanions = specialtyFilter === 'All' 
+      ? companions 
+      : companions.filter(c => c.specialty.includes(specialtyFilter) || c.specialty === specialtyFilter);
+
+  const uniqueSpecialties = Array.from(new Set(companions.map(c => c.specialty))).sort();
 
   return (
     <div className={`min-h-screen transition-colors duration-500 font-sans ${darkMode ? 'dark bg-[#0A0A0A] text-white' : 'bg-[#FFFBEB] text-black'}`}>
@@ -1127,54 +1105,80 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                           {/* COMPANION GRID */}
                           <div>
-                              <div className="flex justify-between items-end mb-6">
+                              <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
                                   <div>
                                       <h2 className="text-2xl font-black dark:text-white">Available Specialists</h2>
                                       <p className="text-gray-500 text-sm">Select a guide to begin your session.</p>
                                   </div>
-                                  <div className="flex gap-2">
-                                      <button className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"><Search className="w-4 h-4 text-gray-500"/></button>
+                                  
+                                  {/* CATEGORY FILTER */}
+                                  <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide">
+                                      <button 
+                                          onClick={() => setSpecialtyFilter('All')} 
+                                          className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === 'All' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}
+                                      >
+                                          All
+                                      </button>
+                                      {uniqueSpecialties.map(spec => (
+                                          <button 
+                                              key={spec}
+                                              onClick={() => setSpecialtyFilter(spec)}
+                                              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === spec ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+                                          >
+                                              {spec}
+                                          </button>
+                                      ))}
                                   </div>
                               </div>
 
                               {loadingCompanions ? (
-                                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                      {[1,2,3,4].map(i => <div key={i} className="h-64 bg-gray-100 dark:bg-gray-900 rounded-3xl animate-pulse"></div>)}
+                                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                                      {[1,2,3,4,5].map(i => <div key={i} className="h-64 bg-gray-100 dark:bg-gray-900 rounded-3xl animate-pulse"></div>)}
                                   </div>
                               ) : (
-                                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                                      {companions.map((companion) => (
+                                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+                                      {filteredCompanions.map((companion) => (
                                           <div 
                                               key={companion.id} 
                                               onClick={() => handleStartConnection(companion)}
-                                              className="group relative bg-white dark:bg-gray-900 rounded-[2rem] overflow-hidden border border-yellow-100 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all duration-300 hover:shadow-2xl cursor-pointer flex flex-col"
+                                              className="group relative bg-white dark:bg-gray-900 rounded-[2rem] overflow-hidden border border-yellow-100 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all duration-300 hover:shadow-2xl cursor-pointer flex flex-col h-full"
                                           >
                                               {/* Image Section - Top */}
-                                              <div className="aspect-square relative overflow-hidden bg-gray-100 dark:bg-gray-800">
+                                              <div className="aspect-[4/5] relative overflow-hidden bg-gray-100 dark:bg-gray-800">
                                                   <AvatarImage src={companion.imageUrl} alt={companion.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                                                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                                                   
                                                   <div className="absolute top-3 left-3 flex gap-2">
-                                                      <div className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md ${companion.status === 'AVAILABLE' ? 'bg-green-500/90 text-white shadow-lg shadow-green-500/20' : 'bg-gray-500/90 text-white'}`}>
+                                                      <div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md ${companion.status === 'AVAILABLE' ? 'bg-green-500/90 text-white shadow-lg shadow-green-500/20' : 'bg-gray-500/90 text-white'}`}>
                                                           {companion.status === 'AVAILABLE' ? 'Online' : 'Busy'}
                                                       </div>
+                                                  </div>
+                                                  
+                                                  <div className="absolute bottom-3 left-3 right-3">
+                                                      <h3 className="text-white font-black text-lg leading-tight mb-0.5 shadow-sm drop-shadow-md">{companion.name}</h3>
+                                                      <p className="text-yellow-400 text-[9px] font-bold uppercase tracking-wider truncate">{companion.specialty}</p>
                                                   </div>
                                               </div>
                                               
                                               {/* Info Section - Bottom */}
-                                              <div className="p-4 md:p-5 flex-1 flex flex-col justify-end bg-white dark:bg-gray-900 border-t border-yellow-50 dark:border-gray-800">
-                                                  <p className="text-yellow-600 dark:text-yellow-500 text-[10px] font-black uppercase tracking-widest mb-1.5 line-clamp-1">{companion.specialty}</p>
-                                                  {/* NAME REMOVED AS REQUESTED */}
-                                                  <div className="flex items-center gap-1 mb-4">
+                                              <div className="p-3 bg-white dark:bg-gray-900 flex justify-between items-center border-t border-gray-100 dark:border-gray-800">
+                                                  <div className="flex items-center gap-1">
                                                       <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
                                                       <span className="text-gray-500 dark:text-gray-400 text-xs font-bold">{companion.rating}</span>
                                                   </div>
-                                                  <button className="w-full py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-yellow-500 dark:hover:bg-yellow-400 hover:text-black transition-all shadow-sm">
-                                                      Start Session
+                                                  <button className="bg-gray-100 dark:bg-gray-800 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black rounded-lg p-2 transition-colors">
+                                                      <ArrowRight className="w-4 h-4" />
                                                   </button>
                                               </div>
                                           </div>
                                       ))}
+                                  </div>
+                              )}
+                              
+                              {filteredCompanions.length === 0 && (
+                                  <div className="text-center py-20 bg-gray-50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800">
+                                      <p className="text-gray-500 font-bold">No specialists found in this category.</p>
+                                      <button onClick={() => setSpecialtyFilter('All')} className="text-yellow-600 text-sm font-bold mt-2 hover:underline">View All</button>
                                   </div>
                               )}
                           </div>

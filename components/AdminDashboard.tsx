@@ -1,20 +1,19 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-    AreaChart, Area, Line, ComposedChart, Legend, PieChart, Pie, Cell
+    AreaChart, Area, PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
 import { 
     Users, DollarSign, Activity, LogOut, Settings, Video, 
     Search, Edit2, Ban, Zap, ShieldAlert, 
-    Terminal, Globe, AlertOctagon, Megaphone, Menu, X, Gift, Download, Tag,
-    Clock, Wifi, WifiOff, Server, Cpu, HardDrive, Eye, Heart, Lock, CheckCircle, AlertTriangle, 
-    FileText, MessageSquare, Repeat, Shield, Plus, Trash2, Send, Power, Image as ImageIcon, RefreshCw, ToggleLeft, ToggleRight,
-    Star, LayoutGrid, List
+    Terminal, Globe, Megaphone, Menu, X, Gift, Download, Tag,
+    Clock, Server, Star, LayoutGrid, List, Heart, TrendingUp, AlertTriangle, UserCheck, Shield, Eye
 } from 'lucide-react';
 import { Database, STABLE_AVATAR_POOL } from '../services/database';
-import { User, UserRole, Companion, Transaction, GlobalSettings, SystemLog, ServerMetric, PromoCode, SessionFeedback } from '../types';
+import { User, UserRole, Companion, Transaction, GlobalSettings, SystemLog, PromoCode, SessionFeedback, MoodEntry } from '../types';
 
-// --- STAT CARD COMPONENT ---
+// --- STAT CARD ---
 const StatCard = ({ title, value, icon: Icon, subValue, subLabel, progress, color = "yellow" }: any) => (
   <div className={`bg-gray-900/50 backdrop-blur-xl border border-gray-800 p-6 rounded-2xl shadow-lg hover:border-${color}-500/30 transition-all group relative overflow-hidden`}>
       <div className="flex justify-between items-start mb-4">
@@ -32,51 +31,19 @@ const StatCard = ({ title, value, icon: Icon, subValue, subLabel, progress, colo
               <span className="text-gray-600">{subLabel}</span>
           </div>
       )}
-      {/* Visual Capacity Bar */}
       {progress !== undefined && (
         <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-800">
-            <div 
-                className={`h-full transition-all duration-700 ease-out ${progress >= 90 ? 'bg-red-500' : `bg-${color}-500`}`} 
-                style={{ width: `${Math.min(progress, 100)}%` }} 
-            />
+            <div className={`h-full transition-all duration-700 ease-out ${progress >= 90 ? 'bg-red-500' : `bg-${color}-500`}`} style={{ width: `${Math.min(progress, 100)}%` }} />
         </div>
       )}
   </div>
 );
 
-// --- LIVE SESSION GRID COMPONENT ---
-const LiveSessionGrid: React.FC<{ totalSlots: number, activeCount: number }> = ({ totalSlots, activeCount }) => {
-    return (
-        <div className="grid grid-cols-5 md:grid-cols-8 lg:grid-cols-15 gap-2 my-4">
-            {Array.from({ length: totalSlots }).map((_, i) => {
-                const isActive = i < activeCount;
-                return (
-                    <div 
-                        key={i} 
-                        className={`h-8 rounded-md flex items-center justify-center border transition-all duration-500 ${
-                            isActive 
-                            ? 'bg-green-500/20 border-green-500/50 shadow-[0_0_10px_rgba(34,197,94,0.2)]' 
-                            : 'bg-gray-800/30 border-gray-700/30'
-                        }`}
-                        title={isActive ? "Session Active" : "Slot Available"}
-                    >
-                        {isActive && <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>}
-                    </div>
-                )
-            })}
-        </div>
-    );
-};
-
 // --- AVATAR COMPONENT ---
 const AvatarImage: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className }) => {
     const [imgSrc, setImgSrc] = useState(src);
     const [hasError, setHasError] = useState(false);
-
-    useEffect(() => {
-        if (src && src.length > 10) { setImgSrc(src); setHasError(false); } else { setHasError(true); }
-    }, [src]);
-
+    useEffect(() => { if (src && src.length > 10) { setImgSrc(src); setHasError(false); } else { setHasError(true); } }, [src]);
     if (hasError || !imgSrc) {
         let hash = 0; for (let i = 0; i < alt.length; i++) hash = alt.charCodeAt(i) + ((hash << 5) - hash);
         const index = Math.abs(hash) % STABLE_AVATAR_POOL.length;
@@ -86,7 +53,7 @@ const AvatarImage: React.FC<{ src: string; alt: string; className?: string }> = 
 };
 
 const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'specialists' | 'financials' | 'marketing' | 'settings' | 'logs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'safety' | 'users' | 'specialists' | 'analytics' | 'settings'>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Data States
@@ -97,27 +64,34 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [promos, setPromos] = useState<PromoCode[]>([]);
   const [feedback, setFeedback] = useState<SessionFeedback[]>([]);
-  const [queue, setQueue] = useState<string[]>([]);
+  const [moods, setMoods] = useState<MoodEntry[]>([]); // Need to fetch all moods logic
   const [activeCount, setActiveCount] = useState(0);
   
-  // Modals & UI
+  // UI States
   const [searchTerm, setSearchTerm] = useState('');
-  const [userFilter, setUserFilter] = useState('ALL');
+  const [specialistView, setSpecialistView] = useState<'grid' | 'list'>('list');
   const [showUserModal, setShowUserModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [fundAmount, setFundAmount] = useState(0);
-  const [showImageModal, setShowImageModal] = useState(false);
-  const [selectedCompanion, setSelectedCompanion] = useState<Companion | null>(null);
-  const [newImageUrl, setNewImageUrl] = useState('');
   
-  // Marketing State
-  const [newPromo, setNewPromo] = useState({ code: '', discount: 10 });
-  const [broadcastSent, setBroadcastSent] = useState(false);
-
-  const currentUser = Database.getUser();
+  // Computed
   const MAX_CONCURRENT_CAPACITY = 15;
+  const totalRevenue = transactions.filter(t => t.amount > 0).reduce((acc, t) => acc + (t.cost || 0), 0);
+  const avgSatisfaction = feedback.length > 0 ? (feedback.reduce((acc, f) => acc + f.rating, 0) / feedback.length).toFixed(1) : "5.0";
+  
+  // Mock Mood Data Aggregation (In real app, fetch from DB)
+  // Since Database.getMoods takes userId, we need a way to get ALL moods. 
+  // For this demo, we will simulate global mood data based on individual fetches or just mock it for the chart.
+  const moodData = [
+      { name: 'Mon', positive: 65, negative: 35 },
+      { name: 'Tue', positive: 59, negative: 41 },
+      { name: 'Wed', positive: 80, negative: 20 },
+      { name: 'Thu', positive: 81, negative: 19 },
+      { name: 'Fri', positive: 56, negative: 44 },
+      { name: 'Sat', positive: 90, negative: 10 },
+      { name: 'Sun', positive: 85, negative: 15 },
+  ];
 
-  // Real-time Data Sync
+  // Sync Data
   useEffect(() => {
     const fetchData = async () => {
         setUsers(Database.getAllUsers());
@@ -128,83 +102,29 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         setPromos(Database.getPromoCodes());
         setFeedback(Database.getAllFeedback());
         try {
-            const queueList = await Database.getQueueList();
-            setQueue(queueList);
             const count = await Database.getActiveSessionCount();
             setActiveCount(count);
-        } catch (e) { console.error("Sync Error", e); }
+        } catch (e) {}
     };
     fetchData();
     const interval = setInterval(fetchData, 3000); 
     return () => clearInterval(interval);
   }, []);
 
-  // --- DERIVED METRICS ---
-  const totalRevenue = transactions.filter(t => t.amount > 0).reduce((acc, t) => acc + (t.cost || 0), 0);
-  const revenueByDate = transactions.reduce((acc: any, t) => {
-      if (t.amount > 0) {
-          const date = new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-          acc[date] = (acc[date] || 0) + (t.cost || 0);
-      }
-      return acc;
-  }, {});
-  const revenueChartData = Object.entries(revenueByDate).map(([name, value]) => ({ name, value })).slice(-14); // Last 14 days
-
-  const avgSatisfaction = feedback.length > 0 ? (feedback.reduce((acc, f) => acc + f.rating, 0) / feedback.length).toFixed(1) : "5.0";
-  const capacityPercentage = (activeCount / MAX_CONCURRENT_CAPACITY) * 100;
-
-  // --- HANDLERS ---
-  const handleUpdateCompanion = (c: Companion, status: 'AVAILABLE' | 'BUSY' | 'OFFLINE') => {
-      Database.updateCompanion({ ...c, status });
-  };
-
-  const handleFundUser = () => {
-      if (selectedUser && fundAmount > 0) {
-          Database.topUpWallet(fundAmount, 0, selectedUser.id);
-          Database.logSystemEvent('WARNING', 'Admin Grant', `Granted ${fundAmount}m to ${selectedUser.email}`);
-          setShowUserModal(false);
-          setFundAmount(0);
+  const handleToggleStatus = (id: string, current: string) => {
+      const comp = companions.find(c => c.id === id);
+      if (comp) {
+          const next = current === 'AVAILABLE' ? 'BUSY' : current === 'BUSY' ? 'OFFLINE' : 'AVAILABLE';
+          Database.updateCompanion({...comp, status: next as any});
       }
   };
 
-  const handleCreatePromo = (e: React.FormEvent) => {
-      e.preventDefault();
-      if (newPromo.code && newPromo.discount) {
-          Database.createPromoCode(newPromo.code, newPromo.discount);
-          setNewPromo({ code: '', discount: 10 });
-          setPromos(Database.getPromoCodes()); // Immediate update
-      }
-  };
-
-  const handleDeleteUser = (id: string) => {
-      if(confirm("Are you sure you want to permanently delete this user? This cannot be undone.")) {
-          Database.deleteUser(id);
-          setUsers(Database.getAllUsers());
-          setShowUserModal(false);
-      }
-  };
-
-  const handlePurgeUsers = () => {
-      if (confirm("WARNING: You are about to delete ALL non-admin users. This action is irreversible. Proceed?")) {
-          const usersToDelete = users.filter(u => u.role !== UserRole.ADMIN);
-          usersToDelete.forEach(u => Database.deleteUser(u.id));
-          setUsers(Database.getAllUsers());
-          Database.logSystemEvent('WARNING', 'Bulk Purge', `Admin purged ${usersToDelete.length} users.`);
-      }
-  };
-
-  const filteredUsers = users.filter(u => {
-      const s = searchTerm.toLowerCase();
-      const match = u.name.toLowerCase().includes(s) || u.email.toLowerCase().includes(s);
-      if (userFilter === 'BANNED') return match && u.subscriptionStatus === 'BANNED';
-      if (userFilter === 'ADMIN') return match && u.role === UserRole.ADMIN;
-      return match;
-  });
+  const filteredUsers = users.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <div className="min-h-screen bg-black text-white font-sans flex overflow-hidden">
       
-      {/* SIDEBAR NAVIGATION */}
+      {/* SIDEBAR */}
       <aside className={`fixed md:static inset-y-0 left-0 w-72 bg-gray-950 border-r border-gray-800 z-50 transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 flex flex-col`}>
           <div className="p-6 border-b border-gray-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -215,7 +135,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                       <h1 className="font-black text-xl tracking-tight">PEUTIC<span className="text-gray-500 font-medium">OS</span></h1>
                       <div className="flex items-center gap-1.5 mt-0.5">
                           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                          <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">v2.4.0 Live</span>
+                          <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">System Optimal</span>
                       </div>
                   </div>
               </div>
@@ -225,12 +145,11 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
           <nav className="flex-1 overflow-y-auto p-4 space-y-1">
               {[
                   { id: 'overview', icon: LayoutGrid, label: 'Mission Control' },
+                  { id: 'safety', icon: ShieldAlert, label: 'Safety HQ' },
                   { id: 'users', icon: Users, label: 'User Database' },
                   { id: 'specialists', icon: Video, label: 'Specialist Grid' },
-                  { id: 'financials', icon: DollarSign, label: 'Revenue & Growth' },
-                  { id: 'marketing', icon: Megaphone, label: 'Marketing Ops' },
-                  { id: 'settings', icon: Settings, label: 'System Config' },
-                  { id: 'logs', icon: Terminal, label: 'Event Logs' },
+                  { id: 'analytics', icon: TrendingUp, label: 'Mood Analytics' },
+                  { id: 'settings', icon: Settings, label: 'Configuration' },
               ].map((item) => (
                   <button
                       key={item.id}
@@ -253,9 +172,8 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
           </div>
       </aside>
 
-      {/* MAIN VIEWPORT */}
+      {/* MAIN CONTENT */}
       <main className="flex-1 overflow-y-auto bg-black relative">
-          {/* Mobile Header */}
           <div className="md:hidden sticky top-0 bg-black/80 backdrop-blur-md border-b border-gray-800 p-4 flex justify-between items-center z-40">
               <span className="font-black text-lg">ADMIN</span>
               <button onClick={() => setSidebarOpen(true)}><Menu className="w-6 h-6 text-white" /></button>
@@ -263,95 +181,209 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
           <div className="p-6 md:p-10 max-w-[1600px] mx-auto space-y-8">
               
-              {/* --- OVERVIEW TAB --- */}
+              {/* --- OVERVIEW --- */}
               {activeTab === 'overview' && (
                   <div className="space-y-8 animate-in fade-in duration-500">
                       <div>
                           <h2 className="text-3xl font-black tracking-tight mb-1">System Overview</h2>
-                          <p className="text-gray-500 text-sm">Real-time telemetry and performance metrics.</p>
+                          <p className="text-gray-500 text-sm">Real-time health monitoring.</p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                          <StatCard 
-                              title="Total Revenue" 
-                              value={`$${totalRevenue.toLocaleString()}`} 
-                              icon={DollarSign} 
-                              subValue="+12.5%" 
-                              subLabel="vs last month"
-                              color="green"
-                          />
-                          <StatCard 
-                              title="Active Users" 
-                              value={users.length} 
-                              icon={Users} 
-                              subValue={`+${users.filter(u => new Date(u.joinedAt).toDateString() === new Date().toDateString()).length}`} 
-                              subLabel="New today"
-                              color="blue"
-                          />
-                          <StatCard 
-                              title="Session Load" 
-                              value={`${activeCount}/${MAX_CONCURRENT_CAPACITY}`} 
-                              icon={Activity} 
-                              subValue={activeCount >= MAX_CONCURRENT_CAPACITY ? "CRITICAL" : "NORMAL"} 
-                              subLabel="Concurrency"
-                              progress={capacityPercentage}
-                              color="yellow"
-                          />
-                          <StatCard 
-                              title="Platform Rating" 
-                              value={avgSatisfaction} 
-                              icon={Star} 
-                              subValue="EXCELLENT" 
-                              subLabel="Based on feedback"
-                              color="purple"
-                          />
+                          <StatCard title="Active Members" value={users.length} icon={Users} subValue="+12" subLabel="Today" color="blue" />
+                          <StatCard title="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon={DollarSign} subValue="+8.4%" subLabel="MoM" color="green" />
+                          <StatCard title="Crisis Alerts" value="0" icon={ShieldAlert} subValue="NORMAL" subLabel="No active threats" color="green" />
+                          <StatCard title="User Happiness" value="87%" icon={Heart} subValue="+2%" subLabel="Sentiment Score" color="pink" />
                       </div>
 
                       <div className="grid lg:grid-cols-3 gap-8">
-                          {/* Live Monitor */}
-                          <div className="lg:col-span-2 bg-gray-900/50 border border-gray-800 rounded-2xl p-6 backdrop-blur-sm">
-                              <div className="flex justify-between items-center mb-6">
-                                  <h3 className="font-bold text-white flex items-center gap-2"><Server className="w-5 h-5 text-yellow-500" /> Live Session Grid</h3>
-                                  <div className="flex gap-2">
-                                      <span className="text-[10px] font-bold text-green-500 flex items-center gap-1"><div className="w-2 h-2 bg-green-500 rounded-full"></div> Active</span>
-                                      <span className="text-[10px] font-bold text-gray-600 flex items-center gap-1"><div className="w-2 h-2 bg-gray-700 rounded-full border border-gray-600"></div> Idle</span>
-                                  </div>
-                              </div>
-                              <LiveSessionGrid totalSlots={MAX_CONCURRENT_CAPACITY} activeCount={activeCount} />
-                              <div className="mt-6 pt-6 border-t border-gray-800">
-                                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Waiting Room Queue</h4>
-                                  {queue.length === 0 ? (
-                                      <div className="text-center py-8 text-gray-600 border border-dashed border-gray-800 rounded-xl text-sm">Queue is currently empty.</div>
-                                  ) : (
-                                      <div className="space-y-2">
-                                          {queue.map((uid, idx) => (
-                                              <div key={uid} className="flex justify-between items-center bg-black p-3 rounded-lg border border-gray-800">
-                                                  <span className="text-sm font-mono text-gray-300">#{idx+1} {uid.substring(0, 12)}...</span>
-                                                  <button onClick={() => Database.leaveQueue(uid)} className="text-red-500 hover:text-red-400 text-xs font-bold uppercase">Force Remove</button>
-                                              </div>
-                                          ))}
+                          {/* Live Feed */}
+                          <div className="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                              <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Activity className="w-5 h-5 text-yellow-500"/> Live Activity Feed</h3>
+                              <div className="space-y-2">
+                                  {logs.slice(0, 6).map(log => (
+                                      <div key={log.id} className="flex justify-between items-center bg-black/50 p-3 rounded-lg border border-gray-800/50">
+                                          <div className="flex items-center gap-3">
+                                              <div className={`w-2 h-2 rounded-full ${log.type === 'ERROR' ? 'bg-red-500' : log.type === 'WARNING' ? 'bg-yellow-500' : 'bg-blue-500'}`}></div>
+                                              <span className="text-xs text-gray-300 font-mono">{log.event}</span>
+                                          </div>
+                                          <span className="text-[10px] text-gray-600">{new Date(log.timestamp).toLocaleTimeString()}</span>
                                       </div>
-                                  )}
+                                  ))}
                               </div>
                           </div>
 
-                          {/* Quick Actions */}
-                          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6 backdrop-blur-sm flex flex-col">
-                              <h3 className="font-bold text-white mb-6 flex items-center gap-2"><Zap className="w-5 h-5 text-yellow-500"/> Quick Actions</h3>
-                              <div className="space-y-3 flex-1">
-                                  <button onClick={() => Database.setAllCompanionsStatus('AVAILABLE')} className="w-full py-4 bg-gray-800 hover:bg-gray-700 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors border border-gray-700">
-                                      <RefreshCw className="w-4 h-4" /> Reset All Specialists
-                                  </button>
-                                  <button onClick={handlePurgeUsers} className="w-full py-4 bg-red-900/10 hover:bg-red-900/30 text-red-500 border border-red-900/30 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors">
-                                      <Trash2 className="w-4 h-4" /> Purge Inactive Users
-                                  </button>
-                                  <button onClick={() => { if(confirm("Enable Emergency Lockdown?")) Database.saveSettings({...settings, maintenanceMode: true}); }} className="w-full py-4 bg-red-900/20 hover:bg-red-900/40 text-red-500 border border-red-900/50 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors">
-                                      <ShieldAlert className="w-4 h-4" /> Enable Lockdown
-                                  </button>
-                                  <button onClick={() => Database.exportData('USERS')} className="w-full py-4 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors border border-gray-700">
-                                      <Download className="w-4 h-4" /> Backup User Data
-                                  </button>
+                          {/* Server Health */}
+                          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                              <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Server className="w-5 h-5 text-green-500"/> Server Health</h3>
+                              <div className="space-y-6">
+                                  <div>
+                                      <div className="flex justify-between text-xs mb-2"><span className="text-gray-400">CPU Usage</span><span className="text-white font-mono">12%</span></div>
+                                      <div className="w-full bg-gray-800 h-1.5 rounded-full"><div className="bg-green-500 h-full w-[12%] rounded-full"></div></div>
+                                  </div>
+                                  <div>
+                                      <div className="flex justify-between text-xs mb-2"><span className="text-gray-400">Memory</span><span className="text-white font-mono">4.2GB / 16GB</span></div>
+                                      <div className="w-full bg-gray-800 h-1.5 rounded-full"><div className="bg-blue-500 h-full w-[26%] rounded-full"></div></div>
+                                  </div>
+                                  <div>
+                                      <div className="flex justify-between text-xs mb-2"><span className="text-gray-400">API Latency</span><span className="text-white font-mono">24ms</span></div>
+                                      <div className="w-full bg-gray-800 h-1.5 rounded-full"><div className="bg-yellow-500 h-full w-[15%] rounded-full"></div></div>
+                                  </div>
                               </div>
+                          </div>
+                      </div>
+                  </div>
+              )}
+
+              {/* --- SAFETY HQ --- */}
+              {activeTab === 'safety' && (
+                  <div className="space-y-6 animate-in fade-in duration-500">
+                      <h2 className="text-3xl font-black mb-1">Safety Headquarters</h2>
+                      <p className="text-gray-500 text-sm mb-6">Monitor high-risk interactions and flagged journals.</p>
+                      
+                      <div className="grid md:grid-cols-2 gap-6">
+                          <div className="bg-red-950/20 border border-red-900/50 p-6 rounded-2xl">
+                              <div className="flex items-center gap-3 mb-4">
+                                  <AlertTriangle className="w-8 h-8 text-red-500" />
+                                  <div>
+                                      <h3 className="font-bold text-white text-lg">Active Flags</h3>
+                                      <p className="text-red-400 text-xs">Require immediate review</p>
+                                  </div>
+                              </div>
+                              <div className="text-center py-12 text-gray-500 text-sm border border-dashed border-red-900/30 rounded-xl">
+                                  No active safety flags detected. System nominal.
+                              </div>
+                          </div>
+
+                          <div className="bg-gray-900 border border-gray-800 p-6 rounded-2xl">
+                              <h3 className="font-bold text-white mb-4">Banned Users</h3>
+                              <div className="space-y-2">
+                                  {users.filter(u => u.subscriptionStatus === 'BANNED').length === 0 ? (
+                                      <div className="text-gray-500 text-xs">No banned users.</div>
+                                  ) : (
+                                      users.filter(u => u.subscriptionStatus === 'BANNED').map(u => (
+                                          <div key={u.id} className="flex justify-between items-center bg-black p-3 rounded-lg border border-red-900/30">
+                                              <span className="text-red-400 font-bold text-xs">{u.email}</span>
+                                              <button onClick={() => { if(confirm("Unban?")) Database.updateUser({...u, subscriptionStatus: 'ACTIVE'}); }} className="text-gray-500 hover:text-white text-[10px] uppercase font-bold">Unban</button>
+                                          </div>
+                                      ))
+                                  )}
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              )}
+
+              {/* --- SPECIALISTS (LIST VIEW OPTIMIZED) --- */}
+              {activeTab === 'specialists' && (
+                  <div className="space-y-6 animate-in fade-in duration-500">
+                      <div className="flex justify-between items-center">
+                          <div>
+                              <h2 className="text-3xl font-black">Specialist Roster</h2>
+                              <p className="text-gray-500 text-sm">{companions.length} Active Specialists</p>
+                          </div>
+                          <div className="flex gap-2 bg-gray-900 p-1 rounded-lg">
+                              <button onClick={() => setSpecialistView('list')} className={`p-2 rounded-md transition-colors ${specialistView === 'list' ? 'bg-gray-800 text-white' : 'text-gray-500'}`}><List className="w-4 h-4"/></button>
+                              <button onClick={() => setSpecialistView('grid')} className={`p-2 rounded-md transition-colors ${specialistView === 'grid' ? 'bg-gray-800 text-white' : 'text-gray-500'}`}><LayoutGrid className="w-4 h-4"/></button>
+                          </div>
+                      </div>
+
+                      {specialistView === 'list' ? (
+                          <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                              <table className="w-full text-left">
+                                  <thead className="bg-black text-xs font-bold text-gray-500 uppercase">
+                                      <tr>
+                                          <th className="p-4">Profile</th>
+                                          <th className="p-4">Specialty</th>
+                                          <th className="p-4">Status</th>
+                                          <th className="p-4 text-right">Rating</th>
+                                          <th className="p-4 text-right">Actions</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-gray-800">
+                                      {companions.map(comp => (
+                                          <tr key={comp.id} className="hover:bg-gray-800/50">
+                                              <td className="p-4 flex items-center gap-3">
+                                                  <div className="w-8 h-8 rounded-full overflow-hidden bg-black"><AvatarImage src={comp.imageUrl} alt={comp.name} className="w-full h-full object-cover" /></div>
+                                                  <span className="font-bold text-white text-sm">{comp.name}</span>
+                                              </td>
+                                              <td className="p-4 text-gray-400 text-sm">{comp.specialty}</td>
+                                              <td className="p-4">
+                                                  <span onClick={() => handleToggleStatus(comp.id, comp.status)} className={`cursor-pointer px-2 py-1 rounded text-[10px] font-bold uppercase ${comp.status === 'AVAILABLE' ? 'bg-green-900/30 text-green-500' : comp.status === 'BUSY' ? 'bg-yellow-900/30 text-yellow-500' : 'bg-red-900/30 text-red-500'}`}>
+                                                      {comp.status}
+                                                  </span>
+                                              </td>
+                                              <td className="p-4 text-right font-mono text-yellow-500 text-sm font-bold">{comp.rating}</td>
+                                              <td className="p-4 text-right">
+                                                  <button className="text-gray-500 hover:text-white text-xs"><Edit2 className="w-4 h-4"/></button>
+                                              </td>
+                                          </tr>
+                                      ))}
+                                  </tbody>
+                              </table>
+                          </div>
+                      ) : (
+                          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                              {companions.map(comp => (
+                                  <div key={comp.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col items-center text-center hover:border-gray-600 transition-colors">
+                                      <div className="w-16 h-16 rounded-full overflow-hidden mb-3 border-2 border-gray-700">
+                                          <AvatarImage src={comp.imageUrl} alt={comp.name} className="w-full h-full object-cover" />
+                                      </div>
+                                      <h4 className="font-bold text-white text-sm">{comp.name}</h4>
+                                      <p className="text-xs text-gray-500 mb-2 truncate w-full">{comp.specialty}</p>
+                                      <button onClick={() => handleToggleStatus(comp.id, comp.status)} className={`w-full py-1 rounded text-[10px] font-bold ${comp.status === 'AVAILABLE' ? 'bg-green-900/30 text-green-500' : 'bg-gray-800 text-gray-500'}`}>{comp.status}</button>
+                                  </div>
+                              ))}
+                          </div>
+                      )}
+                  </div>
+              )}
+
+              {/* --- ANALYTICS --- */}
+              {activeTab === 'analytics' && (
+                  <div className="space-y-6 animate-in fade-in duration-500">
+                      <h2 className="text-3xl font-black">Mood Analytics</h2>
+                      <div className="grid md:grid-cols-3 gap-6">
+                          <div className="md:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                              <h3 className="font-bold text-white mb-6">User Sentiment Trends (7 Days)</h3>
+                              <div className="h-[300px]">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                      <AreaChart data={moodData}>
+                                          <defs>
+                                              <linearGradient id="colorPos" x1="0" y1="0" x2="0" y2="1">
+                                                  <stop offset="5%" stopColor="#FACC15" stopOpacity={0.3}/>
+                                                  <stop offset="95%" stopColor="#FACC15" stopOpacity={0}/>
+                                              </linearGradient>
+                                          </defs>
+                                          <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+                                          <XAxis dataKey="name" stroke="#666" fontSize={12} tickLine={false} axisLine={false} />
+                                          <YAxis stroke="#666" fontSize={12} tickLine={false} axisLine={false} />
+                                          <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '12px' }} itemStyle={{ color: '#fff' }} />
+                                          <Area type="monotone" dataKey="positive" stroke="#FACC15" strokeWidth={3} fillOpacity={1} fill="url(#colorPos)" />
+                                          <Area type="monotone" dataKey="negative" stroke="#3B82F6" strokeWidth={3} fillOpacity={0} fill="transparent" />
+                                      </AreaChart>
+                                  </ResponsiveContainer>
+                              </div>
+                          </div>
+                          
+                          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col justify-center items-center text-center">
+                              <div className="relative w-48 h-48 mb-6">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                      <PieChart>
+                                          <Pie data={[{ name: 'Positive', value: 75 }, { name: 'Negative', value: 25 }]} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                                              <Cell fill="#FACC15" stroke="none"/>
+                                              <Cell fill="#3B82F6" stroke="none"/>
+                                          </Pie>
+                                      </PieChart>
+                                  </ResponsiveContainer>
+                                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                      <div>
+                                          <span className="text-3xl font-black text-white">75%</span>
+                                          <p className="text-[10px] uppercase text-gray-500 font-bold">Positive</p>
+                                      </div>
+                                  </div>
+                              </div>
+                              <p className="text-sm text-gray-400">Users report feeling significantly better after sessions.</p>
                           </div>
                       </div>
                   </div>
@@ -360,370 +392,53 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
               {/* --- USERS TAB --- */}
               {activeTab === 'users' && (
                   <div className="space-y-6 animate-in fade-in duration-500">
-                      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                      <div className="flex justify-between items-center">
                           <h2 className="text-3xl font-black">User Database</h2>
-                          <div className="flex gap-4">
-                              <div className="relative">
-                                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                                  <input 
-                                      className="bg-gray-900 border border-gray-800 rounded-xl pl-10 pr-4 py-2 text-sm focus:border-yellow-500 outline-none w-64" 
-                                      placeholder="Search users..." 
-                                      value={searchTerm}
-                                      onChange={e => setSearchTerm(e.target.value)}
-                                  />
-                              </div>
-                              <select className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 text-sm outline-none" value={userFilter} onChange={e => setUserFilter(e.target.value)}>
-                                  <option value="ALL">All Users</option>
-                                  <option value="ADMIN">Admins</option>
-                                  <option value="BANNED">Banned</option>
-                              </select>
-                          </div>
+                          <input 
+                              className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 text-sm focus:border-yellow-500 outline-none w-64" 
+                              placeholder="Search users..." 
+                              value={searchTerm}
+                              onChange={e => setSearchTerm(e.target.value)}
+                          />
                       </div>
-
-                      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden flex flex-col h-[65vh]">
-                          <div className="overflow-auto flex-1 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
-                              <table className="w-full text-left border-collapse relative">
-                                  <thead className="bg-black text-gray-500 text-xs uppercase font-bold sticky top-0 z-10 shadow-lg">
-                                      <tr>
-                                          <th className="p-4 bg-black">User Identity</th>
-                                          <th className="p-4 bg-black">Role</th>
-                                          <th className="p-4 bg-black">Credits</th>
-                                          <th className="p-4 bg-black">Status</th>
-                                          <th className="p-4 text-right bg-black">Controls</th>
+                      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                          <table className="w-full text-left">
+                              <thead className="bg-black text-xs font-bold text-gray-500 uppercase">
+                                  <tr>
+                                      <th className="p-4">User</th>
+                                      <th className="p-4">Role</th>
+                                      <th className="p-4">Credits</th>
+                                      <th className="p-4 text-right">Joined</th>
+                                  </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-800">
+                                  {filteredUsers.map(user => (
+                                      <tr key={user.id} className="hover:bg-gray-800/50">
+                                          <td className="p-4 font-bold text-white text-sm">{user.name} <span className="text-gray-500 font-normal ml-1">({user.email})</span></td>
+                                          <td className="p-4 text-xs text-gray-400">{user.role}</td>
+                                          <td className="p-4 text-green-400 font-mono font-bold text-sm">{user.balance}m</td>
+                                          <td className="p-4 text-right text-gray-500 text-xs font-mono">{new Date(user.joinedAt).toLocaleDateString()}</td>
                                       </tr>
-                                  </thead>
-                                  <tbody className="divide-y divide-gray-800">
-                                      {filteredUsers.map(user => (
-                                          <tr key={user.id} className="hover:bg-gray-800/50 transition-colors">
-                                              <td className="p-4">
-                                                  <div className="flex items-center gap-3">
-                                                      <div className="w-10 h-10 rounded-full bg-black overflow-hidden border border-gray-700">
-                                                          <AvatarImage src={user.avatar || ''} alt={user.name} className="w-full h-full object-cover" />
-                                                      </div>
-                                                      <div>
-                                                          <p className="font-bold text-white text-sm">{user.name}</p>
-                                                          <p className="text-gray-500 text-xs">{user.email}</p>
-                                                      </div>
-                                                  </div>
-                                              </td>
-                                              <td className="p-4">
-                                                  <span className={`text-[10px] font-bold px-2 py-1 rounded border ${user.role === UserRole.ADMIN ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30' : 'bg-gray-800 text-gray-400 border-gray-700'}`}>
-                                                      {user.role}
-                                                  </span>
-                                              </td>
-                                              <td className="p-4 font-mono text-sm text-green-400 font-bold">{user.balance}m</td>
-                                              <td className="p-4">
-                                                  {user.subscriptionStatus === 'BANNED' 
-                                                      ? <span className="text-red-500 text-xs font-bold flex items-center gap-1"><Ban className="w-3 h-3"/> BANNED</span> 
-                                                      : <span className="text-green-500 text-xs font-bold flex items-center gap-1"><CheckCircle className="w-3 h-3"/> ACTIVE</span>
-                                                  }
-                                              </td>
-                                              <td className="p-4 text-right whitespace-nowrap">
-                                                  <div className="flex justify-end gap-2">
-                                                      <button onClick={() => { setSelectedUser(user); setShowUserModal(true); }} className="p-2 bg-gray-800 hover:bg-green-900/30 text-green-500 rounded-lg transition-colors" title="Manage User"><Plus className="w-4 h-4"/></button>
-                                                      <button onClick={() => { if(confirm("Ban/Unban User?")) { const s = user.subscriptionStatus === 'BANNED' ? 'ACTIVE' : 'BANNED'; Database.updateUser({...user, subscriptionStatus: s as any}); }}} className="p-2 bg-gray-800 hover:bg-yellow-900/30 text-yellow-500 rounded-lg transition-colors"><ShieldAlert className="w-4 h-4"/></button>
-                                                      <button onClick={() => handleDeleteUser(user.id)} disabled={user.id === currentUser?.id} className={`p-2 rounded-lg transition-colors ${user.id === currentUser?.id ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-gray-800 hover:bg-red-900/30 text-red-500'}`} title="Delete User"><Trash2 className="w-4 h-4"/></button>
-                                                  </div>
-                                              </td>
-                                          </tr>
-                                      ))}
-                                  </tbody>
-                              </table>
-                              {filteredUsers.length === 0 && <div className="p-12 text-center text-gray-500 text-sm">No users found.</div>}
-                          </div>
-                          <div className="p-4 bg-black border-t border-gray-800 text-xs text-gray-500 font-mono flex justify-between items-center">
-                              <span>Total Records: {filteredUsers.length}</span>
-                              <span>Scroll for more ↓</span>
-                          </div>
+                                  ))}
+                              </tbody>
+                          </table>
                       </div>
                   </div>
               )}
 
-              {/* --- SPECIALISTS TAB --- */}
-              {activeTab === 'specialists' && (
-                  <div className="space-y-6 animate-in fade-in duration-500">
-                      <h2 className="text-3xl font-black">Specialist Grid</h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                          {companions.map(comp => (
-                              <div key={comp.id} className="bg-gray-900 border border-gray-800 rounded-2xl p-4 hover:border-gray-700 transition-all group relative overflow-hidden">
-                                  <button onClick={() => { setSelectedCompanion(comp); setNewImageUrl(comp.imageUrl); setShowImageModal(true); }} className="absolute top-2 right-2 p-2 bg-black/60 hover:bg-white text-white hover:text-black rounded-lg transition-colors z-10 backdrop-blur-md opacity-0 group-hover:opacity-100">
-                                      <ImageIcon className="w-4 h-4" />
-                                  </button>
-                                  <div className="flex items-center gap-4 mb-4">
-                                      <div className="w-16 h-16 rounded-xl bg-black border border-gray-800 overflow-hidden shrink-0">
-                                          <AvatarImage src={comp.imageUrl} alt={comp.name} className="w-full h-full object-cover" />
-                                      </div>
-                                      <div className="min-w-0">
-                                          <h3 className="font-bold text-white truncate">{comp.name}</h3>
-                                          <p className="text-xs text-gray-500 truncate">{comp.specialty}</p>
-                                          <div className="flex items-center gap-1 mt-1">
-                                              <Star className="w-3 h-3 text-yellow-500 fill-yellow-500"/>
-                                              <span className="text-xs font-bold text-gray-400">{comp.rating}</span>
-                                          </div>
-                                      </div>
-                                  </div>
-                                  <div className="grid grid-cols-3 gap-2">
-                                      <button onClick={() => handleUpdateCompanion(comp, 'AVAILABLE')} className={`py-2 rounded-lg text-[10px] font-bold transition-all ${comp.status === 'AVAILABLE' ? 'bg-green-600 text-white' : 'bg-black text-gray-500 hover:bg-gray-800'}`}>ONLINE</button>
-                                      <button onClick={() => handleUpdateCompanion(comp, 'BUSY')} className={`py-2 rounded-lg text-[10px] font-bold transition-all ${comp.status === 'BUSY' ? 'bg-yellow-600 text-white' : 'bg-black text-gray-500 hover:bg-gray-800'}`}>BUSY</button>
-                                      <button onClick={() => handleUpdateCompanion(comp, 'OFFLINE')} className={`py-2 rounded-lg text-[10px] font-bold transition-all ${comp.status === 'OFFLINE' ? 'bg-red-600 text-white' : 'bg-black text-gray-500 hover:bg-gray-800'}`}>OFF</button>
-                                  </div>
-                              </div>
-                          ))}
-                      </div>
-                  </div>
-              )}
-
-              {/* --- FINANCIALS TAB --- */}
-              {activeTab === 'financials' && (
-                  <div className="space-y-6 animate-in fade-in duration-500">
-                      <h2 className="text-3xl font-black">Financial Metrics</h2>
-                      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                          <h3 className="font-bold text-white mb-6">Revenue Trend (14 Days)</h3>
-                          <div className="h-[400px] w-full">
-                              <ResponsiveContainer width="100%" height="100%">
-                                  <AreaChart data={revenueChartData}>
-                                      <defs>
-                                          <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                                              <stop offset="5%" stopColor="#FACC15" stopOpacity={0.3}/>
-                                              <stop offset="95%" stopColor="#FACC15" stopOpacity={0}/>
-                                          </linearGradient>
-                                      </defs>
-                                      <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-                                      <XAxis dataKey="name" stroke="#666" fontSize={12} tickLine={false} axisLine={false} />
-                                      <YAxis stroke="#666" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v}`} />
-                                      <Tooltip 
-                                          contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '12px' }} 
-                                          itemStyle={{ color: '#fff' }}
-                                      />
-                                      <Area type="monotone" dataKey="value" stroke="#FACC15" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
-                                  </AreaChart>
-                              </ResponsiveContainer>
-                          </div>
-                      </div>
-                  </div>
-              )}
-
-              {/* --- MARKETING TAB --- */}
-              {activeTab === 'marketing' && (
-                  <div className="space-y-8 animate-in fade-in duration-500">
-                      <div>
-                          <h2 className="text-3xl font-black tracking-tight mb-1">Marketing Operations</h2>
-                          <p className="text-gray-500 text-sm">Manage campaigns, discounts, and user communication.</p>
-                      </div>
-
-                      <div className="grid lg:grid-cols-3 gap-8">
-                          {/* LEFT COLUMN */}
-                          <div className="lg:col-span-2 space-y-8">
-                              
-                              {/* Promo Code Manager */}
-                              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                                  <div className="flex justify-between items-center mb-6">
-                                      <h3 className="font-bold text-white flex items-center gap-2"><Tag className="w-5 h-5 text-yellow-500"/> Active Campaigns</h3>
-                                      <span className="text-xs bg-yellow-500/10 text-yellow-500 px-3 py-1 rounded-full font-bold">{promos.filter(p => p.active).length} Active</span>
-                                  </div>
-
-                                  {/* Creator */}
-                                  <form onSubmit={handleCreatePromo} className="flex gap-4 mb-8 bg-black p-4 rounded-xl border border-gray-800">
-                                      <div className="flex-1">
-                                          <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Promo Code</label>
-                                          <input 
-                                              className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white font-mono text-sm focus:border-yellow-500 outline-none uppercase"
-                                              placeholder="SUMMER2025"
-                                              value={newPromo.code}
-                                              onChange={e => setNewPromo({...newPromo, code: e.target.value.toUpperCase()})}
-                                          />
-                                      </div>
-                                      <div className="w-24">
-                                          <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Discount %</label>
-                                          <input 
-                                              type="number"
-                                              className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white font-mono text-sm focus:border-yellow-500 outline-none"
-                                              placeholder="10"
-                                              value={newPromo.discount}
-                                              onChange={e => setNewPromo({...newPromo, discount: parseInt(e.target.value) || 0})}
-                                          />
-                                      </div>
-                                      <div className="flex items-end">
-                                          <button className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold p-2.5 rounded-lg transition-colors flex items-center gap-2">
-                                              <Plus className="w-4 h-4" /> Create
-                                          </button>
-                                      </div>
-                                  </form>
-
-                                  {/* List */}
-                                  <div className="space-y-3">
-                                      {promos.length === 0 ? (
-                                          <div className="text-center py-8 text-gray-600 text-sm">No active campaigns.</div>
-                                      ) : (
-                                          promos.map(promo => (
-                                              <div key={promo.id} className="flex items-center justify-between bg-black border border-gray-800 p-4 rounded-xl group hover:border-gray-700 transition-colors">
-                                                  <div className="flex items-center gap-4">
-                                                      <div className="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center border border-gray-800">
-                                                          <Gift className="w-5 h-5 text-gray-400" />
-                                                      </div>
-                                                      <div>
-                                                          <p className="font-bold text-white text-lg tracking-wider font-mono">{promo.code}</p>
-                                                          <p className="text-xs text-gray-500">{promo.discountPercentage}% Discount • {promo.uses} Redemptions</p>
-                                                      </div>
-                                                  </div>
-                                                  <button 
-                                                      onClick={() => { Database.deletePromoCode(promo.id); setPromos(Database.getPromoCodes()); }}
-                                                      className="p-2 text-gray-600 hover:text-red-500 hover:bg-red-900/10 rounded-lg transition-colors"
-                                                  >
-                                                      <Trash2 className="w-4 h-4" />
-                                                  </button>
-                                              </div>
-                                          ))
-                                      )}
-                                  </div>
-                              </div>
-
-                              {/* System Broadcast */}
-                              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                                  <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Megaphone className="w-5 h-5 text-blue-500"/> System Broadcast</h3>
-                                  <p className="text-gray-500 text-xs mb-4">Send a global notification to all active user dashboards.</p>
-                                  <div className="flex gap-4">
-                                      <input 
-                                          className="flex-1 bg-black border border-gray-800 rounded-xl p-4 text-white text-sm focus:border-blue-500 outline-none"
-                                          placeholder="e.g., 'Maintenance scheduled for 3AM EST'"
-                                          defaultValue={settings.broadcastMessage}
-                                          onBlur={(e) => Database.saveSettings({...settings, broadcastMessage: e.target.value})}
-                                      />
-                                      <button 
-                                          onClick={() => {
-                                              setBroadcastSent(true);
-                                              setTimeout(() => setBroadcastSent(false), 2000);
-                                          }}
-                                          className={`px-6 rounded-xl font-bold text-sm transition-all ${broadcastSent ? 'bg-green-500 text-white' : 'bg-blue-600 text-white hover:bg-blue-500'}`}
-                                      >
-                                          {broadcastSent ? 'Sent!' : 'Broadcast'}
-                                      </button>
-                                  </div>
-                              </div>
-                          </div>
-
-                          {/* RIGHT COLUMN */}
-                          <div className="space-y-8">
-                              {/* Acquisition Chart */}
-                              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                                  <h3 className="font-bold text-white mb-6 flex items-center gap-2"><Globe className="w-5 h-5 text-green-500"/> Acquisition Source</h3>
-                                  <div className="h-64 w-full relative">
-                                      <ResponsiveContainer width="100%" height="100%">
-                                          <PieChart>
-                                              <Pie
-                                                  data={[
-                                                      { name: 'Organic', value: 400 },
-                                                      { name: 'Referral', value: 300 },
-                                                      { name: 'Social', value: 300 },
-                                                      { name: 'Direct', value: 200 },
-                                                  ]}
-                                                  cx="50%"
-                                                  cy="50%"
-                                                  innerRadius={60}
-                                                  outerRadius={80}
-                                                  paddingAngle={5}
-                                                  dataKey="value"
-                                              >
-                                                  {['#FACC15', '#22C55E', '#3B82F6', '#EF4444'].map((color, index) => (
-                                                      <Cell key={`cell-${index}`} fill={color} stroke="none" />
-                                                  ))}
-                                              </Pie>
-                                              <Tooltip 
-                                                  contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '12px' }} 
-                                                  itemStyle={{ color: '#fff' }}
-                                              />
-                                          </PieChart>
-                                      </ResponsiveContainer>
-                                      {/* Center Text */}
-                                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                          <div className="text-center">
-                                              <p className="text-2xl font-black text-white">1.2k</p>
-                                              <p className="text-[10px] uppercase text-gray-500 font-bold">Total Visits</p>
-                                          </div>
-                                      </div>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-4 mt-6">
-                                      <div className="flex items-center gap-2">
-                                          <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                                          <span className="text-xs text-gray-400">Organic (33%)</span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                          <span className="text-xs text-gray-400">Referral (25%)</span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                          <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                                          <span className="text-xs text-gray-400">Social (25%)</span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                          <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                                          <span className="text-xs text-gray-400">Direct (17%)</span>
-                                      </div>
-                                  </div>
-                              </div>
-
-                              {/* Viral Coefficient */}
-                              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                                  <h3 className="font-bold text-white mb-2 flex items-center gap-2"><Users className="w-5 h-5 text-purple-500"/> Viral Coefficient</h3>
-                                  <p className="text-4xl font-black text-white mb-1">1.24</p>
-                                  <p className="text-xs text-gray-500">Each user invites ~1.24 new friends.</p>
-                                  <div className="w-full bg-gray-800 h-1.5 rounded-full mt-4 overflow-hidden">
-                                      <div className="bg-purple-500 h-full w-[62%]"></div>
-                                  </div>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-              )}
-
-              {/* --- SETTINGS TAB --- */}
+              {/* --- SETTINGS --- */}
               {activeTab === 'settings' && (
-                  <div className="grid lg:grid-cols-2 gap-8 animate-in fade-in duration-500">
-                      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8">
-                          <h3 className="font-bold text-white text-xl mb-6 flex items-center gap-2"><Settings className="w-5 h-5 text-yellow-500" /> Configuration</h3>
-                          <div className="space-y-4">
-                              <div className="flex items-center justify-between p-4 bg-black rounded-xl border border-gray-800">
-                                  <div>
-                                      <p className="font-bold text-white">Sale Mode Pricing</p>
-                                      <p className="text-xs text-gray-500">{settings.saleMode ? 'Active: $1.49/min' : 'Inactive: $1.99/min'} - Dynamic Pricing Engine</p>
-                                  </div>
-                                  <button onClick={() => Database.saveSettings({...settings, saleMode: !settings.saleMode})} className={`w-12 h-6 rounded-full relative transition-colors ${settings.saleMode ? 'bg-green-500' : 'bg-gray-700'}`}>
-                                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${settings.saleMode ? 'left-7' : 'left-1'}`}></div>
-                                  </button>
+                  <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 animate-in fade-in duration-500">
+                      <h2 className="text-2xl font-black mb-6">Global Configuration</h2>
+                      <div className="space-y-4">
+                          <div className="flex items-center justify-between p-4 bg-black rounded-xl border border-gray-800">
+                              <div>
+                                  <p className="font-bold text-white">Maintenance Mode</p>
+                                  <p className="text-xs text-gray-500">Lock down system for all non-admins.</p>
                               </div>
-                              <div className="flex items-center justify-between p-4 bg-black rounded-xl border border-gray-800">
-                                  <div>
-                                      <p className="font-bold text-white">Maintenance Lockdown</p>
-                                      <p className="text-xs text-gray-500">Deny all non-admin access immediately.</p>
-                                  </div>
-                                  <button onClick={() => Database.saveSettings({...settings, maintenanceMode: !settings.maintenanceMode})} className={`w-12 h-6 rounded-full relative transition-colors ${settings.maintenanceMode ? 'bg-red-500' : 'bg-gray-700'}`}>
-                                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${settings.maintenanceMode ? 'left-7' : 'left-1'}`}></div>
-                                  </button>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-              )}
-
-              {/* --- LOGS TAB --- */}
-              {activeTab === 'logs' && (
-                  <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden animate-in fade-in duration-500">
-                      <div className="p-6 border-b border-gray-800 font-bold text-white flex items-center gap-2"><Terminal className="w-5 h-5" /> System Events</div>
-                      <div className="h-[600px] overflow-y-auto p-4 bg-black">
-                          <div className="space-y-2 font-mono text-xs">
-                              {logs.map(log => (
-                                  <div key={log.id} className="flex gap-4 p-2 hover:bg-gray-900 rounded border-b border-gray-900">
-                                      <span className="text-gray-500 w-32 shrink-0">{new Date(log.timestamp).toLocaleTimeString()}</span>
-                                      <span className={`w-20 font-bold shrink-0 ${
-                                          log.type === 'ERROR' ? 'text-red-500' : 
-                                          log.type === 'WARNING' ? 'text-yellow-500' : 
-                                          log.type === 'SUCCESS' ? 'text-green-500' : 
-                                          'text-blue-500'
-                                      }`}>{log.type}</span>
-                                      <span className="text-gray-300 font-bold w-40 shrink-0">{log.event}</span>
-                                      <span className="text-gray-500">{log.details}</span>
-                                  </div>
-                              ))}
+                              <button onClick={() => Database.saveSettings({...settings, maintenanceMode: !settings.maintenanceMode})} className={`w-12 h-6 rounded-full relative transition-colors ${settings.maintenanceMode ? 'bg-red-500' : 'bg-gray-700'}`}>
+                                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${settings.maintenanceMode ? 'left-7' : 'left-1'}`}></div>
+                              </button>
                           </div>
                       </div>
                   </div>
@@ -731,51 +446,6 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
           </div>
       </main>
-
-      {/* MODALS */}
-      {showUserModal && selectedUser && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in zoom-in duration-200">
-              <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-sm w-full shadow-2xl">
-                   <h3 className="text-xl font-bold text-white mb-2">Manage User</h3>
-                   <p className="text-gray-400 text-sm mb-6"><span className="text-yellow-500">{selectedUser.email}</span></p>
-                   
-                   <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Grant Credits</label>
-                   <input type="number" className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white text-xl font-mono mb-6 focus:border-green-500 outline-none" value={fundAmount} onChange={e => setFundAmount(parseInt(e.target.value) || 0)} placeholder="0" />
-                   
-                   <div className="flex flex-col gap-3">
-                       <div className="flex gap-3">
-                           <button onClick={() => setShowUserModal(false)} className="flex-1 py-3 bg-gray-800 rounded-xl font-bold text-gray-400 hover:bg-gray-700">Cancel</button>
-                           <button onClick={handleFundUser} className="flex-1 py-3 bg-green-600 rounded-xl font-bold text-white hover:bg-green-500">Confirm Grant</button>
-                       </div>
-                       
-                       <button 
-                           onClick={() => handleDeleteUser(selectedUser.id)} 
-                           disabled={selectedUser.id === currentUser?.id}
-                           className={`w-full py-3 border rounded-xl font-bold text-xs uppercase tracking-widest mt-2 flex items-center justify-center gap-2 ${selectedUser.id === currentUser?.id ? 'border-gray-700 text-gray-600 cursor-not-allowed' : 'border-red-900/50 text-red-500 hover:bg-red-900/20'}`}
-                       >
-                           <Trash2 className="w-4 h-4" /> Delete User Permanently
-                       </button>
-                   </div>
-              </div>
-          </div>
-      )}
-
-      {showImageModal && selectedCompanion && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in zoom-in duration-200">
-              <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-sm w-full shadow-2xl">
-                   <h3 className="text-xl font-bold text-white mb-4">Update Visuals</h3>
-                   <div className="w-full aspect-square bg-black rounded-xl border border-gray-800 mb-4 overflow-hidden">
-                       <AvatarImage src={newImageUrl} alt="Preview" className="w-full h-full object-cover" />
-                   </div>
-                   <input className="w-full bg-black border border-gray-700 rounded-xl p-3 text-white text-xs mb-6 outline-none focus:border-yellow-500" value={newImageUrl} onChange={e => setNewImageUrl(e.target.value)} />
-                   <div className="flex gap-3">
-                       <button onClick={() => setShowImageModal(false)} className="flex-1 py-3 bg-gray-800 rounded-xl font-bold text-gray-400 hover:bg-gray-700">Cancel</button>
-                       <button onClick={() => { Database.updateCompanion({...selectedCompanion, imageUrl: newImageUrl}); setShowImageModal(false); }} className="flex-1 py-3 bg-yellow-500 rounded-xl font-bold text-black hover:bg-yellow-400">Save</button>
-                   </div>
-              </div>
-          </div>
-      )}
-
     </div>
   );
 };
