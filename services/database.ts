@@ -55,7 +55,20 @@ export const STABLE_AVATAR_POOL = [
     "https://images.unsplash.com/photo-1589571894960-20bbe2815d22?auto=format&fit=crop&q=80&w=800",
     "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=800",
     "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&q=80&w=800"
+    "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1562788869-4ed32648eb72?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1580894732444-8ecded7900cd?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1520813792240-56fc4a3765a7?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1628157588553-5eeea00af15c?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1624561172888-ac93c696e10c?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1601455763557-db1bea9a9d5d?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1629460741589-9bd72a6c278c?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1643195223030-9777324317f2?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1542596594-649edbc13630?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1639149888905-fb39731f2e6c?auto=format&fit=crop&q=80&w=800"
 ];
 
 export const INITIAL_COMPANIONS: Companion[] = [
@@ -85,7 +98,26 @@ export const INITIAL_COMPANIONS: Companion[] = [
   { id: 'c24', name: 'Ava', gender: 'Female', specialty: 'Social Anxiety', status: 'AVAILABLE', rating: 5.0, imageUrl: STABLE_AVATAR_POOL[23], bio: 'Building confidence socially.', replicaId: 'r_ava', licenseNumber: 'PsyD-MA-1123', degree: 'PsyD, Clinical Psychology', stateOfPractice: 'MA', yearsExperience: 7 },
   { id: 'c25', name: 'Benjamin', gender: 'Male', specialty: 'Fatherhood', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[24], bio: 'Supporting new dads.', replicaId: 'r_benjamin', licenseNumber: 'LCSW-WA-4421', degree: 'MSW, Social Work', stateOfPractice: 'WA', yearsExperience: 11 },
   { id: 'c26', name: 'Charlotte', gender: 'Female', specialty: 'Art Therapy', status: 'AVAILABLE', rating: 5.0, imageUrl: STABLE_AVATAR_POOL[25], bio: 'Healing through creativity.', replicaId: 'r_charlotte', licenseNumber: 'ATR-BC-NY-8821', degree: 'MA, Art Therapy', stateOfPractice: 'NY', yearsExperience: 14 },
-  { id: 'c27', name: 'Henry', gender: 'Male', specialty: 'Financial Stress', status: 'AVAILABLE', rating: 4.8, imageUrl: STABLE_AVATAR_POOL[26], bio: 'Managing money mindset.', replicaId: 'r_henry', licenseNumber: 'LPC-OH-3321', degree: 'MA, Counseling', stateOfPractice: 'OH', yearsExperience: 13 }
+  { id: 'c27', name: 'Henry', gender: 'Male', specialty: 'Financial Stress', status: 'AVAILABLE', rating: 4.8, imageUrl: STABLE_AVATAR_POOL[26], bio: 'Managing money mindset.', replicaId: 'r_henry', licenseNumber: 'LPC-OH-3321', degree: 'MA, Counseling', stateOfPractice: 'OH', yearsExperience: 13 },
+  { id: 'c28', name: 'Nora', gender: 'Female', specialty: 'Parenting', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[27], bio: 'Guidance for modern parents.', replicaId: 'r_nora', licenseNumber: 'LCSW-CA-1199', degree: 'MSW, Social Welfare', stateOfPractice: 'CA', yearsExperience: 16 },
+  { id: 'c29', name: 'Ethan', gender: 'Male', specialty: 'Career Transition', status: 'AVAILABLE', rating: 4.8, imageUrl: STABLE_AVATAR_POOL[28], bio: 'Finding purpose in work.', replicaId: 'r_ethan', licenseNumber: 'ICF-ACC-4455', degree: 'MBA, Career Coaching', stateOfPractice: 'NY', yearsExperience: 8 },
+  { id: 'c30', name: 'Isabella', gender: 'Female', specialty: 'Mindfulness', status: 'AVAILABLE', rating: 5.0, imageUrl: STABLE_AVATAR_POOL[29], bio: 'Living in the present moment.', replicaId: 'r_isabella', licenseNumber: 'MBSR-CERT-9911', degree: 'PhD, Psychology', stateOfPractice: 'CO', yearsExperience: 10 },
+  { id: 'c31', name: 'Mason', gender: 'Male', specialty: 'Anger & Conflict', status: 'AVAILABLE', rating: 4.7, imageUrl: STABLE_AVATAR_POOL[30], bio: 'Healthy conflict resolution.', replicaId: 'r_mason', licenseNumber: 'LPC-TX-7722', degree: 'MA, Counseling', stateOfPractice: 'TX', yearsExperience: 12 },
+  { id: 'c32', name: 'Grace', gender: 'Female', specialty: 'Fertility Support', status: 'AVAILABLE', rating: 5.0, imageUrl: STABLE_AVATAR_POOL[31], bio: 'Emotional support for fertility.', replicaId: 'r_grace', licenseNumber: 'LCSW-MA-5511', degree: 'MSW, Social Work', stateOfPractice: 'MA', yearsExperience: 9 },
+  { id: 'c33', name: 'Logan', gender: 'Male', specialty: 'Veterans', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[32], bio: 'Support for service members.', replicaId: 'r_logan', licenseNumber: 'PsyD-VA-2288', degree: 'PsyD, Trauma Psychology', stateOfPractice: 'VA', yearsExperience: 15 },
+  { id: 'c34', name: 'Lily', gender: 'Female', specialty: 'Student Life', status: 'AVAILABLE', rating: 4.8, imageUrl: STABLE_AVATAR_POOL[33], bio: 'Navigating academic pressure.', replicaId: 'r_lily', licenseNumber: 'LMHC-FL-6633', degree: 'MA, Mental Health', stateOfPractice: 'FL', yearsExperience: 5 },
+  { id: 'c35', name: 'Oliver', gender: 'Male', specialty: 'Loneliness', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[34], bio: 'Building meaningful connections.', replicaId: 'r_oliver', licenseNumber: 'LCSW-WA-9944', degree: 'MSW, Social Work', stateOfPractice: 'WA', yearsExperience: 7 },
+  { id: 'c36', name: 'Harper', gender: 'Female', specialty: 'Creativity', status: 'AVAILABLE', rating: 5.0, imageUrl: STABLE_AVATAR_POOL[35], bio: 'Unlocking creative potential.', replicaId: 'r_harper', licenseNumber: 'ATR-BC-CA-1122', degree: 'MA, Art Therapy', stateOfPractice: 'CA', yearsExperience: 11 },
+  { id: 'c37', name: 'Elijah', gender: 'Male', specialty: 'Spiritual Growth', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[36], bio: 'Exploring meaning and purpose.', replicaId: 'r_elijah', licenseNumber: 'MDiv-NY-5566', degree: 'MDiv, Pastoral Counseling', stateOfPractice: 'NY', yearsExperience: 20 },
+  { id: 'c38', name: 'Chloe', gender: 'Female', specialty: 'Body Image', status: 'AVAILABLE', rating: 4.8, imageUrl: STABLE_AVATAR_POOL[37], bio: 'Fostering self-love.', replicaId: 'r_chloe', licenseNumber: 'LPC-IL-8877', degree: 'MA, Counseling', stateOfPractice: 'IL', yearsExperience: 8 },
+  { id: 'c39', name: 'Sebastian', gender: 'Male', specialty: 'Sleep Hygiene', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[38], bio: 'Better rest for better life.', replicaId: 'r_sebastian', licenseNumber: 'PhD-OR-3344', degree: 'PhD, Health Psychology', stateOfPractice: 'OR', yearsExperience: 14 },
+  { id: 'c40', name: 'Amelia', gender: 'Female', specialty: 'Nutritional Psy', status: 'AVAILABLE', rating: 5.0, imageUrl: STABLE_AVATAR_POOL[39], bio: 'Food and mood connection.', replicaId: 'r_amelia', licenseNumber: 'RD-TX-9900', degree: 'MS, Nutrition', stateOfPractice: 'TX', yearsExperience: 12 },
+  { id: 'c41', name: 'Alexander', gender: 'Male', specialty: 'Executive Coaching', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[40], bio: 'Leadership and balance.', replicaId: 'r_alexander', licenseNumber: 'PsyD-NY-2211', degree: 'PsyD, Org Psychology', stateOfPractice: 'NY', yearsExperience: 18 },
+  { id: 'c42', name: 'Mila', gender: 'Female', specialty: 'Panic Attacks', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[41], bio: 'Immediate relief strategies.', replicaId: 'r_mila', licenseNumber: 'LCSW-CA-5588', degree: 'MSW, Clinical Work', stateOfPractice: 'CA', yearsExperience: 9 },
+  { id: 'c43', name: 'Daniel', gender: 'Male', specialty: 'Depression', status: 'AVAILABLE', rating: 4.8, imageUrl: STABLE_AVATAR_POOL[42], bio: 'Finding light in darkness.', replicaId: 'r_daniel', licenseNumber: 'LPC-OH-7711', degree: 'MA, Counseling', stateOfPractice: 'OH', yearsExperience: 11 },
+  { id: 'c44', name: 'Avery', gender: 'Female', specialty: 'ADHD Support', status: 'AVAILABLE', rating: 4.9, imageUrl: STABLE_AVATAR_POOL[43], bio: 'Thriving with neurodiversity.', replicaId: 'r_avery', licenseNumber: 'PsyD-MA-6622', degree: 'PsyD, Psychology', stateOfPractice: 'MA', yearsExperience: 10 },
+  { id: 'c45', name: 'Matthew', gender: 'Male', specialty: 'Tech Burnout', status: 'AVAILABLE', rating: 4.8, imageUrl: STABLE_AVATAR_POOL[44], bio: 'Restoring digital balance.', replicaId: 'r_matthew', licenseNumber: 'LMFT-WA-3399', degree: 'MA, Psychology', stateOfPractice: 'WA', yearsExperience: 7 },
+  { id: 'c46', name: 'Scarlett', gender: 'Female', specialty: 'Women\'s Issues', status: 'AVAILABLE', rating: 5.0, imageUrl: STABLE_AVATAR_POOL[45], bio: 'Empowerment and health.', replicaId: 'r_scarlett', licenseNumber: 'LCSW-NY-1188', degree: 'MSW, Social Work', stateOfPractice: 'NY', yearsExperience: 13 }
 ];
 
 export class Database {

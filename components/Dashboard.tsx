@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Companion, Transaction, JournalEntry, ArtEntry, BreathLog, MoodEntry } from '../types';
@@ -850,6 +851,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [showTechCheck, setShowTechCheck] = useState(false);
   const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
+  const [showCookies, setShowCookies] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('peutic_theme');
@@ -1367,6 +1369,68 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                       </p>
                   </div>
               </div>
+
+              {/* High-End Footer - Added Back */}
+              <footer className="bg-[#FFFBEB] dark:bg-[#0A0A0A] text-black dark:text-white py-12 md:py-16 px-6 md:px-10 border-t border-yellow-200 dark:border-gray-800 transition-colors">
+                  <div className="max-w-7xl mx-auto">
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-16 mb-8 md:mb-12">
+                          <div className="md:col-span-5 space-y-6">
+                              <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 md:w-10 md:h-10 bg-yellow-400 rounded-xl flex items-center justify-center">
+                                      <Heart className="w-5 h-5 md:w-6 md:h-6 fill-black text-black" />
+                                  </div>
+                                  <span className="text-xl md:text-2xl font-black tracking-tight">Peutic</span>
+                              </div>
+                              <p className="text-gray-800 dark:text-gray-500 text-sm leading-relaxed max-w-md">
+                                  Connecting the disconnected through elite-level human specialists and cutting-edge secure technology.
+                              </p>
+                              <div className="flex gap-6">
+                                  {[Twitter, Instagram, Linkedin].map((Icon, i) => (
+                                      <button key={i} className="text-gray-800 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors hover:scale-110 transform"><Icon className="w-5 h-5"/></button>
+                                  ))}
+                              </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-1 gap-8 md:col-span-2">
+                              <div>
+                                  <h4 className="font-black mb-4 text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Global</h4>
+                                  <ul className="space-y-2 text-xs md:text-sm font-bold text-gray-800 dark:text-gray-500">
+                                      <li><Link to="/about" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">About</Link></li>
+                                      <li><Link to="/press" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Media</Link></li>
+                                  </ul>
+                              </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 md:grid-cols-1 gap-8 md:col-span-2">
+                              <div>
+                                  <h4 className="font-black mb-4 text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Support</h4>
+                                  <ul className="space-y-2 text-xs md:text-sm font-bold text-gray-800 dark:text-gray-500">
+                                      <li><Link to="/support" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Help Center</Link></li>
+                                      <li><Link to="/safety" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Safety Standards</Link></li>
+                                      <li><Link to="/crisis" className="text-red-600 hover:text-red-700 transition-colors">Crisis Hub</Link></li>
+                                  </ul>
+                              </div>
+                          </div>
+
+                          <div className="md:col-span-3">
+                              <h4 className="font-black mb-4 text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Regulatory</h4>
+                              <ul className="space-y-2 text-xs md:text-sm font-bold text-gray-800 dark:text-gray-500">
+                                  <li><Link to="/privacy" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Privacy Policy</Link></li>
+                                  <li><Link to="/terms" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Terms of Service</Link></li>
+                                  <li><button onClick={() => setShowCookies(true)} className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Cookie Controls</button></li>
+                              </ul>
+                          </div>
+                      </div>
+                      
+                      <div className="pt-8 flex flex-col md:flex-row justify-between items-center text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-gray-700 dark:text-gray-600 gap-4 md:gap-0 border-t border-yellow-200/50 dark:border-gray-800">
+                          <p>&copy; 2025 Peutic Global Inc. | ISO 27001 Certified</p>
+                          <div className="flex items-center gap-3">
+                              <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-green-500 rounded-full animate-pulse"></div>
+                              <span>Network Optimal</span>
+                          </div>
+                      </div>
+                  </div>
+              </footer>
           </main>
       </div>
 

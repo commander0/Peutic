@@ -36,7 +36,18 @@ const LOCAL_AFFIRMATIONS = {
         "I detach from the chaos around me and find the stillness within.",
         "My mind is a tool I use, not a master I obey.",
         "I am not my thoughts; I am the observer of my thoughts.",
-        "Exhale the future. Inhale the now."
+        "Exhale the future. Inhale the now.",
+        "The universe is not in a hurry. You are.",
+        "You are the sky. Everything else – it's just the weather.",
+        "There is nothing to fear in this moment.",
+        "I am safe in my body.",
+        "I release the story I am telling myself.",
+        "Focus on the step in front of you, not the whole staircase.",
+        "I cultivate inner silence amidst outer noise.",
+        "My peace is non-negotiable.",
+        "I am rooted like a tree; the wind cannot break me.",
+        "Quiet the mind, and the soul will speak.",
+        "I allow myself to simply be."
     ],
     stress: [
         "I can do anything, but not everything.",
@@ -58,7 +69,17 @@ const LOCAL_AFFIRMATIONS = {
         "My worth is not measured by my productivity.",
         "It is not the load that breaks you down, it's the way you carry it.",
         "Calmness is a superpower.",
-        "I choose to respond with clarity, not react with haste."
+        "I choose to respond with clarity, not react with haste.",
+        "Rest is not a reward, it is a requirement.",
+        "I adopt the pace of nature: her secret is patience.",
+        "I am not a machine. I honor my human needs.",
+        "I protect my energy with boundaries.",
+        "Pressure is a choice. I choose ease.",
+        "I let go of what I cannot change.",
+        "My best is different every day.",
+        "I fill my cup before pouring into others.",
+        "I am entitled to rest without guilt.",
+        "Stillness is where the answers live."
     ],
     sadness: [
         "It is okay to feel this way. Feelings are visitors.",
@@ -80,7 +101,17 @@ const LOCAL_AFFIRMATIONS = {
         "I honor my feelings without letting them consume me.",
         "Tomorrow is a fresh canvas.",
         "I am gentle with my heart today.",
-        "Light always returns."
+        "Light always returns.",
+        "I hold space for my own heart.",
+        "It is brave to feel.",
+        "Softness is a strength.",
+        "I am patient with my healing.",
+        "Every storm runs out of rain.",
+        "I am loved more than I know.",
+        "This feeling is a wave, not the ocean.",
+        "I forgive myself for not knowing better then.",
+        "My sensitivity is a gift.",
+        "I nurture the child within me."
     ],
     general: [
         "I am exactly where I need to be.",
@@ -103,7 +134,17 @@ const LOCAL_AFFIRMATIONS = {
         "The best way to predict the future is to create it.",
         "You are enough just as you are.",
         "Gratitude turns what we have into enough.",
-        "Growth is a spiral process, doubling back on itself."
+        "Growth is a spiral process, doubling back on itself.",
+        "What is for you will not pass you.",
+        "Trust the timing of your life.",
+        "You are the author of your own story.",
+        "Comparison is the thief of joy.",
+        "Focus on the good.",
+        "Small steps are still progress.",
+        "Inhale confidence, exhale doubt.",
+        "You are doing better than you think.",
+        "Embrace the uncertainty.",
+        "Life isn't about finding yourself, it's about creating yourself."
     ]
 };
 
