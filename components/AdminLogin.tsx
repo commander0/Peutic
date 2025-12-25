@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { Database } from '../services/database';
 import { UserRole } from '../types';
-import { Lock, AlertCircle, Shield, ArrowRight, PlusCircle, Check } from 'lucide-react';
+import { Lock, AlertCircle, Shield, ArrowRight, PlusCircle, Check, RefreshCw } from 'lucide-react';
 
 interface AdminLoginProps {
   onLogin: (user: any) => void;
@@ -21,6 +22,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
   const [newAdminConfirmPassword, setNewAdminConfirmPassword] = useState('');
 
   const lockout = Database.checkAdminLockout();
+  const hasAdmin = Database.hasAdmin();
 
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,8 +63,17 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
           return;
       }
 
+      // RESET FEATURE: If admin exists, we wipe existing data first to prevent lockouts/conflicts
+      if (hasAdmin) {
+          if (confirm("WARNING: Using the Master Key will reset the Admin database. Continue?")) {
+              Database.resetAllUsers(); // Clear previous data
+          } else {
+              return;
+          }
+      }
+
       Database.createUser('System Admin', newAdminEmail, 'email', undefined, UserRole.ADMIN);
-      setSuccessMsg("Root Admin Created Successfully. Please Login.");
+      setSuccessMsg(hasAdmin ? "System Reset Successful. New Admin Created." : "Root Admin Created Successfully.");
       
       setTimeout(() => {
           setShowRegister(false);
@@ -73,8 +84,6 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
           setNewAdminConfirmPassword('');
       }, 2000);
   };
-
-  const hasAdmin = Database.hasAdmin();
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
@@ -102,7 +111,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                         {showRegister ? (
                              <form onSubmit={handleRegisterAdmin} className="space-y-4">
                                 <div className="text-center mb-4">
-                                    <h3 className="text-white font-bold text-lg">Initialize Root Admin</h3>
+                                    <h3 className="text-white font-bold text-lg">{hasAdmin ? "Emergency System Reset" : "Initialize Root Admin"}</h3>
+                                    {hasAdmin && <p className="text-xs text-red-400 mt-1">This will wipe user data to restore access.</p>}
                                 </div>
                                 <input type="password" className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none" placeholder="Master Key" value={masterKey} onChange={e => setMasterKey(e.target.value)} />
                                 <input type="email" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none" placeholder="New Admin Email" value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} />
@@ -110,7 +120,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                     <input type="password" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none" placeholder="Password" value={newAdminPassword} onChange={e => setNewAdminPassword(e.target.value)} />
                                     <input type="password" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none" placeholder="Confirm" value={newAdminConfirmPassword} onChange={e => setNewAdminConfirmPassword(e.target.value)} />
                                 </div>
-                                <button className="w-full bg-yellow-500 text-black font-black py-4 rounded-xl hover:bg-yellow-400 transition-colors mt-4">INITIALIZE SYSTEM</button>
+                                <button className="w-full bg-yellow-500 text-black font-black py-4 rounded-xl hover:bg-yellow-400 transition-colors mt-4">{hasAdmin ? "RESET & CREATE ADMIN" : "INITIALIZE SYSTEM"}</button>
                                 <button type="button" onClick={() => setShowRegister(false)} className="text-gray-500 text-sm w-full text-center hover:text-white py-2">Cancel</button>
                              </form>
                         ) : (
@@ -126,11 +136,10 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                 <button type="submit" disabled={loading} className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2">
                                     {loading ? <span className="animate-pulse">Authenticating...</span> : <><Lock className="w-4 h-4" /> ACCESS TERMINAL</>}
                                 </button>
-                                {!hasAdmin && (
-                                    <button type="button" onClick={() => setShowRegister(true)} className="w-full border border-gray-800 text-gray-500 py-3 rounded-xl text-xs font-bold hover:bg-gray-900 hover:text-white transition-colors flex items-center justify-center gap-2 mt-4">
-                                        <PlusCircle className="w-3 h-3" /> INITIALIZE SYSTEM (First Run)
-                                    </button>
-                                )}
+                                
+                                <button type="button" onClick={() => setShowRegister(true)} className={`w-full border border-gray-800 text-gray-500 py-3 rounded-xl text-xs font-bold hover:bg-gray-900 hover:text-white transition-colors flex items-center justify-center gap-2 mt-4 ${hasAdmin ? 'opacity-50 hover:opacity-100' : ''}`}>
+                                    {hasAdmin ? <><RefreshCw className="w-3 h-3" /> System Recovery</> : <><PlusCircle className="w-3 h-3" /> INITIALIZE SYSTEM (First Run)</>}
+                                </button>
                             </form>
                         )}
                     </>
