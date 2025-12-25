@@ -144,7 +144,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 5.0, 
     imageUrl: "https://images.unsplash.com/photo-1589571894960-20bbe2815d22?auto=format&fit=crop&q=80&w=800", 
     bio: 'Support for caregivers.', 
-    replicaId: 'r6ae5b6efc9d', 
+    replicaId: 'r4317e64d25a', 
     licenseNumber: 'BSW-FL-3321', 
     degree: 'BSW, Gerontology', 
     stateOfPractice: 'FL', 
@@ -503,7 +503,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     stateOfPractice: 'FL', 
     yearsExperience: 25 
   },
-  // 30. Nora (F) - UPDATED IMAGE & VALID REPLICA ID
+  // 30. Nora (F) - UPDATED IMAGE (Female) & VALID REPLICA ID
   { 
     id: 'c30', 
     name: 'Nora', 
@@ -511,7 +511,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     specialty: 'Caregiver Stress', 
     status: 'AVAILABLE', 
     rating: 4.9, 
-    imageUrl: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=800", // UPDATED: Female Avatar
+    imageUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=800", 
     bio: 'Caring for yourself while caring for others.', 
     replicaId: 'r4317e64d25a', 
     licenseNumber: 'LCSW-OH-9912', 
