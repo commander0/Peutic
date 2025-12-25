@@ -8,7 +8,7 @@ import {
     Users, DollarSign, Activity, LogOut, Settings, Video, 
     Search, Edit2, Ban, Zap, ShieldAlert, 
     Terminal, Globe, Megaphone, Menu, X, Gift, Download, Tag,
-    Clock, Server, Star, LayoutGrid, List, Heart, TrendingUp, AlertTriangle, UserCheck, Shield, Eye, Trash2
+    Clock, Server, Star, LayoutGrid, List, Heart, TrendingUp, AlertTriangle, UserCheck, Shield, Eye, Trash2, PlusCircle
 } from 'lucide-react';
 import { Database, STABLE_AVATAR_POOL } from '../services/database';
 import { User, UserRole, Companion, Transaction, GlobalSettings, SystemLog, PromoCode, SessionFeedback, MoodEntry } from '../types';
@@ -53,7 +53,7 @@ const AvatarImage: React.FC<{ src: string; alt: string; className?: string }> = 
 };
 
 const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'safety' | 'users' | 'specialists' | 'analytics' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'safety' | 'users' | 'specialists' | 'financials' | 'settings'>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Data States
@@ -62,28 +62,26 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [settings, setSettings] = useState<GlobalSettings>(Database.getSettings());
   const [logs, setLogs] = useState<SystemLog[]>([]);
-  const [promos, setPromos] = useState<PromoCode[]>([]);
-  const [feedback, setFeedback] = useState<SessionFeedback[]>([]);
-  const [moods, setMoods] = useState<MoodEntry[]>([]); 
   const [activeCount, setActiveCount] = useState(0);
   
   // UI States
   const [searchTerm, setSearchTerm] = useState('');
   const [specialistView, setSpecialistView] = useState<'grid' | 'list'>('list');
+  const [broadcastMsg, setBroadcastMsg] = useState('');
   
   // Computed
   const MAX_CONCURRENT_CAPACITY = 15;
   const totalRevenue = transactions.filter(t => t.amount > 0).reduce((acc, t) => acc + (t.cost || 0), 0);
   
-  // Mock Mood Data
-  const moodData = [
-      { name: 'Mon', positive: 65, negative: 35 },
-      { name: 'Tue', positive: 59, negative: 41 },
-      { name: 'Wed', positive: 80, negative: 20 },
-      { name: 'Thu', positive: 81, negative: 19 },
-      { name: 'Fri', positive: 56, negative: 44 },
-      { name: 'Sat', positive: 90, negative: 10 },
-      { name: 'Sun', positive: 85, negative: 15 },
+  // Revenue Data for Chart
+  const revenueData = [
+      { name: 'Mon', amount: 1200 },
+      { name: 'Tue', amount: 1500 },
+      { name: 'Wed', amount: 1800 },
+      { name: 'Thu', amount: 2200 },
+      { name: 'Fri', amount: 1600 },
+      { name: 'Sat', amount: 2500 },
+      { name: 'Sun', amount: 2100 },
   ];
 
   // Sync Data
@@ -92,10 +90,10 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         setUsers(Database.getAllUsers());
         setCompanions(Database.getCompanions());
         setTransactions(Database.getAllTransactions());
-        setSettings(Database.getSettings());
+        const s = Database.getSettings();
+        setSettings(s);
+        setBroadcastMsg(s.broadcastMessage || '');
         setLogs(Database.getSystemLogs());
-        setPromos(Database.getPromoCodes());
-        setFeedback(Database.getAllFeedback());
         try {
             const count = await Database.getActiveSessionCount();
             setActiveCount(count);
@@ -114,11 +112,40 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
       }
   };
 
-  const handleDeleteUser = async (userId: string) => {
+  const handleDeleteUser = async (userId: string, idx: number) => {
+      // Basic Root Admin Protection: Cannot delete first user or self (if logic extended)
+      // Assuming index 0 is always root admin in our local setup
+      if (idx === 0) {
+          alert("SECURITY ALERT: Cannot delete Root Admin account.");
+          return;
+      }
       if (window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
           await Database.deleteUser(userId);
           setUsers(users.filter(u => u.id !== userId));
       }
+  };
+
+  const handleTopUp = (userId: string) => {
+      const amount = prompt("Enter minutes to add:");
+      if (amount && !isNaN(parseInt(amount))) {
+          Database.topUpWallet(parseInt(amount), 0, userId); // 0 cost for admin grant
+          alert("Credits added successfully.");
+          setUsers(Database.getAllUsers()); // Refresh immediately
+      }
+  };
+
+  const handleBroadcast = () => {
+      const updated = { ...settings, broadcastMessage: broadcastMsg };
+      Database.saveSettings(updated);
+      setSettings(updated);
+      alert("Broadcast updated for all users.");
+  };
+
+  const clearBroadcast = () => {
+      const updated = { ...settings, broadcastMessage: '' };
+      Database.saveSettings(updated);
+      setSettings(updated);
+      setBroadcastMsg('');
   };
 
   const filteredUsers = users.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -150,7 +177,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                   { id: 'safety', icon: ShieldAlert, label: 'Safety HQ' },
                   { id: 'users', icon: Users, label: 'User Database' },
                   { id: 'specialists', icon: Video, label: 'Specialist Grid' },
-                  { id: 'analytics', icon: TrendingUp, label: 'Mood Analytics' },
+                  { id: 'financials', icon: DollarSign, label: 'Financial Intelligence' },
                   { id: 'settings', icon: Settings, label: 'Configuration' },
               ].map((item) => (
                   <button
@@ -183,54 +210,74 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
           <div className="p-6 md:p-10 max-w-[1600px] mx-auto space-y-8">
               
-              {/* --- OVERVIEW --- */}
+              {/* --- OVERVIEW (MISSION CONTROL) --- */}
               {activeTab === 'overview' && (
                   <div className="space-y-8 animate-in fade-in duration-500">
                       <div>
                           <h2 className="text-3xl font-black tracking-tight mb-1">System Overview</h2>
-                          <p className="text-gray-500 text-sm">Real-time health monitoring.</p>
+                          <p className="text-gray-500 text-sm">Real-time command center.</p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                           <StatCard title="Active Sessions" value={activeCount} icon={Video} subValue={`${MAX_CONCURRENT_CAPACITY} Max`} subLabel="Capacity" progress={(activeCount / MAX_CONCURRENT_CAPACITY) * 100} color="purple" />
                           <StatCard title="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon={DollarSign} subValue="+8.4%" subLabel="MoM" color="green" />
                           <StatCard title="Total Users" value={users.length} icon={Users} subValue="+12" subLabel="Today" color="blue" />
-                          <StatCard title="User Happiness" value="87%" icon={Heart} subValue="+2%" subLabel="Sentiment Score" color="pink" />
+                          <StatCard title="Platform Health" value="100%" icon={Heart} subValue="Optimal" subLabel="Uptime" color="pink" />
                       </div>
 
                       <div className="grid lg:grid-cols-3 gap-8">
-                          {/* Live Feed */}
-                          <div className="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                              <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Activity className="w-5 h-5 text-yellow-500"/> Live Activity Feed</h3>
-                              <div className="space-y-2">
-                                  {logs.slice(0, 6).map(log => (
-                                      <div key={log.id} className="flex justify-between items-center bg-black/50 p-3 rounded-lg border border-gray-800/50">
-                                          <div className="flex items-center gap-3">
-                                              <div className={`w-2 h-2 rounded-full ${log.type === 'ERROR' ? 'bg-red-500' : log.type === 'WARNING' ? 'bg-yellow-500' : 'bg-blue-500'}`}></div>
-                                              <span className="text-xs text-gray-300 font-mono">{log.event}</span>
-                                          </div>
-                                          <span className="text-[10px] text-gray-600">{new Date(log.timestamp).toLocaleTimeString()}</span>
-                                      </div>
-                                  ))}
+                          {/* Live Concurrency Meter (15 Blocks) & Broadcast */}
+                          <div className="lg:col-span-2 space-y-8">
+                              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                                  <h3 className="font-bold text-white mb-6 flex items-center gap-2"><Server className="w-5 h-5 text-purple-500"/> Real-time Concurrency</h3>
+                                  
+                                  {/* 15 Block Meter */}
+                                  <div className="grid grid-cols-5 md:grid-cols-15 gap-2 md:gap-3 mb-4">
+                                      {Array.from({ length: 15 }).map((_, i) => (
+                                          <div 
+                                              key={i} 
+                                              className={`aspect-square rounded-lg transition-all duration-500 border border-black/20 ${i < activeCount ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)] animate-pulse' : 'bg-gray-800/50'}`}
+                                          ></div>
+                                      ))}
+                                  </div>
+                                  <div className="flex justify-between text-xs font-mono text-gray-500 uppercase tracking-widest">
+                                      <span>0 Sessions</span>
+                                      <span>{activeCount} Active</span>
+                                      <span>15 Max</span>
+                                  </div>
+                              </div>
+
+                              {/* Global Broadcaster */}
+                              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 relative overflow-hidden">
+                                  <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none"><Megaphone className="w-24 h-24 text-white"/></div>
+                                  <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Megaphone className="w-5 h-5 text-blue-500"/> Global Broadcast System</h3>
+                                  <div className="flex gap-4">
+                                      <input 
+                                          value={broadcastMsg}
+                                          onChange={(e) => setBroadcastMsg(e.target.value)}
+                                          placeholder="Enter emergency or system message for all users..."
+                                          className="flex-1 bg-black border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none"
+                                      />
+                                      <button onClick={handleBroadcast} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-colors">Send</button>
+                                      {settings.broadcastMessage && <button onClick={clearBroadcast} className="bg-gray-800 hover:bg-gray-700 text-gray-400 px-6 py-3 rounded-xl font-bold transition-colors">Clear</button>}
+                                  </div>
+                                  <p className="text-xs text-gray-500 mt-2 ml-1">Message appears on user dashboards immediately.</p>
                               </div>
                           </div>
 
-                          {/* Server Health */}
+                          {/* Live Feed */}
                           <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                              <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Server className="w-5 h-5 text-green-500"/> Server Health</h3>
-                              <div className="space-y-6">
-                                  <div>
-                                      <div className="flex justify-between text-xs mb-2"><span className="text-gray-400">CPU Usage</span><span className="text-white font-mono">12%</span></div>
-                                      <div className="w-full bg-gray-800 h-1.5 rounded-full"><div className="bg-green-500 h-full w-[12%] rounded-full"></div></div>
-                                  </div>
-                                  <div>
-                                      <div className="flex justify-between text-xs mb-2"><span className="text-gray-400">Memory</span><span className="text-white font-mono">4.2GB / 16GB</span></div>
-                                      <div className="w-full bg-gray-800 h-1.5 rounded-full"><div className="bg-blue-500 h-full w-[26%] rounded-full"></div></div>
-                                  </div>
-                                  <div>
-                                      <div className="flex justify-between text-xs mb-2"><span className="text-gray-400">API Latency</span><span className="text-white font-mono">24ms</span></div>
-                                      <div className="w-full bg-gray-800 h-1.5 rounded-full"><div className="bg-yellow-500 h-full w-[15%] rounded-full"></div></div>
-                                  </div>
+                              <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Activity className="w-5 h-5 text-yellow-500"/> Activity Log</h3>
+                              <div className="space-y-2">
+                                  {logs.slice(0, 7).map(log => (
+                                      <div key={log.id} className="flex justify-between items-center bg-black/50 p-3 rounded-lg border border-gray-800/50">
+                                          <div className="flex items-center gap-3">
+                                              <div className={`w-2 h-2 rounded-full ${log.type === 'ERROR' ? 'bg-red-500' : log.type === 'WARNING' ? 'bg-yellow-500' : 'bg-blue-500'}`}></div>
+                                              <span className="text-xs text-gray-300 font-mono line-clamp-1">{log.event}</span>
+                                          </div>
+                                          <span className="text-[10px] text-gray-600 whitespace-nowrap">{new Date(log.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                      </div>
+                                  ))}
                               </div>
                           </div>
                       </div>
@@ -243,40 +290,124 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                       <h2 className="text-3xl font-black mb-1">Safety Headquarters</h2>
                       <p className="text-gray-500 text-sm mb-6">Monitor high-risk interactions and flagged journals.</p>
                       
-                      <div className="grid md:grid-cols-2 gap-6">
-                          <div className="bg-red-950/20 border border-red-900/50 p-6 rounded-2xl">
-                              <div className="flex items-center gap-3 mb-4">
-                                  <AlertTriangle className="w-8 h-8 text-red-500" />
-                                  <div>
-                                      <h3 className="font-bold text-white text-lg">Active Flags</h3>
-                                      <p className="text-red-400 text-xs">Require immediate review</p>
-                                  </div>
+                      <div className="grid md:grid-cols-3 gap-6">
+                          <div className="col-span-2 bg-red-950/10 border border-red-900/30 p-6 rounded-2xl">
+                              <div className="flex items-center gap-3 mb-6">
+                                  <ShieldAlert className="w-6 h-6 text-red-500" />
+                                  <h3 className="font-bold text-white">Keyword Watchlist</h3>
                               </div>
-                              <div className="text-center py-12 text-gray-500 text-sm border border-dashed border-red-900/30 rounded-xl">
-                                  No active safety flags detected. System nominal.
+                              <div className="flex flex-wrap gap-2">
+                                  {["Self-harm", "Suicide", "Danger", "Hurt", "Kill", "Weapon", "Emergency"].map(word => (
+                                      <span key={word} className="px-3 py-1 bg-red-900/40 border border-red-800 text-red-300 rounded-full text-xs font-bold uppercase tracking-wide">{word}</span>
+                                  ))}
+                                  <button className="px-3 py-1 bg-gray-800 border border-gray-700 text-gray-400 rounded-full text-xs font-bold hover:text-white">+</button>
                               </div>
                           </div>
 
                           <div className="bg-gray-900 border border-gray-800 p-6 rounded-2xl">
-                              <h3 className="font-bold text-white mb-4">Banned Users</h3>
-                              <div className="space-y-2">
-                                  {users.filter(u => u.subscriptionStatus === 'BANNED').length === 0 ? (
-                                      <div className="text-gray-500 text-xs">No banned users.</div>
-                                  ) : (
-                                      users.filter(u => u.subscriptionStatus === 'BANNED').map(u => (
-                                          <div key={u.id} className="flex justify-between items-center bg-black p-3 rounded-lg border border-red-900/30">
-                                              <span className="text-red-400 font-bold text-xs">{u.email}</span>
-                                              <button onClick={() => { if(confirm("Unban?")) Database.updateUser({...u, subscriptionStatus: 'ACTIVE'}); }} className="text-gray-500 hover:text-white text-[10px] uppercase font-bold">Unban</button>
-                                          </div>
-                                      ))
-                                  )}
+                              <h3 className="font-bold text-white mb-4">Incident Reports</h3>
+                              <div className="text-center py-8 text-gray-500 text-xs border border-dashed border-gray-800 rounded-xl">
+                                  No active incidents reported in last 24h.
                               </div>
+                          </div>
+                      </div>
+
+                      <div className="bg-gray-900 border border-gray-800 p-6 rounded-2xl">
+                          <h3 className="font-bold text-white mb-4">Banned Users</h3>
+                          <div className="space-y-2">
+                              {users.filter(u => u.subscriptionStatus === 'BANNED').length === 0 ? (
+                                  <div className="text-gray-500 text-xs">No banned users.</div>
+                              ) : (
+                                  users.filter(u => u.subscriptionStatus === 'BANNED').map(u => (
+                                      <div key={u.id} className="flex justify-between items-center bg-black p-3 rounded-lg border border-red-900/30">
+                                          <span className="text-red-400 font-bold text-xs">{u.email}</span>
+                                          <button onClick={() => { if(confirm("Unban?")) Database.updateUser({...u, subscriptionStatus: 'ACTIVE'}); }} className="text-gray-500 hover:text-white text-[10px] uppercase font-bold">Unban</button>
+                                      </div>
+                                  ))
+                              )}
                           </div>
                       </div>
                   </div>
               )}
 
-              {/* --- SPECIALISTS (LIST VIEW OPTIMIZED) --- */}
+              {/* --- USERS TAB --- */}
+              {activeTab === 'users' && (
+                  <div className="space-y-6 animate-in fade-in duration-500">
+                      <div className="flex justify-between items-center">
+                          <h2 className="text-3xl font-black">User Database</h2>
+                          <input 
+                              className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 text-sm focus:border-yellow-500 outline-none w-64" 
+                              placeholder="Search users..." 
+                              value={searchTerm}
+                              onChange={e => setSearchTerm(e.target.value)}
+                          />
+                      </div>
+                      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                          <table className="w-full text-left">
+                              <thead className="bg-black text-xs font-bold text-gray-500 uppercase">
+                                  <tr>
+                                      <th className="p-4">User</th>
+                                      <th className="p-4">Role</th>
+                                      <th className="p-4">Credits</th>
+                                      <th className="p-4 text-right">Joined</th>
+                                      <th className="p-4 text-right">Actions</th>
+                                  </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-800">
+                                  {filteredUsers.map((user, idx) => (
+                                      <tr key={user.id} className="hover:bg-gray-800/50">
+                                          <td className="p-4 font-bold text-white text-sm">{user.name} <span className="text-gray-500 font-normal ml-1">({user.email})</span></td>
+                                          <td className="p-4 text-xs text-gray-400">{user.role}</td>
+                                          <td className="p-4 text-green-400 font-mono font-bold text-sm">{user.balance}m</td>
+                                          <td className="p-4 text-right text-gray-500 text-xs font-mono">{new Date(user.joinedAt).toLocaleDateString()}</td>
+                                          <td className="p-4 text-right flex justify-end gap-2">
+                                              <button onClick={() => handleTopUp(user.id)} className="text-blue-500 hover:text-blue-400 p-2 transition-colors bg-blue-500/10 rounded-lg" title="Top Up Credits">
+                                                  <Gift className="w-4 h-4"/>
+                                              </button>
+                                              <button onClick={() => handleDeleteUser(user.id, idx)} className={`p-2 transition-colors rounded-lg ${idx === 0 ? 'text-gray-600 cursor-not-allowed' : 'text-red-500 hover:text-red-400 bg-red-500/10'}`} title={idx === 0 ? "Cannot delete Root Admin" : "Delete User"}>
+                                                  <Trash2 className="w-4 h-4"/>
+                                              </button>
+                                          </td>
+                                      </tr>
+                                  ))}
+                              </tbody>
+                          </table>
+                      </div>
+                  </div>
+              )}
+
+              {/* --- FINANCIAL INTELLIGENCE (Replaces Analytics) --- */}
+              {activeTab === 'financials' && (
+                  <div className="space-y-6 animate-in fade-in duration-500">
+                      <h2 className="text-3xl font-black">Financial Intelligence</h2>
+                      <div className="grid md:grid-cols-3 gap-6">
+                          <div className="md:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                              <h3 className="font-bold text-white mb-6">Revenue Trend (7 Days)</h3>
+                              <div className="h-[300px]">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                      <BarChart data={revenueData}>
+                                          <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+                                          <XAxis dataKey="name" stroke="#666" fontSize={12} tickLine={false} axisLine={false} />
+                                          <YAxis stroke="#666" fontSize={12} tickLine={false} axisLine={false} />
+                                          <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '12px' }} itemStyle={{ color: '#fff' }} />
+                                          <Bar dataKey="amount" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                                      </BarChart>
+                                  </ResponsiveContainer>
+                              </div>
+                          </div>
+                          
+                          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col justify-center items-center text-center">
+                              <div className="p-6 bg-green-500/10 rounded-full mb-6 border border-green-500/30">
+                                  <DollarSign className="w-12 h-12 text-green-500" />
+                              </div>
+                              <h3 className="text-3xl font-black text-white mb-2">${totalRevenue.toLocaleString()}</h3>
+                              <p className="text-gray-500 text-sm uppercase tracking-widest">Total Gross Revenue</p>
+                          </div>
+                      </div>
+                  </div>
+              )}
+
+              {/* --- SPECIALISTS --- */}
               {activeTab === 'specialists' && (
                   <div className="space-y-6 animate-in fade-in duration-500">
                       <div className="flex justify-between items-center">
@@ -338,99 +469,6 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                               ))}
                           </div>
                       )}
-                  </div>
-              )}
-
-              {/* --- ANALYTICS --- */}
-              {activeTab === 'analytics' && (
-                  <div className="space-y-6 animate-in fade-in duration-500">
-                      <h2 className="text-3xl font-black">Mood Analytics</h2>
-                      <div className="grid md:grid-cols-3 gap-6">
-                          <div className="md:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                              <h3 className="font-bold text-white mb-6">User Sentiment Trends (7 Days)</h3>
-                              <div className="h-[300px]">
-                                  <ResponsiveContainer width="100%" height="100%">
-                                      <AreaChart data={moodData}>
-                                          <defs>
-                                              <linearGradient id="colorPos" x1="0" y1="0" x2="0" y2="1">
-                                                  <stop offset="5%" stopColor="#FACC15" stopOpacity={0.3}/>
-                                                  <stop offset="95%" stopColor="#FACC15" stopOpacity={0}/>
-                                              </linearGradient>
-                                          </defs>
-                                          <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-                                          <XAxis dataKey="name" stroke="#666" fontSize={12} tickLine={false} axisLine={false} />
-                                          <YAxis stroke="#666" fontSize={12} tickLine={false} axisLine={false} />
-                                          <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '12px' }} itemStyle={{ color: '#fff' }} />
-                                          <Area type="monotone" dataKey="positive" stroke="#FACC15" strokeWidth={3} fillOpacity={1} fill="url(#colorPos)" />
-                                          <Area type="monotone" dataKey="negative" stroke="#3B82F6" strokeWidth={3} fillOpacity={0} fill="transparent" />
-                                      </AreaChart>
-                                  </ResponsiveContainer>
-                              </div>
-                          </div>
-                          
-                          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col justify-center items-center text-center">
-                              <div className="relative w-48 h-48 mb-6">
-                                  <ResponsiveContainer width="100%" height="100%">
-                                      <PieChart>
-                                          <Pie data={[{ name: 'Positive', value: 75 }, { name: 'Negative', value: 25 }]} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-                                              <Cell fill="#FACC15" stroke="none"/>
-                                              <Cell fill="#3B82F6" stroke="none"/>
-                                          </Pie>
-                                      </PieChart>
-                                  </ResponsiveContainer>
-                                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                      <div>
-                                          <span className="text-3xl font-black text-white">75%</span>
-                                          <p className="text-[10px] uppercase text-gray-500 font-bold">Positive</p>
-                                      </div>
-                                  </div>
-                              </div>
-                              <p className="text-sm text-gray-400">Users report feeling significantly better after sessions.</p>
-                          </div>
-                      </div>
-                  </div>
-              )}
-
-              {/* --- USERS TAB --- */}
-              {activeTab === 'users' && (
-                  <div className="space-y-6 animate-in fade-in duration-500">
-                      <div className="flex justify-between items-center">
-                          <h2 className="text-3xl font-black">User Database</h2>
-                          <input 
-                              className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 text-sm focus:border-yellow-500 outline-none w-64" 
-                              placeholder="Search users..." 
-                              value={searchTerm}
-                              onChange={e => setSearchTerm(e.target.value)}
-                          />
-                      </div>
-                      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                          <table className="w-full text-left">
-                              <thead className="bg-black text-xs font-bold text-gray-500 uppercase">
-                                  <tr>
-                                      <th className="p-4">User</th>
-                                      <th className="p-4">Role</th>
-                                      <th className="p-4">Credits</th>
-                                      <th className="p-4 text-right">Joined</th>
-                                      <th className="p-4 text-right">Actions</th>
-                                  </tr>
-                              </thead>
-                              <tbody className="divide-y divide-gray-800">
-                                  {filteredUsers.map(user => (
-                                      <tr key={user.id} className="hover:bg-gray-800/50">
-                                          <td className="p-4 font-bold text-white text-sm">{user.name} <span className="text-gray-500 font-normal ml-1">({user.email})</span></td>
-                                          <td className="p-4 text-xs text-gray-400">{user.role}</td>
-                                          <td className="p-4 text-green-400 font-mono font-bold text-sm">{user.balance}m</td>
-                                          <td className="p-4 text-right text-gray-500 text-xs font-mono">{new Date(user.joinedAt).toLocaleDateString()}</td>
-                                          <td className="p-4 text-right">
-                                              <button onClick={() => handleDeleteUser(user.id)} className="text-red-500 hover:text-red-400 p-2 transition-colors" title="Delete User">
-                                                  <Trash2 className="w-4 h-4"/>
-                                              </button>
-                                          </td>
-                                      </tr>
-                                  ))}
-                              </tbody>
-                          </table>
-                      </div>
                   </div>
               )}
 
