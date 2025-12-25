@@ -95,12 +95,12 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                 {[
-                    { img: STABLE_AVATAR_POOL[10], name: "Sarah J.", role: "Architect", quote: "I used to wait weeks for a therapy appointment. With Peutic, I found calm before my big presentation in minutes. It's a game changer." },
-                    { img: STABLE_AVATAR_POOL[15], name: "Michael R.", role: "Student", quote: "Exam stress was eating me alive. Connecting with a specialist at 3 AM saved my semester. I felt understood." },
-                    { img: STABLE_AVATAR_POOL[20], name: "Elena G.", role: "New Mom", quote: "Postpartum loneliness is real. Having a friendly face just a click away made me feel human again." },
-                    { img: STABLE_AVATAR_POOL[5], name: "David K.", role: "Veteran", quote: "Traditional settings felt too clinical. Here, I can just talk. It feels like talking to a wise friend." },
-                    { img: STABLE_AVATAR_POOL[8], name: "Priya M.", role: "Founder", quote: "Founder burnout is real. Peutic helps me reset my mindset between high-stakes meetings." },
-                    { img: STABLE_AVATAR_POOL[25], name: "James L.", role: "Musician", quote: "I use it to clear creative blocks. The specialists ask the right questions to get me unstuck." }
+                    { img: STABLE_AVATAR_POOL[1], name: "Sarah J.", role: "Architect", quote: "I used to wait weeks for a therapy appointment. With Peutic, I found calm before my big presentation in minutes. It's a game changer." },
+                    { img: STABLE_AVATAR_POOL[0], name: "Michael R.", role: "Student", quote: "Exam stress was eating me alive. Connecting with a specialist at 3 AM saved my semester. I felt understood." },
+                    { img: STABLE_AVATAR_POOL[3], name: "Elena G.", role: "New Mom", quote: "Postpartum loneliness is real. Having a friendly face just a click away made me feel human again." },
+                    { img: STABLE_AVATAR_POOL[2], name: "David K.", role: "Veteran", quote: "Traditional settings felt too clinical. Here, I can just talk. It feels like talking to a wise friend." },
+                    { img: STABLE_AVATAR_POOL[5], name: "Priya M.", role: "Founder", quote: "Founder burnout is real. Peutic helps me reset my mindset between high-stakes meetings." },
+                    { img: STABLE_AVATAR_POOL[4], name: "James L.", role: "Musician", quote: "I use it to clear creative blocks. The specialists ask the right questions to get me unstuck." }
                 ].map((story, i) => (
                     <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
                         <div className="flex items-center gap-4 mb-4">
