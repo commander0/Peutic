@@ -142,7 +142,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     specialty: 'Elder Care', 
     status: 'AVAILABLE', 
     rating: 5.0, 
-    imageUrl: "https://images.unsplash.com/photo-1589571894960-20bbe2815d22?auto=format&fit=crop&q=80&w=800", 
+    imageUrl: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=80&w=800", // FIXED: Older woman portrait
     bio: 'Support for caregivers.', 
     replicaId: 'r4317e64d25a', 
     licenseNumber: 'BSW-FL-3321', 
@@ -366,7 +366,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     specialty: 'Chronic Pain', 
     status: 'AVAILABLE', 
     rating: 4.9, 
-    imageUrl: "https://images.unsplash.com/photo-1554151228-14d9def656ec?auto=format&fit=crop&q=80&w=800", 
+    imageUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=800", // FIXED: Smiling woman
     bio: 'Mind-body healing.', 
     replicaId: 're3a705cf66a', 
     licenseNumber: 'PhD-CA-1123', 
@@ -382,7 +382,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     specialty: 'Divorce Recovery', 
     status: 'AVAILABLE', 
     rating: 4.8, 
-    imageUrl: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=800", 
+    imageUrl: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=800", // FIXED: Male portrait
     bio: 'Navigating life transitions.', 
     replicaId: 'rca8a38779a8', 
     licenseNumber: 'LMFT-IL-5521', 
@@ -398,7 +398,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     specialty: 'Relationship Counseling', 
     status: 'AVAILABLE', 
     rating: 5.0, 
-    imageUrl: "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?auto=format&fit=crop&q=80&w=800", 
+    imageUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=800", // FIXED: Female portrait
     bio: 'Building stronger bonds.', 
     replicaId: 'r6ae5b6efc9d', 
     licenseNumber: 'LMFT-TX-8821', 
