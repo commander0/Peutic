@@ -3,22 +3,22 @@ import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, Serv
 import { supabase } from './supabaseClient';
 
 const DB_KEYS = {
-  USER: 'peutic_db_current_user_v24', // Bumped to v24 for content updates
-  ALL_USERS: 'peutic_db_users_v24', 
-  COMPANIONS: 'peutic_db_companions_v24',
-  TRANSACTIONS: 'peutic_db_transactions_v24',
-  SETTINGS: 'peutic_db_settings_v24',
-  LOGS: 'peutic_db_logs_v24',
-  MOODS: 'peutic_db_moods_v24',
-  JOURNALS: 'peutic_db_journals_v24',
-  ART: 'peutic_db_art_v24',
-  PROMOS: 'peutic_db_promos_v24',
-  ADMIN_ATTEMPTS: 'peutic_db_admin_attempts_v24',
-  BREATHE_COOLDOWN: 'peutic_db_breathe_cooldown_v24',
-  BREATHE_LOGS: 'peutic_db_breathe_logs_v24',
-  MEMORIES: 'peutic_db_memories_v24',
-  GIFTS: 'peutic_db_gifts_v24',
-  FEEDBACK: 'peutic_db_feedback_v24',
+  USER: 'peutic_db_current_user_v25', // Bumped to v25 for critical content update
+  ALL_USERS: 'peutic_db_users_v25', 
+  COMPANIONS: 'peutic_db_companions_v25',
+  TRANSACTIONS: 'peutic_db_transactions_v25',
+  SETTINGS: 'peutic_db_settings_v25',
+  LOGS: 'peutic_db_logs_v25',
+  MOODS: 'peutic_db_moods_v25',
+  JOURNALS: 'peutic_db_journals_v25',
+  ART: 'peutic_db_art_v25',
+  PROMOS: 'peutic_db_promos_v25',
+  ADMIN_ATTEMPTS: 'peutic_db_admin_attempts_v25',
+  BREATHE_COOLDOWN: 'peutic_db_breathe_cooldown_v25',
+  BREATHE_LOGS: 'peutic_db_breathe_logs_v25',
+  MEMORIES: 'peutic_db_memories_v25',
+  GIFTS: 'peutic_db_gifts_v25',
+  FEEDBACK: 'peutic_db_feedback_v25',
 };
 
 // --- GENERIC AVATAR POOL (For Users/Fallbacks ONLY) ---
@@ -511,7 +511,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     specialty: 'Caregiver Stress', 
     status: 'AVAILABLE', 
     rating: 4.9, 
-    imageUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=800", // NEW: Verified Female Portrait
+    imageUrl: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=800", // NEW: Verified Female Portrait from User
     bio: 'Caring for yourself while caring for others.', 
     replicaId: 'r4317e64d25a', 
     licenseNumber: 'LCSW-OH-9912', 
