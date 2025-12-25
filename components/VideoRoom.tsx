@@ -213,8 +213,8 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 // We are next in line, try to enter
                 await tryStart();
             }
-        } else if (connectionState === 'CONNECTED') {
-            // Send Keep Alive ping to DB so we don't get garbage collected
+        } else if (connectionState === 'CONNECTED' || connectionState === 'DEMO_MODE') {
+            // HEARTBEAT: Keep alive every 3s to prevent zombie cleanup (15s timeout)
             Database.sendKeepAlive(userId);
         }
     }, 3000);
@@ -246,8 +246,16 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   const startTavusConnection = async () => {
       // Prevent double calls (API Optimization)
       if (connectionInitiated.current) return;
-      connectionInitiated.current = true;
+      
+      // FINAL DOUBLE CHECK: Ensure we still have the spot before burning API credits
+      const stillHasSpot = await Database.claimActiveSpot(userId);
+      if (!stillHasSpot) {
+          console.warn("Lost spot during initialization latency.");
+          setConnectionState('QUEUED'); // Re-queue
+          return;
+      }
 
+      connectionInitiated.current = true;
       setConnectionState('CONNECTING');
       setErrorMsg('');
       
