@@ -21,7 +21,6 @@ declare global {
 
 const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' }) => {
   const [isLogin, setIsLogin] = useState(initialMode === 'login');
-  const [isResettingPassword, setIsResettingPassword] = useState(false);
   
   // Update state when prop changes to support switching modes from parent
   useEffect(() => {
@@ -39,13 +38,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
   // States
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
   const [toast, setToast] = useState<string | null>(null);
-
-  // Password Reset State
-  const [resetStep, setResetStep] = useState(0);
-  const [resetCode, setResetCode] = useState('');
-  const [newPassword, setNewPassword] = useState('');
 
   // Onboarding State
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -99,7 +92,6 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             // Using a generic client ID. 
             // Note: If you see [GSI_LOGGER] origin errors in console, it is because this 
             // client ID is not whitelisted for your specific domain/localhost. 
-            // The app handles this via the "Smart Fallback" in handleGoogleClick below.
             window.google.accounts.id.initialize({
                 client_id: "360174265748-nqb0dk8qi8bk0hil4ggt12d53ecvdobo.apps.googleusercontent.com",
                 callback: handleGoogleCredentialResponse,
@@ -115,8 +107,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
   const handleGoogleClick = () => {
       // 1. SDK Check
       if (!window.google) {
-          console.warn("Google SDK not loaded. Using Dev Fallback.");
-          onLogin(UserRole.USER, "Google User", undefined, `google_user_${Date.now()}@gmail.com`, undefined, 'google');
+          setError("Google Sign-In is currently unavailable. Please use email.");
           return;
       }
 
@@ -126,27 +117,12 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
               if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
                   const reason = notification.getNotDisplayedReason();
                   console.warn("Google Prompt Skipped/Hidden. Reason:", reason);
-                  
-                  // 3. SMART FALLBACK
-                  // If GSI fails due to configuration (origin_mismatch) or user state, 
-                  // we gracefully fall back to a simulated login to ensure the user isn't stuck.
-                  if (reason === "origin_mismatch" || reason === "suppressed_by_user" || reason === "opt_out_or_no_session") {
-                       console.log("Origin Mismatch or Block detected. Switching to Fallback Login.");
-                       setTimeout(() => {
-                           onLogin(UserRole.USER, "Google User", undefined, `google_user_${Date.now()}@gmail.com`, undefined, 'google');
-                       }, 500);
-                  } else {
-                      // Even for other errors, in this demo environment, we prioritize access.
-                      setTimeout(() => {
-                           onLogin(UserRole.USER, "Google User", undefined, `google_user_${Date.now()}@gmail.com`, undefined, 'google');
-                       }, 500);
-                  }
+                  setError("Google Sign-In was blocked or closed. Please try again or use email.");
               }
           });
       } catch (e) {
           console.error("Google Prompt Exception:", e);
-          // 4. Fatal Error Fallback
-          onLogin(UserRole.USER, "Google User", undefined, `google_user_${Date.now()}@gmail.com`, undefined, 'google');
+          setError("An error occurred with Google Sign-In.");
       }
   };
 
@@ -156,9 +132,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
           return;
       }
       if (!window.FB) {
-          // Fallback if AdBlock blocks FB
-          console.warn("Facebook SDK not found. Using fallback.");
-          onLogin(UserRole.USER, "Facebook User", undefined, `fb_user_${Date.now()}@facebook.com`, undefined, 'facebook');
+          setError("Facebook SDK not loaded. Please verify your connection.");
           return;
       }
       window.FB.login(function(response: any) {
@@ -173,13 +147,6 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
              console.log("User cancelled FB Login");
           }
       }, {scope: 'public_profile,email'});
-  };
-
-  const handleTwitterLogin = () => {
-      // Direct Simulation for X since API requires backend proxy
-      setTimeout(() => {
-          onLogin(UserRole.USER, "X User", undefined, `x_user_${Date.now()}@x.com`, undefined, 'x');
-      }, 800);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -301,91 +268,50 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
         <button onClick={onCancel} className="absolute top-4 right-4 md:top-8 md:right-8 text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white font-bold">Back</button>
         
         <div className="max-w-md w-full mx-auto pt-10 md:pt-0">
-            {isResettingPassword ? (
-                 <div className="animate-in slide-in-from-right-10 fade-in duration-300">
-                    <h2 className="text-2xl md:text-3xl font-bold mb-4">Account Recovery</h2>
-                    {error && <div className="text-red-500 mb-4 font-bold text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">{error}</div>}
-                    {successMsg && <div className="text-green-600 mb-4 font-bold text-sm bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">{successMsg}</div>}
-                    
-                    {resetStep === 0 && (
-                        <form onSubmit={(e) => { 
-                            e.preventDefault(); 
-                            const user = Database.getUserByEmail(email);
-                            if (!user) { setError("Email not found."); return; }
-                            setError('');
-                            // Simulate Verification
-                            setResetStep(1); 
-                            setSuccessMsg(`Verification code sent to ${email}`); 
-                        }}>
-                             <input type="email" className="w-full p-3 mb-4 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} />
-                             <button className="w-full bg-black dark:bg-white text-white dark:text-black py-3 rounded-xl font-bold hover:bg-gray-800 dark:hover:bg-gray-200 text-sm md:text-base">Send Code</button>
-                        </form>
-                    )}
-                    {resetStep === 1 && (
-                        <form onSubmit={(e) => { e.preventDefault(); if(resetCode === '123456') setResetStep(2); else setError('Invalid Code (Hint: 123456)'); }}>
-                             <input type="text" className="w-full p-3 mb-4 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-center text-2xl tracking-widest dark:text-white" placeholder="000000" maxLength={6} value={resetCode} onChange={e => setResetCode(e.target.value)} />
-                             <button className="w-full bg-black dark:bg-white text-white dark:text-black py-3 rounded-xl font-bold hover:bg-gray-800 dark:hover:bg-gray-200 text-sm md:text-base">Verify</button>
-                        </form>
-                    )}
-                    {resetStep === 2 && (
-                        <form onSubmit={(e) => { e.preventDefault(); setIsResettingPassword(false); setIsLogin(true); setSuccessMsg('Password updated. Please sign in.'); }}>
-                             <input type="password" className="w-full p-3 mb-4 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="New Password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
-                             <input type="password" className="w-full p-3 mb-4 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="Confirm Password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
-                             <button className="w-full bg-black dark:bg-white text-white dark:text-black py-3 rounded-xl font-bold hover:bg-gray-800 dark:hover:bg-gray-200 text-sm md:text-base">Update Password</button>
-                        </form>
-                    )}
-                    <button onClick={() => setIsResettingPassword(false)} className="mt-4 text-sm text-gray-500 hover:text-black dark:hover:text-white">Cancel</button>
-                 </div>
-            ) : (
-                <div className="animate-in slide-in-from-left-10 fade-in duration-300">
-                    <h2 className="text-2xl md:text-3xl font-bold mb-2">{isLogin ? 'Member Login' : 'Create Account'}</h2>
-                    <p className="text-gray-500 mb-6 md:mb-8 text-sm md:text-base">{isLogin ? 'Access your private sanctuary.' : 'Join 1M+ users finding clarity.'}</p>
+            <div className="animate-in slide-in-from-left-10 fade-in duration-300">
+                <h2 className="text-2xl md:text-3xl font-bold mb-2">{isLogin ? 'Member Login' : 'Create Account'}</h2>
+                <p className="text-gray-500 mb-6 md:mb-8 text-sm md:text-base">{isLogin ? 'Access your private sanctuary.' : 'Join 1M+ users finding clarity.'}</p>
 
-                    {error && (
-                        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 text-sm rounded-xl flex items-center gap-2 font-bold">
-                            <AlertCircle className="w-4 h-4" /> {error}
-                        </div>
-                    )}
-
-                    <div className="grid grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
-                        <button type="button" onClick={handleGoogleClick} className="w-full h-12 md:h-14 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center hover:bg-white dark:hover:bg-gray-900 bg-white dark:bg-black shadow-sm transition-transform hover:scale-105 relative overflow-hidden" title="Sign in with Google">
-                             <svg width="24" height="24" viewBox="0 0 24 24" className="w-5 h-5 md:w-6 md:h-6"><path d="M23.52 12.29C23.52 11.43 23.45 10.61 23.31 9.82H12V14.46H18.46C18.18 15.92 17.32 17.16 16.03 18.02V20.99H19.91C22.18 18.9 23.52 15.83 23.52 12.29Z" fill="#4285F4"/><path d="M12 24C15.24 24 17.96 22.93 19.91 20.99L16.03 18.02C14.95 18.74 13.58 19.17 12 19.17C8.87 19.17 6.22 17.06 5.27 14.2H1.26V17.31C3.24 21.25 7.31 24 12 24Z" fill="#34A853"/><path d="M5.27 14.2C5.03 13.33 4.9 12.42 4.9 11.5C4.9 10.58 5.03 9.67 5.27 8.8V5.69H1.26C0.46 7.29 0 9.1 0 11.5C0 13.9 0.46 15.71 1.26 17.31L5.27 14.2Z" fill="#FBBC05"/><path d="M12 3.83C13.76 3.83 15.35 4.44 16.59 5.62L20 2.21C17.96 0.31 15.24 0 12 0C7.31 0 3.24 2.75 1.26 6.69L5.27 9.8C6.22 6.94 8.87 3.83 12 3.83Z" fill="#EA4335"/></svg>
-                        </button>
-                        <button type="button" onClick={handleFacebookLogin} className="w-full h-12 md:h-14 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-900/20 bg-white dark:bg-black shadow-sm transition-transform hover:scale-105" title="Sign in with Facebook">
-                             <Facebook className="w-5 h-5 md:w-6 md:h-6 text-[#1877F2]" />
-                        </button>
-                        <button type="button" onClick={handleTwitterLogin} className="w-full h-12 md:h-14 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-900 bg-white dark:bg-black shadow-sm transition-transform hover:scale-105" title="Sign in with X">
-                             <svg className="w-4 h-4 md:w-5 md:h-5 text-black dark:text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M13.6823 10.6218L20.2391 3H18.6854L12.9921 9.61788L8.44486 3H3.2002L10.0765 13.0074L3.2002 21H4.75404L10.7663 14.0113L15.5685 21H20.8131L13.6819 10.6218H13.6823ZM11.5541 13.0956L10.8574 12.0991L5.31391 4.16971H7.70053L12.1742 10.5689L12.8709 11.5655L18.6861 19.8835H16.2995L11.5541 13.096V13.0956Z" /></svg>
-                        </button>
+                {error && (
+                    <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 text-sm rounded-xl flex items-center gap-2 font-bold">
+                        <AlertCircle className="w-4 h-4" /> {error}
                     </div>
+                )}
 
-                    <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
-                        {!isLogin && (
-                            <>
-                                <div className="grid grid-cols-2 gap-3 md:gap-4 animate-in slide-in-from-bottom-2 fade-in">
-                                    <input type="text" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="First Name" value={firstName} onChange={e => setFirstName(e.target.value)} />
-                                    <input type="text" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="Last Name" value={lastName} onChange={e => setLastName(e.target.value)} />
-                                </div>
-                                <input type="date" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all animate-in slide-in-from-bottom-3 fade-in text-sm md:text-base dark:text-white" value={birthday} onChange={e => setBirthday(e.target.value)} />
-                            </>
-                        )}
-                        <input type="email" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} />
-                        <input type="password" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
-                        {!isLogin && (
-                            <input type="password" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all animate-in slide-in-from-bottom-4 fade-in text-sm md:text-base dark:text-white" placeholder="Confirm Password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
-                        )}
-
-                        <button type="submit" disabled={loading} className="w-full bg-black dark:bg-white text-white dark:text-black py-3 md:py-4 rounded-xl font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-all flex justify-center gap-2 shadow-xl text-sm md:text-base">
-                            {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
-                        </button>
-                    </form>
-
-                    <div className="mt-6 flex justify-between text-sm font-bold">
-                        <button onClick={() => { setIsLogin(!isLogin); setError(''); }} className="dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors">{isLogin ? "Create account" : "Sign in"}</button>
-                        {isLogin && <button onClick={() => setIsResettingPassword(true)} className="text-[#FACC15] hover:text-[#EAB308]">Forgot Password?</button>}
-                    </div>
+                <div className="grid grid-cols-2 gap-3 md:gap-4 mb-6 md:mb-8">
+                    <button type="button" onClick={handleGoogleClick} className="w-full h-12 md:h-14 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center hover:bg-white dark:hover:bg-gray-900 bg-white dark:bg-black shadow-sm transition-transform hover:scale-105 relative overflow-hidden" title="Sign in with Google">
+                            <svg width="24" height="24" viewBox="0 0 24 24" className="w-5 h-5 md:w-6 md:h-6"><path d="M23.52 12.29C23.52 11.43 23.45 10.61 23.31 9.82H12V14.46H18.46C18.18 15.92 17.32 17.16 16.03 18.02V20.99H19.91C22.18 18.9 23.52 15.83 23.52 12.29Z" fill="#4285F4"/><path d="M12 24C15.24 24 17.96 22.93 19.91 20.99L16.03 18.02C14.95 18.74 13.58 19.17 12 19.17C8.87 19.17 6.22 17.06 5.27 14.2H1.26V17.31C3.24 21.25 7.31 24 12 24Z" fill="#34A853"/><path d="M5.27 14.2C5.03 13.33 4.9 12.42 4.9 11.5C4.9 10.58 5.03 9.67 5.27 8.8V5.69H1.26C0.46 7.29 0 9.1 0 11.5C0 13.9 0.46 15.71 1.26 17.31L5.27 14.2Z" fill="#FBBC05"/><path d="M12 3.83C13.76 3.83 15.35 4.44 16.59 5.62L20 2.21C17.96 0.31 15.24 0 12 0C7.31 0 3.24 2.75 1.26 6.69L5.27 9.8C6.22 6.94 8.87 3.83 12 3.83Z" fill="#EA4335"/></svg>
+                    </button>
+                    <button type="button" onClick={handleFacebookLogin} className="w-full h-12 md:h-14 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-900/20 bg-white dark:bg-black shadow-sm transition-transform hover:scale-105" title="Sign in with Facebook">
+                            <Facebook className="w-5 h-5 md:w-6 md:h-6 text-[#1877F2]" />
+                    </button>
                 </div>
-            )}
+
+                <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
+                    {!isLogin && (
+                        <>
+                            <div className="grid grid-cols-2 gap-3 md:gap-4 animate-in slide-in-from-bottom-2 fade-in">
+                                <input type="text" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="First Name" value={firstName} onChange={e => setFirstName(e.target.value)} />
+                                <input type="text" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="Last Name" value={lastName} onChange={e => setLastName(e.target.value)} />
+                            </div>
+                            <input type="date" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all animate-in slide-in-from-bottom-3 fade-in text-sm md:text-base dark:text-white" value={birthday} onChange={e => setBirthday(e.target.value)} />
+                        </>
+                    )}
+                    <input type="email" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} />
+                    <input type="password" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
+                    {!isLogin && (
+                        <input type="password" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all animate-in slide-in-from-bottom-4 fade-in text-sm md:text-base dark:text-white" placeholder="Confirm Password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+                    )}
+
+                    <button type="submit" disabled={loading} className="w-full bg-black dark:bg-white text-white dark:text-black py-3 md:py-4 rounded-xl font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-all flex justify-center gap-2 shadow-xl text-sm md:text-base">
+                        {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
+                    </button>
+                </form>
+
+                <div className="mt-6 flex justify-between text-sm font-bold">
+                    <button onClick={() => { setIsLogin(!isLogin); setError(''); }} className="dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors">{isLogin ? "Create account" : "Sign in"}</button>
+                </div>
+            </div>
         </div>
       </div>
     </div>

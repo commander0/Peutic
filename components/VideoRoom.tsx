@@ -128,7 +128,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
   // Session State
   const [duration, setDuration] = useState(0);
-  const [connectionState, setConnectionState] = useState<'QUEUED' | 'CONNECTING' | 'CONNECTED' | 'ERROR' | 'DEMO_MODE'>('QUEUED');
+  const [connectionState, setConnectionState] = useState<'QUEUED' | 'CONNECTING' | 'CONNECTED' | 'ERROR'>('QUEUED');
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [conversationUrl, setConversationUrl] = useState<string | null>(null);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
@@ -213,7 +213,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 // We are next in line, try to enter
                 await tryStart();
             }
-        } else if (connectionState === 'CONNECTED' || connectionState === 'DEMO_MODE') {
+        } else if (connectionState === 'CONNECTED') {
             // HEARTBEAT: Keep alive every 3s to prevent zombie cleanup (15s timeout)
             Database.sendKeepAlive(userId);
         }
@@ -288,11 +288,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
               handleEndSession(); 
               return;
           }
-          if (err.message.includes("out of credits") || err.message.includes("Billing") || err.message.includes("402")) {
-              console.warn("Protocol switch: High-Fidelity Simulation Mode active.");
-              setConnectionState('DEMO_MODE');
-              return;
-          }
+          // STRICT PRODUCTION ERROR HANDLING
           setConnectionState('ERROR');
           setErrorMsg(err.message || "Failed to establish secure connection.");
       }
@@ -301,7 +297,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   // --- Timers & Credit Enforcement ---
   useEffect(() => {
     if (showSummary) return;
-    if (connectionState !== 'CONNECTED' && connectionState !== 'DEMO_MODE') return;
+    if (connectionState !== 'CONNECTED') return;
 
     const interval = setInterval(() => {
         setDuration(d => {
@@ -533,16 +529,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                     allow="microphone *; camera *; autoplay; fullscreen; display-capture" 
                     title="Tavus Session" 
                 />
-            )}
-
-            {connectionState === 'DEMO_MODE' && (
-                <div className="absolute inset-0 w-full h-full bg-black">
-                    <img src={companion.imageUrl} className="w-full h-full object-cover object-top opacity-60 scale-105 animate-pulse-slow" alt="Background" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40"></div>
-                    <div className="absolute bottom-32 left-1/2 -translate-x-1/2 flex items-center gap-1 h-12 z-10">
-                        {new Array(12).fill(0).map((_, i) => ( <div key={i} className="w-1.5 bg-white/80 rounded-full animate-pulse" style={{ height: `${Math.random() * 100}%`, animationDuration: `${0.5 + Math.random()}s` }}></div> ))}
-                    </div>
-                </div>
             )}
         </div>
 
