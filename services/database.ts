@@ -112,7 +112,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 5.0, 
     imageUrl: "https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&q=80&w=800", 
     bio: 'Empowerment and health.', 
-    replicaId: 'r_scarlett', 
+    replicaId: 're3a705cf66a', // Fixed Placeholder
     licenseNumber: 'LCSW-NY-1188', 
     degree: 'MSW, Social Work', 
     stateOfPractice: 'NY', 
@@ -128,7 +128,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 4.9, 
     imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=800", 
     bio: 'One day at a time.', 
-    replicaId: 'r_marcus', 
+    replicaId: 'rca8a38779a8', // Fixed Placeholder
     licenseNumber: 'LAC-NJ-8821', 
     degree: 'MA, Addiction Counseling', 
     stateOfPractice: 'NJ', 
@@ -144,7 +144,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 5.0, 
     imageUrl: "https://images.unsplash.com/photo-1589571894960-20bbe2815d22?auto=format&fit=crop&q=80&w=800", 
     bio: 'Support for caregivers.', 
-    replicaId: 'r4317e64d25a', 
+    replicaId: 'r6ae5b6efc9d', 
     licenseNumber: 'BSW-FL-3321', 
     degree: 'BSW, Gerontology', 
     stateOfPractice: 'FL', 
@@ -160,7 +160,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 4.8, 
     imageUrl: "https://images.unsplash.com/photo-1629460741589-9bd72a6c278c?auto=format&fit=crop&q=80&w=800", 
     bio: 'Restoring digital balance.', 
-    replicaId: 'r_matthew', 
+    replicaId: 'r92debe21318', 
     licenseNumber: 'LMFT-WA-3399', 
     degree: 'MA, Psychology', 
     stateOfPractice: 'WA', 
@@ -192,7 +192,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 5.0, 
     imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=800", 
     bio: 'High performance sustainability.', 
-    replicaId: 'r_chen', 
+    replicaId: 'rca8a38779a8', // Fixed Placeholder
     licenseNumber: 'PsyD-CA-9921', 
     degree: 'PsyD, Org Psychology', 
     stateOfPractice: 'CA', 
@@ -208,7 +208,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 5.0, 
     imageUrl: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&q=80&w=800", 
     bio: 'Supporting new mothers.', 
-    replicaId: 'r_elena', 
+    replicaId: 're3a705cf66a', 
     licenseNumber: 'LCSW-TX-3321', 
     degree: 'MSW, Clinical Social Work', 
     stateOfPractice: 'TX', 
@@ -224,7 +224,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 4.9, 
     imageUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800", 
     bio: 'Healing the past.', 
-    replicaId: 'r_malik', 
+    replicaId: 'r92debe21318', 
     licenseNumber: 'LPC-IL-2210', 
     degree: 'PhD, Clinical Psychology', 
     stateOfPractice: 'IL', 
@@ -240,7 +240,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 4.9, 
     imageUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=800", 
     bio: 'Thriving with neurodiversity.', 
-    replicaId: 'r_avery', 
+    replicaId: 'rc2146c13e81', 
     licenseNumber: 'PsyD-MA-6622', 
     degree: 'PsyD, Psychology', 
     stateOfPractice: 'MA', 
@@ -256,7 +256,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 4.7, 
     imageUrl: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&q=80&w=800", 
     bio: 'Constructive expression.', 
-    replicaId: 'r_liam', 
+    replicaId: 'rca8a38779a8', 
     licenseNumber: 'LCSW-MA-8812', 
     degree: 'MSW, Social Work', 
     stateOfPractice: 'MA', 
@@ -272,7 +272,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 4.8, 
     imageUrl: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=800", 
     bio: 'Building a healthy relationship with food.', 
-    replicaId: 'r_sarah', 
+    replicaId: 'r6ae5b6efc9d', 
     licenseNumber: 'RD-NY-4421', 
     degree: 'MS, Nutrition & Psychology', 
     stateOfPractice: 'NY', 
@@ -288,7 +288,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 4.8, 
     imageUrl: "https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?auto=format&fit=crop&q=80&w=800", 
     bio: 'Helping teens navigate pressure.', 
-    replicaId: 'r_noah', 
+    replicaId: 'r92debe21318', 
     licenseNumber: 'LMFT-WA-9921', 
     degree: 'MA, Family Therapy', 
     stateOfPractice: 'WA', 
@@ -304,7 +304,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 5.0, 
     imageUrl: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&q=80&w=800", 
     bio: 'Affirming and inclusive care.', 
-    replicaId: 'r_zoe', 
+    replicaId: 're3a705cf66a', 
     licenseNumber: 'LMFT-OR-5521', 
     degree: 'MA, Counseling Psychology', 
     stateOfPractice: 'OR', 
@@ -320,7 +320,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 4.8, 
     imageUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=800", 
     bio: 'Peak performance mindset.', 
-    replicaId: 'r_jackson', 
+    replicaId: 'rca8a38779a8', 
     licenseNumber: 'PsyD-FL-4421', 
     degree: 'PsyD, Sports Psychology', 
     stateOfPractice: 'FL', 
@@ -336,7 +336,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 5.0, 
     imageUrl: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=800", 
     bio: 'Restoring natural rhythms.', 
-    replicaId: 'r_patel', 
+    replicaId: 'rc2146c13e81', 
     licenseNumber: 'MD-NY-1102', 
     degree: 'MD, Psychiatry', 
     stateOfPractice: 'NY', 
@@ -352,7 +352,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 4.7, 
     imageUrl: "https://images.unsplash.com/photo-1463453091185-61582044d556?auto=format&fit=crop&q=80&w=800", 
     bio: 'Unplugging for mental health.', 
-    replicaId: 'r_lucas', 
+    replicaId: 'r92debe21318', 
     licenseNumber: 'LCSW-NY-3321', 
     degree: 'MSW, Social Work', 
     stateOfPractice: 'NY', 
@@ -368,7 +368,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 4.9, 
     imageUrl: "https://images.unsplash.com/photo-1554151228-14d9def656ec?auto=format&fit=crop&q=80&w=800", 
     bio: 'Mind-body healing.', 
-    replicaId: 'r_sofia', 
+    replicaId: 're3a705cf66a', 
     licenseNumber: 'PhD-CA-1123', 
     degree: 'PhD, Health Psychology', 
     stateOfPractice: 'CA', 
@@ -384,7 +384,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 4.8, 
     imageUrl: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=800", 
     bio: 'Navigating life transitions.', 
-    replicaId: 'r_william', 
+    replicaId: 'rca8a38779a8', 
     licenseNumber: 'LMFT-IL-5521', 
     degree: 'MA, Family Therapy', 
     stateOfPractice: 'IL', 
@@ -400,7 +400,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 5.0, 
     imageUrl: "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?auto=format&fit=crop&q=80&w=800", 
     bio: 'Building stronger bonds.', 
-    replicaId: 'r_emma', 
+    replicaId: 'r6ae5b6efc9d', 
     licenseNumber: 'LMFT-TX-8821', 
     degree: 'MA, Marriage & Family', 
     stateOfPractice: 'TX', 
@@ -471,7 +471,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     stateOfPractice: 'VA', 
     yearsExperience: 16 
   },
-  // 28. Layla (F) - UPDATED REPLICA ID
+  // 28. Layla (F) - VALID REPLICA ID
   { 
     id: 'c28', 
     name: 'Layla', 
@@ -487,7 +487,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     stateOfPractice: 'CA', 
     yearsExperience: 14 
   },
-  // 29. Henry (M) - Retirement Adjustment - UPDATED REPLICA ID
+  // 29. Henry (M) - VALID REPLICA ID
   { 
     id: 'c29', 
     name: 'Henry', 
@@ -503,7 +503,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     stateOfPractice: 'FL', 
     yearsExperience: 25 
   },
-  // 30. Nora (F) - Caregiver Stress
+  // 30. Nora (F) - UPDATED IMAGE & VALID REPLICA ID
   { 
     id: 'c30', 
     name: 'Nora', 
@@ -511,15 +511,15 @@ export const INITIAL_COMPANIONS: Companion[] = [
     specialty: 'Caregiver Stress', 
     status: 'AVAILABLE', 
     rating: 4.9, 
-    imageUrl: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=800", 
+    imageUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=800", 
     bio: 'Caring for yourself while caring for others.', 
-    replicaId: 'r4317e64d25a', 
+    replicaId: 'r6ae5b6efc9d', 
     licenseNumber: 'LCSW-OH-9912', 
     degree: 'MSW, Social Work', 
     stateOfPractice: 'OH', 
     yearsExperience: 18 
   },
-  // 31. Owen (M) - Gaming Addiction - UPDATED REPLICA ID
+  // 31. Owen (M) - VALID REPLICA ID
   { 
     id: 'c31', 
     name: 'Owen', 
@@ -535,7 +535,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     stateOfPractice: 'WA', 
     yearsExperience: 6 
   },
-  // 32. Luna (F) - Spiritual Crisis
+  // 32. Luna (F) - VALID REPLICA ID
   { 
     id: 'c32', 
     name: 'Luna', 
@@ -551,7 +551,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     stateOfPractice: 'OR', 
     yearsExperience: 11 
   },
-  // 33. Gabriel (M) - Anger Regulation - UPDATED REPLICA ID
+  // 33. Gabriel (M) - VALID REPLICA ID
   { 
     id: 'c33', 
     name: 'Gabriel', 
@@ -567,7 +567,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     stateOfPractice: 'IL', 
     yearsExperience: 13 
   },
-  // 34. Sophie (F) - Social Anxiety - UPDATED REPLICA ID
+  // 34. Sophie (F) - VALID REPLICA ID
   { 
     id: 'c34', 
     name: 'Sophie', 
@@ -583,7 +583,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     stateOfPractice: 'NY', 
     yearsExperience: 8 
   },
-  // 35. Ethan (M) - Financial Anxiety - UPDATED REPLICA ID
+  // 35. Ethan (M) - VALID REPLICA ID
   { 
     id: 'c35', 
     name: 'Ethan', 
