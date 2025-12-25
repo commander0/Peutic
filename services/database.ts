@@ -511,7 +511,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     specialty: 'Caregiver Stress', 
     status: 'AVAILABLE', 
     rating: 4.9, 
-    imageUrl: "https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?auto=format&fit=crop&q=80&w=800", 
+    imageUrl: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=800", 
     bio: 'Caring for yourself while caring for others.', 
     replicaId: 'r4317e64d25a', 
     licenseNumber: 'LCSW-OH-9912', 

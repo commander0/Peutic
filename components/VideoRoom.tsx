@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Companion, SessionFeedback } from '../types';
 import { 
@@ -119,9 +120,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Media State
-  const [micOn, setMicOn] = useState(true);
-  const [camOn, setCamOn] = useState(true);
-  const [blurBackground, setBlurBackground] = useState(false);
   const [showCredential, setShowCredential] = useState(false);
   
   // Icebreaker State
@@ -322,13 +320,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
       setShowSummary(true);
   };
 
-  const handleRefundRequest = () => {
-      if(confirm("Are you sure you want to end this session and request a credit refund for technical issues?")) {
-          performCleanup();
-          onEndSession();
-      }
-  };
-
   const submitFeedbackAndClose = () => {
       const minutesUsed = Math.ceil(duration / 60);
       const user = Database.getUser();
@@ -356,8 +347,11 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
   const toggleFeedbackTag = (tag: string) => { if (feedbackTags.includes(tag)) setFeedbackTags(feedbackTags.filter(t => t !== tag)); else setFeedbackTags([...feedbackTags, tag]); };
   const formatTime = (seconds: number) => { const mins = Math.floor(seconds / 60); const secs = seconds % 60; return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`; };
+  
+  // Calculate cost dynamically based on active sale mode setting
   const settings = Database.getSettings();
-  const cost = Math.ceil(duration / 60) * settings.pricePerMinute;
+  const currentRate = settings.saleMode ? 1.49 : 1.99;
+  const cost = Math.ceil(duration / 60) * currentRate;
 
   // --- HELPER: Pre-fill Name to Skip Input Screen ---
   const getIframeUrl = () => {
@@ -397,7 +391,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
                   <div className="bg-black/50 rounded-2xl p-4 mb-6 border border-gray-800">
                       <div className="flex justify-between mb-2"><span className="text-gray-500 font-bold text-xs uppercase">Time</span><span className="font-mono font-bold text-white">{formatTime(duration)}</span></div>
-                      <div className="flex justify-between items-center"><span className="text-gray-500 font-bold text-xs uppercase">Cost</span><span className="text-green-500 font-black text-lg">${cost.toFixed(2)}</span></div>
+                      <div className="flex justify-between items-center"><span className="text-gray-500 font-bold text-xs uppercase">Cost (@ ${currentRate}/m)</span><span className="text-green-500 font-black text-lg">${cost.toFixed(2)}</span></div>
                   </div>
                   
                   <div className="mb-6">
@@ -433,7 +427,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
         {/* --- ICEBREAKER OVERLAY --- */}
         {showIcebreaker && (
-            <div className="absolute bottom-24 right-4 z-40 bg-white/10 backdrop-blur-xl border border-white/20 p-6 rounded-3xl w-72 md:w-80 shadow-2xl animate-in slide-in-from-bottom-10 fade-in duration-500">
+            <div className="absolute bottom-24 left-4 z-40 bg-white/10 backdrop-blur-xl border border-white/20 p-6 rounded-3xl w-72 md:w-80 shadow-2xl animate-in slide-in-from-bottom-10 fade-in duration-500">
                 <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-yellow-400 fill-yellow-400 animate-pulse" />
@@ -455,6 +449,11 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         {/* --- HEADER OVERLAY --- */}
         <div className="absolute top-0 left-0 right-0 p-4 md:p-6 flex justify-between items-start z-20 pointer-events-none bg-gradient-to-b from-black/80 via-black/20 to-transparent pb-20 transition-opacity duration-500">
             <div className="flex items-center gap-4 pointer-events-auto">
+                {/* END CALL BUTTON - TOP LEFT */}
+                <button onClick={handleEndSession} className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-full transition-colors shadow-lg shadow-red-600/20" title="End Session">
+                    <PhoneOff className="w-5 h-5" />
+                </button>
+
                 <div className={`bg-black/40 backdrop-blur-xl px-4 py-2 rounded-full border ${lowBalanceWarning ? 'border-red-500 animate-pulse' : 'border-white/10'} text-white font-mono shadow-xl flex items-center gap-3 transition-colors duration-500`}>
                     <div className={`w-2 h-2 rounded-full ${connectionState === 'CONNECTED' ? 'bg-red-500 animate-pulse' : 'bg-yellow-500'}`}></div>
                     <span className={`font-variant-numeric tabular-nums tracking-wide font-bold ${lowBalanceWarning ? 'text-red-400' : 'text-white'}`}>
@@ -535,25 +534,16 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             )}
         </div>
 
-        {/* --- VERTICAL CONTROLS (Top Left) --- */}
-        <div className="absolute top-24 left-4 z-30 pointer-events-auto">
-            <div className="flex flex-col items-center gap-3 bg-black/60 backdrop-blur-md px-3 py-5 rounded-full border border-white/10 shadow-2xl hover:bg-black/80 transition-all">
-                <button onClick={() => setMicOn(!micOn)} className={`p-3 rounded-full transition-all ${micOn ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-red-500 text-white'}`}>{micOn ? <Mic className="w-5 h-5"/> : <MicOff className="w-5 h-5"/>}</button>
-                <button onClick={() => setCamOn(!camOn)} className={`p-3 rounded-full transition-all ${camOn ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-red-500 text-white'}`}>{camOn ? <VideoIcon className="w-5 h-5"/> : <VideoOff className="w-5 h-5"/>}</button>
-                <button onClick={() => setBlurBackground(!blurBackground)} className={`p-3 rounded-full transition-all ${blurBackground ? 'bg-yellow-500 text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}><Aperture className="w-5 h-5"/></button>
-                
-                <button onClick={() => setShowIcebreaker(!showIcebreaker)} className={`p-3 rounded-full transition-all relative ${showIcebreaker ? 'bg-blue-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`} title="Conversation Sparks">
-                    <MessageSquare className="w-5 h-5" />
-                    {!showIcebreaker && <span className="absolute top-0 right-0 w-3 h-3 bg-yellow-500 rounded-full border-2 border-black"></span>}
-                </button>
-
-                <div className="w-6 h-px bg-white/20 my-1"></div>
-                <button onClick={handleRefundRequest} className="text-[10px] font-bold text-gray-400 hover:text-white mb-2" title="Report Issue / Refund">Report</button>
-                
-                <button onClick={handleEndSession} className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-full transition-colors shadow-lg shadow-red-600/20" title="End Session">
-                    <PhoneOff className="w-5 h-5" />
-                </button>
-            </div>
+        {/* --- BOTTOM LEFT ICEBREAKER BUTTON --- */}
+        <div className="absolute bottom-6 left-4 z-30 pointer-events-auto">
+            <button 
+                onClick={() => setShowIcebreaker(!showIcebreaker)} 
+                className={`p-4 rounded-full transition-all relative shadow-xl hover:scale-110 ${showIcebreaker ? 'bg-blue-500 text-white' : 'bg-black/60 backdrop-blur-md border border-white/10 text-white hover:bg-black/80'}`} 
+                title="Conversation Sparks"
+            >
+                <MessageSquare className="w-6 h-6" />
+                {!showIcebreaker && <span className="absolute top-0 right-0 w-3 h-3 bg-yellow-500 rounded-full border-2 border-black animate-pulse"></span>}
+            </button>
         </div>
     </div>
   );
