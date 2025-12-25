@@ -168,7 +168,15 @@ const MainApp: React.FC = () => {
             user && user.role === UserRole.USER ? (
                 <Dashboard user={user} onLogout={handleLogout} onStartSession={(c) => setActiveSessionCompanion(c)} />
             ) : (
-                <LandingPage onLoginClick={(signup) => { setAuthMode(signup ? 'signup' : 'login'); setShowAuth(true); }} />
+                <LandingPage onLoginClick={(signup) => { 
+                    const requestedMode = signup ? 'signup' : 'login';
+                    if (showAuth && authMode === requestedMode) {
+                        setShowAuth(false);
+                    } else {
+                        setAuthMode(requestedMode);
+                        setShowAuth(true);
+                    }
+                }} />
             )
         } />
         

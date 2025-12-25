@@ -103,7 +103,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
       </div>
 
       {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'py-3 md:py-4 bg-[#FFFBEB]/80 dark:bg-black/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-6 md:py-8 bg-transparent border-transparent'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-500 ${scrolled ? 'py-3 md:py-4 bg-[#FFFBEB]/80 dark:bg-black/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-6 md:py-8 bg-transparent border-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 md:px-10 flex justify-between items-center">
             <div className="flex items-center gap-2 md:gap-3 group cursor-pointer">
                <div className="w-8 h-8 md:w-10 md:h-10 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">

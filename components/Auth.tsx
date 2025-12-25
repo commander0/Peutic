@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { UserRole } from '../types';
 import { Facebook, AlertCircle, Send, Heart, Check } from 'lucide-react';
@@ -21,6 +22,11 @@ declare global {
 const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' }) => {
   const [isLogin, setIsLogin] = useState(initialMode === 'login');
   const [isResettingPassword, setIsResettingPassword] = useState(false);
+  
+  // Update state when prop changes to support switching modes from parent
+  useEffect(() => {
+    setIsLogin(initialMode === 'login');
+  }, [initialMode]);
   
   // Form Fields
   const [email, setEmail] = useState('');
