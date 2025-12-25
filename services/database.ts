@@ -471,7 +471,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     stateOfPractice: 'VA', 
     yearsExperience: 16 
   },
-  // 28. Layla (F)
+  // 28. Layla (F) - UPDATED REPLICA ID
   { 
     id: 'c28', 
     name: 'Layla', 
@@ -481,13 +481,13 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 5.0, 
     imageUrl: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=800", 
     bio: 'Supporting your path to parenthood.', 
-    replicaId: 'r_scarlett', 
+    replicaId: 're3a705cf66a', 
     licenseNumber: 'PhD-CA-8821', 
     degree: 'PhD, Health Psychology', 
     stateOfPractice: 'CA', 
     yearsExperience: 14 
   },
-  // 29. Henry (M) - Retirement Adjustment (Swapped Image with Lucas)
+  // 29. Henry (M) - Retirement Adjustment - UPDATED REPLICA ID
   { 
     id: 'c29', 
     name: 'Henry', 
@@ -497,13 +497,13 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 4.8, 
     imageUrl: "https://images.unsplash.com/photo-1504257432389-52343af06ae3?auto=format&fit=crop&q=80&w=800", 
     bio: 'Finding purpose in the next chapter.', 
-    replicaId: 'r_marcus', 
+    replicaId: 'rca8a38779a8', 
     licenseNumber: 'LMFT-FL-3321', 
     degree: 'MA, Counseling', 
     stateOfPractice: 'FL', 
     yearsExperience: 25 
   },
-  // 30. Nora (F)
+  // 30. Nora (F) - Caregiver Stress
   { 
     id: 'c30', 
     name: 'Nora', 
@@ -519,7 +519,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     stateOfPractice: 'OH', 
     yearsExperience: 18 
   },
-  // 31. Owen (M)
+  // 31. Owen (M) - Gaming Addiction - UPDATED REPLICA ID
   { 
     id: 'c31', 
     name: 'Owen', 
@@ -529,13 +529,13 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 4.7, 
     imageUrl: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=800", 
     bio: 'Balancing virtual worlds with reality.', 
-    replicaId: 'r_matthew', 
+    replicaId: 'r92debe21318', 
     licenseNumber: 'LPC-WA-2210', 
     degree: 'MA, Psychology', 
     stateOfPractice: 'WA', 
     yearsExperience: 6 
   },
-  // 32. Luna (F)
+  // 32. Luna (F) - Spiritual Crisis
   { 
     id: 'c32', 
     name: 'Luna', 
@@ -551,7 +551,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     stateOfPractice: 'OR', 
     yearsExperience: 11 
   },
-  // 33. Gabriel (M)
+  // 33. Gabriel (M) - Anger Regulation - UPDATED REPLICA ID
   { 
     id: 'c33', 
     name: 'Gabriel', 
@@ -561,13 +561,13 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 4.8, 
     imageUrl: "https://images.unsplash.com/photo-1480455624313-e29b44bbfde1?auto=format&fit=crop&q=80&w=800", 
     bio: 'Transforming rage into constructive action.', 
-    replicaId: 'r_chen', 
+    replicaId: 'rca8a38779a8', 
     licenseNumber: 'PsyD-IL-4421', 
     degree: 'PsyD, Clinical Psychology', 
     stateOfPractice: 'IL', 
     yearsExperience: 13 
   },
-  // 34. Sophie (F)
+  // 34. Sophie (F) - Social Anxiety - UPDATED REPLICA ID
   { 
     id: 'c34', 
     name: 'Sophie', 
@@ -577,13 +577,13 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 4.9, 
     imageUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=800", 
     bio: 'Building confidence in connection.', 
-    replicaId: 'r_elena', 
+    replicaId: 'r6ae5b6efc9d', 
     licenseNumber: 'LCSW-NY-3399', 
     degree: 'MSW, Social Work', 
     stateOfPractice: 'NY', 
     yearsExperience: 8 
   },
-  // 35. Ethan (M)
+  // 35. Ethan (M) - Financial Anxiety - UPDATED REPLICA ID
   { 
     id: 'c35', 
     name: 'Ethan', 
@@ -593,7 +593,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 4.9, 
     imageUrl: "https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&q=80&w=800", 
     bio: 'Healing your relationship with money.', 
-    replicaId: 'r_malik', 
+    replicaId: 'r92debe21318', 
     licenseNumber: 'LMFT-CA-2210', 
     degree: 'MA, Financial Therapy', 
     stateOfPractice: 'CA', 
