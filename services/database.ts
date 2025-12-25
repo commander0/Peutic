@@ -112,7 +112,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 5.0, 
     imageUrl: "https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&q=80&w=800", 
     bio: 'Empowerment and health.', 
-    replicaId: 're3a705cf66a', // Fixed Placeholder
+    replicaId: 're3a705cf66a', 
     licenseNumber: 'LCSW-NY-1188', 
     degree: 'MSW, Social Work', 
     stateOfPractice: 'NY', 
@@ -128,7 +128,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 4.9, 
     imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=800", 
     bio: 'One day at a time.', 
-    replicaId: 'rca8a38779a8', // Fixed Placeholder
+    replicaId: 'rca8a38779a8', 
     licenseNumber: 'LAC-NJ-8821', 
     degree: 'MA, Addiction Counseling', 
     stateOfPractice: 'NJ', 
@@ -192,7 +192,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     rating: 5.0, 
     imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=800", 
     bio: 'High performance sustainability.', 
-    replicaId: 'rca8a38779a8', // Fixed Placeholder
+    replicaId: 'rca8a38779a8', 
     licenseNumber: 'PsyD-CA-9921', 
     degree: 'PsyD, Org Psychology', 
     stateOfPractice: 'CA', 
@@ -511,9 +511,9 @@ export const INITIAL_COMPANIONS: Companion[] = [
     specialty: 'Caregiver Stress', 
     status: 'AVAILABLE', 
     rating: 4.9, 
-    imageUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=800", 
+    imageUrl: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=800", // UPDATED: Female Avatar
     bio: 'Caring for yourself while caring for others.', 
-    replicaId: 'r6ae5b6efc9d', 
+    replicaId: 'r4317e64d25a', 
     licenseNumber: 'LCSW-OH-9912', 
     degree: 'MSW, Social Work', 
     stateOfPractice: 'OH', 
