@@ -193,52 +193,63 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
   // --- RENDER ONBOARDING ---
   if (showOnboarding) {
       return (
-        <div className="fixed inset-0 bg-[#FFFBEB] dark:bg-black z-50 flex flex-col md:flex-row animate-in fade-in slide-in-from-bottom-10 duration-500">
+        <div className="fixed inset-0 bg-[#FFFBEB] dark:bg-black z-50 flex flex-col md:flex-row animate-in fade-in slide-in-from-bottom-5 duration-500">
             <div className="hidden md:block w-1/2 bg-[#FACC15] dark:bg-yellow-600 relative overflow-hidden">
                 <div className="absolute inset-0 flex items-center justify-center">
                      <Heart className="w-64 h-64 text-black opacity-10 animate-pulse" />
                 </div>
             </div>
-            <div className="w-full md:w-1/2 p-6 md:p-20 flex flex-col justify-center bg-[#FFFBEB] dark:bg-black text-black dark:text-white">
-                <div className="max-w-md w-full mx-auto">
-                    {onboardingStep === 0 && (
-                        <div>
-                            <h2 className="text-2xl md:text-3xl font-bold mb-4">Welcome, {firstName || 'Buddy'}.</h2>
-                            <p className="text-gray-500 dark:text-gray-400 text-base md:text-lg mb-8">Let's tailor your sanctuary.</p>
-                            <button onClick={() => setOnboardingStep(1)} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-xl font-bold hover:scale-[1.02] transition-transform text-sm md:text-base">Begin Setup</button>
-                        </div>
-                    )}
-                    {onboardingStep === 1 && (
-                        <div>
-                            <h2 className="text-2xl md:text-3xl font-bold mb-8">Privacy First</h2>
-                            <p className="mb-8 text-base md:text-lg">Your sessions are 100% encrypted. No one listens but you.</p>
-                            <button onClick={() => setOnboardingStep(2)} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-xl font-bold hover:scale-[1.02] transition-transform text-sm md:text-base">I Understand</button>
-                        </div>
-                    )}
-                    {onboardingStep === 2 && (
-                        <div>
-                            <h2 className="text-2xl md:text-3xl font-bold mb-2">Focus Areas</h2>
-                            <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm md:text-base">Select what's on your mind.</p>
-                            <div className="flex flex-wrap gap-2 md:gap-3 mb-10">
-                                {["Anxiety", "Stress", "Career", "Relationships", "Grief", "Sleep", "Confidence"].map(t => (
-                                    <button key={t} onClick={() => { 
-                                        if (selectedTopics.includes(t)) setSelectedTopics(selectedTopics.filter(topic => topic !== t));
-                                        else if (selectedTopics.length < 5) setSelectedTopics([...selectedTopics, t]);
-                                    }} className={`px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base border rounded-full font-bold transition-all ${selectedTopics.includes(t) ? 'bg-black dark:bg-white text-white dark:text-black border-black dark:border-white' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-black dark:hover:border-white'}`}>{t}</button>
-                                ))}
+            <div className="w-full md:w-1/2 h-full overflow-y-auto flex flex-col bg-[#FFFBEB] dark:bg-black text-black dark:text-white relative">
+                <div className="flex-1 flex flex-col justify-end md:justify-center p-6 md:p-20 pb-12 md:pb-20 min-h-full">
+                    <div className="max-w-md w-full mx-auto">
+                        {onboardingStep === 0 && (
+                            <div className="animate-in slide-in-from-bottom-5 fade-in duration-500 space-y-6">
+                                <div>
+                                    <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tight">Welcome, {firstName || 'Buddy'}.</h2>
+                                    <p className="text-gray-500 dark:text-gray-400 text-lg md:text-xl font-medium leading-relaxed">Let's tailor your sanctuary.</p>
+                                </div>
+                                <button onClick={() => setOnboardingStep(1)} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 md:py-5 rounded-2xl font-black hover:scale-[1.02] transition-transform text-base md:text-lg shadow-xl">Begin Setup</button>
                             </div>
-                            <button onClick={() => setOnboardingStep(3)} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-xl font-bold hover:scale-[1.02] transition-transform text-sm md:text-base">Finalize Profile</button>
-                        </div>
-                    )}
-                    {onboardingStep === 3 && (
-                        <div className="text-center">
-                             <div className="w-16 h-16 md:w-20 md:h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                                 <Check className="w-8 h-8 md:w-10 md:h-10 text-green-600 dark:text-green-400" />
-                             </div>
-                             <h2 className="text-2xl md:text-3xl font-bold mb-4">All Set!</h2>
-                             <button onClick={finishOnboarding} className="w-full bg-[#FACC15] text-black py-4 rounded-xl font-bold shadow-xl hover:bg-[#EAB308] transition-all text-sm md:text-base">Enter Dashboard</button>
-                        </div>
-                    )}
+                        )}
+                        {onboardingStep === 1 && (
+                            <div className="animate-in slide-in-from-bottom-5 fade-in duration-500 space-y-6">
+                                <div>
+                                    <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tight">Privacy First</h2>
+                                    <p className="text-gray-500 dark:text-gray-400 text-lg md:text-xl font-medium leading-relaxed">Your sessions are 100% encrypted. No one listens but you.</p>
+                                </div>
+                                <button onClick={() => setOnboardingStep(2)} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 md:py-5 rounded-2xl font-black hover:scale-[1.02] transition-transform text-base md:text-lg shadow-xl">I Understand</button>
+                            </div>
+                        )}
+                        {onboardingStep === 2 && (
+                            <div className="animate-in slide-in-from-bottom-5 fade-in duration-500 space-y-6">
+                                <div>
+                                    <h2 className="text-3xl md:text-4xl font-black mb-2 tracking-tight">Focus Areas</h2>
+                                    <p className="text-gray-500 dark:text-gray-400 text-base md:text-lg mb-6">Select what's on your mind.</p>
+                                    <div className="flex flex-wrap gap-2 md:gap-3 mb-8">
+                                        {["Anxiety", "Stress", "Career", "Relationships", "Grief", "Sleep", "Confidence"].map(t => (
+                                            <button key={t} onClick={() => { 
+                                                if (selectedTopics.includes(t)) setSelectedTopics(selectedTopics.filter(topic => topic !== t));
+                                                else if (selectedTopics.length < 5) setSelectedTopics([...selectedTopics, t]);
+                                            }} className={`px-4 py-2.5 md:px-5 md:py-3 text-sm md:text-base border rounded-full font-bold transition-all ${selectedTopics.includes(t) ? 'bg-black dark:bg-white text-white dark:text-black border-black dark:border-white shadow-md' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-black dark:hover:border-white'}`}>{t}</button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <button onClick={() => setOnboardingStep(3)} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 md:py-5 rounded-2xl font-black hover:scale-[1.02] transition-transform text-base md:text-lg shadow-xl">Finalize Profile</button>
+                            </div>
+                        )}
+                        {onboardingStep === 3 && (
+                            <div className="text-center animate-in zoom-in duration-500 space-y-8">
+                                 <div className="w-20 h-20 md:w-24 md:h-24 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto shadow-lg">
+                                     <Check className="w-10 h-10 md:w-12 md:h-12 text-green-600 dark:text-green-400" />
+                                 </div>
+                                 <div>
+                                    <h2 className="text-3xl md:text-4xl font-black mb-2 tracking-tight">All Set!</h2>
+                                    <p className="text-gray-500">Your safe space is ready.</p>
+                                 </div>
+                                 <button onClick={finishOnboarding} className="w-full bg-[#FACC15] text-black py-4 md:py-5 rounded-2xl font-black shadow-[0_20px_40px_-15px_rgba(250,204,21,0.5)] hover:bg-[#EAB308] hover:scale-105 transition-all text-base md:text-lg uppercase tracking-widest">Enter Dashboard</button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
