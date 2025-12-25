@@ -194,7 +194,11 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         // Attempt to claim spot securely via Supabase
         const canEnter = await Database.claimActiveSpot(userId);
         if (canEnter) {
-            startTavusConnection();
+            // SAFETY DELAY: Wait 1s to ensure TechCheck hardware is fully released by browser
+            // This prevents "Camera Busy" errors on mobile devices
+            setTimeout(() => {
+                startTavusConnection();
+            }, 1000);
         }
     };
 

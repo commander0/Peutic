@@ -18,6 +18,7 @@ const TechCheck: React.FC<TechCheckProps> = ({ onConfirm, onCancel }) => {
   const animationRef = useRef<number | null>(null);
 
   useEffect(() => {
+    // 1. LOCAL ONLY: Check browser hardware permissions. No API calls here.
     const startStream = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -28,7 +29,7 @@ const TechCheck: React.FC<TechCheckProps> = ({ onConfirm, onCancel }) => {
           videoRef.current.srcObject = stream;
         }
 
-        // Audio Visualization Setup
+        // Local Audio Visualization Setup
         const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
         if (AudioContextClass) {
             const audioCtx = new AudioContextClass({});
@@ -64,34 +65,49 @@ const TechCheck: React.FC<TechCheckProps> = ({ onConfirm, onCancel }) => {
 
     startStream();
 
-    // CLEANUP FUNCTION: IMPORTANT
-    // This runs when the component unmounts (e.g. when transitioning to VideoRoom)
+    // CLEANUP: Runs on unmount to ensure hardware is released
     return () => {
+      stopLocalHardware();
+    };
+  }, []);
+
+  const stopLocalHardware = () => {
+      // 1. Stop Animation Frame
+      if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+          animationRef.current = null;
+      }
+
+      // 2. Stop Camera/Mic Tracks
       if (videoStream) {
         videoStream.getTracks().forEach(track => {
             track.stop();
-            console.log("TechCheck: Camera track stopped.");
+            console.log("TechCheck: Local track stopped.");
         });
+        setVideoStream(null);
       }
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-      if (audioContextRef.current) {
-          audioContextRef.current.close();
-      }
-    };
-  }, []); // Empty dependency array means this only runs once on mount, and cleanup on unmount
 
-  // Manual handler to ensure stream stop before state transition if needed
-  const handleConfirm = () => {
-      if (videoStream) {
-          videoStream.getTracks().forEach(t => t.stop());
+      // 3. Clear Video Source
+      if (videoRef.current) {
+          videoRef.current.srcObject = null;
       }
+
+      // 4. Close Audio Context (Releases Mic Handle)
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+          audioContextRef.current.close().catch(console.error);
+          audioContextRef.current = null;
+      }
+  };
+
+  const handleConfirm = () => {
+      // STRICT HANDOFF: Explicitly stop hardware BEFORE confirming
+      // This ensures the camera is free for the Tavus/VideoRoom component
+      stopLocalHardware();
       onConfirm();
   };
 
   const handleCancel = () => {
-      if (videoStream) {
-          videoStream.getTracks().forEach(t => t.stop());
-      }
+      stopLocalHardware();
       onCancel();
   };
 
