@@ -205,7 +205,13 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
     // Polling Interval for Queue Position
     const queueInterval = setInterval(async () => {
         if (connectionState === 'QUEUED') {
-            const pos = await Database.getQueuePosition(userId);
+            let pos = await Database.getQueuePosition(userId);
+            
+            // Failsafe: If queue dropped us but we are still waiting
+            if (pos === 0) {
+                pos = await Database.joinQueue(userId);
+            }
+
             setQueuePos(pos);
             setEstWait(Database.getEstimatedWaitTime(pos));
 

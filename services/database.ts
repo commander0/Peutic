@@ -11,16 +11,13 @@ const DB_KEYS = {
   LOGS: 'peutic_db_logs_v26',
   MOODS: 'peutic_db_moods_v26',
   JOURNALS: 'peutic_db_journals_v26',
-  ART: 'peutic_db_art_v26',
   PROMOS: 'peutic_db_promos_v26',
   ADMIN_ATTEMPTS: 'peutic_db_admin_attempts_v26',
   BREATHE_COOLDOWN: 'peutic_db_breathe_cooldown_v26',
   BREATHE_LOGS: 'peutic_db_breathe_logs_v26',
   MEMORIES: 'peutic_db_memories_v26',
   GIFTS: 'peutic_db_gifts_v26',
-  FEEDBACK: 'peutic_db_feedback_v26',
-  ACTIVE_SESSIONS: 'peutic_active_sessions_v2',
-  QUEUE: 'peutic_queue_v1'
+  FEEDBACK: 'peutic_db_feedback_v26'
 };
 
 // --- GENERIC AVATAR POOL (For Users/Fallbacks ONLY) ---
@@ -274,15 +271,16 @@ export class Database {
 
   static async ensureSupabaseUser(user: User) {
       try {
-          const { error } = await supabase.from('users').insert({
+          const { error } = await supabase.from('users').upsert({
               id: user.id,
               name: user.name,
               email: user.email,
               role: user.role,
               balance: user.balance,
               last_login_date: new Date().toISOString()
-          });
-          if (error && error.code !== '23505') { // Ignore duplicate key error
+          }, { onConflict: 'id' });
+          
+          if (error) { 
               console.warn("Supabase Sync Warning:", error);
           }
       } catch (e) {}
@@ -419,7 +417,64 @@ export class Database {
   }
 
   // =========================================================================
-  //  GLOBAL CONCURRENCY & QUEUE (SUPABASE ENFORCED)
+  //  ART & WISDOM (SUPABASE ONLY - NO LOCAL STORAGE)
+  // =========================================================================
+
+  static async saveArt(entry: ArtEntry) {
+      try {
+          const { error } = await supabase.from('user_art').insert({
+              id: entry.id,
+              user_id: entry.userId,
+              image_url: entry.imageUrl,
+              prompt: entry.prompt,
+              title: entry.title,
+              created_at: entry.createdAt
+          });
+          if (error) throw error;
+      } catch (e) {
+          console.error("Save Art Failed (Remote):", e);
+          throw e; // Ensure caller knows it failed
+      }
+  }
+
+  static async getUserArt(userId: string): Promise<ArtEntry[]> {
+      try {
+          const { data, error } = await supabase
+              .from('user_art')
+              .select('*')
+              .eq('user_id', userId)
+              .order('created_at', { ascending: false })
+              .limit(20);
+
+          if (error) throw error;
+          
+          if (data) {
+              return data.map((d: any) => ({
+                  id: d.id,
+                  userId: d.user_id,
+                  imageUrl: d.image_url,
+                  prompt: d.prompt,
+                  title: d.title,
+                  createdAt: d.created_at
+              }));
+          }
+      } catch (e) {
+          console.error("Get Art Failed (Remote):", e);
+      }
+      return [];
+  }
+
+  static async deleteArt(artId: string) {
+      try {
+          const { error } = await supabase.from('user_art').delete().eq('id', artId);
+          if (error) throw error;
+      } catch(e) {
+          console.error("Delete Art Failed (Remote):", e);
+      }
+  }
+
+  // =========================================================================
+  //  GLOBAL CONCURRENCY & QUEUE (SUPABASE ONLY - NO LOCAL FALLBACK)
   // =========================================================================
 
   // 1. ZOMBIE CLEANUP (Backend Emulation)
@@ -443,9 +498,8 @@ export class Database {
           if (error) throw error;
           return count || 0;
       } catch (e) {
-          // Fallback to local storage count if remote fails, but warn
-          console.warn("Supabase Count Failed, using local fallback.");
-          return 0;
+          console.error("Supabase Count Failed:", e);
+          return 0; // Return 0 on error, do not fall back to local
       }
   }
 
@@ -648,62 +702,24 @@ export class Database {
       all.push({ id: `b_${Date.now()}`, userId, date: new Date().toISOString(), durationSeconds: duration });
       localStorage.setItem(DB_KEYS.BREATHE_LOGS, JSON.stringify(all));
   }
-  static async saveArt(entry: ArtEntry) { 
-      // Save local first for UI speed
-      this.saveArtLocal(entry);
-      // Sync to Supabase
-      try {
-          await supabase.from('user_art').insert({
-              id: entry.id,
-              user_id: entry.userId,
-              image_url: entry.imageUrl,
-              prompt: entry.prompt,
-              title: entry.title,
-              created_at: entry.createdAt
-          });
-      } catch (e) {}
-  }
-  static saveArtLocal(entry: ArtEntry) {
-      let art = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]');
-      const userArt = art.filter((a: ArtEntry) => a.userId === entry.userId);
-      const otherArt = art.filter((a: ArtEntry) => a.userId !== entry.userId);
-      userArt.unshift(entry); 
-      while (userArt.length > 15) { userArt.pop(); }
-      let newArt = [...otherArt, ...userArt];
-      try { localStorage.setItem(DB_KEYS.ART, JSON.stringify(newArt)); } catch (e: any) {}
-  }
-  static async getUserArt(userId: string): Promise<ArtEntry[]> { 
-      // Try remote first
-      try {
-          const { data, error } = await supabase.from('user_art').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(15);
-          if (!error && data) {
-              return data.map((d: any) => ({
-                  id: d.id, userId: d.user_id, imageUrl: d.image_url, prompt: d.prompt, title: d.title, createdAt: d.created_at
-              }));
-          }
-      } catch (e) {}
-      return this.getUserArtLocal(userId); 
-  }
-  static getUserArtLocal(userId: string): ArtEntry[] {
-      const art = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]');
-      return art.filter((a: ArtEntry) => a.userId === userId).sort((a: ArtEntry, b: ArtEntry) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 15);
-  }
-  static async deleteArt(artId: string) { 
-      try { await supabase.from('user_art').delete().eq('id', artId); } catch(e) {}
-      let art = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]'); 
-      art = art.filter((a: ArtEntry) => a.id !== artId); 
-      localStorage.setItem(DB_KEYS.ART, JSON.stringify(art)); 
-  }
+  // Remove saveArtLocal and getUserArtLocal
+  
   static getBreathingCooldown(): number | null { const cd = localStorage.getItem(DB_KEYS.BREATHE_COOLDOWN); return cd ? parseInt(cd, 10) : null; }
   static setBreathingCooldown(timestamp: number) { localStorage.setItem(DB_KEYS.BREATHE_COOLDOWN, timestamp.toString()); }
   static getWeeklyProgress(userId: string): { current: number; target: number; message: string } {
       const now = new Date(); const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const tx = this.getUserTransactions(userId).filter(t => new Date(t.date) > oneWeekAgo && t.amount < 0);
       const j = this.getJournals(userId).filter(j => new Date(j.date) > oneWeekAgo);
-      const a = this.getUserArtLocal(userId).filter(a => new Date(a.createdAt) > oneWeekAgo);
+      // Art is now remote-only, strictly fetch would require async here.
+      // For now, to keep this method sync (as it's used in UI render loops), we omit Art count or assume caller fetches separately.
+      // But typically this is called in refreshData() which could be async.
+      // Given the constraint to remove local storage implementation for art, 
+      // we'll omit art from local score calculation unless we refactor to async.
+      // For simplicity/safety in this refactor, we remove art count from sync weekly score to avoid errors.
       const m = this.getMoods(userId).filter(m => new Date(m.date) > oneWeekAgo);
       const b = this.getBreathLogs(userId).filter(b => new Date(b.date) > oneWeekAgo);
-      const score = (tx.length * 3) + (j.length * 1) + (a.length * 1) + (b.length * 1) + (m.length * 0.5);
+      
+      const score = (tx.length * 3) + (j.length * 1) + (b.length * 1) + (m.length * 0.5);
       const target = 10;
       let message = "Start your journey.";
       const pct = score / target;
