@@ -44,6 +44,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [oauthData, setOauthData] = useState<{ provider: 'google' | 'facebook' | 'x', avatar?: string } | null>(null);
   
   // --- FACEBOOK SDK INIT ---
   useEffect(() => {
@@ -78,11 +79,27 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             const data = JSON.parse(jsonPayload);
             
             if (data.email) {
-                const fullName = data.name || "Buddy";
-                onLogin(UserRole.USER, fullName, data.picture, data.email, undefined, 'google');
+                const existingUser = Database.getUserByEmail(data.email);
+                
+                if (existingUser) {
+                    // Existing user: Direct login
+                    const fullName = existingUser.name;
+                    onLogin(existingUser.role, fullName, existingUser.avatar || data.picture, data.email, undefined, 'google');
+                } else {
+                    // New user: Route to Onboarding
+                    const fullName = data.name || "Buddy";
+                    const nameParts = fullName.split(' ');
+                    setFirstName(nameParts[0] || "");
+                    setLastName(nameParts.slice(1).join(' ') || "");
+                    setEmail(data.email);
+                    setOauthData({ provider: 'google', avatar: data.picture });
+                    
+                    // Switch to onboarding view
+                    setShowOnboarding(true);
+                }
             }
         } catch (err) {
-            console.error("Google Parse Error");
+            console.error("Google Parse Error", err);
             setError("Google Authentication Failed.");
         }
     };
@@ -90,8 +107,6 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
     if (window.google) {
         try {
             // Using a generic client ID. 
-            // Note: If you see [GSI_LOGGER] origin errors in console, it is because this 
-            // client ID is not whitelisted for your specific domain/localhost. 
             window.google.accounts.id.initialize({
                 client_id: "360174265748-nqb0dk8qi8bk0hil4ggt12d53ecvdobo.apps.googleusercontent.com",
                 callback: handleGoogleCredentialResponse,
@@ -138,10 +153,25 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
       window.FB.login(function(response: any) {
           if (response.authResponse) {
              window.FB.api('/me', { fields: 'name, email, picture' }, function(profile: any) {
-                 const name = profile.name || "Buddy";
-                 const pic = profile.picture?.data?.url;
                  const fbEmail = profile.email || `${profile.id}@facebook.com`;
-                 onLogin(UserRole.USER, name, pic, fbEmail, undefined, 'facebook');
+                 const existingUser = Database.getUserByEmail(fbEmail);
+
+                 if (existingUser) {
+                     // Existing: Direct Login
+                     const name = existingUser.name;
+                     const pic = existingUser.avatar || profile.picture?.data?.url;
+                     onLogin(existingUser.role, name, pic, fbEmail, undefined, 'facebook');
+                 } else {
+                     // New: Onboarding
+                     const fullName = profile.name || "Buddy";
+                     const nameParts = fullName.split(' ');
+                     setFirstName(nameParts[0] || "");
+                     setLastName(nameParts.slice(1).join(' ') || "");
+                     setEmail(fbEmail);
+                     setOauthData({ provider: 'facebook', avatar: profile.picture?.data?.url });
+                     
+                     setShowOnboarding(true);
+                 }
              });
           } else {
              console.log("User cancelled FB Login");
@@ -171,6 +201,21 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                 setError("Passwords do not match.");
                 return;
             }
+            if (password.length < 8) {
+                setLoading(false);
+                setError("Password must be at least 8 characters long.");
+                return;
+            }
+            // Strong Password Regex: At least one number AND one special character
+            const hasNumber = /\d/.test(password);
+            const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+            
+            if (!hasNumber || !hasSpecial) {
+                setLoading(false);
+                setError("Password must contain at least one number and one special character.");
+                return;
+            }
+
             const existingUser = Database.getUserByEmail(email);
             if (existingUser) {
                 setLoading(false);
@@ -178,6 +223,8 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                 return;
             }
             
+            // Clear any potential OAuth data if user switched to email form
+            setOauthData(null);
             setLoading(false);
             setShowOnboarding(true);
         }
@@ -187,7 +234,14 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
   const finishOnboarding = () => {
       const fullName = `${firstName.trim()} ${lastName.trim()}`;
       const formattedName = fullName.length > 1 ? (fullName.charAt(0).toUpperCase() + fullName.slice(1)) : "Buddy";
-      onLogin(UserRole.USER, formattedName, undefined, email, birthday, 'email');
+      
+      if (oauthData) {
+          // Finish OAuth Signup
+          onLogin(UserRole.USER, formattedName, oauthData.avatar, email, undefined, oauthData.provider);
+      } else {
+          // Finish Email Signup
+          onLogin(UserRole.USER, formattedName, undefined, email, birthday, 'email');
+      }
   };
 
   // --- RENDER ONBOARDING ---
