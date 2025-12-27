@@ -140,11 +140,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                <div className="relative" ref={langMenuRef}>
                    <button 
                        onClick={() => setShowLangMenu(!showLangMenu)} 
-                       className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors flex items-center gap-1 font-bold text-xs uppercase"
+                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/50 dark:bg-black/50 backdrop-blur-md border border-gray-200 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-500 transition-all text-xs font-black uppercase tracking-wider shadow-sm group"
                    >
-                       <Globe className="w-4 h-4 md:w-5 md:h-5 text-gray-600 dark:text-gray-400" />
-                       <span>{lang}</span>
-                       <ChevronDown className="w-3 h-3 text-gray-500" />
+                       <Globe className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400 group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors" />
+                       <span className="text-gray-800 dark:text-gray-200">{lang}</span>
+                       <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform duration-300 ${showLangMenu ? 'rotate-180' : ''}`} />
                    </button>
                    
                    {showLangMenu && (
@@ -153,9 +153,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                                <button
                                    key={l.code}
                                    onClick={() => { setLang(l.code); setShowLangMenu(false); }}
-                                   className={`w-full text-left px-4 py-3 text-xs font-bold hover:bg-yellow-50 dark:hover:bg-gray-800 transition-colors ${lang === l.code ? 'text-yellow-600 dark:text-yellow-500 bg-yellow-50/50' : 'text-gray-700 dark:text-gray-300'}`}
+                                   className={`w-full text-left px-4 py-3 text-xs font-bold hover:bg-yellow-50 dark:hover:bg-gray-800 transition-colors flex justify-between items-center ${lang === l.code ? 'text-yellow-600 dark:text-yellow-500 bg-yellow-50/50' : 'text-gray-700 dark:text-gray-300'}`}
                                >
                                    {l.label}
+                                   {lang === l.code && <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>}
                                </button>
                            ))}
                        </div>

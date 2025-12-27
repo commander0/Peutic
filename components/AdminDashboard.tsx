@@ -87,9 +87,14 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   // Sync Data
   useEffect(() => {
     const fetchData = async () => {
-        setUsers(Database.getAllUsers());
+        // ASYNC FETCHING
+        const fetchedUsers = await Database.getAllUsers();
+        setUsers(fetchedUsers);
+        
+        const fetchedTransactions = await Database.getAllTransactions();
+        setTransactions(fetchedTransactions);
+
         setCompanions(Database.getCompanions());
-        setTransactions(Database.getAllTransactions());
         const s = Database.getSettings();
         setSettings(s);
         setBroadcastMsg(s.broadcastMessage || '');
@@ -100,7 +105,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         } catch (e) {}
     };
     fetchData();
-    const interval = setInterval(fetchData, 3000); 
+    const interval = setInterval(fetchData, 10000); // Polling every 10s
     return () => clearInterval(interval);
   }, []);
 
@@ -113,24 +118,24 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   };
 
   const handleDeleteUser = async (userId: string, idx: number) => {
-      // Basic Root Admin Protection: Cannot delete first user or self (if logic extended)
-      // Assuming index 0 is always root admin in our local setup
       if (idx === 0) {
           alert("SECURITY ALERT: Cannot delete Root Admin account.");
           return;
       }
       if (window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
           await Database.deleteUser(userId);
-          setUsers(users.filter(u => u.id !== userId));
+          const freshUsers = await Database.getAllUsers();
+          setUsers(freshUsers);
       }
   };
 
-  const handleTopUp = (userId: string) => {
+  const handleTopUp = async (userId: string) => {
       const amount = prompt("Enter minutes to add:");
       if (amount && !isNaN(parseInt(amount))) {
-          Database.topUpWallet(parseInt(amount), 0, userId); // 0 cost for admin grant
+          await Database.topUpWallet(parseInt(amount), 0, userId);
           alert("Credits added successfully.");
-          setUsers(Database.getAllUsers()); // Refresh immediately
+          const freshUsers = await Database.getAllUsers();
+          setUsers(freshUsers);
       }
   };
 

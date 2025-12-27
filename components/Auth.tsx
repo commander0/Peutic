@@ -105,23 +105,18 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
   }, [onLogin]);
 
   const handleGoogleClick = () => {
-      // 1. SDK Check
       if (!window.google) {
           setError("Google Sign-In is currently unavailable. Please use email.");
           return;
       }
-
       try {
-          // 2. Attempt Real Login
           window.google.accounts.id.prompt((notification: any) => {
               if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
                   const reason = notification.getNotDisplayedReason();
-                  console.warn("Google Prompt Skipped/Hidden. Reason:", reason);
-                  setError("Google Sign-In was blocked or closed. Please try again or use email.");
+                  setError("Google Sign-In was blocked. Please try again or use email.");
               }
           });
       } catch (e) {
-          console.error("Google Prompt Exception:", e);
           setError("An error occurred with Google Sign-In.");
       }
   };
@@ -149,15 +144,14 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
       }, {scope: 'public_profile,email'});
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    setTimeout(() => {
+    try {
         if (isLogin) {
-            // STRICT LOGIN CHECK
-            const existingUser = Database.getUserByEmail(email);
+            const existingUser = await Database.getUserByEmail(email);
             if (existingUser) {
                 onLogin(existingUser.role, existingUser.name, existingUser.avatar, email, undefined, 'email');
             } else {
@@ -165,13 +159,12 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                 setError("Invalid email address or password combination.");
             }
         } else {
-            // SIGNUP VALIDATION
             if (password !== confirmPassword) {
                 setLoading(false);
                 setError("Passwords do not match.");
                 return;
             }
-            const existingUser = Database.getUserByEmail(email);
+            const existingUser = await Database.getUserByEmail(email);
             if (existingUser) {
                 setLoading(false);
                 setError("An account with this email already exists. Please sign in.");
@@ -181,7 +174,10 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             setLoading(false);
             setShowOnboarding(true);
         }
-    }, 1000);
+    } catch (err) {
+        setLoading(false);
+        setError("Connection error. Please try again.");
+    }
   };
 
   const finishOnboarding = () => {
@@ -190,7 +186,6 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
       onLogin(UserRole.USER, formattedName, undefined, email, birthday, 'email');
   };
 
-  // --- RENDER ONBOARDING ---
   if (showOnboarding) {
       return (
         <div className="fixed inset-0 bg-[#FFFBEB] dark:bg-black z-50 flex flex-col md:flex-row animate-in fade-in slide-in-from-bottom-5 duration-500">

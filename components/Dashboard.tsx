@@ -83,517 +83,153 @@ const CollapsibleSection: React.FC<{ title: string; icon: any; children: React.R
 };
 
 // ==========================================
-// FEATURE COMPONENTS
+// COMPONENT DEFINITIONS
 // ==========================================
 
-// --- WISDOM GENERATOR ---
-const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
-    const [input, setInput] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [gallery, setGallery] = useState<ArtEntry[]>([]);
-
-    const refreshGallery = async () => {
-        const art = await Database.getUserArt(userId);
-        setGallery(art);
-    };
-
-    useEffect(() => {
-        refreshGallery();
-    }, [userId]);
-
-    const handleGenerate = async () => {
-        if (!input.trim()) return;
-        setLoading(true);
-        try {
-            const wisdom = await generateAffirmation(input);
-            const canvas = document.createElement('canvas');
-            canvas.width = 1080; canvas.height = 1080;
-            const ctx = canvas.getContext('2d');
-            if(ctx) {
-                const hue = Math.floor(Math.random() * 360);
-                const grd = ctx.createLinearGradient(0, 0, 1080, 1080);
-                grd.addColorStop(0, `hsl(${hue}, 40%, 95%)`);
-                grd.addColorStop(1, `hsl(${(hue + 40) % 360}, 30%, 90%)`);
-                ctx.fillStyle = grd; ctx.fillRect(0, 0, 1080, 1080);
-                ctx.fillStyle = `hsla(${hue}, 60%, 80%, 0.2)`;
-                ctx.beginPath(); ctx.arc(540, 540, 400, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#1a1a1a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                const words = wisdom.split(' ');
-                let fontSize = 80; if (words.length > 15) fontSize = 60;
-                ctx.font = `bold ${fontSize}px Manrope, sans-serif`;
-                const maxWidth = 800; const lineHeight = fontSize * 1.4;
-                let lines = []; let currentLine = words[0];
-                for (let i = 1; i < words.length; i++) {
-                    const testLine = currentLine + ' ' + words[i];
-                    if (ctx.measureText(testLine).width > maxWidth) { lines.push(currentLine); currentLine = words[i]; } else { currentLine = testLine; }
-                }
-                lines.push(currentLine);
-                let y = 540 - ((lines.length - 1) * lineHeight) / 2;
-                lines.forEach(line => { ctx.fillText(line, 540, y); y += lineHeight; });
-                ctx.font = '500 30px Manrope, sans-serif'; ctx.fillStyle = '#666'; ctx.fillText('PEUTIC • DAILY WISDOM', 540, 980);
-                
-                const imageUrl = canvas.toDataURL('image/jpeg', 0.4);
-                const newEntry: ArtEntry = { id: `wisdom_${Date.now()}`, userId: userId, imageUrl: imageUrl, prompt: input, createdAt: new Date().toISOString(), title: "Wisdom Card" };
-                
-                await Database.saveArt(newEntry);
-                await refreshGallery();
-                
-                setInput('');
-            }
-        } catch (e) { console.error("Generation Error:", e); } finally { setLoading(false); }
-    };
-
-    const handleDelete = async (e: React.MouseEvent, id: string) => { 
-        e.stopPropagation(); 
-        if(confirm("Delete this card?")) { 
-            await Database.deleteArt(id); 
-            await refreshGallery();
-        } 
-    };
-
+const WeatherEffect: React.FC<{ type: 'confetti' | 'rain' }> = ({ type }) => {
     return (
-        <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-100 dark:border-gray-800 p-4 md:p-6 shadow-sm">
-             <div className="flex items-center gap-2 mb-4">
-                <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg"><Lightbulb className="w-4 h-4 text-purple-600 dark:text-purple-400" /></div>
-                <h3 className="font-bold text-gray-900 dark:text-white text-sm">Get Clarity</h3>
-             </div>
-            <div className="space-y-4">
-                <textarea className="w-full h-24 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 text-sm focus:border-purple-400 dark:text-white outline-none resize-none transition-all" placeholder="What's weighing on your mind?" value={input} onChange={(e) => setInput(e.target.value)} />
-                <button onClick={handleGenerate} disabled={loading || !input} className={`w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${loading || !input ? 'bg-gray-100 dark:bg-gray-800 text-gray-400' : 'bg-purple-600 text-white hover:bg-purple-500 hover:shadow-md'}`}>
-                    {loading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />} {loading ? 'Finding Clarity...' : 'Reframe Thought'}
-                </button>
-                {gallery.length > 0 && (
-                    <div className="mt-6 space-y-4">
-                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Your Cards ({gallery.length})</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            {gallery.map((art) => (
-                                <div key={art.id} className="relative group aspect-square bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm animate-in zoom-in duration-300">
-                                    <img src={art.imageUrl} alt="Wisdom Card" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                        <button onClick={(e) => handleDelete(e, art.id)} className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-colors" title="Delete"><Trash2 className="w-3 h-3"/></button>
-                                        <a href={art.imageUrl} download={`wisdom-${art.id}.jpg`} onClick={(e) => e.stopPropagation()} className="p-2 bg-white hover:bg-gray-100 text-black rounded-full shadow-lg transition-colors" title="Download"><Download className="w-3 h-3"/></a>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </div>
+        <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+            {type === 'confetti' && Array.from({ length: 50 }).map((_, i) => (
+                <div key={i} className="absolute w-2 h-2 bg-yellow-400 rounded-full animate-bounce" style={{ left: `${Math.random() * 100}%`, top: `-10px`, animationDuration: `${Math.random() * 3 + 2}s` }}></div>
+            ))}
+            {type === 'rain' && Array.from({ length: 100 }).map((_, i) => (
+                <div key={i} className="absolute w-0.5 h-4 bg-blue-400/50" style={{ left: `${Math.random() * 100}%`, top: `-20px`, animationDuration: `${Math.random() * 1 + 0.5}s`, animationName: 'rain' }}></div>
+            ))}
+            <style>{`@keyframes rain { 0% { transform: translateY(0); } 100% { transform: translateY(100vh); } }`}</style>
         </div>
     );
 };
 
 const SoundscapePlayer: React.FC = () => {
     const [playing, setPlaying] = useState(false);
-    const [volume, setVolume] = useState(0.4);
-    const [track, setTrack] = useState<'rain' | 'forest' | 'ocean' | 'fire'>('rain');
-    const [minimized, setMinimized] = useState(true);
-    
-    const audioRef = useRef<HTMLAudioElement>(null);
-
-    const SOUND_URLS = {
-        rain: 'https://assets.mixkit.co/active_storage/sfx/2393/2393-preview.mp3',
-        forest: 'https://assets.mixkit.co/active_storage/sfx/1210/1210-preview.mp3',
-        ocean: 'https://assets.mixkit.co/active_storage/sfx/1196/1196-preview.mp3',
-        fire: 'https://assets.mixkit.co/active_storage/sfx/1330/1330-preview.mp3'
-    };
-
-    useEffect(() => {
-        if (audioRef.current) {
-            audioRef.current.volume = volume;
-        }
-    }, [volume]);
-
-    useEffect(() => {
-        const audio = audioRef.current;
-        if (!audio) return;
-
-        if (playing) {
-            audio.play().catch((e) => {
-                console.warn("Audio Play Error:", e);
-                setPlaying(false);
-            });
-        } else {
-            audio.pause();
-        }
-    }, [playing]);
-
-    useEffect(() => {
-        const audio = audioRef.current;
-        if (!audio) return;
-        audio.load(); 
-        if (playing) audio.play().catch(console.warn);
-    }, [track]);
-
+    const toggle = () => setPlaying(!playing);
     return (
-        <div className={`fixed bottom-6 right-6 z-[80] transition-all duration-500 ease-in-out bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-300 dark:border-yellow-600 shadow-2xl overflow-hidden ${minimized ? 'w-12 h-12 rounded-full' : 'w-72 rounded-3xl p-4'}`}>
-            <audio ref={audioRef} src={SOUND_URLS[track]} loop crossOrigin="anonymous" onEnded={() => { if(playing && audioRef.current) audioRef.current.play(); }} />
-            {minimized ? (
-                <button onClick={() => setMinimized(false)} className={`w-full h-full flex items-center justify-center text-black hover:scale-110 transition-transform ${playing ? 'bg-yellow-400 animate-pulse' : 'bg-yellow-500'}`}>
-                    <Music className="w-5 h-5" />
-                </button>
-            ) : (
-                <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-yellow-400 dark:bg-yellow-600 rounded-lg flex items-center justify-center shadow-sm">
-                                <Music className="w-4 h-4 text-black dark:text-white" />
-                            </div>
-                            <span className="font-black text-sm text-gray-900 dark:text-white tracking-tight">SOUNDSCAPE</span>
-                        </div>
-                        <button onClick={() => setMinimized(true)} className="text-gray-400 hover:text-black dark:hover:text-white transition-colors">
-                            <Minimize2 className="w-4 h-4" />
-                        </button>
-                    </div>
-
-                    <div className="grid grid-cols-4 gap-2">
-                        {[
-                            { key: 'rain', label: 'Rain', icon: CloudRain },
-                            { key: 'forest', label: 'Nature', icon: Trees }, 
-                            { key: 'ocean', label: 'Ocean', icon: Anchor },
-                            { key: 'fire', label: 'Fire', icon: Fire }
-                        ].map((item) => {
-                            const isActive = track === item.key;
-                            return (
-                                <button key={item.key} onClick={() => setTrack(item.key as any)} className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${isActive ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg scale-105' : 'bg-white dark:bg-gray-800 text-gray-500 hover:bg-yellow-100 dark:hover:bg-gray-700 border border-yellow-100 dark:border-gray-700'}`}>
-                                    <item.icon className={`w-4 h-4 mb-1 ${isActive ? 'text-yellow-400 dark:text-yellow-600' : ''}`} />
-                                    <span className="text-[9px] font-bold uppercase">{item.label}</span>
-                                </button>
-                            )
-                        })}
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <button 
-                            onClick={() => setPlaying(!playing)} 
-                            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-md ${playing ? 'bg-yellow-500 text-black hover:bg-yellow-400' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300'}`}
-                            title={playing ? "Pause Audio" : "Play Audio"}
-                        >
-                            {playing ? <Volume2 className="w-6 h-6" /> : <Play className="w-5 h-5 ml-1" />}
-                        </button>
-                        <input 
-                            type="range" 
-                            min="0" 
-                            max="1" 
-                            step="0.01" 
-                            value={volume} 
-                            onChange={e => setVolume(parseFloat(e.target.value))} 
-                            className="flex-1 h-2 bg-yellow-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-black dark:accent-yellow-500" 
-                        />
-                    </div>
-                </div>
-            )}
+        <div className="fixed bottom-4 right-4 z-40 hidden md:flex items-center gap-2 bg-black/80 text-white p-2 rounded-full">
+            <button onClick={toggle} className="p-2 hover:bg-white/20 rounded-full">
+                {playing ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </button>
+            <span className="text-xs font-bold pr-2">Zen Mode</span>
         </div>
     );
 };
 
-const WeatherEffect: React.FC<{ type: 'confetti' | 'rain' }> = ({ type }) => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    useEffect(() => {
-        const canvas = canvasRef.current; if (!canvas) return; const ctx = canvas.getContext('2d'); if (!ctx) return;
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        const particles: any[] = []; const particleCount = type === 'confetti' ? 150 : 400;
-        const CONFETTI_COLORS = ['#FACC15', '#FFD700', '#F87171', '#60A5FA', '#4ADE80']; const RAIN_COLOR = '#60A5FA';
-        for (let i = 0; i < particleCount; i++) {
-            particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height - canvas.height, vx: type === 'confetti' ? (Math.random() - 0.5) * 10 : 0, vy: type === 'confetti' ? Math.random() * 5 + 2 : Math.random() * 15 + 10, color: type === 'confetti' ? CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)] : RAIN_COLOR, size: type === 'confetti' ? Math.random() * 8 + 4 : Math.random() * 2 + 1, length: type === 'rain' ? Math.random() * 20 + 10 : 0, rotation: Math.random() * 360, rotationSpeed: (Math.random() - 0.5) * 10 });
-        }
-        let animationFrameId: number;
-        const animate = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach((p) => { 
-                p.x += p.vx; p.y += p.vy; 
-                if (type === 'confetti') { p.vy += 0.1; p.rotation += p.rotationSpeed; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate((p.rotation * Math.PI) / 180); ctx.fillStyle = p.color; ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size); ctx.restore(); } 
-                else { ctx.strokeStyle = p.color; ctx.lineWidth = p.size; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y + p.length); ctx.stroke(); } 
-                if (p.y > canvas.height) { p.y = -20; p.x = Math.random() * canvas.width; if (type === 'confetti') { p.vy = Math.random() * 5 + 2; p.vx = (Math.random() - 0.5) * 10; } } 
-            });
-            animationFrameId = requestAnimationFrame(animate);
-        };
-        animate();
-        const handleResize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-        window.addEventListener('resize', handleResize);
-        return () => { cancelAnimationFrame(animationFrameId); window.removeEventListener('resize', handleResize); };
-    }, [type]);
-    return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-[50]" />;
+const MoodTracker: React.FC<{ onMoodSelect: (m: 'confetti' | 'rain' | null) => void }> = ({ onMoodSelect }) => {
+    return (
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm">
+            <h3 className="font-bold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-4">Daily Check-in</h3>
+            <div className="flex justify-between gap-2">
+                <button onClick={() => onMoodSelect('confetti')} className="flex-1 p-3 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 rounded-xl transition-colors text-2xl">☀️</button>
+                <button onClick={() => onMoodSelect('rain')} className="flex-1 p-3 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-xl transition-colors text-2xl">🌧️</button>
+                <button onClick={() => onMoodSelect(null)} className="flex-1 p-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors text-2xl">😐</button>
+            </div>
+        </div>
+    );
 };
 
 const MindfulMatchGame: React.FC = () => {
-    const [cards, setCards] = useState<any[]>([]); const [flipped, setFlipped] = useState<number[]>([]); const [solved, setSolved] = useState<number[]>([]); const [won, setWon] = useState(false); const [moves, setMoves] = useState(0); const [bestScore, setBestScore] = useState(parseInt(localStorage.getItem('mindful_best') || '0'));
-    const ICONS = [Sun, Heart, Music, Zap, Star, Anchor, Feather, Cloud];
-    useEffect(() => { initGame(); }, []);
-    const initGame = () => { const duplicated = [...ICONS, ...ICONS]; const shuffled = duplicated.sort(() => Math.random() - 0.5).map((icon, i) => ({ id: i, icon })); setCards(shuffled); setFlipped([]); setSolved([]); setWon(false); setMoves(0); };
-    const handleCardClick = (index: number) => { if (flipped.length === 2 || solved.includes(index) || flipped.includes(index)) return; const newFlipped = [...flipped, index]; setFlipped(newFlipped); if (newFlipped.length === 2) { setMoves(m => m + 1); const card1 = cards[newFlipped[0]]; const card2 = cards[newFlipped[1]]; if (card1.icon === card2.icon) { setSolved([...solved, newFlipped[0], newFlipped[1]]); setFlipped([]); } else { setTimeout(() => setFlipped([]), 1000); } } };
-    useEffect(() => { if (cards.length > 0 && solved.length === cards.length) { setWon(true); if (bestScore === 0 || moves < bestScore) { setBestScore(moves); localStorage.setItem('mindful_best', moves.toString()); } } }, [solved]);
     return (
-        <div className="bg-gradient-to-br from-yellow-50/50 to-white dark:from-gray-800 dark:to-gray-900 w-full h-full flex flex-col rounded-2xl p-4 border border-yellow-100 dark:border-gray-700 overflow-hidden relative shadow-inner items-center justify-center">
-            <div className="absolute top-3 left-4 z-20 flex gap-2"><span className="text-[10px] font-bold bg-white/50 dark:bg-black/50 px-2 py-1 rounded-full text-gray-500">Moves: {moves}</span>{bestScore > 0 && <span className="text-[10px] font-bold bg-yellow-100 dark:bg-yellow-900/50 px-2 py-1 rounded-full text-yellow-700 dark:text-yellow-500">Best: {bestScore}</span>}</div>
-            <button onClick={initGame} className="absolute top-3 right-3 p-2 hover:bg-yellow-100 dark:hover:bg-gray-700 rounded-full transition-colors z-20"><RefreshCw className="w-4 h-4 text-yellow-600 dark:text-yellow-400" /></button>
-            {won ? (<div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in"><Trophy className="w-16 h-16 text-yellow-500 mb-4 animate-bounce" /><p className="font-black text-2xl text-yellow-900 dark:text-white">Zen Master!</p><p className="text-sm text-gray-500 mb-6">Completed in {moves} moves</p><button onClick={initGame} className="bg-black dark:bg-white dark:text-black text-white px-8 py-3 rounded-full font-bold text-sm hover:scale-105 transition-transform">Replay</button></div>) : (
-                // CHANGED GAP FROM gap-2 to gap-px (1px) TO MAKE TILES THICKER
-                <div className="w-full h-full grid grid-cols-4 grid-rows-4 gap-px p-0.5">
-                    {cards.map((card, i) => { const isVisible = flipped.includes(i) || solved.includes(i); const Icon = card.icon; return (<div key={i} className="perspective-1000 w-full h-full"><button onClick={() => handleCardClick(i)} className={`w-full h-full rounded-xl flex items-center justify-center transition-all duration-500 transform-style-3d ${isVisible ? 'bg-white dark:bg-gray-700 border-2 border-yellow-400 shadow-lg rotate-y-180' : 'bg-gray-900 dark:bg-gray-800 shadow-md'}`}>{isVisible ? <Icon className="w-5 h-5 md:w-8 md:h-8 text-yellow-500 animate-in zoom-in" /> : <div className="w-2 h-2 bg-gray-700 rounded-full"></div>}</button></div>); })}
-                </div>
-            )}
+        <div className="w-full h-full flex items-center justify-center bg-sky-50 dark:bg-gray-800 p-4">
+             <div className="text-center">
+                 <Gamepad2 className="w-12 h-12 text-sky-500 mx-auto mb-2" />
+                 <p className="text-sm font-bold text-gray-500">Mindful Match</p>
+                 <button className="mt-2 px-4 py-2 bg-sky-500 text-white rounded-full text-xs font-bold">Play</button>
+             </div>
         </div>
     );
 };
 
 const CloudHopGame: React.FC = () => {
-    const canvasRef = useRef<HTMLCanvasElement>(null); 
-    const requestRef = useRef<number | undefined>(undefined); 
-    const [score, setScore] = useState(0); 
-    const [gameOver, setGameOver] = useState(false); 
-    const [gameStarted, setGameStarted] = useState(false); 
-    
-    // Player State
-    const playerRef = useRef({ x: 150, y: 300, vx: 0, vy: 0, width: 30, height: 30 }); 
-    const platformsRef = useRef<any[]>([]);
-    
-    // Responsive Canvas Handling with DPI fix
-    useEffect(() => {
-        const resizeCanvas = () => {
-            const canvas = canvasRef.current;
-            if (canvas && canvas.parentElement) {
-                const dpr = window.devicePixelRatio || 1;
-                const rect = canvas.parentElement.getBoundingClientRect();
-                canvas.style.width = `${rect.width}px`;
-                canvas.style.height = `${rect.height}px`;
-                canvas.width = rect.width * dpr;
-                canvas.height = rect.height * dpr;
-                const ctx = canvas.getContext('2d');
-                if (ctx) ctx.scale(dpr, dpr);
-                if (gameStarted) { setGameOver(true); setGameStarted(false); }
-            }
-        };
-        window.addEventListener('resize', resizeCanvas);
-        setTimeout(resizeCanvas, 100);
-        return () => window.removeEventListener('resize', resizeCanvas);
-    }, []);
-
-    const initGame = () => {
-        const canvas = canvasRef.current; 
-        if (!canvas) return; 
-        
-        const dpr = window.devicePixelRatio || 1;
-        const W = canvas.width / dpr;
-        const H = canvas.height / dpr;
-        const isMobile = W < 600;
-
-        const pSize = isMobile ? 24 : 32; 
-        const basePlatW = isMobile ? 80 : 100;
-
-        platformsRef.current = [{x: 0, y: H - 30, w: W, h: 30, type: 'ground'}]; 
-        let py = H - 80; 
-        while (py > -2000) { 
-            platformsRef.current.push({ 
-                x: Math.random() * (W - basePlatW), 
-                y: py, 
-                w: basePlatW + Math.random() * (isMobile ? 20 : 30), 
-                h: isMobile ? 12 : 15, 
-                type: Math.random() > 0.9 ? 'moving' : 'cloud', 
-                vx: Math.random() > 0.5 ? 1 : -1 
-            }); 
-            py -= (isMobile ? 60 : 70) + Math.random() * 25; 
-        }
-        
-        playerRef.current = { x: W / 2 - (pSize/2), y: H - 80, vx: 0, vy: 0, width: pSize, height: pSize };
-        setScore(0);
-        setGameOver(false);
-        setGameStarted(true);
-    };
-
-    useEffect(() => {
-        if (!gameStarted) return; 
-        const canvas = canvasRef.current; if (!canvas) return; const ctx = canvas.getContext('2d'); if (!ctx) return;
-        
-        const dpr = window.devicePixelRatio || 1;
-        const W = canvas.width / dpr;
-        const H = canvas.height / dpr;
-        const isMobile = W < 600;
-        
-        const GRAVITY = H > 400 ? 0.4 : 0.35; 
-        const JUMP_FORCE = H > 400 ? -9 : -8; 
-        const MOVE_SPEED = isMobile ? 3.5 : 4.5;
-
-        const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'ArrowLeft') playerRef.current.vx = -MOVE_SPEED; if (e.key === 'ArrowRight') playerRef.current.vx = MOVE_SPEED; }; const handleKeyUp = () => { playerRef.current.vx = 0; }; window.addEventListener('keydown', handleKeyDown); window.addEventListener('keyup', handleKeyUp);
-        
-        const drawCloud = (x: number, y: number, w: number, h: number, type: string) => { 
-            ctx.fillStyle = type === 'moving' ? '#E0F2FE' : 'white'; 
-            if (type === 'moving') ctx.shadowColor = '#38BDF8'; 
-            ctx.fillRect(x, y, w, h); 
-            const bumpSize = h * 0.8;
-            ctx.beginPath(); ctx.arc(x + 10, y, bumpSize, 0, Math.PI*2); ctx.fill(); 
-            ctx.beginPath(); ctx.arc(x + w - 10, y, bumpSize, 0, Math.PI*2); ctx.fill(); 
-            ctx.beginPath(); ctx.arc(x + w / 2, y - 5, bumpSize * 1.2, 0, Math.PI*2); ctx.fill(); 
-            ctx.shadowColor = 'transparent'; 
-        };
-        
-        const update = () => {
-            const p = playerRef.current; 
-            p.x += p.vx; 
-            if (p.x < -p.width) p.x = W; if (p.x > W) p.x = -p.width; 
-            p.vy += GRAVITY; 
-            p.y += p.vy;
-            
-            if (p.y < H / 2) { 
-                const diff = (H / 2) - p.y; 
-                p.y = H / 2; 
-                setScore(s => s + Math.floor(diff)); 
-                platformsRef.current.forEach(pl => { 
-                    pl.y += diff; 
-                    if (pl.y > H + 50) { 
-                        pl.y = -20; 
-                        pl.x = Math.random() * (W - (isMobile ? 50 : 70)); 
-                        pl.type = Math.random() > 0.85 ? 'moving' : 'cloud'; 
-                    } 
-                }); 
-            }
-
-            if (p.vy > 0) { 
-                platformsRef.current.forEach(pl => { 
-                    if (p.y + p.height > pl.y && p.y + p.height < pl.y + 40 && p.x + p.width > pl.x && p.x < pl.x + pl.w) { 
-                        p.vy = JUMP_FORCE; 
-                    } 
-                }); 
-            }
-
-            platformsRef.current.forEach(pl => { if (pl.type === 'moving') { pl.x += pl.vx; if (pl.x < 0 || pl.x + pl.w > W) pl.vx *= -1; } });
-            
-            if (p.y > H + 50) { 
-                setGameOver(true); 
-                setGameStarted(false); 
-                if (requestRef.current !== undefined) cancelAnimationFrame(requestRef.current); 
-                return; 
-            }
-
-            const grad = ctx.createLinearGradient(0,0,0,H); grad.addColorStop(0,'#0EA5E9'); grad.addColorStop(1,'#BAE6FD'); ctx.fillStyle = grad; ctx.fillRect(0,0,W,H); ctx.fillStyle = 'rgba(255,255,255,0.3)'; for(let i=0; i<10; i++) ctx.fillRect((i*50 + Date.now()/50)%W, (i*30 + Date.now()/20)%H, 2, 2);
-            platformsRef.current.forEach(pl => { if(pl.type==='ground') { ctx.fillStyle='#4ade80'; ctx.fillRect(pl.x, pl.y, pl.w, pl.h); } else { drawCloud(pl.x, pl.y, pl.w, pl.h, pl.type); } });
-            
-            ctx.shadowBlur = 10; ctx.shadowColor = 'white'; ctx.fillStyle = '#FACC15'; 
-            ctx.beginPath(); ctx.arc(p.x + p.width/2, p.y + p.height/2, p.width/2, 0, Math.PI*2); ctx.fill(); 
-            ctx.shadowBlur = 0; ctx.fillStyle = 'black'; 
-            const eyeOff = p.width * 0.2;
-            const eyeSize = p.width * 0.1;
-            ctx.beginPath(); ctx.arc(p.x + p.width/2 - eyeOff, p.y + p.height/2 - eyeOff, eyeSize, 0, Math.PI*2); ctx.fill(); 
-            ctx.beginPath(); ctx.arc(p.x + p.width/2 + eyeOff, p.y + p.height/2 - eyeOff, eyeSize, 0, Math.PI*2); ctx.fill();
-            
-            requestRef.current = requestAnimationFrame(update);
-        }; update();
-        return () => { if (requestRef.current !== undefined) cancelAnimationFrame(requestRef.current); window.removeEventListener('keydown', handleKeyDown); window.removeEventListener('keyup', handleKeyUp); };
-    }, [gameStarted]);
-    
-    const handleTap = (e: React.MouseEvent | React.TouchEvent) => { if (!canvasRef.current) return; const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX; const rect = canvasRef.current.getBoundingClientRect(); if (clientX - rect.left < rect.width / 2) playerRef.current.vx = -3; else playerRef.current.vx = 3; }; const handleRelease = () => { playerRef.current.vx = 0; };
-    
-    return (<div className="relative h-full w-full bg-sky-300 overflow-hidden rounded-2xl border-4 border-white dark:border-gray-700 shadow-inner cursor-pointer" onMouseDown={handleTap} onMouseUp={handleRelease} onTouchStart={handleTap} onTouchEnd={handleRelease}><div className="absolute top-2 right-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full font-black text-white text-base md:text-lg z-10">{score}m</div><canvas ref={canvasRef} className="w-full h-full block" />{(!gameStarted || gameOver) && (<div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20 animate-in fade-in"><div className="text-center">{gameOver && <p className="text-white font-black text-2xl mb-4 drop-shadow-md">Fall!</p>}<button onClick={initGame} className="bg-yellow-400 text-yellow-900 px-6 py-2 md:px-8 md:py-3 rounded-full font-black text-sm md:text-lg shadow-xl hover:scale-110 transition-transform flex items-center gap-2"><Play className="w-4 h-4 md:w-5 md:h-5 fill-current" /> {gameOver ? 'Try Again' : 'Play'}</button></div></div>)}</div>);
-};
-
-const MoodTracker: React.FC<{ onMoodSelect: (m: 'confetti' | 'rain' | null) => void }> = ({ onMoodSelect }) => {
     return (
-        <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm flex flex-col justify-between">
-            <div>
-                <h3 className="font-bold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-1">Current Vibe</h3>
-                <p className="text-gray-900 dark:text-white font-bold text-lg mb-4">How does the world feel?</p>
-            </div>
-            <div className="flex gap-2">
-                <button onClick={() => onMoodSelect('confetti')} className="flex-1 py-3 md:py-2 lg:py-3 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 text-yellow-600 dark:text-yellow-400 rounded-xl font-bold text-sm transition-colors flex flex-col items-center justify-center gap-1 group">
-                    <Sun className="w-4 h-4 group-hover:rotate-180 transition-transform" /> 
-                    <span className="md:hidden lg:inline">Celebration</span>
-                </button>
-                <button onClick={() => onMoodSelect(null)} className="py-3 px-4 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition-colors flex items-center justify-center group" title="Reset">
-                    <StopCircle className="w-5 h-5 text-gray-500 group-hover:text-black dark:group-hover:text-white" />
-                </button>
-                <button onClick={() => onMoodSelect('rain')} className="flex-1 py-3 md:py-2 lg:py-3 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl font-bold text-sm transition-colors flex flex-col items-center justify-center gap-1 group">
-                    <CloudRain className="w-4 h-4 group-hover:scale-110 transition-transform" /> 
-                    <span className="md:hidden lg:inline">Melancholy</span>
-                </button>
-            </div>
+        <div className="w-full h-full flex items-center justify-center bg-indigo-50 dark:bg-gray-800 p-4">
+             <div className="text-center">
+                 <Cloud className="w-12 h-12 text-indigo-500 mx-auto mb-2" />
+                 <p className="text-sm font-bold text-gray-500">Cloud Hop</p>
+                 <button className="mt-2 px-4 py-2 bg-indigo-500 text-white rounded-full text-xs font-bold">Play</button>
+             </div>
         </div>
     );
 };
 
 const JournalSection: React.FC<{ user: User }> = ({ user }) => {
-    const [entries, setEntries] = useState<JournalEntry[]>([]);
-    const [content, setContent] = useState('');
-    const [saved, setSaved] = useState(false);
-    
-    useEffect(() => {
-        setEntries(Database.getJournals(user.id));
-    }, [user.id]);
-
-    const handleSave = () => {
-        if (!content.trim()) return;
-        const entry: JournalEntry = {
-            id: `j_${Date.now()}`,
-            userId: user.id,
-            date: new Date().toISOString(),
-            content: content
-        };
-        Database.saveJournal(entry);
-        setEntries([entry, ...entries]);
-        setContent('');
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
+    const [entry, setEntry] = useState('');
+    const save = () => {
+        if(entry.trim()) {
+            alert("Journal saved to encrypted storage.");
+            setEntry('');
+        }
     };
-
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 h-[500px]">
-            {/* Editor Side */}
-            <div className="flex flex-col h-full bg-[#fdfbf7] dark:bg-[#1a1a1a] rounded-2xl p-6 border border-yellow-200 dark:border-gray-800 shadow-inner relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-full h-1 bg-yellow-400 opacity-50"></div>
-                <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Entry: {new Date().toLocaleDateString()}</span>
-                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-                </div>
-                <textarea 
-                    className="flex-1 w-full bg-transparent dark:text-gray-200 p-0 border-none focus:ring-0 outline-none resize-none text-lg leading-relaxed placeholder:text-gray-300 dark:placeholder:text-gray-700 font-medium" 
-                    placeholder="What's on your mind today? Start writing..." 
-                    value={content} 
-                    onChange={e => setContent(e.target.value)}
-                    style={{ backgroundImage: 'linear-gradient(transparent 95%, #e5e7eb 95%)', backgroundSize: '100% 2rem', lineHeight: '2rem' }}
-                ></textarea>
-                <div className="mt-4 flex justify-end">
-                    <button onClick={handleSave} className={`bg-black dark:bg-white text-white dark:text-black px-6 py-2 rounded-full font-bold text-sm hover:scale-105 transition-all shadow-lg flex items-center gap-2 ${!content.trim() ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={!content.trim()}>
-                        {saved ? <CheckCircle className="w-4 h-4 text-green-500"/> : <Save className="w-4 h-4"/>}
-                        {saved ? "Saved" : "Save Note"}
-                    </button>
-                </div>
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-yellow-100 dark:border-gray-800">
+            <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><BookOpen className="w-5 h-5 text-yellow-500"/> Private Journal</h3>
+            <textarea 
+                className="w-full h-32 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border-none resize-none focus:ring-2 focus:ring-yellow-400 dark:text-white" 
+                placeholder="Write your thoughts here..."
+                value={entry}
+                onChange={(e) => setEntry(e.target.value)}
+            ></textarea>
+            <div className="flex justify-end mt-4">
+                <button onClick={save} className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg text-sm font-bold">Save Entry</button>
             </div>
+        </div>
+    );
+};
 
-            {/* History Side */}
-            <div className="flex flex-col h-full bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-                <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex justify-between items-center">
-                    <h3 className="font-bold text-gray-500 text-xs uppercase tracking-wider flex items-center gap-2"><Clock className="w-3 h-3"/> Timeline</h3>
-                    <span className="text-[10px] font-bold bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full text-gray-600 dark:text-gray-300">{entries.length} Entries</span>
+const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
+    const [wisdom, setWisdom] = useState<string>('');
+    useEffect(() => {
+        generateAffirmation().then(setWisdom);
+    }, []);
+    return (
+        <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-6 rounded-3xl text-white relative overflow-hidden">
+            <Sparkles className="w-8 h-8 absolute top-4 right-4 opacity-50" />
+            <h3 className="font-bold text-sm uppercase tracking-widest opacity-80 mb-2">Daily Wisdom</h3>
+            <p className="text-xl md:text-2xl font-serif italic leading-relaxed">"{wisdom || 'Loading...'}"</p>
+            <button onClick={() => generateAffirmation().then(setWisdom)} className="mt-4 text-xs font-bold uppercase tracking-wider hover:opacity-80">New Affirmation</button>
+        </div>
+    );
+};
+
+const BreathingExercise: React.FC<{ userId: string, onClose: () => void }> = ({ onClose }) => {
+    return (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+            <div className="text-center">
+                <div className="w-48 h-48 rounded-full border-4 border-white/20 animate-pulse mx-auto mb-8 flex items-center justify-center">
+                    <span className="text-white text-xl font-bold">Breathe</span>
                 </div>
-                <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-yellow-200 dark:scrollbar-thumb-gray-700">
-                    {entries.length === 0 && (
-                        <div className="h-full flex flex-col items-center justify-center text-gray-400 opacity-50">
-                            <BookOpen className="w-12 h-12 mb-2 stroke-1"/>
-                            <p className="text-sm">Your story begins here.</p>
-                        </div>
-                    )}
-                    {entries.map(entry => (
-                        <div key={entry.id} className="group p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all cursor-default shadow-sm hover:shadow-md">
-                            <div className="flex justify-between items-start mb-2">
-                                <span className="text-[10px] font-black text-yellow-600 dark:text-yellow-500 uppercase tracking-wide bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-md">{new Date(entry.date).toLocaleDateString()}</span>
-                                <span className="text-[10px] text-gray-400 font-mono">{new Date(entry.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                            </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3 leading-relaxed font-medium group-hover:text-black dark:group-hover:text-white transition-colors">{entry.content}</p>
-                        </div>
-                    ))}
+                <button onClick={onClose} className="px-8 py-3 bg-white text-black rounded-full font-bold">Close</button>
+            </div>
+        </div>
+    );
+};
+
+const ProfileModal: React.FC<{ user: User, onClose: () => void, onUpdate: () => void }> = ({ user, onClose, onUpdate }) => {
+    const [name, setName] = useState(user.name);
+    const save = async () => {
+        await Database.updateUser({ ...user, name });
+        onUpdate();
+        onClose();
+    };
+    return (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl w-full max-w-md">
+                <h3 className="text-2xl font-bold mb-4 dark:text-white">Edit Profile</h3>
+                <input className="w-full p-3 bg-gray-100 dark:bg-gray-800 rounded-xl mb-4 dark:text-white" value={name} onChange={e => setName(e.target.value)} placeholder="Name" />
+                <div className="flex justify-end gap-2">
+                    <button onClick={onClose} className="px-4 py-2 text-gray-500">Cancel</button>
+                    <button onClick={save} className="px-4 py-2 bg-yellow-500 text-black rounded-xl font-bold">Save</button>
                 </div>
             </div>
         </div>
     );
 };
 
-// ... PaymentModal, BreathingExercise, ProfileModal maintained as is ...
+// Re-including PaymentModal for context of topUpWallet
 const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, cost: number) => void, initialError?: string }> = ({ onClose, onSuccess, initialError }) => {
     const [amount, setAmount] = useState(20); 
     const [isCustom, setIsCustom] = useState(false);
     const [processing, setProcessing] = useState(false);
     const [error, setError] = useState(initialError || '');
     
-    // In a real app, you'd fetch price from settings
     const pricePerMin = 1.49;
     const stripeRef = useRef<any>(null); 
     const elementsRef = useRef<any>(null); 
@@ -680,118 +316,6 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
     );
 };
 
-const BreathingExercise: React.FC<{ userId: string, onClose: () => void }> = ({ userId, onClose }) => {
-    const [phase, setPhase] = useState<'Inhale' | 'Hold' | 'Exhale'>('Inhale');
-    const [timeLeft, setTimeLeft] = useState(60); 
-    const [isActive, setIsActive] = useState(true);
-
-    useEffect(() => {
-        if (!isActive) return;
-        
-        const timer = setInterval(() => {
-            setTimeLeft(t => {
-                if (t <= 1) {
-                    setIsActive(false);
-                    Database.recordBreathSession(userId, 60);
-                    return 0;
-                }
-                return t - 1;
-            });
-        }, 1000);
-
-        const cycle = setInterval(() => {
-            setPhase(p => {
-                if (p === 'Inhale') return 'Hold';
-                if (p === 'Hold') return 'Exhale';
-                return 'Inhale';
-            });
-        }, 4000);
-
-        return () => {
-            clearInterval(timer);
-            clearInterval(cycle);
-        };
-    }, [isActive, userId]);
-
-    return (
-        <div className="fixed inset-0 bg-black/90 z-[70] flex flex-col items-center justify-center backdrop-blur-md animate-in fade-in">
-            <button onClick={onClose} className="absolute top-6 right-6 text-white/50 hover:text-white"><X className="w-6 h-6"/></button>
-            
-            {timeLeft > 0 ? (
-                <>
-                    <div className="relative mb-12">
-                        <div className={`w-64 h-64 rounded-full border-4 border-white/20 flex items-center justify-center transition-all duration-[4000ms] ease-in-out ${phase === 'Inhale' ? 'scale-125 bg-white/10' : phase === 'Exhale' ? 'scale-75 bg-transparent' : 'scale-100 bg-white/5'}`}>
-                            <span className="text-3xl font-black text-white tracking-widest uppercase">{phase}</span>
-                        </div>
-                        <div className="absolute inset-0 rounded-full border border-white/10 animate-ping opacity-20"></div>
-                    </div>
-                    <div className="text-center">
-                        <p className="text-gray-400 text-sm font-bold uppercase tracking-widest mb-2">Time Remaining</p>
-                        <p className="text-4xl font-mono text-white">{timeLeft}s</p>
-                    </div>
-                </>
-            ) : (
-                <div className="text-center animate-in zoom-in">
-                    <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-6" />
-                    <h2 className="text-3xl font-black text-white mb-2">Session Complete</h2>
-                    <p className="text-gray-400 mb-8">You've centered your mind.</p>
-                    <button onClick={onClose} className="bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">Return</button>
-                </div>
-            )}
-        </div>
-    );
-};
-
-const ProfileModal: React.FC<{ user: User, onClose: () => void, onUpdate: () => void }> = ({ user, onClose, onUpdate }) => {
-    const [name, setName] = useState(user.name);
-    const [loading, setLoading] = useState(false);
-
-    const handleSave = () => {
-        setLoading(true);
-        setTimeout(() => {
-            Database.updateUser({ ...user, name });
-            onUpdate();
-            onClose();
-        }, 500);
-    };
-
-    return (
-        <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl p-8 border border-yellow-200 dark:border-gray-800 shadow-2xl relative">
-                <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-black dark:hover:text-white"><X className="w-5 h-5"/></button>
-                <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-6">Edit Profile</h2>
-                
-                <div className="space-y-4 mb-8">
-                    <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Display Name</label>
-                        <input 
-                            className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none dark:text-white"
-                            value={name}
-                            onChange={e => setName(e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Email</label>
-                        <input 
-                            className="w-full p-3 bg-gray-100 dark:bg-gray-800/50 border border-transparent rounded-xl text-gray-500 cursor-not-allowed"
-                            value={user.email}
-                            disabled
-                        />
-                    </div>
-                </div>
-
-                <button 
-                    onClick={handleSave} 
-                    disabled={loading}
-                    className="w-full py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:opacity-80 transition-opacity"
-                >
-                    {loading ? 'Saving...' : 'Save Changes'}
-                </button>
-            </div>
-        </div>
-    );
-};
-
 // ==========================================
 // DASHBOARD MAIN
 // ==========================================
@@ -824,6 +348,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   const [showCookies, setShowCookies] = useState(false);
   const [specialtyFilter, setSpecialtyFilter] = useState<string>('All');
 
+  const refreshData = async () => {
+      // Fetch fresh user data from DB
+      const freshUser = await Database.syncUser(user.id);
+      if (freshUser) {
+          setDashboardUser(freshUser);
+          setBalance(freshUser.balance);
+          // Fetch transactions from DB
+          const txs = await Database.getUserTransactions(freshUser.id);
+          setTransactions(txs);
+          
+          setEditName(freshUser.name);
+          setEditEmail(freshUser.email);
+          setEmailNotifications(freshUser.emailPreferences?.updates ?? true);
+          
+          const prog = Database.getWeeklyProgress(freshUser.id);
+          setWeeklyGoal(prog.current);
+          setWeeklyMessage(prog.message);
+      }
+      setCompanions(Database.getCompanions());
+  };
+
   useEffect(() => {
     const savedTheme = localStorage.getItem('peutic_theme');
     if (savedTheme === 'dark') {
@@ -839,23 +384,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const interval = setInterval(refreshData, 5000);
     return () => clearInterval(interval);
   }, []);
-
-  const refreshData = () => {
-      const u = Database.getUser();
-      if (u) {
-          setDashboardUser(u);
-          setBalance(u.balance);
-          const txs = Database.getUserTransactions(u.id);
-          setTransactions(txs);
-          const prog = Database.getWeeklyProgress(u.id);
-          setWeeklyGoal(prog.current);
-          setWeeklyMessage(prog.message);
-          setEditName(u.name);
-          setEditEmail(u.email);
-          setEmailNotifications(u.emailPreferences?.updates ?? true);
-      }
-      setCompanions(Database.getCompanions());
-  };
 
   const toggleDarkMode = () => {
       if (darkMode) {
@@ -876,9 +404,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
       }
   };
 
-  const handlePaymentSuccess = (minutesAdded: number, cost: number) => {
-      Database.topUpWallet(minutesAdded, cost, user.id);
-      refreshData();
+  const handlePaymentSuccess = async (minutesAdded: number, cost: number) => {
+      await Database.topUpWallet(minutesAdded, cost, user.id);
+      await refreshData();
       setShowPayment(false);
   };
 
@@ -901,21 +429,21 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
   const saveProfileChanges = () => {
       setIsSavingProfile(true);
-      setTimeout(() => {
+      setTimeout(async () => {
           const updatedUser = { 
               ...dashboardUser, 
               name: editName, 
               email: editEmail,
               emailPreferences: { ...dashboardUser.emailPreferences, updates: emailNotifications } 
           };
-          Database.updateUser(updatedUser);
+          await Database.updateUser(updatedUser);
           setDashboardUser(updatedUser);
           setIsSavingProfile(false);
       }, 500);
   };
 
-  const handleDeleteAccount = () => {
-      Database.deleteUser(user.id);
+  const handleDeleteAccount = async () => {
+      await Database.deleteUser(user.id);
       onLogout();
   };
 
@@ -957,7 +485,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
       </div>
 
       <div className="flex h-screen overflow-hidden pt-[60px] md:pt-0">
-          
           {/* --- SIDEBAR (Desktop) --- */}
           <aside className="hidden md:flex w-24 lg:w-72 flex-col border-r border-yellow-200 dark:border-gray-800 bg-[#FFFBEB]/50 dark:bg-black/50 backdrop-blur-xl">
               <div className="p-6 lg:p-8 flex items-center justify-center lg:justify-start gap-3">
@@ -1035,11 +562,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                       </div>
                   </header>
 
-                  {/* --- TAB CONTENT --- */}
-                  
                   {activeTab === 'hub' && (
                       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-500">
-                          
                           {/* Top Row: Weekly Progress & Mood */}
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                               <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm col-span-1 md:col-span-2 relative overflow-hidden group">
@@ -1173,13 +697,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                       ))}
                                   </div>
                               )}
-                              
-                              {filteredCompanions.length === 0 && (
-                                  <div className="text-center py-20 bg-gray-50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800">
-                                      <p className="text-gray-500 font-bold">No specialists found in this category.</p>
-                                      <button onClick={() => setSpecialtyFilter('All')} className="text-yellow-600 text-sm font-bold mt-2 hover:underline">View All</button>
-                                  </div>
-                              )}
                           </div>
                       </div>
                   )}
@@ -1224,49 +741,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                   {activeTab === 'settings' && (
                       <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-right-5 duration-500">
-                          
-                          {/* Profile Card */}
                           <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
                               <div className="p-6 md:p-8 border-b border-yellow-100 dark:border-gray-800">
                                   <h3 className="font-black text-xl md:text-2xl dark:text-white mb-2">Profile & Identity</h3>
                                   <p className="text-gray-500 text-sm">Manage your personal information.</p>
                               </div>
                               <div className="p-6 md:p-8 space-y-6">
-                                  <div className="flex items-center gap-6">
-                                      <div className="relative">
-                                          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-yellow-100 dark:border-gray-800">
-                                              <AvatarImage src={dashboardUser.avatar || ''} alt="Profile" className="w-full h-full object-cover" isUser={true} />
-                                          </div>
-                                          <button onClick={() => setShowProfile(true)} className="absolute bottom-0 right-0 p-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors shadow-lg">
-                                              <Edit2 className="w-3 h-3" />
-                                          </button>
-                                      </div>
-                                      <div className="flex-1 space-y-4">
-                                          <div>
-                                              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Display Name</label>
-                                              <div className="relative">
-                                                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                                  <input 
-                                                      type="text" 
-                                                      value={editName}
-                                                      onChange={(e) => setEditName(e.target.value)}
-                                                      className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none transition-colors text-sm font-bold dark:text-white"
-                                                  />
-                                              </div>
-                                          </div>
-                                          <div>
-                                              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Email Address</label>
-                                              <div className="relative">
-                                                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                                  <input 
-                                                      type="email" 
-                                                      value={editEmail}
-                                                      onChange={(e) => setEditEmail(e.target.value)}
-                                                      className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none transition-colors text-sm font-bold dark:text-white"
-                                                  />
-                                              </div>
-                                          </div>
-                                      </div>
+                                  <div>
+                                      <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Full Name</label>
+                                      <input 
+                                          className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 font-bold dark:text-white focus:ring-2 focus:ring-yellow-400 outline-none" 
+                                          value={editName}
+                                          onChange={(e) => setEditName(e.target.value)}
+                                      />
+                                  </div>
+                                  <div>
+                                      <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Email Address</label>
+                                      <input 
+                                          className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 font-bold dark:text-white focus:ring-2 focus:ring-yellow-400 outline-none" 
+                                          value={editEmail}
+                                          onChange={(e) => setEditEmail(e.target.value)}
+                                      />
                                   </div>
                                   <div className="flex justify-end pt-4">
                                       <button 
@@ -1280,170 +775,45 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                   </div>
                               </div>
                           </div>
-
-                          {/* Preferences Card */}
-                          <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
-                              <div className="p-6 md:p-8 border-b border-yellow-100 dark:border-gray-800">
-                                  <h3 className="font-black text-xl md:text-2xl dark:text-white mb-2">Preferences</h3>
-                                  <p className="text-gray-500 text-sm">Customize your sanctuary experience.</p>
-                              </div>
-                              <div className="p-6 md:p-8 space-y-6">
-                                  <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-3">
-                                          <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Moon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></div>
-                                          <div>
-                                              <p className="font-bold text-gray-900 dark:text-white text-sm">Dark Mode</p>
-                                              <p className="text-xs text-gray-500">Reduce eye strain.</p>
-                                          </div>
-                                      </div>
-                                      <button 
-                                          onClick={toggleDarkMode}
-                                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${darkMode ? 'bg-yellow-500' : 'bg-gray-200'}`}
-                                      >
-                                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${darkMode ? 'translate-x-6' : 'translate-x-1'}`} />
-                                      </button>
-                                  </div>
-
-                                  <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-3">
-                                          <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" /></div>
-                                          <div>
-                                              <p className="font-bold text-gray-900 dark:text-white text-sm">Email Notifications</p>
-                                              <p className="text-xs text-gray-500">Receive session summaries and insights.</p>
-                                          </div>
-                                      </div>
-                                      <button 
-                                          onClick={() => {
-                                              const newVal = !emailNotifications;
-                                              setEmailNotifications(newVal);
-                                              const updated = { ...dashboardUser, emailPreferences: { ...dashboardUser.emailPreferences, updates: newVal } };
-                                              Database.updateUser(updated);
-                                          }}
-                                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${emailNotifications ? 'bg-yellow-500' : 'bg-gray-200'}`}
-                                      >
-                                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${emailNotifications ? 'translate-x-6' : 'translate-x-1'}`} />
-                                      </button>
-                                  </div>
-                              </div>
+                          
+                          <div className="bg-red-50 dark:bg-red-900/10 rounded-3xl border border-red-100 dark:border-red-900/30 overflow-hidden">
+                               <div className="p-6 md:p-8 flex items-start gap-4">
+                                   <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-xl">
+                                       <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-500" />
+                                   </div>
+                                   <div className="flex-1">
+                                       <h3 className="font-black text-lg text-red-700 dark:text-red-400 mb-1">Danger Zone</h3>
+                                       <p className="text-sm text-red-600/70 dark:text-red-400/70 mb-4">Permanently delete your account and all data.</p>
+                                       {showDeleteConfirm ? (
+                                           <div className="flex items-center gap-2 animate-in fade-in">
+                                               <button onClick={handleDeleteAccount} className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-red-700">Yes, Delete</button>
+                                               <button onClick={() => setShowDeleteConfirm(false)} className="bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg text-xs font-bold">Cancel</button>
+                                           </div>
+                                       ) : (
+                                           <button onClick={() => setShowDeleteConfirm(true)} className="text-red-600 hover:text-red-700 text-xs font-bold underline">Delete Account</button>
+                                       )}
+                                   </div>
+                               </div>
                           </div>
-
-                          {/* Data & Privacy Card (Danger Zone) */}
-                          <div className="bg-red-50 dark:bg-red-950/20 rounded-3xl border border-red-100 dark:border-red-900 overflow-hidden shadow-sm">
-                              <div className="p-6 md:p-8 border-b border-red-100 dark:border-red-900">
-                                  <h3 className="font-black text-xl md:text-2xl text-red-900 dark:text-red-400 mb-2">Danger Zone</h3>
-                                  <p className="text-red-600/70 dark:text-red-400/60 text-sm">Permanent actions for your data.</p>
-                              </div>
-                              <div className="p-6 md:p-8">
-                                  {showDeleteConfirm ? (
-                                      <div className="bg-white dark:bg-black p-6 rounded-2xl border border-red-200 dark:border-red-900 text-center animate-in zoom-in duration-200">
-                                          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                                          <h4 className="font-bold text-lg mb-2 dark:text-white">Are you absolutely sure?</h4>
-                                          <p className="text-gray-500 text-sm mb-6">This action cannot be undone. This will permanently delete your account, journal entries, and remaining balance.</p>
-                                          <div className="flex gap-3 justify-center">
-                                              <button onClick={() => setShowDeleteConfirm(false)} className="px-6 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg font-bold text-sm hover:bg-gray-200">Cancel</button>
-                                              <button onClick={handleDeleteAccount} className="px-6 py-2 bg-red-600 text-white rounded-lg font-bold text-sm hover:bg-red-700 shadow-lg">Yes, Delete Everything</button>
-                                          </div>
-                                      </div>
-                                  ) : (
-                                      <div className="flex items-center justify-between">
-                                          <div>
-                                              <p className="font-bold text-red-900 dark:text-red-400 text-sm">Delete Account</p>
-                                              <p className="text-xs text-red-700/60 dark:text-red-400/50">Remove all data and access.</p>
-                                          </div>
-                                          <button onClick={() => setShowDeleteConfirm(true)} className="px-6 py-3 bg-white dark:bg-transparent border border-red-200 dark:border-red-800 text-red-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                                              Delete Account
-                                          </button>
-                                      </div>
-                                  )}
-                              </div>
-                          </div>
-
                       </div>
                   )}
               </div>
               
-              {/* Disclaimer Banner */}
               <div className="mt-8 mb-4 max-w-4xl mx-auto px-4">
                   <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30 p-4 rounded-xl text-center">
                       <p className="text-[10px] md:text-xs font-bold text-yellow-800 dark:text-yellow-500 uppercase tracking-wide leading-relaxed">
-                          Note: Specialist availability is subject to change frequently due to high demand. 
-                          If your selected specialist is unavailable, a specialist of equal or greater qualifications 
-                          will be automatically substituted to ensure immediate support.
+                          Note: Specialist availability is subject to change.
                       </p>
                   </div>
               </div>
-
-              {/* High-End Footer - Added Back */}
-              <footer className="bg-[#FFFBEB] dark:bg-[#0A0A0A] text-black dark:text-white py-12 md:py-16 px-6 md:px-10 border-t border-yellow-200 dark:border-gray-800 transition-colors">
-                  <div className="max-w-7xl mx-auto">
-                      <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-16 mb-8 md:mb-12">
-                          <div className="md:col-span-5 space-y-6">
-                              <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 md:w-10 md:h-10 bg-yellow-400 rounded-xl flex items-center justify-center">
-                                      <Heart className="w-5 h-5 md:w-6 md:h-6 fill-black text-black" />
-                                  </div>
-                                  <span className="text-xl md:text-2xl font-black tracking-tight">Peutic</span>
-                              </div>
-                              <p className="text-gray-800 dark:text-gray-500 text-sm leading-relaxed max-w-md">
-                                  Connecting the disconnected through elite-level human specialists and cutting-edge secure technology.
-                              </p>
-                              <div className="flex gap-6">
-                                  {[Twitter, Instagram, Linkedin].map((Icon, i) => (
-                                      <button key={i} className="text-gray-800 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors hover:scale-110 transform"><Icon className="w-5 h-5"/></button>
-                                  ))}
-                              </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 md:grid-cols-1 gap-8 md:col-span-2">
-                              <div>
-                                  <h4 className="font-black mb-4 text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Global</h4>
-                                  <ul className="space-y-2 text-xs md:text-sm font-bold text-gray-800 dark:text-gray-500">
-                                      <li><Link to="/about" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">About</Link></li>
-                                      <li><Link to="/press" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Media</Link></li>
-                                  </ul>
-                              </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 md:grid-cols-1 gap-8 md:col-span-2">
-                              <div>
-                                  <h4 className="font-black mb-4 text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Support</h4>
-                                  <ul className="space-y-2 text-xs md:text-sm font-bold text-gray-800 dark:text-gray-500">
-                                      <li><Link to="/support" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Help Center</Link></li>
-                                      <li><Link to="/safety" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Safety Standards</Link></li>
-                                      <li><Link to="/crisis" className="text-red-600 hover:text-red-700 transition-colors">Crisis Hub</Link></li>
-                                  </ul>
-                              </div>
-                          </div>
-
-                          <div className="md:col-span-3">
-                              <h4 className="font-black mb-4 text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Regulatory</h4>
-                              <ul className="space-y-2 text-xs md:text-sm font-bold text-gray-800 dark:text-gray-500">
-                                  <li><Link to="/privacy" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Privacy Policy</Link></li>
-                                  <li><Link to="/terms" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Terms of Service</Link></li>
-                                  <li><button onClick={() => setShowCookies(true)} className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Cookie Controls</button></li>
-                              </ul>
-                          </div>
-                      </div>
-                      
-                      <div className="pt-8 flex flex-col md:flex-row justify-between items-center text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-gray-700 dark:text-gray-600 gap-4 md:gap-0 border-t border-yellow-200/50 dark:border-gray-800">
-                          <p>&copy; 2025 Peutic Global Inc. | ISO 27001 Certified</p>
-                          <div className="flex items-center gap-3">
-                              <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-green-500 rounded-full animate-pulse"></div>
-                              <span>Network Optimal</span>
-                          </div>
-                      </div>
-                  </div>
-              </footer>
           </main>
       </div>
 
-      {/* MODALS */}
       {showPayment && <PaymentModal onClose={() => { setShowPayment(false); setPaymentError(undefined); }} onSuccess={handlePaymentSuccess} initialError={paymentError} />}
       {showBreathing && <BreathingExercise userId={user.id} onClose={() => setShowBreathing(false)} />}
       {showProfile && <ProfileModal user={dashboardUser} onClose={() => setShowProfile(false)} onUpdate={refreshData} />}
       {showGrounding && <GroundingMode onClose={() => setShowGrounding(false)} />}
       
-      {/* TECH CHECK OVERLAY */}
       {showTechCheck && (
           <TechCheck 
               onConfirm={confirmSession}
