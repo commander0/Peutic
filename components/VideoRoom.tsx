@@ -338,10 +338,9 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
       const minutesUsed = Math.ceil(duration / 60);
       const user = Database.getUser();
       if (minutesUsed > 0 && user) {
-        // Fire and forget async updates to DB
         Database.deductBalance(minutesUsed);
         Database.addTransaction({
-            id: `sess_${Date.now()}`, userId: user.id, userName: userName, date: new Date().toISOString(),
+            id: `sess_${Date.now()}`, userName: userName, date: new Date().toISOString(),
             amount: -minutesUsed, description: `Session with ${companion.name}`, status: 'COMPLETED'
         });
         
@@ -423,8 +422,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
   return (
     <div ref={containerRef} className="fixed inset-0 bg-black z-50 flex flex-col overflow-hidden select-none">
-        {/* ... (Unchanged VideoRoom UI) ... */}
-        {/* Truncated for brevity but kept functional parts */}
+        
         {/* --- CREDENTIAL BADGE --- */}
         {showCredential && (
             <div className="absolute top-36 right-4 z-40 bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl w-64 animate-in slide-in-from-right-10 fade-in duration-300">
@@ -441,14 +439,35 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             </div>
         )}
 
-        {/* ... Icebreaker, Header, Main Content ... */}
-        {/* Re-rendering core UI structure to ensure valid file */}
+        {/* --- ICEBREAKER OVERLAY --- */}
+        {showIcebreaker && (
+            <div className="absolute bottom-24 left-4 z-40 bg-white/10 backdrop-blur-xl border border-white/20 p-6 rounded-3xl w-72 md:w-80 shadow-2xl animate-in slide-in-from-bottom-10 fade-in duration-500">
+                <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-yellow-400 fill-yellow-400 animate-pulse" />
+                        <span className="text-xs font-black text-white uppercase tracking-widest">Conversation Sparks</span>
+                    </div>
+                    <button onClick={() => setShowIcebreaker(false)} className="text-white/50 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
+                </div>
+                <div className="min-h-[80px] flex items-center justify-center">
+                    <p className="text-white font-medium text-lg leading-relaxed mb-6 text-center animate-in fade-in duration-500 key={currentTopicIndex}">
+                        "{ICEBREAKERS[currentTopicIndex]}"
+                    </p>
+                </div>
+                <button onClick={nextIcebreaker} className="w-full bg-white text-black py-3 rounded-xl font-bold text-sm hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2">
+                    Next Topic <ChevronRight className="w-4 h-4" />
+                </button>
+            </div>
+        )}
+
         {/* --- HEADER OVERLAY --- */}
         <div className="absolute top-0 left-0 right-0 p-4 md:p-6 flex justify-between items-start z-20 pointer-events-none bg-gradient-to-b from-black/80 via-black/20 to-transparent pb-20 transition-opacity duration-500">
             <div className="flex items-center gap-4 pointer-events-auto">
+                {/* END CALL BUTTON - TOP LEFT */}
                 <button onClick={handleEndSession} className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-full transition-colors shadow-lg shadow-red-600/20" title="End Session">
                     <PhoneOff className="w-5 h-5" />
                 </button>
+
                 <div className={`bg-black/40 backdrop-blur-xl px-4 py-2 rounded-full border ${lowBalanceWarning ? 'border-red-500 animate-pulse' : 'border-white/10'} text-white font-mono shadow-xl flex items-center gap-3 transition-colors duration-500`}>
                     <div className={`w-2 h-2 rounded-full ${connectionState === 'CONNECTED' ? 'bg-red-500 animate-pulse' : 'bg-yellow-500'}`}></div>
                     <span className={`font-variant-numeric tabular-nums tracking-wide font-bold ${lowBalanceWarning ? 'text-red-400' : 'text-white'}`}>
@@ -459,32 +478,56 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                     <FileText className="w-5 h-5" />
                 </button>
             </div>
+            <div className="flex items-center gap-2 pointer-events-auto">
+                <div className="flex gap-1 h-4 items-end">
+                    {[1, 2, 3, 4].map(i => (
+                        <div key={i} className={`w-1 rounded-sm ${i <= networkQuality ? 'bg-green-500' : 'bg-gray-600'}`} style={{ height: `${i * 25}%` }}></div>
+                    ))}
+                </div>
+            </div>
         </div>
 
         {/* --- MAIN CONTENT --- */}
         <div className="absolute inset-0 w-full h-full bg-gray-900 flex items-center justify-center">
+            {/* QUEUE SCREEN */}
             {connectionState === 'QUEUED' && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/95">
+                    <div className="relative mb-8">
+                         <div className="w-24 h-24 rounded-full border-4 border-yellow-500/20 flex items-center justify-center animate-pulse">
+                             <Users className="w-10 h-10 text-yellow-500" />
+                         </div>
+                    </div>
                     <h3 className="text-3xl font-black text-white tracking-tight mb-2">You are in queue</h3>
                     <p className="text-gray-400 text-sm mb-6">Position {queuePos} • Est. {estWait}m wait</p>
                     <button onClick={onEndSession} className="mt-8 text-gray-500 hover:text-white text-sm font-bold">Leave Queue</button>
                 </div>
             )}
+
             {connectionState === 'CONNECTING' && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/90 backdrop-blur-md">
-                    <Loader2 className="w-16 h-16 animate-spin text-yellow-500 mb-8" />
+                    <div className="relative mb-8">
+                        <div className="absolute inset-0 bg-yellow-500/20 blur-[60px] rounded-full animate-pulse"></div>
+                        <div className="relative z-10 p-8 rounded-full border border-yellow-500/30 bg-black/50 shadow-2xl">
+                            <Loader2 className="w-16 h-16 animate-spin text-yellow-500" />
+                        </div>
+                    </div>
                     <h3 className="text-3xl font-black text-white tracking-tight mb-2">Securing Link</h3>
+                    <p className="text-gray-400 text-sm">Establishing end-to-end encryption...</p>
                 </div>
             )}
+            
+            {/* Error State */}
             {connectionState === 'ERROR' && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/95">
                     <div className="bg-red-500/10 border border-red-500/30 p-8 rounded-3xl max-w-md text-center backdrop-blur-md">
+                        <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/30"><AlertCircle className="w-8 h-8 text-red-500" /></div>
                         <h3 className="text-2xl font-bold text-white mb-2">Connection Failed</h3>
                         <p className="text-gray-400 mb-8 text-sm">{errorMsg}</p>
                         <button onClick={onEndSession} className="bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2 mx-auto"><RefreshCcw className="w-4 h-4" /> Return to Dashboard</button>
                     </div>
                 </div>
             )}
+
             {connectionState === 'CONNECTED' && conversationUrl && (
                 <iframe 
                     src={getIframeUrl()} 
@@ -493,6 +536,18 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                     title="Tavus Session" 
                 />
             )}
+        </div>
+
+        {/* --- BOTTOM LEFT ICEBREAKER BUTTON --- */}
+        <div className="absolute bottom-6 left-4 z-30 pointer-events-auto">
+            <button 
+                onClick={() => setShowIcebreaker(!showIcebreaker)} 
+                className={`p-4 rounded-full transition-all relative shadow-xl hover:scale-110 ${showIcebreaker ? 'bg-blue-500 text-white' : 'bg-black/60 backdrop-blur-md border border-white/10 text-white hover:bg-black/80'}`} 
+                title="Conversation Sparks"
+            >
+                <MessageSquare className="w-6 h-6" />
+                {!showIcebreaker && <span className="absolute top-0 right-0 w-3 h-3 bg-yellow-500 rounded-full border-2 border-black animate-pulse"></span>}
+            </button>
         </div>
     </div>
   );

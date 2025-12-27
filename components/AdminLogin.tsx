@@ -14,7 +14,6 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
-  const [hasAdmin, setHasAdmin] = useState(false);
   
   const [showRegister, setShowRegister] = useState(false);
   const [masterKey, setMasterKey] = useState('');
@@ -23,13 +22,9 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
   const [newAdminConfirmPassword, setNewAdminConfirmPassword] = useState('');
 
   const lockout = Database.checkAdminLockout();
+  const hasAdmin = Database.hasAdmin();
 
-  // Async Check
-  React.useEffect(() => {
-      Database.hasAdmin().then(setHasAdmin);
-  }, []);
-
-  const handleAdminLogin = async (e: React.FormEvent) => {
+  const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     if (lockout) {
@@ -37,9 +32,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         return;
     }
     setLoading(true);
-    
-    try {
-        const user = await Database.getUserByEmail(email);
+    setTimeout(() => {
+        const user = Database.getUserByEmail(email);
         if (user && user.role === UserRole.ADMIN) {
             Database.resetAdminFailure();
             onLogin(user);
@@ -47,14 +41,11 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
              Database.recordAdminFailure();
              setError("Access Denied. Incident reported.");
         }
-    } catch (e) {
-        setError("Network Error");
-    } finally {
         setLoading(false);
-    }
+    }, 1000);
   };
 
-  const handleRegisterAdmin = async (e: React.FormEvent) => {
+  const handleRegisterAdmin = (e: React.FormEvent) => {
       e.preventDefault();
       setError('');
       setSuccessMsg('');
@@ -75,13 +66,13 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
       // RESET FEATURE: If admin exists, we wipe existing data first to prevent lockouts/conflicts
       if (hasAdmin) {
           if (confirm("WARNING: Using the Master Key will reset the Admin database. Continue?")) {
-              await Database.resetAllUsers(); // Clear previous data
+              Database.resetAllUsers(); // Clear previous data
           } else {
               return;
           }
       }
 
-      await Database.createUser('System Admin', newAdminEmail, 'email', undefined, UserRole.ADMIN);
+      Database.createUser('System Admin', newAdminEmail, 'email', undefined, UserRole.ADMIN);
       setSuccessMsg(hasAdmin ? "System Reset Successful. New Admin Created." : "Root Admin Created Successfully.");
       
       setTimeout(() => {
@@ -91,7 +82,6 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
           setMasterKey('');
           setNewAdminPassword('');
           setNewAdminConfirmPassword('');
-          setHasAdmin(true);
       }, 2000);
   };
 

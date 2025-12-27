@@ -87,14 +87,9 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   // Sync Data
   useEffect(() => {
     const fetchData = async () => {
-        // ASYNC FETCHING
-        const fetchedUsers = await Database.getAllUsers();
-        setUsers(fetchedUsers);
-        
-        const fetchedTransactions = await Database.getAllTransactions();
-        setTransactions(fetchedTransactions);
-
+        setUsers(Database.getAllUsers());
         setCompanions(Database.getCompanions());
+        setTransactions(Database.getAllTransactions());
         const s = Database.getSettings();
         setSettings(s);
         setBroadcastMsg(s.broadcastMessage || '');
@@ -105,7 +100,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         } catch (e) {}
     };
     fetchData();
-    const interval = setInterval(fetchData, 10000); // Polling every 10s
+    const interval = setInterval(fetchData, 3000); 
     return () => clearInterval(interval);
   }, []);
 
@@ -118,24 +113,24 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   };
 
   const handleDeleteUser = async (userId: string, idx: number) => {
+      // Basic Root Admin Protection: Cannot delete first user or self (if logic extended)
+      // Assuming index 0 is always root admin in our local setup
       if (idx === 0) {
           alert("SECURITY ALERT: Cannot delete Root Admin account.");
           return;
       }
       if (window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
           await Database.deleteUser(userId);
-          const freshUsers = await Database.getAllUsers();
-          setUsers(freshUsers);
+          setUsers(users.filter(u => u.id !== userId));
       }
   };
 
-  const handleTopUp = async (userId: string) => {
+  const handleTopUp = (userId: string) => {
       const amount = prompt("Enter minutes to add:");
       if (amount && !isNaN(parseInt(amount))) {
-          await Database.topUpWallet(parseInt(amount), 0, userId);
+          Database.topUpWallet(parseInt(amount), 0, userId); // 0 cost for admin grant
           alert("Credits added successfully.");
-          const freshUsers = await Database.getAllUsers();
-          setUsers(freshUsers);
+          setUsers(Database.getAllUsers()); // Refresh immediately
       }
   };
 
