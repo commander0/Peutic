@@ -39,7 +39,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
   const [scrolled, setScrolled] = useState(false);
   const [featuredSpecialists, setFeaturedSpecialists] = useState<Companion[]>([]);
   const [darkMode, setDarkMode] = useState(false);
+  const [lang, setLang] = useState<LanguageCode>('en'); // Language State
   const settings = Database.getSettings();
+
+  // Helper to shorten translation calls
+  const t = (key: any) => getTranslation(lang, key);
 
   useEffect(() => {
     // Theme Init
@@ -84,6 +88,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
       }
   };
 
+  const cycleLanguage = () => {
+      const langs: LanguageCode[] = ['en', 'es', 'fr', 'zh', 'ar'];
+      const currentIndex = langs.indexOf(lang);
+      const nextIndex = (currentIndex + 1) % langs.length;
+      setLang(langs[nextIndex]);
+  };
+
   const acceptCookies = () => {
       localStorage.setItem('peutic_cookies_accepted', 'true');
       setShowCookies(false);
@@ -94,7 +105,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
   const row2 = featuredSpecialists.slice(Math.ceil(featuredSpecialists.length / 2));
 
   return (
-    <div className="min-h-screen bg-[#FFFBEB] dark:bg-[#0A0A0A] font-sans text-[#0A0A0A] dark:text-[#F3F4F6] selection:bg-yellow-200 selection:text-black transition-colors duration-500">
+    <div className={`min-h-screen bg-[#FFFBEB] dark:bg-[#0A0A0A] font-sans text-[#0A0A0A] dark:text-[#F3F4F6] selection:bg-yellow-200 selection:text-black transition-colors duration-500 ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       
       {/* Mesh Gradient Background Elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
@@ -113,14 +124,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             </div>
             
             <div className="flex items-center gap-2 md:gap-4">
+               <button onClick={cycleLanguage} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors flex items-center gap-1 font-bold text-xs uppercase">
+                  <Globe className="w-4 h-4 md:w-5 md:h-5 text-gray-600 dark:text-gray-400" />
+                  <span>{lang}</span>
+               </button>
                <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
                   {darkMode ? <Sun className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" /> : <Moon className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />}
                </button>
                <button onClick={() => onLoginClick(false)} className="text-xs md:text-sm font-black uppercase tracking-widest hover:opacity-70 transition-opacity px-2 md:px-4 dark:text-gray-300">
-                 Sign In
+                 {t('nav_signin')}
                </button>
                <button onClick={() => onLoginClick(true)} className="bg-black dark:bg-white text-white dark:text-black px-5 py-2.5 md:px-8 md:py-3.5 rounded-full font-black text-xs md:text-sm uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-gray-200 transition-all hover:scale-105 active:scale-95 shadow-xl">
-                  Join Now
+                  {t('nav_join')}
                </button>
             </div>
         </div>
@@ -132,24 +147,24 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
               <div className="lg:col-span-7 space-y-6 md:space-y-10 text-center">
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-white dark:bg-gray-900 border border-yellow-200/50 dark:border-gray-800 rounded-full shadow-sm transition-colors">
                       <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">{onlineCount} Specialists Ready</span>
+                      <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">{onlineCount} {t('hero_badge')}</span>
                   </div>
                   
                   <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black leading-[1.1] md:leading-[1] tracking-tighter dark:text-white">
-                      Humanity <br/> 
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-orange-400">On Demand.</span>
+                      {t('hero_title_1')} <br/> 
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-orange-400">{t('hero_title_2')}</span>
                   </h1>
                   
                   <p className="text-base sm:text-lg md:text-2xl text-gray-500 dark:text-gray-400 font-medium max-w-2xl mx-auto leading-relaxed px-2">
-                      Experience the gold standard in emotional support. Connect instantly via video with a dedicated specialist tailored to your journey.
+                      {t('hero_subtitle')}
                   </p>
                   
                   <div className="flex flex-col sm:flex-row gap-3 md:gap-5 justify-center pt-2 md:pt-4">
                       <button onClick={() => onLoginClick(true)} className="px-8 py-3.5 md:px-10 md:py-5 bg-[#FACC15] text-black rounded-full font-black text-sm md:text-lg uppercase tracking-widest shadow-[0_20px_40px_-15px_rgba(250,204,21,0.4)] hover:shadow-[0_25px_50px_-12px_rgba(250,204,21,0.5)] transition-all hover:-translate-y-1 flex items-center justify-center gap-3">
-                         <Play className="w-4 h-4 md:w-5 md:h-5 fill-black" /> Get Started
+                         <Play className="w-4 h-4 md:w-5 md:h-5 fill-black" /> {t('cta_start')}
                       </button>
                       <button onClick={() => onLoginClick(true)} className="px-8 py-3.5 md:px-10 md:py-5 bg-white dark:bg-gray-900 border border-yellow-200 dark:border-gray-700 text-black dark:text-white rounded-full font-black text-sm md:text-lg uppercase tracking-widest hover:bg-yellow-50 dark:hover:bg-gray-800 transition-all flex items-center justify-center gap-3">
-                         View Team
+                         {t('cta_team')}
                       </button>
                   </div>
 
@@ -159,12 +174,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                               <img key={i} src={src} className="w-10 h-10 md:w-12 md:h-12 rounded-full border-4 border-[#FFFBEB] dark:border-black object-cover" alt="User" />
                           ))}
                       </div>
-                      <p className="text-[10px] md:text-sm font-bold text-gray-400 uppercase tracking-widest">Trusted by 1M+ Members</p>
+                      <p className="text-[10px] md:text-sm font-bold text-gray-400 uppercase tracking-widest">{t('trusted_by')}</p>
                   </div>
               </div>
 
               <div className="lg:col-span-5 relative mt-8 md:mt-0">
-                  {/* HERO IMAGE CONTAINER: Fixed max-width, centered, subtle opposite slant (-1deg) */}
+                  {/* HERO IMAGE CONTAINER */}
                   <div className="relative w-4/5 md:w-full max-w-sm mx-auto -rotate-1 hover:rotate-0 transition-all duration-500">
                       <div className="relative aspect-[4/5] bg-gray-900 rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl border-4 md:border-8 border-white dark:border-gray-800 group">
                            <img src={INITIAL_COMPANIONS[0].imageUrl} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Ruby" />
@@ -172,11 +187,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                            <div className="absolute top-6 left-6 md:top-8 md:left-8">
                                 <div className="bg-black/30 backdrop-blur-xl border border-white/20 px-3 py-1 md:px-4 md:py-1.5 rounded-full flex items-center gap-2">
                                     <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-red-500 rounded-full animate-pulse"></div>
-                                    <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-white">Live Link Active</span>
+                                    <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-white">{t('live_link')}</span>
                                 </div>
                            </div>
                            <div className="absolute bottom-8 left-8 right-8 md:bottom-10 md:left-10 md:right-10">
-                                <p className="text-yellow-400 text-[10px] md:text-xs font-black uppercase tracking-[0.3em] mb-2">Primary Specialist</p>
+                                <p className="text-yellow-400 text-[10px] md:text-xs font-black uppercase tracking-[0.3em] mb-2">{t('primary_spec')}</p>
                                 <h3 className="text-white text-3xl md:text-4xl font-black mb-1">Ruby</h3>
                                 <p className="text-gray-300 font-medium italic text-sm md:text-base">Anxiety & Emotional Regulation</p>
                            </div>
@@ -199,10 +214,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
       {/* Infinite Marquee Roster */}
       <section className="py-16 md:py-24 bg-[#FFFBEB] dark:bg-[#0A0A0A] relative overflow-hidden transition-colors">
           <div className="max-w-7xl mx-auto text-center mb-10 md:mb-16 px-6">
-              <p className="text-yellow-600 font-black uppercase tracking-[0.4em] text-[10px] md:text-xs mb-3 md:mb-4">The Care Team</p>
-              <h2 className="text-3xl md:text-5xl font-black leading-[1.1] tracking-tight mb-4 md:mb-6 dark:text-white">Select Your Guide</h2>
+              <p className="text-yellow-600 font-black uppercase tracking-[0.4em] text-[10px] md:text-xs mb-3 md:mb-4">{t('roster_title')}</p>
+              <h2 className="text-3xl md:text-5xl font-black leading-[1.1] tracking-tight mb-4 md:mb-6 dark:text-white">{t('roster_heading')}</h2>
               <button onClick={() => onLoginClick(true)} className="flex items-center gap-3 font-black uppercase tracking-widest text-[10px] md:text-xs hover:gap-5 transition-all justify-center dark:text-gray-300">
-                  Browse Full Roster <ArrowRight className="w-3 h-3 md:w-4 md:h-4 text-[#FACC15]" />
+                  {t('roster_btn')} <ArrowRight className="w-3 h-3 md:w-4 md:h-4 text-[#FACC15]" />
               </button>
           </div>
 
@@ -281,22 +296,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
               <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
                   <ShieldCheck className="w-12 h-12 md:w-16 md:h-16 text-black dark:text-white" />
                   <div>
-                      <h3 className="text-xl md:text-2xl font-black tracking-tight mb-2">HIPAA Compliant Infrastructure</h3>
-                      <p className="text-sm md:text-base text-gray-800 dark:text-gray-400 font-medium">End-to-end 256-bit encryption. Your sessions belong to you alone.</p>
+                      <h3 className="text-xl md:text-2xl font-black tracking-tight mb-2">{t('trust_title')}</h3>
+                      <p className="text-sm md:text-base text-gray-800 dark:text-gray-400 font-medium">{t('trust_desc')}</p>
                   </div>
               </div>
               <div className="flex gap-8 md:gap-12">
                   <div className="text-center">
                       <p className="text-2xl md:text-3xl font-black mb-1">99.9%</p>
-                      <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-700 dark:text-gray-500">Uptime</p>
+                      <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-700 dark:text-gray-500">{t('stat_uptime')}</p>
                   </div>
                   <div className="text-center">
                       <p className="text-2xl md:text-3xl font-black mb-1">0%</p>
-                      <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-700 dark:text-gray-500">Data Sharing</p>
+                      <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-700 dark:text-gray-500">{t('stat_sharing')}</p>
                   </div>
                   <div className="text-center">
                       <p className="text-2xl md:text-3xl font-black mb-1">AES</p>
-                      <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-700 dark:text-gray-500">Encrypted</p>
+                      <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-700 dark:text-gray-500">{t('stat_enc')}</p>
                   </div>
               </div>
           </div>
@@ -310,8 +325,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                   <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-yellow-100/30 dark:bg-yellow-900/10 blur-[80px] pointer-events-none"></div>
                   
                   <div className="relative z-10 space-y-3 md:space-y-4">
-                      <p className="text-black/60 dark:text-white/60 font-black uppercase tracking-[0.4em] text-[8px] md:text-[9px]">Premium Access</p>
-                      <h2 className="text-xl md:text-2xl font-black tracking-tighter">Pay only for clarity.</h2>
+                      <p className="text-black/60 dark:text-white/60 font-black uppercase tracking-[0.4em] text-[8px] md:text-[9px]">{t('pricing_badge')}</p>
+                      <h2 className="text-xl md:text-2xl font-black tracking-tighter">{t('pricing_title')}</h2>
                       
                       <div className="flex flex-col items-center justify-center gap-1 py-1">
                            {settings.saleMode ? (
@@ -330,11 +345,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                       </div>
 
                       <p className="text-black/70 dark:text-white/70 text-xs max-w-sm mx-auto font-medium leading-relaxed">
-                          No subscriptions. No hidden fees. Instant access to elite specialists 24/7.
+                          {t('pricing_sub')}
                       </p>
 
                       <button onClick={() => onLoginClick(true)} className="bg-black dark:bg-white text-white dark:text-black px-6 py-3 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-gray-200 transition-all hover:scale-105 shadow-xl mt-2">
-                          Start Session Now
+                          {t('pricing_btn')}
                       </button>
                   </div>
               </div>
@@ -353,7 +368,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                           <span className="text-xl md:text-2xl font-black tracking-tight">Peutic</span>
                       </div>
                       <p className="text-gray-800 dark:text-gray-500 text-sm md:text-lg leading-relaxed max-w-md">
-                          Connecting the disconnected through elite-level human specialists and cutting-edge secure technology.
+                          {t('footer_desc')}
                       </p>
                       <div className="flex gap-6">
                           {[Twitter, Instagram, Linkedin].map((Icon, i) => (
@@ -364,31 +379,31 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                   
                   <div className="grid grid-cols-2 md:grid-cols-1 gap-8 md:col-span-2">
                       <div>
-                          <h4 className="font-black mb-4 md:mb-8 text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Global</h4>
+                          <h4 className="font-black mb-4 md:mb-8 text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">{t('footer_global')}</h4>
                           <ul className="space-y-2 md:space-y-4 text-xs md:text-sm font-bold text-gray-800 dark:text-gray-500">
-                              <li><Link to="/about" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">About</Link></li>
-                              <li><Link to="/press" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Media</Link></li>
+                              <li><Link to="/about" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_about')}</Link></li>
+                              <li><Link to="/press" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_media')}</Link></li>
                           </ul>
                       </div>
                   </div>
 
                   <div className="grid grid-cols-2 md:grid-cols-1 gap-8 md:col-span-2">
                       <div>
-                          <h4 className="font-black mb-4 md:mb-8 text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Support</h4>
+                          <h4 className="font-black mb-4 md:mb-8 text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">{t('footer_support')}</h4>
                           <ul className="space-y-2 md:space-y-4 text-xs md:text-sm font-bold text-gray-800 dark:text-gray-500">
-                              <li><Link to="/support" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Help Center</Link></li>
-                              <li><Link to="/safety" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Safety Standards</Link></li>
-                              <li><Link to="/crisis" className="text-red-600 hover:text-red-700 transition-colors">Crisis Hub</Link></li>
+                              <li><Link to="/support" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_help')}</Link></li>
+                              <li><Link to="/safety" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_safety')}</Link></li>
+                              <li><Link to="/crisis" className="text-red-600 hover:text-red-700 transition-colors">{t('link_crisis')}</Link></li>
                           </ul>
                       </div>
                   </div>
 
                   <div className="md:col-span-3">
-                      <h4 className="font-black mb-4 md:mb-8 text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Regulatory</h4>
+                      <h4 className="font-black mb-4 md:mb-8 text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">{t('footer_reg')}</h4>
                       <ul className="space-y-2 md:space-y-4 text-xs md:text-sm font-bold text-gray-800 dark:text-gray-500">
-                          <li><Link to="/privacy" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Privacy Policy</Link></li>
-                          <li><Link to="/terms" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Terms of Service</Link></li>
-                          <li><button onClick={() => setShowCookies(true)} className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Cookie Controls</button></li>
+                          <li><Link to="/privacy" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_privacy')}</Link></li>
+                          <li><Link to="/terms" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_terms')}</Link></li>
+                          <li><button onClick={() => setShowCookies(true)} className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_cookies')}</button></li>
                       </ul>
                   </div>
               </div>
