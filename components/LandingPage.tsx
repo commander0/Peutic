@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { Shield, Heart, CheckCircle, ArrowRight, Star, Globe, ShieldCheck, Sparkles, Cookie, Instagram, Twitter, Linkedin, Play, MessageCircle, Moon, Sun } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Shield, Heart, CheckCircle, ArrowRight, Star, Globe, ShieldCheck, Sparkles, Cookie, Instagram, Twitter, Linkedin, Play, MessageCircle, Moon, Sun, ChevronDown } from 'lucide-react';
 import { LanguageCode, getTranslation } from '../services/i18n';
 import { Link } from 'react-router-dom';
 import { Database, STABLE_AVATAR_POOL, INITIAL_COMPANIONS } from '../services/database';
@@ -33,6 +33,14 @@ interface LandingPageProps {
   onLoginClick: (signupMode?: boolean) => void;
 }
 
+const LANGUAGES: { code: LanguageCode; label: string }[] = [
+  { code: 'en', label: 'English' },
+  { code: 'es', label: 'Español' },
+  { code: 'fr', label: 'Français' },
+  { code: 'zh', label: '中文' },
+  { code: 'ar', label: 'العربية' }
+];
+
 const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
   const [onlineCount, setOnlineCount] = useState(124);
   const [showCookies, setShowCookies] = useState(false);
@@ -40,6 +48,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
   const [featuredSpecialists, setFeaturedSpecialists] = useState<Companion[]>([]);
   const [darkMode, setDarkMode] = useState(false);
   const [lang, setLang] = useState<LanguageCode>('en'); // Language State
+  const [showLangMenu, setShowLangMenu] = useState(false);
+  const langMenuRef = useRef<HTMLDivElement>(null);
+  
   const settings = Database.getSettings();
 
   // Helper to shorten translation calls
@@ -70,9 +81,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
         setFeaturedSpecialists(INITIAL_COMPANIONS); 
     }
 
+    const handleClickOutside = (event: MouseEvent) => {
+        if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
+            setShowLangMenu(false);
+        }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+
     return () => {
         clearTimeout(timer);
         window.removeEventListener('scroll', handleScroll);
+        document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -86,13 +105,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
           localStorage.setItem('peutic_theme', 'dark');
           setDarkMode(true);
       }
-  };
-
-  const cycleLanguage = () => {
-      const langs: LanguageCode[] = ['en', 'es', 'fr', 'zh', 'ar'];
-      const currentIndex = langs.indexOf(lang);
-      const nextIndex = (currentIndex + 1) % langs.length;
-      setLang(langs[nextIndex]);
   };
 
   const acceptCookies = () => {
@@ -124,10 +136,32 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             </div>
             
             <div className="flex items-center gap-2 md:gap-4">
-               <button onClick={cycleLanguage} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors flex items-center gap-1 font-bold text-xs uppercase">
-                  <Globe className="w-4 h-4 md:w-5 md:h-5 text-gray-600 dark:text-gray-400" />
-                  <span>{lang}</span>
-               </button>
+               {/* Language Dropdown */}
+               <div className="relative" ref={langMenuRef}>
+                   <button 
+                       onClick={() => setShowLangMenu(!showLangMenu)} 
+                       className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors flex items-center gap-1 font-bold text-xs uppercase"
+                   >
+                       <Globe className="w-4 h-4 md:w-5 md:h-5 text-gray-600 dark:text-gray-400" />
+                       <span>{lang}</span>
+                       <ChevronDown className="w-3 h-3 text-gray-500" />
+                   </button>
+                   
+                   {showLangMenu && (
+                       <div className="absolute top-full right-0 mt-2 w-32 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden z-50 animate-in fade-in zoom-in duration-200">
+                           {LANGUAGES.map((l) => (
+                               <button
+                                   key={l.code}
+                                   onClick={() => { setLang(l.code); setShowLangMenu(false); }}
+                                   className={`w-full text-left px-4 py-3 text-xs font-bold hover:bg-yellow-50 dark:hover:bg-gray-800 transition-colors ${lang === l.code ? 'text-yellow-600 dark:text-yellow-500 bg-yellow-50/50' : 'text-gray-700 dark:text-gray-300'}`}
+                               >
+                                   {l.label}
+                               </button>
+                           ))}
+                       </div>
+                   )}
+               </div>
+
                <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
                   {darkMode ? <Sun className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" /> : <Moon className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />}
                </button>
