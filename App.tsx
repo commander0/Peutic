@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole, Companion } from './types';
@@ -74,20 +73,23 @@ const MainApp: React.FC = () => {
     return () => clearInterval(interval);
   }, [user, activeSessionCompanion]);
 
-  const handleLogin = (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email') => {
+  const handleLogin = async (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email') => {
     let currentUser = Database.getUser();
     const userEmail = email || `${name.toLowerCase().replace(/ /g, '.')}@example.com`;
     
     if (!currentUser || currentUser.email !== userEmail) {
-        const allUsers = Database.getAllUsers();
-        const existing = allUsers.find(u => u.email === userEmail);
+        // Fix: Use getUserByEmail instead of getAllUsers.find to handle async/await properly
+        const existing = await Database.getUserByEmail(userEmail);
         
         if (existing) {
             currentUser = existing;
-            if (avatar) { currentUser.avatar = avatar; Database.updateUser(currentUser); }
+            if (avatar) { 
+                currentUser.avatar = avatar; 
+                await Database.updateUser(currentUser); 
+            }
         } else {
             // STRICT ADMIN CREATION LOGIC
-            const adminExists = Database.hasAdmin();
+            const adminExists = await Database.hasAdmin();
             let finalRole = UserRole.USER;
             if (!adminExists && provider === 'email') {
                 finalRole = UserRole.ADMIN;
@@ -95,22 +97,30 @@ const MainApp: React.FC = () => {
                 finalRole = UserRole.USER;
             }
 
-            currentUser = Database.createUser(name, userEmail, provider, birthday, finalRole);
-            if (avatar) { currentUser.avatar = avatar; Database.updateUser(currentUser); }
+            // Fix: await createUser
+            currentUser = await Database.createUser(name, userEmail, provider, birthday, finalRole);
+            if (avatar) { 
+                currentUser.avatar = avatar; 
+                await Database.updateUser(currentUser); 
+            }
         }
     }
     
-    currentUser = Database.checkAndIncrementStreak(currentUser);
+    // Ensure we have a valid user object before proceeding
+    if (currentUser) {
+        // Fix: await checkAndIncrementStreak
+        currentUser = await Database.checkAndIncrementStreak(currentUser);
 
-    setUser(currentUser);
-    Database.saveUserSession(currentUser);
-    lastActivityRef.current = Date.now();
-    setShowAuth(false);
-    
-    if (currentUser.role === UserRole.ADMIN) {
-        navigate('/admin/dashboard');
-    } else {
-        navigate('/');
+        setUser(currentUser);
+        Database.saveUserSession(currentUser);
+        lastActivityRef.current = Date.now();
+        setShowAuth(false);
+        
+        if (currentUser.role === UserRole.ADMIN) {
+            navigate('/admin/dashboard');
+        } else {
+            navigate('/');
+        }
     }
   };
 

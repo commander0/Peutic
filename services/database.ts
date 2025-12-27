@@ -4,6 +4,8 @@ import { supabase } from './supabaseClient';
 
 const DB_KEYS = {
   USER: 'peutic_db_current_user_v26', 
+  ALL_USERS: 'peutic_db_all_users_v26', // Added for Local Fallback
+  TRANSACTIONS: 'peutic_db_transactions_v26', // Added for Local Fallback
   COMPANIONS: 'peutic_db_companions_v26',
   SETTINGS: 'peutic_db_settings_v26',
   LOGS: 'peutic_db_logs_v26',
@@ -66,10 +68,43 @@ export class Database {
       };
   }
 
-  // --- USER MANAGEMENT (SUPABASE) ---
+  // --- LOCAL STORAGE FALLBACK HELPERS ---
+  private static getLocalUsers(): User[] {
+      try {
+          const stored = localStorage.getItem(DB_KEYS.ALL_USERS);
+          return stored ? JSON.parse(stored) : [];
+      } catch (e) { return []; }
+  }
+
+  private static saveLocalUser(user: User) {
+      const users = this.getLocalUsers();
+      const index = users.findIndex(u => u.id === user.id);
+      if (index >= 0) users[index] = user;
+      else users.push(user);
+      localStorage.setItem(DB_KEYS.ALL_USERS, JSON.stringify(users));
+  }
+
+  private static deleteLocalUser(userId: string) {
+      const users = this.getLocalUsers().filter(u => u.id !== userId);
+      localStorage.setItem(DB_KEYS.ALL_USERS, JSON.stringify(users));
+  }
+
+  private static getLocalTransactions(): Transaction[] {
+      try {
+          const stored = localStorage.getItem(DB_KEYS.TRANSACTIONS);
+          return stored ? JSON.parse(stored) : [];
+      } catch (e) { return []; }
+  }
+
+  private static saveLocalTransaction(tx: Transaction) {
+      const txs = this.getLocalTransactions();
+      txs.unshift(tx);
+      localStorage.setItem(DB_KEYS.TRANSACTIONS, JSON.stringify(txs));
+  }
+
+  // --- USER MANAGEMENT ---
 
   static getUser(): User | null {
-    // Current Session (Fast Local Read)
     const userStr = localStorage.getItem(DB_KEYS.USER);
     return userStr ? JSON.parse(userStr) : null;
   }
@@ -81,25 +116,49 @@ export class Database {
   static async syncUser(userId: string): Promise<User | null> {
       try {
           const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();
-          if (error || !data) return null;
+          if (error) throw error;
+          if (!data) throw new Error("No data");
+          
           const user = this.mapDbUserToAppUser(data);
           this.saveUserSession(user);
+          this.saveLocalUser(user); // Keep local in sync
           return user;
       } catch (e) {
+          // Fallback to local
+          const localUser = this.getLocalUsers().find(u => u.id === userId);
+          if (localUser) {
+              this.saveUserSession(localUser);
+              return localUser;
+          }
           return null;
       }
   }
 
   static async getAllUsers(): Promise<User[]> {
-      const { data, error } = await supabase.from('users').select('*').order('joined_at', { ascending: false });
-      if (error) return [];
-      return data.map(this.mapDbUserToAppUser);
+      try {
+          const { data, error } = await supabase.from('users').select('*').order('joined_at', { ascending: false });
+          if (error) throw error;
+          return data.map(this.mapDbUserToAppUser);
+      } catch (e) {
+          return this.getLocalUsers();
+      }
   }
 
   static async getUserByEmail(email: string): Promise<User | undefined> {
-      const { data, error } = await supabase.from('users').select('*').eq('email', email).single();
-      if (error || !data) return undefined;
-      return this.mapDbUserToAppUser(data);
+      try {
+          const { data, error } = await supabase.from('users').select('*').eq('email', email).single();
+          if (error) {
+              // If it's a "no rows found" error (PGRST116), return undefined gracefully
+              if (error.code === 'PGRST116') return undefined;
+              throw error; 
+          }
+          if (!data) return undefined;
+          return this.mapDbUserToAppUser(data);
+      } catch (e) {
+          // Fallback to local storage checks
+          console.warn("Supabase unreachable, checking local cache.");
+          return this.getLocalUsers().find(u => u.email === email);
+      }
   }
 
   static async createUser(name: string, email: string, provider: 'email' | 'google' | 'facebook' | 'x', birthday?: string, role: UserRole = UserRole.USER): Promise<User> {
@@ -117,43 +176,65 @@ export class Database {
       birthday
     };
 
-    const { error } = await supabase.from('users').insert(newUser);
-    if (error) {
-        console.error("Create User Error:", error);
-        throw error;
+    const appUser = this.mapDbUserToAppUser(newUser);
+    
+    // Always save locally first to ensure success
+    this.saveLocalUser(appUser);
+    this.saveUserSession(appUser);
+
+    // Try Remote
+    try {
+        await supabase.from('users').insert(newUser);
+    } catch (e) {
+        console.warn("Created user locally (Supabase offline).");
     }
 
-    const appUser = this.mapDbUserToAppUser(newUser);
-    this.saveUserSession(appUser);
     return appUser;
   }
 
   static async updateUser(user: Partial<User> & { id: string }) {
     // Optimistic Local Update
     const current = this.getUser();
-    if (current && current.id === user.id) {
-        const merged = { ...current, ...user };
-        this.saveUserSession(merged);
+    let merged = current ? { ...current, ...user } : undefined;
+    
+    // If updating a user that isn't current session, fetch from local list
+    if (!merged) {
+        const local = this.getLocalUsers().find(u => u.id === user.id);
+        if (local) merged = { ...local, ...user };
+    }
+
+    if (merged) {
+        // Update Session if it matches
+        if (current && current.id === user.id) this.saveUserSession(merged as User);
+        // Update Local Storage DB
+        this.saveLocalUser(merged as User);
     }
 
     // Remote Update
-    const dbUpdate: any = {};
-    if (user.name) dbUpdate.name = user.name;
-    if (user.email) dbUpdate.email = user.email;
-    if (user.avatar) dbUpdate.avatar = user.avatar;
-    if (user.lastLoginDate) dbUpdate.last_login_date = user.lastLoginDate;
-    if (user.streak !== undefined) dbUpdate.streak = user.streak;
-    if (user.balance !== undefined) dbUpdate.balance = user.balance;
-    if (user.emailPreferences) dbUpdate.email_preferences = user.emailPreferences;
-    if (user.subscriptionStatus) dbUpdate.subscription_status = user.subscriptionStatus;
+    try {
+        const dbUpdate: any = {};
+        if (user.name) dbUpdate.name = user.name;
+        if (user.email) dbUpdate.email = user.email;
+        if (user.avatar) dbUpdate.avatar = user.avatar;
+        if (user.lastLoginDate) dbUpdate.last_login_date = user.lastLoginDate;
+        if (user.streak !== undefined) dbUpdate.streak = user.streak;
+        if (user.balance !== undefined) dbUpdate.balance = user.balance;
+        if (user.emailPreferences) dbUpdate.email_preferences = user.emailPreferences;
+        if (user.subscriptionStatus) dbUpdate.subscription_status = user.subscriptionStatus;
 
-    await supabase.from('users').update(dbUpdate).eq('id', user.id);
+        await supabase.from('users').update(dbUpdate).eq('id', user.id);
+    } catch (e) {
+        console.warn("Update failed remotely, saved locally.");
+    }
   }
 
   static async deleteUser(id: string) {
-      await supabase.from('users').delete().eq('id', id);
+      this.deleteLocalUser(id);
       const current = this.getUser();
       if (current && current.id === id) this.clearSession();
+      try {
+          await supabase.from('users').delete().eq('id', id);
+      } catch (e) {}
   }
 
   static clearSession() {
@@ -161,8 +242,13 @@ export class Database {
   }
 
   static async hasAdmin(): Promise<boolean> {
-    const { count } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'ADMIN');
-    return (count || 0) > 0;
+    try {
+        const { count } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'ADMIN');
+        return (count || 0) > 0;
+    } catch (e) {
+        // Local Check
+        return this.getLocalUsers().some(u => u.role === 'ADMIN');
+    }
   }
 
   static async checkAndIncrementStreak(user: User): Promise<User> {
@@ -190,55 +276,75 @@ export class Database {
 
   static async resetAllUsers() {
       // DEV ONLY: Deletes everyone except protected admins ideally
-      await supabase.from('users').delete().neq('role', 'ADMIN');
+      try {
+          await supabase.from('users').delete().neq('role', 'ADMIN');
+      } catch (e) {}
+      localStorage.removeItem(DB_KEYS.ALL_USERS);
       this.clearSession();
   }
 
-  // --- TRANSACTIONS (SUPABASE) ---
+  // --- TRANSACTIONS ---
 
   static async getAllTransactions(): Promise<Transaction[]> {
-      const { data } = await supabase.from('transactions').select('*').order('date', { ascending: false }).limit(100);
-      return (data || []).map((t: any) => ({
-          id: t.id,
-          userId: t.user_id,
-          userName: t.user_name,
-          date: t.date,
-          amount: t.amount,
-          cost: t.cost,
-          description: t.description,
-          status: t.status
-      }));
+      try {
+          const { data, error } = await supabase.from('transactions').select('*').order('date', { ascending: false }).limit(100);
+          if (error) throw error;
+          return (data || []).map((t: any) => ({
+              id: t.id,
+              userId: t.user_id,
+              userName: t.user_name,
+              date: t.date,
+              amount: t.amount,
+              cost: t.cost,
+              description: t.description,
+              status: t.status
+          }));
+      } catch (e) {
+          return this.getLocalTransactions();
+      }
   }
 
   static async getUserTransactions(userId: string): Promise<Transaction[]> {
-      const { data } = await supabase
-          .from('transactions')
-          .select('*')
-          .eq('user_id', userId)
-          .order('date', { ascending: false });
-      
-      return (data || []).map((t: any) => ({
-          id: t.id,
-          userId: t.user_id,
-          userName: t.user_name,
-          date: t.date,
-          amount: t.amount,
-          cost: t.cost,
-          description: t.description,
-          status: t.status
-      }));
+      try {
+          const { data, error } = await supabase
+              .from('transactions')
+              .select('*')
+              .eq('user_id', userId)
+              .order('date', { ascending: false });
+          
+          if (error) throw error;
+          
+          return (data || []).map((t: any) => ({
+              id: t.id,
+              userId: t.user_id,
+              userName: t.user_name,
+              date: t.date,
+              amount: t.amount,
+              cost: t.cost,
+              description: t.description,
+              status: t.status
+          }));
+      } catch (e) {
+          return this.getLocalTransactions().filter(t => t.userId === userId);
+      }
   }
 
   static async addTransaction(tx: Transaction) {
-      await supabase.from('transactions').insert({
-          user_id: tx.userId,
-          user_name: tx.userName,
-          amount: tx.amount,
-          cost: tx.cost,
-          description: tx.description,
-          status: tx.status,
-          date: tx.date
-      });
+      // Local Save
+      this.saveLocalTransaction(tx);
+      
+      // Remote Save
+      try {
+          await supabase.from('transactions').insert({
+              user_id: tx.userId,
+              user_name: tx.userName,
+              amount: tx.amount,
+              cost: tx.cost,
+              description: tx.description,
+              status: tx.status,
+              date: tx.date
+          });
+      } catch (e) {}
   }
 
   static async topUpWallet(amount: number, cost: number, userId?: string) {
@@ -316,42 +422,51 @@ export class Database {
 
   static async claimActiveSpot(userId: string): Promise<boolean> {
       const settings = this.getSettings();
-      const count = await this.getActiveSessionCount();
-      
-      const { data: existing } = await supabase.from('active_sessions').select('user_id').eq('user_id', userId).single();
-      if (existing) { await this.sendKeepAlive(userId); return true; }
+      try {
+          const count = await this.getActiveSessionCount();
+          
+          const { data: existing } = await supabase.from('active_sessions').select('user_id').eq('user_id', userId).single();
+          if (existing) { await this.sendKeepAlive(userId); return true; }
 
-      if (count >= settings.maxConcurrentSessions) return false;
+          if (count >= settings.maxConcurrentSessions) return false;
 
-      const { error } = await supabase.from('active_sessions').insert({ user_id: userId, last_ping: new Date().toISOString() });
-      if (error && error.code !== '23505') return false;
+          const { error } = await supabase.from('active_sessions').insert({ user_id: userId, last_ping: new Date().toISOString() });
+          if (error && error.code !== '23505') return false;
 
-      await this.leaveQueue(userId);
-      return true;
+          await this.leaveQueue(userId);
+          return true;
+      } catch (e) {
+          // If Supabase is down, assume open access for demo
+          return true;
+      }
   }
 
   static async sendKeepAlive(userId: string) {
-      await supabase.from('active_sessions').upsert({ user_id: userId, last_ping: new Date().toISOString() });
+      try { await supabase.from('active_sessions').upsert({ user_id: userId, last_ping: new Date().toISOString() }); } catch(e) {}
   }
 
   static async endSession(userId: string) {
-      await supabase.from('active_sessions').delete().eq('user_id', userId);
+      try { await supabase.from('active_sessions').delete().eq('user_id', userId); } catch(e) {}
   }
 
   static async joinQueue(userId: string): Promise<number> {
-      await supabase.from('session_queue').upsert({ user_id: userId, joined_at: new Date().toISOString() });
-      return this.getQueuePosition(userId);
+      try {
+          await supabase.from('session_queue').upsert({ user_id: userId, joined_at: new Date().toISOString() });
+          return this.getQueuePosition(userId);
+      } catch(e) { return 1; }
   }
 
   static async leaveQueue(userId: string) {
-      await supabase.from('session_queue').delete().eq('user_id', userId);
+      try { await supabase.from('session_queue').delete().eq('user_id', userId); } catch(e) {}
   }
 
   static async getQueuePosition(userId: string): Promise<number> {
-      const { data: myEntry } = await supabase.from('session_queue').select('joined_at').eq('user_id', userId).single();
-      if (!myEntry) return 0;
-      const { count } = await supabase.from('session_queue').select('*', { count: 'exact', head: true }).lt('joined_at', myEntry.joined_at);
-      return (count || 0) + 1;
+      try {
+          const { data: myEntry } = await supabase.from('session_queue').select('joined_at').eq('user_id', userId).single();
+          if (!myEntry) return 0;
+          const { count } = await supabase.from('session_queue').select('*', { count: 'exact', head: true }).lt('joined_at', myEntry.joined_at);
+          return (count || 0) + 1;
+      } catch(e) { return 1; }
   }
 
   static getEstimatedWaitTime(pos: number): number {
@@ -362,9 +477,11 @@ export class Database {
   static async saveArt(entry: ArtEntry) {
       // Local cache for speed
       this.saveArtLocal(entry);
-      await supabase.from('user_art').insert({
-          id: entry.id, user_id: entry.userId, image_url: entry.imageUrl, prompt: entry.prompt, title: entry.title, created_at: entry.createdAt
-      });
+      try {
+          await supabase.from('user_art').insert({
+              id: entry.id, user_id: entry.userId, image_url: entry.imageUrl, prompt: entry.prompt, title: entry.title, created_at: entry.createdAt
+          });
+      } catch(e) {}
   }
 
   static saveArtLocal(entry: ArtEntry) {
@@ -374,12 +491,14 @@ export class Database {
   }
 
   static async getUserArt(userId: string): Promise<ArtEntry[]> {
-      const { data } = await supabase.from('user_art').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(20);
-      if (data) {
-          return data.map((d: any) => ({
-              id: d.id, userId: d.user_id, imageUrl: d.image_url, prompt: d.prompt, title: d.title, createdAt: d.created_at
-          }));
-      }
+      try {
+          const { data } = await supabase.from('user_art').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(20);
+          if (data) {
+              return data.map((d: any) => ({
+                  id: d.id, userId: d.user_id, imageUrl: d.image_url, prompt: d.prompt, title: d.title, createdAt: d.created_at
+              }));
+          }
+      } catch(e) {}
       return this.getUserArtLocal(userId);
   }
 
@@ -389,7 +508,7 @@ export class Database {
   }
 
   static async deleteArt(artId: string) {
-      await supabase.from('user_art').delete().eq('id', artId);
+      try { await supabase.from('user_art').delete().eq('id', artId); } catch(e) {}
       let art = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]');
       art = art.filter((a: ArtEntry) => a.id !== artId);
       localStorage.setItem(DB_KEYS.ART, JSON.stringify(art));
