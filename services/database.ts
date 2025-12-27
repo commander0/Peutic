@@ -3,24 +3,24 @@ import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, Mood
 import { supabase } from './supabaseClient';
 
 const DB_KEYS = {
-  USER: 'peutic_db_current_user_v26', 
-  ALL_USERS: 'peutic_db_all_users_v26', // Added for Local Fallback
-  TRANSACTIONS: 'peutic_db_transactions_v26', // Added for Local Fallback
-  COMPANIONS: 'peutic_db_companions_v26',
-  SETTINGS: 'peutic_db_settings_v26',
-  LOGS: 'peutic_db_logs_v26',
-  MOODS: 'peutic_db_moods_v26',
-  JOURNALS: 'peutic_db_journals_v26',
-  ART: 'peutic_db_art_v26',
-  PROMOS: 'peutic_db_promos_v26',
-  ADMIN_ATTEMPTS: 'peutic_db_admin_attempts_v26',
-  BREATHE_COOLDOWN: 'peutic_db_breathe_cooldown_v26',
-  BREATHE_LOGS: 'peutic_db_breathe_logs_v26',
-  MEMORIES: 'peutic_db_memories_v26',
-  GIFTS: 'peutic_db_gifts_v26',
-  FEEDBACK: 'peutic_db_feedback_v26',
-  ACTIVE_SESSIONS: 'peutic_active_sessions_v2',
-  QUEUE: 'peutic_queue_v1'
+  USER: 'peutic_db_current_user_v29', 
+  ALL_USERS: 'peutic_db_all_users_v29', 
+  TRANSACTIONS: 'peutic_db_transactions_v29', 
+  COMPANIONS: 'peutic_db_companions_v29',
+  SETTINGS: 'peutic_db_settings_v29',
+  LOGS: 'peutic_db_logs_v29',
+  MOODS: 'peutic_db_moods_v29',
+  JOURNALS: 'peutic_db_journals_v29',
+  ART: 'peutic_db_art_v29',
+  PROMOS: 'peutic_db_promos_v29',
+  ADMIN_ATTEMPTS: 'peutic_db_admin_attempts_v29',
+  BREATHE_COOLDOWN: 'peutic_db_breathe_cooldown_v29',
+  BREATHE_LOGS: 'peutic_db_breathe_logs_v29',
+  MEMORIES: 'peutic_db_memories_v29',
+  GIFTS: 'peutic_db_gifts_v29',
+  FEEDBACK: 'peutic_db_feedback_v29',
+  ACTIVE_SESSIONS: 'peutic_active_sessions_v29',
+  QUEUE: 'peutic_queue_v29'
 };
 
 // --- GENERIC AVATAR POOL (For Users/Fallbacks ONLY) ---
@@ -156,7 +156,6 @@ export class Database {
           return this.mapDbUserToAppUser(data);
       } catch (e) {
           // Fallback to local storage checks
-          console.warn("Supabase unreachable, checking local cache.");
           return this.getLocalUsers().find(u => u.email === email);
       }
   }
@@ -243,8 +242,12 @@ export class Database {
 
   static async hasAdmin(): Promise<boolean> {
     try {
-        const { count } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'ADMIN');
-        return (count || 0) > 0;
+        const response = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'ADMIN');
+        // Ensure real response. Dummy client returns an object that lacks .count or is not a promise result with data/count
+        if (response && typeof response.count === 'number') {
+            return response.count > 0;
+        }
+        throw new Error("Supabase offline or invalid client");
     } catch (e) {
         // Local Check
         return this.getLocalUsers().some(u => u.role === 'ADMIN');
