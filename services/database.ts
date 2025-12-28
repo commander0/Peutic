@@ -384,7 +384,7 @@ export class Database {
   // --- GLOBAL SETTINGS ---
   static getSettings(): GlobalSettings {
     const defaultSettings: GlobalSettings = {
-        pricePerMinute: 1.49,
+        pricePerMinute: 1.59,
         saleMode: true,
         maintenanceMode: false,
         allowSignups: true,

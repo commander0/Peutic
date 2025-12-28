@@ -489,7 +489,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                           <div className="flex items-center justify-between p-4 bg-black rounded-xl border border-gray-800">
                               <div>
                                   <p className="font-bold text-white">Sale Pricing Mode</p>
-                                  <p className="text-xs text-gray-500">Toggle between $1.49 (On) and $1.99 (Off).</p>
+                                  <p className="text-xs text-gray-500">Toggle between $1.59 (On) and $1.99 (Off).</p>
                               </div>
                               <button onClick={() => Database.saveSettings({...settings, saleMode: !settings.saleMode})} className={`w-12 h-6 rounded-full relative transition-colors ${settings.saleMode ? 'bg-green-500' : 'bg-gray-700'}`}>
                                   <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${settings.saleMode ? 'left-7' : 'left-1'}`}></div>

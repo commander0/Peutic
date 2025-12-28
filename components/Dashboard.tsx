@@ -593,7 +593,7 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
     const [error, setError] = useState(initialError || '');
     
     // In a real app, you'd fetch price from settings
-    const pricePerMin = 1.49;
+    const pricePerMin = 1.59;
     const stripeRef = useRef<any>(null); 
     const elementsRef = useRef<any>(null); 
     const cardElementRef = useRef<any>(null); 
@@ -830,7 +830,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
       if (paymentStatus === 'success') {
           const rawAmount = parseFloat(searchParams.get('amount') || '0');
           if (rawAmount > 0) {
-              const pricePerMin = 1.49;
+              const pricePerMin = 1.59;
               const minutes = Math.floor(rawAmount / pricePerMin);
               // Optimistically update UI, though database should have handled webhook ideally.
               // In this client-side fallback flow, we re-call topUp to ensure sync if webhook delayed or not set up
