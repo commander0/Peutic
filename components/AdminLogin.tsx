@@ -45,6 +45,15 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
     }, 1000);
   };
 
+  const validatePasswordStrength = (pwd: string): string | null => {
+      if (pwd.length < 8) return "Password must be at least 8 characters long.";
+      if (!/[A-Z]/.test(pwd)) return "Password must include at least one uppercase letter.";
+      if (!/[a-z]/.test(pwd)) return "Password must include at least one lowercase letter.";
+      if (!/[0-9]/.test(pwd)) return "Password must include at least one number.";
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) return "Password must include at least one special character.";
+      return null;
+  };
+
   const handleRegisterAdmin = (e: React.FormEvent) => {
       e.preventDefault();
       setError('');
@@ -58,8 +67,10 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
           setError("Passwords do not match.");
           return;
       }
-      if (newAdminPassword.length < 6) {
-          setError("Password must be at least 6 characters.");
+      
+      const weakPasswordMsg = validatePasswordStrength(newAdminPassword);
+      if (weakPasswordMsg) {
+          setError(weakPasswordMsg);
           return;
       }
 
@@ -120,6 +131,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                     <input type="password" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none" placeholder="Password" value={newAdminPassword} onChange={e => setNewAdminPassword(e.target.value)} />
                                     <input type="password" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none" placeholder="Confirm" value={newAdminConfirmPassword} onChange={e => setNewAdminConfirmPassword(e.target.value)} />
                                 </div>
+                                <div className="text-[10px] text-gray-500 leading-tight">Must contain 8+ chars, uppercase, lowercase, number, symbol.</div>
                                 <button className="w-full bg-yellow-500 text-black font-black py-4 rounded-xl hover:bg-yellow-400 transition-colors mt-4">{hasAdmin ? "RESET & CREATE ADMIN" : "INITIALIZE SYSTEM"}</button>
                                 <button type="button" onClick={() => setShowRegister(false)} className="text-gray-500 text-sm w-full text-center hover:text-white py-2">Cancel</button>
                              </form>

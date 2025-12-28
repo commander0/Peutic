@@ -149,6 +149,27 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
       }, {scope: 'public_profile,email'});
   };
 
+  // --- VALIDATION HELPERS ---
+  const validatePasswordStrength = (pwd: string): string | null => {
+      if (pwd.length < 8) return "Password must be at least 8 characters long.";
+      if (!/[A-Z]/.test(pwd)) return "Password must include at least one uppercase letter.";
+      if (!/[a-z]/.test(pwd)) return "Password must include at least one lowercase letter.";
+      if (!/[0-9]/.test(pwd)) return "Password must include at least one number.";
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) return "Password must include at least one special character.";
+      return null;
+  };
+
+  const validateAge = (dateStr: string): boolean => {
+      const today = new Date();
+      const birthDate = new Date(dateStr);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+      }
+      return age >= 18;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -166,11 +187,30 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             }
         } else {
             // SIGNUP VALIDATION
+            
+            // 1. Check Age
+            if (!validateAge(birthday)) {
+                setLoading(false);
+                setError("You must be at least 18 years old to create an account.");
+                return;
+            }
+
+            // 2. Check Password Match
             if (password !== confirmPassword) {
                 setLoading(false);
                 setError("Passwords do not match.");
                 return;
             }
+
+            // 3. Check Password Strength
+            const weakPasswordMsg = validatePasswordStrength(password);
+            if (weakPasswordMsg) {
+                setLoading(false);
+                setError(weakPasswordMsg);
+                return;
+            }
+
+            // 4. Check Existing User
             const existingUser = Database.getUserByEmail(email);
             if (existingUser) {
                 setLoading(false);
@@ -305,13 +345,19 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                                 <input type="text" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="First Name" value={firstName} onChange={e => setFirstName(e.target.value)} />
                                 <input type="text" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="Last Name" value={lastName} onChange={e => setLastName(e.target.value)} />
                             </div>
-                            <input type="date" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all animate-in slide-in-from-bottom-3 fade-in text-sm md:text-base dark:text-white" value={birthday} onChange={e => setBirthday(e.target.value)} />
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold text-gray-500 uppercase ml-1">Date of Birth</label>
+                                <input type="date" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all animate-in slide-in-from-bottom-3 fade-in text-sm md:text-base dark:text-white" value={birthday} onChange={e => setBirthday(e.target.value)} />
+                            </div>
                         </>
                     )}
                     <input type="email" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} />
                     <input type="password" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
                     {!isLogin && (
-                        <input type="password" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all animate-in slide-in-from-bottom-4 fade-in text-sm md:text-base dark:text-white" placeholder="Confirm Password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+                        <>
+                            <input type="password" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all animate-in slide-in-from-bottom-4 fade-in text-sm md:text-base dark:text-white" placeholder="Confirm Password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+                            <p className="text-[10px] text-gray-500 dark:text-gray-400 px-1 leading-tight">Password must be 8+ chars with uppercase, lowercase, number, & symbol.</p>
+                        </>
                     )}
 
                     <button type="submit" disabled={loading} className="w-full bg-black dark:bg-white text-white dark:text-black py-3 md:py-4 rounded-xl font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-all flex justify-center gap-2 shadow-xl text-sm md:text-base">
