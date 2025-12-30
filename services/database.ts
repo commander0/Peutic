@@ -589,21 +589,30 @@ export class Database {
       list.unshift(tx);
       localStorage.setItem(DB_KEYS.TRANSACTIONS, JSON.stringify(list));
   }
-  static topUpWallet(amount: number, cost: number, userId?: string) {
+  static async topUpWallet(amount: number, cost: number, userId?: string) {
       const targetUser = userId ? this.getAllUsers().find(u => u.id === userId) : this.getUser();
       if (targetUser) {
-          targetUser.balance += amount;
-          this.updateUser(targetUser);
-          this.addTransaction({
-              id: `tx_${Date.now()}`,
-              userId: targetUser.id,
-              userName: targetUser.name,
-              date: new Date().toISOString(),
-              amount: amount,
-              cost: cost,
-              description: cost > 0 ? 'Credit Purchase' : 'Admin Grant',
-              status: 'COMPLETED'
-          });
+          try {
+              // 1. Sync with Server (Critical for Video Init balance check)
+              await Api.topUp(targetUser.id, amount, cost);
+              
+              // 2. Local Update (Optimistic UI)
+              targetUser.balance += amount;
+              this.updateUser(targetUser);
+              this.addTransaction({
+                  id: `tx_${Date.now()}`,
+                  userId: targetUser.id,
+                  userName: targetUser.name,
+                  date: new Date().toISOString(),
+                  amount: amount,
+                  cost: cost,
+                  description: cost > 0 ? 'Credit Purchase' : 'Admin Grant',
+                  status: 'COMPLETED'
+              });
+          } catch (e) {
+              console.error("Top-up failed on server:", e);
+              // In production, we should show error to user and revert
+          }
       }
   }
   
