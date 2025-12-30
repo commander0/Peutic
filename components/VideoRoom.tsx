@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Companion, SessionFeedback } from '../types';
 import { 
@@ -431,9 +432,9 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   // --- CONNECTED STATE ---
   if (connectionState === 'CONNECTED' && conversationUrl) {
       return (
-          <div className="fixed inset-0 bg-black z-50 flex flex-col">
+          <div className="fixed inset-0 bg-black z-50 flex flex-col h-[100dvh]">
               {/* VIDEO LAYER */}
-              <div className="flex-1 relative bg-gray-900">
+              <div className="flex-1 relative bg-gray-900 overflow-hidden">
                   <iframe 
                       src={getIframeUrl()} 
                       allow="microphone; camera; autoplay; fullscreen"

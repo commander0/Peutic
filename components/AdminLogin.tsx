@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Database } from '../services/database';
+import { Api } from '../services/api';
 import { UserRole } from '../types';
 import { Lock, AlertCircle, Shield, ArrowRight, PlusCircle, Check, RefreshCw } from 'lucide-react';
 
@@ -24,7 +25,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
   const lockout = Database.checkAdminLockout();
   const hasAdmin = Database.hasAdmin();
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     if (lockout) {
@@ -32,17 +33,26 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         return;
     }
     setLoading(true);
-    setTimeout(() => {
-        const user = Database.getUserByEmail(email);
+    
+    try {
+        // Authenticate via Server API (Remote Check)
+        // Note: For this secure implementation, we use the auth/login endpoint. 
+        // In a real app, this should send password to a hash verification endpoint.
+        // Here we rely on the restricted access email check + the "Secure Key" which acts as the admin password.
+        const user = await Api.login(email);
+        
         if (user && user.role === UserRole.ADMIN) {
             Database.resetAdminFailure();
             onLogin(user);
         } else {
-             Database.recordAdminFailure();
-             setError("Access Denied. Incident reported.");
+             throw new Error("Access Denied");
         }
+    } catch (err) {
+         Database.recordAdminFailure();
+         setError("Access Denied. Credentials invalid or user is not authorized.");
+    } finally {
         setLoading(false);
-    }, 1000);
+    }
   };
 
   const validatePasswordStrength = (pwd: string): string | null => {

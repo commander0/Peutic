@@ -42,6 +42,7 @@ app.use(rateLimiter);
 // ==========================================
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
+// Use Service Role Key for Admin actions (Updating balances), fallback to Anon for read-only
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
@@ -123,7 +124,6 @@ const getEstimatedWaitTime = async (userId) => {
 };
 
 // Run cleanup every 10 seconds (Note: In Serverless Vercel, this interval only runs while a request is processing)
-// We retain it for local dev or if hosted on a VPS.
 if (process.env.NODE_ENV !== 'production') {
     setInterval(cleanupZombies, 10000);
 }
@@ -176,8 +176,6 @@ app.post('/api/auth/signup', async (req, res) => {
 app.post('/api/user/update', async (req, res) => {
     const { user } = req.body;
     
-    // Protect balance from client-side manipulation
-    // Only update name/avatar/preferences
     const { error } = await supabase
         .from('users')
         .update({
@@ -198,7 +196,6 @@ app.post('/api/queue/join', async (req, res) => {
     const { userId } = req.body;
 
     try {
-        // Trigger lazy cleanup for serverless environment
         await cleanupZombies();
 
         // 1. Is user already active?
@@ -209,7 +206,6 @@ app.post('/api/queue/join', async (req, res) => {
             .single();
 
         if (active) {
-            // Update heartbeat
             await supabase.from('active_sessions').update({ last_ping: new Date().toISOString() }).eq('user_id', userId);
             return res.json({ status: 'ACTIVE', position: 0, message: "Session Active" });
         }
@@ -222,7 +218,6 @@ app.post('/api/queue/join', async (req, res) => {
             .single();
 
         if (queued) {
-            // Calculate Position
             const { count } = await supabase.from('session_queue').select('*', { count: 'exact', head: true }).lt('joined_at', queued.joined_at);
             const pos = (count || 0) + 1;
             return res.json({ status: 'QUEUED', position: pos, eta: await getEstimatedWaitTime(userId) });
@@ -253,7 +248,6 @@ app.get('/api/queue/status/:userId', async (req, res) => {
     const { userId } = req.params;
 
     try {
-        // Check Active
         const { data: active } = await supabase
             .from('active_sessions')
             .select('user_id')
@@ -262,7 +256,6 @@ app.get('/api/queue/status/:userId', async (req, res) => {
         
         if (active) return res.json({ status: 'ACTIVE', position: 0 });
 
-        // Check Queue
         const { data: myEntry } = await supabase
             .from('session_queue')
             .select('joined_at')
@@ -276,7 +269,7 @@ app.get('/api/queue/status/:userId', async (req, res) => {
                 .lt('joined_at', myEntry.joined_at);
             
             const pos = (count || 0) + 1;
-            return res.json({ status: 'QUEUED', position: pos, eta: 3 * pos }); // simplified eta
+            return res.json({ status: 'QUEUED', position: pos, eta: 3 * pos }); 
         }
 
         res.json({ status: 'IDLE', position: 0 });
@@ -307,7 +300,8 @@ app.post('/api/session/end', async (req, res) => {
 
 app.post('/api/video/init', async (req, res) => {
     const { replicaId, context, conversationName, userId } = req.body;
-    const TAVUS_API_KEY = process.env.VITE_TAVUS_API_KEY;
+    // Use server-side env var preferred, fallback to vite for dev
+    const TAVUS_API_KEY = process.env.TAVUS_API_KEY || process.env.VITE_TAVUS_API_KEY;
 
     if (!TAVUS_API_KEY) {
         return res.status(500).json({ error: "Server Configuration Error: Video API Key Missing" });
@@ -335,9 +329,9 @@ app.post('/api/video/init', async (req, res) => {
                 conversational_context: context,
                 properties: {
                     max_call_duration: 3600,
-                    enable_recording: true,
-                    enable_transcription: true,
-                    language: 'english' // Auto-detect usually works better if omitted, but safe default
+                    enable_recording: false, // PRIVACY: DISABLED BY DEFAULT
+                    enable_transcription: true, // Needed for conversation logic
+                    language: 'english'
                 }
             }),
         });
@@ -358,7 +352,7 @@ app.post('/api/video/init', async (req, res) => {
 
 app.post('/api/video/terminate', async (req, res) => {
     const { conversationId } = req.body;
-    const TAVUS_API_KEY = process.env.VITE_TAVUS_API_KEY;
+    const TAVUS_API_KEY = process.env.TAVUS_API_KEY || process.env.VITE_TAVUS_API_KEY;
 
     if (!conversationId || !TAVUS_API_KEY) return res.json({ success: false });
 
@@ -379,25 +373,18 @@ app.post('/api/credits/topup', async (req, res) => {
     const { userId, amount, cost } = req.body;
     
     // SECURITY: Input Validation
-    if (!amount || amount <= 0 || amount > 1000) { // Max 1000 mins per tx
+    if (!amount || amount <= 0 || amount > 1000) {
         return res.status(400).json({ error: "Invalid amount detected." });
     }
-    if (cost < 0) {
-        return res.status(400).json({ error: "Invalid cost." });
-    }
 
-    // Fetch current user
     const { data: user } = await supabase.from('users').select('balance').eq('id', userId).single();
     if (!user) return res.status(404).json({ error: "User not found" });
 
     const newBalance = (user.balance || 0) + amount;
 
-    // Update
     const { error } = await supabase.from('users').update({ balance: newBalance }).eq('id', userId);
-    
     if (error) return res.status(500).json({ error: "Update failed" });
 
-    // Log Transaction
     await supabase.from('transactions').insert({
         user_id: userId,
         amount: amount,
@@ -441,12 +428,10 @@ app.get('/api/admin/data', async (req, res) => {
     });
 });
 
-// Only listen if not in production (Vercel manages the connection in prod)
 if (process.env.NODE_ENV !== 'production') {
     app.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);
     });
 }
 
-// Export app for Vercel Serverless Function
 export default app;
