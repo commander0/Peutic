@@ -10,35 +10,28 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-// Port is only used for local development
-const PORT = process.env.PORT || 3001;
+const PORT = 3001;
 
 // --- CONFIGURATION ---
 const MAX_CONCURRENT_SESSIONS = 15;
 const MAX_QUEUE_SIZE = 50;
-
-// VERCEL ADAPTATION: Vercel file system is read-only. 
-// We must use /tmp for temporary storage, but note that data WILL persist only briefly.
-// For a real production app on Vercel, you must use an external database (MongoDB, Postgres, etc).
-const isVercel = process.env.VERCEL === '1';
-const DB_FILE = isVercel ? '/tmp/db.json' : path.join(__dirname, 'db.json');
-
+const DB_FILE = path.join(__dirname, 'db.json');
 // In production, this would come from process.env
 const TAVUS_API_KEY = process.env.VITE_TAVUS_API_KEY || ''; 
 
 app.use(cors());
-app.use(bodyParser.json({ limit: '10mb' })); 
+app.use(bodyParser.json({ limit: '10mb' })); // Increased limit for image data
 
 // --- IN-MEMORY STATE ---
-// Note: On Vercel, these reset on every cold start (approx every 15 mins of inactivity)
-let activeSessions = []; 
-let queue = []; 
+// Volatile state for Queue/Sessions (resets on restart to prevent stale locks)
+let activeSessions = []; // Array of userIds
+let queue = []; // Array of userIds
 
 // Persistent State (Saved to JSON)
 let db = {
     users: [],
-    journals: {}, 
-    art: {}, 
+    journals: {}, // Map<userId, Array>
+    art: {}, // Map<userId, Array>
     transactions: [],
     feedback: [],
     settings: {
@@ -60,7 +53,7 @@ const loadDb = () => {
             const data = fs.readFileSync(DB_FILE, 'utf8');
             const loaded = JSON.parse(data);
             db = { ...db, ...loaded };
-            console.log('📦 Database loaded.');
+            console.log('📦 Database loaded from disk.');
         } catch (e) {
             console.error("DB Load Error:", e);
         }
@@ -77,15 +70,16 @@ const saveDb = () => {
     }
 };
 
-// Initialize DB
 loadDb();
 
 // --- QUEUE LOGIC ---
 const processQueue = () => {
+    // While there are spots active and people waiting
     while (activeSessions.length < MAX_CONCURRENT_SESSIONS && queue.length > 0) {
         const nextUser = queue.shift();
         if (nextUser && !activeSessions.includes(nextUser)) {
             activeSessions.push(nextUser);
+            console.log(`[QUEUE] User ${nextUser} moved to active. Active: ${activeSessions.length}/${MAX_CONCURRENT_SESSIONS}`);
         }
     }
 };
@@ -117,7 +111,7 @@ app.post('/api/auth/signup', (req, res) => {
         id: `u_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
         name, 
         email, 
-        role: role || (db.users.length === 0 ? 'ADMIN' : 'USER'),
+        role: role || (db.users.length === 0 ? 'ADMIN' : 'USER'), // First user is Admin
         balance: 0,
         avatar,
         birthday,
@@ -149,6 +143,7 @@ app.post('/api/user/update', (req, res) => {
 app.delete('/api/user/:userId', (req, res) => {
     const { userId } = req.params;
     db.users = db.users.filter(u => u.id !== userId);
+    // Cleanup their data
     delete db.journals[userId];
     delete db.art[userId];
     saveDb();
@@ -168,18 +163,23 @@ app.post('/api/queue/join', (req, res) => {
         return res.json({ status: 'QUEUED', position: qIdx + 1 });
     }
 
+    // Capacity Check
     if (activeSessions.length >= MAX_CONCURRENT_SESSIONS && queue.length >= MAX_QUEUE_SIZE) {
         return res.status(503).json({ 
-            error: 'System at capacity.' 
+            error: 'Friendly Reminder: Our sanctuary is currently at full capacity (50+ waiting). Please breathe and try again in a few minutes.' 
         });
     }
 
+    // If active spots open, skip queue
     if (activeSessions.length < MAX_CONCURRENT_SESSIONS) {
         activeSessions.push(userId);
+        console.log(`[SESSION] User ${userId} started directly. Active: ${activeSessions.length}`);
         return res.json({ status: 'ACTIVE', position: 0 });
     }
 
+    // Add to queue
     queue.push(userId);
+    console.log(`[QUEUE] User ${userId} joined queue at pos ${queue.length}`);
     res.json({ status: 'QUEUED', position: queue.length });
 });
 
@@ -190,6 +190,7 @@ app.get('/api/queue/status/:userId', (req, res) => {
     const qIdx = queue.indexOf(userId);
     if (qIdx !== -1) return res.json({ status: 'QUEUED', position: qIdx + 1 });
     
+    // Not in queue or active
     res.json({ status: 'NONE', position: 0 });
 });
 
@@ -200,13 +201,16 @@ app.post('/api/session/end', (req, res) => {
     queue = queue.filter(id => id !== userId);
     
     if (wasActive) {
-        processQueue();
+        console.log(`[SESSION] User ${userId} ended session.`);
+        processQueue(); // Allow next person in
     }
     res.json({ success: true });
 });
 
 app.post('/api/session/heartbeat', (req, res) => {
     const { userId } = req.body;
+    // In a real memory store (Redis), we would update TTL here.
+    // For in-memory JS array, existence is enough.
     if (!activeSessions.includes(userId) && !queue.includes(userId)) {
         return res.status(401).json({ error: "Session expired" });
     }
@@ -241,7 +245,9 @@ app.post('/api/credits/deduct', (req, res) => {
     const user = db.users.find(u => u.id === userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
+    // Allow overdraft for Admins, strictly enforce for Users
     if (user.role !== 'ADMIN' && user.balance < amount) {
+        // Deduct what is left at least
         const taken = user.balance;
         user.balance = 0;
         saveDb();
@@ -260,7 +266,7 @@ app.post('/api/transaction', (req, res) => {
     res.json({ success: true });
 });
 
-// 4. STORAGE
+// 4. STORAGE (Journal, Art, Feedback)
 app.get('/api/journal/:userId', (req, res) => {
     res.json(db.journals[req.params.userId] || []);
 });
@@ -280,6 +286,7 @@ app.get('/api/art/:userId', (req, res) => {
 app.post('/api/art', (req, res) => {
     const { userId, entry } = req.body;
     if (!db.art[userId]) db.art[userId] = [];
+    // Limit to 15 images per user to save space in this file-based DB demo
     if (db.art[userId].length >= 15) db.art[userId].pop();
     
     db.art[userId].unshift(entry);
@@ -303,12 +310,13 @@ app.post('/api/feedback', (req, res) => {
     res.json({ success: true });
 });
 
-// 5. VIDEO PROXY
+// 5. VIDEO PROXY (TAVUS) - Keeps API Key Secure on Server
 app.post('/api/video/init', async (req, res) => {
     const { replicaId, context, conversationName } = req.body;
     
+    // In production this API key should be in a .env file on the server
     if (!TAVUS_API_KEY && process.env.NODE_ENV !== 'development') {
-        console.error("Missing TAVUS_API_KEY");
+        console.error("Missing TAVUS_API_KEY in server environment");
     }
 
     try {
@@ -332,12 +340,16 @@ app.post('/api/video/init', async (req, res) => {
         });
 
         const data = await response.json();
+        
+        // If API key is invalid or request fails, return descriptive error
         if (!response.ok) {
              throw new Error(data.message || data.error || 'Video provider error');
         }
+        
         res.json(data);
     } catch (e) {
         console.error("Video Init Error:", e);
+        // Fallback for development if API key is missing
         if (process.env.NODE_ENV === 'development' || !TAVUS_API_KEY) {
              return res.json({ 
                 conversation_id: "mock_id", 
@@ -368,13 +380,8 @@ app.post('/api/settings', (req, res) => {
     res.json(db.settings);
 });
 
-// VERCEL CONFIGURATION
-// Only listen if not running in Vercel environment
-if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => {
-        console.log(`✨ Peutic Server running locally on http://localhost:${PORT}`);
-    });
-}
-
-// Export the app for Vercel Serverless
-export default app;
+// Start Server
+app.listen(PORT, () => {
+    console.log(`✨ Peutic Server running on http://localhost:${PORT}`);
+    console.log(`🔒 Limits: ${MAX_CONCURRENT_SESSIONS} Active / ${MAX_QUEUE_SIZE} Queue`);
+});
