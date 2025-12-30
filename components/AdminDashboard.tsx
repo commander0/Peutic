@@ -62,7 +62,10 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [settings, setSettings] = useState<GlobalSettings>(Database.getSettings());
   const [logs, setLogs] = useState<SystemLog[]>([]);
+  
+  // Real-time Server Stats
   const [activeCount, setActiveCount] = useState(0);
+  const [queueCount, setQueueCount] = useState(0);
   
   // UI States
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,6 +74,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   
   // Computed
   const MAX_CONCURRENT_CAPACITY = 15;
+  const QUEUE_CAPACITY_DISPLAY = 35; // Visual limit for dashboard grid
   const totalRevenue = transactions.filter(t => t.amount > 0).reduce((acc, t) => acc + (t.cost || 0), 0);
   
   // Revenue Data for Chart
@@ -95,9 +99,13 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         setBroadcastMsg(s.broadcastMessage || '');
         setLogs(Database.getSystemLogs());
         try {
-            const count = await Database.getActiveSessionCount();
-            setActiveCount(count);
-        } catch (e) {}
+            // Fetch real server stats
+            const stats = await Database.getAdminData();
+            setActiveCount(stats.activeSessions || 0);
+            setQueueCount(stats.queueLength || 0);
+        } catch (e) {
+            console.warn("Failed to sync server stats");
+        }
     };
     fetchData();
     const interval = setInterval(fetchData, 3000); 
@@ -113,8 +121,6 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   };
 
   const handleDeleteUser = async (userId: string, idx: number) => {
-      // Basic Root Admin Protection: Cannot delete first user or self (if logic extended)
-      // Assuming index 0 is always root admin in our local setup
       if (idx === 0) {
           alert("SECURITY ALERT: Cannot delete Root Admin account.");
           return;
@@ -220,30 +226,54 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                           <StatCard title="Active Sessions" value={activeCount} icon={Video} subValue={`${MAX_CONCURRENT_CAPACITY} Max`} subLabel="Capacity" progress={(activeCount / MAX_CONCURRENT_CAPACITY) * 100} color="purple" />
+                          <StatCard title="Queue Length" value={queueCount} icon={Clock} subValue="Waiting" subLabel="Users" color="yellow" />
                           <StatCard title="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon={DollarSign} subValue="+8.4%" subLabel="MoM" color="green" />
                           <StatCard title="Total Users" value={users.length} icon={Users} subValue="+12" subLabel="Today" color="blue" />
-                          <StatCard title="Platform Health" value="100%" icon={Heart} subValue="Optimal" subLabel="Uptime" color="pink" />
                       </div>
 
                       <div className="grid lg:grid-cols-3 gap-8">
-                          {/* Live Concurrency Meter (15 Blocks) & Broadcast */}
+                          {/* Live Traffic Monitoring */}
                           <div className="lg:col-span-2 space-y-8">
+                              
+                              {/* ACTIVE SESSIONS GRID (GREEN) */}
                               <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                                  <h3 className="font-bold text-white mb-6 flex items-center gap-2"><Server className="w-5 h-5 text-purple-500"/> Real-time Concurrency</h3>
+                                  <h3 className="font-bold text-white mb-6 flex items-center gap-2"><Server className="w-5 h-5 text-green-500"/> Active Connections</h3>
                                   
                                   {/* 15 Block Meter */}
                                   <div className="grid grid-cols-5 md:grid-cols-15 gap-2 md:gap-3 mb-4">
-                                      {Array.from({ length: 15 }).map((_, i) => (
+                                      {Array.from({ length: MAX_CONCURRENT_CAPACITY }).map((_, i) => (
                                           <div 
-                                              key={i} 
+                                              key={`active-${i}`} 
                                               className={`aspect-square rounded-lg transition-all duration-500 border border-black/20 ${i < activeCount ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)] animate-pulse' : 'bg-gray-800/50'}`}
+                                              title={i < activeCount ? "Active Session" : "Available Slot"}
                                           ></div>
                                       ))}
                                   </div>
                                   <div className="flex justify-between text-xs font-mono text-gray-500 uppercase tracking-widest">
                                       <span>0 Sessions</span>
                                       <span>{activeCount} Active</span>
-                                      <span>15 Max</span>
+                                      <span>{MAX_CONCURRENT_CAPACITY} Max</span>
+                                  </div>
+                              </div>
+
+                              {/* WAITING ROOM GRID (YELLOW) */}
+                              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                                  <h3 className="font-bold text-white mb-6 flex items-center gap-2"><Clock className="w-5 h-5 text-yellow-500"/> Waiting Room Queue</h3>
+                                  
+                                  {/* 35 Block Meter for Queue Visualization */}
+                                  <div className="grid grid-cols-7 md:grid-cols-15 gap-2 md:gap-3 mb-4">
+                                      {Array.from({ length: QUEUE_CAPACITY_DISPLAY }).map((_, i) => (
+                                          <div 
+                                              key={`queue-${i}`} 
+                                              className={`aspect-square rounded-lg transition-all duration-500 border border-black/20 ${i < queueCount ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.6)]' : 'bg-gray-800/30 border-dashed border-gray-700'}`}
+                                              title={i < queueCount ? `User Waiting #${i+1}` : "Empty Queue Slot"}
+                                          ></div>
+                                      ))}
+                                  </div>
+                                  <div className="flex justify-between text-xs font-mono text-gray-500 uppercase tracking-widest">
+                                      <span>Next in Line</span>
+                                      <span>{queueCount} Waiting</span>
+                                      <span>Capacity View</span>
                                   </div>
                               </div>
 

@@ -235,34 +235,38 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
               <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">Last Updated: October 24, 2025</p>
             </div>
 
+            <section className="bg-yellow-50 dark:bg-yellow-900/10 p-6 rounded-2xl border border-yellow-200 dark:border-yellow-900/30">
+              <h2 className="text-lg font-black text-yellow-800 dark:text-yellow-500 uppercase tracking-wider mb-2">Important Disclaimer</h2>
+              <p className="text-sm text-yellow-900 dark:text-yellow-200 font-medium">
+                PEUTIC IS NOT A HEALTHCARE PROVIDER. The Services are for emotional support and coaching purposes only. 
+                They do not constitute medical advice, diagnosis, or treatment.
+              </p>
+            </section>
+
             <section>
-              <h2 className="text-xl md:text-2xl font-bold mb-4 flex items-center gap-2 dark:text-white"><Shield className="w-5 h-5 md:w-6 md:h-6 text-green-600"/> 1. HIPAA & Data Security</h2>
+              <h2 className="text-xl md:text-2xl font-bold mb-4 flex items-center gap-2 dark:text-white"><Shield className="w-5 h-5 md:w-6 md:h-6 text-green-600"/> 1. Data Security & HIPAA</h2>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4 text-sm md:text-base">
-                Peutic Inc. ("we", "us") is committed to protecting your medical and personal information. 
-                We operate in full compliance with the Health Insurance Portability and Accountability Act (HIPAA). 
-                All video transmission is end-to-end encrypted using AES-256 standards.
+                Peutic Inc. operates in compliance with HIPAA standards for data transmission. All video and audio streams are encrypted via AES-256 and WebRTC DTLS.
               </p>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm md:text-base">
-                We do <strong>not</strong> record video sessions unless explicitly requested by the user for therapeutic review. 
-                Transient data processed by our AI models is anonymized and not used for model training without consent.
+                We do <strong>not</strong> record or store video content of your sessions on our servers unless you explicitly opt-in for therapeutic review features.
               </p>
             </section>
 
             <section>
-              <h2 className="text-xl md:text-2xl font-bold mb-4 dark:text-white">2. Information We Collect</h2>
+              <h2 className="text-xl md:text-2xl font-bold mb-4 dark:text-white">2. AI Data Usage</h2>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm md:text-base">
+                Our AI systems process text and audio transiently to facilitate the conversation. Your personal conversation data is <strong>never</strong> used to train our general public models.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl md:text-2xl font-bold mb-4 dark:text-white">3. Information We Collect</h2>
               <ul className="list-disc pl-6 space-y-2 text-gray-700 dark:text-gray-300 text-sm md:text-base">
-                <li><strong>Account Information:</strong> Name, email, and date of birth for identity verification.</li>
-                <li><strong>Health Data:</strong> Mood logs, journal entries, and session session summaries (stored encrypted).</li>
-                <li><strong>Usage Data:</strong> Session duration and transaction history for billing purposes.</li>
+                <li><strong>Identity:</strong> Name, email, and age verification (18+ only).</li>
+                <li><strong>Usage:</strong> Transaction history and session timestamps for billing.</li>
+                <li><strong>Voluntary Data:</strong> Journal entries and mood logs (stored encrypted).</li>
               </ul>
-            </section>
-
-            <section>
-              <h2 className="text-xl md:text-2xl font-bold mb-4 dark:text-white">3. Cookie Policy</h2>
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm md:text-base">
-                We use secure HTTP-only cookies to maintain your session authentication. We also use minimal analytic cookies 
-                to monitor system performance (latency, uptime) to ensure the quality of video calls. You may opt-out of non-essential cookies via the footer settings.
-              </p>
             </section>
           </div>
         );
@@ -275,32 +279,34 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
               <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">Effective Date: October 24, 2025</p>
             </div>
 
-            <section>
-              <h2 className="text-xl md:text-2xl font-bold mb-4 dark:text-white">1. Service Usage</h2>
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4 text-sm md:text-base">
-                Peutic provides an emotional support platform connecting users with AI-enhanced human specialists. 
-                <strong>This service is not a replacement for emergency medical care.</strong> If you are in crisis or have suicidal ideation, 
-                please call your local emergency services immediately (988 in the US).
+            <section className="bg-red-50 dark:bg-red-900/10 p-6 rounded-2xl border border-red-200 dark:border-red-900/30">
+              <h2 className="text-lg font-black text-red-800 dark:text-red-500 uppercase tracking-wider mb-2">NON-MEDICAL SERVICE</h2>
+              <p className="text-sm text-red-900 dark:text-red-200 font-bold">
+                IF YOU ARE THINKING ABOUT SUICIDE OR IF YOU ARE CONSIDERING HARMING YOURSELF OR OTHERS OR IF YOU FEEL THAT ANY OTHER PERSON MAY BE IN ANY DANGER OR IF YOU HAVE ANY MEDICAL EMERGENCY, YOU MUST IMMEDIATELY CALL THE EMERGENCY SERVICE NUMBER (911 IN THE US) AND NOTIFY THE RELEVANT AUTHORITIES.
               </p>
             </section>
 
             <section>
-              <h2 className="text-xl md:text-2xl font-bold mb-4 dark:text-white">2. Payments & Billing</h2>
+              <h2 className="text-xl md:text-2xl font-bold mb-4 dark:text-white">1. Service Description</h2>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4 text-sm md:text-base">
-                <strong>Rate:</strong> Services are billed at the rate locked in during signup (currently $1.49/USD per minute).
-                Billing is calculated per second.
-              </p>
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm md:text-base">
-                <strong>Refunds:</strong> We offer a satisfaction guarantee. If a session was unsatisfactory due to technical issues, 
-                please contact support within 24 hours for a full credit refund.
+                Peutic provides a platform for connecting with human and AI-assisted emotional support specialists. Our specialists act as coaches and companions, not licensed psychiatrists or doctors.
               </p>
             </section>
 
             <section>
-              <h2 className="text-xl md:text-2xl font-bold mb-4 dark:text-white">3. User Conduct</h2>
+              <h2 className="text-xl md:text-2xl font-bold mb-4 dark:text-white">2. Billing & Credits</h2>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4 text-sm md:text-base">
+                <strong>Prepaid Credits:</strong> Services are purchased via prepaid credits. These credits do not expire as long as the account is active.
+              </p>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm md:text-base">
-                Users agree to treat specialists with respect. Harassment, hate speech, or inappropriate behavior during video calls 
-                will result in an immediate permanent ban and forfeiture of remaining balance.
+                <strong>Refunds:</strong> We offer a "Good Fit Guarantee". If you are unsatisfied with the first 5 minutes of any session, you may end the call and request a credit refund via support.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl md:text-2xl font-bold mb-4 dark:text-white">3. Zero Tolerance Policy</h2>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm md:text-base">
+                We maintain a strict zero-tolerance policy for harassment, hate speech, or inappropriate sexual conduct towards our specialists. Violation of this policy results in an immediate permanent ban and forfeiture of all remaining credits.
               </p>
             </section>
           </div>

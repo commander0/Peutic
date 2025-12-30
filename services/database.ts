@@ -1,6 +1,7 @@
 
 import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, ServerMetric, MoodEntry, JournalEntry, PromoCode, SessionFeedback, ArtEntry, BreathLog, SessionMemory, GiftCard } from '../types';
 import { supabase } from './supabaseClient';
+import { Api } from './api';
 
 const DB_KEYS = {
   USER: 'peutic_db_current_user_v26', 
@@ -384,7 +385,7 @@ export class Database {
   // --- GLOBAL SETTINGS ---
   static getSettings(): GlobalSettings {
     const defaultSettings: GlobalSettings = {
-        pricePerMinute: 1.59,
+        pricePerMinute: 1.49,
         saleMode: true,
         maintenanceMode: false,
         allowSignups: true,
@@ -564,6 +565,16 @@ export class Database {
 
   static getEstimatedWaitTime(pos: number): number {
       return Math.max(0, (pos - 1) * 3); // 3 mins per person avg
+  }
+
+  // --- ADMIN & ANALYTICS ---
+  static async getAdminData() {
+      try {
+          return await Api.getAdminData();
+      } catch (e) {
+          console.error("Admin data fetch failed", e);
+          return { activeSessions: 0, queueLength: 0, totalUsers: 0 };
+      }
   }
 
   // --- TRANSACTIONS & REST ---
