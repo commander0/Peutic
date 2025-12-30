@@ -606,13 +606,31 @@ export class Database {
           });
       }
   }
-  static deductBalance(amount: number) {
+  
+  // UPDATED: Use secure API call for deduction
+  static async deductBalance(amount: number) {
       const user = this.getUser();
       if (user) {
-          user.balance = Math.max(0, user.balance - amount);
-          this.updateUser(user);
+          try {
+              // Optimistic UI Update
+              const oldBalance = user.balance;
+              user.balance = Math.max(0, user.balance - amount);
+              this.updateUser(user);
+
+              // Server Sync
+              const res = await Api.deduct(user.id, amount);
+              if (!res.success) {
+                  // Rollback if server fails
+                  user.balance = oldBalance;
+                  this.updateUser(user);
+                  console.error("Deduction failed on server");
+              }
+          } catch (e) {
+              console.error("Deduction Error:", e);
+          }
       }
   }
+
   static getSystemLogs(): SystemLog[] {
       return JSON.parse(localStorage.getItem(DB_KEYS.LOGS) || '[]');
   }

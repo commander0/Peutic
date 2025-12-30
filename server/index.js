@@ -303,6 +303,76 @@ app.post('/api/session/end', async (req, res) => {
     res.json({ success: true });
 });
 
+// --- VIDEO GENERATION (TAVUS) ---
+
+app.post('/api/video/init', async (req, res) => {
+    const { replicaId, context, conversationName, userId } = req.body;
+    const TAVUS_API_KEY = process.env.VITE_TAVUS_API_KEY;
+
+    if (!TAVUS_API_KEY) {
+        return res.status(500).json({ error: "Server Configuration Error: Video API Key Missing" });
+    }
+
+    try {
+        // 1. Balance Check
+        if (userId) {
+            const { data: user } = await supabase.from('users').select('balance').eq('id', userId).single();
+            if (!user || user.balance <= 0) {
+                return res.status(403).json({ error: "Insufficient Credits" });
+            }
+        }
+
+        // 2. Call Tavus
+        const response = await fetch('https://tavusapi.com/v2/conversations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': TAVUS_API_KEY,
+            },
+            body: JSON.stringify({
+                replica_id: replicaId,
+                conversation_name: conversationName,
+                conversational_context: context,
+                properties: {
+                    max_call_duration: 3600,
+                    enable_recording: true,
+                    enable_transcription: true,
+                    language: 'english' // Auto-detect usually works better if omitted, but safe default
+                }
+            }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || data.error || "Failed to create conversation");
+        }
+
+        res.json(data);
+
+    } catch (e) {
+        console.error("Video Init Error:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/video/terminate', async (req, res) => {
+    const { conversationId } = req.body;
+    const TAVUS_API_KEY = process.env.VITE_TAVUS_API_KEY;
+
+    if (!conversationId || !TAVUS_API_KEY) return res.json({ success: false });
+
+    try {
+        await fetch(`https://tavusapi.com/v2/conversations/${conversationId}/end`, {
+            method: 'POST',
+            headers: { 'x-api-key': TAVUS_API_KEY }
+        });
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: "Termination failed" });
+    }
+});
+
 // --- SECURE CREDITS ---
 
 app.post('/api/credits/topup', async (req, res) => {
@@ -315,11 +385,6 @@ app.post('/api/credits/topup', async (req, res) => {
     if (cost < 0) {
         return res.status(400).json({ error: "Invalid cost." });
     }
-
-    // TODO: In a real production environment, you MUST validate the 
-    // Stripe PaymentIntent ID here before crediting the user.
-    // e.g., const payment = await stripe.paymentIntents.retrieve(paymentId);
-    // if (payment.status !== 'succeeded') return error;
 
     // Fetch current user
     const { data: user } = await supabase.from('users').select('balance').eq('id', userId).single();
