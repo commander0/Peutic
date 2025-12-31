@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Database } from '../services/database';
 import { Api } from '../services/api';
 import { UserRole } from '../types';
-import { Lock, AlertCircle, Shield, ArrowRight, PlusCircle, Check, RefreshCw } from 'lucide-react';
+import { Lock, AlertCircle, Shield, ArrowRight, PlusCircle, RefreshCw, Key } from 'lucide-react';
 
 interface AdminLoginProps {
   onLogin: (user: any) => void;
@@ -16,6 +16,11 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   
+  // Lockout State
+  const [lockoutMinutes, setLockoutMinutes] = useState(Database.checkAdminLockout());
+  const [showOverride, setShowOverride] = useState(false);
+  const [overrideKey, setOverrideKey] = useState('');
+
   const [showRegister, setShowRegister] = useState(false);
   const [masterKey, setMasterKey] = useState('');
   const [newAdminEmail, setNewAdminEmail] = useState('');
@@ -25,8 +30,6 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
   // Checking server state
   const [checkingStatus, setCheckingStatus] = useState(true);
   const [hasAdmin, setHasAdmin] = useState(false);
-
-  const lockout = Database.checkAdminLockout();
 
   useEffect(() => {
       const checkAdmin = async () => {
@@ -40,15 +43,27 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
           }
       };
       checkAdmin();
+
+      // Check lockout status every second to update timer or auto-unlock
+      const timer = setInterval(() => {
+          setLockoutMinutes(Database.checkAdminLockout());
+      }, 1000);
+
+      return () => clearInterval(timer);
   }, []);
 
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (lockout) {
-        setError(`System Locked. Try again in ${lockout} minutes.`);
+    
+    // Double check lockout before submitting
+    const currentLockout = Database.checkAdminLockout();
+    if (currentLockout > 0) {
+        setLockoutMinutes(currentLockout);
+        setError(`System Locked. Try again in ${currentLockout} minutes.`);
         return;
     }
+
     setLoading(true);
     
     try {
@@ -62,10 +77,25 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         }
     } catch (err: any) {
          Database.recordAdminFailure();
+         // Update lockout state immediately after failure
+         setLockoutMinutes(Database.checkAdminLockout());
          setError(err.message || "Access Denied. Invalid credentials.");
     } finally {
         setLoading(false);
     }
+  };
+
+  const handleOverride = (e: React.FormEvent) => {
+      e.preventDefault();
+      if (overrideKey === 'PEUTIC-MASTER-2025') {
+          Database.resetAdminFailure();
+          setLockoutMinutes(0);
+          setShowOverride(false);
+          setOverrideKey('');
+          setSuccessMsg("Terminal Unlocked via Master Key Override.");
+      } else {
+          setError("Invalid Master Key.");
+      }
   };
 
   const validatePasswordStrength = (pwd: string): string | null => {
@@ -119,6 +149,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
           if (res.success) {
               setSuccessMsg(hasAdmin ? "System Reset Successful. New Admin Created." : "Root Admin Created Successfully.");
               setHasAdmin(true);
+              Database.resetAdminFailure(); // Clear any lockouts on successful init
+              setLockoutMinutes(0);
               
               setTimeout(() => {
                   setShowRegister(false);
@@ -149,13 +181,43 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                 <p className="text-gray-500 font-mono text-xs mt-2 tracking-widest uppercase">Restricted Access Level 5</p>
             </div>
 
-            <div className="bg-gray-900 border border-gray-800 rounded-3xl p-8 shadow-2xl overflow-hidden relative">
-                {lockout ? (
-                    <div className="text-center py-12">
-                        <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <div className="bg-gray-900 border border-gray-800 rounded-3xl p-8 shadow-2xl overflow-hidden relative transition-all duration-300">
+                {lockoutMinutes > 0 && !showOverride ? (
+                    <div className="text-center py-8">
+                        <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4 animate-pulse" />
                         <h3 className="text-xl font-bold text-red-500">TERMINAL LOCKED</h3>
-                        <p className="text-white font-mono mt-4">Unlock in: {lockout}m</p>
+                        <p className="text-white font-mono mt-4 text-sm">Too many failed attempts.</p>
+                        <p className="text-yellow-500 font-mono text-lg font-bold mt-2">Unlock in: {lockoutMinutes}m</p>
+                        
+                        <button 
+                            onClick={() => setShowOverride(true)}
+                            className="mt-8 text-xs text-gray-600 hover:text-white underline flex items-center justify-center gap-2 mx-auto transition-colors"
+                        >
+                            <Key className="w-3 h-3" /> Emergency Override
+                        </button>
                     </div>
+                ) : showOverride ? (
+                    <form onSubmit={handleOverride} className="py-4 animate-in fade-in slide-in-from-bottom-4">
+                        <div className="text-center mb-6">
+                            <h3 className="text-white font-bold flex items-center justify-center gap-2"><Key className="w-4 h-4 text-yellow-500"/> Security Override</h3>
+                            <p className="text-xs text-gray-500 mt-1">Enter Master Key to reset lockout.</p>
+                        </div>
+                        {error && <div className="mb-4 p-3 bg-red-900/30 border border-red-800 text-red-400 text-xs rounded-lg text-center font-bold">{error}</div>}
+                        <input 
+                            type="password" 
+                            autoFocus
+                            className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none mb-4" 
+                            placeholder="Master Key" 
+                            value={overrideKey} 
+                            onChange={e => setOverrideKey(e.target.value)} 
+                        />
+                        <button className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl transition-colors mb-3">
+                            UNLOCK TERMINAL
+                        </button>
+                        <button type="button" onClick={() => { setShowOverride(false); setError(''); }} className="w-full text-gray-500 hover:text-white text-xs py-2">
+                            Cancel
+                        </button>
+                    </form>
                 ) : (
                     <>
                         {error && <div className="mb-6 p-4 bg-red-900/30 border border-red-800 text-red-400 text-sm rounded-xl flex items-center gap-2 font-bold">{error}</div>}
@@ -166,7 +228,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                 <div className="w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
                             </div>
                         ) : showRegister ? (
-                             <form onSubmit={handleRegisterAdmin} className="space-y-4">
+                             <form onSubmit={handleRegisterAdmin} className="space-y-4 animate-in fade-in">
                                 <div className="text-center mb-4">
                                     <h3 className="text-white font-bold text-lg">{hasAdmin ? "Emergency System Reset" : "Initialize Root Admin"}</h3>
                                     {hasAdmin && <p className="text-xs text-red-400 mt-1">This will wipe user data to restore access.</p>}

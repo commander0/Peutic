@@ -764,9 +764,15 @@ export class Database {
   static checkAdminLockout(): number {
       const stored = localStorage.getItem(DB_KEYS.ADMIN_ATTEMPTS);
       if (!stored) return 0;
-      const { attempts, lockoutUntil } = JSON.parse(stored);
-      if (lockoutUntil && Date.now() < lockoutUntil) return Math.ceil((lockoutUntil - Date.now()) / 60000);
-      if (lockoutUntil && Date.now() > lockoutUntil) { this.resetAdminFailure(); return 0; }
+      try {
+        const { attempts, lockoutUntil } = JSON.parse(stored);
+        if (lockoutUntil && Date.now() < lockoutUntil) return Math.ceil((lockoutUntil - Date.now()) / 60000);
+        if (lockoutUntil && Date.now() > lockoutUntil) { this.resetAdminFailure(); return 0; }
+      } catch (e) {
+          // If JSON is malformed, reset and allow access
+          this.resetAdminFailure();
+          return 0;
+      }
       return 0;
   }
   static recordAdminFailure() {
