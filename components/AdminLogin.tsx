@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Database } from '../services/database';
 import { Api } from '../services/api';
 import { UserRole } from '../types';
@@ -21,9 +21,26 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminPassword, setNewAdminPassword] = useState('');
   const [newAdminConfirmPassword, setNewAdminConfirmPassword] = useState('');
+  
+  // Checking server state
+  const [checkingStatus, setCheckingStatus] = useState(true);
+  const [hasAdmin, setHasAdmin] = useState(false);
 
   const lockout = Database.checkAdminLockout();
-  const hasAdmin = Database.hasAdmin();
+
+  useEffect(() => {
+      const checkAdmin = async () => {
+          try {
+              const res = await Api.checkAdminExists();
+              setHasAdmin(res.exists);
+          } catch (e) {
+              console.warn("Could not reach server to check admin status");
+          } finally {
+              setCheckingStatus(false);
+          }
+      };
+      checkAdmin();
+  }, []);
 
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,11 +52,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
     setLoading(true);
     
     try {
-        // Authenticate via Server API (Remote Check)
-        // Note: For this secure implementation, we use the auth/login endpoint. 
-        // In a real app, this should send password to a hash verification endpoint.
-        // Here we rely on the restricted access email check + the "Secure Key" which acts as the admin password.
-        const user = await Api.login(email);
+        const user = await Api.adminLogin(email, password);
         
         if (user && user.role === UserRole.ADMIN) {
             Database.resetAdminFailure();
@@ -47,9 +60,9 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         } else {
              throw new Error("Access Denied");
         }
-    } catch (err) {
+    } catch (err: any) {
          Database.recordAdminFailure();
-         setError("Access Denied. Credentials invalid or user is not authorized.");
+         setError(err.message || "Access Denied. Invalid credentials.");
     } finally {
         setLoading(false);
     }
@@ -64,46 +77,65 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
       return null;
   };
 
-  const handleRegisterAdmin = (e: React.FormEvent) => {
+  const handleRegisterAdmin = async (e: React.FormEvent) => {
       e.preventDefault();
       setError('');
       setSuccessMsg('');
+      setLoading(true);
 
       if (masterKey.trim() !== 'PEUTIC-MASTER-2025') {
           setError("Invalid Master Key.");
+          setLoading(false);
           return;
       }
       if (newAdminPassword !== newAdminConfirmPassword) {
           setError("Passwords do not match.");
+          setLoading(false);
           return;
       }
       
       const weakPasswordMsg = validatePasswordStrength(newAdminPassword);
       if (weakPasswordMsg) {
           setError(weakPasswordMsg);
+          setLoading(false);
           return;
       }
 
-      // RESET FEATURE: If admin exists, we wipe existing data first to prevent lockouts/conflicts
-      if (hasAdmin) {
-          if (confirm("WARNING: Using the Master Key will reset the Admin database. Continue?")) {
-              Database.resetAllUsers(); // Clear previous data
-          } else {
-              return;
-          }
+      const resetRequested = hasAdmin && confirm("WARNING: This will RESET the database and existing admin accounts. Continue?");
+      if (hasAdmin && !resetRequested) {
+          setLoading(false);
+          return;
       }
 
-      Database.createUser('System Admin', newAdminEmail, 'email', undefined, UserRole.ADMIN);
-      setSuccessMsg(hasAdmin ? "System Reset Successful. New Admin Created." : "Root Admin Created Successfully.");
-      
-      setTimeout(() => {
-          setShowRegister(false);
-          setSuccessMsg('');
-          setEmail(newAdminEmail);
-          setMasterKey('');
-          setNewAdminPassword('');
-          setNewAdminConfirmPassword('');
-      }, 2000);
+      try {
+          const res = await Api.initAdmin({
+              masterKey,
+              email: newAdminEmail,
+              password: newAdminPassword,
+              name: 'System Admin',
+              reset: hasAdmin // Reset if admin already exists
+          });
+
+          if (res.success) {
+              setSuccessMsg(hasAdmin ? "System Reset Successful. New Admin Created." : "Root Admin Created Successfully.");
+              setHasAdmin(true);
+              
+              setTimeout(() => {
+                  setShowRegister(false);
+                  setSuccessMsg('');
+                  setEmail(newAdminEmail);
+                  setMasterKey('');
+                  setNewAdminPassword('');
+                  setNewAdminConfirmPassword('');
+              }, 2000);
+          } else {
+              throw new Error("Init failed");
+          }
+      } catch (err: any) {
+          setError(err.message || "Failed to initialize admin.");
+      } finally {
+          setLoading(false);
+      }
   };
 
   return (
@@ -129,7 +161,11 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                         {error && <div className="mb-6 p-4 bg-red-900/30 border border-red-800 text-red-400 text-sm rounded-xl flex items-center gap-2 font-bold">{error}</div>}
                         {successMsg && <div className="mb-6 p-4 bg-green-900/30 border border-green-800 text-green-400 text-sm rounded-xl flex items-center gap-2 font-bold">{successMsg}</div>}
 
-                        {showRegister ? (
+                        {checkingStatus ? (
+                            <div className="text-center py-8">
+                                <div className="w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                            </div>
+                        ) : showRegister ? (
                              <form onSubmit={handleRegisterAdmin} className="space-y-4">
                                 <div className="text-center mb-4">
                                     <h3 className="text-white font-bold text-lg">{hasAdmin ? "Emergency System Reset" : "Initialize Root Admin"}</h3>
@@ -142,18 +178,20 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                     <input type="password" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none" placeholder="Confirm" value={newAdminConfirmPassword} onChange={e => setNewAdminConfirmPassword(e.target.value)} />
                                 </div>
                                 <div className="text-[10px] text-gray-500 leading-tight">Must contain 8+ chars, uppercase, lowercase, number, symbol.</div>
-                                <button className="w-full bg-yellow-500 text-black font-black py-4 rounded-xl hover:bg-yellow-400 transition-colors mt-4">{hasAdmin ? "RESET & CREATE ADMIN" : "INITIALIZE SYSTEM"}</button>
+                                <button disabled={loading} className="w-full bg-yellow-500 text-black font-black py-4 rounded-xl hover:bg-yellow-400 transition-colors mt-4">
+                                    {loading ? "INITIALIZING..." : (hasAdmin ? "RESET & CREATE ADMIN" : "INITIALIZE SYSTEM")}
+                                </button>
                                 <button type="button" onClick={() => setShowRegister(false)} className="text-gray-500 text-sm w-full text-center hover:text-white py-2">Cancel</button>
                              </form>
                         ) : (
                             <form onSubmit={handleAdminLogin} className="space-y-6">
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Admin Identifier</label>
-                                    <input type="email" className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="admin@peutic.com" value={email} onChange={e => setEmail(e.target.value)} />
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Admin Email</label>
+                                    <input type="email" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="admin@peutic.com" value={email} onChange={e => setEmail(e.target.value)} />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Secure Key</label>
-                                    <input type="password" className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} />
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Password</label>
+                                    <input type="password" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} />
                                 </div>
                                 <button type="submit" disabled={loading} className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2">
                                     {loading ? <span className="animate-pulse">Authenticating...</span> : <><Lock className="w-4 h-4" /> ACCESS TERMINAL</>}

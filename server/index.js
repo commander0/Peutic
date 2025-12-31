@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'node:crypto';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -54,10 +55,24 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 // CONSTANTS
 const MAX_CONCURRENT_SESSIONS = 15;
 const SESSION_TIMEOUT_MS = 15000; // 15s heartbeat timeout
+const MASTER_KEY = "PEUTIC-MASTER-2025"; // Hardcoded for this environment, ideally env var
 
 // ==========================================
 // HELPERS
 // ==========================================
+
+const hashPassword = (password) => {
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+    return `${salt}:${hash}`;
+};
+
+const verifyPassword = (password, storedHash) => {
+    if (!storedHash) return false;
+    const [salt, originalHash] = storedHash.split(':');
+    const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+    return hash === originalHash;
+};
 
 const cleanupZombies = async () => {
     const cutoff = new Date(Date.now() - SESSION_TIMEOUT_MS).toISOString();
@@ -131,6 +146,83 @@ if (process.env.NODE_ENV !== 'production') {
 // ==========================================
 // ENDPOINTS
 // ==========================================
+
+// --- ADMIN AUTH ---
+app.get('/api/admin/check', async (req, res) => {
+    const { count } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'ADMIN');
+    res.json({ exists: (count || 0) > 0 });
+});
+
+app.post('/api/admin/init', async (req, res) => {
+    const { masterKey, email, password, name, reset } = req.body;
+    
+    if (masterKey !== MASTER_KEY) {
+        return res.status(403).json({ error: "Invalid Master Key" });
+    }
+
+    try {
+        // If reset requested, wipe users (Dangerous)
+        if (reset) {
+            await supabase.from('users').delete().neq('id', '0'); // Delete all
+        }
+
+        const hashedPassword = hashPassword(password);
+        const adminUser = {
+            id: `admin_${Date.now()}`,
+            email: email,
+            name: name || 'System Admin',
+            role: 'ADMIN',
+            password_hash: hashedPassword,
+            subscription_status: 'ACTIVE',
+            joined_at: new Date().toISOString(),
+            last_login_date: new Date().toISOString()
+        };
+
+        const { data, error } = await supabase.from('users').upsert(adminUser).select().single();
+        if (error) throw error;
+
+        res.json({ success: true, user: data });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/admin/login', async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .eq('role', 'ADMIN')
+            .single();
+
+        if (error || !user) {
+            return res.status(401).json({ error: "Invalid admin credentials" });
+        }
+
+        if (!user.password_hash) {
+            // Legacy admin or created without password
+            return res.status(401).json({ error: "Admin account not properly configured. Use Master Reset." });
+        }
+
+        if (verifyPassword(password, user.password_hash)) {
+            // Update last login
+            await supabase.from('users').update({ last_login_date: new Date().toISOString() }).eq('id', user.id);
+            // Remove sensitive hash before sending back
+            delete user.password_hash;
+            return res.json(user);
+        } else {
+            return res.status(401).json({ error: "Invalid password" });
+        }
+    } catch (e) {
+        res.status(500).json({ error: "Login failed" });
+    }
+});
 
 // --- AUTH & SYNC ---
 app.post('/api/auth/login', async (req, res) => {
