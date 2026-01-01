@@ -23,7 +23,7 @@ interface DashboardProps {
 }
 
 // PRODUCTION SECURITY: Use Environment Variable for Stripe
-const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_KEY || "";
+const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_KEY || "pk_live_51MZuG0BUviiBIU4d81PC3BDlYgxuUszLu1InD0FFWOcGwQyNYgn5jjNOYi5a0uic9iuG8FdMjZBqpihTxK7oH0W600KfPZFZwp";
 
 declare global {
   interface Window {

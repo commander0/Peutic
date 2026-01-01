@@ -1,4 +1,3 @@
-
 const TAVUS_API_URL = 'https://tavusapi.com/v2';
 const API_KEY = process.env.VITE_TAVUS_API_KEY;
 
