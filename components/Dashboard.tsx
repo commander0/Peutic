@@ -594,7 +594,7 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
     const [error, setError] = useState(initialError || '');
     
     // In a real app, you'd fetch price from settings
-    const pricePerMin = 1.49;
+    const pricePerMin = 1.59;
     const stripeRef = useRef<any>(null); 
     const elementsRef = useRef<any>(null); 
     const cardElementRef = useRef<any>(null); 
@@ -657,14 +657,6 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
                             ))} 
                             <button type="button" onClick={() => { setIsCustom(true); setAmount(0); }} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${isCustom ? 'bg-black dark:bg-white dark:text-black text-white shadow-lg transform scale-105' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>Custom</button>
                         </div>
-                        {isCustom && (
-                            <div className="mb-6 animate-in fade-in zoom-in duration-300">
-                                <div className="relative max-w-[180px] mx-auto">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-lg">$</span>
-                                    <input type="number" min="1" step="1" value={amount === 0 ? '' : amount} onChange={(e) => setAmount(parseFloat(e.target.value) || 0)} className="w-full pl-8 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none text-2xl font-bold text-center" placeholder="0.00" autoFocus />
-                                </div>
-                            </div>
-                        )}
                         <p className="text-xs text-gray-400 mt-2">Adds approx. <span className="font-bold text-black dark:text-white">{Math.floor((amount || 0) / pricePerMin)} mins</span> of talk time.</p>
                     </div>
                     {error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 text-sm rounded-lg flex items-center gap-2"><AlertTriangle className="w-4 h-4 flex-shrink-0" /><span>{error}</span></div>}

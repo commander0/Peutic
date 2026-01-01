@@ -8,7 +8,7 @@ import {
     Users, DollarSign, Activity, LogOut, Settings, Video, 
     Search, Edit2, Ban, Zap, ShieldAlert, 
     Terminal, Globe, Megaphone, Menu, X, Gift, Download, Tag,
-    Clock, Server, Star, LayoutGrid, List, Heart, TrendingUp, AlertTriangle, UserCheck, Shield, Eye, Trash2, PlusCircle
+    Clock, Server, Star, LayoutGrid, List, Heart, TrendingUp, AlertTriangle, UserCheck, Shield, Eye, Trash2, PlusCircle, CheckCircle, Power, Lock
 } from 'lucide-react';
 import { Database, STABLE_AVATAR_POOL } from '../services/database';
 import { User, UserRole, Companion, Transaction, GlobalSettings, SystemLog, PromoCode, SessionFeedback, MoodEntry } from '../types';
@@ -109,12 +109,12 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
       if (comp) {
           const next = current === 'AVAILABLE' ? 'BUSY' : current === 'BUSY' ? 'OFFLINE' : 'AVAILABLE';
           Database.updateCompanion({...comp, status: next as any});
+          // Optimistic update
+          setCompanions(prev => prev.map(c => c.id === id ? {...c, status: next as any} : c));
       }
   };
 
   const handleDeleteUser = async (userId: string, idx: number) => {
-      // Basic Root Admin Protection: Cannot delete first user or self (if logic extended)
-      // Assuming index 0 is always root admin in our local setup
       if (idx === 0) {
           alert("SECURITY ALERT: Cannot delete Root Admin account.");
           return;
@@ -146,6 +146,12 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
       Database.saveSettings(updated);
       setSettings(updated);
       setBroadcastMsg('');
+  };
+
+  const handleSettingChange = (key: keyof GlobalSettings, value: any) => {
+      const updated = { ...settings, [key]: value };
+      setSettings(updated);
+      Database.saveSettings(updated);
   };
 
   const filteredUsers = users.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -426,7 +432,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                               <table className="w-full text-left">
                                   <thead className="bg-black text-xs font-bold text-gray-500 uppercase">
                                       <tr>
-                                          <th className="p-4">Profile</th>
+                                          <th className="p-4">Specialist</th>
                                           <th className="p-4">Specialty</th>
                                           <th className="p-4">Status</th>
                                           <th className="p-4 text-right">Rating</th>
@@ -434,21 +440,21 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                       </tr>
                                   </thead>
                                   <tbody className="divide-y divide-gray-800">
-                                      {companions.map(comp => (
+                                      {companions.map((comp) => (
                                           <tr key={comp.id} className="hover:bg-gray-800/50">
                                               <td className="p-4 flex items-center gap-3">
-                                                  <div className="w-8 h-8 rounded-full overflow-hidden bg-black"><AvatarImage src={comp.imageUrl} alt={comp.name} className="w-full h-full object-cover" /></div>
-                                                  <span className="font-bold text-white text-sm">{comp.name}</span>
+                                                  <AvatarImage src={comp.imageUrl} alt={comp.name} className="w-8 h-8 rounded-full object-cover" />
+                                                  <span className="font-bold text-sm text-white">{comp.name}</span>
                                               </td>
-                                              <td className="p-4 text-gray-400 text-sm">{comp.specialty}</td>
+                                              <td className="p-4 text-xs text-gray-400">{comp.specialty}</td>
                                               <td className="p-4">
-                                                  <span onClick={() => handleToggleStatus(comp.id, comp.status)} className={`cursor-pointer px-2 py-1 rounded text-[10px] font-bold uppercase ${comp.status === 'AVAILABLE' ? 'bg-green-900/30 text-green-500' : comp.status === 'BUSY' ? 'bg-yellow-900/30 text-yellow-500' : 'bg-red-900/30 text-red-500'}`}>
+                                                  <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${comp.status === 'AVAILABLE' ? 'bg-green-500/20 text-green-400' : 'bg-gray-700 text-gray-400'}`}>
                                                       {comp.status}
                                                   </span>
                                               </td>
-                                              <td className="p-4 text-right font-mono text-yellow-500 text-sm font-bold">{comp.rating}</td>
+                                              <td className="p-4 text-right text-sm font-mono text-yellow-500">{comp.rating}</td>
                                               <td className="p-4 text-right">
-                                                  <button className="text-gray-500 hover:text-white text-xs"><Edit2 className="w-4 h-4"/></button>
+                                                   <button onClick={() => handleToggleStatus(comp.id, comp.status)} className="text-xs font-bold text-blue-500 hover:text-blue-400">Toggle Status</button>
                                               </td>
                                           </tr>
                                       ))}
@@ -456,15 +462,15 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                               </table>
                           </div>
                       ) : (
-                          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                              {companions.map(comp => (
-                                  <div key={comp.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col items-center text-center hover:border-gray-600 transition-colors">
-                                      <div className="w-16 h-16 rounded-full overflow-hidden mb-3 border-2 border-gray-700">
-                                          <AvatarImage src={comp.imageUrl} alt={comp.name} className="w-full h-full object-cover" />
-                                      </div>
-                                      <h4 className="font-bold text-white text-sm">{comp.name}</h4>
-                                      <p className="text-xs text-gray-500 mb-2 truncate w-full">{comp.specialty}</p>
-                                      <button onClick={() => handleToggleStatus(comp.id, comp.status)} className={`w-full py-1 rounded text-[10px] font-bold ${comp.status === 'AVAILABLE' ? 'bg-green-900/30 text-green-500' : 'bg-gray-800 text-gray-500'}`}>{comp.status}</button>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              {companions.map((comp) => (
+                                  <div key={comp.id} className="bg-gray-900 border border-gray-800 p-4 rounded-xl flex flex-col items-center text-center">
+                                      <AvatarImage src={comp.imageUrl} alt={comp.name} className="w-16 h-16 rounded-full object-cover mb-3" />
+                                      <h3 className="font-bold text-white text-sm">{comp.name}</h3>
+                                      <p className="text-xs text-gray-500 mb-2">{comp.specialty}</p>
+                                      <button onClick={() => handleToggleStatus(comp.id, comp.status)} className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${comp.status === 'AVAILABLE' ? 'bg-green-500 text-black' : 'bg-gray-700 text-gray-400'}`}>
+                                          {comp.status}
+                                      </button>
                                   </div>
                               ))}
                           </div>
@@ -474,31 +480,40 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
               {/* --- SETTINGS --- */}
               {activeTab === 'settings' && (
-                  <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 animate-in fade-in duration-500">
-                      <h2 className="text-2xl font-black mb-6">Global Configuration</h2>
-                      <div className="space-y-4">
-                          <div className="flex items-center justify-between p-4 bg-black rounded-xl border border-gray-800">
-                              <div>
-                                  <p className="font-bold text-white">Maintenance Mode</p>
-                                  <p className="text-xs text-gray-500">Lock down system for all non-admins.</p>
+                  <div className="space-y-6 animate-in fade-in duration-500">
+                      <h2 className="text-3xl font-black">System Configuration</h2>
+                      <div className="grid md:grid-cols-2 gap-6">
+                          <div className="bg-gray-900 border border-gray-800 p-6 rounded-2xl space-y-4">
+                              <h3 className="font-bold text-white mb-4">Pricing Control</h3>
+                              <div className="flex justify-between items-center">
+                                  <span className="text-sm text-gray-400">Active Sale ($1.59/m)</span>
+                                  <button 
+                                    onClick={() => handleSettingChange('saleMode', !settings.saleMode)}
+                                    className={`w-12 h-6 rounded-full p-1 transition-colors ${settings.saleMode ? 'bg-green-500' : 'bg-gray-700'}`}
+                                  >
+                                      <div className={`w-4 h-4 bg-white rounded-full transform transition-transform ${settings.saleMode ? 'translate-x-6' : ''}`}></div>
+                                  </button>
                               </div>
-                              <button onClick={() => Database.saveSettings({...settings, maintenanceMode: !settings.maintenanceMode})} className={`w-12 h-6 rounded-full relative transition-colors ${settings.maintenanceMode ? 'bg-red-500' : 'bg-gray-700'}`}>
-                                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${settings.maintenanceMode ? 'left-7' : 'left-1'}`}></div>
-                              </button>
                           </div>
-                          <div className="flex items-center justify-between p-4 bg-black rounded-xl border border-gray-800">
-                              <div>
-                                  <p className="font-bold text-white">Sale Pricing Mode</p>
-                                  <p className="text-xs text-gray-500">Toggle between $1.49 (On) and $1.99 (Off).</p>
+
+                          <div className="bg-gray-900 border border-gray-800 p-6 rounded-2xl space-y-4">
+                              <h3 className="font-bold text-white mb-4">System Access</h3>
+                              <div className="flex justify-between items-center">
+                                  <div className="flex items-center gap-2">
+                                      <Ban className="w-4 h-4 text-red-500"/>
+                                      <span className="text-sm text-gray-400">Maintenance Mode</span>
+                                  </div>
+                                  <button 
+                                    onClick={() => handleSettingChange('maintenanceMode', !settings.maintenanceMode)}
+                                    className={`w-12 h-6 rounded-full p-1 transition-colors ${settings.maintenanceMode ? 'bg-red-500' : 'bg-gray-700'}`}
+                                  >
+                                      <div className={`w-4 h-4 bg-white rounded-full transform transition-transform ${settings.maintenanceMode ? 'translate-x-6' : ''}`}></div>
+                                  </button>
                               </div>
-                              <button onClick={() => Database.saveSettings({...settings, saleMode: !settings.saleMode})} className={`w-12 h-6 rounded-full relative transition-colors ${settings.saleMode ? 'bg-green-500' : 'bg-gray-700'}`}>
-                                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${settings.saleMode ? 'left-7' : 'left-1'}`}></div>
-                              </button>
                           </div>
                       </div>
                   </div>
               )}
-
           </div>
       </main>
     </div>

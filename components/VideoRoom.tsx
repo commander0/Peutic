@@ -364,7 +364,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   
   // Calculate cost dynamically based on active sale mode setting
   const settings = Database.getSettings();
-  const currentRate = settings.saleMode ? 1.49 : 1.99;
+  const currentRate = settings.saleMode ? 1.59 : 1.99;
   const cost = Math.ceil(duration / 60) * currentRate;
 
   // --- HELPER: Pre-fill Name to Skip Input Screen ---
