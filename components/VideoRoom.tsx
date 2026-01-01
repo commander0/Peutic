@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Companion, SessionFeedback } from '../types';
 import { 
     Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, 
-    Loader2, AlertCircle, RefreshCcw, Aperture, Star, CheckCircle, Users, Download, Share2, BadgeCheck, FileText, MessageSquare, Sparkles, ChevronRight, X, Eye
+    Loader2, AlertCircle, RefreshCcw, Aperture, Star, CheckCircle, Users, Download, Share2, BadgeCheck, FileText, MessageSquare, Sparkles, ChevronRight, X, Eye, Clock
 } from 'lucide-react';
 import { createTavusConversation, endTavusConversation } from '../services/tavusService';
 import { Database } from '../services/database';
@@ -128,7 +128,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
   // Session State
   const [duration, setDuration] = useState(0);
-  const [connectionState, setConnectionState] = useState<'QUEUED' | 'CONNECTING' | 'CONNECTED' | 'ERROR'>('QUEUED');
+  const [connectionState, setConnectionState] = useState<'QUEUED' | 'CONNECTING' | 'CONNECTED' | 'ERROR' | 'QUEUE_FULL'>('QUEUED');
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [conversationUrl, setConversationUrl] = useState<string | null>(null);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
@@ -175,6 +175,12 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         try {
             // Join Queue (Remote)
             const pos = await Database.joinQueue(userId);
+            
+            if (pos === -1) {
+                setConnectionState('QUEUE_FULL');
+                return;
+            }
+
             setQueuePos(pos);
             setEstWait(Database.getEstimatedWaitTime(pos));
 
@@ -210,6 +216,11 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             // Failsafe: If queue dropped us but we are still waiting
             if (pos === 0) {
                 pos = await Database.joinQueue(userId);
+            }
+            
+            if (pos === -1) {
+                setConnectionState('QUEUE_FULL');
+                return;
             }
 
             setQueuePos(pos);
@@ -471,7 +482,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 <div className={`bg-black/40 backdrop-blur-xl px-4 py-2 rounded-full border ${lowBalanceWarning ? 'border-red-500 animate-pulse' : 'border-white/10'} text-white font-mono shadow-xl flex items-center gap-3 transition-colors duration-500`}>
                     <div className={`w-2 h-2 rounded-full ${connectionState === 'CONNECTED' ? 'bg-red-500 animate-pulse' : 'bg-yellow-500'}`}></div>
                     <span className={`font-variant-numeric tabular-nums tracking-wide font-bold ${lowBalanceWarning ? 'text-red-400' : 'text-white'}`}>
-                        {connectionState === 'CONNECTED' ? formatTime(duration) : connectionState === 'QUEUED' ? 'Waiting...' : 'Connecting...'}
+                        {connectionState === 'CONNECTED' ? formatTime(duration) : connectionState === 'QUEUED' ? 'Waiting...' : connectionState === 'QUEUE_FULL' ? 'Capacity Full' : 'Connecting...'}
                     </span>
                 </div>
                 <button onClick={() => setShowCredential(!showCredential)} className="bg-black/40 backdrop-blur-xl p-2 rounded-full border border-white/10 text-white hover:bg-white/10 transition-colors">
@@ -489,6 +500,21 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
         {/* --- MAIN CONTENT --- */}
         <div className="absolute inset-0 w-full h-full bg-gray-900 flex items-center justify-center">
+            {/* QUEUE FULL STATE */}
+            {connectionState === 'QUEUE_FULL' && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/95 p-6 text-center">
+                    <div className="relative mb-8">
+                         <div className="w-24 h-24 rounded-full border-4 border-yellow-500/20 flex items-center justify-center">
+                             <Clock className="w-10 h-10 text-yellow-500" />
+                         </div>
+                    </div>
+                    <h3 className="text-3xl font-black text-white tracking-tight mb-4">We are at capacity</h3>
+                    <p className="text-gray-400 text-sm mb-2 max-w-md">Our specialists are currently fully booked and the waiting room is full.</p>
+                    <p className="text-yellow-500 font-bold text-sm mb-8">Please check back in 5-10 minutes.</p>
+                    <button onClick={onEndSession} className="bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">Return to Dashboard</button>
+                </div>
+            )}
+
             {/* QUEUE SCREEN */}
             {connectionState === 'QUEUED' && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/95">

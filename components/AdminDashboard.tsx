@@ -63,6 +63,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const [settings, setSettings] = useState<GlobalSettings>(Database.getSettings());
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [activeCount, setActiveCount] = useState(0);
+  const [waitingCount, setWaitingCount] = useState(0);
   
   // UI States
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,6 +72,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   
   // Computed
   const MAX_CONCURRENT_CAPACITY = 15;
+  const WAITING_ROOM_CAPACITY = 35;
   const totalRevenue = transactions.filter(t => t.amount > 0).reduce((acc, t) => acc + (t.cost || 0), 0);
   
   // Revenue Data for Chart
@@ -97,6 +99,8 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         try {
             const count = await Database.getActiveSessionCount();
             setActiveCount(count);
+            const queue = await Database.getQueueLength();
+            setWaitingCount(queue);
         } catch (e) {}
     };
     fetchData();
@@ -226,14 +230,16 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                           <StatCard title="Active Sessions" value={activeCount} icon={Video} subValue={`${MAX_CONCURRENT_CAPACITY} Max`} subLabel="Capacity" progress={(activeCount / MAX_CONCURRENT_CAPACITY) * 100} color="purple" />
+                          <StatCard title="Waiting Room" value={waitingCount} icon={Clock} subValue={`${WAITING_ROOM_CAPACITY} Max`} subLabel="Capacity" progress={(waitingCount / WAITING_ROOM_CAPACITY) * 100} color="yellow" />
                           <StatCard title="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon={DollarSign} subValue="+8.4%" subLabel="MoM" color="green" />
                           <StatCard title="Total Users" value={users.length} icon={Users} subValue="+12" subLabel="Today" color="blue" />
-                          <StatCard title="Platform Health" value="100%" icon={Heart} subValue="Optimal" subLabel="Uptime" color="pink" />
                       </div>
 
                       <div className="grid lg:grid-cols-3 gap-8">
-                          {/* Live Concurrency Meter (15 Blocks) & Broadcast */}
+                          {/* Live Concurrency & Waiting Meters */}
                           <div className="lg:col-span-2 space-y-8">
+                              
+                              {/* 1. Active Concurrency */}
                               <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
                                   <h3 className="font-bold text-white mb-6 flex items-center gap-2"><Server className="w-5 h-5 text-purple-500"/> Real-time Concurrency</h3>
                                   
@@ -250,6 +256,26 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                       <span>0 Sessions</span>
                                       <span>{activeCount} Active</span>
                                       <span>15 Max</span>
+                                  </div>
+                              </div>
+
+                              {/* 2. Waiting Room */}
+                              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                                  <h3 className="font-bold text-white mb-6 flex items-center gap-2"><Clock className="w-5 h-5 text-yellow-500"/> Waiting Room</h3>
+                                  
+                                  {/* 35 Block Meter */}
+                                  <div className="grid grid-cols-7 gap-2 md:gap-3 mb-4">
+                                      {Array.from({ length: 35 }).map((_, i) => (
+                                          <div 
+                                              key={i} 
+                                              className={`aspect-square rounded-lg transition-all duration-500 border border-black/20 ${i < waitingCount ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.6)] animate-pulse' : 'bg-gray-800/50'}`}
+                                          ></div>
+                                      ))}
+                                  </div>
+                                  <div className="flex justify-between text-xs font-mono text-gray-500 uppercase tracking-widest">
+                                      <span>0 Waiting</span>
+                                      <span>{waitingCount} Queued</span>
+                                      <span>35 Max</span>
                                   </div>
                               </div>
 

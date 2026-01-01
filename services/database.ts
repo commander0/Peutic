@@ -519,8 +519,30 @@ export class Database {
   }
 
   // --- GLOBAL QUEUE ---
+  
+  static async getQueueLength(): Promise<number> {
+      try {
+          const { count } = await supabase
+              .from('session_queue')
+              .select('*', { count: 'exact', head: true });
+          return count || 0;
+      } catch (e) {
+          return 0;
+      }
+  }
+
   static async joinQueue(userId: string): Promise<number> {
       try {
+          // Check if already in queue to avoid double counting logic issues
+          const currentPos = await this.getQueuePosition(userId);
+          if (currentPos > 0) return currentPos;
+
+          // Check limits
+          const queueLen = await this.getQueueLength();
+          if (queueLen >= 35) {
+              return -1; // Full
+          }
+
           // Add to queue
           await supabase.from('session_queue').upsert({
               user_id: userId,
