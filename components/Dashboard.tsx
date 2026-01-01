@@ -624,7 +624,6 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
                 setError(result.error.message); 
                 setProcessing(false); 
             } else { 
-                // Simulate processing delay
                 setTimeout(() => { 
                     setProcessing(false); 
                     const minutesAdded = Math.floor(amount / pricePerMin); 
@@ -900,9 +899,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
       }
   };
 
-  // UPDATED: Await server transaction before refresh
-  const handlePaymentSuccess = async (minutesAdded: number, cost: number) => {
-      await Database.topUpWallet(minutesAdded, cost, user.id);
+  const handlePaymentSuccess = (minutesAdded: number, cost: number) => {
+      Database.topUpWallet(minutesAdded, cost, user.id);
       refreshData();
       setShowPayment(false);
   };

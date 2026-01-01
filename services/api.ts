@@ -42,11 +42,6 @@ export const Api = {
     updateUser: (user: any) => Api.request('/user/update', 'POST', { user }),
     deleteUser: (userId: string) => Api.request(`/user/${userId}`, 'DELETE'),
 
-    // Admin Auth
-    checkAdminExists: () => Api.request('/admin/check'),
-    adminLogin: (email: string, password: string) => Api.request('/admin/login', 'POST', { email, password }),
-    initAdmin: (data: any) => Api.request('/admin/init', 'POST', data),
-
     // Queue
     joinQueue: (userId: string) => Api.request('/queue/join', 'POST', { userId }),
     getQueueStatus: (userId: string) => Api.request(`/queue/status/${userId}`),
