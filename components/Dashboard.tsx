@@ -953,10 +953,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
           {/* --- SIDEBAR (Desktop) --- */}
           <aside className="hidden md:flex w-24 lg:w-72 flex-col border-r border-yellow-200 dark:border-gray-800 bg-[#FFFBEB]/50 dark:bg-black/50 backdrop-blur-xl">
               <div className="p-6 lg:p-8 flex items-center justify-center lg:justify-start gap-3">
-                  <div className="w-10 h-10 bg-yellow-400 dark:bg-yellow-600 rounded-xl flex items-center justify-center shadow-lg group hover:scale-110 transition-transform">
-                      <Heart className="w-6 h-6 text-black dark:text-white fill-black dark:fill-white" />
+                  <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg group hover:scale-110 transition-transform">
+                      <Heart className="w-6 h-6 text-black fill-black" />
                   </div>
-                  <span className="hidden lg:block text-2xl font-black tracking-tight">Peutic</span>
+                  <span className="hidden lg:block text-2xl font-black tracking-tight dark:text-white">Peutic</span>
               </div>
 
               <nav className="flex-1 px-4 py-8 space-y-4">
