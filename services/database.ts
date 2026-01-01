@@ -429,6 +429,8 @@ export class Database {
       try {
           // DELETE FROM active_sessions WHERE last_ping < cutoff
           await supabase.from('active_sessions').delete().lt('last_ping', cutoff);
+          // DELETE FROM session_queue WHERE last_ping < cutoff
+          await supabase.from('session_queue').delete().lt('last_ping', cutoff);
       } catch (e) {
           console.warn("Cleanup failed (likely permissions or offline)", e);
       }
@@ -510,9 +512,18 @@ export class Database {
       }
   }
 
+  static async sendQueueHeartbeat(userId: string) {
+      try {
+          await supabase.from('session_queue').update({
+              last_ping: new Date().toISOString()
+          }).eq('user_id', userId);
+      } catch (e) {}
+  }
+
   static async endSession(userId: string) {
       try {
           await supabase.from('active_sessions').delete().eq('user_id', userId);
+          await supabase.from('session_queue').delete().eq('user_id', userId);
       } catch (e) {
           console.warn("End Session Failed");
       }
@@ -543,10 +554,11 @@ export class Database {
               return -1; // Full
           }
 
-          // Add to queue
+          // Add to queue with heartbeat
           await supabase.from('session_queue').upsert({
               user_id: userId,
-              joined_at: new Date().toISOString()
+              joined_at: new Date().toISOString(),
+              last_ping: new Date().toISOString()
           });
           
           return await this.getQueuePosition(userId);

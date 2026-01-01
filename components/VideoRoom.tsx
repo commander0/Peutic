@@ -164,7 +164,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
           conversationIdRef.current = null;
       }
 
-      // 2. Update Database state
+      // 2. Update Database state (Clean both Active and Queue)
       Database.endSession(userId);
   }, [userId]);
 
@@ -178,6 +178,13 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             
             if (pos === -1) {
                 setConnectionState('QUEUE_FULL');
+                return;
+            }
+            
+            if (pos === 99) {
+                // Database connectivity issue
+                setErrorMsg("Unable to join queue. Please check your internet connection.");
+                setConnectionState('ERROR');
                 return;
             }
 
@@ -208,9 +215,10 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         }
     };
 
-    // Polling Interval for Queue Position
+    // Polling Interval for Queue Position & Heartbeat
     const queueInterval = setInterval(async () => {
         if (connectionState === 'QUEUED') {
+            await Database.sendQueueHeartbeat(userId); // Prevent Zombie Queue
             let pos = await Database.getQueuePosition(userId);
             
             // Failsafe: If queue dropped us but we are still waiting
@@ -220,6 +228,12 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             
             if (pos === -1) {
                 setConnectionState('QUEUE_FULL');
+                return;
+            }
+            
+            if (pos === 99) {
+                // Keep trying silently, don't crash, but don't update UI to error yet
+                console.warn("Lost DB connection");
                 return;
             }
 
