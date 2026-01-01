@@ -71,7 +71,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const [broadcastMsg, setBroadcastMsg] = useState('');
   
   // Computed
-  const MAX_CONCURRENT_CAPACITY = 15;
+  const MAX_CONCURRENT_CAPACITY = settings.maxConcurrentSessions || 15;
   const WAITING_ROOM_CAPACITY = 35;
   const totalRevenue = transactions.filter(t => t.amount > 0).reduce((acc, t) => acc + (t.cost || 0), 0);
   
@@ -243,19 +243,19 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                               <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
                                   <h3 className="font-bold text-white mb-6 flex items-center gap-2"><Server className="w-5 h-5 text-purple-500"/> Real-time Concurrency</h3>
                                   
-                                  {/* 15 Block Meter */}
-                                  <div className="grid grid-cols-5 md:grid-cols-15 gap-2 md:gap-3 mb-4">
-                                      {Array.from({ length: 15 }).map((_, i) => (
+                                  {/* Dynamic Block Meter based on Capacity */}
+                                  <div className="flex flex-wrap gap-2 md:gap-3 mb-4">
+                                      {Array.from({ length: MAX_CONCURRENT_CAPACITY }).map((_, i) => (
                                           <div 
                                               key={i} 
-                                              className={`aspect-square rounded-lg transition-all duration-500 border border-black/20 ${i < activeCount ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)] animate-pulse' : 'bg-gray-800/50'}`}
+                                              className={`w-8 h-8 md:w-10 md:h-10 rounded-lg transition-all duration-500 border border-black/20 ${i < activeCount ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)] animate-pulse' : 'bg-gray-800/50'}`}
                                           ></div>
                                       ))}
                                   </div>
                                   <div className="flex justify-between text-xs font-mono text-gray-500 uppercase tracking-widest">
                                       <span>0 Sessions</span>
                                       <span>{activeCount} Active</span>
-                                      <span>15 Max</span>
+                                      <span>{MAX_CONCURRENT_CAPACITY} Max</span>
                                   </div>
                               </div>
 
@@ -508,7 +508,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
               {activeTab === 'settings' && (
                   <div className="space-y-6 animate-in fade-in duration-500">
                       <h2 className="text-3xl font-black">System Configuration</h2>
-                      <div className="grid md:grid-cols-2 gap-6">
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                           <div className="bg-gray-900 border border-gray-800 p-6 rounded-2xl space-y-4">
                               <h3 className="font-bold text-white mb-4">Pricing Control</h3>
                               <div className="flex justify-between items-center">
@@ -535,6 +535,44 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                   >
                                       <div className={`w-4 h-4 bg-white rounded-full transform transition-transform ${settings.maintenanceMode ? 'translate-x-6' : ''}`}></div>
                                   </button>
+                              </div>
+                          </div>
+
+                          <div className="bg-gray-900 border border-gray-800 p-6 rounded-2xl space-y-4">
+                              <h3 className="font-bold text-white mb-4">Concurrency Limit</h3>
+                              <div className="flex flex-col gap-3">
+                                  <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                          <Server className="w-4 h-4 text-purple-500"/>
+                                          <span className="text-sm text-gray-400">Capacity</span>
+                                      </div>
+                                      <span className="font-mono font-bold text-white text-lg">{settings.maxConcurrentSessions}</span>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-2 bg-black p-1 rounded-xl border border-gray-800">
+                                       <button 
+                                          onClick={() => handleSettingChange('maxConcurrentSessions', 3)}
+                                          className={`py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${settings.maxConcurrentSessions === 3 ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'text-gray-500 hover:bg-gray-800'}`}
+                                       >
+                                          <Shield className="w-3 h-3" /> Low (3)
+                                       </button>
+                                       <button 
+                                          onClick={() => handleSettingChange('maxConcurrentSessions', 15)}
+                                          className={`py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${settings.maxConcurrentSessions === 15 ? 'bg-green-500/20 text-green-400 border border-green-500/50' : 'text-gray-500 hover:bg-gray-800'}`}
+                                       >
+                                          <Zap className="w-3 h-3" /> Std (15)
+                                       </button>
+                                  </div>
+                                  <div className="relative">
+                                     <input 
+                                        type="number" 
+                                        min="1"
+                                        max="50"
+                                        className="w-full bg-black border border-gray-700 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-purple-500 transition-colors text-center"
+                                        value={settings.maxConcurrentSessions}
+                                        onChange={(e) => handleSettingChange('maxConcurrentSessions', parseInt(e.target.value) || 1)}
+                                        placeholder="Custom Limit"
+                                     />
+                                  </div>
                               </div>
                           </div>
                       </div>
