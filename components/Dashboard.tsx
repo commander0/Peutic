@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { User, Companion, Transaction, JournalEntry, ArtEntry, BreathLog, MoodEntry } from '../types';
 import { 
   Video, Clock, Settings, LogOut, 
@@ -23,7 +23,7 @@ interface DashboardProps {
 }
 
 // PRODUCTION SECURITY: Use Environment Variable for Stripe
-const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_KEY || "";
+const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_KEY || "pk_live_51MZuG0BUviiBIU4d81PC3BDlYgxuUszLu1InD0FFWOcGwQyNYgn5jjNOYi5a0uic9iuG8FdMjZBqpihTxK7oH0W600KfPZFZwp";
 
 declare global {
   interface Window {
@@ -328,6 +328,7 @@ const MindfulMatchGame: React.FC = () => {
             <div className="absolute top-3 left-4 z-20 flex gap-2"><span className="text-[10px] font-bold bg-white/50 dark:bg-black/50 px-2 py-1 rounded-full text-gray-500">Moves: {moves}</span>{bestScore > 0 && <span className="text-[10px] font-bold bg-yellow-100 dark:bg-yellow-900/50 px-2 py-1 rounded-full text-yellow-700 dark:text-yellow-500">Best: {bestScore}</span>}</div>
             <button onClick={initGame} className="absolute top-3 right-3 p-2 hover:bg-yellow-100 dark:hover:bg-gray-700 rounded-full transition-colors z-20"><RefreshCw className="w-4 h-4 text-yellow-600 dark:text-yellow-400" /></button>
             {won ? (<div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in"><Trophy className="w-16 h-16 text-yellow-500 mb-4 animate-bounce" /><p className="font-black text-2xl text-yellow-900 dark:text-white">Zen Master!</p><p className="text-sm text-gray-500 mb-6">Completed in {moves} moves</p><button onClick={initGame} className="bg-black dark:bg-white dark:text-black text-white px-8 py-3 rounded-full font-bold text-sm hover:scale-105 transition-transform">Replay</button></div>) : (
+                // CHANGED GAP FROM gap-2 to gap-px (1px) TO MAKE TILES THICKER
                 <div className="w-full h-full grid grid-cols-4 grid-rows-4 gap-px p-0.5">
                     {cards.map((card, i) => { const isVisible = flipped.includes(i) || solved.includes(i); const Icon = card.icon; return (<div key={i} className="perspective-1000 w-full h-full"><button onClick={() => handleCardClick(i)} className={`w-full h-full rounded-xl flex items-center justify-center transition-all duration-500 transform-style-3d ${isVisible ? 'bg-white dark:bg-gray-700 border-2 border-yellow-400 shadow-lg rotate-y-180' : 'bg-gray-900 dark:bg-gray-800 shadow-md'}`}>{isVisible ? <Icon className="w-5 h-5 md:w-8 md:h-8 text-yellow-500 animate-in zoom-in" /> : <div className="w-2 h-2 bg-gray-700 rounded-full"></div>}</button></div>); })}
                 </div>
@@ -593,7 +594,7 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
     const [error, setError] = useState(initialError || '');
     
     // In a real app, you'd fetch price from settings
-    const pricePerMin = 1.59;
+    const pricePerMin = 1.49;
     const stripeRef = useRef<any>(null); 
     const elementsRef = useRef<any>(null); 
     const cardElementRef = useRef<any>(null); 
@@ -822,30 +823,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
   const [showCookies, setShowCookies] = useState(false);
   const [specialtyFilter, setSpecialtyFilter] = useState<string>('All');
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  // --- HANDLE PAYMENT RETURN ---
-  useEffect(() => {
-      const paymentStatus = searchParams.get('payment');
-      if (paymentStatus === 'success') {
-          const rawAmount = parseFloat(searchParams.get('amount') || '0');
-          if (rawAmount > 0) {
-              const pricePerMin = 1.59;
-              const minutes = Math.floor(rawAmount / pricePerMin);
-              // Optimistically update UI, though database should have handled webhook ideally.
-              // In this client-side fallback flow, we re-call topUp to ensure sync if webhook delayed or not set up
-              Database.topUpWallet(minutes, rawAmount, user.id);
-              alert("Payment Successful! Credits added.");
-              // Clean URL
-              setSearchParams({});
-              refreshData();
-          }
-      } else if (paymentStatus === 'cancelled') {
-          setPaymentError("Payment was cancelled.");
-          setShowPayment(true);
-          setSearchParams({});
-      }
-  }, [searchParams, user.id, setSearchParams]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('peutic_theme');
@@ -1224,7 +1201,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                       {transactions.length === 0 ? (
                                           <tr><td colSpan={4} className="p-8 text-center text-gray-400">No history found.</td></tr>
                                       ) : (
-                                          transactions.map(tx => (
+                                          transactions.map((tx) => (
                                               <tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                                                   <td className="p-4 md:p-6 text-sm dark:text-gray-300 font-mono">{new Date(tx.date).toLocaleDateString()}</td>
                                                   <td className="p-4 md:p-6 text-sm font-bold dark:text-white">{tx.description}</td>
@@ -1460,7 +1437,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
           </main>
       </div>
 
-      {/* Modals */}
+      {/* MODALS */}
       {showPayment && <PaymentModal onClose={() => { setShowPayment(false); setPaymentError(undefined); }} onSuccess={handlePaymentSuccess} initialError={paymentError} />}
       {showBreathing && <BreathingExercise userId={user.id} onClose={() => setShowBreathing(false)} />}
       {showProfile && <ProfileModal user={dashboardUser} onClose={() => setShowProfile(false)} onUpdate={refreshData} />}

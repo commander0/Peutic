@@ -368,7 +368,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                                <div className="flex items-baseline gap-2">
                                    <span className="text-sm md:text-lg text-black/50 dark:text-white/50 font-black line-through opacity-50 decoration-black dark:decoration-white">$1.99</span>
                                    <div className="text-3xl md:text-4xl font-black text-black dark:text-white flex items-start gap-1">
-                                      <span className="text-base md:text-lg mt-1 md:mt-2">$</span>1.59<span className="text-[10px] md:text-xs text-black/60 dark:text-white/60 mt-4 md:mt-6">/min</span>
+                                      <span className="text-base md:text-lg mt-1 md:mt-2">$</span>1.49<span className="text-[10px] md:text-xs text-black/60 dark:text-white/60 mt-4 md:mt-6">/min</span>
                                    </div>
                                </div>
                            ) : (

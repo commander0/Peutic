@@ -1,7 +1,6 @@
 
 import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, ServerMetric, MoodEntry, JournalEntry, PromoCode, SessionFeedback, ArtEntry, BreathLog, SessionMemory, GiftCard } from '../types';
 import { supabase } from './supabaseClient';
-import { Api } from './api';
 
 const DB_KEYS = {
   USER: 'peutic_db_current_user_v26', 
@@ -567,16 +566,6 @@ export class Database {
       return Math.max(0, (pos - 1) * 3); // 3 mins per person avg
   }
 
-  // --- ADMIN & ANALYTICS ---
-  static async getAdminData() {
-      try {
-          return await Api.getAdminData();
-      } catch (e) {
-          console.error("Admin data fetch failed", e);
-          return { activeSessions: 0, queueLength: 0, totalUsers: 0 };
-      }
-  }
-
   // --- TRANSACTIONS & REST ---
   static getAllTransactions(): Transaction[] {
       return JSON.parse(localStorage.getItem(DB_KEYS.TRANSACTIONS) || '[]');
@@ -606,31 +595,13 @@ export class Database {
           });
       }
   }
-  
-  // UPDATED: Use secure API call for deduction
-  static async deductBalance(amount: number) {
+  static deductBalance(amount: number) {
       const user = this.getUser();
       if (user) {
-          try {
-              // Optimistic UI Update
-              const oldBalance = user.balance;
-              user.balance = Math.max(0, user.balance - amount);
-              this.updateUser(user);
-
-              // Server Sync
-              const res = await Api.deduct(user.id, amount);
-              if (!res.success) {
-                  // Rollback if server fails
-                  user.balance = oldBalance;
-                  this.updateUser(user);
-                  console.error("Deduction failed on server");
-              }
-          } catch (e) {
-              console.error("Deduction Error:", e);
-          }
+          user.balance = Math.max(0, user.balance - amount);
+          this.updateUser(user);
       }
   }
-
   static getSystemLogs(): SystemLog[] {
       return JSON.parse(localStorage.getItem(DB_KEYS.LOGS) || '[]');
   }

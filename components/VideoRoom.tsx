@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Companion, SessionFeedback } from '../types';
 import { 
@@ -117,6 +118,9 @@ const renderSessionArtifact = (companionName: string, durationStr: string, dateS
 
 const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Media State
+  const [showCredential, setShowCredential] = useState(false);
   
   // Icebreaker State
   const [showIcebreaker, setShowIcebreaker] = useState(false);
@@ -336,7 +340,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
       if (minutesUsed > 0 && user) {
         Database.deductBalance(minutesUsed);
         Database.addTransaction({
-            id: `sess_${Date.now()}`, userId: user.id, userName: userName, date: new Date().toISOString(),
+            id: `sess_${Date.now()}`, userName: userName, date: new Date().toISOString(),
             amount: -minutesUsed, description: `Session with ${companion.name}`, status: 'COMPLETED'
         });
         
@@ -360,7 +364,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   
   // Calculate cost dynamically based on active sale mode setting
   const settings = Database.getSettings();
-  const currentRate = settings.saleMode ? 1.59 : 1.99;
+  const currentRate = settings.saleMode ? 1.49 : 1.99;
   const cost = Math.ceil(duration / 60) * currentRate;
 
   // --- HELPER: Pre-fill Name to Skip Input Screen ---
@@ -403,152 +407,149 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                       <div className="flex justify-between mb-2"><span className="text-gray-500 font-bold text-xs uppercase">Time</span><span className="font-mono font-bold text-white">{formatTime(duration)}</span></div>
                       <div className="flex justify-between items-center"><span className="text-gray-500 font-bold text-xs uppercase">Cost (@ ${currentRate}/m)</span><span className="text-green-500 font-black text-lg">${cost.toFixed(2)}</span></div>
                   </div>
-
+                  
                   <div className="mb-6">
-                      <p className="text-gray-400 text-sm mb-3 font-bold">How was {companion.name}?</p>
-                      <div className="flex justify-center gap-2 mb-4">
-                          {[1,2,3,4,5].map(star => (
-                              <button key={star} onClick={() => setRating(star)} className={`p-2 rounded-full transition-transform hover:scale-110 ${rating >= star ? 'text-yellow-400' : 'text-gray-700'}`}>
-                                  <Star className={`w-8 h-8 ${rating >= star ? 'fill-yellow-400' : ''}`} />
-                              </button>
-                          ))}
-                      </div>
-                      <div className="flex flex-wrap gap-2 justify-center">
-                          {["Empathetic", "Professional", "Helpful", "Calming", "Insightful"].map(tag => (
-                              <button key={tag} onClick={() => toggleFeedbackTag(tag)} className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors ${feedbackTags.includes(tag) ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-gray-700 hover:border-gray-500'}`}>
-                                  {tag}
-                              </button>
-                          ))}
-                      </div>
+                      <p className="text-xs font-bold uppercase text-gray-500 mb-3 tracking-widest">Rate Experience</p>
+                      <div className="flex justify-center gap-2 mb-4">{[1, 2, 3, 4, 5].map(star => (<button key={star} onClick={() => setRating(star)} className="focus:outline-none"><Star className={`w-6 h-6 ${star <= rating ? 'fill-yellow-500 text-yellow-500' : 'text-gray-700'}`} /></button>))}</div>
+                      <div className="flex flex-wrap justify-center gap-2">{['Good Listener', 'Empathetic', 'Helpful', 'Calming', 'Insightful'].map(tag => (<button key={tag} onClick={() => toggleFeedbackTag(tag)} className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${feedbackTags.includes(tag) ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-gray-700 hover:border-gray-500'}`}>{tag}</button>))}</div>
                   </div>
-
-                  <button onClick={submitFeedbackAndClose} className="w-full bg-yellow-500 text-black py-4 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-yellow-400 transition-transform hover:scale-[1.02] shadow-lg">Return to Dashboard</button>
-              </div>
-          </div>
-      );
-  }
-
-  // --- CONNECTED STATE ---
-  if (connectionState === 'CONNECTED' && conversationUrl) {
-      return (
-          <div className="fixed inset-0 bg-black z-50 flex flex-col">
-              {/* VIDEO LAYER */}
-              <div className="flex-1 relative bg-gray-900">
-                  <iframe 
-                      src={getIframeUrl()} 
-                      allow="microphone; camera; autoplay; fullscreen"
-                      className="w-full h-full border-0"
-                      title="Peutic Session"
-                  />
                   
-                  {/* OVERLAYS */}
-                  {lowBalanceWarning && (
-                      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-2 rounded-full font-bold text-sm shadow-xl animate-pulse flex items-center gap-2 z-20">
-                          <AlertCircle className="w-4 h-4"/> Less than 1 min remaining
-                      </div>
-                  )}
-
-                  {/* ICEBREAKER CARD */}
-                  {showIcebreaker && (
-                      <div className="absolute bottom-32 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-2xl text-center shadow-2xl animate-in slide-in-from-bottom-10 z-20">
-                          <p className="text-yellow-400 text-xs font-black uppercase tracking-widest mb-2">Conversation Starter</p>
-                          <h3 className="text-white text-lg md:text-xl font-bold mb-4 leading-relaxed">"{ICEBREAKERS[currentTopicIndex]}"</h3>
-                          <div className="flex gap-2 justify-center">
-                              <button onClick={() => setShowIcebreaker(false)} className="px-4 py-2 bg-black/50 hover:bg-black/70 text-white rounded-lg text-xs font-bold transition-colors">Close</button>
-                              <button onClick={nextIcebreaker} className="px-4 py-2 bg-white text-black hover:bg-gray-200 rounded-lg text-xs font-bold transition-colors flex items-center gap-2">Next <ChevronRight className="w-3 h-3"/></button>
-                          </div>
-                      </div>
-                  )}
-
-                  {/* CONTROLS */}
-                  <div className="absolute bottom-8 left-0 right-0 flex justify-center items-center gap-4 md:gap-6 z-20 px-4">
-                      <button 
-                          onClick={() => setShowIcebreaker(!showIcebreaker)} 
-                          className={`p-4 rounded-full backdrop-blur-md transition-all shadow-lg hover:scale-105 ${showIcebreaker ? 'bg-yellow-500 text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
-                      >
-                          <Sparkles className="w-6 h-6" />
-                      </button>
-                      
-                      <button onClick={handleEndSession} className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold text-lg shadow-xl hover:scale-105 transition-all flex items-center gap-2">
-                          <PhoneOff className="w-6 h-6" /> End Session
-                      </button>
-
-                      <div className="hidden md:flex flex-col items-center justify-center w-14 h-14 rounded-full bg-black/40 backdrop-blur-sm border border-white/10">
-                          <div className="flex gap-0.5 items-end h-4 mb-1">
-                             {[1,2,3,4].map(bar => (
-                                 <div key={bar} className={`w-1 bg-white rounded-full transition-all duration-300 ${networkQuality >= bar ? 'bg-green-500' : 'bg-gray-600'}`} style={{ height: `${bar * 4}px` }}></div>
-                             ))}
-                          </div>
-                          <span className="text-[8px] font-bold text-gray-400 uppercase">Signal</span>
-                      </div>
-                  </div>
-
-                  {/* Top Info */}
-                  <div className="absolute top-6 left-6 z-20 flex items-center gap-3">
-                      <div className="bg-red-600 px-3 py-1 rounded-full flex items-center gap-2 animate-pulse">
-                          <div className="w-2 h-2 bg-white rounded-full"></div>
-                          <span className="text-white text-xs font-bold uppercase tracking-widest">Live</span>
-                      </div>
-                      <div className="bg-black/40 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10 text-white font-mono text-sm font-bold shadow-sm">
-                          {formatTime(duration)}
-                      </div>
-                  </div>
+                  <button onClick={submitFeedbackAndClose} className="w-full bg-yellow-500 hover:bg-yellow-400 text-black py-4 rounded-xl font-black tracking-wide transition-colors shadow-lg">Return to Dashboard</button>
               </div>
           </div>
       );
   }
 
-  // --- CONNECTING / QUEUE STATE ---
   return (
-      <div className="fixed inset-0 bg-gray-900 z-50 flex flex-col items-center justify-center text-white">
-          {connectionState === 'QUEUED' && (
-              <div className="max-w-md w-full p-8 text-center animate-in fade-in">
-                  <div className="w-20 h-20 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-6 relative">
-                      <Users className="w-10 h-10 text-yellow-500" />
-                      <div className="absolute top-0 right-0 bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded-full">#{queuePos}</div>
-                  </div>
-                  <h2 className="text-3xl font-black mb-2">You are in line</h2>
-                  <p className="text-gray-400 mb-8">Due to high demand, we are securing a private line for you.</p>
-                  
-                  <div className="bg-gray-800 rounded-2xl p-6 mb-8 border border-gray-700">
-                      <div className="flex justify-between items-center mb-2">
-                          <span className="text-gray-500 font-bold text-xs uppercase">Est. Wait</span>
-                          <span className="text-white font-mono font-bold">{estWait} min</span>
-                      </div>
-                      <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
-                          <div className="h-full bg-yellow-500 animate-pulse" style={{ width: '100%' }}></div>
-                      </div>
-                  </div>
-                  <button onClick={() => { Database.leaveQueue(userId); onEndSession(); }} className="text-gray-500 hover:text-white text-sm font-bold">Cancel Request</button>
-              </div>
-          )}
+    <div ref={containerRef} className="fixed inset-0 bg-black z-50 flex flex-col overflow-hidden select-none">
+        
+        {/* --- CREDENTIAL BADGE --- */}
+        {showCredential && (
+            <div className="absolute top-36 right-4 z-40 bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl w-64 animate-in slide-in-from-right-10 fade-in duration-300">
+                <div className="flex justify-between items-start mb-2">
+                    <h4 className="text-white font-bold text-sm uppercase tracking-widest flex items-center gap-2"><BadgeCheck className="w-4 h-4 text-blue-400 fill-blue-400" /> Verified</h4>
+                    <button onClick={() => setShowCredential(false)} className="text-white/50 hover:text-white"><Share2 className="w-3 h-3 rotate-180" /></button>
+                </div>
+                <div className="space-y-2 text-xs">
+                    <div className="flex justify-between"><span className="text-gray-400">License</span><span className="text-white font-mono">{companion.licenseNumber || 'PENDING'}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">Education</span><span className="text-white text-right">{companion.degree || 'PhD, Clinical Psychology'}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">State</span><span className="text-white">{companion.stateOfPractice || 'NY'}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">Exp.</span><span className="text-white">{companion.yearsExperience || 10} Years</span></div>
+                </div>
+            </div>
+        )}
 
-          {connectionState === 'CONNECTING' && (
-              <div className="max-w-md w-full p-8 text-center animate-in zoom-in">
-                  <div className="relative w-32 h-32 mx-auto mb-8">
-                      <div className="absolute inset-0 border-4 border-yellow-500/30 rounded-full"></div>
-                      <div className="absolute inset-0 border-4 border-t-yellow-500 rounded-full animate-spin"></div>
-                      <img src={companion.imageUrl} alt={companion.name} className="absolute inset-2 w-28 h-28 rounded-full object-cover border-2 border-gray-900" />
-                  </div>
-                  <h2 className="text-3xl font-black mb-2">Connecting to {companion.name}...</h2>
-                  <p className="text-gray-400 text-sm animate-pulse">Establishing secure P2P encryption...</p>
-              </div>
-          )}
+        {/* --- ICEBREAKER OVERLAY --- */}
+        {showIcebreaker && (
+            <div className="absolute bottom-24 left-4 z-40 bg-white/10 backdrop-blur-xl border border-white/20 p-6 rounded-3xl w-72 md:w-80 shadow-2xl animate-in slide-in-from-bottom-10 fade-in duration-500">
+                <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-yellow-400 fill-yellow-400 animate-pulse" />
+                        <span className="text-xs font-black text-white uppercase tracking-widest">Conversation Sparks</span>
+                    </div>
+                    <button onClick={() => setShowIcebreaker(false)} className="text-white/50 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
+                </div>
+                <div className="min-h-[80px] flex items-center justify-center">
+                    <p className="text-white font-medium text-lg leading-relaxed mb-6 text-center animate-in fade-in duration-500 key={currentTopicIndex}">
+                        "{ICEBREAKERS[currentTopicIndex]}"
+                    </p>
+                </div>
+                <button onClick={nextIcebreaker} className="w-full bg-white text-black py-3 rounded-xl font-bold text-sm hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2">
+                    Next Topic <ChevronRight className="w-4 h-4" />
+                </button>
+            </div>
+        )}
 
-          {connectionState === 'ERROR' && (
-              <div className="max-w-md w-full p-8 text-center animate-in shake">
-                  <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <AlertCircle className="w-10 h-10 text-red-500" />
-                  </div>
-                  <h2 className="text-2xl font-black mb-4">Connection Failed</h2>
-                  <p className="text-red-400 mb-8 bg-red-950/30 p-4 rounded-xl border border-red-900/50 text-sm">{errorMsg}</p>
-                  <div className="flex gap-4 justify-center">
-                      <button onClick={onEndSession} className="px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-xl font-bold">Close</button>
-                      <button onClick={() => { setErrorMsg(''); setConnectionState('QUEUED'); }} className="px-6 py-3 bg-white text-black hover:bg-gray-200 rounded-xl font-bold flex items-center gap-2"><RefreshCcw className="w-4 h-4"/> Retry</button>
-                  </div>
-              </div>
-          )}
-      </div>
+        {/* --- HEADER OVERLAY --- */}
+        <div className="absolute top-0 left-0 right-0 p-4 md:p-6 flex justify-between items-start z-20 pointer-events-none bg-gradient-to-b from-black/80 via-black/20 to-transparent pb-20 transition-opacity duration-500">
+            <div className="flex items-center gap-4 pointer-events-auto">
+                {/* END CALL BUTTON - TOP LEFT */}
+                <button onClick={handleEndSession} className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-full transition-colors shadow-lg shadow-red-600/20" title="End Session">
+                    <PhoneOff className="w-5 h-5" />
+                </button>
+
+                <div className={`bg-black/40 backdrop-blur-xl px-4 py-2 rounded-full border ${lowBalanceWarning ? 'border-red-500 animate-pulse' : 'border-white/10'} text-white font-mono shadow-xl flex items-center gap-3 transition-colors duration-500`}>
+                    <div className={`w-2 h-2 rounded-full ${connectionState === 'CONNECTED' ? 'bg-red-500 animate-pulse' : 'bg-yellow-500'}`}></div>
+                    <span className={`font-variant-numeric tabular-nums tracking-wide font-bold ${lowBalanceWarning ? 'text-red-400' : 'text-white'}`}>
+                        {connectionState === 'CONNECTED' ? formatTime(duration) : connectionState === 'QUEUED' ? 'Waiting...' : 'Connecting...'}
+                    </span>
+                </div>
+                <button onClick={() => setShowCredential(!showCredential)} className="bg-black/40 backdrop-blur-xl p-2 rounded-full border border-white/10 text-white hover:bg-white/10 transition-colors">
+                    <FileText className="w-5 h-5" />
+                </button>
+            </div>
+            <div className="flex items-center gap-2 pointer-events-auto">
+                <div className="flex gap-1 h-4 items-end">
+                    {[1, 2, 3, 4].map(i => (
+                        <div key={i} className={`w-1 rounded-sm ${i <= networkQuality ? 'bg-green-500' : 'bg-gray-600'}`} style={{ height: `${i * 25}%` }}></div>
+                    ))}
+                </div>
+            </div>
+        </div>
+
+        {/* --- MAIN CONTENT --- */}
+        <div className="absolute inset-0 w-full h-full bg-gray-900 flex items-center justify-center">
+            {/* QUEUE SCREEN */}
+            {connectionState === 'QUEUED' && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/95">
+                    <div className="relative mb-8">
+                         <div className="w-24 h-24 rounded-full border-4 border-yellow-500/20 flex items-center justify-center animate-pulse">
+                             <Users className="w-10 h-10 text-yellow-500" />
+                         </div>
+                    </div>
+                    <h3 className="text-3xl font-black text-white tracking-tight mb-2">You are in queue</h3>
+                    <p className="text-gray-400 text-sm mb-6">Position {queuePos} • Est. {estWait}m wait</p>
+                    <button onClick={onEndSession} className="mt-8 text-gray-500 hover:text-white text-sm font-bold">Leave Queue</button>
+                </div>
+            )}
+
+            {connectionState === 'CONNECTING' && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/90 backdrop-blur-md">
+                    <div className="relative mb-8">
+                        <div className="absolute inset-0 bg-yellow-500/20 blur-[60px] rounded-full animate-pulse"></div>
+                        <div className="relative z-10 p-8 rounded-full border border-yellow-500/30 bg-black/50 shadow-2xl">
+                            <Loader2 className="w-16 h-16 animate-spin text-yellow-500" />
+                        </div>
+                    </div>
+                    <h3 className="text-3xl font-black text-white tracking-tight mb-2">Securing Link</h3>
+                    <p className="text-gray-400 text-sm">Establishing end-to-end encryption...</p>
+                </div>
+            )}
+            
+            {/* Error State */}
+            {connectionState === 'ERROR' && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/95">
+                    <div className="bg-red-500/10 border border-red-500/30 p-8 rounded-3xl max-w-md text-center backdrop-blur-md">
+                        <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/30"><AlertCircle className="w-8 h-8 text-red-500" /></div>
+                        <h3 className="text-2xl font-bold text-white mb-2">Connection Failed</h3>
+                        <p className="text-gray-400 mb-8 text-sm">{errorMsg}</p>
+                        <button onClick={onEndSession} className="bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2 mx-auto"><RefreshCcw className="w-4 h-4" /> Return to Dashboard</button>
+                    </div>
+                </div>
+            )}
+
+            {connectionState === 'CONNECTED' && conversationUrl && (
+                <iframe 
+                    src={getIframeUrl()} 
+                    className="absolute inset-0 w-full h-full border-0" 
+                    allow="microphone *; camera *; autoplay; fullscreen; display-capture" 
+                    title="Tavus Session" 
+                />
+            )}
+        </div>
+
+        {/* --- BOTTOM LEFT ICEBREAKER BUTTON --- */}
+        <div className="absolute bottom-6 left-4 z-30 pointer-events-auto">
+            <button 
+                onClick={() => setShowIcebreaker(!showIcebreaker)} 
+                className={`p-4 rounded-full transition-all relative shadow-xl hover:scale-110 ${showIcebreaker ? 'bg-blue-500 text-white' : 'bg-black/60 backdrop-blur-md border border-white/10 text-white hover:bg-black/80'}`} 
+                title="Conversation Sparks"
+            >
+                <MessageSquare className="w-6 h-6" />
+                {!showIcebreaker && <span className="absolute top-0 right-0 w-3 h-3 bg-yellow-500 rounded-full border-2 border-black animate-pulse"></span>}
+            </button>
+        </div>
+    </div>
   );
 };
 

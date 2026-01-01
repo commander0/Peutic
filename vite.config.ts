@@ -1,4 +1,3 @@
-
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -12,21 +11,16 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     define: {
       // Manually define specific process.env variables to ensure they are available
+      // This is required because we are using process.env syntax in the client code
       'process.env.API_KEY': JSON.stringify(env.API_KEY || env.VITE_API_KEY || ''),
       'process.env.STRIPE_KEY': JSON.stringify(env.STRIPE_KEY || env.VITE_STRIPE_KEY || ''),
-      'process.env.VITE_TAVUS_API_KEY': JSON.stringify(env.VITE_TAVUS_API_KEY || ''),
-
+      'process.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL || ''),
+      'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY || ''),
+      'process.env.VITE_TAVUS_API_KEY': JSON.stringify(env.VITE_TAVUS_API_KEY || 'ae15b9c744264844a555049b576094d8'),
+      
       // Polyfill process.env to prevent "process is not defined" errors for other libraries
+      // BUT do not overwrite the specific keys defined above
       'process.env': {} 
-    },
-    server: {
-      proxy: {
-        '/api': {
-          target: 'http://localhost:3001',
-          changeOrigin: true,
-          secure: false,
-        }
-      }
     },
     build: {
       chunkSizeWarningLimit: 1000,

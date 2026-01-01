@@ -74,7 +74,7 @@ const MainApp: React.FC = () => {
     return () => clearInterval(interval);
   }, [user, activeSessionCompanion]);
 
-  const handleLogin = async (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email') => {
+  const handleLogin = (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email') => {
     let currentUser = Database.getUser();
     const userEmail = email || `${name.toLowerCase().replace(/ /g, '.')}@example.com`;
     
@@ -95,30 +95,22 @@ const MainApp: React.FC = () => {
                 finalRole = UserRole.USER;
             }
 
-            const newUser = await Database.createUser(name, userEmail, provider, birthday, finalRole);
-            if (newUser) {
-                currentUser = newUser;
-                if (avatar) { 
-                    currentUser.avatar = avatar; 
-                    Database.updateUser(currentUser); 
-                }
-            }
+            currentUser = Database.createUser(name, userEmail, provider, birthday, finalRole);
+            if (avatar) { currentUser.avatar = avatar; Database.updateUser(currentUser); }
         }
     }
     
-    if (currentUser) {
-        currentUser = Database.checkAndIncrementStreak(currentUser);
+    currentUser = Database.checkAndIncrementStreak(currentUser);
 
-        setUser(currentUser);
-        Database.saveUserSession(currentUser);
-        lastActivityRef.current = Date.now();
-        setShowAuth(false);
-        
-        if (currentUser.role === UserRole.ADMIN) {
-            navigate('/admin/dashboard');
-        } else {
-            navigate('/');
-        }
+    setUser(currentUser);
+    Database.saveUserSession(currentUser);
+    lastActivityRef.current = Date.now();
+    setShowAuth(false);
+    
+    if (currentUser.role === UserRole.ADMIN) {
+        navigate('/admin/dashboard');
+    } else {
+        navigate('/');
     }
   };
 
