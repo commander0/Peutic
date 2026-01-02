@@ -1,11 +1,43 @@
 
-import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, MoodEntry, JournalEntry, PromoCode, SessionFeedback, ArtEntry, BreathLog } from '../types';
+import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, ServerMetric, MoodEntry, JournalEntry, PromoCode, SessionFeedback, ArtEntry, BreathLog, SessionMemory, GiftCard } from '../types';
 import { supabase } from './supabaseClient';
 
-// We use localStorage ONLY for the session token (user ID) to persist login across reloads
-const SESSION_KEY = 'peutic_session_user_id';
+const DB_KEYS = {
+  USER: 'peutic_db_current_user_v26', 
+  ALL_USERS: 'peutic_db_users_v26', 
+  COMPANIONS: 'peutic_db_companions_v26',
+  TRANSACTIONS: 'peutic_db_transactions_v26',
+  SETTINGS: 'peutic_db_settings_v26',
+  LOGS: 'peutic_db_logs_v26',
+  MOODS: 'peutic_db_moods_v26',
+  JOURNALS: 'peutic_db_journals_v26',
+  ART: 'peutic_db_art_v26',
+  PROMOS: 'peutic_db_promos_v26',
+  ADMIN_ATTEMPTS: 'peutic_db_admin_attempts_v26',
+  BREATHE_COOLDOWN: 'peutic_db_breathe_cooldown_v26',
+  BREATHE_LOGS: 'peutic_db_breathe_logs_v26',
+  MEMORIES: 'peutic_db_memories_v26',
+  GIFTS: 'peutic_db_gifts_v26',
+  FEEDBACK: 'peutic_db_feedback_v26',
+  ACTIVE_SESSIONS: 'peutic_active_sessions_v2',
+  QUEUE: 'peutic_queue_v1'
+};
 
-// --- INITIAL COMPANIONS SEED DATA (35 Total) ---
+// --- GENERIC AVATAR POOL (For Users/Fallbacks ONLY) ---
+export const STABLE_AVATAR_POOL = [
+    "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1500048993953-d23a436266cf?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=800"
+];
+
+// --- HERO COMPANIONS ---
 export const INITIAL_COMPANIONS: Companion[] = [
   // 1. Ruby (F)
   { 
@@ -49,10 +81,10 @@ export const INITIAL_COMPANIONS: Companion[] = [
     imageUrl: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=80&w=800", 
     bio: 'Support for caregivers.', replicaId: 'r4317e64d25a', licenseNumber: 'BSW-FL-3321', degree: 'BSW, Gerontology', stateOfPractice: 'FL', yearsExperience: 20 
   },
-  // 8. Matthew (M) - FIXED IMAGE URL
+  // 8. Matthew (M)
   { 
     id: 'c45', name: 'Matthew', gender: 'Male', specialty: 'Tech Burnout', status: 'AVAILABLE', rating: 4.8, 
-    imageUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=800", 
+    imageUrl: "https://images.unsplash.com/photo-1629460741589-9bd72a6c278c?auto=format&fit=crop&q=80&w=800", 
     bio: 'Restoring digital balance.', replicaId: 'r92debe21318', licenseNumber: 'LMFT-WA-3399', degree: 'MA, Psychology', stateOfPractice: 'WA', yearsExperience: 7 
   },
   // 9. Olivia (F)
@@ -219,112 +251,53 @@ export const INITIAL_COMPANIONS: Companion[] = [
   }
 ];
 
-export const STABLE_AVATAR_POOL = [
-    "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1500048993953-d23a436266cf?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1552058544-f2b08422138a?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1554151228-14d9def656ec?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1504257432389-52343af06ae3?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1534751516642-a1af1ef26a56?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1463453091185-61582044d556?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1485206412256-701ccc5b93ca?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1618077555391-58f67333af49?auto=format&fit=crop&q=80&w=800"
-];
-
 export class Database {
+  // Ensure we rely on Supabase for global states, fall back to local only if absolutely necessary
+  // but strictly prefer global logic for business rules (concurrency, payments, auth)
   
-  // --- USER MANAGEMENT (SUPABASE ASYNC) ---
-
-  // Get current logged-in user details from DB
-  static async getUser(): Promise<User | null> {
-    const userId = localStorage.getItem(SESSION_KEY);
-    if (!userId) return null;
-
-    try {
-        const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();
-        if (error || !data) {
-            // Invalid session or user deleted
-            this.clearSession();
-            return null;
-        }
-        
-        // Map DB response to User type
-        return {
-            id: data.id,
-            name: data.name,
-            email: data.email,
-            role: data.role as UserRole,
-            balance: data.balance,
-            subscriptionStatus: data.subscription_status,
-            joinedAt: data.joined_at,
-            lastLoginDate: data.last_login_date,
-            avatar: data.avatar,
-            provider: data.provider || 'email',
-            streak: 0, // Computed dynamically in real app, reset here for now
-            emailPreferences: data.email_preferences
-        };
-    } catch (e) {
-        console.error("DB Get User Error:", e);
-        return null;
-    }
+  // --- USER MANAGEMENT ---
+  static getAllUsers(): User[] {
+    const usersStr = localStorage.getItem(DB_KEYS.ALL_USERS);
+    return usersStr ? JSON.parse(usersStr) : [];
   }
 
-  // Admin: Get all users
-  static async getAllUsers(): Promise<User[]> {
-      try {
-          const { data, error } = await supabase.from('users').select('*');
-          if (error) throw error;
-          return data.map((d: any) => ({
-             id: d.id, name: d.name, email: d.email, role: d.role, balance: d.balance, 
-             subscriptionStatus: d.subscription_status, joinedAt: d.joined_at, 
-             lastLoginDate: d.last_login_date, avatar: d.avatar, provider: d.provider, streak: 0
-          }));
-      } catch (e) {
-          return [];
-      }
-  }
-
-  static async getUserByEmail(email: string): Promise<User | null> {
-      const { data } = await supabase.from('users').select('*').eq('email', email).single();
-      if (!data) return null;
-      return {
-          id: data.id, name: data.name, email: data.email, role: data.role, balance: data.balance,
-          subscriptionStatus: data.subscription_status, joinedAt: data.joined_at,
-          lastLoginDate: data.last_login_date, avatar: data.avatar, provider: data.provider, streak: 0
-      };
+  static getUser(): User | null {
+    const userStr = localStorage.getItem(DB_KEYS.USER);
+    return userStr ? JSON.parse(userStr) : null;
   }
 
   static saveUserSession(user: User) {
-    localStorage.setItem(SESSION_KEY, user.id);
+    localStorage.setItem(DB_KEYS.USER, JSON.stringify(user));
+    // SYNC: Create user in Supabase if not exists to support relationships
+    this.ensureSupabaseUser(user);
   }
 
-  static async createUser(name: string, email: string, provider: 'email' | 'google' | 'facebook' | 'x', birthday?: string, role: UserRole = UserRole.USER): Promise<User> {
+  static async ensureSupabaseUser(user: User) {
+      try {
+          const { error } = await supabase.from('users').upsert({
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              role: user.role,
+              balance: user.balance,
+              last_login_date: new Date().toISOString()
+          }, { onConflict: 'id' });
+          
+          if (error) { 
+              console.warn("Supabase Sync Warning:", error);
+          }
+      } catch (e) {}
+  }
+
+  static clearSession() {
+    localStorage.removeItem(DB_KEYS.USER);
+  }
+
+  static getUserByEmail(email: string): User | undefined {
+    return this.getAllUsers().find(u => u.email === email);
+  }
+
+  static createUser(name: string, email: string, provider: 'email' | 'google' | 'facebook' | 'x', birthday?: string, role: UserRole = UserRole.USER): User {
     const newUser: User = {
       id: `u_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name,
@@ -338,74 +311,78 @@ export class Database {
       provider,
       birthday
     };
-    
-    // Save to Supabase
-    try {
-        await supabase.from('users').insert({
-            id: newUser.id,
-            name: newUser.name,
-            email: newUser.email,
-            role: newUser.role,
-            balance: newUser.balance,
-            provider: newUser.provider,
-            last_login_date: newUser.lastLoginDate,
-            avatar: newUser.avatar,
-            subscription_status: newUser.subscriptionStatus
-        });
-        this.saveUserSession(newUser);
-    } catch (e) {
-        console.error("Create User Error", e);
-    }
-    
+    const users = this.getAllUsers();
+    users.push(newUser);
+    localStorage.setItem(DB_KEYS.ALL_USERS, JSON.stringify(users));
+    this.ensureSupabaseUser(newUser); // Sync
     return newUser;
   }
 
   static async updateUser(user: User) {
+    const users = this.getAllUsers();
+    const index = users.findIndex(u => u.id === user.id);
+    if (index !== -1) {
+      users[index] = user;
+      localStorage.setItem(DB_KEYS.ALL_USERS, JSON.stringify(users));
+    }
+    const currentUser = this.getUser();
+    if (currentUser && currentUser.id === user.id) {
+        localStorage.setItem(DB_KEYS.USER, JSON.stringify(user));
+    }
+    
     try {
         await supabase.from('users').update({
             name: user.name,
             email: user.email,
             balance: user.balance,
-            last_login_date: user.lastLoginDate,
-            avatar: user.avatar,
-            email_preferences: user.emailPreferences
+            last_login_date: user.lastLoginDate
         }).eq('id', user.id);
     } catch (e) {
-        console.warn("Remote update failed", e);
+        console.warn("Remote update failed");
     }
   }
 
   static async deleteUser(id: string) {
+      const users = this.getAllUsers().filter(u => u.id !== id);
+      localStorage.setItem(DB_KEYS.ALL_USERS, JSON.stringify(users));
+      const currentUser = this.getUser();
+      if(currentUser && currentUser.id === id) {
+          this.clearSession();
+      }
       try {
           await supabase.from('users').delete().eq('id', id);
-          const currentId = localStorage.getItem(SESSION_KEY);
-          if (currentId === id) this.clearSession();
       } catch (e) {}
   }
 
-  static clearSession() {
-    localStorage.removeItem(SESSION_KEY);
-  }
-
   static hasAdmin(): boolean {
-     // Since this is async in reality, for synchronous checks (like redirects), we might assume false
-     // or this method should be refactored to be async in components.
-     // For now, returning true prevents blocking login flow, logic handled in AdminLogin.
-     return true; 
+    return this.getAllUsers().some(u => u.role === UserRole.ADMIN);
   }
 
   static checkAndIncrementStreak(user: User): User {
-      // Local Logic kept for simplicity in object return, but typically needs async update
-      return user; 
+      const today = new Date().toDateString();
+      const lastLogin = new Date(user.lastLoginDate).toDateString();
+      
+      if (today !== lastLogin) {
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          if (new Date(user.lastLoginDate).toDateString() === yesterday.toDateString()) {
+              user.streak += 1;
+          } else {
+              user.streak = 1;
+          }
+          user.lastLoginDate = new Date().toISOString();
+          this.updateUser(user);
+      }
+      return user;
   }
 
-  static async resetAllUsers() {
-      // Admin only
-      await supabase.from('users').delete().neq('role', 'ADMIN');
+  static resetAllUsers() {
+      localStorage.removeItem(DB_KEYS.ALL_USERS);
+      localStorage.removeItem(DB_KEYS.USER);
   }
 
-  // --- SETTINGS (SUPABASE) ---
-  static async getSettings(): Promise<GlobalSettings> {
+  // --- GLOBAL SETTINGS ---
+  static getSettings(): GlobalSettings {
     const defaultSettings: GlobalSettings = {
         pricePerMinute: 1.59,
         saleMode: true,
@@ -415,287 +392,386 @@ export class Database {
         maxConcurrentSessions: 15,
         multilingualMode: true
     };
-    try {
-        const { data } = await supabase.from('global_settings').select('*').eq('id', 1).single();
-        if (data) {
-            return {
-                pricePerMinute: data.price_per_minute,
-                saleMode: data.sale_mode,
-                maintenanceMode: data.maintenance_mode,
-                allowSignups: data.allow_signups,
-                siteName: data.site_name || defaultSettings.siteName,
-                broadcastMessage: data.broadcast_message,
-                maxConcurrentSessions: data.max_concurrent_sessions,
-                multilingualMode: data.multilingual_mode
-            };
-        }
-    } catch (e) {}
-    return defaultSettings;
+    const saved = localStorage.getItem(DB_KEYS.SETTINGS);
+    return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
   }
 
-  static async saveSettings(settings: GlobalSettings) {
-      await supabase.from('global_settings').upsert({
-          id: 1,
-          price_per_minute: settings.pricePerMinute,
-          sale_mode: settings.saleMode,
-          maintenance_mode: settings.maintenanceMode,
-          allow_signups: settings.allowSignups,
-          site_name: settings.siteName,
-          broadcast_message: settings.broadcastMessage,
-          max_concurrent_sessions: settings.maxConcurrentSessions,
-          multilingual_mode: settings.multilingualMode
-      });
+  static saveSettings(settings: GlobalSettings) {
+      localStorage.setItem(DB_KEYS.SETTINGS, JSON.stringify(settings));
   }
 
-  // --- COMPANIONS (SUPABASE) ---
-  static async getCompanions(): Promise<Companion[]> {
-      // Prefer Database source for dynamic updates
-      const { data } = await supabase.from('companions').select('*');
-      if (data && data.length > 0) {
-          return data.map((c: any) => ({
-              id: c.id, name: c.name, specialty: c.specialty, status: c.status,
-              imageUrl: c.image_url, rating: c.rating, bio: c.bio, replicaId: c.replica_id,
-              gender: c.gender, licenseNumber: c.license_number, degree: c.degree,
-              stateOfPractice: c.state_of_practice, yearsExperience: c.years_experience
-          }));
+  // --- COMPANIONS ---
+  static getCompanions(): Companion[] {
+      const saved = localStorage.getItem(DB_KEYS.COMPANIONS);
+      if (!saved) {
+          localStorage.setItem(DB_KEYS.COMPANIONS, JSON.stringify(INITIAL_COMPANIONS));
+          return INITIAL_COMPANIONS;
       }
-      // Fallback to static list if DB is empty
-      return INITIAL_COMPANIONS;
+      return JSON.parse(saved);
   }
 
-  static async updateCompanion(c: Companion) {
-      await supabase.from('companions').upsert({
-          id: c.id, name: c.name, specialty: c.specialty, status: c.status,
-          image_url: c.imageUrl, rating: c.rating, bio: c.bio, replica_id: c.replicaId,
-          gender: c.gender, license_number: c.licenseNumber, degree: c.degree,
-          state_of_practice: c.stateOfPractice, years_experience: c.yearsExperience
-      });
-  }
-
-  // --- JOURNALS (SUPABASE) ---
-  static async getJournals(userId: string): Promise<JournalEntry[]> {
-      const { data } = await supabase.from('journals').select('*').eq('user_id', userId).order('date', { ascending: false });
-      return (data || []).map((d: any) => ({ id: d.id, userId: d.user_id, content: d.content, date: d.date }));
-  }
-
-  static async saveJournal(entry: JournalEntry) {
-      await supabase.from('journals').insert({
-          id: entry.id, user_id: entry.userId, content: entry.content, date: entry.date
-      });
-  }
-
-  // --- TRANSACTIONS (SUPABASE) ---
-  static async getAllTransactions(): Promise<Transaction[]> {
-      const { data } = await supabase.from('transactions').select('*').order('date', { ascending: false });
-      return (data || []).map((d: any) => ({
-          id: d.id, userId: d.user_id, userName: d.user_name, amount: d.amount, cost: d.cost, description: d.description, status: d.status, date: d.date
-      }));
-  }
-
-  static async getUserTransactions(userId: string): Promise<Transaction[]> {
-      const { data } = await supabase.from('transactions').select('*').eq('user_id', userId).order('date', { ascending: false });
-      return (data || []).map((d: any) => ({
-          id: d.id, userId: d.user_id, userName: d.user_name, amount: d.amount, cost: d.cost, description: d.description, status: d.status, date: d.date
-      }));
-  }
-
-  static async addTransaction(tx: Transaction) {
-      await supabase.from('transactions').insert({
-          id: tx.id, user_id: tx.userId, user_name: tx.userName, amount: tx.amount, cost: tx.cost, description: tx.description, status: tx.status, date: tx.date
-      });
-  }
-
-  static async topUpWallet(amount: number, cost: number, userId?: string) {
-      if (!userId) {
-          const u = await this.getUser();
-          if (u) userId = u.id; else return;
-      }
-      const { data: user } = await supabase.from('users').select('*').eq('id', userId).single();
-      if (user) {
-          const newBalance = (user.balance || 0) + amount;
-          await supabase.from('users').update({ balance: newBalance }).eq('id', userId);
-          await this.addTransaction({
-              id: `tx_${Date.now()}`, userId: userId, userName: user.name, date: new Date().toISOString(),
-              amount: amount, cost: cost, description: cost > 0 ? 'Credit Purchase' : 'Admin Grant', status: 'COMPLETED'
-          });
+  static updateCompanion(companion: Companion) {
+      const list = this.getCompanions();
+      const index = list.findIndex(c => c.id === companion.id);
+      if (index !== -1) {
+          list[index] = companion;
+          localStorage.setItem(DB_KEYS.COMPANIONS, JSON.stringify(list));
       }
   }
 
-  static async deductBalance(amount: number) {
-      const user = await this.getUser();
-      if (user) {
-          const newBalance = Math.max(0, user.balance - amount);
-          await supabase.from('users').update({ balance: newBalance }).eq('id', user.id);
-      }
-  }
+  // =========================================================================
+  //  GLOBAL CONCURRENCY & QUEUE (SUPABASE ENFORCED)
+  // =========================================================================
 
-  // --- MOODS & LOGS ---
-  static async getMoods(userId: string): Promise<MoodEntry[]> {
-      const { data } = await supabase.from('mood_entries').select('*').eq('user_id', userId);
-      return (data || []).map((d: any) => ({ id: d.id, userId: d.user_id, mood: d.mood, date: d.date }));
-  }
-
-  static async saveMood(userId: string, mood: 'confetti' | 'rain' | null) {
-      if (!mood) return;
-      await supabase.from('mood_entries').insert({
-          id: `m_${Date.now()}`, user_id: userId, mood: mood, date: new Date().toISOString()
-      });
-  }
-
-  // --- GLOBAL QUEUE SYSTEM (SUPABASE) ---
+  // 1. ZOMBIE CLEANUP (Backend Emulation)
   private static async runGlobalCleanup() {
-      const cutoff = new Date(Date.now() - 15000).toISOString(); 
+      const cutoff = new Date(Date.now() - 15000).toISOString(); // 15s timeout
       try {
+          // DELETE FROM active_sessions WHERE last_ping < cutoff
           await supabase.from('active_sessions').delete().lt('last_ping', cutoff);
+          // DELETE FROM session_queue WHERE last_ping < cutoff
           await supabase.from('session_queue').delete().lt('last_ping', cutoff);
-      } catch (e) {}
+      } catch (e) {
+          console.warn("Cleanup failed (likely permissions or offline)", e);
+      }
   }
 
   static async getActiveSessionCount(): Promise<number> {
       await this.runGlobalCleanup();
-      const { count } = await supabase.from('active_sessions').select('*', { count: 'exact', head: true });
-      return count || 0;
+      try {
+          const { count, error } = await supabase
+              .from('active_sessions')
+              .select('*', { count: 'exact', head: true });
+          
+          if (error) throw error;
+          return count || 0;
+      } catch (e) {
+          // Fallback to local storage count if remote fails, but warn
+          console.warn("Supabase Count Failed, using local fallback.");
+          return 0;
+      }
   }
 
   static async claimActiveSpot(userId: string): Promise<boolean> {
       await this.runGlobalCleanup();
-      const settings = await this.getSettings();
-      const count = await this.getActiveSessionCount();
+      const settings = this.getSettings();
       
-      const { data: existing } = await supabase.from('active_sessions').select('user_id').eq('user_id', userId).single();
-      if (existing) {
-          await this.sendKeepAlive(userId);
+      try {
+          // 1. Check current count
+          const count = await this.getActiveSessionCount();
+          
+          // 2. Check if user is ALREADY active (idempotency)
+          const { data: existing } = await supabase
+              .from('active_sessions')
+              .select('user_id')
+              .eq('user_id', userId)
+              .single();
+
+          if (existing) {
+              // Just update ping
+              await this.sendKeepAlive(userId);
+              return true;
+          }
+
+          // 3. Enforce Limit
+          if (count >= settings.maxConcurrentSessions) {
+              return false;
+          }
+
+          // 4. Insert
+          const { error } = await supabase.from('active_sessions').insert({
+              user_id: userId,
+              last_ping: new Date().toISOString()
+          });
+
+          if (error) {
+              // Race condition check: maybe someone stole the spot ms ago?
+              // Or maybe user was inserted by another tab?
+              if (error.code === '23505') return true; // Duplicate key = success (already inside)
+              return false;
+          }
+
+          // 5. Remove from Queue if successful
+          await this.leaveQueue(userId);
           return true;
+
+      } catch (e) {
+          console.error("Claim Spot Error:", e);
+          return false;
       }
-
-      if (count >= settings.maxConcurrentSessions) return false;
-
-      const { error } = await supabase.from('active_sessions').insert({ user_id: userId, last_ping: new Date().toISOString() });
-      if (error && error.code !== '23505') return false;
-
-      await this.leaveQueue(userId);
-      return true;
   }
 
   static async sendKeepAlive(userId: string) {
-      await supabase.from('active_sessions').upsert({ user_id: userId, last_ping: new Date().toISOString() });
+      try {
+          await supabase.from('active_sessions').upsert({
+              user_id: userId,
+              last_ping: new Date().toISOString()
+          });
+      } catch (e) {
+          console.warn("KeepAlive Failed");
+      }
   }
 
   static async sendQueueHeartbeat(userId: string) {
-      await supabase.from('session_queue').update({ last_ping: new Date().toISOString() }).eq('user_id', userId);
+      try {
+          await supabase.from('session_queue').update({
+              last_ping: new Date().toISOString()
+          }).eq('user_id', userId);
+      } catch (e) {}
   }
 
   static async endSession(userId: string) {
-      await supabase.from('active_sessions').delete().eq('user_id', userId);
-      await supabase.from('session_queue').delete().eq('user_id', userId);
+      try {
+          await supabase.from('active_sessions').delete().eq('user_id', userId);
+          await supabase.from('session_queue').delete().eq('user_id', userId);
+      } catch (e) {
+          console.warn("End Session Failed");
+      }
   }
 
+  // --- GLOBAL QUEUE ---
+  
   static async getQueueLength(): Promise<number> {
-      const { count } = await supabase.from('session_queue').select('*', { count: 'exact', head: true });
-      return count || 0;
+      try {
+          const { count } = await supabase
+              .from('session_queue')
+              .select('*', { count: 'exact', head: true });
+          return count || 0;
+      } catch (e) {
+          return 0;
+      }
   }
 
   static async joinQueue(userId: string): Promise<number> {
-      const currentPos = await this.getQueuePosition(userId);
-      if (currentPos > 0) return currentPos;
+      try {
+          // Check if already in queue to avoid double counting logic issues
+          const currentPos = await this.getQueuePosition(userId);
+          if (currentPos > 0) return currentPos;
 
-      const queueLen = await this.getQueueLength();
-      if (queueLen >= 35) return -1;
+          // Check limits
+          const queueLen = await this.getQueueLength();
+          if (queueLen >= 35) {
+              return -1; // Full
+          }
 
-      await supabase.from('session_queue').upsert({
-          user_id: userId,
-          joined_at: new Date().toISOString(),
-          last_ping: new Date().toISOString()
-      });
-      
-      return await this.getQueuePosition(userId);
+          // Add to queue with heartbeat
+          await supabase.from('session_queue').upsert({
+              user_id: userId,
+              joined_at: new Date().toISOString(),
+              last_ping: new Date().toISOString()
+          });
+          
+          return await this.getQueuePosition(userId);
+      } catch (e) {
+          return 99; // Error state
+      }
   }
 
   static async leaveQueue(userId: string) {
-      await supabase.from('session_queue').delete().eq('user_id', userId);
+      try {
+          await supabase.from('session_queue').delete().eq('user_id', userId);
+      } catch (e) {}
   }
 
   static async getQueuePosition(userId: string): Promise<number> {
-      const { data: myEntry } = await supabase.from('session_queue').select('joined_at').eq('user_id', userId).single();
-      if (!myEntry) return 0;
-      const { count } = await supabase.from('session_queue').select('*', { count: 'exact', head: true }).lt('joined_at', myEntry.joined_at);
-      return (count || 0) + 1;
+      try {
+          // Get my join time
+          const { data: myEntry } = await supabase
+              .from('session_queue')
+              .select('joined_at')
+              .eq('user_id', userId)
+              .single();
+          
+          if (!myEntry) return 0; // Not in queue
+
+          // Count how many joined BEFORE me
+          const { count } = await supabase
+              .from('session_queue')
+              .select('*', { count: 'exact', head: true })
+              .lt('joined_at', myEntry.joined_at);
+          
+          return (count || 0) + 1;
+      } catch (e) {
+          return 1;
+      }
   }
 
   static getEstimatedWaitTime(pos: number): number {
-      return Math.max(0, (pos - 1) * 3);
+      return Math.max(0, (pos - 1) * 3); // 3 mins per person avg
   }
 
-  // --- ART & WISDOM ---
-  static async saveArt(entry: ArtEntry) {
-      await supabase.from('user_art').insert({
-          id: entry.id, user_id: entry.userId, image_url: entry.imageUrl,
-          prompt: entry.prompt, title: entry.title, created_at: entry.createdAt
-      });
+  // --- TRANSACTIONS & REST ---
+  static getAllTransactions(): Transaction[] {
+      return JSON.parse(localStorage.getItem(DB_KEYS.TRANSACTIONS) || '[]');
   }
-
-  static async getUserArt(userId: string): Promise<ArtEntry[]> {
-      const { data } = await supabase.from('user_art').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(20);
-      return (data || []).map((d: any) => ({
-          id: d.id, userId: d.user_id, imageUrl: d.image_url, prompt: d.prompt, title: d.title, createdAt: d.created_at
-      }));
+  static getUserTransactions(userId: string): Transaction[] {
+      return this.getAllTransactions().filter(t => t.userId === userId).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
-
-  static async deleteArt(id: string) {
-      await supabase.from('user_art').delete().eq('id', id);
+  static addTransaction(tx: Transaction) {
+      const list = this.getAllTransactions();
+      list.unshift(tx);
+      localStorage.setItem(DB_KEYS.TRANSACTIONS, JSON.stringify(list));
   }
-
-  // --- FEEDBACK & LOGS ---
-  static async saveFeedback(feedback: SessionFeedback) {
-      await supabase.from('session_feedback').insert({
-          id: feedback.id, user_id: feedback.userId, user_name: feedback.userName,
-          companion_name: feedback.companionName, rating: feedback.rating, tags: feedback.tags,
-          duration: feedback.duration, date: feedback.date
-      });
+  static topUpWallet(amount: number, cost: number, userId?: string) {
+      const targetUser = userId ? this.getAllUsers().find(u => u.id === userId) : this.getUser();
+      if (targetUser) {
+          targetUser.balance += amount;
+          this.updateUser(targetUser);
+          this.addTransaction({
+              id: `tx_${Date.now()}`,
+              userId: targetUser.id,
+              userName: targetUser.name,
+              date: new Date().toISOString(),
+              amount: amount,
+              cost: cost,
+              description: cost > 0 ? 'Credit Purchase' : 'Admin Grant',
+              status: 'COMPLETED'
+          });
+      }
   }
-
-  static async recordBreathSession(userId: string, duration: number) {
-      await supabase.from('breath_logs').insert({
-          id: `b_${Date.now()}`, user_id: userId, duration_seconds: duration, date: new Date().toISOString()
-      });
+  static deductBalance(amount: number) {
+      const user = this.getUser();
+      if (user) {
+          user.balance = Math.max(0, user.balance - amount);
+          this.updateUser(user);
+      }
   }
-  
-  static async getSystemLogs(): Promise<SystemLog[]> {
-      const { data } = await supabase.from('system_logs').select('*').order('timestamp', { ascending: false }).limit(100);
-      return data || [];
+  static getSystemLogs(): SystemLog[] {
+      return JSON.parse(localStorage.getItem(DB_KEYS.LOGS) || '[]');
   }
-
-  static async logSystemEvent(type: 'INFO' | 'WARNING' | 'ERROR' | 'SUCCESS' | 'SECURITY', event: string, details: string) {
-      await supabase.from('system_logs').insert({
-          id: `log_${Date.now()}`, timestamp: new Date().toISOString(), type, event, details
-      });
+  static logSystemEvent(type: 'INFO' | 'WARNING' | 'ERROR' | 'SUCCESS' | 'SECURITY', event: string, details: string) {
+      const logs = this.getSystemLogs();
+      logs.unshift({ id: `log_${Date.now()}`, timestamp: new Date().toISOString(), type, event, details });
+      if (logs.length > 500) logs.pop(); 
+      localStorage.setItem(DB_KEYS.LOGS, JSON.stringify(logs));
   }
-
-  static async getWeeklyProgress(userId: string): Promise<{ current: number; target: number; message: string }> {
-      // Simplified progress logic for backend migration
-      const { count: sessions } = await supabase.from('transactions').select('*', { count: 'exact', head: true }).eq('user_id', userId).lt('amount', 0);
-      const score = (sessions || 0) * 3;
+  static getAllFeedback(): SessionFeedback[] {
+      return JSON.parse(localStorage.getItem(DB_KEYS.FEEDBACK) || '[]');
+  }
+  static saveFeedback(feedback: SessionFeedback) {
+      const list = this.getAllFeedback();
+      list.unshift(feedback);
+      localStorage.setItem(DB_KEYS.FEEDBACK, JSON.stringify(list));
+  }
+  static getJournals(userId: string): JournalEntry[] {
+      const all = JSON.parse(localStorage.getItem(DB_KEYS.JOURNALS) || '[]');
+      return all.filter((j: JournalEntry) => j.userId === userId).sort((a: any,b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }
+  static saveJournal(entry: JournalEntry) {
+      const all = JSON.parse(localStorage.getItem(DB_KEYS.JOURNALS) || '[]');
+      all.unshift(entry);
+      localStorage.setItem(DB_KEYS.JOURNALS, JSON.stringify(all));
+  }
+  static getMoods(userId: string): MoodEntry[] {
+      const all = JSON.parse(localStorage.getItem(DB_KEYS.MOODS) || '[]');
+      return all.filter((m: MoodEntry) => m.userId === userId);
+  }
+  static saveMood(userId: string, mood: 'confetti' | 'rain' | null) {
+      if (mood === null) return;
+      const all = JSON.parse(localStorage.getItem(DB_KEYS.MOODS) || '[]');
+      const entry: MoodEntry = { id: `m_${Date.now()}`, userId, date: new Date().toISOString(), mood };
+      all.push(entry);
+      localStorage.setItem(DB_KEYS.MOODS, JSON.stringify(all));
+  }
+  static getBreathLogs(userId: string): BreathLog[] {
+      const all = JSON.parse(localStorage.getItem(DB_KEYS.BREATHE_LOGS) || '[]');
+      return all.filter((b: BreathLog) => b.userId === userId);
+  }
+  static recordBreathSession(userId: string, duration: number) {
+      if (duration < 10) return;
+      const all = JSON.parse(localStorage.getItem(DB_KEYS.BREATHE_LOGS) || '[]');
+      all.push({ id: `b_${Date.now()}`, userId, date: new Date().toISOString(), durationSeconds: duration });
+      localStorage.setItem(DB_KEYS.BREATHE_LOGS, JSON.stringify(all));
+  }
+  static async saveArt(entry: ArtEntry) { 
+      // Save local first for UI speed
+      this.saveArtLocal(entry);
+      // Sync to Supabase
+      try {
+          await supabase.from('user_art').insert({
+              id: entry.id,
+              user_id: entry.userId,
+              image_url: entry.imageUrl,
+              prompt: entry.prompt,
+              title: entry.title,
+              created_at: entry.createdAt
+          });
+      } catch (e) {}
+  }
+  static saveArtLocal(entry: ArtEntry) {
+      let art = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]');
+      const userArt = art.filter((a: ArtEntry) => a.userId === entry.userId);
+      const otherArt = art.filter((a: ArtEntry) => a.userId !== entry.userId);
+      userArt.unshift(entry); 
+      while (userArt.length > 15) { userArt.pop(); }
+      let newArt = [...otherArt, ...userArt];
+      try { localStorage.setItem(DB_KEYS.ART, JSON.stringify(newArt)); } catch (e: any) {}
+  }
+  static async getUserArt(userId: string): Promise<ArtEntry[]> { 
+      // Try remote first
+      try {
+          const { data, error } = await supabase.from('user_art').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(15);
+          if (!error && data) {
+              return data.map((d: any) => ({
+                  id: d.id, userId: d.user_id, imageUrl: d.image_url, prompt: d.prompt, title: d.title, createdAt: d.created_at
+              }));
+          }
+      } catch (e) {}
+      return this.getUserArtLocal(userId); 
+  }
+  static getUserArtLocal(userId: string): ArtEntry[] {
+      const art = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]');
+      return art.filter((a: ArtEntry) => a.userId === userId).sort((a: ArtEntry, b: ArtEntry) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 15);
+  }
+  static async deleteArt(artId: string) { 
+      try { await supabase.from('user_art').delete().eq('id', artId); } catch(e) {}
+      let art = JSON.parse(localStorage.getItem(DB_KEYS.ART) || '[]'); 
+      art = art.filter((a: ArtEntry) => a.id !== artId); 
+      localStorage.setItem(DB_KEYS.ART, JSON.stringify(art)); 
+  }
+  static getBreathingCooldown(): number | null { const cd = localStorage.getItem(DB_KEYS.BREATHE_COOLDOWN); return cd ? parseInt(cd, 10) : null; }
+  static setBreathingCooldown(timestamp: number) { localStorage.setItem(DB_KEYS.BREATHE_COOLDOWN, timestamp.toString()); }
+  static getWeeklyProgress(userId: string): { current: number; target: number; message: string } {
+      const now = new Date(); const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const tx = this.getUserTransactions(userId).filter(t => new Date(t.date) > oneWeekAgo && t.amount < 0);
+      const j = this.getJournals(userId).filter(j => new Date(j.date) > oneWeekAgo);
+      const a = this.getUserArtLocal(userId).filter(a => new Date(a.createdAt) > oneWeekAgo);
+      const m = this.getMoods(userId).filter(m => new Date(m.date) > oneWeekAgo);
+      const b = this.getBreathLogs(userId).filter(b => new Date(b.date) > oneWeekAgo);
+      const score = (tx.length * 3) + (j.length * 1) + (a.length * 1) + (b.length * 1) + (m.length * 0.5);
       const target = 10;
       let message = "Start your journey.";
-      if (score > 0) message = "Great start!";
-      if (score >= 5) message = "Halfway there!";
-      if (score >= 10) message = "Goal Crushed! 🌟";
+      const pct = score / target;
+      if (pct > 0 && pct < 0.3) message = "Great start!"; else if (pct >= 0.3 && pct < 0.6) message = "Building momentum!"; else if (pct >= 0.6 && pct < 1) message = "Almost there!"; else if (pct >= 1) message = "Goal Crushed! 🌟";
       return { current: score, target, message };
   }
+  static getPromoCodes(): PromoCode[] { return JSON.parse(localStorage.getItem(DB_KEYS.PROMOS) || '[]'); }
+  static createPromoCode(code: string, discount: number) { const list = this.getPromoCodes(); list.push({ id: Date.now().toString(), code: code.toUpperCase(), discountPercentage: discount, uses: 0, active: true }); localStorage.setItem(DB_KEYS.PROMOS, JSON.stringify(list)); }
+  static deletePromoCode(id: string) { const list = this.getPromoCodes().filter(p => p.id !== id); localStorage.setItem(DB_KEYS.PROMOS, JSON.stringify(list)); }
+  static exportData(type: 'USERS' | 'LOGS') {
+      const data = type === 'USERS' ? this.getAllUsers() : this.getSystemLogs();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = `peutic_${type.toLowerCase()}_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
 
-  // --- ADMIN SECURITY (SIMPLE LOCAL FALLBACK) ---
+  // --- ADMIN SECURITY ---
   static checkAdminLockout(): number {
-      const stored = localStorage.getItem('peutic_admin_lockout');
+      const stored = localStorage.getItem(DB_KEYS.ADMIN_ATTEMPTS);
       if (!stored) return 0;
       const { attempts, lockoutUntil } = JSON.parse(stored);
       if (lockoutUntil && Date.now() < lockoutUntil) return Math.ceil((lockoutUntil - Date.now()) / 60000);
+      if (lockoutUntil && Date.now() > lockoutUntil) { this.resetAdminFailure(); return 0; }
       return 0;
   }
   static recordAdminFailure() {
-      let stored = JSON.parse(localStorage.getItem('peutic_admin_lockout') || '{"attempts":0}');
-      stored.attempts++;
-      if (stored.attempts >= 5) stored.lockoutUntil = Date.now() + 15 * 60000;
-      localStorage.setItem('peutic_admin_lockout', JSON.stringify(stored));
+      const stored = localStorage.getItem(DB_KEYS.ADMIN_ATTEMPTS);
+      let { attempts, lockoutUntil } = stored ? JSON.parse(stored) : { attempts: 0, lockoutUntil: 0 };
+      attempts++;
+      if (attempts >= 5) { lockoutUntil = Date.now() + (15 * 60 * 1000); this.logSystemEvent('SECURITY', 'Admin Lockout Triggered', '5 failed attempts'); } 
+      else { this.logSystemEvent('WARNING', 'Failed Admin Login', `Attempt ${attempts}/5`); }
+      localStorage.setItem(DB_KEYS.ADMIN_ATTEMPTS, JSON.stringify({ attempts, lockoutUntil }));
   }
-  static resetAdminFailure() { localStorage.removeItem('peutic_admin_lockout'); }
+  static resetAdminFailure() { localStorage.removeItem(DB_KEYS.ADMIN_ATTEMPTS); }
 }

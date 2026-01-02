@@ -175,10 +175,10 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
     setError('');
     setLoading(true);
 
-    setTimeout(async () => {
+    setTimeout(() => {
         if (isLogin) {
             // STRICT LOGIN CHECK
-            const existingUser = await Database.getUserByEmail(email);
+            const existingUser = Database.getUserByEmail(email);
             if (existingUser) {
                 onLogin(existingUser.role, existingUser.name, existingUser.avatar, email, undefined, 'email');
             } else {
@@ -211,7 +211,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             }
 
             // 4. Check Existing User
-            const existingUser = await Database.getUserByEmail(email);
+            const existingUser = Database.getUserByEmail(email);
             if (existingUser) {
                 setLoading(false);
                 setError("An account with this email already exists. Please sign in.");
