@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Companion, SessionFeedback } from '../types';
+import { Companion, SessionFeedback, GlobalSettings } from '../types';
 import { 
     Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, 
     Loader2, AlertCircle, RefreshCcw, Aperture, Star, CheckCircle, Users, Download, Share2, BadgeCheck, FileText, MessageSquare, Sparkles, ChevronRight, X, Eye, Clock
@@ -148,11 +148,26 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   const [remainingMinutes, setRemainingMinutes] = useState(0);
   const [lowBalanceWarning, setLowBalanceWarning] = useState(false);
 
+  // Global Settings
+  const [settings, setSettings] = useState<GlobalSettings>({
+      pricePerMinute: 1.59,
+      saleMode: true,
+      maintenanceMode: false,
+      allowSignups: true,
+      siteName: 'Peutic',
+      maxConcurrentSessions: 15,
+      multilingualMode: true
+  });
+
   const userId = useRef(`user_${Date.now()}`).current;
   const conversationIdRef = useRef<string | null>(null);
   
   // GUARD: Prevent double initialization in React Strict Mode
   const connectionInitiated = useRef(false);
+
+  useEffect(() => {
+    Database.getSettings().then(setSettings);
+  }, []);
 
   // --- Strict Resource Cleanup ---
   const performCleanup = useCallback(() => {
@@ -191,8 +206,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             setQueuePos(pos);
             setEstWait(Database.getEstimatedWaitTime(pos));
 
-            // If we are #1 or inactive (pos 0 implies potential active state in some logics, but mostly 1)
-            // Note: DB returns 0 if active, 1+ if waiting.
             if (pos === 1 || pos === 0) {
                  await tryStart();
             }
@@ -207,8 +220,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         // Attempt to claim spot securely via Supabase
         const canEnter = await Database.claimActiveSpot(userId);
         if (canEnter) {
-            // SAFETY DELAY: Wait 1s to ensure TechCheck hardware is fully released by browser
-            // This prevents "Camera Busy" errors on mobile devices
             setTimeout(() => {
                 startTavusConnection();
             }, 1000);
@@ -221,7 +232,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             await Database.sendQueueHeartbeat(userId); // Prevent Zombie Queue
             let pos = await Database.getQueuePosition(userId);
             
-            // Failsafe: If queue dropped us but we are still waiting
             if (pos === 0) {
                 pos = await Database.joinQueue(userId);
             }
@@ -232,7 +242,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             }
             
             if (pos === 99) {
-                // Keep trying silently, don't crash, but don't update UI to error yet
                 console.warn("Lost DB connection");
                 return;
             }
@@ -241,18 +250,15 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             setEstWait(Database.getEstimatedWaitTime(pos));
 
             if (pos === 1) {
-                // We are next in line, try to enter
                 await tryStart();
             }
         } else if (connectionState === 'CONNECTED') {
-            // HEARTBEAT: Keep alive every 3s to prevent zombie cleanup (15s timeout)
             Database.sendKeepAlive(userId);
         }
     }, 3000);
 
     initQueue();
 
-    // HANDLE MOBILE & DESKTOP TAB CLOSE / REFRESH
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
         performCleanup();
         e.preventDefault(); 
@@ -275,14 +281,12 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   }, [performCleanup]);
 
   const startTavusConnection = async () => {
-      // Prevent double calls (API Optimization)
       if (connectionInitiated.current) return;
       
-      // FINAL DOUBLE CHECK: Ensure we still have the spot before burning API credits
       const stillHasSpot = await Database.claimActiveSpot(userId);
       if (!stillHasSpot) {
           console.warn("Lost spot during initialization latency.");
-          setConnectionState('QUEUED'); // Re-queue
+          setConnectionState('QUEUED');
           return;
       }
 
@@ -291,7 +295,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
       setErrorMsg('');
       
       try {
-          const user = Database.getUser();
+          const user = await Database.getUser();
           if (!user || user.balance <= 0) {
               throw new Error("Insufficient Credits: Session Access Denied.");
           }
@@ -319,13 +323,11 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
               handleEndSession(); 
               return;
           }
-          // STRICT PRODUCTION ERROR HANDLING
           setConnectionState('ERROR');
           setErrorMsg(err.message || "Failed to establish secure connection.");
       }
   };
 
-  // --- Timers & Credit Enforcement ---
   useEffect(() => {
     if (showSummary) return;
     if (connectionState !== 'CONNECTED') return;
@@ -337,7 +339,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 setRemainingMinutes(prev => {
                     const nextVal = prev - 1;
                     if (nextVal <= 0) { 
-                        // STRICT CUTOFF
                         performCleanup();
                         handleEndSession(); 
                         return 0; 
@@ -354,18 +355,18 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   }, [showSummary, remainingMinutes, connectionState, performCleanup]);
 
   const handleEndSession = () => {
-      performCleanup(); // Strict API cutoff
+      performCleanup();
       setSummaryImage(renderSessionArtifact(companion.name, formatTime(duration), new Date().toLocaleDateString()));
       setShowSummary(true);
   };
 
-  const submitFeedbackAndClose = () => {
+  const submitFeedbackAndClose = async () => {
       const minutesUsed = Math.ceil(duration / 60);
-      const user = Database.getUser();
+      const user = await Database.getUser();
       if (minutesUsed > 0 && user) {
-        Database.deductBalance(minutesUsed);
-        Database.addTransaction({
-            id: `sess_${Date.now()}`, userName: userName, date: new Date().toISOString(),
+        await Database.deductBalance(minutesUsed);
+        await Database.addTransaction({
+            id: `sess_${Date.now()}`, userId: user.id, userName: userName, date: new Date().toISOString(),
             amount: -minutesUsed, description: `Session with ${companion.name}`, status: 'COMPLETED'
         });
         
@@ -379,7 +380,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             date: new Date().toISOString(),
             duration: minutesUsed
         };
-        Database.saveFeedback(feedback);
+        await Database.saveFeedback(feedback);
       }
       onEndSession();
   };
@@ -387,12 +388,9 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   const toggleFeedbackTag = (tag: string) => { if (feedbackTags.includes(tag)) setFeedbackTags(feedbackTags.filter(t => t !== tag)); else setFeedbackTags([...feedbackTags, tag]); };
   const formatTime = (seconds: number) => { const mins = Math.floor(seconds / 60); const secs = seconds % 60; return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`; };
   
-  // Calculate cost dynamically based on active sale mode setting
-  const settings = Database.getSettings();
   const currentRate = settings.saleMode ? 1.59 : 1.99;
   const cost = Math.ceil(duration / 60) * currentRate;
 
-  // --- HELPER: Pre-fill Name to Skip Input Screen ---
   const getIframeUrl = () => {
       if (!conversationUrl) return '';
       try {
@@ -416,7 +414,6 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                   <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/50"><CheckCircle className="w-8 h-8 text-green-500" /></div>
                   <h2 className="text-2xl font-black text-white mb-6 tracking-tight">Session Complete</h2>
                   
-                  {/* ARTIFACT DISPLAY */}
                   {summaryImage && (
                       <div className="mb-6 relative group">
                           <img src={summaryImage} alt="Session Artifact" className="w-full rounded-xl shadow-lg border border-gray-700" />

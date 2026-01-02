@@ -4,7 +4,7 @@ import { Shield, Heart, CheckCircle, ArrowRight, Star, Globe, ShieldCheck, Spark
 import { LanguageCode, getTranslation } from '../services/i18n';
 import { Link } from 'react-router-dom';
 import { Database, STABLE_AVATAR_POOL, INITIAL_COMPANIONS } from '../services/database';
-import { Companion } from '../types';
+import { Companion, GlobalSettings } from '../types';
 
 const AvatarImage: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className }) => {
     const [imgSrc, setImgSrc] = useState(src);
@@ -51,7 +51,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
   const [showLangMenu, setShowLangMenu] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
   
-  const settings = Database.getSettings();
+  const [settings, setSettings] = useState<GlobalSettings>({
+      pricePerMinute: 1.59,
+      saleMode: true,
+      maintenanceMode: false,
+      allowSignups: true,
+      siteName: 'Peutic',
+      maxConcurrentSessions: 15,
+      multilingualMode: true
+  });
 
   // Helper to shorten translation calls
   const t = (key: any) => getTranslation(lang, key);
@@ -66,6 +74,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
         setDarkMode(false);
         document.documentElement.classList.remove('dark');
     }
+
+    // Async Settings Load
+    const loadSettings = async () => {
+        const s = await Database.getSettings();
+        setSettings(s);
+    };
+    loadSettings();
 
     setOnlineCount(Math.floor(Math.random() * (300 - 80 + 1)) + 142);
     const timer = setTimeout(() => {
