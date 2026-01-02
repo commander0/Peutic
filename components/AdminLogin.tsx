@@ -32,8 +32,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         return;
     }
     setLoading(true);
-    setTimeout(() => {
-        const user = Database.getUserByEmail(email);
+    setTimeout(async () => {
+        const user = await Database.getUserByEmail(email);
         if (user && user.role === UserRole.ADMIN) {
             Database.resetAdminFailure();
             onLogin(user);
@@ -54,7 +54,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
       return null;
   };
 
-  const handleRegisterAdmin = (e: React.FormEvent) => {
+  const handleRegisterAdmin = async (e: React.FormEvent) => {
       e.preventDefault();
       setError('');
       setSuccessMsg('');
@@ -77,13 +77,13 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
       // RESET FEATURE: If admin exists, we wipe existing data first to prevent lockouts/conflicts
       if (hasAdmin) {
           if (confirm("WARNING: Using the Master Key will reset the Admin database. Continue?")) {
-              Database.resetAllUsers(); // Clear previous data
+              await Database.resetAllUsers(); // Clear previous data
           } else {
               return;
           }
       }
 
-      Database.createUser('System Admin', newAdminEmail, 'email', undefined, UserRole.ADMIN);
+      await Database.createUser('System Admin', newAdminEmail, 'email', undefined, UserRole.ADMIN);
       setSuccessMsg(hasAdmin ? "System Reset Successful. New Admin Created." : "Root Admin Created Successfully.");
       
       setTimeout(() => {
