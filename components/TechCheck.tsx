@@ -14,21 +14,16 @@ const TechCheck: React.FC<TechCheckProps> = ({ onConfirm, onCancel }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
-  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const animationRef = useRef<number | null>(null);
 
+  // 1. ACQUIRE HARDWARE
   useEffect(() => {
-    // 1. LOCAL ONLY: Check browser hardware permissions. No API calls here.
     const startStream = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         setVideoStream(stream);
         setHasPermissions(true);
         
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-
         // Local Audio Visualization Setup
         const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
         if (AudioContextClass) {
@@ -38,14 +33,14 @@ const TechCheck: React.FC<TechCheckProps> = ({ onConfirm, onCancel }) => {
             analyser.fftSize = 256;
             analyserRef.current = analyser;
             const source = audioCtx.createMediaStreamSource(stream);
-            sourceRef.current = source;
             source.connect(analyser);
 
             const bufferLength = analyser.frequencyBinCount;
             const dataArray = new Uint8Array(bufferLength);
 
             const updateAudioLevel = () => {
-                analyser.getByteFrequencyData(dataArray);
+                if (!analyserRef.current) return;
+                analyserRef.current.getByteFrequencyData(dataArray);
                 let sum = 0;
                 for(let i = 0; i < bufferLength; i++) {
                     sum += dataArray[i];
@@ -71,6 +66,13 @@ const TechCheck: React.FC<TechCheckProps> = ({ onConfirm, onCancel }) => {
     };
   }, []);
 
+  // 2. ATTACH STREAM TO DOM (Fixes race condition)
+  useEffect(() => {
+      if (videoRef.current && videoStream) {
+          videoRef.current.srcObject = videoStream;
+      }
+  }, [videoStream, hasPermissions]);
+
   const stopLocalHardware = () => {
       // 1. Stop Animation Frame
       if (animationRef.current) {
@@ -82,7 +84,6 @@ const TechCheck: React.FC<TechCheckProps> = ({ onConfirm, onCancel }) => {
       if (videoStream) {
         videoStream.getTracks().forEach(track => {
             track.stop();
-            console.log("TechCheck: Local track stopped.");
         });
         setVideoStream(null);
       }
