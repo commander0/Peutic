@@ -735,6 +735,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
   const [showCookies, setShowCookies] = useState(false);
   const [specialtyFilter, setSpecialtyFilter] = useState<string>('All');
+  const [settings, setSettings] = useState(Database.getSettings());
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('peutic_theme');
@@ -742,6 +743,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     refreshData();
     generateDailyInsight(user.name).then(setDailyInsight);
     setTimeout(() => { setCompanions(Database.getCompanions()); setLoadingCompanions(false); }, 500);
+    
+    // Refresh loop
     const interval = setInterval(refreshData, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -760,6 +763,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
           setEmailNotifications(u.emailPreferences?.updates ?? true);
       }
       setCompanions(Database.getCompanions());
+      setSettings(Database.getSettings());
   };
 
   const toggleDarkMode = () => {

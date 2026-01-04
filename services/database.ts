@@ -1,5 +1,5 @@
 
-import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, ServerMetric, MoodEntry, JournalEntry, PromoCode, SessionFeedback, ArtEntry, BreathLog, SessionMemory, GiftCard } from '../types';
+import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, MoodEntry, JournalEntry, PromoCode, SessionFeedback, ArtEntry, BreathLog, SessionMemory, GiftCard } from '../types';
 import { supabase } from './supabaseClient';
 
 const DB_KEYS = {
@@ -84,7 +84,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
   // 8. Matthew (M)
   { 
     id: 'c45', name: 'Matthew', gender: 'Male', specialty: 'Tech Burnout', status: 'AVAILABLE', rating: 4.8, 
-    imageUrl: "https://images.unsplash.com/photo-1629460741589-9bd72a6c278c?auto=format&fit=crop&q=80&w=800", 
+    imageUrl: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=800", 
     bio: 'Restoring digital balance.', replicaId: 'r92debe21318', licenseNumber: 'LMFT-WA-3399', degree: 'MA, Psychology', stateOfPractice: 'WA', yearsExperience: 7 
   },
   // 9. Olivia (F)
@@ -396,8 +396,49 @@ export class Database {
     return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
   }
 
-  static saveSettings(settings: GlobalSettings) {
+  // New: Push settings to Remote DB so all users see changes (Maintenance mode, etc.)
+  static async saveSettings(settings: GlobalSettings) {
+      // 1. Save Local (Immediate UI Update)
       localStorage.setItem(DB_KEYS.SETTINGS, JSON.stringify(settings));
+      
+      // 2. Push to Supabase (Global Sync)
+      try {
+          await supabase.from('global_settings').upsert({
+              id: 1, // Singleton row
+              price_per_minute: settings.pricePerMinute,
+              sale_mode: settings.saleMode,
+              maintenance_mode: settings.maintenanceMode,
+              allow_signups: settings.allowSignups,
+              site_name: settings.siteName,
+              broadcast_message: settings.broadcastMessage,
+              max_concurrent_sessions: settings.maxConcurrentSessions,
+              multilingual_mode: settings.multilingualMode
+          });
+      } catch (e) {
+          console.error("Failed to push settings globally", e);
+      }
+  }
+
+  // New: Poll remote settings to keep client in sync
+  static async syncGlobalSettings() {
+      try {
+          const { data } = await supabase.from('global_settings').select('*').eq('id', 1).single();
+          if (data) {
+              const remoteSettings: GlobalSettings = {
+                  pricePerMinute: data.price_per_minute,
+                  saleMode: data.sale_mode,
+                  maintenanceMode: data.maintenance_mode,
+                  allowSignups: data.allow_signups,
+                  siteName: data.site_name,
+                  broadcastMessage: data.broadcast_message,
+                  maxConcurrentSessions: data.max_concurrent_sessions,
+                  multilingualMode: data.multilingual_mode
+              };
+              localStorage.setItem(DB_KEYS.SETTINGS, JSON.stringify(remoteSettings));
+          }
+      } catch (e) {
+          // Silent fail on network error, keep using local
+      }
   }
 
   // --- COMPANIONS ---

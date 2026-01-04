@@ -30,13 +30,18 @@ const MainApp: React.FC = () => {
     const savedUser = Database.getUser();
     if (savedUser) setUser(savedUser);
     
-    const settings = Database.getSettings();
-    setMaintenanceMode(settings.maintenanceMode);
+    // Initial Setting Sync
+    Database.syncGlobalSettings().then(() => {
+        const settings = Database.getSettings();
+        setMaintenanceMode(settings.maintenanceMode);
+    });
 
-    const interval = setInterval(() => {
-        const currentSettings = Database.getSettings();
+    // Active Polling for Remote Settings (Maintenance/Sale Mode)
+    const interval = setInterval(async () => {
+        await Database.syncGlobalSettings(); // Pull from remote
+        const currentSettings = Database.getSettings(); // Read updated local state
         setMaintenanceMode(currentSettings.maintenanceMode);
-    }, 2000);
+    }, 5000);
 
     setIsRestoring(false);
     return () => clearInterval(interval);
