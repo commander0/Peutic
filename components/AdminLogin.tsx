@@ -23,19 +23,25 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
   const [newAdminConfirmPassword, setNewAdminConfirmPassword] = useState('');
 
   const [hasAdmin, setHasAdmin] = useState(false);
-  const lockout = Database.checkAdminLockout();
+  const [lockout, setLockout] = useState(0);
 
   useEffect(() => {
       Database.hasAdmin().then(setHasAdmin);
+      Database.checkAdminLockout().then(setLockout);
   }, []);
 
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (lockout) {
-        setError(`System Locked. Try again in ${lockout} minutes.`);
+    
+    // Check fresh lockout status
+    const currentLockout = await Database.checkAdminLockout();
+    if (currentLockout > 0) {
+        setLockout(currentLockout);
+        setError(`System Locked. Try again in ${currentLockout} minutes.`);
         return;
     }
+    
     setLoading(true);
     
     try {
@@ -44,8 +50,11 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             Database.resetAdminFailure();
             onLogin(user);
         } else {
-             Database.recordAdminFailure();
+             await Database.recordAdminFailure();
              setError("Access Denied. Incident reported.");
+             // Re-check lockout immediately
+             const newLock = await Database.checkAdminLockout();
+             if (newLock > 0) setLockout(newLock);
         }
     } catch (e) {
         setError("Connection Error.");
@@ -95,7 +104,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
           // If verification passed, proceed with local creation
           if (hasAdmin) {
               if (confirm("WARNING: System Reset Confirmed. Proceeding.")) {
-                  Database.resetAllUsers();
+                  await Database.resetAllUsers();
               } else {
                   setLoading(false);
                   return;
@@ -134,7 +143,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             </div>
 
             <div className="bg-gray-900 border border-gray-800 rounded-3xl p-8 shadow-2xl overflow-hidden relative">
-                {lockout ? (
+                {lockout > 0 ? (
                     <div className="text-center py-12">
                         <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
                         <h3 className="text-xl font-bold text-red-500">TERMINAL LOCKED</h3>

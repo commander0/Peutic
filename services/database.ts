@@ -222,7 +222,7 @@ export class Database {
   }
 
   static checkAndIncrementStreak(user: User): User {
-      // Logic moved to syncUserByEmail essentially, or we can add DB procedure later
+      // For now, logic remains in memory until refresh, effectively handled by syncUserByEmail
       return user;
   }
 
@@ -460,10 +460,71 @@ export class Database {
   }
 
   // --- HELPERS ---
-  static getWeeklyProgress(userId: string): any { return { current: 5, target: 10, message: "Keep going!" }; }
-  static checkAdminLockout() { return 0; }
-  static recordAdminFailure() {}
-  static resetAdminFailure() {}
-  static resetAllUsers() {}
-  static getPromoCodes(): PromoCode[] { return []; }
+  
+  static async getWeeklyProgress(userId: string): Promise<{ current: number, target: number, message: string }> {
+      try {
+          const oneWeekAgo = new Date();
+          oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+          
+          const { count: journalCount } = await supabase.from('journals')
+              .select('*', { count: 'exact', head: true })
+              .eq('user_id', userId)
+              .gte('date', oneWeekAgo.toISOString());
+              
+          const { count: sessionCount } = await supabase.from('transactions')
+              .select('*', { count: 'exact', head: true })
+              .eq('user_id', userId)
+              .eq('status', 'COMPLETED')
+              .gte('date', oneWeekAgo.toISOString());
+
+          const current = (journalCount || 0) + (sessionCount || 0);
+          const target = 10;
+          let message = "Keep going!";
+          if (current === 0) message = "Start your journey.";
+          else if (current < 5) message = "Good start!";
+          else if (current < 10) message = "Almost there!";
+          else message = "Goal crushed!";
+          
+          return { current, target, message };
+      } catch (e) {
+          return { current: 0, target: 10, message: "Start your journey." };
+      }
+  }
+
+  static async checkAdminLockout(): Promise<number> {
+      // Check for 5 failures in last 15 mins
+      try {
+          const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+          const { count } = await supabase.from('system_logs')
+              .select('*', { count: 'exact', head: true })
+              .eq('type', 'SECURITY')
+              .eq('event', 'Admin Login Failed')
+              .gte('timestamp', fifteenMinsAgo);
+              
+          if ((count || 0) >= 5) return 15;
+      } catch(e) {}
+      return 0;
+  }
+
+  static async recordAdminFailure() {
+      await this.logSystemEvent('SECURITY', 'Admin Login Failed', 'Invalid credentials or key');
+  }
+
+  static async resetAdminFailure() {
+      // In a real system, we might delete logs or add a 'reset' log, here we just do nothing as time will pass
+  }
+
+  static async resetAllUsers() {
+      await supabase.from('users').delete().neq('role', 'ADMIN');
+  }
+
+  static async getPromoCodes(): Promise<PromoCode[]> {
+      try {
+          const { data } = await supabase.from('promo_codes').select('*').eq('active', true);
+          if (data) return data.map(d => ({
+              id: d.id, code: d.code, discountPercentage: d.discount_percentage, uses: d.uses, active: d.active
+          }));
+      } catch(e) {}
+      return [];
+  }
 }

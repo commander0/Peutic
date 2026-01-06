@@ -605,8 +605,9 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
         setError('');
         setRedeemSuccess('');
         
-        setTimeout(() => {
-            const codes = Database.getPromoCodes();
+        // Simulating network delay for async operation
+        setTimeout(async () => {
+            const codes = await Database.getPromoCodes();
             const found = codes.find(c => c.code === promoCode.toUpperCase() && c.active);
             
             if (found) {
@@ -808,15 +809,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     return () => clearInterval(interval);
   }, []);
 
-  const refreshData = () => {
+  const refreshData = async () => {
       const u = Database.getUser();
       if (u) {
           setDashboardUser(u);
           setBalance(u.balance);
           Database.getUserTransactions(u.id).then(setTransactions);
-          const prog = Database.getWeeklyProgress(u.id);
+          // Async call for progress
+          const prog = await Database.getWeeklyProgress(u.id);
           setWeeklyGoal(prog.current);
           setWeeklyMessage(prog.message);
+          
           setEditName(u.name);
           setEditEmail(u.email);
           setEmailNotifications(u.emailPreferences?.updates ?? true);
