@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, ErrorInfo, Component } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole, Companion } from './types';
@@ -21,12 +22,8 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  // Initial state declaration using class field
   public state: ErrorBoundaryState = {
     hasError: false
   };
