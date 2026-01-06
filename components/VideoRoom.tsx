@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Companion, SessionFeedback } from '../types';
 import { 
     Mic, MicOff, Video as VideoIcon, VideoOff, PhoneOff, 
-    Loader2, AlertCircle, RefreshCcw, Aperture, Star, CheckCircle, Users, Download, Share2, BadgeCheck, FileText, MessageSquare, Sparkles, ChevronRight, X, Eye, Clock
+    Loader2, AlertCircle, RefreshCcw, Aperture, Star, CheckCircle, Users, Download, Share2, BadgeCheck, FileText, MessageSquare, Sparkles, ChevronRight, X, Eye, Clock, ShieldAlert
 } from 'lucide-react';
 import { createTavusConversation, endTavusConversation } from '../services/tavusService';
 import { Database } from '../services/database';
@@ -299,7 +299,19 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
           if (!companion.replicaId) throw new Error("Invalid Specialist Configuration");
 
-          const context = `You are ${companion.name}, a professional specialist in ${companion.specialty}. Your bio is: "${companion.bio}". You are speaking with ${userName}. Be empathetic, professional, and concise. Listen actively.`;
+          // --- INTELLIGENT CONTEXT INJECTION ---
+          // 1. Fetch recent mood
+          const moods = Database.getMoods(user.id);
+          const recentMood = moods.length > 0 ? moods[moods.length - 1].mood : null;
+          let moodContext = "";
+          if (recentMood === 'rain') moodContext = "The user recently indicated they are feeling down or melancholic. Approach with extra gentleness.";
+          else if (recentMood === 'confetti') moodContext = "The user recently indicated they are in a celebratory or good mood. Match their energy.";
+
+          // 2. Fetch language preference
+          const savedLang = localStorage.getItem('peutic_language') || 'en';
+          const langInstructions = savedLang !== 'en' ? `IMPORTANT: The user prefers language code '${savedLang}'. You must speak in this language.` : "";
+
+          const context = `You are ${companion.name}, a professional specialist in ${companion.specialty}. Your bio is: "${companion.bio}". You are speaking with ${userName}. Be empathetic, professional, and concise. Listen actively. ${moodContext} ${langInstructions}`;
 
           const response = await createTavusConversation(companion.replicaId, userName, context);
           
@@ -447,6 +459,16 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
   return (
     <div ref={containerRef} className="fixed inset-0 bg-black z-50 flex flex-col overflow-hidden select-none">
+        <style>{`
+            @keyframes breathe {
+                0% { transform: scale(1); opacity: 0.6; }
+                50% { transform: scale(1.5); opacity: 0.3; }
+                100% { transform: scale(1); opacity: 0.6; }
+            }
+            .animate-breathe {
+                animation: breathe 6s infinite ease-in-out;
+            }
+        `}</style>
         
         {/* --- CREDENTIAL BADGE --- */}
         {showCredential && (
@@ -503,7 +525,16 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                     <FileText className="w-5 h-5" />
                 </button>
             </div>
+            
             <div className="flex items-center gap-2 pointer-events-auto">
+                {/* CRISIS BUTTON */}
+                <button 
+                    onClick={() => window.open('#/crisis', '_blank')}
+                    className="flex items-center gap-2 bg-red-900/50 hover:bg-red-600 border border-red-500/50 text-red-100 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all mr-2"
+                >
+                    <ShieldAlert className="w-4 h-4" /> SOS
+                </button>
+
                 <div className="flex gap-1 h-4 items-end">
                     {[1, 2, 3, 4].map(i => (
                         <div key={i} className={`w-1 rounded-sm ${i <= networkQuality ? 'bg-green-500' : 'bg-gray-600'}`} style={{ height: `${i * 25}%` }}></div>
@@ -529,17 +560,28 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 </div>
             )}
 
-            {/* QUEUE SCREEN */}
+            {/* QUEUE SCREEN (CALMING ANIMATION) */}
             {connectionState === 'QUEUED' && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/95">
-                    <div className="relative mb-8">
-                         <div className="w-24 h-24 rounded-full border-4 border-yellow-500/20 flex items-center justify-center animate-pulse">
-                             <Users className="w-10 h-10 text-yellow-500" />
+                    {/* Breathing Circles */}
+                    <div className="relative mb-12">
+                         <div className="w-48 h-48 rounded-full bg-yellow-500/10 animate-breathe absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
+                         <div className="w-32 h-32 rounded-full bg-yellow-500/20 animate-breathe absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ animationDelay: '1s' }}></div>
+                         <div className="w-16 h-16 rounded-full bg-yellow-500/30 flex items-center justify-center relative z-10">
+                             <Users className="w-6 h-6 text-yellow-500" />
                          </div>
                     </div>
-                    <h3 className="text-3xl font-black text-white tracking-tight mb-2">You are in queue</h3>
-                    <p className="text-gray-400 text-sm mb-6">Position {queuePos} • Est. {estWait}m wait</p>
-                    <button onClick={onEndSession} className="mt-8 text-gray-500 hover:text-white text-sm font-bold">Leave Queue</button>
+                    
+                    <h3 className="text-2xl font-bold text-white tracking-tight mb-2">Breathe with us.</h3>
+                    <p className="text-gray-400 text-sm mb-8">You are safe. Your specialist is preparing for you.</p>
+                    
+                    <div className="flex gap-4 text-xs font-mono text-gray-500 uppercase tracking-widest border border-gray-800 rounded-lg p-3">
+                        <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-pulse"></div> Position {queuePos}</span>
+                        <span className="w-px bg-gray-800 h-4"></span>
+                        <span>Est. {estWait}m</span>
+                    </div>
+
+                    <button onClick={onEndSession} className="mt-12 text-gray-600 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors">Leave Queue</button>
                 </div>
             )}
 

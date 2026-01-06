@@ -39,6 +39,9 @@ const strictDummyClient = {
         getUser: () => Promise.resolve({ data: { user: null } }),
         onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
     },
+    functions: {
+        invoke: () => Promise.reject(new Error("Supabase Functions Not Configured: Missing API Keys"))
+    },
     rpc: () => Promise.reject(new Error("Supabase Not Configured"))
 } as any;
 

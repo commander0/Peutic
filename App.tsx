@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Component, ErrorInfo } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole, Companion } from './types';
 import LandingPage from './components/LandingPage';
@@ -10,7 +10,55 @@ import Auth from './components/Auth';
 import VideoRoom from './components/VideoRoom';
 import StaticPages from './components/StaticPages';
 import { Database } from './services/database';
-import { Wrench, AlertTriangle, Clock } from 'lucide-react';
+import { Wrench, AlertTriangle, Clock, RefreshCw } from 'lucide-react';
+
+// --- ERROR BOUNDARY (CRASH PREVENTION) ---
+
+interface ErrorBoundaryProps {
+  children?: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
+
+// Fix: Use Component from named import to resolve type issues
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  // Fix: Add return type annotation
+  static getDerivedStateFromError(_: Error): ErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Critical Application Error:", error, errorInfo);
+    Database.logSystemEvent('ERROR', 'App Crash', error.message);
+  }
+
+  render() {
+    // Fix: Access state safely with proper typing inheritance
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center text-white">
+          <AlertTriangle className="w-16 h-16 text-yellow-500 mb-6" />
+          <h1 className="text-3xl font-black mb-4">Something went wrong.</h1>
+          <p className="text-gray-400 mb-8 max-w-md">Our systems detected an unexpected issue. We have logged this report and notified our engineering team.</p>
+          <button 
+            onClick={() => { this.setState({ hasError: false }); window.location.href = '/'; }} 
+            className="bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform flex items-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4" /> Reload Application
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const MainApp: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -145,7 +193,7 @@ const MainApp: React.FC = () => {
   }
 
   return (
-    <>
+    <ErrorBoundary>
       {showAuth && <Auth onLogin={handleLogin} onCancel={() => setShowAuth(false)} initialMode={authMode} />}
       
       {/* TIMEOUT WARNING MODAL */}
@@ -207,7 +255,7 @@ const MainApp: React.FC = () => {
         <Route path="/support" element={<StaticPages type="support" />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
-    </>
+    </ErrorBoundary>
   );
 };
 

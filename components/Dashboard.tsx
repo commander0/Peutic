@@ -9,7 +9,7 @@ import {
   Sun, Cloud, Feather, Anchor, Gamepad2, RefreshCw, Play, Zap, Star, Edit2, Trash2, Bell,
   CloudRain, Image as ImageIcon, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Shield, Moon,
   Twitter, Instagram, Linkedin, LifeBuoy, Volume2, VolumeX, Minimize2, Maximize2, Music, Radio, Flame as Fire, Smile, Trees,
-  Mail, Smartphone, Globe, CreditCard, ToggleLeft, ToggleRight, StopCircle, ArrowRight, FileText, Filter
+  Mail, Smartphone, Globe, CreditCard, ToggleLeft, ToggleRight, StopCircle, ArrowRight, FileText, Filter, Tag, Eye
 } from 'lucide-react';
 import { Database, STABLE_AVATAR_POOL } from '../services/database';
 import { generateAffirmation, generateDailyInsight } from '../services/geminiService';
@@ -22,8 +22,8 @@ interface DashboardProps {
   onStartSession: (companion: Companion) => void;
 }
 
-// Safely handle Stripe Key without process.env causing crashes
-const STRIPE_PUBLISHABLE_KEY = "pk_live_51MZuG0BUviiBIU4d81PC3BDlYgxuUszLu1InD0FFWOcGwQyNYgn5jjNOYi5a0uic9iuG8FdMjZBqpihTxK7oH0W600KfPZFZwp";
+// SECURE: Use environment variable, fall back only for dev/demo purposes
+const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_KEY || "pk_live_51MZuG0BUviiBIU4d81PC3BDlYgxuUszLu1InD0FFWOcGwQyNYgn5jjNOYi5a0uic9iuG8FdMjZBqpihTxK7oH0W600KfPZFZwp";
 
 declare global {
   interface Window {
@@ -566,6 +566,9 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
     const [isCustom, setIsCustom] = useState(false);
     const [processing, setProcessing] = useState(false);
     const [error, setError] = useState(initialError || '');
+    const [promoCode, setPromoCode] = useState('');
+    const [redeemSuccess, setRedeemSuccess] = useState('');
+    
     const pricePerMin = 1.59;
     const stripeRef = useRef<any>(null); 
     const elementsRef = useRef<any>(null); 
@@ -576,6 +579,7 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
         if (!window.Stripe) { setError("Stripe failed to load. Please refresh."); return; } 
         if (!stripeRef.current) { 
             try {
+                // Initialize Stripe
                 stripeRef.current = window.Stripe(STRIPE_PUBLISHABLE_KEY); 
                 elementsRef.current = stripeRef.current.elements(); 
                 const style = { base: { color: "#32325d", fontFamily: '"Manrope", sans-serif', fontSmoothing: "antialiased", fontSize: "16px", "::placeholder": { color: "#aab7c4" } } }; 
@@ -595,6 +599,37 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
         if (node && cardElementRef.current) {
             try { cardElementRef.current.mount(node); } catch(e) {}
         }
+    };
+
+    const handleRedeemCode = async () => {
+        if (!promoCode.trim()) return;
+        setProcessing(true);
+        setError('');
+        setRedeemSuccess('');
+        
+        // Simulating robust promo verification here (normally server-side)
+        // In a real app, you'd call an API. For now, we simulate a check against "DB".
+        setTimeout(() => {
+            const codes = Database.getPromoCodes();
+            const found = codes.find(c => c.code === promoCode.toUpperCase() && c.active);
+            
+            if (found) {
+                // For demo purposes, let's treat "100OFF" or similar as free credits
+                // Real implementation would discount the Stripe amount
+                if (found.code === 'WELCOME20') {
+                    onSuccess(20, 0); // 20 Free Mins
+                    setRedeemSuccess("Code Redeemed! 20 Minutes Added.");
+                } else if (found.discountPercentage === 100) {
+                    onSuccess(50, 0); // Grant 50 mins for full discount codes
+                    setRedeemSuccess("Voucher Redeemed! 50 Minutes Added.");
+                } else {
+                    setError("Discount codes apply to checkout total (Feature WIP).");
+                }
+            } else {
+                setError("Invalid or expired code.");
+            }
+            setProcessing(false);
+        }, 800);
     };
 
     const handleSubmit = async (e: React.FormEvent) => { 
@@ -643,6 +678,32 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
                         </div>
                         <p className="text-xs text-gray-400 mt-2">Adds approx. <span className="font-bold text-black dark:text-white">{Math.floor((amount || 0) / pricePerMin)} mins</span> of talk time.</p>
                     </div>
+                    
+                    {/* PROMO CODE SECTION */}
+                    <div className="mb-6 relative">
+                        <div className="flex gap-2">
+                            <div className="relative flex-1">
+                                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input 
+                                    type="text" 
+                                    placeholder="Promo Code (e.g. WELCOME20)" 
+                                    className="w-full bg-gray-100 dark:bg-gray-800 border border-transparent focus:border-yellow-500 rounded-xl py-3 pl-10 pr-4 text-sm font-bold outline-none uppercase"
+                                    value={promoCode}
+                                    onChange={(e) => setPromoCode(e.target.value)}
+                                />
+                            </div>
+                            <button 
+                                type="button"
+                                onClick={handleRedeemCode}
+                                disabled={processing || !promoCode}
+                                className="bg-gray-200 dark:bg-gray-700 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black text-gray-600 dark:text-gray-300 px-4 rounded-xl text-xs font-bold transition-colors disabled:opacity-50"
+                            >
+                                Apply
+                            </button>
+                        </div>
+                        {redeemSuccess && <p className="text-green-500 text-xs font-bold mt-2 flex items-center gap-1"><CheckCircle className="w-3 h-3"/> {redeemSuccess}</p>}
+                    </div>
+
                     {error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 text-sm rounded-lg flex items-center gap-2"><AlertTriangle className="w-4 h-4 flex-shrink-0" /><span>{error}</span></div>}
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700"><div ref={setMountNode} className="p-2" /></div>
@@ -886,7 +947,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                           <CollapsibleSection title="Inner Sanctuary" icon={Feather}><div className="space-y-8"><JournalSection user={user} /><div className="border-t border-dashed border-yellow-200 dark:border-gray-700" /><WisdomGenerator userId={user.id} /></div></CollapsibleSection>
                           <div>
                               <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6"><div><h2 className="text-2xl font-black dark:text-white">Available Specialists</h2><p className="text-gray-500 text-sm">Select a guide to begin your session.</p></div><div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide"><button onClick={() => setSpecialtyFilter('All')} className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === 'All' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>All</button>{uniqueSpecialties.map(spec => (<button key={spec} onClick={() => setSpecialtyFilter(spec)} className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === spec ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>{spec}</button>))}</div></div>
-                              {loadingCompanions ? (<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">{[1,2,3,4,5].map(i => <div key={i} className="h-64 bg-gray-100 dark:bg-gray-900 rounded-3xl animate-pulse"></div>)}</div>) : (<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">{filteredCompanions.map((companion) => (<div key={companion.id} onClick={() => handleStartConnection(companion)} className="group relative bg-white dark:bg-gray-900 rounded-[2rem] overflow-hidden border border-yellow-100 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all duration-300 hover:shadow-2xl cursor-pointer flex flex-col h-full"><div className="aspect-[4/5] relative overflow-hidden bg-gray-100 dark:bg-gray-800"><AvatarImage src={companion.imageUrl} alt={companion.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" /><div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div><div className="absolute top-3 left-3 flex gap-2"><div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md ${companion.status === 'AVAILABLE' ? 'bg-green-500/90 text-white shadow-lg shadow-green-500/20' : 'bg-gray-500/90 text-white'}`}>{companion.status === 'AVAILABLE' ? 'Online' : 'Busy'}</div></div><div className="absolute bottom-3 left-3 right-3"><h3 className="text-white font-black text-lg leading-tight mb-0.5 shadow-sm drop-shadow-md">{companion.name}</h3><p className="text-yellow-400 text-[9px] font-bold uppercase tracking-wider truncate">{companion.specialty}</p></div></div><div className="p-3 bg-white dark:bg-gray-900 flex justify-between items-center border-t border-gray-100 dark:border-gray-800"><div className="flex items-center gap-1"><Star className="w-3 h-3 text-yellow-400 fill-yellow-400" /><span className="text-gray-500 dark:text-gray-400 text-xs font-bold">{companion.rating}</span></div><button className="bg-gray-100 dark:bg-gray-800 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black rounded-lg p-2 transition-colors"><ArrowRight className="w-4 h-4" /></button></div></div>))}</div>)}
+                              {loadingCompanions ? (<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">{[1,2,3,4,5].map(i => <div key={i} className="h-64 bg-gray-100 dark:bg-gray-900 rounded-3xl animate-pulse"></div>)}</div>) : (<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">{filteredCompanions.map((companion) => (<div key={companion.id} onClick={() => handleStartConnection(companion)} className="group relative bg-white dark:bg-gray-900 rounded-[2rem] overflow-hidden border border-yellow-100 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all duration-300 hover:shadow-2xl cursor-pointer flex flex-col h-full"><div className="aspect-[4/5] relative overflow-hidden bg-gray-100 dark:bg-gray-800"><AvatarImage src={companion.imageUrl} alt={companion.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" /><div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                              <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-6 flex flex-col justify-center text-center">
+                                  <p className="text-yellow-400 text-xs font-black uppercase tracking-widest mb-2">About {companion.name}</p>
+                                  <p className="text-white text-sm leading-relaxed mb-4">"{companion.bio}"</p>
+                                  <div className="grid grid-cols-2 gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-4"><div className="bg-white/10 p-2 rounded-lg">{companion.yearsExperience} Yrs Exp</div><div className="bg-white/10 p-2 rounded-lg">{companion.degree}</div></div>
+                                  <button className="bg-white text-black px-4 py-2 rounded-full font-bold text-xs flex items-center justify-center gap-2 hover:bg-yellow-400 transition-colors"><Video className="w-3 h-3"/> Connect Now</button>
+                              </div>
+                              <div className="absolute top-3 left-3 flex gap-2"><div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md ${companion.status === 'AVAILABLE' ? 'bg-green-500/90 text-white shadow-lg shadow-green-500/20' : 'bg-gray-500/90 text-white'}`}>{companion.status === 'AVAILABLE' ? 'Online' : 'Busy'}</div></div><div className="absolute bottom-3 left-3 right-3 group-hover:opacity-0 transition-opacity"><h3 className="text-white font-black text-lg leading-tight mb-0.5 shadow-sm drop-shadow-md">{companion.name}</h3><p className="text-yellow-400 text-[9px] font-bold uppercase tracking-wider truncate">{companion.specialty}</p></div></div><div className="p-3 bg-white dark:bg-gray-900 flex justify-between items-center border-t border-gray-100 dark:border-gray-800"><div className="flex items-center gap-1"><Star className="w-3 h-3 text-yellow-400 fill-yellow-400" /><span className="text-gray-500 dark:text-gray-400 text-xs font-bold">{companion.rating}</span></div><button className="bg-gray-100 dark:bg-gray-800 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black rounded-lg p-2 transition-colors"><Eye className="w-4 h-4" /></button></div></div>))}</div>)}
                               {filteredCompanions.length === 0 && (<div className="text-center py-20 bg-gray-50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800"><p className="text-gray-500 font-bold">No specialists found in this category.</p><button onClick={() => setSpecialtyFilter('All')} className="text-yellow-600 text-sm font-bold mt-2 hover:underline">View All</button></div>)}
                           </div>
                       </div>

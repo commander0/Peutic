@@ -58,12 +58,29 @@ export const generateAffirmation = async (struggle: string = "general"): Promise
 };
 
 export const generateSpeech = async (text: string): Promise<Uint8Array | null> => {
-  // TTS requires high bandwidth and low latency. Proxying binary data via Supabase Functions 
-  // can be slow and costly. For now, we disable AI TTS if no key is present securely, 
-  // or rely on browser speech synthesis as a robust fallback.
-  // To enable secure AI TTS, a dedicated streaming endpoint would be needed.
-  console.warn("Secure TTS not configured. Using Browser Fallback.");
-  return null;
+  try {
+      const { data, error } = await supabase.functions.invoke('api-gateway', {
+          body: {
+              action: 'gemini-speak',
+              payload: { text }
+          }
+      });
+
+      if (error || !data?.audioData) throw error;
+
+      // Decode Base64 to Uint8Array (PCM)
+      const binaryString = atob(data.audioData);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+      }
+      return bytes;
+
+  } catch (e) {
+      console.warn("Secure TTS Failed (Falling back to Browser):", e);
+      return null;
+  }
 };
 
 export const generateWellnessImage = async (prompt: string): Promise<string | null> => {

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
     AreaChart, Area, PieChart, Pie, Cell, LineChart, Line
@@ -73,18 +73,27 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   // Computed
   const MAX_CONCURRENT_CAPACITY = settings.maxConcurrentSessions || 15;
   const WAITING_ROOM_CAPACITY = 35;
-  const totalRevenue = transactions.filter(t => t.amount > 0).reduce((acc, t) => acc + (t.cost || 0), 0);
+  const totalRevenue = transactions.filter(t => t.cost && t.cost > 0).reduce((acc, t) => acc + (t.cost || 0), 0);
   
-  // Revenue Data for Chart
-  const revenueData = [
-      { name: 'Mon', amount: 1200 },
-      { name: 'Tue', amount: 1500 },
-      { name: 'Wed', amount: 1800 },
-      { name: 'Thu', amount: 2200 },
-      { name: 'Fri', amount: 1600 },
-      { name: 'Sat', amount: 2500 },
-      { name: 'Sun', amount: 2100 },
-  ];
+  // Calculate Real Revenue Data (Last 7 Days)
+  const revenueData = useMemo(() => {
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const today = new Date();
+      const last7Days = Array.from({length: 7}, (_, i) => {
+          const d = new Date(today);
+          d.setDate(today.getDate() - (6 - i));
+          return d;
+      });
+
+      return last7Days.map(date => {
+          const dayName = days[date.getDay()];
+          const dateStr = date.toDateString();
+          const dailyTotal = transactions
+              .filter(t => t.cost && t.cost > 0 && new Date(t.date).toDateString() === dateStr)
+              .reduce((acc, t) => acc + (t.cost || 0), 0);
+          return { name: dayName, amount: dailyTotal };
+      });
+  }, [transactions]);
 
   // Sync Data
   useEffect(() => {
@@ -231,7 +240,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                           <StatCard title="Active Sessions" value={activeCount} icon={Video} subValue={`${MAX_CONCURRENT_CAPACITY} Max`} subLabel="Capacity" progress={(activeCount / MAX_CONCURRENT_CAPACITY) * 100} color="purple" />
                           <StatCard title="Waiting Room" value={waitingCount} icon={Clock} subValue={`${WAITING_ROOM_CAPACITY} Max`} subLabel="Capacity" progress={(waitingCount / WAITING_ROOM_CAPACITY) * 100} color="yellow" />
-                          <StatCard title="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon={DollarSign} subValue="+8.4%" subLabel="MoM" color="green" />
+                          <StatCard title="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon={DollarSign} subValue="Real-Time" subLabel="Gross" color="green" />
                           <StatCard title="Total Users" value={users.length} icon={Users} subValue="+12" subLabel="Today" color="blue" />
                       </div>
 
@@ -414,7 +423,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                       <h2 className="text-3xl font-black">Financial Intelligence</h2>
                       <div className="grid md:grid-cols-3 gap-6">
                           <div className="md:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                              <h3 className="font-bold text-white mb-6">Revenue Trend (7 Days)</h3>
+                              <h3 className="font-bold text-white mb-6">Revenue Trend (Last 7 Days)</h3>
                               <div className="h-[300px]">
                                   <ResponsiveContainer width="100%" height="100%">
                                       <BarChart data={revenueData}>
@@ -432,7 +441,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                               <div className="p-6 bg-green-500/10 rounded-full mb-6 border border-green-500/30">
                                   <DollarSign className="w-12 h-12 text-green-500" />
                               </div>
-                              <h3 className="text-3xl font-black text-white mb-2">${totalRevenue.toLocaleString()}</h3>
+                              <h3 className="text-3xl font-black text-white mb-2">${totalRevenue.toFixed(2)}</h3>
                               <p className="text-gray-500 text-sm uppercase tracking-widest">Total Gross Revenue</p>
                           </div>
                       </div>
