@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Database } from '../services/database';
+import { supabase } from '../services/supabaseClient';
 import { UserRole } from '../types';
 import { Lock, AlertCircle, Shield, ArrowRight, PlusCircle, Check, RefreshCw } from 'lucide-react';
 
@@ -54,15 +55,11 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
       return null;
   };
 
-  const handleRegisterAdmin = (e: React.FormEvent) => {
+  const handleRegisterAdmin = async (e: React.FormEvent) => {
       e.preventDefault();
       setError('');
       setSuccessMsg('');
 
-      if (masterKey.trim() !== 'PEUTIC-MASTER-2025') {
-          setError("Invalid Master Key.");
-          return;
-      }
       if (newAdminPassword !== newAdminConfirmPassword) {
           setError("Passwords do not match.");
           return;
@@ -74,26 +71,46 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
           return;
       }
 
-      // RESET FEATURE: If admin exists, we wipe existing data first to prevent lockouts/conflicts
-      if (hasAdmin) {
-          if (confirm("WARNING: Using the Master Key will reset the Admin database. Continue?")) {
-              Database.resetAllUsers(); // Clear previous data
-          } else {
-              return;
-          }
-      }
+      setLoading(true);
 
-      Database.createUser('System Admin', newAdminEmail, 'email', undefined, UserRole.ADMIN);
-      setSuccessMsg(hasAdmin ? "System Reset Successful. New Admin Created." : "Root Admin Created Successfully.");
-      
-      setTimeout(() => {
-          setShowRegister(false);
-          setSuccessMsg('');
-          setEmail(newAdminEmail);
-          setMasterKey('');
-          setNewAdminPassword('');
-          setNewAdminConfirmPassword('');
-      }, 2000);
+      // --- SECURE VERIFICATION ---
+      try {
+          // Call server-side check instead of local string comparison
+          const { data, error } = await supabase.functions.invoke('api-gateway', {
+              body: { action: 'admin-verify', payload: { key: masterKey } }
+          });
+
+          if (error || !data?.success) {
+              throw new Error("Invalid Master Key");
+          }
+
+          // If verification passed, proceed with local creation
+          if (hasAdmin) {
+              if (confirm("WARNING: System Reset Confirmed. Proceeding.")) {
+                  Database.resetAllUsers();
+              } else {
+                  setLoading(false);
+                  return;
+              }
+          }
+
+          Database.createUser('System Admin', newAdminEmail, 'email', undefined, UserRole.ADMIN);
+          setSuccessMsg("Root Admin Created Successfully.");
+          
+          setTimeout(() => {
+              setShowRegister(false);
+              setSuccessMsg('');
+              setEmail(newAdminEmail);
+              setMasterKey('');
+              setNewAdminPassword('');
+              setNewAdminConfirmPassword('');
+          }, 2000);
+
+      } catch (e) {
+          setError("Invalid Master Key or Connection Failed.");
+      } finally {
+          setLoading(false);
+      }
   };
 
   return (
@@ -123,7 +140,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                              <form onSubmit={handleRegisterAdmin} className="space-y-4">
                                 <div className="text-center mb-4">
                                     <h3 className="text-white font-bold text-lg">{hasAdmin ? "Emergency System Reset" : "Initialize Root Admin"}</h3>
-                                    {hasAdmin && <p className="text-xs text-red-400 mt-1">This will wipe user data to restore access.</p>}
+                                    <p className="text-xs text-gray-500">Requires Server-Side Master Key</p>
                                 </div>
                                 <input type="password" className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none" placeholder="Master Key" value={masterKey} onChange={e => setMasterKey(e.target.value)} />
                                 <input type="email" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none" placeholder="New Admin Email" value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} />
@@ -131,8 +148,9 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                     <input type="password" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none" placeholder="Password" value={newAdminPassword} onChange={e => setNewAdminPassword(e.target.value)} />
                                     <input type="password" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none" placeholder="Confirm" value={newAdminConfirmPassword} onChange={e => setNewAdminConfirmPassword(e.target.value)} />
                                 </div>
-                                <div className="text-[10px] text-gray-500 leading-tight">Must contain 8+ chars, uppercase, lowercase, number, symbol.</div>
-                                <button className="w-full bg-yellow-500 text-black font-black py-4 rounded-xl hover:bg-yellow-400 transition-colors mt-4">{hasAdmin ? "RESET & CREATE ADMIN" : "INITIALIZE SYSTEM"}</button>
+                                <button disabled={loading} className="w-full bg-yellow-500 text-black font-black py-4 rounded-xl hover:bg-yellow-400 transition-colors mt-4">
+                                    {loading ? "VERIFYING..." : (hasAdmin ? "RESET & CREATE ADMIN" : "INITIALIZE SYSTEM")}
+                                </button>
                                 <button type="button" onClick={() => setShowRegister(false)} className="text-gray-500 text-sm w-full text-center hover:text-white py-2">Cancel</button>
                              </form>
                         ) : (

@@ -334,7 +334,7 @@ export class Database {
         await supabase.from('users').update({
             name: user.name,
             email: user.email,
-            balance: user.balance,
+            // Balance update removed here to force use of secure top-up
             last_login_date: user.lastLoginDate
         }).eq('id', user.id);
     } catch (e) {
@@ -653,23 +653,53 @@ export class Database {
       list.unshift(tx);
       localStorage.setItem(DB_KEYS.TRANSACTIONS, JSON.stringify(list));
   }
-  static topUpWallet(amount: number, cost: number, userId?: string) {
-      const targetUser = userId ? this.getAllUsers().find(u => u.id === userId) : this.getUser();
-      if (targetUser) {
-          targetUser.balance += amount;
-          this.updateUser(targetUser);
-          this.addTransaction({
-              id: `tx_${Date.now()}`,
-              userId: targetUser.id,
-              userName: targetUser.name,
-              date: new Date().toISOString(),
-              amount: amount,
-              cost: cost,
-              description: cost > 0 ? 'Credit Purchase' : 'Admin Grant',
-              status: 'COMPLETED'
+
+  // UPDATED: SECURE TOP UP
+  static async topUpWallet(amount: number, cost: number, userId?: string) {
+      const targetUserId = userId || this.getUser()?.id;
+      if (!targetUserId) return;
+
+      try {
+          // Call Edge Function to process transaction securely
+          const { data, error } = await supabase.functions.invoke('api-gateway', {
+              body: { 
+                  action: 'process-topup', 
+                  payload: { userId: targetUserId, amount, cost } 
+              }
           });
+
+          if (error || !data.success) {
+              console.error("Top-up Failed:", error);
+              return;
+          }
+
+          // Update Local State for UI responsiveness
+          const targetUser = this.getAllUsers().find(u => u.id === targetUserId);
+          if (targetUser) {
+              targetUser.balance = data.newBalance; // Use authoritative balance from server
+              this.updateUser(targetUser); // Save to local storage
+              
+              const tx: Transaction = {
+                  id: `tx_${Date.now()}`,
+                  userId: targetUserId,
+                  userName: targetUser.name,
+                  date: new Date().toISOString(),
+                  amount: amount,
+                  cost: cost,
+                  description: cost > 0 ? 'Credit Purchase' : 'Admin Grant',
+                  status: 'COMPLETED'
+              };
+              
+              const list = this.getAllTransactions();
+              list.unshift(tx);
+              localStorage.setItem(DB_KEYS.TRANSACTIONS, JSON.stringify(list));
+          }
+
+      } catch (e) {
+          console.error("Secure Top-up Exception", e);
       }
   }
+
   static deductBalance(amount: number) {
       const user = this.getUser();
       if (user) {
