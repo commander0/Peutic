@@ -301,7 +301,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
           // --- INTELLIGENT CONTEXT INJECTION ---
           // 1. Fetch recent mood
-          const moods = Database.getMoods(user.id);
+          const moods = await Database.getMoods(user.id);
           const recentMood = moods.length > 0 ? moods[moods.length - 1].mood : null;
           let moodContext = "";
           if (recentMood === 'rain') moodContext = "The user recently indicated they are feeling down or melancholic. Approach with extra gentleness.";

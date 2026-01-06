@@ -72,14 +72,17 @@ const MainApp: React.FC = () => {
 
   // Restore session
   useEffect(() => {
-    const savedUser = Database.getUser();
-    if (savedUser) setUser(savedUser);
-    
-    // Initial Setting Sync
-    Database.syncGlobalSettings().then(() => {
+    const init = async () => {
+        const restored = await Database.restoreSession();
+        if (restored) setUser(restored);
+        
+        await Database.syncGlobalSettings();
         const settings = Database.getSettings();
         setMaintenanceMode(settings.maintenanceMode);
-    });
+        
+        setIsRestoring(false);
+    };
+    init();
 
     // Active Polling for Remote Settings (Maintenance/Sale Mode)
     const interval = setInterval(async () => {
@@ -88,7 +91,6 @@ const MainApp: React.FC = () => {
         setMaintenanceMode(currentSettings.maintenanceMode);
     }, 5000);
 
-    setIsRestoring(false);
     return () => clearInterval(interval);
   }, []);
 
@@ -124,20 +126,19 @@ const MainApp: React.FC = () => {
     return () => clearInterval(interval);
   }, [user, activeSessionCompanion]);
 
-  const handleLogin = (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email') => {
-    let currentUser = Database.getUser();
+  const handleLogin = async (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email') => {
     const userEmail = email || `${name.toLowerCase().replace(/ /g, '.')}@example.com`;
-    
-    if (!currentUser || currentUser.email !== userEmail) {
-        const allUsers = Database.getAllUsers();
-        const existing = allUsers.find(u => u.email === userEmail);
+    let currentUser: User;
+
+    try {
+        const existing = await Database.fetchUserFromCloud(userEmail);
         
         if (existing) {
             currentUser = existing;
-            if (avatar) { currentUser.avatar = avatar; Database.updateUser(currentUser); }
+            if (avatar) { currentUser.avatar = avatar; await Database.updateUser(currentUser); }
         } else {
             // STRICT ADMIN CREATION LOGIC
-            const adminExists = Database.hasAdmin();
+            const adminExists = await Database.hasAdmin();
             let finalRole = UserRole.USER;
             if (!adminExists && provider === 'email') {
                 finalRole = UserRole.ADMIN;
@@ -145,26 +146,29 @@ const MainApp: React.FC = () => {
                 finalRole = UserRole.USER;
             }
 
-            currentUser = Database.createUser(name, userEmail, provider, birthday, finalRole);
-            if (avatar) { currentUser.avatar = avatar; Database.updateUser(currentUser); }
+            currentUser = await Database.createUser(name, userEmail, provider, birthday, finalRole);
+            if (avatar) { currentUser.avatar = avatar; await Database.updateUser(currentUser); }
         }
-    }
-    
-    currentUser = Database.checkAndIncrementStreak(currentUser);
+        
+        currentUser = Database.checkAndIncrementStreak(currentUser);
 
-    setUser(currentUser);
-    Database.saveUserSession(currentUser);
-    lastActivityRef.current = Date.now();
-    setShowAuth(false);
-    
-    if (currentUser.role === UserRole.ADMIN) {
-        navigate('/admin/dashboard');
-    } else {
-        navigate('/');
+        setUser(currentUser);
+        Database.saveUserSession(currentUser);
+        lastActivityRef.current = Date.now();
+        setShowAuth(false);
+        
+        if (currentUser.role === UserRole.ADMIN) {
+            navigate('/admin/dashboard');
+        } else {
+            navigate('/');
+        }
+    } catch (e) {
+        console.error("Login Failed", e);
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await Database.logout();
     Database.clearSession();
     setUser(null);
     setActiveSessionCompanion(null);

@@ -22,7 +22,6 @@ interface DashboardProps {
   onStartSession: (companion: Companion) => void;
 }
 
-// SECURE: Use environment variable, fall back only for dev/demo purposes
 const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_KEY || "pk_live_51MZuG0BUviiBIU4d81PC3BDlYgxuUszLu1InD0FFWOcGwQyNYgn5jjNOYi5a0uic9iuG8FdMjZBqpihTxK7oH0W600KfPZFZwp";
 
 declare global {
@@ -31,8 +30,6 @@ declare global {
     webkitAudioContext?: typeof AudioContext;
   }
 }
-
-// --- HELPER COMPONENTS ---
 
 const AvatarImage: React.FC<{ src: string; alt: string; className?: string; isUser?: boolean }> = ({ src, alt, className, isUser = false }) => {
     const [imgSrc, setImgSrc] = useState(src);
@@ -80,7 +77,6 @@ const CollapsibleSection: React.FC<{ title: string; icon: any; children: React.R
     );
 };
 
-// --- WISDOM GENERATOR ---
 const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
@@ -540,8 +536,10 @@ const JournalSection: React.FC<{ user: User }> = ({ user }) => {
     const [entries, setEntries] = useState<JournalEntry[]>([]);
     const [content, setContent] = useState('');
     const [saved, setSaved] = useState(false);
-    useEffect(() => { setEntries(Database.getJournals(user.id)); }, [user.id]);
-    const handleSave = () => { if (!content.trim()) return; const entry: JournalEntry = { id: `j_${Date.now()}`, userId: user.id, date: new Date().toISOString(), content: content }; Database.saveJournal(entry); setEntries([entry, ...entries]); setContent(''); setSaved(true); setTimeout(() => setSaved(false), 2000); };
+    useEffect(() => { 
+        Database.getJournals(user.id).then(setEntries); 
+    }, [user.id]);
+    const handleSave = () => { if (!content.trim()) return; const entry: JournalEntry = { id: `j_${Date.now()}`, userId: user.id, date: new Date().toISOString(), content: content }; Database.saveJournal(entry).then(() => { setEntries([entry, ...entries]); setContent(''); setSaved(true); setTimeout(() => setSaved(false), 2000); }); };
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 h-[500px]">
             <div className="flex flex-col h-full bg-[#fdfbf7] dark:bg-[#1a1a1a] rounded-2xl p-6 border border-yellow-200 dark:border-gray-800 shadow-inner relative overflow-hidden group">
@@ -607,15 +605,11 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
         setError('');
         setRedeemSuccess('');
         
-        // Simulating robust promo verification here (normally server-side)
-        // In a real app, you'd call an API. For now, we simulate a check against "DB".
         setTimeout(() => {
             const codes = Database.getPromoCodes();
             const found = codes.find(c => c.code === promoCode.toUpperCase() && c.active);
             
             if (found) {
-                // For demo purposes, let's treat "100OFF" or similar as free credits
-                // Real implementation would discount the Stripe amount
                 if (found.code === 'WELCOME20') {
                     onSuccess(20, 0); // 20 Free Mins
                     setRedeemSuccess("Code Redeemed! 20 Minutes Added.");
@@ -749,7 +743,7 @@ const BreathingExercise: React.FC<{ userId: string, onClose: () => void }> = ({ 
 const ProfileModal: React.FC<{ user: User, onClose: () => void, onUpdate: () => void }> = ({ user, onClose, onUpdate }) => {
     const [name, setName] = useState(user.name);
     const [loading, setLoading] = useState(false);
-    const handleSave = () => { setLoading(true); setTimeout(() => { Database.updateUser({ ...user, name }); onUpdate(); onClose(); }, 500); };
+    const handleSave = () => { setLoading(true); Database.updateUser({ ...user, name }).then(() => { onUpdate(); onClose(); }); };
     return (
         <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
             <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl p-8 border border-yellow-200 dark:border-gray-800 shadow-2xl relative">
@@ -764,10 +758,6 @@ const ProfileModal: React.FC<{ user: User, onClose: () => void, onUpdate: () => 
         </div>
     );
 };
-
-// ==========================================
-// DASHBOARD MAIN COMPONENT
-// ==========================================
 
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession }) => {
   const [activeTab, setActiveTab] = useState<'hub' | 'history' | 'settings'>('hub');
@@ -803,10 +793,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     if (savedTheme === 'dark') { setDarkMode(true); document.documentElement.classList.add('dark'); }
     refreshData();
     generateDailyInsight(user.name).then(setDailyInsight);
-    setTimeout(() => { setCompanions(Database.getCompanions()); setLoadingCompanions(false); }, 500);
+    setTimeout(() => { 
+        Database.getCompanions().then((comps) => {
+            setCompanions(comps); 
+            setLoadingCompanions(false); 
+        });
+    }, 500);
     
-    // Refresh loop
-    const interval = setInterval(refreshData, 5000);
+    // Refresh loop (Also syncs user balance from cloud)
+    const interval = setInterval(async () => {
+        await Database.syncUser(user.id);
+        refreshData();
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -815,7 +813,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
       if (u) {
           setDashboardUser(u);
           setBalance(u.balance);
-          setTransactions(Database.getUserTransactions(u.id));
+          Database.getUserTransactions(u.id).then(setTransactions);
           const prog = Database.getWeeklyProgress(u.id);
           setWeeklyGoal(prog.current);
           setWeeklyMessage(prog.message);
@@ -823,7 +821,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
           setEditEmail(u.email);
           setEmailNotifications(u.emailPreferences?.updates ?? true);
       }
-      setCompanions(Database.getCompanions());
+      Database.getCompanions().then(setCompanions);
       setSettings(Database.getSettings());
   };
 
@@ -861,7 +859,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
           </div>
           <div className="flex items-center gap-3">
               <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
-                  {darkMode ? <Sun className="w-4 h-4 text-yellow-400" /> : <Moon className="w-4 h-4 text-gray-600" />}
+                  {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4 text-gray-600" />}
               </button>
               <button onClick={() => setShowGrounding(true)} className="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors animate-pulse" title="Panic Relief">
                   <LifeBuoy className="w-4 h-4" />

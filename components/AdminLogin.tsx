@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Database } from '../services/database';
 import { supabase } from '../services/supabaseClient';
 import { UserRole } from '../types';
@@ -22,10 +22,14 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
   const [newAdminPassword, setNewAdminPassword] = useState('');
   const [newAdminConfirmPassword, setNewAdminConfirmPassword] = useState('');
 
+  const [hasAdmin, setHasAdmin] = useState(false);
   const lockout = Database.checkAdminLockout();
-  const hasAdmin = Database.hasAdmin();
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+      Database.hasAdmin().then(setHasAdmin);
+  }, []);
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     if (lockout) {
@@ -33,8 +37,9 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         return;
     }
     setLoading(true);
-    setTimeout(() => {
-        const user = Database.getUserByEmail(email);
+    
+    try {
+        const user = await Database.fetchUserFromCloud(email);
         if (user && user.role === UserRole.ADMIN) {
             Database.resetAdminFailure();
             onLogin(user);
@@ -42,8 +47,11 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
              Database.recordAdminFailure();
              setError("Access Denied. Incident reported.");
         }
+    } catch (e) {
+        setError("Connection Error.");
+    } finally {
         setLoading(false);
-    }, 1000);
+    }
   };
 
   const validatePasswordStrength = (pwd: string): string | null => {
@@ -94,7 +102,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
               }
           }
 
-          Database.createUser('System Admin', newAdminEmail, 'email', undefined, UserRole.ADMIN);
+          await Database.createUser('System Admin', newAdminEmail, 'email', undefined, UserRole.ADMIN);
           setSuccessMsg("Root Admin Created Successfully.");
           
           setTimeout(() => {
@@ -104,6 +112,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
               setMasterKey('');
               setNewAdminPassword('');
               setNewAdminConfirmPassword('');
+              setHasAdmin(true);
           }, 2000);
 
       } catch (e) {

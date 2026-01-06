@@ -98,13 +98,13 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   // Sync Data
   useEffect(() => {
     const fetchData = async () => {
-        setUsers(Database.getAllUsers());
-        setCompanions(Database.getCompanions());
-        setTransactions(Database.getAllTransactions());
-        const s = Database.getSettings();
+        setUsers(await Database.getAllUsers());
+        setCompanions(await Database.getCompanions());
+        setTransactions(await Database.getAllTransactions());
+        const s = await Database.syncGlobalSettings();
         setSettings(s);
         setBroadcastMsg(s.broadcastMessage || '');
-        setLogs(Database.getSystemLogs());
+        setLogs(await Database.getSystemLogs());
         try {
             const count = await Database.getActiveSessionCount();
             setActiveCount(count);
@@ -117,13 +117,14 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleToggleStatus = (id: string, current: string) => {
+  const handleToggleStatus = async (id: string, current: string) => {
       const comp = companions.find(c => c.id === id);
       if (comp) {
           const next = current === 'AVAILABLE' ? 'BUSY' : current === 'BUSY' ? 'OFFLINE' : 'AVAILABLE';
-          Database.updateCompanion({...comp, status: next as any});
+          const updated = {...comp, status: next as any};
+          await Database.updateCompanion(updated);
           // Optimistic update
-          setCompanions(prev => prev.map(c => c.id === id ? {...c, status: next as any} : c));
+          setCompanions(prev => prev.map(c => c.id === id ? updated : c));
       }
   };
 
@@ -138,33 +139,33 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
       }
   };
 
-  const handleTopUp = (userId: string) => {
+  const handleTopUp = async (userId: string) => {
       const amount = prompt("Enter minutes to add:");
       if (amount && !isNaN(parseInt(amount))) {
-          Database.topUpWallet(parseInt(amount), 0, userId); // 0 cost for admin grant
+          await Database.topUpWallet(parseInt(amount), 0, userId); 
           alert("Credits added successfully.");
-          setUsers(Database.getAllUsers()); // Refresh immediately
+          setUsers(await Database.getAllUsers()); 
       }
   };
 
-  const handleBroadcast = () => {
+  const handleBroadcast = async () => {
       const updated = { ...settings, broadcastMessage: broadcastMsg };
-      Database.saveSettings(updated);
+      await Database.saveSettings(updated);
       setSettings(updated);
       alert("Broadcast updated for all users.");
   };
 
-  const clearBroadcast = () => {
+  const clearBroadcast = async () => {
       const updated = { ...settings, broadcastMessage: '' };
-      Database.saveSettings(updated);
+      await Database.saveSettings(updated);
       setSettings(updated);
       setBroadcastMsg('');
   };
 
-  const handleSettingChange = (key: keyof GlobalSettings, value: any) => {
+  const handleSettingChange = async (key: keyof GlobalSettings, value: any) => {
       const updated = { ...settings, [key]: value };
       setSettings(updated);
-      Database.saveSettings(updated);
+      await Database.saveSettings(updated);
   };
 
   const filteredUsers = users.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase()));

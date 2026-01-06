@@ -22,12 +22,10 @@ declare global {
 const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' }) => {
   const [isLogin, setIsLogin] = useState(initialMode === 'login');
   
-  // Update state when prop changes to support switching modes from parent
   useEffect(() => {
     setIsLogin(initialMode === 'login');
   }, [initialMode]);
   
-  // Form Fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -35,26 +33,18 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
   const [lastName, setLastName] = useState('');
   const [birthday, setBirthday] = useState('');
 
-  // States
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [toast, setToast] = useState<string | null>(null);
 
-  // Onboarding State
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   
-  // --- FACEBOOK SDK INIT ---
   useEffect(() => {
       if (window.FB) return;
       window.fbAsyncInit = function() {
-        window.FB.init({
-          appId: '1143120088010234', 
-          cookie: true,
-          xfbml: true,
-          version: 'v18.0'
-        });
+        window.FB.init({ appId: '1143120088010234', cookie: true, xfbml: true, version: 'v18.0' });
       };
       (function(d, s, id) {
         var js, fjs = d.getElementsByTagName(s)[0];
@@ -66,7 +56,6 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
       }(document, 'script', 'facebook-jssdk'));
   }, []);
 
-  // --- GOOGLE OAUTH ---
   useEffect(() => {
     const handleGoogleCredentialResponse = (response: any) => {
         try {
@@ -76,52 +65,34 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                 return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
             }).join(''));
             const data = JSON.parse(jsonPayload);
-            
             if (data.email) {
-                const fullName = data.name || "Buddy";
-                onLogin(UserRole.USER, fullName, data.picture, data.email, undefined, 'google');
+                onLogin(UserRole.USER, data.name || "Buddy", data.picture, data.email, undefined, 'google');
             }
         } catch (err) {
-            console.error("Google Parse Error");
             setError("Google Authentication Failed.");
         }
     };
 
     if (window.google) {
         try {
-            // Using a generic client ID. 
-            // Note: If you see [GSI_LOGGER] origin errors in console, it is because this 
-            // client ID is not whitelisted for your specific domain/localhost. 
             window.google.accounts.id.initialize({
                 client_id: "360174265748-nqb0dk8qi8bk0hil4ggt12d53ecvdobo.apps.googleusercontent.com",
                 callback: handleGoogleCredentialResponse,
                 use_fedcm_for_prompt: false, 
                 auto_select: false
             });
-        } catch (e) {
-            console.warn("GSI Init Error", e);
-        }
+        } catch (e) {}
     }
   }, [onLogin]);
 
   const handleGoogleClick = () => {
-      // 1. SDK Check
       if (!window.google) {
           setError("Google Sign-In is currently unavailable. Please use email.");
           return;
       }
-
       try {
-          // 2. Attempt Real Login
-          window.google.accounts.id.prompt((notification: any) => {
-              if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                  const reason = notification.getNotDisplayedReason();
-                  console.warn("Google Prompt Skipped/Hidden. Reason:", reason);
-                  setError("Google Sign-In was blocked or closed. Please try again or use email.");
-              }
-          });
+          window.google.accounts.id.prompt();
       } catch (e) {
-          console.error("Google Prompt Exception:", e);
           setError("An error occurred with Google Sign-In.");
       }
   };
@@ -143,13 +114,10 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                  const fbEmail = profile.email || `${profile.id}@facebook.com`;
                  onLogin(UserRole.USER, name, pic, fbEmail, undefined, 'facebook');
              });
-          } else {
-             console.log("User cancelled FB Login");
           }
       }, {scope: 'public_profile,email'});
   };
 
-  // --- VALIDATION HELPERS ---
   const validatePasswordStrength = (pwd: string): string | null => {
       if (pwd.length < 8) return "Password must be at least 8 characters long.";
       if (!/[A-Z]/.test(pwd)) return "Password must include at least one uppercase letter.";
@@ -170,58 +138,49 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
       return age >= 18;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    setTimeout(() => {
+    try {
         if (isLogin) {
-            // STRICT LOGIN CHECK
-            const existingUser = Database.getUserByEmail(email);
+            const existingUser = await Database.fetchUserFromCloud(email);
             if (existingUser) {
                 onLogin(existingUser.role, existingUser.name, existingUser.avatar, email, undefined, 'email');
             } else {
-                setLoading(false);
                 setError("Invalid email address or password combination.");
             }
         } else {
-            // SIGNUP VALIDATION
-            
-            // 1. Check Age
             if (!validateAge(birthday)) {
-                setLoading(false);
                 setError("You must be at least 18 years old to create an account.");
-                return;
-            }
-
-            // 2. Check Password Match
-            if (password !== confirmPassword) {
                 setLoading(false);
-                setError("Passwords do not match.");
                 return;
             }
-
-            // 3. Check Password Strength
+            if (password !== confirmPassword) {
+                setError("Passwords do not match.");
+                setLoading(false);
+                return;
+            }
             const weakPasswordMsg = validatePasswordStrength(password);
             if (weakPasswordMsg) {
-                setLoading(false);
                 setError(weakPasswordMsg);
-                return;
-            }
-
-            // 4. Check Existing User
-            const existingUser = Database.getUserByEmail(email);
-            if (existingUser) {
                 setLoading(false);
-                setError("An account with this email already exists. Please sign in.");
                 return;
             }
-            
-            setLoading(false);
+            const existingUser = await Database.fetchUserFromCloud(email);
+            if (existingUser) {
+                setError("An account with this email already exists. Please sign in.");
+                setLoading(false);
+                return;
+            }
             setShowOnboarding(true);
         }
-    }, 1000);
+    } catch (e) {
+        setError("Connection failed. Please check internet.");
+    } finally {
+        if (!showOnboarding) setLoading(false);
+    }
   };
 
   const finishOnboarding = () => {
@@ -230,7 +189,6 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
       onLogin(UserRole.USER, formattedName, undefined, email, birthday, 'email');
   };
 
-  // --- RENDER ONBOARDING ---
   if (showOnboarding) {
       return (
         <div className="fixed inset-0 bg-[#FFFBEB] dark:bg-black z-50 flex flex-col md:flex-row animate-in fade-in slide-in-from-bottom-5 duration-500">
