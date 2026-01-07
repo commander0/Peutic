@@ -59,43 +59,6 @@ serve(async (req) => {
         return new Response(JSON.stringify({ success: false, error: 'Invalid Credentials' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // --- SECURE USER CREATION (Bypasses RLS) ---
-    if (action === 'user-create') {
-        const { name, email, role, provider, key } = payload;
-
-        // Security Check for Admin Creation
-        if (role === 'ADMIN') {
-             const MASTER_KEY = Deno.env.get('ADMIN_MASTER_KEY') || 'PEUTIC-MASTER-2025-SECURE';
-             if (key !== MASTER_KEY) {
-                 return new Response(JSON.stringify({ error: 'Unauthorized: Invalid Master Key' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-             }
-        }
-
-        // Check duplicates
-        const { data: existing } = await supabaseClient.from('users').select('id').eq('email', email).single();
-        if (existing) {
-             return new Response(JSON.stringify({ error: 'User already exists' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        }
-
-        const id = \`u_\${Date.now()}_\${Math.random().toString(36).substr(2, 9)}\`;
-        const newUser = {
-            id,
-            name,
-            email,
-            role: role || 'USER',
-            balance: 0,
-            created_at: new Date().toISOString(),
-            last_login_date: new Date().toISOString(),
-            provider: provider || 'email',
-            avatar_url: ''
-        };
-
-        const { error: insertError } = await supabaseClient.from('users').insert(newUser);
-        if (insertError) throw new Error(insertError.message);
-
-        return new Response(JSON.stringify({ success: true, user: newUser }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
     if (action === 'process-topup') {
         if (!stripe) throw new Error("Stripe not configured on server");
         

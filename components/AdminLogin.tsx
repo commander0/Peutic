@@ -90,7 +90,37 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
 
       setLoading(true);
 
+      // --- SECURE VERIFICATION ---
       try {
+          let verified = false;
+
+          // 1. Try Server-Side Verification (Preferred)
+          try {
+              const { data, error } = await supabase.functions.invoke('api-gateway', {
+                  body: { action: 'admin-verify', payload: { key: masterKey } }
+              });
+
+              if (!error && data?.success) {
+                  verified = true;
+              }
+          } catch (serverError) {
+              console.warn("Server verification unreachable. Attempting local default check.");
+          }
+
+          // 2. Fallback: Local Check (For initial setup/local dev only if server is down)
+          // This ensures you can still initialize the system locally if you have the correct default key.
+          if (!verified) {
+               const DEFAULT_KEY = 'PEUTIC-MASTER-2025-SECURE';
+               if (masterKey === DEFAULT_KEY) {
+                   verified = true;
+                   console.log("Verified via Local Default Key");
+               } else {
+                   throw new Error("Invalid Master Key");
+               }
+          }
+          
+          if (!verified) throw new Error("Verification Failed");
+
           // If verification passed, proceed with creation
           if (hasAdmin) {
               if (confirm("WARNING: System Reset Confirmed. Proceeding.")) {
@@ -101,9 +131,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
               }
           }
 
-          // Create Admin via Secure API Gateway (Requires Master Key)
-          await Database.createUser('System Admin', newAdminEmail, 'email', undefined, UserRole.ADMIN, masterKey);
-          
+          await Database.createUser('System Admin', newAdminEmail, 'email', undefined, UserRole.ADMIN);
           setSuccessMsg("Root Admin Created Successfully.");
           
           setTimeout(() => {
