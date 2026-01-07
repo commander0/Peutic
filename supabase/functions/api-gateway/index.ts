@@ -100,10 +100,16 @@ serve(async (req) => {
         const apiKey = Deno.env.get('GEMINI_API_KEY');
         if (!apiKey) throw new Error("Server Misconfiguration: Missing AI Key");
         
+        // Correct Initialization per Guidelines
         const ai = new GoogleGenAI({ apiKey: apiKey });
+        
+        // Use Gemini 3 Flash Preview for text generation (Speed + Quality balance)
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
-            contents: payload.prompt
+            contents: payload.prompt,
+            config: {
+                systemInstruction: "You are a warm, empathetic mental wellness companion. Be concise, supportive, and human-like. Do not give medical advice."
+            }
         });
         
         return new Response(JSON.stringify({ text: response.text }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -116,7 +122,7 @@ serve(async (req) => {
 
         const ai = new GoogleGenAI({ apiKey: apiKey });
         
-        // Use Gemini 2.5 Flash TTS
+        // Use Gemini 2.5 Flash TTS (Specialized for Audio)
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash-preview-tts',
             contents: { parts: [{ text: payload.text }] },
@@ -124,7 +130,7 @@ serve(async (req) => {
                 responseModalities: ['AUDIO'],
                 speechConfig: {
                     voiceConfig: {
-                        prebuiltVoiceConfig: { voiceName: 'Kore' },
+                        prebuiltVoiceConfig: { voiceName: 'Kore' }, // 'Kore', 'Puck', 'Charon', 'Fenrir', 'Zephyr'
                     },
                 },
             },

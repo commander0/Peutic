@@ -921,8 +921,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
       {mood && <WeatherEffect type={mood} />}
       <SoundscapePlayer />
 
+      {/* --- LIABILITY SHIELD / HEADER --- */}
+      <div className="bg-black/90 text-white text-[10px] md:text-xs font-bold text-center py-2 px-4 backdrop-blur-md sticky top-0 z-[60] flex justify-between items-center">
+          <div className="flex items-center gap-2">
+              <AlertTriangle className="w-3 h-3 text-yellow-500" />
+              <span>Not a Medical Service. For entertainment & companionship only.</span>
+          </div>
+          <Link to="/crisis" className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded-full text-white transition-colors">
+              In Crisis?
+          </Link>
+      </div>
+
       {/* --- MOBILE TOP BAR --- */}
-      <div className="md:hidden sticky top-0 bg-[#FFFBEB]/90 dark:bg-black/90 backdrop-blur-md border-b border-yellow-200 dark:border-gray-800 p-4 flex justify-between items-center z-40">
+      <div className="md:hidden sticky top-8 bg-[#FFFBEB]/90 dark:bg-black/90 backdrop-blur-md border-b border-yellow-200 dark:border-gray-800 p-4 flex justify-between items-center z-40">
           <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-yellow-400 rounded-lg flex items-center justify-center shadow-md">
                   <Heart className="w-5 h-5 text-black fill-black" />
