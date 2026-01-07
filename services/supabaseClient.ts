@@ -1,9 +1,17 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Prioritize Environment Variables for Production
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+// Robust Environment Variable Retrieval
+const getEnv = (key: string) => {
+  // @ts-ignore
+  if (typeof process !== 'undefined' && process.env?.[key]) return process.env[key];
+  // @ts-ignore
+  if (typeof import.meta !== 'undefined' && import.meta.env?.[key]) return import.meta.env[key];
+  return '';
+};
+
+const supabaseUrl = getEnv('VITE_SUPABASE_URL');
+const supabaseKey = getEnv('VITE_SUPABASE_ANON_KEY');
 
 // Strict Dummy Client for Offline/Missing Config - Throws Errors
 const strictDummyClient = {
