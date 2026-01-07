@@ -4,11 +4,16 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "setup": "npm install && node scripts/setup-backend.js",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "cap:sync": "npx cap sync",
-    "cap:open": "npx cap open android"
+    "cap:open": "npx cap open android",
+    "backend:setup": "node scripts/setup-backend.js",
+    "backend:login": "npx supabase login",
+    "backend:link": "npx supabase link",
+    "backend:deploy": "npx supabase functions deploy api-gateway --no-verify-jwt && npx supabase functions deploy tavus-proxy --no-verify-jwt"
   },
   "dependencies": {
     "@capacitor/android": "^6.0.0",
