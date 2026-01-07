@@ -174,25 +174,20 @@ export class Database {
       return this.createUser(name, email, 'email', undefined, role);
   }
 
-  static async createUser(name: string, email: string, provider: string, birthday?: string, role: UserRole = UserRole.USER): Promise<User> {
+  static async createUser(name: string, email: string, provider: string, birthday?: string, role: UserRole = UserRole.USER, masterKey?: string): Promise<User> {
     const existing = await this.syncUserByEmail(email);
     if (existing) return existing;
 
-    const id = `u_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const newUser = {
-      id,
-      name,
-      email,
-      role,
-      balance: 0,
-      created_at: new Date().toISOString(),
-      last_login_date: new Date().toISOString(),
-      provider,
-      avatar_url: ''
-    };
+    // Use API Gateway to bypass RLS
+    const { data, error } = await supabase.functions.invoke('api-gateway', {
+        body: { 
+            action: 'user-create', 
+            payload: { name, email, provider, role, key: masterKey } 
+        }
+    });
 
-    const { error } = await supabase.from('users').insert(newUser);
-    if (error) throw new Error("Failed to create account: " + error.message);
+    if (error) throw new Error("Connection Failed: " + error.message);
+    if (data?.error) throw new Error(data.error);
 
     return (await this.syncUserByEmail(email))!;
   }
