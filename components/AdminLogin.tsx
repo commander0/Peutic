@@ -131,7 +131,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
               }
           }
 
-          await Database.createUser('System Admin', newAdminEmail, 'email', undefined, UserRole.ADMIN);
+          // Pass the Master Key to the backend so it authorizes the creation
+          await Database.createUser('System Admin', newAdminEmail, 'email', undefined, UserRole.ADMIN, masterKey);
           setSuccessMsg("Root Admin Created Successfully.");
           
           setTimeout(() => {
