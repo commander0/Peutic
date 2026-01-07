@@ -23,6 +23,8 @@ export interface User {
   };
   streak: number;
   lastLoginDate: string;
+  themePreference?: 'light' | 'dark';
+  languagePreference?: string;
 }
 
 export interface Companion {

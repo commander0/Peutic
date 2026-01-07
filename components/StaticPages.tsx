@@ -14,11 +14,9 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
   const [sent, setSent] = useState(false);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('peutic_theme');
-    if (savedTheme === 'dark') {
+    // Just ensure dark mode class is respected if set by App or OS
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches && document.documentElement.classList.contains('dark')) {
         document.documentElement.classList.add('dark');
-    } else {
-        document.documentElement.classList.remove('dark');
     }
   }, []);
 

@@ -136,7 +136,9 @@ export class Database {
           streak: 0,
           provider: 'email',
           avatar: data.avatar_url,
-          emailPreferences: data.email_preferences || { marketing: true, updates: true }
+          emailPreferences: data.email_preferences || { marketing: true, updates: true },
+          themePreference: data.theme_preference,
+          languagePreference: data.language_preference
         };
         // Background update last login
         const now = new Date().toISOString();
@@ -154,6 +156,8 @@ export class Database {
           if (data && this.currentUser && this.currentUser.id === userId) {
               this.currentUser.balance = data.balance;
               this.currentUser.role = data.role as UserRole;
+              this.currentUser.themePreference = data.theme_preference;
+              this.currentUser.languagePreference = data.language_preference;
           }
       } catch (e) {}
   }
@@ -205,7 +209,9 @@ export class Database {
           name: user.name,
           email: user.email,
           avatar_url: user.avatar,
-          email_preferences: user.emailPreferences
+          email_preferences: user.emailPreferences,
+          theme_preference: user.themePreference,
+          language_preference: user.languagePreference
       }).eq('id', user.id);
   }
 
@@ -233,7 +239,8 @@ export class Database {
       return (data || []).map(d => ({
           id: d.id, name: d.name, email: d.email, role: d.role as UserRole, balance: d.balance,
           subscriptionStatus: 'ACTIVE', joinedAt: d.created_at, lastLoginDate: d.last_login_date,
-          streak: 0, provider: 'email', avatar: d.avatar_url, emailPreferences: d.email_preferences
+          streak: 0, provider: 'email', avatar: d.avatar_url, emailPreferences: d.email_preferences,
+          themePreference: d.theme_preference, languagePreference: d.language_preference
       }));
   }
 
@@ -325,12 +332,16 @@ export class Database {
       });
   }
 
-  static async topUpWallet(amount: number, cost: number, userId?: string) {
+  static async topUpWallet(amount: number, cost: number, userId?: string, paymentToken?: string) {
       const uid = userId || this.currentUser?.id;
       if (!uid) return;
-      await supabase.functions.invoke('api-gateway', {
-          body: { action: 'process-topup', payload: { userId: uid, amount, cost } }
+      
+      const { error } = await supabase.functions.invoke('api-gateway', {
+          body: { action: 'process-topup', payload: { userId: uid, amount, cost, paymentToken } }
       });
+      
+      if (error) throw new Error("Transaction Failed: " + error.message);
+      
       await this.syncUser(uid);
   }
 

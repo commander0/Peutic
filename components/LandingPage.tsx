@@ -46,7 +46,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
   const [showCookies, setShowCookies] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [featuredSpecialists, setFeaturedSpecialists] = useState<Companion[]>([]);
-  const [darkMode, setDarkMode] = useState(false);
+  
+  // Theme State with LocalStorage Priority
+  const [darkMode, setDarkMode] = useState(() => {
+      const local = localStorage.getItem('peutic_theme');
+      if (local) return local === 'dark';
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
   const [lang, setLang] = useState<LanguageCode>('en'); // Language State
   const [showLangMenu, setShowLangMenu] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
@@ -57,21 +64,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
   const t = (key: any) => getTranslation(lang, key);
 
   useEffect(() => {
-    // Theme Init
-    const savedTheme = localStorage.getItem('peutic_theme');
-    if (savedTheme === 'dark') {
-        setDarkMode(true);
+    // Apply theme on mount/change
+    if (darkMode) {
         document.documentElement.classList.add('dark');
     } else {
-        setDarkMode(false);
         document.documentElement.classList.remove('dark');
     }
 
     setOnlineCount(Math.floor(Math.random() * (300 - 80 + 1)) + 142);
+    
+    // Cookie banner shows every session for guests (stateless)
     const timer = setTimeout(() => {
-        if (!localStorage.getItem('peutic_cookies_accepted')) {
-            setShowCookies(true);
-        }
+        setShowCookies(true);
     }, 2000);
 
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -93,22 +97,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
         window.removeEventListener('scroll', handleScroll);
         document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [darkMode]);
 
   const toggleDarkMode = () => {
-      if (darkMode) {
-          document.documentElement.classList.remove('dark');
-          localStorage.setItem('peutic_theme', 'light');
-          setDarkMode(false);
-      } else {
-          document.documentElement.classList.add('dark');
+      const newMode = !darkMode;
+      setDarkMode(newMode);
+      if (newMode) {
           localStorage.setItem('peutic_theme', 'dark');
-          setDarkMode(true);
+      } else {
+          localStorage.setItem('peutic_theme', 'light');
       }
   };
 
   const acceptCookies = () => {
-      localStorage.setItem('peutic_cookies_accepted', 'true');
       setShowCookies(false);
   };
 

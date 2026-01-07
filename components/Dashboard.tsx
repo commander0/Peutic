@@ -22,7 +22,7 @@ interface DashboardProps {
   onStartSession: (companion: Companion) => void;
 }
 
-const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_KEY || "pk_live_51MZuG0BUviiBIU4d81PC3BDlYgxuUszLu1InD0FFWOcGwQyNYgn5jjNOYi5a0uic9iuG8FdMjZBqpihTxK7oH0W600KfPZFZwp";
+const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_KEY;
 
 declare global {
   interface Window {
@@ -268,7 +268,13 @@ const MindfulMatchGame: React.FC = () => {
     const [solved, setSolved] = useState<number[]>([]); 
     const [won, setWon] = useState(false); 
     const [moves, setMoves] = useState(0); 
-    const [bestScore, setBestScore] = useState(parseInt(localStorage.getItem('mindful_best') || '0'));
+    
+    // PERSISTENCE: Initialize from LocalStorage for High Score
+    const [bestScore, setBestScore] = useState(() => {
+        try {
+            return parseInt(localStorage.getItem('peutic_match_score') || '0');
+        } catch (e) { return 0; }
+    });
     
     const ICONS = [Sun, Heart, Music, Zap, Star, Anchor, Feather, Cloud];
     
@@ -304,9 +310,10 @@ const MindfulMatchGame: React.FC = () => {
     useEffect(() => { 
         if (cards.length > 0 && solved.length === cards.length) { 
             setWon(true); 
+            // Update Best Score locally
             if (bestScore === 0 || moves < bestScore) { 
                 setBestScore(moves); 
-                localStorage.setItem('mindful_best', moves.toString()); 
+                localStorage.setItem('peutic_match_score', moves.toString());
             } 
         } 
     }, [solved]);
@@ -330,6 +337,14 @@ const CloudHopGame: React.FC = () => {
     const [score, setScore] = useState(0); 
     const [gameOver, setGameOver] = useState(false); 
     const [gameStarted, setGameStarted] = useState(false); 
+    
+    // PERSISTENCE: Initialize from LocalStorage for High Score
+    const [highScore, setHighScore] = useState(() => {
+        try {
+            return parseInt(localStorage.getItem('peutic_cloud_score') || '0');
+        } catch (e) { return 0; }
+    });
+
     const playerRef = useRef({ x: 150, y: 300, vx: 0, vy: 0, width: 30, height: 30 }); 
     const platformsRef = useRef<any[]>([]);
     
@@ -352,6 +367,16 @@ const CloudHopGame: React.FC = () => {
         setTimeout(resizeCanvas, 100); 
         return () => window.removeEventListener('resize', resizeCanvas);
     }, []);
+
+    // Effect to handle High Score updates when game over state changes
+    useEffect(() => {
+        if (gameOver) {
+            if (score > highScore) {
+                setHighScore(score);
+                localStorage.setItem('peutic_cloud_score', score.toString());
+            }
+        }
+    }, [gameOver, score, highScore]);
 
     const initGame = () => { 
         const canvas = canvasRef.current; 
@@ -480,8 +505,7 @@ const CloudHopGame: React.FC = () => {
             ctx.shadowBlur = 0; ctx.fillStyle = 'black'; 
             const eyeOff = p.width * 0.2; 
             const eyeSize = p.width * 0.1; 
-            ctx.beginPath(); ctx.arc(p.x + p.width/2 - eyeOff, p.y + p.height/2 - eyeOff, eyeSize, 0, Math.PI*2); ctx.fill(); 
-            ctx.beginPath(); ctx.arc(p.x + p.width/2 + eyeOff, p.y + p.height/2 - eyeOff, eyeSize, 0, Math.PI*2); ctx.fill(); 
+            ctx.beginPath(); ctx.arc(p.x + p.width/2 - eyeOff, p.y + p.height/2 - eyeOff, eyeSize, 0, Math.PI*2); ctx.beginPath(); ctx.arc(p.x + p.width/2 + eyeOff, p.y + p.height/2 - eyeOff, eyeSize, 0, Math.PI*2); ctx.fill(); 
             
             requestRef.current = requestAnimationFrame(update); 
         }; 
@@ -504,7 +528,9 @@ const CloudHopGame: React.FC = () => {
     const handleRelease = () => { playerRef.current.vx = 0; };
     
     return (
-        <div className="relative h-full w-full bg-sky-300 overflow-hidden rounded-2xl border-4 border-white dark:border-gray-700 shadow-inner cursor-pointer" onMouseDown={handleTap} onMouseUp={handleRelease} onTouchStart={handleTap} onTouchEnd={handleRelease}><div className="absolute top-2 right-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full font-black text-white text-base md:text-lg z-10">{score}m</div><canvas ref={canvasRef} className="w-full h-full block" />{(!gameStarted || gameOver) && (<div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20 animate-in fade-in"><div className="text-center">{gameOver && <p className="text-white font-black text-2xl mb-4 drop-shadow-md">Fall!</p>}<button onClick={initGame} className="bg-yellow-400 text-yellow-900 px-6 py-2 md:px-8 md:py-3 rounded-full font-black text-sm md:text-lg shadow-xl hover:scale-110 transition-transform flex items-center gap-2"><Play className="w-4 h-4 md:w-5 md:h-5 fill-current" /> {gameOver ? 'Try Again' : 'Play'}</button></div></div>)}</div>
+        <div className="relative h-full w-full bg-sky-300 overflow-hidden rounded-2xl border-4 border-white dark:border-gray-700 shadow-inner cursor-pointer" onMouseDown={handleTap} onMouseUp={handleRelease} onTouchStart={handleTap} onTouchEnd={handleRelease}><div className="absolute top-2 right-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full font-black text-white text-base md:text-lg z-10">{score}m</div>
+        {highScore > 0 && <div className="absolute top-2 left-2 bg-yellow-400/20 backdrop-blur-sm px-3 py-1 rounded-full font-black text-white text-xs md:text-sm z-10 border border-yellow-400/50">Best: {highScore}</div>}
+        <canvas ref={canvasRef} className="w-full h-full block" />{(!gameStarted || gameOver) && (<div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20 animate-in fade-in"><div className="text-center">{gameOver && <p className="text-white font-black text-2xl mb-4 drop-shadow-md">Fall!</p>}<button onClick={initGame} className="bg-yellow-400 text-yellow-900 px-6 py-2 md:px-8 md:py-3 rounded-full font-black text-sm md:text-lg shadow-xl hover:scale-110 transition-transform flex items-center gap-2"><Play className="w-4 h-4 md:w-5 md:h-5 fill-current" /> {gameOver ? 'Try Again' : 'Play'}</button></div></div>)}</div>
     );
 };
 
@@ -559,7 +585,7 @@ const JournalSection: React.FC<{ user: User }> = ({ user }) => {
     );
 };
 
-const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, cost: number) => void, initialError?: string }> = ({ onClose, onSuccess, initialError }) => {
+const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, cost: number, token?: string) => void, initialError?: string }> = ({ onClose, onSuccess, initialError }) => {
     const [amount, setAmount] = useState(20); 
     const [isCustom, setIsCustom] = useState(false);
     const [processing, setProcessing] = useState(false);
@@ -574,6 +600,7 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
     const mountNodeRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => { 
+        if (!STRIPE_PUBLISHABLE_KEY) { setError("Payment system not configured."); return; }
         if (!window.Stripe) { setError("Stripe failed to load. Please refresh."); return; } 
         if (!stripeRef.current) { 
             try {
@@ -639,11 +666,16 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
                 setError(result.error.message); 
                 setProcessing(false); 
             } else { 
+                // CRITICAL SECURITY FIX: Pass the TOKEN to the backend, not just the amount.
+                // The backend must use this token to charge the card before adding credits.
+                const paymentToken = result.token.id;
+                const minutesAdded = Math.floor(amount / pricePerMin); 
+                
+                // Allow a small delay for UI smoothness, but the heavy lifting is in onSuccess (DB Call)
                 setTimeout(() => { 
                     setProcessing(false); 
-                    const minutesAdded = Math.floor(amount / pricePerMin); 
-                    onSuccess(minutesAdded, amount); 
-                }, 1500); 
+                    onSuccess(minutesAdded, amount, paymentToken); 
+                }, 500); 
             } 
         } catch (err: any) { 
             setError(err.message || "Payment failed."); 
@@ -762,7 +794,15 @@ const ProfileModal: React.FC<{ user: User, onClose: () => void, onUpdate: () => 
 
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession }) => {
   const [activeTab, setActiveTab] = useState<'hub' | 'history' | 'settings'>('hub');
-  const [darkMode, setDarkMode] = useState(false); 
+  
+  // --- HYBRID THEME STATE ---
+  // Initialize from LocalStorage if available, otherwise User Pref, otherwise System
+  const [darkMode, setDarkMode] = useState(() => {
+      const local = localStorage.getItem('peutic_theme');
+      if (local) return local === 'dark';
+      return user.themePreference === 'dark';
+  });
+
   const [balance, setBalance] = useState(user.balance);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [companions, setCompanions] = useState<Companion[]>([]);
@@ -790,8 +830,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   const [settings, setSettings] = useState(Database.getSettings());
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('peutic_theme');
-    if (savedTheme === 'dark') { setDarkMode(true); document.documentElement.classList.add('dark'); }
+    // Apply User Preference to DOM
+    if (darkMode) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+    
     refreshData();
     generateDailyInsight(user.name).then(setDailyInsight);
     setTimeout(() => { 
@@ -807,7 +852,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         refreshData();
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [darkMode]);
 
   const refreshData = async () => {
       const u = Database.getUser();
@@ -829,12 +874,36 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   };
 
   const toggleDarkMode = () => {
-      if (darkMode) { document.documentElement.classList.remove('dark'); localStorage.setItem('peutic_theme', 'light'); setDarkMode(false); } 
-      else { document.documentElement.classList.add('dark'); localStorage.setItem('peutic_theme', 'dark'); setDarkMode(true); }
+      const newMode = !darkMode;
+      setDarkMode(newMode);
+      
+      // 1. Instant Local Update
+      if (newMode) {
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('peutic_theme', 'dark');
+      } else {
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('peutic_theme', 'light');
+      }
+
+      // 2. Background Cloud Sync
+      const updatedUser = { ...dashboardUser, themePreference: newMode ? 'dark' : 'light' as 'light'|'dark' };
+      Database.updateUser(updatedUser);
   };
 
   const handleMoodSelect = (m: 'confetti' | 'rain' | null) => { setMood(m); if (m) Database.saveMood(user.id, m); };
-  const handlePaymentSuccess = (minutesAdded: number, cost: number) => { Database.topUpWallet(minutesAdded, cost, user.id); refreshData(); setShowPayment(false); };
+  
+  const handlePaymentSuccess = async (minutesAdded: number, cost: number, token?: string) => { 
+      try {
+          await Database.topUpWallet(minutesAdded, cost, user.id, token); 
+          refreshData(); 
+          setShowPayment(false);
+          alert("Payment successful! Credits added.");
+      } catch (e: any) {
+          setPaymentError(e.message || "Payment verification failed.");
+      }
+  };
+
   const handleStartConnection = (c: Companion) => {
       if (dashboardUser.balance <= 0) { setPaymentError("Insufficient credits. Please add funds to start a session."); setShowPayment(true); return; }
       setPendingCompanion(c);

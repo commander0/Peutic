@@ -307,8 +307,8 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
           if (recentMood === 'rain') moodContext = "The user recently indicated they are feeling down or melancholic. Approach with extra gentleness.";
           else if (recentMood === 'confetti') moodContext = "The user recently indicated they are in a celebratory or good mood. Match their energy.";
 
-          // 2. Fetch language preference
-          const savedLang = localStorage.getItem('peutic_language') || 'en';
+          // 2. Fetch language preference from User Object (was localStorage)
+          const savedLang = user.languagePreference || 'en';
           const langInstructions = savedLang !== 'en' ? `IMPORTANT: The user prefers language code '${savedLang}'. You must speak in this language.` : "";
 
           const context = `You are ${companion.name}, a professional specialist in ${companion.specialty}. Your bio is: "${companion.bio}". You are speaking with ${userName}. Be empathetic, professional, and concise. Listen actively. ${moodContext} ${langInstructions}`;
@@ -458,179 +458,91 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
   }
 
   return (
-    <div ref={containerRef} className="fixed inset-0 bg-black z-50 flex flex-col overflow-hidden select-none">
-        <style>{`
-            @keyframes breathe {
-                0% { transform: scale(1); opacity: 0.6; }
-                50% { transform: scale(1.5); opacity: 0.3; }
-                100% { transform: scale(1); opacity: 0.6; }
-            }
-            .animate-breathe {
-                animation: breathe 6s infinite ease-in-out;
-            }
-        `}</style>
-        
-        {/* --- CREDENTIAL BADGE --- */}
-        {showCredential && (
-            <div className="absolute top-36 right-4 z-40 bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl w-64 animate-in slide-in-from-right-10 fade-in duration-300">
-                <div className="flex justify-between items-start mb-2">
-                    <h4 className="text-white font-bold text-sm uppercase tracking-widest flex items-center gap-2"><BadgeCheck className="w-4 h-4 text-blue-400 fill-blue-400" /> Verified</h4>
-                    <button onClick={() => setShowCredential(false)} className="text-white/50 hover:text-white"><Share2 className="w-3 h-3 rotate-180" /></button>
-                </div>
-                <div className="space-y-2 text-xs">
-                    <div className="flex justify-between"><span className="text-gray-400">License</span><span className="text-white font-mono">{companion.licenseNumber || 'PENDING'}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-400">Education</span><span className="text-white text-right">{companion.degree || 'PhD, Clinical Psychology'}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-400">State</span><span className="text-white">{companion.stateOfPractice || 'NY'}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-400">Exp.</span><span className="text-white">{companion.yearsExperience || 10} Years</span></div>
-                </div>
-            </div>
-        )}
-
-        {/* --- ICEBREAKER OVERLAY --- */}
-        {showIcebreaker && (
-            <div className="absolute bottom-24 left-4 z-40 bg-white/10 backdrop-blur-xl border border-white/20 p-6 rounded-3xl w-72 md:w-80 shadow-2xl animate-in slide-in-from-bottom-10 fade-in duration-500">
-                <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-yellow-400 fill-yellow-400 animate-pulse" />
-                        <span className="text-xs font-black text-white uppercase tracking-widest">Conversation Sparks</span>
-                    </div>
-                    <button onClick={() => setShowIcebreaker(false)} className="text-white/50 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
-                </div>
-                <div className="min-h-[80px] flex items-center justify-center">
-                    <p className="text-white font-medium text-lg leading-relaxed mb-6 text-center animate-in fade-in duration-500 key={currentTopicIndex}">
-                        "{ICEBREAKERS[currentTopicIndex]}"
-                    </p>
-                </div>
-                <button onClick={nextIcebreaker} className="w-full bg-white text-black py-3 rounded-xl font-bold text-sm hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2">
-                    Next Topic <ChevronRight className="w-4 h-4" />
-                </button>
-            </div>
-        )}
-
-        {/* --- HEADER OVERLAY --- */}
-        <div className="absolute top-0 left-0 right-0 p-4 md:p-6 flex justify-between items-start z-20 pointer-events-none bg-gradient-to-b from-black/80 via-black/20 to-transparent pb-20 transition-opacity duration-500">
-            <div className="flex items-center gap-4 pointer-events-auto">
-                {/* END CALL BUTTON - TOP LEFT */}
-                <button onClick={handleEndSession} className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-full transition-colors shadow-lg shadow-red-600/20" title="End Session">
-                    <PhoneOff className="w-5 h-5" />
-                </button>
-
-                <div className={`bg-black/40 backdrop-blur-xl px-4 py-2 rounded-full border ${lowBalanceWarning ? 'border-red-500 animate-pulse' : 'border-white/10'} text-white font-mono shadow-xl flex items-center gap-3 transition-colors duration-500`}>
-                    <div className={`w-2 h-2 rounded-full ${connectionState === 'CONNECTED' ? 'bg-red-500 animate-pulse' : 'bg-yellow-500'}`}></div>
-                    <span className={`font-variant-numeric tabular-nums tracking-wide font-bold ${lowBalanceWarning ? 'text-red-400' : 'text-white'}`}>
-                        {connectionState === 'CONNECTED' ? formatTime(duration) : connectionState === 'QUEUED' ? 'Waiting...' : connectionState === 'QUEUE_FULL' ? 'Capacity Full' : 'Connecting...'}
-                    </span>
-                </div>
-                <button onClick={() => setShowCredential(!showCredential)} className="bg-black/40 backdrop-blur-xl p-2 rounded-full border border-white/10 text-white hover:bg-white/10 transition-colors">
-                    <FileText className="w-5 h-5" />
-                </button>
-            </div>
-            
-            <div className="flex items-center gap-2 pointer-events-auto">
-                {/* CRISIS BUTTON */}
-                <button 
-                    onClick={() => window.open('#/crisis', '_blank')}
-                    className="flex items-center gap-2 bg-red-900/50 hover:bg-red-600 border border-red-500/50 text-red-100 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all mr-2"
-                >
-                    <ShieldAlert className="w-4 h-4" /> SOS
-                </button>
-
-                <div className="flex gap-1 h-4 items-end">
-                    {[1, 2, 3, 4].map(i => (
-                        <div key={i} className={`w-1 rounded-sm ${i <= networkQuality ? 'bg-green-500' : 'bg-gray-600'}`} style={{ height: `${i * 25}%` }}></div>
-                    ))}
-                </div>
-            </div>
+    <div ref={containerRef} className="fixed inset-0 bg-black z-50 flex items-center justify-center overflow-hidden">
+        {/* Background / Placeholder */}
+        <div className="absolute inset-0 bg-gray-900">
+             {/* If we have a companion image, show it blurred as background */}
+             <img src={companion.imageUrl} className="w-full h-full object-cover opacity-30 blur-xl" alt="Background" />
         </div>
 
-        {/* --- MAIN CONTENT --- */}
-        <div className="absolute inset-0 w-full h-full bg-gray-900 flex items-center justify-center">
-            {/* QUEUE FULL STATE */}
-            {connectionState === 'QUEUE_FULL' && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/95 p-6 text-center">
-                    <div className="relative mb-8">
-                         <div className="w-24 h-24 rounded-full border-4 border-yellow-500/20 flex items-center justify-center">
-                             <Clock className="w-10 h-10 text-yellow-500" />
-                         </div>
-                    </div>
-                    <h3 className="text-3xl font-black text-white tracking-tight mb-4">We are at capacity</h3>
-                    <p className="text-gray-400 text-sm mb-2 max-w-md">Our specialists are currently fully booked and the waiting room is full.</p>
-                    <p className="text-yellow-500 font-bold text-sm mb-8">Please check back in 5-10 minutes.</p>
-                    <button onClick={onEndSession} className="bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">Return to Dashboard</button>
+        {/* State: CONNECTING / QUEUED */}
+        {(connectionState === 'CONNECTING' || connectionState === 'QUEUED') && (
+            <div className="relative z-10 text-center p-8 bg-black/40 backdrop-blur-md rounded-3xl border border-white/10 max-w-md w-full animate-in fade-in">
+                <div className="relative w-24 h-24 mx-auto mb-6">
+                    <img src={companion.imageUrl} className="w-full h-full rounded-full object-cover border-4 border-yellow-500 shadow-lg" alt={companion.name} />
+                    <div className="absolute bottom-0 right-0 bg-green-500 w-6 h-6 rounded-full border-4 border-black animate-pulse"></div>
                 </div>
-            )}
-
-            {/* QUEUE SCREEN (CALMING ANIMATION) */}
-            {connectionState === 'QUEUED' && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/95">
-                    {/* Breathing Circles */}
-                    <div className="relative mb-12">
-                         <div className="w-48 h-48 rounded-full bg-yellow-500/10 animate-breathe absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
-                         <div className="w-32 h-32 rounded-full bg-yellow-500/20 animate-breathe absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ animationDelay: '1s' }}></div>
-                         <div className="w-16 h-16 rounded-full bg-yellow-500/30 flex items-center justify-center relative z-10">
-                             <Users className="w-6 h-6 text-yellow-500" />
-                         </div>
+                <h2 className="text-2xl font-black text-white mb-2">Connecting to {companion.name}...</h2>
+                
+                {connectionState === 'QUEUED' && (
+                    <div className="mt-4 bg-yellow-500/10 border border-yellow-500/30 p-4 rounded-xl">
+                        <p className="text-yellow-400 font-bold text-sm uppercase tracking-wider mb-1">In Queue</p>
+                        <p className="text-white text-lg">Position: <span className="font-mono font-black">{queuePos}</span></p>
+                        <p className="text-gray-400 text-xs mt-1">Est. Wait: {estWait > 0 ? `${estWait}s` : 'Momentarily'}</p>
                     </div>
-                    
-                    <h3 className="text-2xl font-bold text-white tracking-tight mb-2">Breathe with us.</h3>
-                    <p className="text-gray-400 text-sm mb-8">You are safe. Your specialist is preparing for you.</p>
-                    
-                    <div className="flex gap-4 text-xs font-mono text-gray-500 uppercase tracking-widest border border-gray-800 rounded-lg p-3">
-                        <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-pulse"></div> Position {queuePos}</span>
-                        <span className="w-px bg-gray-800 h-4"></span>
-                        <span>Est. {estWait}m</span>
+                )}
+                
+                {connectionState === 'CONNECTING' && (
+                    <div className="mt-4 flex flex-col items-center gap-2">
+                        <Loader2 className="w-8 h-8 text-yellow-500 animate-spin" />
+                        <p className="text-gray-300 text-sm">Securing encrypted line...</p>
                     </div>
+                )}
+            </div>
+        )}
 
-                    <button onClick={onEndSession} className="mt-12 text-gray-600 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors">Leave Queue</button>
-                </div>
-            )}
+        {/* State: ERROR */}
+        {(connectionState === 'ERROR' || connectionState === 'QUEUE_FULL') && (
+            <div className="relative z-10 text-center p-8 bg-red-900/80 backdrop-blur-md rounded-3xl border border-red-500/30 max-w-md w-full animate-in zoom-in">
+                <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                <h2 className="text-2xl font-black text-white mb-2">Connection Failed</h2>
+                <p className="text-gray-300 mb-6">{errorMsg || "System is currently at capacity. Please try again later."}</p>
+                <button onClick={onEndSession} className="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-gray-200 transition-colors">Return to Dashboard</button>
+            </div>
+        )}
 
-            {connectionState === 'CONNECTING' && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/90 backdrop-blur-md">
-                    <div className="relative mb-8">
-                        <div className="absolute inset-0 bg-yellow-500/20 blur-[60px] rounded-full animate-pulse"></div>
-                        <div className="relative z-10 p-8 rounded-full border border-yellow-500/30 bg-black/50 shadow-2xl">
-                            <Loader2 className="w-16 h-16 animate-spin text-yellow-500" />
+        {/* State: CONNECTED */}
+        {connectionState === 'CONNECTED' && conversationUrl && (
+            <>
+                <iframe 
+                    src={getIframeUrl() || conversationUrl}
+                    className="absolute inset-0 w-full h-full border-0 z-10 bg-black"
+                    allow="microphone; camera; autoplay; fullscreen"
+                />
+                
+                {/* HUD Overlay */}
+                <div className="absolute top-0 left-0 right-0 p-4 z-20 flex justify-between items-start bg-gradient-to-b from-black/60 to-transparent">
+                    <div className="flex items-center gap-3">
+                        <div className={`px-3 py-1 rounded-full flex items-center gap-2 backdrop-blur-md border border-white/10 ${lowBalanceWarning ? 'bg-red-500/80 animate-pulse' : 'bg-black/40'}`}>
+                             <Clock className="w-4 h-4 text-white" />
+                             <span className="font-mono font-bold text-white text-sm">{formatTime(duration)}</span>
+                        </div>
+                        <div className="px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${networkQuality > 2 ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                            <span className="text-xs font-bold text-gray-300 uppercase hidden md:inline">HD Secure</span>
                         </div>
                     </div>
-                    <h3 className="text-3xl font-black text-white tracking-tight mb-2">Securing Link</h3>
-                    <p className="text-gray-400 text-sm">Establishing end-to-end encryption...</p>
-                </div>
-            )}
-            
-            {/* Error State */}
-            {connectionState === 'ERROR' && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/95">
-                    <div className="bg-red-500/10 border border-red-500/30 p-8 rounded-3xl max-w-md text-center backdrop-blur-md">
-                        <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/30"><AlertCircle className="w-8 h-8 text-red-500" /></div>
-                        <h3 className="text-2xl font-bold text-white mb-2">Connection Failed</h3>
-                        <p className="text-gray-400 mb-8 text-sm">{errorMsg}</p>
-                        <button onClick={onEndSession} className="bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2 mx-auto"><RefreshCcw className="w-4 h-4" /> Return to Dashboard</button>
-                    </div>
-                </div>
-            )}
 
-            {connectionState === 'CONNECTED' && conversationUrl && (
-                <iframe 
-                    src={getIframeUrl()} 
-                    className="absolute inset-0 w-full h-full border-0" 
-                    allow="microphone *; camera *; autoplay; fullscreen; display-capture" 
-                    title="Tavus Session" 
-                />
-            )}
-        </div>
+                    <button 
+                        onClick={handleEndSession}
+                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full font-bold text-xs uppercase tracking-widest shadow-lg flex items-center gap-2 transition-transform hover:scale-105"
+                    >
+                        <PhoneOff className="w-4 h-4" /> End
+                    </button>
+                </div>
 
-        {/* --- BOTTOM LEFT ICEBREAKER BUTTON --- */}
-        <div className="absolute bottom-6 left-4 z-30 pointer-events-auto">
-            <button 
-                onClick={() => setShowIcebreaker(!showIcebreaker)} 
-                className={`p-4 rounded-full transition-all relative shadow-xl hover:scale-110 ${showIcebreaker ? 'bg-blue-500 text-white' : 'bg-black/60 backdrop-blur-md border border-white/10 text-white hover:bg-black/80'}`} 
-                title="Conversation Sparks"
-            >
-                <MessageSquare className="w-6 h-6" />
-                {!showIcebreaker && <span className="absolute top-0 right-0 w-3 h-3 bg-yellow-500 rounded-full border-2 border-black animate-pulse"></span>}
-            </button>
-        </div>
+                {/* Icebreaker / Tools Panel (Bottom Left) */}
+                <div className="absolute bottom-6 left-6 z-20 hidden md:block">
+                     <div className="bg-black/60 backdrop-blur-lg border border-white/10 rounded-2xl p-4 max-w-sm">
+                         <div className="flex justify-between items-center mb-2">
+                             <h4 className="text-yellow-500 text-xs font-black uppercase tracking-widest flex items-center gap-2"><Sparkles className="w-3 h-3"/> Conversation Starter</h4>
+                             <button onClick={nextIcebreaker} className="text-gray-400 hover:text-white transition-colors"><RefreshCcw className="w-3 h-3"/></button>
+                         </div>
+                         <p className="text-white text-sm font-medium leading-snug">"{ICEBREAKERS[currentTopicIndex]}"</p>
+                     </div>
+                </div>
+            </>
+        )}
     </div>
   );
 };
