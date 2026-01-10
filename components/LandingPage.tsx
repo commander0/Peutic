@@ -63,6 +63,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
   // Helper to shorten translation calls
   const t = (key: any) => getTranslation(lang, key);
 
+  // Separate effect for Cookies to ensure it runs EXACTLY once
+  useEffect(() => {
+    const hasAccepted = localStorage.getItem('peutic_cookies_accepted');
+    if (!hasAccepted) {
+        const timer = setTimeout(() => {
+            setShowCookies(true);
+        }, 2000);
+        return () => clearTimeout(timer);
+    }
+  }, []);
+
   useEffect(() => {
     // Apply theme on mount/change
     if (darkMode) {
@@ -73,16 +84,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
 
     setOnlineCount(Math.floor(Math.random() * (300 - 80 + 1)) + 142);
     
-    // Cookie banner logic with persistence
-    const hasAccepted = localStorage.getItem('peutic_cookies_accepted');
-    let timer: any;
-    
-    if (!hasAccepted) {
-        timer = setTimeout(() => {
-            setShowCookies(true);
-        }, 2000);
-    }
-
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
 
@@ -98,7 +99,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     document.addEventListener('mousedown', handleClickOutside);
 
     return () => {
-        if (timer) clearTimeout(timer);
         window.removeEventListener('scroll', handleScroll);
         document.removeEventListener('mousedown', handleClickOutside);
     };
