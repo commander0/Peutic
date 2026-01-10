@@ -1,3 +1,4 @@
+
 import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, MoodEntry, JournalEntry, PromoCode, SessionFeedback, ArtEntry, BreathLog, SessionMemory, GiftCard } from '../types';
 import { supabase } from './supabaseClient';
 
@@ -173,87 +174,56 @@ export class Database {
       return this.createUser(name, email, 'email', undefined, role);
   }
 
+  // UPDATED: Strict Edge Function Usage - No Fallback
   static async createUser(name: string, email: string, provider: 'email' | 'google' | 'facebook' | 'x', birthday?: string, role: UserRole = UserRole.USER, masterKey?: string): Promise<User> {
     const existing = await this.syncUserByEmail(email);
     if (existing) return existing;
 
-    let serverData, serverError;
-
     try {
-        // Use API Gateway to bypass RLS if configured
-        const res = await supabase.functions.invoke('api-gateway', {
+        const { data, error } = await supabase.functions.invoke('api-gateway', {
             body: { 
                 action: 'user-create', 
                 payload: { name, email, provider, role, key: masterKey } 
             }
         });
-        serverData = res.data;
-        serverError = res.error;
-    } catch (e) {
-        console.warn("Edge Function unavailable, attempting direct fallback.", e);
+
+        if (error) {
+            console.error("Edge Function Invocation Error:", error);
+            throw new Error(`Connection Failed: ${error.message || 'Unknown Server Error'}`);
+        }
+
+        if (data?.error) {
+            throw new Error(data.error);
+        }
+
+        if (data?.user) {
+            this.currentUser = {
+                id: data.user.id,
+                name: data.user.name,
+                email: data.user.email,
+                role: data.user.role as UserRole,
+                balance: data.user.balance,
+                subscriptionStatus: 'ACTIVE',
+                joinedAt: data.user.created_at,
+                lastLoginDate: data.user.last_login_date,
+                streak: 0,
+                provider: data.user.provider,
+                avatar: data.user.avatar_url,
+                emailPreferences: { marketing: true, updates: true },
+                themePreference: 'light',
+                languagePreference: 'en'
+            };
+            return this.currentUser;
+        }
+        
+        throw new Error("Invalid response structure from server.");
+
+    } catch (e: any) {
+        console.error("Account Creation Failed (Strict Mode):", e);
+        // Clean up error message for UI
+        const msg = e.message?.replace('FunctionsFetchError:', '').trim() || "Could not create account. Please ensure backend is deployed.";
+        throw new Error(msg);
     }
-
-    // If server succeeded
-    if (serverData?.user && !serverError) {
-        this.currentUser = {
-            id: serverData.user.id,
-            name: serverData.user.name,
-            email: serverData.user.email,
-            role: serverData.user.role as UserRole,
-            balance: serverData.user.balance,
-            subscriptionStatus: 'ACTIVE',
-            joinedAt: serverData.user.created_at,
-            lastLoginDate: serverData.user.last_login_date,
-            streak: 0,
-            provider: serverData.user.provider,
-            avatar: serverData.user.avatar_url,
-            emailPreferences: { marketing: true, updates: true },
-            themePreference: 'light',
-            languagePreference: 'en'
-        };
-        return this.currentUser;
-    }
-
-    // FALLBACK: Direct Client-Side Insert (Requires Permissive RLS in SQL)
-    const id = `u_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const newUser = {
-        id,
-        name,
-        email,
-        role: role || UserRole.USER,
-        balance: 0,
-        created_at: new Date().toISOString(),
-        last_login_date: new Date().toISOString(),
-        provider: provider || 'email',
-        avatar_url: '',
-        email_preferences: { marketing: true, updates: true },
-        theme_preference: 'light',
-        language_preference: 'en'
-    };
-
-    const { error: insertError } = await supabase.from('users').insert(newUser);
-    if (insertError) {
-        console.error("Direct creation failed:", insertError);
-        throw new Error("Could not create account. Please ensure database setup is run.");
-    }
-
-    this.currentUser = {
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role as UserRole,
-        balance: newUser.balance,
-        subscriptionStatus: 'ACTIVE',
-        joinedAt: newUser.created_at,
-        lastLoginDate: newUser.last_login_date,
-        streak: 0,
-        provider: newUser.provider,
-        avatar: newUser.avatar_url,
-        emailPreferences: newUser.email_preferences,
-        themePreference: 'light',
-        languagePreference: 'en'
-    };
-    return this.currentUser;
   }
 
   static async logout() {
