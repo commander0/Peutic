@@ -45,10 +45,11 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
     setLoading(true);
     
     try {
-        const user = await Database.fetchUserFromCloud(email);
+        const normalizedEmail = email.toLowerCase().trim();
+        const user = await Database.fetchUserFromCloud(normalizedEmail);
         
         if (!user) {
-             setError("User not found in database. If you just created this account, please check Database RLS policies.");
+             setError("User not found in database. 1) Check capitalization. 2) Ensure SQL Schema RLS is open (run supabase/schema.sql).");
              setLoading(false);
              return;
         }
@@ -64,6 +65,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
              if (newLock > 0) setLockout(newLock);
         }
     } catch (e) {
+        console.error(e);
         setError("Connection Error. Ensure Database is reachable.");
     } finally {
         setLoading(false);
@@ -115,12 +117,10 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
           }
 
           // 2. Fallback: Local Check (For initial setup/local dev only if server is down)
-          // This ensures you can still initialize the system locally if you have the correct default key.
           if (!verified) {
                const DEFAULT_KEY = 'PEUTIC-MASTER-2025-SECURE';
                if (masterKey === DEFAULT_KEY) {
                    verified = true;
-                   console.log("Verified via Local Default Key");
                } else {
                    throw new Error("Invalid Master Key");
                }
@@ -138,14 +138,16 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
               }
           }
 
+          const finalEmail = newAdminEmail.toLowerCase().trim();
+
           // Pass the Master Key to the backend so it authorizes the creation
-          await Database.createUser('System Admin', newAdminEmail, 'email', undefined, UserRole.ADMIN, masterKey);
+          await Database.createUser('System Admin', finalEmail, 'email', undefined, UserRole.ADMIN, masterKey);
           setSuccessMsg("Root Admin Created Successfully.");
           
           setTimeout(() => {
               setShowRegister(false);
               setSuccessMsg('');
-              setEmail(newAdminEmail);
+              setEmail(finalEmail);
               setMasterKey('');
               setNewAdminPassword('');
               setNewAdminConfirmPassword('');
