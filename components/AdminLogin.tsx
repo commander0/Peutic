@@ -46,12 +46,19 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
     
     try {
         const user = await Database.fetchUserFromCloud(email);
-        if (user && user.role === UserRole.ADMIN) {
+        
+        if (!user) {
+             setError("User not found in database. If you just created this account, please check Database RLS policies.");
+             setLoading(false);
+             return;
+        }
+
+        if (user.role === UserRole.ADMIN) {
             Database.resetAdminFailure();
             onLogin(user);
         } else {
              await Database.recordAdminFailure();
-             setError("Access Denied. Incident reported.");
+             setError("Access Denied. This account does not have Administrator privileges.");
              // Re-check lockout immediately
              const newLock = await Database.checkAdminLockout();
              if (newLock > 0) setLockout(newLock);
