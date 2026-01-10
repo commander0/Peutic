@@ -268,18 +268,13 @@ const MindfulMatchGame: React.FC = () => {
     const [solved, setSolved] = useState<number[]>([]); 
     const [won, setWon] = useState(false); 
     const [moves, setMoves] = useState(0); 
-    
-    // PERSISTENCE: Initialize from LocalStorage for High Score
     const [bestScore, setBestScore] = useState(() => {
         try {
             return parseInt(localStorage.getItem('peutic_match_score') || '0');
         } catch (e) { return 0; }
     });
-    
     const ICONS = [Sun, Heart, Music, Zap, Star, Anchor, Feather, Cloud];
-    
     useEffect(() => { initGame(); }, []);
-    
     const initGame = () => { 
         const duplicated = [...ICONS, ...ICONS]; 
         const shuffled = duplicated.sort(() => Math.random() - 0.5).map((icon, i) => ({ id: i, icon })); 
@@ -289,7 +284,6 @@ const MindfulMatchGame: React.FC = () => {
         setWon(false); 
         setMoves(0); 
     };
-    
     const handleCardClick = (index: number) => { 
         if (flipped.length === 2 || solved.includes(index) || flipped.includes(index)) return; 
         const newFlipped = [...flipped, index]; 
@@ -306,18 +300,15 @@ const MindfulMatchGame: React.FC = () => {
             } 
         } 
     };
-    
     useEffect(() => { 
         if (cards.length > 0 && solved.length === cards.length) { 
             setWon(true); 
-            // Update Best Score locally
             if (bestScore === 0 || moves < bestScore) { 
                 setBestScore(moves); 
                 localStorage.setItem('peutic_match_score', moves.toString());
             } 
         } 
     }, [solved]);
-
     return (
         <div className="bg-gradient-to-br from-yellow-50/50 to-white dark:from-gray-800 dark:to-gray-900 w-full h-full flex flex-col rounded-2xl p-4 border border-yellow-100 dark:border-gray-700 overflow-hidden relative shadow-inner items-center justify-center">
             <div className="absolute top-3 left-4 z-20 flex gap-2"><span className="text-[10px] font-bold bg-white/50 dark:bg-black/50 px-2 py-1 rounded-full text-gray-500">Moves: {moves}</span>{bestScore > 0 && <span className="text-[10px] font-bold bg-yellow-100 dark:bg-yellow-900/50 px-2 py-1 rounded-full text-yellow-700 dark:text-yellow-500">Best: {bestScore}</span>}</div>
@@ -337,17 +328,13 @@ const CloudHopGame: React.FC = () => {
     const [score, setScore] = useState(0); 
     const [gameOver, setGameOver] = useState(false); 
     const [gameStarted, setGameStarted] = useState(false); 
-    
-    // PERSISTENCE: Initialize from LocalStorage for High Score
     const [highScore, setHighScore] = useState(() => {
         try {
             return parseInt(localStorage.getItem('peutic_cloud_score') || '0');
         } catch (e) { return 0; }
     });
-
     const playerRef = useRef({ x: 150, y: 300, vx: 0, vy: 0, width: 30, height: 30 }); 
     const platformsRef = useRef<any[]>([]);
-    
     useEffect(() => {
         const resizeCanvas = () => { 
             const canvas = canvasRef.current; 
@@ -367,8 +354,6 @@ const CloudHopGame: React.FC = () => {
         setTimeout(resizeCanvas, 100); 
         return () => window.removeEventListener('resize', resizeCanvas);
     }, []);
-
-    // Effect to handle High Score updates when game over state changes
     useEffect(() => {
         if (gameOver) {
             if (score > highScore) {
@@ -377,7 +362,6 @@ const CloudHopGame: React.FC = () => {
             }
         }
     }, [gameOver, score, highScore]);
-
     const initGame = () => { 
         const canvas = canvasRef.current; 
         if (!canvas) return; 
@@ -405,7 +389,6 @@ const CloudHopGame: React.FC = () => {
         setGameOver(false); 
         setGameStarted(true); 
     };
-
     useEffect(() => {
         if (!gameStarted) return; 
         const canvas = canvasRef.current; 
@@ -419,16 +402,13 @@ const CloudHopGame: React.FC = () => {
         const GRAVITY = H > 400 ? 0.4 : 0.35; 
         const JUMP_FORCE = H > 400 ? -9 : -8; 
         const MOVE_SPEED = isMobile ? 3.5 : 4.5;
-        
         const handleKeyDown = (e: KeyboardEvent) => { 
             if (e.key === 'ArrowLeft') playerRef.current.vx = -MOVE_SPEED; 
             if (e.key === 'ArrowRight') playerRef.current.vx = MOVE_SPEED; 
         }; 
         const handleKeyUp = () => { playerRef.current.vx = 0; }; 
-        
         window.addEventListener('keydown', handleKeyDown); 
         window.addEventListener('keyup', handleKeyUp);
-        
         const drawCloud = (x: number, y: number, w: number, h: number, type: string) => { 
             ctx.fillStyle = type === 'moving' ? '#E0F2FE' : 'white'; 
             if (type === 'moving') ctx.shadowColor = '#38BDF8'; 
@@ -439,7 +419,6 @@ const CloudHopGame: React.FC = () => {
             ctx.beginPath(); ctx.arc(x + w / 2, y - 5, bumpSize * 1.2, 0, Math.PI*2); ctx.fill(); 
             ctx.shadowColor = 'transparent'; 
         };
-        
         const update = () => { 
             const p = playerRef.current; 
             p.x += p.vx; 
@@ -447,7 +426,6 @@ const CloudHopGame: React.FC = () => {
             if (p.x > W) p.x = -p.width; 
             p.vy += GRAVITY; 
             p.y += p.vy; 
-            
             if (p.y < H / 2) { 
                 const diff = (H / 2) - p.y; 
                 p.y = H / 2; 
@@ -461,7 +439,6 @@ const CloudHopGame: React.FC = () => {
                     } 
                 }); 
             } 
-            
             if (p.vy > 0) { 
                 platformsRef.current.forEach(pl => { 
                     if (p.y + p.height > pl.y && p.y + p.height < pl.y + 40 && p.x + p.width > pl.x && p.x < pl.x + pl.w) { 
@@ -469,64 +446,52 @@ const CloudHopGame: React.FC = () => {
                     } 
                 }); 
             } 
-            
             platformsRef.current.forEach(pl => { 
                 if (pl.type === 'moving') { 
                     pl.x += pl.vx; 
                     if (pl.x < 0 || pl.x + pl.w > W) pl.vx *= -1; 
                 } 
             }); 
-            
             if (p.y > H + 50) { 
                 setGameOver(true); 
                 setGameStarted(false); 
                 if (requestRef.current !== undefined) cancelAnimationFrame(requestRef.current); 
                 return; 
             } 
-            
             const grad = ctx.createLinearGradient(0,0,0,H); 
             grad.addColorStop(0,'#0EA5E9'); 
             grad.addColorStop(1,'#BAE6FD'); 
             ctx.fillStyle = grad; 
             ctx.fillRect(0,0,W,H); 
-            
             ctx.fillStyle = 'rgba(255,255,255,0.3)'; 
             for(let i=0; i<10; i++) ctx.fillRect((i*50 + Date.now()/50)%W, (i*30 + Date.now()/20)%H, 2, 2); 
-            
             platformsRef.current.forEach(pl => { 
                 if(pl.type==='ground') { ctx.fillStyle='#4ade80'; ctx.fillRect(pl.x, pl.y, pl.w, pl.h); } 
                 else { drawCloud(pl.x, pl.y, pl.w, pl.h, pl.type); } 
             }); 
-            
             ctx.shadowBlur = 10; ctx.shadowColor = 'white'; 
             ctx.fillStyle = '#FACC15'; 
             ctx.beginPath(); ctx.arc(p.x + p.width/2, p.y + p.height/2, p.width/2, 0, Math.PI*2); ctx.fill(); 
-            
             ctx.shadowBlur = 0; ctx.fillStyle = 'black'; 
             const eyeOff = p.width * 0.2; 
             const eyeSize = p.width * 0.1; 
             ctx.beginPath(); ctx.arc(p.x + p.width/2 - eyeOff, p.y + p.height/2 - eyeOff, eyeSize, 0, Math.PI*2); ctx.beginPath(); ctx.arc(p.x + p.width/2 + eyeOff, p.y + p.height/2 - eyeOff, eyeSize, 0, Math.PI*2); ctx.fill(); 
-            
             requestRef.current = requestAnimationFrame(update); 
         }; 
         update(); 
-        
         return () => { 
             if (requestRef.current !== undefined) cancelAnimationFrame(requestRef.current); 
             window.removeEventListener('keydown', handleKeyDown); 
             window.removeEventListener('keyup', handleKeyUp); 
         };
     }, [gameStarted]);
-    
     const handleTap = (e: React.MouseEvent | React.TouchEvent) => { 
         if (!canvasRef.current) return; 
         const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX; 
         const rect = canvasRef.current.getBoundingClientRect(); 
         if (clientX - rect.left < rect.width / 2) playerRef.current.vx = -3; else playerRef.current.vx = 3; 
     }; 
-    
     const handleRelease = () => { playerRef.current.vx = 0; };
-    
     return (
         <div className="relative h-full w-full bg-sky-300 overflow-hidden rounded-2xl border-4 border-white dark:border-gray-700 shadow-inner cursor-pointer" onMouseDown={handleTap} onMouseUp={handleRelease} onTouchStart={handleTap} onTouchEnd={handleRelease}><div className="absolute top-2 right-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full font-black text-white text-base md:text-lg z-10">{score}m</div>
         {highScore > 0 && <div className="absolute top-2 left-2 bg-yellow-400/20 backdrop-blur-sm px-3 py-1 rounded-full font-black text-white text-xs md:text-sm z-10 border border-yellow-400/50">Best: {highScore}</div>}
@@ -592,19 +557,16 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
     const [error, setError] = useState(initialError || '');
     const [promoCode, setPromoCode] = useState('');
     const [redeemSuccess, setRedeemSuccess] = useState('');
-    
     const pricePerMin = 1.59;
     const stripeRef = useRef<any>(null); 
     const elementsRef = useRef<any>(null); 
     const cardElementRef = useRef<any>(null); 
     const mountNodeRef = useRef<HTMLDivElement>(null);
-
     useEffect(() => { 
         if (!STRIPE_PUBLISHABLE_KEY) { setError("Payment system not configured."); return; }
         if (!window.Stripe) { setError("Stripe failed to load. Please refresh."); return; } 
         if (!stripeRef.current) { 
             try {
-                // Initialize Stripe
                 stripeRef.current = window.Stripe(STRIPE_PUBLISHABLE_KEY); 
                 elementsRef.current = stripeRef.current.elements(); 
                 const style = { base: { color: "#32325d", fontFamily: '"Manrope", sans-serif', fontSmoothing: "antialiased", fontSize: "16px", "::placeholder": { color: "#aab7c4" } } }; 
@@ -618,31 +580,26 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
             }
         } 
     }, []);
-
     const setMountNode = (node: HTMLDivElement | null) => {
         mountNodeRef.current = node;
         if (node && cardElementRef.current) {
             try { cardElementRef.current.mount(node); } catch(e) {}
         }
     };
-
     const handleRedeemCode = async () => {
         if (!promoCode.trim()) return;
         setProcessing(true);
         setError('');
         setRedeemSuccess('');
-        
-        // Simulating network delay for async operation
         setTimeout(async () => {
             const codes = await Database.getPromoCodes();
             const found = codes.find(c => c.code === promoCode.toUpperCase() && c.active);
-            
             if (found) {
                 if (found.code === 'WELCOME20') {
-                    onSuccess(20, 0); // 20 Free Mins
+                    onSuccess(20, 0); 
                     setRedeemSuccess("Code Redeemed! 20 Minutes Added.");
                 } else if (found.discountPercentage === 100) {
-                    onSuccess(50, 0); // Grant 50 mins for full discount codes
+                    onSuccess(50, 0); 
                     setRedeemSuccess("Voucher Redeemed! 50 Minutes Added.");
                 } else {
                     setError("Discount codes apply to checkout total (Feature WIP).");
@@ -653,7 +610,6 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
             setProcessing(false);
         }, 800);
     };
-
     const handleSubmit = async (e: React.FormEvent) => { 
         e.preventDefault(); 
         setProcessing(true); 
@@ -666,12 +622,8 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
                 setError(result.error.message); 
                 setProcessing(false); 
             } else { 
-                // CRITICAL SECURITY FIX: Pass the TOKEN to the backend, not just the amount.
-                // The backend must use this token to charge the card before adding credits.
                 const paymentToken = result.token.id;
                 const minutesAdded = Math.floor(amount / pricePerMin); 
-                
-                // Allow a small delay for UI smoothness, but the heavy lifting is in onSuccess (DB Call)
                 setTimeout(() => { 
                     setProcessing(false); 
                     onSuccess(minutesAdded, amount, paymentToken); 
@@ -682,7 +634,6 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
             setProcessing(false); 
         } 
     };
-
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
             <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in duration-300 border border-gray-100 dark:border-gray-800">
@@ -705,8 +656,6 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
                         </div>
                         <p className="text-xs text-gray-400 mt-2">Adds approx. <span className="font-bold text-black dark:text-white">{Math.floor((amount || 0) / pricePerMin)} mins</span> of talk time.</p>
                     </div>
-                    
-                    {/* PROMO CODE SECTION */}
                     <div className="mb-6 relative">
                         <div className="flex gap-2">
                             <div className="relative flex-1">
@@ -730,7 +679,6 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
                         </div>
                         {redeemSuccess && <p className="text-green-500 text-xs font-bold mt-2 flex items-center gap-1"><CheckCircle className="w-3 h-3"/> {redeemSuccess}</p>}
                     </div>
-
                     {error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 text-sm rounded-lg flex items-center gap-2"><AlertTriangle className="w-4 h-4 flex-shrink-0" /><span>{error}</span></div>}
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700"><div ref={setMountNode} className="p-2" /></div>
@@ -754,7 +702,6 @@ const BreathingExercise: React.FC<{ userId: string, onClose: () => void }> = ({ 
         const cycle = setInterval(() => { setPhase(p => { if (p === 'Inhale') return 'Hold'; if (p === 'Hold') return 'Exhale'; return 'Inhale'; }); }, 4000);
         return () => { clearInterval(timer); clearInterval(cycle); };
     }, [isActive, userId]);
-
     return (
         <div className="fixed inset-0 bg-black/90 z-[70] flex flex-col items-center justify-center backdrop-blur-md animate-in fade-in">
             <button onClick={onClose} className="absolute top-6 right-6 text-white/50 hover:text-white"><X className="w-6 h-6"/></button>
@@ -795,8 +742,7 @@ const ProfileModal: React.FC<{ user: User, onClose: () => void, onUpdate: () => 
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession }) => {
   const [activeTab, setActiveTab] = useState<'hub' | 'history' | 'settings'>('hub');
   
-  // --- HYBRID THEME STATE ---
-  // Initialize from LocalStorage if available, otherwise User Pref, otherwise System
+  // Default to Light Mode
   const [darkMode, setDarkMode] = useState(() => {
       const local = localStorage.getItem('peutic_theme');
       if (local) return local === 'dark';
@@ -830,7 +776,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   const [settings, setSettings] = useState(Database.getSettings());
 
   useEffect(() => {
-    // Apply User Preference to DOM
     if (darkMode) {
         document.documentElement.classList.add('dark');
     } else {
@@ -846,7 +791,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         });
     }, 500);
     
-    // Refresh loop (Also syncs user balance from cloud)
     const interval = setInterval(async () => {
         await Database.syncUser(user.id);
         refreshData();
@@ -860,11 +804,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
           setDashboardUser(u);
           setBalance(u.balance);
           Database.getUserTransactions(u.id).then(setTransactions);
-          // Async call for progress
           const prog = await Database.getWeeklyProgress(u.id);
           setWeeklyGoal(prog.current);
           setWeeklyMessage(prog.message);
-          
           setEditName(u.name);
           setEditEmail(u.email);
           setEmailNotifications(u.emailPreferences?.updates ?? true);
@@ -876,8 +818,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
   const toggleDarkMode = () => {
       const newMode = !darkMode;
       setDarkMode(newMode);
-      
-      // 1. Instant Local Update
       if (newMode) {
           document.documentElement.classList.add('dark');
           localStorage.setItem('peutic_theme', 'dark');
@@ -885,14 +825,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
           document.documentElement.classList.remove('dark');
           localStorage.setItem('peutic_theme', 'light');
       }
-
-      // 2. Background Cloud Sync
-      const updatedUser = { ...dashboardUser, themePreference: newMode ? 'dark' : 'light' as 'light'|'dark' };
+      const updatedUser = { ...dashboardUser, themePreference: (newMode ? 'dark' : 'light') as 'light'|'dark' };
       Database.updateUser(updatedUser);
   };
 
   const handleMoodSelect = (m: 'confetti' | 'rain' | null) => { setMood(m); if (m) Database.saveMood(user.id, m); };
-  
   const handlePaymentSuccess = async (minutesAdded: number, cost: number, token?: string) => { 
       try {
           await Database.topUpWallet(minutesAdded, cost, user.id, token); 
@@ -903,7 +840,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
           setPaymentError(e.message || "Payment verification failed.");
       }
   };
-
   const handleStartConnection = (c: Companion) => {
       if (dashboardUser.balance <= 0) { setPaymentError("Insufficient credits. Please add funds to start a session."); setShowPayment(true); return; }
       setPendingCompanion(c);
@@ -917,11 +853,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
   return (
     <div className={`min-h-screen transition-colors duration-500 font-sans ${darkMode ? 'dark bg-[#0A0A0A] text-white' : 'bg-[#FFFBEB] text-black'}`}>
-      
       {mood && <WeatherEffect type={mood} />}
       <SoundscapePlayer />
-
-      {/* --- LIABILITY SHIELD / HEADER --- */}
       <div className="bg-black/90 text-white text-[10px] md:text-xs font-bold text-center py-2 px-4 backdrop-blur-md sticky top-0 z-[60] flex justify-between items-center">
           <div className="flex items-center gap-2">
               <AlertTriangle className="w-3 h-3 text-yellow-500" />
@@ -931,8 +864,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
               In Crisis?
           </Link>
       </div>
-
-      {/* --- MOBILE TOP BAR --- */}
       <div className="md:hidden sticky top-8 bg-[#FFFBEB]/90 dark:bg-black/90 backdrop-blur-md border-b border-yellow-200 dark:border-gray-800 p-4 flex justify-between items-center z-40">
           <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-yellow-400 rounded-lg flex items-center justify-center shadow-md">
@@ -947,11 +878,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
               <button onClick={() => setShowGrounding(true)} className="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors animate-pulse" title="Panic Relief">
                   <LifeBuoy className="w-4 h-4" />
               </button>
-              <button 
-                  onClick={() => setShowPayment(true)} 
-                  className="bg-black dark:bg-white text-white dark:text-black px-3 py-1.5 rounded-full text-xs font-bold shadow-md flex items-center gap-1 active:scale-95 transition-transform"
-                  title="Top Up Credits"
-              >
+              <button onClick={() => setShowPayment(true)} className="bg-black dark:bg-white text-white dark:text-black px-3 py-1.5 rounded-full text-xs font-bold shadow-md flex items-center gap-1 active:scale-95 transition-transform">
                   <span>{balance}m</span>
                   <Plus className="w-3 h-3 text-yellow-400" />
               </button>
@@ -963,9 +890,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
               </button>
           </div>
       </div>
-
       <div className="flex h-screen overflow-hidden pt-[60px] md:pt-0">
-          {/* --- SIDEBAR (Desktop) --- */}
           <aside className="hidden md:flex w-24 lg:w-72 flex-col border-r border-yellow-200 dark:border-gray-800 bg-[#FFFBEB]/50 dark:bg-black/50 backdrop-blur-xl">
               <div className="p-6 lg:p-8 flex items-center justify-center lg:justify-start gap-3">
                   <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg group hover:scale-110 transition-transform">
@@ -987,8 +912,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                   </button>
               </div>
           </aside>
-
-          {/* --- MAIN CONTENT --- */}
           <main className="flex-1 overflow-y-auto relative scroll-smooth">
               <div className="max-w-7xl mx-auto p-4 md:p-8 lg:p-12 pb-32">
                   <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
@@ -1008,8 +931,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                           <button onClick={() => setShowProfile(true)} className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-yellow-400 shadow-xl hover:rotate-3 transition-transform"><AvatarImage src={dashboardUser.avatar || ''} alt={dashboardUser.name} className="w-full h-full object-cover" isUser={true} /></button>
                       </div>
                   </header>
-
-                  {/* --- TAB CONTENT --- */}
                   {activeTab === 'hub' && (
                       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-500">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
@@ -1040,7 +961,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                           </div>
                       </div>
                   )}
-
                   {activeTab === 'history' && (
                       <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-500">
                           <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-100 dark:border-gray-800 overflow-hidden">
@@ -1053,7 +973,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                           </div>
                       </div>
                   )}
-
                   {activeTab === 'settings' && (
                       <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-right-5 duration-500">
                           <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
@@ -1079,7 +998,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                       </div>
                   )}
               </div>
-              
               <div className="mt-8 mb-4 max-w-4xl mx-auto px-4"><div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30 p-4 rounded-xl text-center"><p className="text-[10px] md:text-xs font-bold text-yellow-800 dark:text-yellow-500 uppercase tracking-wide leading-relaxed">Note: Specialist availability is subject to change frequently due to high demand. If your selected specialist is unavailable, a specialist of equal or greater qualifications will be automatically substituted to ensure immediate support.</p></div></div>
               <footer className="bg-[#FFFBEB] dark:bg-[#0A0A0A] text-black dark:text-white py-12 md:py-16 px-6 md:px-10 border-t border-yellow-200 dark:border-gray-800 transition-colors">
                   <div className="max-w-7xl mx-auto">
@@ -1097,14 +1015,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
               </footer>
           </main>
       </div>
-
       {showPayment && <PaymentModal onClose={() => { setShowPayment(false); setPaymentError(undefined); }} onSuccess={handlePaymentSuccess} initialError={paymentError} />}
       {showBreathing && <BreathingExercise userId={user.id} onClose={() => setShowBreathing(false)} />}
       {showProfile && <ProfileModal user={dashboardUser} onClose={() => setShowProfile(false)} onUpdate={refreshData} />}
       {showGrounding && <GroundingMode onClose={() => setShowGrounding(false)} />}
-      
       {showTechCheck && (<TechCheck onConfirm={confirmSession} onCancel={() => setShowTechCheck(false)} />)}
-
     </div>
   );
 };
