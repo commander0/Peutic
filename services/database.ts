@@ -83,8 +83,9 @@ export class Database {
   static async restoreSession(): Promise<User | null> {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email) {
-        await this.syncUserByEmail(session.user.email);
+      if (session?.user) {
+        // Use ID based sync for reliability with RLS
+        return await this.syncUser(session.user.id);
       }
     } catch (e) {
       console.warn("Restore Session Failed (Offline?)");
@@ -106,13 +107,9 @@ export class Database {
   }
 
   static async fetchUserFromCloud(email: string): Promise<User | null> {
+      // NOTE: This will fail RLS if not logged in. 
+      // AdminLogin now handles auth before calling this or uses auth response directly.
       return this.syncUserByEmail(email);
-  }
-
-  static getUserByEmail(email: string): User | null {
-      // In-memory check only, backend check handled by fetchUserFromCloud
-      if (this.currentUser && this.currentUser.email === email) return this.currentUser;
-      return null;
   }
 
   static async syncUserByEmail(email: string): Promise<User | null> {
@@ -124,13 +121,33 @@ export class Database {
         .single();
 
       if (data && !error) {
-        this.currentUser = {
+        this.currentUser = this.mapUser(data);
+        return this.currentUser;
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  static async syncUser(userId: string): Promise<User | null> {
+      if (!userId) return null;
+      try {
+          const { data } = await supabase.from('users').select('*').eq('id', userId).single();
+          if (data) {
+              this.currentUser = this.mapUser(data);
+              return this.currentUser;
+          }
+      } catch (e) {}
+      return null;
+  }
+
+  private static mapUser(data: any): User {
+      return {
           id: data.id,
           name: data.name,
           email: data.email,
           role: data.role as UserRole,
           balance: data.balance,
-          subscriptionStatus: 'ACTIVE',
+          subscriptionStatus: data.subscription_status || 'ACTIVE',
           joinedAt: data.created_at || new Date().toISOString(),
           lastLoginDate: data.last_login_date || new Date().toISOString(),
           streak: 0,
@@ -139,27 +156,7 @@ export class Database {
           emailPreferences: data.email_preferences || { marketing: true, updates: true },
           themePreference: data.theme_preference,
           languagePreference: data.language_preference
-        };
-        // Background update last login
-        const now = new Date().toISOString();
-        supabase.from('users').update({ last_login_date: now }).eq('id', data.id).then();
-        return this.currentUser;
-      }
-    } catch (e) {}
-    return null;
-  }
-
-  static async syncUser(userId: string) {
-      if (!userId) return;
-      try {
-          const { data } = await supabase.from('users').select('*').eq('id', userId).single();
-          if (data && this.currentUser && this.currentUser.id === userId) {
-              this.currentUser.balance = data.balance;
-              this.currentUser.role = data.role as UserRole;
-              this.currentUser.themePreference = data.theme_preference;
-              this.currentUser.languagePreference = data.language_preference;
-          }
-      } catch (e) {}
+      };
   }
 
   // --- AUTHENTICATION ACTIONS ---
@@ -170,12 +167,9 @@ export class Database {
     return user;
   }
 
-  static async signup(name: string, email: string, birthday?: string, role: UserRole = UserRole.USER): Promise<User> {
-      return this.createUser(name, email, 'email', undefined, role);
-  }
-
   // UPDATED: Strict Edge Function Usage - No Fallback
   static async createUser(name: string, email: string, provider: 'email' | 'google' | 'facebook' | 'x', birthday?: string, role: UserRole = UserRole.USER, masterKey?: string): Promise<User> {
+    // If user already authenticated and trying to create a profile (rare/fallback), check locally
     const existing = await this.syncUserByEmail(email);
     if (existing) return existing;
 
@@ -189,10 +183,9 @@ export class Database {
 
         if (error) {
             console.error("Edge Function Invocation Error:", error);
-            // More descriptive error for non-2xx status
             let errMsg = error.message || 'Unknown Server Error';
             if (errMsg.includes('non-2xx')) {
-                errMsg = "Server Configuration Error. Please ensure database tables are created (see README).";
+                errMsg = "Server Configuration Error. Please ensure database tables are created.";
             }
             throw new Error(`Connection Failed: ${errMsg}`);
         }
@@ -202,22 +195,7 @@ export class Database {
         }
 
         if (data?.user) {
-            this.currentUser = {
-                id: data.user.id,
-                name: data.user.name,
-                email: data.user.email,
-                role: data.user.role as UserRole,
-                balance: data.user.balance,
-                subscriptionStatus: 'ACTIVE',
-                joinedAt: data.user.created_at,
-                lastLoginDate: data.user.last_login_date,
-                streak: 0,
-                provider: data.user.provider,
-                avatar: data.user.avatar_url,
-                emailPreferences: { marketing: true, updates: true },
-                themePreference: 'light',
-                languagePreference: 'en'
-            };
+            this.currentUser = this.mapUser(data.user);
             return this.currentUser;
         }
         
@@ -225,8 +203,7 @@ export class Database {
 
     } catch (e: any) {
         console.error("Account Creation Failed (Strict Mode):", e);
-        // Clean up error message for UI
-        const msg = e.message?.replace('FunctionsFetchError:', '').trim() || "Could not create account. Please ensure backend is deployed.";
+        const msg = e.message?.replace('FunctionsFetchError:', '').trim() || "Could not create account.";
         throw new Error(msg);
     }
   }
@@ -262,7 +239,6 @@ export class Database {
   }
 
   static checkAndIncrementStreak(user: User): User {
-      // For now, logic remains in memory until refresh, effectively handled by syncUserByEmail
       return user;
   }
 
@@ -270,18 +246,13 @@ export class Database {
 
   static async getAllUsers(): Promise<User[]> {
       const { data } = await supabase.from('users').select('*');
-      return (data || []).map(d => ({
-          id: d.id, name: d.name, email: d.email, role: d.role as UserRole, balance: d.balance,
-          subscriptionStatus: 'ACTIVE', joinedAt: d.created_at, lastLoginDate: d.last_login_date,
-          streak: 0, provider: 'email', avatar: d.avatar_url, emailPreferences: d.email_preferences,
-          themePreference: d.theme_preference, languagePreference: d.language_preference
-      }));
+      return (data || []).map(this.mapUser);
   }
 
   static async getCompanions(): Promise<Companion[]> {
       const { data } = await supabase.from('companions').select('*');
       if (!data || data.length === 0) {
-          // Auto-Seed if empty
+          // Auto-Seed if empty (Client-side fallback seeding, ideally server does this)
           const toInsert = INITIAL_COMPANIONS.map(c => ({
               id: c.id, name: c.name, gender: c.gender, specialty: c.specialty,
               status: c.status, rating: c.rating, image_url: c.imageUrl,
@@ -323,7 +294,6 @@ export class Database {
                   multilingualMode: data.multilingual_mode
               };
           } else {
-              // Create default if missing
               await this.saveSettings(this.settingsCache);
           }
       } catch(e) {}
@@ -381,7 +351,6 @@ export class Database {
 
   static async deductBalance(amount: number) {
       if (!this.currentUser) return;
-      // We do optimistic update here, but relying on server/db for truth
       this.currentUser.balance -= amount;
       await supabase.from('users').update({ balance: this.currentUser.balance }).eq('id', this.currentUser.id);
   }
@@ -434,7 +403,7 @@ export class Database {
   }
 
   static recordBreathSession(userId: string, duration: number) {
-      // Placeholder for breath analytics table if needed
+      // Placeholder
   }
 
   // --- QUEUE SYSTEM ---
@@ -504,8 +473,6 @@ export class Database {
       return Math.max(0, (pos - 1) * 3);
   }
 
-  // --- HELPERS ---
-  
   static async getWeeklyProgress(userId: string): Promise<{ current: number, target: number, message: string }> {
       try {
           const oneWeekAgo = new Date();
@@ -523,21 +490,13 @@ export class Database {
               .gte('date', oneWeekAgo.toISOString());
 
           const current = (journalCount || 0) + (sessionCount || 0);
-          const target = 10;
-          let message = "Keep going!";
-          if (current === 0) message = "Start your journey.";
-          else if (current < 5) message = "Good start!";
-          else if (current < 10) message = "Almost there!";
-          else message = "Goal crushed!";
-          
-          return { current, target, message };
+          return { current, target: 10, message: current >= 10 ? "Goal crushed!" : "Keep going!" };
       } catch (e) {
           return { current: 0, target: 10, message: "Start your journey." };
       }
   }
 
   static async checkAdminLockout(): Promise<number> {
-      // Check for 5 failures in last 15 mins
       try {
           const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
           const { count } = await supabase.from('system_logs')
@@ -556,7 +515,7 @@ export class Database {
   }
 
   static async resetAdminFailure() {
-      // In a real system, we might delete logs or add a 'reset' log, here we just do nothing as time will pass
+      // Logic managed by time-based lockout
   }
 
   static async resetAllUsers() {

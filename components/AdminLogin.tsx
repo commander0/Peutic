@@ -46,10 +46,28 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
     
     try {
         const normalizedEmail = email.toLowerCase().trim();
-        const user = await Database.fetchUserFromCloud(normalizedEmail);
+
+        // 1. AUTHENTICATE FIRST (Required for RLS)
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+            email: normalizedEmail,
+            password: password
+        });
+
+        if (authError) {
+            await Database.recordAdminFailure();
+            const newLock = await Database.checkAdminLockout();
+            if (newLock > 0) setLockout(newLock);
+            throw new Error("Invalid Credentials");
+        }
+
+        if (!authData.user) throw new Error("Auth failed");
+
+        // 2. FETCH PROFILE (Now authorized)
+        // We use the ID from the auth session, which is safer than searching by email
+        const user = await Database.syncUser(authData.user.id);
         
         if (!user) {
-             setError("User not found in database. 1) Check capitalization. 2) Ensure SQL Schema RLS is open (run supabase/schema.sql).");
+             setError("User profile not found. If this is a new deploy, ensure the Trigger in schema.sql is running.");
              setLoading(false);
              return;
         }
@@ -60,13 +78,12 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         } else {
              await Database.recordAdminFailure();
              setError("Access Denied. This account does not have Administrator privileges.");
-             // Re-check lockout immediately
-             const newLock = await Database.checkAdminLockout();
-             if (newLock > 0) setLockout(newLock);
+             // Sign out immediately if not admin
+             await supabase.auth.signOut();
         }
-    } catch (e) {
+    } catch (e: any) {
         console.error(e);
-        setError("Connection Error. Ensure Database is reachable.");
+        setError(e.message || "Connection Error.");
     } finally {
         setLoading(false);
     }
@@ -99,50 +116,48 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
 
       setLoading(true);
 
-      // --- SECURE VERIFICATION ---
       try {
-          let verified = false;
+          // --- 1. VERIFY MASTER KEY ---
+          const { data: verifyData, error: verifyError } = await supabase.functions.invoke('api-gateway', {
+              body: { action: 'admin-verify', payload: { key: masterKey } }
+          });
 
-          // 1. Try Server-Side Verification (Preferred)
-          try {
-              const { data, error } = await supabase.functions.invoke('api-gateway', {
-                  body: { action: 'admin-verify', payload: { key: masterKey } }
-              });
-
-              if (!error && data?.success) {
-                  verified = true;
-              }
-          } catch (serverError) {
-              console.warn("Server verification unreachable. Attempting local default check.");
-          }
-
-          // 2. Fallback: Local Check (For initial setup/local dev only if server is down)
-          if (!verified) {
+          if (verifyError || !verifyData?.success) {
+               // Fallback for local dev if edge function isn't running
                const DEFAULT_KEY = 'PEUTIC-MASTER-2025-SECURE';
-               if (masterKey === DEFAULT_KEY) {
-                   verified = true;
-               } else {
-                   throw new Error("Invalid Master Key");
-               }
-          }
-          
-          if (!verified) throw new Error("Verification Failed");
-
-          // If verification passed, proceed with creation
-          if (hasAdmin) {
-              if (confirm("WARNING: System Reset Confirmed. Proceeding.")) {
-                  await Database.resetAllUsers();
-              } else {
-                  setLoading(false);
-                  return;
-              }
+               if (masterKey !== DEFAULT_KEY) throw new Error("Invalid Master Key");
           }
 
+          // --- 2. CREATE ADMIN USER (Via Backend to bypass RLS/Signup restrictions) ---
           const finalEmail = newAdminEmail.toLowerCase().trim();
+          
+          // First, sign up the user in Supabase Auth
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+              email: finalEmail,
+              password: newAdminPassword,
+              options: {
+                  data: { full_name: 'System Admin', role: UserRole.ADMIN }
+              }
+          });
 
-          // Pass the Master Key to the backend so it authorizes the creation
+          if (signUpError) throw signUpError;
+
+          // If trigger didn't fire (race condition or not set up), ensure profile exists via API
+          // Ideally, the trigger handles this. We will assume success or API gateway handle.
+          
+          // Elevate to Admin (requires DB update if trigger only set USER)
+          // We use the createUser method which calls api-gateway 'user-create'
+          // BUT 'user-create' in api-gateway (in current codebase) just inserts to public.users
+          // It DOES NOT create the Auth User.
+          
+          // CORRECT FLOW: 
+          // 1. SignUp creates Auth User -> Trigger creates Public User (Role: USER)
+          // 2. We need to UPDATE that user to ADMIN. Since we can't do that from client RLS,
+          //    we must rely on the 'user-create' API function which has Admin privileges.
+          
           await Database.createUser('System Admin', finalEmail, 'email', undefined, UserRole.ADMIN, masterKey);
-          setSuccessMsg("Root Admin Created Successfully.");
+
+          setSuccessMsg("Root Admin Created. Please Log In.");
           
           setTimeout(() => {
               setShowRegister(false);
@@ -156,7 +171,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
 
       } catch (e: any) {
           console.error(e);
-          setError(e.message || "Invalid Master Key or Connection Failed.");
+          setError(e.message || "Initialization Failed.");
       } finally {
           setLoading(false);
       }

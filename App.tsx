@@ -1,5 +1,5 @@
 
-import React, { Component, useState, useEffect, useRef, ErrorInfo, ReactNode } from 'react';
+import React, { useState, useEffect, useRef, ErrorInfo, ReactNode } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole, Companion } from './types';
 import LandingPage from './components/LandingPage';
@@ -22,11 +22,10 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-// Fix: Explicitly use Component from React to ensure inheritance of state and props is correctly recognized
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+// Fix: Explicitly use React.Component to ensure inheritance of state and props is correctly recognized
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    // Fix: state property is correctly inherited from Component
     this.state = { hasError: false };
   }
 
@@ -40,7 +39,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   render() {
-    // Fix: state property is correctly inherited from Component
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center text-white">
@@ -48,7 +46,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
           <h1 className="text-3xl font-black mb-4">Something went wrong.</h1>
           <p className="text-gray-400 mb-8 max-w-md">Our systems detected an unexpected issue. We have logged this report and notified our engineering team.</p>
           <button 
-            // Fix: setState property is correctly inherited from Component
             onClick={() => { this.setState({ hasError: false }); window.location.href = '/'; }} 
             className="bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform flex items-center gap-2"
           >
@@ -57,7 +54,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
         </div>
       );
     }
-    // Fix: props property is correctly inherited from Component
     return this.props.children;
   }
 }
