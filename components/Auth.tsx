@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { UserRole } from '../types';
-import { Facebook, AlertCircle, Send, Heart, Check } from 'lucide-react';
+import { Facebook, AlertCircle, Send, Heart, Check, Loader2 } from 'lucide-react';
 import { Database } from '../services/database';
 import { Shield } from 'lucide-react';
 
 interface AuthProps {
-  onLogin: (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider?: 'email' | 'google' | 'facebook' | 'x') => void;
+  onLogin: (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider?: 'email' | 'google' | 'facebook' | 'x') => Promise<void>;
   onCancel: () => void;
   initialMode?: 'login' | 'signup';
 }
@@ -57,8 +57,9 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
   }, []);
 
   useEffect(() => {
-    const handleGoogleCredentialResponse = (response: any) => {
+    const handleGoogleCredentialResponse = async (response: any) => {
         try {
+            setLoading(true);
             const base64Url = response.credential.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
             const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
@@ -66,10 +67,12 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             }).join(''));
             const data = JSON.parse(jsonPayload);
             if (data.email) {
-                onLogin(UserRole.USER, data.name || "Buddy", data.picture, data.email, undefined, 'google');
+                await onLogin(UserRole.USER, data.name || "Buddy", data.picture, data.email, undefined, 'google');
             }
         } catch (err) {
             setError("Google Authentication Failed.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -108,11 +111,18 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
       }
       window.FB.login(function(response: any) {
           if (response.authResponse) {
-             window.FB.api('/me', { fields: 'name, email, picture' }, function(profile: any) {
+             window.FB.api('/me', { fields: 'name, email, picture' }, async function(profile: any) {
                  const name = profile.name || "Buddy";
                  const pic = profile.picture?.data?.url;
                  const fbEmail = profile.email || `${profile.id}@facebook.com`;
-                 onLogin(UserRole.USER, name, pic, fbEmail, undefined, 'facebook');
+                 setLoading(true);
+                 try {
+                    await onLogin(UserRole.USER, name, pic, fbEmail, undefined, 'facebook');
+                 } catch(e) {
+                    setError("Facebook Login Failed");
+                 } finally {
+                    setLoading(false);
+                 }
              });
           }
       }, {scope: 'public_profile,email'});
@@ -147,7 +157,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
         if (isLogin) {
             const existingUser = await Database.fetchUserFromCloud(email);
             if (existingUser) {
-                onLogin(existingUser.role, existingUser.name, existingUser.avatar, email, undefined, 'email');
+                await onLogin(existingUser.role, existingUser.name, existingUser.avatar, email, undefined, 'email');
             } else {
                 setError("Invalid email address or password combination.");
             }
@@ -183,10 +193,18 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
     }
   };
 
-  const finishOnboarding = () => {
-      const fullName = `${firstName.trim()} ${lastName.trim()}`;
-      const formattedName = fullName.length > 1 ? (fullName.charAt(0).toUpperCase() + fullName.slice(1)) : "Buddy";
-      onLogin(UserRole.USER, formattedName, undefined, email, birthday, 'email');
+  const finishOnboarding = async () => {
+      setLoading(true);
+      setError('');
+      try {
+          const fullName = `${firstName.trim()} ${lastName.trim()}`;
+          const formattedName = fullName.length > 1 ? (fullName.charAt(0).toUpperCase() + fullName.slice(1)) : "Buddy";
+          await onLogin(UserRole.USER, formattedName, undefined, email, birthday, 'email');
+      } catch (e: any) {
+          setError("Account creation failed. Please try again.");
+      } finally {
+          setLoading(false);
+      }
   };
 
   if (showOnboarding) {
@@ -244,7 +262,18 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                                     <h2 className="text-3xl md:text-4xl font-black mb-2 tracking-tight">All Set!</h2>
                                     <p className="text-gray-500">Your safe space is ready.</p>
                                  </div>
-                                 <button onClick={finishOnboarding} className="w-full bg-[#FACC15] text-black py-4 md:py-5 rounded-2xl font-black shadow-[0_20px_40px_-15px_rgba(250,204,21,0.5)] hover:bg-[#EAB308] hover:scale-105 transition-all text-base md:text-lg uppercase tracking-widest">Enter Dashboard</button>
+                                 {error && (
+                                    <div className="p-4 bg-red-50 text-red-600 rounded-xl font-bold text-sm flex items-center gap-2 justify-center">
+                                        <AlertCircle className="w-4 h-4"/> {error}
+                                    </div>
+                                 )}
+                                 <button 
+                                    onClick={finishOnboarding} 
+                                    disabled={loading}
+                                    className="w-full bg-[#FACC15] text-black py-4 md:py-5 rounded-2xl font-black shadow-[0_20px_40px_-15px_rgba(250,204,21,0.5)] hover:bg-[#EAB308] hover:scale-105 transition-all text-base md:text-lg uppercase tracking-widest flex items-center justify-center gap-2"
+                                 >
+                                    {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> Creating Space...</> : "Enter Dashboard"}
+                                 </button>
                             </div>
                         )}
                     </div>
@@ -319,7 +348,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                     )}
 
                     <button type="submit" disabled={loading} className="w-full bg-black dark:bg-white text-white dark:text-black py-3 md:py-4 rounded-xl font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-all flex justify-center gap-2 shadow-xl text-sm md:text-base">
-                        {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
+                        {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</> : (isLogin ? 'Sign In' : 'Create Account')}
                     </button>
                 </form>
 

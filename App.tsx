@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, ErrorInfo, Component, ReactNode } from 'react';
+import React, { useState, useEffect, useRef, ErrorInfo, ReactNode, Component } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole, Companion } from './types';
 import LandingPage from './components/LandingPage';
@@ -22,10 +22,7 @@ interface ErrorBoundaryState {
 }
 
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false };
-  }
+  public state: ErrorBoundaryState = { hasError: false };
 
   static getDerivedStateFromError(_: Error): ErrorBoundaryState {
     return { hasError: true };
@@ -125,7 +122,7 @@ const MainApp: React.FC = () => {
     return () => clearInterval(interval);
   }, [user, activeSessionCompanion]);
 
-  const handleLogin = async (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email') => {
+  const handleLogin = async (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email'): Promise<void> => {
     const userEmail = email || `${name.toLowerCase().replace(/ /g, '.')}@example.com`;
     let currentUser: User;
 
@@ -161,8 +158,12 @@ const MainApp: React.FC = () => {
         } else {
             navigate('/');
         }
-    } catch (e) {
+    } catch (e: any) {
         console.error("Login Failed", e);
+        // Explicitly warn user so they aren't stuck on the modal
+        const msg = e.message || "Please check your internet connection.";
+        alert(`Login failed: ${msg}`);
+        throw e; // Rethrow to let Auth component know
     }
   };
 
