@@ -189,7 +189,12 @@ export class Database {
 
         if (error) {
             console.error("Edge Function Invocation Error:", error);
-            throw new Error(`Connection Failed: ${error.message || 'Unknown Server Error'}`);
+            // More descriptive error for non-2xx status
+            let errMsg = error.message || 'Unknown Server Error';
+            if (errMsg.includes('non-2xx')) {
+                errMsg = "Server Configuration Error. Please ensure database tables are created (see README).";
+            }
+            throw new Error(`Connection Failed: ${errMsg}`);
         }
 
         if (data?.error) {

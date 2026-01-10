@@ -24,7 +24,14 @@ npm run backend:login
 npx supabase link --project-ref YOUR_PROJECT_REF_ID
 ```
 
-### 3. Deploy Backend (Do this once)
+### 3. Setup Database Tables (CRITICAL)
+You must create the database tables for the backend to work.
+1.  Go to your **Supabase Dashboard** > **SQL Editor**.
+2.  Open the file `supabase/schema.sql` from this project.
+3.  Copy the content and paste it into the Supabase SQL Editor.
+4.  Click **Run**.
+
+### 4. Deploy Backend (Do this once)
 This pushes your server-side logic (`api-gateway`) to the cloud. **Run this in your local terminal, NOT on Vercel.**
 
 ```bash
@@ -35,7 +42,7 @@ npx supabase secrets set GEMINI_API_KEY=your_key STRIPE_SECRET_KEY=your_key TAVU
 npm run backend:deploy
 ```
 
-### 4. Run Frontend
+### 5. Run Frontend
 Start the website locally.
 
 ```bash
