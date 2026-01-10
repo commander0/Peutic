@@ -7,41 +7,65 @@
 
 A premium, 24/7 virtual companion platform providing tailored human-like connection and support via video and voice.
 
-## 🚀 Easy Start Guide
+## 🚀 Quick Start (Local Development)
 
-### 1. Initial Setup (Run this first)
-This single command installs all dependencies and generates your backend code automatically.
+### 1. Initial Setup
+This command installs dependencies and generates the backend function files locally.
 
 ```bash
 npm run setup
 ```
 
-### 2. Connect to Cloud
-Now, push your backend code to Supabase.
+### 2. Connect to Supabase
+Link your local project to your remote Supabase project.
 
 ```bash
-# Login to Supabase
 npm run backend:login
-
-# Link your local project to your remote Supabase project
-# (Get your Reference ID from https://supabase.com/dashboard/project/_/settings/general)
 npx supabase link --project-ref YOUR_PROJECT_REF_ID
+```
 
-# Set your Production Secrets (Replace values with your actual keys)
+### 3. Deploy Backend (Do this once)
+This pushes your server-side logic (`api-gateway`) to the cloud. **Run this in your local terminal, NOT on Vercel.**
+
+```bash
+# Set Production Secrets first
 npx supabase secrets set GEMINI_API_KEY=your_key STRIPE_SECRET_KEY=your_key TAVUS_API_KEY=your_key ADMIN_MASTER_KEY=PEUTIC-MASTER-2025-SECURE
 
-# Deploy the functions
+# Deploy functions
 npm run backend:deploy
 ```
 
-### 3. Run the App
+### 4. Run Frontend
 Start the website locally.
 
 ```bash
 npm run dev
 ```
 
-### 4. Build for Mobile (Android)
+---
+
+## ☁️ Deployment Guide
+
+### Part A: The Backend (Supabase)
+Your backend logic (AI, Payments, User Creation) lives on Supabase Edge Functions.
+*   **Where to run:** Local Terminal.
+*   **Command:** `npm run backend:deploy`
+*   **When:** Run this whenever you edit files in `supabase/functions`.
+
+### Part B: The Frontend (Vercel / Netlify)
+Your visual website (React) lives here.
+*   **Where to run:** Vercel Dashboard.
+*   **Build Command:** `npm run build`
+*   **Output Directory:** `dist`
+*   **Environment Variables (Required on Vercel):**
+    *   `VITE_SUPABASE_URL`: Found in Supabase Dashboard > Settings > API.
+    *   `VITE_SUPABASE_ANON_KEY`: Found in Supabase Dashboard > Settings > API.
+    *   `VITE_STRIPE_KEY`: Your Stripe Publishable Key.
+
+---
+
+## 📱 Mobile Build (Android)
+
 To build the Android APK:
 
 ```bash
@@ -53,15 +77,6 @@ npm run cap:sync
 
 # Open Android Studio to compile APK
 npm run cap:open
-```
-
-## 🔐 Environment Variables (.env.local)
-Create a `.env.local` file in the root for local development:
-
-```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-public-anon-key
-VITE_STRIPE_KEY=pk_test_...
 ```
 
 ## 🛠 Tech Stack
