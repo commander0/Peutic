@@ -1,3 +1,4 @@
+
 import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, MoodEntry, JournalEntry, PromoCode, SessionFeedback, ArtEntry, BreathLog, SessionMemory, GiftCard } from '../types';
 import { supabase } from './supabaseClient';
 
@@ -180,16 +181,15 @@ export class Database {
             }
         });
 
+        // Handle generic network/invocation errors
         if (error) {
             console.error("Edge Function Invocation Error:", error);
-            let errMsg = error.message || 'Unknown Server Error';
-            if (errMsg.includes('non-2xx')) {
-                errMsg = "Server Configuration Error. Please ensure database tables are created.";
-            }
-            throw new Error(`Connection Failed: ${errMsg}`);
+            throw new Error(`Connection Error: ${error.message}`);
         }
 
+        // Handle logical errors from the API (200 OK but with error field)
         if (data?.error) {
+            console.error("API Logic Error:", data.error);
             throw new Error(data.error);
         }
 
@@ -198,10 +198,10 @@ export class Database {
             return this.currentUser;
         }
         
-        throw new Error("Invalid response structure from server.");
+        throw new Error("Invalid response from server. No user data returned.");
 
     } catch (e: any) {
-        console.error("Account Creation Failed (Strict Mode):", e);
+        console.error("Account Creation Failed:", e);
         const msg = e.message?.replace('FunctionsFetchError:', '').trim() || "Could not create account.";
         throw new Error(msg);
     }

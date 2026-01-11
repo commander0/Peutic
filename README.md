@@ -25,14 +25,14 @@ npx supabase link --project-ref YOUR_PROJECT_REF_ID
 ```
 
 ### 3. Setup Database Tables (CRITICAL)
-You must create the database tables for the backend to work.
+**You must do this for the app to work.**
 1.  Go to your **Supabase Dashboard** > **SQL Editor**.
 2.  Open the file `supabase/schema.sql` from this project.
 3.  Copy the content and paste it into the Supabase SQL Editor.
 4.  Click **Run**.
 
 ### 4. Deploy Backend (Do this once)
-This pushes your server-side logic (`api-gateway`) to the cloud. **Run this in your local terminal, NOT on Vercel.**
+This pushes your server-side logic (`api-gateway`) to the cloud.
 
 ```bash
 # Set Production Secrets first

@@ -40,11 +40,18 @@ serve(async (req) => {
   try {
     const { action, payload } = await req.json();
     
+    // Debug Log (View in Supabase Dashboard > Edge Functions > Logs)
+    console.log("Request Action:", action);
+
     // Initialize Supabase Admin Client (Service Role)
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supUrl = Deno.env.get('SUPABASE_URL');
+    const supKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!supUrl || !supKey) {
+        throw new Error("Server Misconfiguration: Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+    }
+
+    const supabaseClient = createClient(supUrl, supKey);
 
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
     const stripe = stripeKey ? new Stripe(stripeKey, {
@@ -57,7 +64,8 @@ serve(async (req) => {
         if (payload.key === MASTER_KEY) {
             return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
-        return new Response(JSON.stringify({ success: false, error: 'Invalid Credentials' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        // Return 200 with error to avoid generic 500 on client
+        return new Response(JSON.stringify({ success: false, error: 'Invalid Credentials' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // --- SECURE USER CREATION (Bypasses RLS) ---
@@ -68,12 +76,18 @@ serve(async (req) => {
         let finalRole = role || 'USER';
 
         // 2. Check if any admins ALREADY exist in the system
-        const { count: adminCount } = await supabaseClient.from('users').select('*', { count: 'exact', head: true }).eq('role', 'ADMIN');
+        const { count: adminCount, error: countError } = await supabaseClient.from('users').select('*', { count: 'exact', head: true }).eq('role', 'ADMIN');
+        
+        if (countError) {
+            // This usually means table doesn't exist
+            throw new Error(\`Database Error: \${countError.message}. Did you run the SQL schema?\`);
+        }
+
         const hasAdmins = (adminCount || 0) > 0;
 
         // 3. AUTO-PROMOTION LOGIC
         if (!hasAdmins) {
-            // If NO admins exist, this user becomes the Root Admin automatically
+            console.log("No admins found. Promoting first user to ADMIN.");
             finalRole = 'ADMIN';
         }
 
@@ -81,14 +95,15 @@ serve(async (req) => {
         if (finalRole === 'ADMIN' && hasAdmins) {
              const MASTER_KEY = Deno.env.get('ADMIN_MASTER_KEY') || 'PEUTIC-MASTER-2025-SECURE';
              if (key !== MASTER_KEY) {
-                 return new Response(JSON.stringify({ error: 'Unauthorized: Invalid Master Key. System already has an administrator.' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+                 return new Response(JSON.stringify({ error: 'Unauthorized: Invalid Master Key. System already has an administrator.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
              }
         }
 
         // 5. Check duplicates using admin privileges
+        // We ignore error here as .single() returns error if no rows found
         const { data: existing } = await supabaseClient.from('users').select('id').eq('email', email).single();
         if (existing) {
-             return new Response(JSON.stringify({ error: 'User already exists' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+             return new Response(JSON.stringify({ error: 'User already exists' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
         const id = \`u_\${Date.now()}_\${Math.random().toString(36).substr(2, 9)}\`;
@@ -198,7 +213,9 @@ serve(async (req) => {
     throw new Error("Invalid Action");
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    console.error("Gateway Error:", error);
+    // Return 200 with error property to bypass generic 500 handlers on client
+    return new Response(JSON.stringify({ error: error.message }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });
 `;
