@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Shield, Heart, CheckCircle, ArrowRight, Star, Globe, ShieldCheck, Sparkles, Cookie, Instagram, Twitter, Linkedin, Play, MessageCircle, Moon, Sun, ChevronDown } from 'lucide-react';
 import { LanguageCode, getTranslation } from '../services/i18n';
@@ -194,8 +195,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                   </div>
               </div>
               <div className="lg:col-span-5 relative mt-8 md:mt-0">
-                  <div className="relative w-4/5 md:w-full max-w-sm mx-auto -rotate-1 hover:rotate-0 transition-all duration-500">
-                      <div className="relative aspect-[4/5] bg-gray-900 rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl border-4 md:border-8 border-white dark:border-gray-800 group">
+                  <div className="relative w-4/5 md:w-full max-w-sm mx-auto -rotate-1 hover:rotate-0 transition-all duration-500 transform-gpu backface-hidden">
+                      <div 
+                          className="relative aspect-[4/5] bg-gray-900 rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl border-4 md:border-8 border-white dark:border-gray-800 group z-10"
+                          style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)', maskImage: 'radial-gradient(white, black)' }}
+                      >
                            <img src={INITIAL_COMPANIONS[0].imageUrl} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Ruby" />
                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20"></div>
                            <div className="absolute top-6 left-6 md:top-8 md:left-8">

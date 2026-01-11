@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, ErrorInfo, ReactNode } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole, Companion } from './types';
@@ -22,7 +21,6 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-// Fix: Explicitly use React.Component to ensure inheritance of state and props is correctly recognized
 class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);

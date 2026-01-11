@@ -1,4 +1,3 @@
-
 import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, MoodEntry, JournalEntry, PromoCode, SessionFeedback, ArtEntry, BreathLog, SessionMemory, GiftCard } from '../types';
 import { supabase } from './supabaseClient';
 
@@ -68,8 +67,8 @@ export const INITIAL_COMPANIONS: Companion[] = [
 export class Database {
   private static currentUser: User | null = null;
   private static settingsCache: GlobalSettings = {
-      pricePerMinute: 1.59,
-      saleMode: true,
+      pricePerMinute: 1.99,
+      saleMode: false,
       maintenanceMode: false,
       allowSignups: true,
       siteName: 'Peutic',
