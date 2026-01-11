@@ -145,6 +145,40 @@ export class Database {
               return this.currentUser;
           }
       } catch (e) {}
+
+      // --- SELF HEALING MECHANISM ---
+      // If we are here, public.users has no row, but we might be authenticated via Supabase Auth.
+      // This happens if the DB trigger failed or was deleted. We attempt to repair it.
+      try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user && user.id === userId) {
+              console.warn("User missing in public DB. Attempting self-healing repair...");
+              
+              // Attempt to insert missing row based on auth metadata
+              const role = user.user_metadata?.role || 'USER';
+              const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+              
+              const newUser = {
+                  id: user.id,
+                  email: user.email,
+                  name: name,
+                  role: role,
+                  balance: 0,
+                  created_at: new Date().toISOString(),
+                  last_login_date: new Date().toISOString(),
+                  provider: user.app_metadata?.provider || 'email'
+              };
+              
+              const { error } = await supabase.from('users').insert(newUser);
+              if (!error) {
+                  this.currentUser = this.mapUser(newUser);
+                  return this.currentUser;
+              }
+          }
+      } catch(e) {
+          console.error("Self-healing failed", e);
+      }
+
       return null;
   }
 
@@ -225,7 +259,9 @@ export class Database {
             options: {
                 data: {
                     full_name: name,
-                    role: 'USER', // Metadata only, trigger handles real role
+                    // CRITICAL: We must pass the anticipated role here so the trigger uses it.
+                    // If we pass 'USER', the trigger will ignore the fact it's the first user if logic is weak.
+                    role: anticipatedRole === UserRole.ADMIN ? 'ADMIN' : 'USER', 
                     provider: provider
                 }
             }
@@ -244,9 +280,6 @@ export class Database {
             }
 
             // OPTIMISTIC RETURN LOGIC
-            // We race the DB sync against a timeout to ensure the UI doesn't hang.
-            // If the DB trigger is slow, we return a valid User object immediately so the app can load.
-            
             const optimisticUser: User = {
                 id: data.user.id,
                 email: data.user.email || email,

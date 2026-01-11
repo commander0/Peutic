@@ -164,7 +164,16 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
       utterance.rate = 0.9; 
       utterance.volume = 1;
       const voices = window.speechSynthesis.getVoices();
-      const preferredVoice = voices.find(v => v.name.includes("Samantha") || v.lang === "en-US");
+      
+      // IMPROVED VOICE SELECTION: Prioritize female or natural sounding voices
+      const preferredVoice = voices.find(v => 
+        v.name.includes("Samantha") || 
+        v.name.includes("Zira") || 
+        v.name.includes("Google US English") || 
+        v.name.includes("Female") ||
+        (v.lang === "en-US" && !v.name.includes("David") && !v.name.includes("Mark"))
+      );
+      
       if (preferredVoice) utterance.voice = preferredVoice;
       window.speechSynthesis.speak(utterance);
   };

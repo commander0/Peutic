@@ -561,7 +561,10 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
     const cardElementRef = useRef<any>(null); 
     const mountNodeRef = useRef<HTMLDivElement>(null);
     useEffect(() => { 
-        if (!STRIPE_PUBLISHABLE_KEY) { setError("Payment system not configured."); return; }
+        if (!STRIPE_PUBLISHABLE_KEY) { 
+            setError("Payment system configuration missing. Please verify your environment settings."); 
+            return; 
+        }
         if (!window.Stripe) { setError("Stripe failed to load. Please refresh."); return; } 
         if (!stripeRef.current) { 
             try {
@@ -574,7 +577,7 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
                 } 
             } catch (e) {
                 console.error("Stripe Init Error", e);
-                setError("Payment system unavailable.");
+                setError("Payment system unavailable. Please check your internet connection.");
             }
         } 
     }, []);
@@ -589,7 +592,7 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
         setProcessing(true); 
         setError(''); 
         if (!amount || amount <= 0) { setError("Please enter a valid amount."); setProcessing(false); return; } 
-        if (!stripeRef.current || !cardElementRef.current) { setError("Stripe not initialized."); setProcessing(false); return; } 
+        if (!stripeRef.current || !cardElementRef.current) { setError("Payment system not initialized. Please try again later."); setProcessing(false); return; } 
         try { 
             const result = await stripeRef.current.createToken(cardElementRef.current); 
             if (result.error) { 
@@ -633,7 +636,7 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
                     {error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 text-sm rounded-lg flex items-center gap-2"><AlertTriangle className="w-4 h-4 flex-shrink-0" /><span>{error}</span></div>}
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700"><div ref={setMountNode} className="p-2" /></div>
-                        <button type="submit" disabled={processing || !window.Stripe || (amount <= 0)} className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2 ${processing || (amount <= 0) ? 'bg-gray-800 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-yellow-500 text-black hover:bg-yellow-400 hover:scale-[1.02]'}`}>
+                        <button type="submit" disabled={processing || !window.Stripe || (amount <= 0) || !!error} className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2 ${processing || (amount <= 0) || !!error ? 'bg-gray-800 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-yellow-500 text-black hover:bg-yellow-400 hover:scale-[1.02]'}`}>
                             {processing ? <span className="animate-pulse">Processing Securely...</span> : <><Lock className="w-5 h-5" /> Pay ${(amount || 0).toFixed(2)}</>}
                         </button>
                     </form>
