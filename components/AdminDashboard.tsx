@@ -11,7 +11,7 @@ import {
     Clock, Server, Star, LayoutGrid, List, Heart, TrendingUp, AlertTriangle, UserCheck, Shield, Eye, Trash2, PlusCircle, CheckCircle, Power, Lock
 } from 'lucide-react';
 import { Database, STABLE_AVATAR_POOL } from '../services/database';
-import { User, UserRole, Companion, Transaction, GlobalSettings, SystemLog, PromoCode, SessionFeedback, MoodEntry } from '../types';
+import { User, UserRole, Companion, Transaction, GlobalSettings, SystemLog, SessionFeedback, MoodEntry } from '../types';
 
 // --- STAT CARD ---
 const StatCard = ({ title, value, icon: Icon, subValue, subLabel, progress, color = "yellow" }: any) => (

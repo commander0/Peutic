@@ -555,8 +555,6 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
     const [isCustom, setIsCustom] = useState(false);
     const [processing, setProcessing] = useState(false);
     const [error, setError] = useState(initialError || '');
-    const [promoCode, setPromoCode] = useState('');
-    const [redeemSuccess, setRedeemSuccess] = useState('');
     const pricePerMin = 1.59;
     const stripeRef = useRef<any>(null); 
     const elementsRef = useRef<any>(null); 
@@ -585,30 +583,6 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
         if (node && cardElementRef.current) {
             try { cardElementRef.current.mount(node); } catch(e) {}
         }
-    };
-    const handleRedeemCode = async () => {
-        if (!promoCode.trim()) return;
-        setProcessing(true);
-        setError('');
-        setRedeemSuccess('');
-        setTimeout(async () => {
-            const codes = await Database.getPromoCodes();
-            const found = codes.find(c => c.code === promoCode.toUpperCase() && c.active);
-            if (found) {
-                if (found.code === 'WELCOME20') {
-                    onSuccess(20, 0); 
-                    setRedeemSuccess("Code Redeemed! 20 Minutes Added.");
-                } else if (found.discountPercentage === 100) {
-                    onSuccess(50, 0); 
-                    setRedeemSuccess("Voucher Redeemed! 50 Minutes Added.");
-                } else {
-                    setError("Discount codes apply to checkout total (Feature WIP).");
-                }
-            } else {
-                setError("Invalid or expired code.");
-            }
-            setProcessing(false);
-        }, 800);
     };
     const handleSubmit = async (e: React.FormEvent) => { 
         e.preventDefault(); 
@@ -655,29 +629,6 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
                             <button type="button" onClick={() => { setIsCustom(true); setAmount(0); }} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${isCustom ? 'bg-black dark:bg-white dark:text-black text-white shadow-lg transform scale-105' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>Custom</button>
                         </div>
                         <p className="text-xs text-gray-400 mt-2">Adds approx. <span className="font-bold text-black dark:text-white">{Math.floor((amount || 0) / pricePerMin)} mins</span> of talk time.</p>
-                    </div>
-                    <div className="mb-6 relative">
-                        <div className="flex gap-2">
-                            <div className="relative flex-1">
-                                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <input 
-                                    type="text" 
-                                    placeholder="Promo Code (e.g. WELCOME20)" 
-                                    className="w-full bg-gray-100 dark:bg-gray-800 border border-transparent focus:border-yellow-500 rounded-xl py-3 pl-10 pr-4 text-sm font-bold outline-none uppercase"
-                                    value={promoCode}
-                                    onChange={(e) => setPromoCode(e.target.value)}
-                                />
-                            </div>
-                            <button 
-                                type="button"
-                                onClick={handleRedeemCode}
-                                disabled={processing || !promoCode}
-                                className="bg-gray-200 dark:bg-gray-700 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black text-gray-600 dark:text-gray-300 px-4 rounded-xl text-xs font-bold transition-colors disabled:opacity-50"
-                            >
-                                Apply
-                            </button>
-                        </div>
-                        {redeemSuccess && <p className="text-green-500 text-xs font-bold mt-2 flex items-center gap-1"><CheckCircle className="w-3 h-3"/> {redeemSuccess}</p>}
                     </div>
                     {error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 text-sm rounded-lg flex items-center gap-2"><AlertTriangle className="w-4 h-4 flex-shrink-0" /><span>{error}</span></div>}
                     <form onSubmit={handleSubmit} className="space-y-6">

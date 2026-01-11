@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Database } from '../services/database';
 import { supabase } from '../services/supabaseClient';
 import { UserRole } from '../types';
-import { Lock, AlertCircle, Shield, ArrowRight, PlusCircle, Check, RefreshCw, Crown } from 'lucide-react';
+import { Lock, AlertCircle, Shield, ArrowRight, PlusCircle, Check, RefreshCw, Crown, KeyRound } from 'lucide-react';
 
 interface AdminLoginProps {
   onLogin: (user: any) => void;
@@ -174,26 +174,33 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                     </div>
                 ) : (
                     <>
-                        {error && <div className="mb-6 p-4 bg-red-900/30 border border-red-800 text-red-400 text-sm rounded-xl flex items-center gap-2 font-bold">{error}</div>}
-                        {successMsg && <div className="mb-6 p-4 bg-green-900/30 border border-green-800 text-green-400 text-sm rounded-xl flex items-center gap-2 font-bold">{successMsg}</div>}
+                        {error && <div className="mb-6 p-4 bg-red-900/30 border border-red-800 text-red-400 text-sm rounded-xl flex items-center gap-2 font-bold animate-pulse"><AlertCircle className="w-4 h-4"/> {error}</div>}
+                        {successMsg && <div className="mb-6 p-4 bg-green-900/30 border border-green-800 text-green-400 text-sm rounded-xl flex items-center gap-2 font-bold animate-bounce"><Check className="w-4 h-4"/> {successMsg}</div>}
 
-                        {showRegister && !hasAdmin ? (
-                             <form onSubmit={handleRegisterAdmin} className="space-y-4">
-                                <div className="text-center mb-4">
-                                    <h3 className="text-white font-bold text-lg flex items-center justify-center gap-2"><Crown className="w-5 h-5 text-yellow-500"/> Initialize Root Admin</h3>
-                                    <p className="text-xs text-gray-500">No admins detected. Claim system ownership.</p>
+                        {showRegister ? (
+                             <form onSubmit={handleRegisterAdmin} className="space-y-4 animate-in fade-in">
+                                <div className="text-center mb-6 p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/30">
+                                    <h3 className="text-white font-black text-lg flex items-center justify-center gap-2 uppercase tracking-wide"><Crown className="w-5 h-5 text-yellow-500"/> System Claim</h3>
+                                    <p className="text-[10px] text-gray-400 mt-1">No administrators detected. Initialize root access.</p>
                                 </div>
-                                <input type="email" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="Admin Email" value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} />
+                                <input type="email" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="Root Email Address" value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} />
                                 <div className="grid grid-cols-2 gap-4">
                                     <input type="password" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="Password" value={newAdminPassword} onChange={e => setNewAdminPassword(e.target.value)} />
                                     <input type="password" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="Confirm" value={newAdminConfirmPassword} onChange={e => setNewAdminConfirmPassword(e.target.value)} />
                                 </div>
-                                <button disabled={loading} className="w-full bg-yellow-500 text-black font-black py-4 rounded-xl hover:bg-yellow-400 transition-colors mt-4 shadow-lg shadow-yellow-500/20">
-                                    {loading ? "INITIALIZING..." : "CLAIM SYSTEM"}
+                                <button disabled={loading} className="w-full bg-yellow-500 text-black font-black py-4 rounded-xl hover:bg-yellow-400 transition-colors mt-4 shadow-lg shadow-yellow-500/20 uppercase tracking-widest text-sm">
+                                    {loading ? "INITIALIZING..." : "CLAIM SYSTEM OWNERSHIP"}
                                 </button>
+                                
+                                <div className="pt-4 text-center">
+                                    <button type="button" onClick={() => setShowRegister(false)} className="text-gray-500 hover:text-white text-xs font-bold transition-colors">Already initialized? Login here.</button>
+                                </div>
                              </form>
                         ) : (
-                            <form onSubmit={handleAdminLogin} className="space-y-6">
+                            <form onSubmit={handleAdminLogin} className="space-y-6 animate-in fade-in">
+                                <div className="text-center mb-2">
+                                    <h3 className="text-white font-bold text-sm uppercase tracking-widest text-gray-500">Secure Login</h3>
+                                </div>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Admin Identifier</label>
                                     <input type="email" className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="admin@peutic.com" value={email} onChange={e => setEmail(e.target.value)} />
@@ -202,9 +209,15 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Secure Key</label>
                                     <input type="password" className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} />
                                 </div>
-                                <button type="submit" disabled={loading} className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-yellow-500/20">
-                                    {loading ? <span className="animate-pulse">Authenticating...</span> : <><Lock className="w-4 h-4" /> ACCESS TERMINAL</>}
+                                <button type="submit" disabled={loading} className="w-full bg-white hover:bg-gray-200 text-black font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02]">
+                                    {loading ? <span className="animate-pulse">Authenticating...</span> : <><KeyRound className="w-4 h-4" /> ACCESS TERMINAL</>}
                                 </button>
+                                
+                                {!hasAdmin && (
+                                    <div className="pt-4 text-center">
+                                        <button type="button" onClick={() => setShowRegister(true)} className="text-yellow-600 hover:text-yellow-500 text-xs font-bold transition-colors uppercase tracking-wide">System Empty? Claim Root Access</button>
+                                    </div>
+                                )}
                             </form>
                         )}
                     </>

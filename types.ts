@@ -114,14 +114,6 @@ export interface BreathLog {
   durationSeconds: number;
 }
 
-export interface PromoCode {
-  id: string;
-  code: string;
-  discountPercentage: number;
-  uses: number;
-  active: boolean;
-}
-
 export interface SessionFeedback {
   id: string;
   userId: string;

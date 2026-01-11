@@ -1,5 +1,4 @@
-
-import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, MoodEntry, JournalEntry, PromoCode, SessionFeedback, ArtEntry, BreathLog, SessionMemory, GiftCard } from '../types';
+import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, MoodEntry, JournalEntry, SessionFeedback, ArtEntry } from '../types';
 import { supabase } from './supabaseClient';
 
 // --- GENERIC AVATAR POOL ---
@@ -50,7 +49,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
   { id: 'c21', name: 'Lucas', gender: 'Male', specialty: 'Digital Addiction', status: 'AVAILABLE', rating: 4.7, imageUrl: "https://images.unsplash.com/photo-1463453091185-61582044d556?auto=format&fit=crop&q=80&w=800", bio: 'Unplugging for mental health.', replicaId: 'r92debe21318', licenseNumber: 'LCSW-NY-3321', degree: 'MSW, Social Work', stateOfPractice: 'NY', yearsExperience: 6 },
   { id: 'c18', name: 'Sofia', gender: 'Female', specialty: 'Chronic Pain', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=800", bio: 'Mind-body healing.', replicaId: 're3a705cf66a', licenseNumber: 'PhD-CA-1123', degree: 'PhD, Health Psychology', stateOfPractice: 'CA', yearsExperience: 12 },
   { id: 'c23', name: 'William', gender: 'Male', specialty: 'Divorce Recovery', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=800", bio: 'Navigating life transitions.', replicaId: 'rca8a38779a8', licenseNumber: 'LMFT-IL-5521', degree: 'MA, Family Therapy', stateOfPractice: 'IL', yearsExperience: 15 },
-  { id: 'c24', name: 'Maya', gender: 'Female', specialty: 'Cultural Identity', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&q=80&w=800", bio: 'Navigating dual cultures and belonging.', replicaId: 'r6ae5b6efc9d', licenseNumber: 'LCSW-CA-1102', degree: 'MSW, Social Work', stateOfPractice: 'CA', yearsExperience: 9 },
+  { id: 'c24', name: 'Maya', gender: 'Female', specialty: 'Cultural Identity', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&q=80&w=800", bio: 'Navigating dual cultures and belonging.', replicaId: 're3a705cf66a', licenseNumber: 'LCSW-CA-1102', degree: 'MSW, Social Work', stateOfPractice: 'CA', yearsExperience: 9 },
   { id: 'c25', name: 'Caleb', gender: 'Male', specialty: 'Imposter Syndrome', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=800", bio: 'Owning your success with confidence.', replicaId: 'rca8a38779a8', licenseNumber: 'LPC-TX-9921', degree: 'MA, Counseling', stateOfPractice: 'TX', yearsExperience: 7 },
   { id: 'c26', name: 'Chloe', gender: 'Female', specialty: 'Pet Loss Grief', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800", bio: 'Honoring the bond with our animal companions.', replicaId: 'r6ae5b6efc9d', licenseNumber: 'LMFT-NY-2210', degree: 'MS, Family Therapy', stateOfPractice: 'NY', yearsExperience: 12 },
   { id: 'c27', name: 'Jordan', gender: 'Male', specialty: 'Military Transition', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=800", bio: 'From service to civilian life.', replicaId: 'r92debe21318', licenseNumber: 'LCSW-VA-4421', degree: 'MSW, Clinical Social Work', stateOfPractice: 'VA', yearsExperience: 16 },
@@ -84,7 +83,17 @@ export class Database {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         // Use ID based sync for reliability with RLS
-        return await this.syncUser(session.user.id);
+        const user = await this.syncUser(session.user.id);
+        
+        if (!user) {
+            // CRITICAL: If session exists but User table entry is gone (e.g. after DB flush)
+            // Force logout to clear the stale session and prevent app hanging.
+            console.warn("Session valid but User not found in DB. Forcing logout.");
+            await this.logout();
+            return null;
+        }
+        
+        return user;
       }
     } catch (e) {
       console.warn("Restore Session Failed (Offline?)");
@@ -198,13 +207,25 @@ export class Database {
     // or USER if admins exist.
     
     if (provider === 'email' && password) {
+        // 1. PRE-CHECK: Determine if this user WILL be an admin (table empty)
+        // This allows us to return the correct role instantly without waiting for the DB trigger sync.
+        let anticipatedRole = UserRole.USER;
+        try {
+            const { count } = await supabase.from('users').select('*', { count: 'exact', head: true });
+            if (count === 0) {
+                anticipatedRole = UserRole.ADMIN;
+            }
+        } catch(e) {
+            console.warn("Could not determine user count, defaulting to USER role.");
+        }
+
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
                 data: {
                     full_name: name,
-                    role: 'USER', // This is just metadata, the trigger calculates the real role
+                    role: 'USER', // Metadata only, trigger handles real role
                     provider: provider
                 }
             }
@@ -230,7 +251,7 @@ export class Database {
                 id: data.user.id,
                 email: data.user.email || email,
                 name: name,
-                role: UserRole.USER, // Default to USER visually, Dashboard will re-sync true role in background
+                role: anticipatedRole, // Use our pre-calculated role
                 balance: 0,
                 subscriptionStatus: 'ACTIVE',
                 joinedAt: new Date().toISOString(),
@@ -572,15 +593,5 @@ export class Database {
 
   static async resetAllUsers() {
       await supabase.from('users').delete().neq('role', 'ADMIN');
-  }
-
-  static async getPromoCodes(): Promise<PromoCode[]> {
-      try {
-          const { data } = await supabase.from('promo_codes').select('*').eq('active', true);
-          if (data) return data.map(d => ({
-              id: d.id, code: d.code, discountPercentage: d.discount_percentage, uses: d.uses, active: d.active
-          }));
-      } catch(e) {}
-      return [];
   }
 }
