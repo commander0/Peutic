@@ -66,9 +66,17 @@ serve(async (req) => {
 
         // Security Check for Admin Creation
         if (role === 'ADMIN') {
-             const MASTER_KEY = Deno.env.get('ADMIN_MASTER_KEY') || 'PEUTIC-MASTER-2025-SECURE';
-             if (key !== MASTER_KEY) {
-                 return new Response(JSON.stringify({ error: 'Unauthorized: Invalid Master Key' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+             // Check if any admins ALREADY exist
+             const { count: adminCount } = await supabaseClient.from('users').select('*', { count: 'exact', head: true }).eq('role', 'ADMIN');
+             const hasAdmins = (adminCount || 0) > 0;
+
+             // If admins exist, we REQUIRE the Master Key.
+             // If NO admins exist (System Init), we ALLOW creation without key.
+             if (hasAdmins) {
+                 const MASTER_KEY = Deno.env.get('ADMIN_MASTER_KEY') || 'PEUTIC-MASTER-2025-SECURE';
+                 if (key !== MASTER_KEY) {
+                     return new Response(JSON.stringify({ error: 'Unauthorized: Invalid Master Key. System already has an administrator.' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+                 }
              }
         }
 
