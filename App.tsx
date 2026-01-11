@@ -22,10 +22,7 @@ interface ErrorBoundaryState {
 }
 
 class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false };
-  }
+  public state: ErrorBoundaryState = { hasError: false };
 
   static getDerivedStateFromError(_: Error): ErrorBoundaryState {
     return { hasError: true };
@@ -125,24 +122,39 @@ const MainApp: React.FC = () => {
     return () => clearInterval(interval);
   }, [user, activeSessionCompanion]);
 
-  const handleLogin = async (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email'): Promise<void> => {
+  const handleLogin = async (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email', password?: string): Promise<void> => {
     const userEmail = email || `${name.toLowerCase().replace(/ /g, '.')}@example.com`;
     let currentUser: User;
 
     try {
-        const existing = await Database.fetchUserFromCloud(userEmail);
-        
-        if (existing) {
-            currentUser = existing;
-            if (avatar) { currentUser.avatar = avatar; await Database.updateUser(currentUser); }
+        if (role === UserRole.ADMIN) {
+            // Admins are special and use the API gateway bypass or direct auth via AdminLogin component
+            // If we are here, it means we are logging in/signing up a regular user via Auth.tsx
+            // If trying to create admin via regular Auth, force to User
+            role = UserRole.USER; 
+        }
+
+        // --- REAL SUPABASE AUTHENTICATION ---
+        // This ensures the session persists on refresh
+        if (provider === 'email' && password) {
+            // Attempt Login
+            try {
+                currentUser = await Database.login(userEmail, password);
+            } catch (loginError: any) {
+                // If login fails, try signup (if this was a signup attempt)
+                if (authMode === 'signup' || loginError.message.includes('Invalid login credentials') === false) {
+                     // Try creating user
+                     currentUser = await Database.createUser(name, userEmail, password, provider, role);
+                } else {
+                    throw loginError;
+                }
+            }
+        } else if (provider !== 'email') {
+            // Social Login handling (User already authed via SDK in Auth.tsx usually)
+            // Just ensure profile exists
+            currentUser = await Database.createUser(name, userEmail, 'social-login-placeholder', provider, role);
         } else {
-            // SIMPLIFIED LOGIC:
-            // We pass the requested role (User or Admin).
-            // The backend Edge Function checks if an admin already exists.
-            // If NO admin exists, the backend auto-promotes this user to ADMIN regardless of requested role.
-            // If admins EXIST, the backend enforces standard rules (User allowed, Admin requires key).
-            currentUser = await Database.createUser(name, userEmail, provider, birthday, role);
-            if (avatar) { currentUser.avatar = avatar; await Database.updateUser(currentUser); }
+            throw new Error("Password required for email login");
         }
         
         currentUser = Database.checkAndIncrementStreak(currentUser);
@@ -151,12 +163,8 @@ const MainApp: React.FC = () => {
         Database.saveUserSession(currentUser);
         lastActivityRef.current = Date.now();
         setShowAuth(false);
-        
-        if (currentUser.role === UserRole.ADMIN) {
-            navigate('/admin/dashboard');
-        } else {
-            navigate('/');
-        }
+        navigate('/');
+
     } catch (e: any) {
         console.error("Login Failed", e);
         const msg = e.message || "Please check your internet connection.";

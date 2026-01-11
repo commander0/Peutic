@@ -6,7 +6,7 @@ import { Database } from '../services/database';
 import { Shield } from 'lucide-react';
 
 interface AuthProps {
-  onLogin: (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider?: 'email' | 'google' | 'facebook' | 'x') => Promise<void>;
+  onLogin: (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider?: 'email' | 'google' | 'facebook' | 'x', password?: string) => Promise<void>;
   onCancel: () => void;
   initialMode?: 'login' | 'signup';
 }
@@ -155,12 +155,8 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
 
     try {
         if (isLogin) {
-            const existingUser = await Database.fetchUserFromCloud(email);
-            if (existingUser) {
-                await onLogin(existingUser.role, existingUser.name, existingUser.avatar, email, undefined, 'email');
-            } else {
-                setError("Invalid email address or password combination.");
-            }
+            // DIRECT LOGIN: No pre-check. Supabase Auth handles invalid credentials securely.
+            await onLogin(UserRole.USER, '', undefined, email, undefined, 'email', password);
         } else {
             if (!validateAge(birthday)) {
                 setError("You must be at least 18 years old to create an account.");
@@ -178,18 +174,12 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                 setLoading(false);
                 return;
             }
-            const existingUser = await Database.fetchUserFromCloud(email);
-            if (existingUser) {
-                setError("An account with this email already exists. Please sign in.");
-                setLoading(false);
-                return;
-            }
+            // Proceed to onboarding before final creation
             setShowOnboarding(true);
         }
-    } catch (e) {
-        setError("Connection failed. Please check internet.");
-    } finally {
-        if (!showOnboarding) setLoading(false);
+    } catch (e: any) {
+        setError(e.message || "Connection failed. Please check internet.");
+        setLoading(false);
     }
   };
 
@@ -199,10 +189,9 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
       try {
           const fullName = `${firstName.trim()} ${lastName.trim()}`;
           const formattedName = fullName.length > 1 ? (fullName.charAt(0).toUpperCase() + fullName.slice(1)) : "Buddy";
-          await onLogin(UserRole.USER, formattedName, undefined, email, birthday, 'email');
+          await onLogin(UserRole.USER, formattedName, undefined, email, birthday, 'email', password);
       } catch (e: any) {
-          setError("Account creation failed. Please try again.");
-      } finally {
+          setError(e.message || "Account creation failed. Please try again.");
           setLoading(false);
       }
   };

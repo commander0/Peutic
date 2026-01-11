@@ -1,4 +1,3 @@
-
 import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, MoodEntry, JournalEntry, PromoCode, SessionFeedback, ArtEntry, BreathLog, SessionMemory, GiftCard } from '../types';
 import { supabase } from './supabaseClient';
 
@@ -108,7 +107,7 @@ export class Database {
 
   static async fetchUserFromCloud(email: string): Promise<User | null> {
       // NOTE: This will fail RLS if not logged in. 
-      // AdminLogin now handles auth before calling this or uses auth response directly.
+      // Use only in Admin or Post-Auth contexts
       return this.syncUserByEmail(email);
   }
 
@@ -161,50 +160,91 @@ export class Database {
 
   // --- AUTHENTICATION ACTIONS ---
 
-  static async login(email: string): Promise<User> {
+  static async login(email: string, password?: string): Promise<User> {
+    if (password) {
+        // Real Supabase Auth
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw new Error(error.message);
+        if (data.user) {
+            // Fetch profile
+            const user = await this.syncUser(data.user.id);
+            if (user) return user;
+            
+            // If profile missing (sync issue), fallback to mapping auth data
+            return {
+                id: data.user.id,
+                email: data.user.email || email,
+                name: data.user.user_metadata?.full_name || 'User',
+                role: UserRole.USER,
+                balance: 0,
+                subscriptionStatus: 'ACTIVE',
+                joinedAt: new Date().toISOString(),
+                lastLoginDate: new Date().toISOString(),
+                streak: 0,
+                provider: 'email'
+            }
+        }
+    }
+    // Fallback for mock/legacy
     const user = await this.syncUserByEmail(email);
     if (!user) throw new Error("User not found. Please sign up.");
     return user;
   }
 
-  // UPDATED: Strict Edge Function Usage - No Fallback
-  static async createUser(name: string, email: string, provider: 'email' | 'google' | 'facebook' | 'x', birthday?: string, role: UserRole = UserRole.USER, masterKey?: string): Promise<User> {
-    // If user already authenticated and trying to create a profile (rare/fallback), check locally
-    const existing = await this.syncUserByEmail(email);
-    if (existing) return existing;
-
-    try {
+  static async createUser(name: string, email: string, password?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email', role: UserRole = UserRole.USER, masterKey?: string): Promise<User> {
+    
+    // ADMIN CREATION (Uses Gateway)
+    if (role === UserRole.ADMIN) {
         const { data, error } = await supabase.functions.invoke('api-gateway', {
             body: { 
                 action: 'user-create', 
                 payload: { name, email, provider, role, key: masterKey } 
             }
         });
-
-        // Handle generic network/invocation errors
-        if (error) {
-            console.error("Edge Function Invocation Error:", error);
-            throw new Error(`Connection Error: ${error.message}`);
-        }
-
-        // Handle logical errors from the API (200 OK but with error field)
-        if (data?.error) {
-            console.error("API Logic Error:", data.error);
-            throw new Error(data.error);
-        }
-
+        if (error || data?.error) throw new Error(data?.error || "Admin creation failed");
         if (data?.user) {
             this.currentUser = this.mapUser(data.user);
             return this.currentUser;
         }
-        
-        throw new Error("Invalid response from server. No user data returned.");
-
-    } catch (e: any) {
-        console.error("Account Creation Failed:", e);
-        const msg = e.message?.replace('FunctionsFetchError:', '').trim() || "Could not create account.";
-        throw new Error(msg);
     }
+
+    // REGULAR USER CREATION (Uses Supabase Auth + Trigger)
+    if (provider === 'email' && password) {
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    full_name: name,
+                    role: 'USER',
+                    provider: provider
+                }
+            }
+        });
+
+        if (error) throw new Error(error.message);
+        if (data.user) {
+            // Wait a moment for trigger to create public profile
+            await new Promise(r => setTimeout(r, 1000));
+            const user = await this.syncUser(data.user.id);
+            if (user) return user;
+            
+            return {
+                id: data.user.id,
+                email: data.user.email || email,
+                name: name,
+                role: UserRole.USER,
+                balance: 0,
+                subscriptionStatus: 'ACTIVE',
+                joinedAt: new Date().toISOString(),
+                lastLoginDate: new Date().toISOString(),
+                streak: 0,
+                provider: provider
+            };
+        }
+    }
+
+    throw new Error("Invalid signup parameters");
   }
 
   static async logout() {
