@@ -64,23 +64,28 @@ serve(async (req) => {
     if (action === 'user-create') {
         const { name, email, role, provider, key } = payload;
 
-        // Security Check for Admin Creation
-        if (role === 'ADMIN') {
-             // Check if any admins ALREADY exist
-             const { count: adminCount } = await supabaseClient.from('users').select('*', { count: 'exact', head: true }).eq('role', 'ADMIN');
-             const hasAdmins = (adminCount || 0) > 0;
+        // 1. Determine requested role (default to USER)
+        let finalRole = role || 'USER';
 
-             // If admins exist, we REQUIRE the Master Key.
-             // If NO admins exist (System Init), we ALLOW creation without key.
-             if (hasAdmins) {
-                 const MASTER_KEY = Deno.env.get('ADMIN_MASTER_KEY') || 'PEUTIC-MASTER-2025-SECURE';
-                 if (key !== MASTER_KEY) {
-                     return new Response(JSON.stringify({ error: 'Unauthorized: Invalid Master Key. System already has an administrator.' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-                 }
+        // 2. Check if any admins ALREADY exist in the system
+        const { count: adminCount } = await supabaseClient.from('users').select('*', { count: 'exact', head: true }).eq('role', 'ADMIN');
+        const hasAdmins = (adminCount || 0) > 0;
+
+        // 3. AUTO-PROMOTION LOGIC
+        if (!hasAdmins) {
+            // If NO admins exist, this user becomes the Root Admin automatically
+            finalRole = 'ADMIN';
+        }
+
+        // 4. Security Check: If requesting ADMIN when admins already exist, require Key
+        if (finalRole === 'ADMIN' && hasAdmins) {
+             const MASTER_KEY = Deno.env.get('ADMIN_MASTER_KEY') || 'PEUTIC-MASTER-2025-SECURE';
+             if (key !== MASTER_KEY) {
+                 return new Response(JSON.stringify({ error: 'Unauthorized: Invalid Master Key. System already has an administrator.' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
              }
         }
 
-        // Check duplicates using admin privileges
+        // 5. Check duplicates using admin privileges
         const { data: existing } = await supabaseClient.from('users').select('id').eq('email', email).single();
         if (existing) {
              return new Response(JSON.stringify({ error: 'User already exists' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -91,7 +96,7 @@ serve(async (req) => {
             id,
             name,
             email,
-            role: role || 'USER',
+            role: finalRole,
             balance: 0,
             created_at: new Date().toISOString(),
             last_login_date: new Date().toISOString(),

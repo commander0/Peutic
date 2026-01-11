@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Component, ErrorInfo, ReactNode } from 'react';
+import React, { useState, useEffect, useRef, ErrorInfo, ReactNode } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole, Companion } from './types';
 import LandingPage from './components/LandingPage';
@@ -21,7 +21,7 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
@@ -136,16 +136,12 @@ const MainApp: React.FC = () => {
             currentUser = existing;
             if (avatar) { currentUser.avatar = avatar; await Database.updateUser(currentUser); }
         } else {
-            // STRICT ADMIN CREATION LOGIC
-            const adminExists = await Database.hasAdmin();
-            let finalRole = UserRole.USER;
-            if (!adminExists && provider === 'email') {
-                finalRole = UserRole.ADMIN;
-            } else if (provider !== 'email') {
-                finalRole = UserRole.USER;
-            }
-
-            currentUser = await Database.createUser(name, userEmail, provider, birthday, finalRole);
+            // SIMPLIFIED LOGIC:
+            // We pass the requested role (User or Admin).
+            // The backend Edge Function checks if an admin already exists.
+            // If NO admin exists, the backend auto-promotes this user to ADMIN regardless of requested role.
+            // If admins EXIST, the backend enforces standard rules (User allowed, Admin requires key).
+            currentUser = await Database.createUser(name, userEmail, provider, birthday, role);
             if (avatar) { currentUser.avatar = avatar; await Database.updateUser(currentUser); }
         }
         
