@@ -105,7 +105,7 @@ serve(async (req) => {
         
         // Use Gemini 3 Flash Preview for text generation (Speed + Quality balance)
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: payload.prompt,
             config: {
                 systemInstruction: "You are a warm, empathetic mental wellness companion. Be concise, supportive, and human-like. Do not give medical advice."
