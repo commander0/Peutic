@@ -209,7 +209,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
 
   if (showOnboarding) {
       return (
-        <div className="fixed inset-0 bg-[#FFFBEB] dark:bg-black z-50 flex flex-col md:flex-row animate-in fade-in slide-in-from-bottom-5 duration-500">
+        <div className="fixed inset-0 bg-[#FFFBEB] dark:bg-black z-[100] flex flex-col md:flex-row animate-in fade-in slide-in-from-bottom-5 duration-500">
             <div className="hidden md:block w-1/2 bg-[#FACC15] dark:bg-yellow-600 relative overflow-hidden">
                 <div className="absolute inset-0 flex items-center justify-center">
                      <Heart className="w-64 h-64 text-black opacity-10 animate-pulse" />
@@ -284,9 +284,9 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
   }
 
   return (
-    <div className="fixed inset-0 bg-[#FFFBEB] dark:bg-black z-50 flex flex-col md:flex-row transition-colors">
+    <div className="fixed inset-0 bg-[#FFFBEB] dark:bg-black z-[100] flex flex-col md:flex-row transition-colors">
       {toast && (
-          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-black dark:bg-white text-white dark:text-black px-6 py-3 rounded-full shadow-2xl z-[100] flex items-center gap-2 animate-in slide-in-from-top-5 fade-in">
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-black dark:bg-white text-white dark:text-black px-6 py-3 rounded-full shadow-2xl z-[110] flex items-center gap-2 animate-in slide-in-from-top-5 fade-in">
               <Send className="w-4 h-4" /> {toast}
           </div>
       )}
@@ -303,7 +303,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
 
       {/* Right Side */}
       <div className="w-full md:w-1/2 p-6 md:p-20 flex flex-col justify-center relative bg-[#FFFBEB] dark:bg-black text-black dark:text-white overflow-y-auto h-full">
-        <button onClick={onCancel} className="absolute top-4 right-4 md:top-8 md:right-8 text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white font-bold">Back</button>
+        <button onClick={onCancel} className="absolute top-4 right-4 md:top-8 md:right-8 text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white font-bold z-[101]">Back</button>
         
         <div className="max-w-md w-full mx-auto pt-10 md:pt-0">
             <div className="animate-in slide-in-from-left-10 fade-in duration-300">

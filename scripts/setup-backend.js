@@ -22,7 +22,7 @@ console.log("🚀 Initializing Peutic Backend...");
 const apiGatewayCode = `
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { GoogleGenAI } from 'https://esm.sh/@google/genai'
+import { GoogleGenAI } from 'https://esm.sh/@google/genai@0.1.1'
 import Stripe from 'https://esm.sh/stripe@14.14.0?target=deno'
 
 declare const Deno: any;
@@ -33,6 +33,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -172,11 +173,11 @@ serve(async (req) => {
 
     if (action === 'gemini-generate') {
         const apiKey = Deno.env.get('GEMINI_API_KEY');
-        if (!apiKey) throw new Error("Server Misconfiguration: Missing AI Key");
+        if (!apiKey) throw new Error("Server Misconfiguration: Missing GEMINI_API_KEY");
         
         const ai = new GoogleGenAI({ apiKey: apiKey });
         const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-2.5-flash',
             contents: payload.prompt,
             config: {
                 systemInstruction: "You are a warm, empathetic mental wellness companion. Be concise, supportive, and human-like. Do not give medical advice."
@@ -188,7 +189,7 @@ serve(async (req) => {
 
     if (action === 'gemini-speak') {
         const apiKey = Deno.env.get('GEMINI_API_KEY');
-        if (!apiKey) throw new Error("Server Misconfiguration: Missing AI Key");
+        if (!apiKey) throw new Error("Server Misconfiguration: Missing GEMINI_API_KEY");
 
         const ai = new GoogleGenAI({ apiKey: apiKey });
         const response = await ai.models.generateContent({

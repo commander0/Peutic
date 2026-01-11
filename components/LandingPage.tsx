@@ -124,7 +124,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
           <div className="absolute -top-[10%] -right-[5%] w-[60%] h-[60%] bg-yellow-200/40 dark:bg-yellow-900/10 rounded-full blur-[120px] animate-pulse-slow"></div>
           <div className="absolute top-[20%] -left-[10%] w-[40%] h-[40%] bg-orange-100/30 dark:bg-blue-900/10 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
       </div>
-      <nav className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-500 ${scrolled ? 'py-3 bg-[#FFFBEB]/80 dark:bg-black/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-5 md:py-6 bg-transparent border-transparent'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-3 bg-[#FFFBEB]/80 dark:bg-black/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-5 md:py-6 bg-transparent border-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 md:px-8 flex justify-between items-center">
             <div className="flex items-center gap-2 md:gap-3 group cursor-pointer shrink-0">
                <div className="w-8 h-8 md:w-9 md:h-9 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
@@ -141,7 +141,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                        <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform duration-300 ${showLangMenu ? 'rotate-180' : ''}`} />
                    </button>
                    {showLangMenu && (
-                       <div className="absolute top-full right-0 mt-2 w-32 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden z-[70] animate-in fade-in zoom-in duration-200">
+                       <div className="absolute top-full right-0 mt-2 w-32 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden z-50 animate-in fade-in zoom-in duration-200">
                            {LANGUAGES.map((l) => (
                                <button key={l.code} onClick={() => { setLang(l.code); setShowLangMenu(false); }} className={`w-full text-left px-4 py-3 text-xs font-bold hover:bg-yellow-50 dark:hover:bg-gray-800 transition-colors flex justify-between items-center ${lang === l.code ? 'text-yellow-600 dark:text-yellow-500 bg-yellow-50/50' : 'text-gray-700 dark:text-gray-300'}`}>
                                    {l.label}
