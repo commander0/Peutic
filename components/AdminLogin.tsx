@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Database } from '../services/database';
 import { supabase } from '../services/supabaseClient';
 import { UserRole } from '../types';
-import { Lock, AlertCircle, Shield, ArrowRight, PlusCircle, Check, RefreshCw } from 'lucide-react';
+import { Lock, AlertCircle, Shield, ArrowRight, PlusCircle, Check, RefreshCw, Crown } from 'lucide-react';
 
 interface AdminLoginProps {
   onLogin: (user: any) => void;
@@ -17,16 +17,20 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
   const [successMsg, setSuccessMsg] = useState('');
   
   const [showRegister, setShowRegister] = useState(false);
-  const [masterKey, setMasterKey] = useState('');
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminPassword, setNewAdminPassword] = useState('');
   const [newAdminConfirmPassword, setNewAdminConfirmPassword] = useState('');
 
-  const [hasAdmin, setHasAdmin] = useState(false);
+  const [hasAdmin, setHasAdmin] = useState<boolean | null>(null);
   const [lockout, setLockout] = useState(0);
 
   useEffect(() => {
-      Database.hasAdmin().then(setHasAdmin);
+      // Check if admin exists to determine if we show "Initialize System"
+      Database.hasAdmin().then(exists => {
+          setHasAdmin(exists);
+          // If no admin exists, default to Registration mode
+          if (!exists) setShowRegister(true);
+      });
       Database.checkAdminLockout().then(setLockout);
   }, []);
 
@@ -63,11 +67,10 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         if (!authData.user) throw new Error("Auth failed");
 
         // 2. FETCH PROFILE (Now authorized)
-        // We use the ID from the auth session, which is safer than searching by email
         const user = await Database.syncUser(authData.user.id);
         
         if (!user) {
-             setError("User profile not found. If this is a new deploy, ensure the Trigger in schema.sql is running.");
+             setError("Profile sync error. Please try again.");
              setLoading(false);
              return;
         }
@@ -77,8 +80,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             onLogin(user);
         } else {
              await Database.recordAdminFailure();
-             setError("Access Denied. This account does not have Administrator privileges.");
-             // Sign out immediately if not admin
+             setError("Access Denied. This account is not an Administrator.");
              await supabase.auth.signOut();
         }
     } catch (e: any) {
@@ -103,6 +105,11 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
       setError('');
       setSuccessMsg('');
 
+      if (hasAdmin) {
+          setError("System already initialized. Additional admins cannot be created via this terminal.");
+          return;
+      }
+
       if (newAdminPassword !== newAdminConfirmPassword) {
           setError("Passwords do not match.");
           return;
@@ -117,57 +124,27 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
       setLoading(true);
 
       try {
-          // --- 1. VERIFY MASTER KEY ---
-          const { data: verifyData, error: verifyError } = await supabase.functions.invoke('api-gateway', {
-              body: { action: 'admin-verify', payload: { key: masterKey } }
-          });
-
-          if (verifyError || !verifyData?.success) {
-               // Fallback for local dev if edge function isn't running
-               const DEFAULT_KEY = 'PEUTIC-MASTER-2025-SECURE';
-               if (masterKey !== DEFAULT_KEY) throw new Error("Invalid Master Key");
-          }
-
-          // --- 2. CREATE ADMIN USER (Via Backend to bypass RLS/Signup restrictions) ---
           const finalEmail = newAdminEmail.toLowerCase().trim();
           
-          // First, sign up the user in Supabase Auth
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-              email: finalEmail,
-              password: newAdminPassword,
-              options: {
-                  data: { full_name: 'System Admin', role: UserRole.ADMIN }
-              }
-          });
+          // Use standard creation. The Database Trigger will handle role assignment.
+          // IF table is empty, trigger sets ADMIN.
+          // IF table has users, trigger sets USER.
+          const newUser = await Database.createUser('System Admin', finalEmail, newAdminPassword);
 
-          if (signUpError) throw signUpError;
-
-          // If trigger didn't fire (race condition or not set up), ensure profile exists via API
-          // Ideally, the trigger handles this. We will assume success or API gateway handle.
-          
-          // Elevate to Admin (requires DB update if trigger only set USER)
-          // We use the createUser method which calls api-gateway 'user-create'
-          // BUT 'user-create' in api-gateway (in current codebase) just inserts to public.users
-          // It DOES NOT create the Auth User.
-          
-          // CORRECT FLOW: 
-          // 1. SignUp creates Auth User -> Trigger creates Public User (Role: USER)
-          // 2. We need to UPDATE that user to ADMIN. Since we can't do that from client RLS,
-          //    we must rely on the 'user-create' API function which has Admin privileges.
-          
-          await Database.createUser('System Admin', finalEmail, 'email', undefined, UserRole.ADMIN, masterKey);
-
-          setSuccessMsg("Root Admin Created. Please Log In.");
-          
-          setTimeout(() => {
-              setShowRegister(false);
-              setSuccessMsg('');
-              setEmail(finalEmail);
-              setMasterKey('');
-              setNewAdminPassword('');
-              setNewAdminConfirmPassword('');
-              setHasAdmin(true);
-          }, 2000);
+          if (newUser.role === UserRole.ADMIN) {
+              setSuccessMsg("Root Admin Initialized Successfully.");
+              setTimeout(() => {
+                  setShowRegister(false);
+                  setSuccessMsg('');
+                  setEmail(finalEmail);
+                  setNewAdminPassword('');
+                  setNewAdminConfirmPassword('');
+                  setHasAdmin(true);
+              }, 2000);
+          } else {
+              // This happens if someone else claimed it first
+              throw new Error("Initialization Failed: System already has an owner.");
+          }
 
       } catch (e: any) {
           console.error(e);
@@ -200,22 +177,20 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                         {error && <div className="mb-6 p-4 bg-red-900/30 border border-red-800 text-red-400 text-sm rounded-xl flex items-center gap-2 font-bold">{error}</div>}
                         {successMsg && <div className="mb-6 p-4 bg-green-900/30 border border-green-800 text-green-400 text-sm rounded-xl flex items-center gap-2 font-bold">{successMsg}</div>}
 
-                        {showRegister ? (
+                        {showRegister && !hasAdmin ? (
                              <form onSubmit={handleRegisterAdmin} className="space-y-4">
                                 <div className="text-center mb-4">
-                                    <h3 className="text-white font-bold text-lg">{hasAdmin ? "Emergency System Reset" : "Initialize Root Admin"}</h3>
-                                    <p className="text-xs text-gray-500">Enter Master Key to Initialize</p>
+                                    <h3 className="text-white font-bold text-lg flex items-center justify-center gap-2"><Crown className="w-5 h-5 text-yellow-500"/> Initialize Root Admin</h3>
+                                    <p className="text-xs text-gray-500">No admins detected. Claim system ownership.</p>
                                 </div>
-                                <input type="password" className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none" placeholder="Master Key (Default: PEUTIC...)" value={masterKey} onChange={e => setMasterKey(e.target.value)} />
-                                <input type="email" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none" placeholder="New Admin Email" value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} />
+                                <input type="email" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="Admin Email" value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} />
                                 <div className="grid grid-cols-2 gap-4">
-                                    <input type="password" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none" placeholder="Password" value={newAdminPassword} onChange={e => setNewAdminPassword(e.target.value)} />
-                                    <input type="password" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none" placeholder="Confirm" value={newAdminConfirmPassword} onChange={e => setNewAdminConfirmPassword(e.target.value)} />
+                                    <input type="password" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="Password" value={newAdminPassword} onChange={e => setNewAdminPassword(e.target.value)} />
+                                    <input type="password" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="Confirm" value={newAdminConfirmPassword} onChange={e => setNewAdminConfirmPassword(e.target.value)} />
                                 </div>
-                                <button disabled={loading} className="w-full bg-yellow-500 text-black font-black py-4 rounded-xl hover:bg-yellow-400 transition-colors mt-4">
-                                    {loading ? "VERIFYING..." : (hasAdmin ? "RESET & CREATE ADMIN" : "INITIALIZE SYSTEM")}
+                                <button disabled={loading} className="w-full bg-yellow-500 text-black font-black py-4 rounded-xl hover:bg-yellow-400 transition-colors mt-4 shadow-lg shadow-yellow-500/20">
+                                    {loading ? "INITIALIZING..." : "CLAIM SYSTEM"}
                                 </button>
-                                <button type="button" onClick={() => setShowRegister(false)} className="text-gray-500 text-sm w-full text-center hover:text-white py-2">Cancel</button>
                              </form>
                         ) : (
                             <form onSubmit={handleAdminLogin} className="space-y-6">
@@ -227,12 +202,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Secure Key</label>
                                     <input type="password" className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} />
                                 </div>
-                                <button type="submit" disabled={loading} className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2">
+                                <button type="submit" disabled={loading} className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-yellow-500/20">
                                     {loading ? <span className="animate-pulse">Authenticating...</span> : <><Lock className="w-4 h-4" /> ACCESS TERMINAL</>}
-                                </button>
-                                
-                                <button type="button" onClick={() => setShowRegister(true)} className={`w-full border border-gray-800 text-gray-500 py-3 rounded-xl text-xs font-bold hover:bg-gray-900 hover:text-white transition-colors flex items-center justify-center gap-2 mt-4 ${hasAdmin ? 'opacity-50 hover:opacity-100' : ''}`}>
-                                    {hasAdmin ? <><RefreshCw className="w-3 h-3" /> System Recovery</> : <><PlusCircle className="w-3 h-3" /> INITIALIZE SYSTEM (First Run)</>}
                                 </button>
                             </form>
                         )}

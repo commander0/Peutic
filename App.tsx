@@ -70,7 +70,13 @@ const MainApp: React.FC = () => {
   useEffect(() => {
     const init = async () => {
         const restored = await Database.restoreSession();
-        if (restored) setUser(restored);
+        if (restored) {
+            setUser(restored);
+            // If admin is at root, redirect
+            if (restored.role === UserRole.ADMIN && location.pathname === '/') {
+                navigate('/admin/dashboard');
+            }
+        }
         
         await Database.syncGlobalSettings();
         const settings = Database.getSettings();
@@ -127,13 +133,6 @@ const MainApp: React.FC = () => {
     let currentUser: User;
 
     try {
-        if (role === UserRole.ADMIN) {
-            // Admins are special and use the API gateway bypass or direct auth via AdminLogin component
-            // If we are here, it means we are logging in/signing up a regular user via Auth.tsx
-            // If trying to create admin via regular Auth, force to User
-            role = UserRole.USER; 
-        }
-
         // --- REAL SUPABASE AUTHENTICATION ---
         // This ensures the session persists on refresh
         if (provider === 'email' && password) {
@@ -144,15 +143,14 @@ const MainApp: React.FC = () => {
                 // If login fails, try signup (if this was a signup attempt)
                 if (authMode === 'signup' || loginError.message.includes('Invalid login credentials') === false) {
                      // Try creating user
-                     currentUser = await Database.createUser(name, userEmail, password, provider, role);
+                     currentUser = await Database.createUser(name, userEmail, password, provider);
                 } else {
                     throw loginError;
                 }
             }
         } else if (provider !== 'email') {
-            // Social Login handling (User already authed via SDK in Auth.tsx usually)
-            // Just ensure profile exists
-            currentUser = await Database.createUser(name, userEmail, 'social-login-placeholder', provider, role);
+            // Social Login handling
+            currentUser = await Database.createUser(name, userEmail, 'social-login-placeholder', provider);
         } else {
             throw new Error("Password required for email login");
         }
@@ -163,7 +161,13 @@ const MainApp: React.FC = () => {
         Database.saveUserSession(currentUser);
         lastActivityRef.current = Date.now();
         setShowAuth(false);
-        navigate('/');
+        
+        // Intelligent Redirect
+        if (currentUser.role === UserRole.ADMIN) {
+            navigate('/admin/dashboard');
+        } else {
+            navigate('/');
+        }
 
     } catch (e: any) {
         console.error("Login Failed", e);
@@ -225,8 +229,8 @@ const MainApp: React.FC = () => {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={
-            user && user.role === UserRole.USER ? (
-                <Dashboard user={user} onLogout={handleLogout} onStartSession={(c) => setActiveSessionCompanion(c)} />
+            user ? (
+                user.role === UserRole.ADMIN ? <Navigate to="/admin/dashboard" /> : <Dashboard user={user} onLogout={handleLogout} onStartSession={(c) => setActiveSessionCompanion(c)} />
             ) : (
                 <LandingPage onLoginClick={(signup) => { 
                     const requestedMode = signup ? 'signup' : 'login';

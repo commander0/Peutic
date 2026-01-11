@@ -1,3 +1,4 @@
+
 import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, MoodEntry, JournalEntry, PromoCode, SessionFeedback, ArtEntry, BreathLog, SessionMemory, GiftCard } from '../types';
 import { supabase } from './supabaseClient';
 
@@ -191,24 +192,12 @@ export class Database {
     return user;
   }
 
-  static async createUser(name: string, email: string, password?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email', role: UserRole = UserRole.USER, masterKey?: string): Promise<User> {
+  static async createUser(name: string, email: string, password?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email'): Promise<User> {
     
-    // ADMIN CREATION (Uses Gateway)
-    if (role === UserRole.ADMIN) {
-        const { data, error } = await supabase.functions.invoke('api-gateway', {
-            body: { 
-                action: 'user-create', 
-                payload: { name, email, provider, role, key: masterKey } 
-            }
-        });
-        if (error || data?.error) throw new Error(data?.error || "Admin creation failed");
-        if (data?.user) {
-            this.currentUser = this.mapUser(data.user);
-            return this.currentUser;
-        }
-    }
-
     // REGULAR USER CREATION (Uses Supabase Auth + Trigger)
+    // The Database Trigger 'handle_new_user' will automatically set role to ADMIN if the table is empty,
+    // or USER if admins exist.
+    
     if (provider === 'email' && password) {
         const { data, error } = await supabase.auth.signUp({
             email,
@@ -216,7 +205,7 @@ export class Database {
             options: {
                 data: {
                     full_name: name,
-                    role: 'USER',
+                    role: 'USER', // This is just metadata, the trigger calculates the real role
                     provider: provider
                 }
             }
@@ -233,7 +222,7 @@ export class Database {
                 id: data.user.id,
                 email: data.user.email || email,
                 name: name,
-                role: UserRole.USER,
+                role: UserRole.USER, // Default fallback
                 balance: 0,
                 subscriptionStatus: 'ACTIVE',
                 joinedAt: new Date().toISOString(),
@@ -272,7 +261,7 @@ export class Database {
 
   static async hasAdmin(): Promise<boolean> {
       try {
-          const { count } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', UserRole.ADMIN);
+          const { count } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'ADMIN');
           return (count || 0) > 0;
       } catch (e) { return false; }
   }
