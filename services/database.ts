@@ -115,16 +115,22 @@ export class Database {
             provider: authUser.app_metadata?.provider || 'email'
         };
         
-        // This INSERT works because of the RLS policy: "Users can insert own profile"
+        // This INSERT works because of the RLS policy: "Users Insert Self"
         const { error } = await supabase.from('users').insert(newUser);
         
-        if (!error || error.code === '23505') { // 23505 = duplicate key (race condition success)
-            return await this.syncUser(authUser.id);
+        if (error) {
+            // Ignore duplicate key errors (race condition success)
+            if (error.code === '23505') return await this.syncUser(authUser.id);
+            
+            console.error("Repair Profile Error:", error);
+            throw new Error(`Database Insert Failed: ${error.message} (Code: ${error.code})`);
         }
-    } catch (e) { 
+        
+        return await this.syncUser(authUser.id);
+    } catch (e: any) { 
         console.error("Repair failed", e); 
+        throw e; // Propagate error to caller
     }
-    return null;
   }
 
   static getUser(): User | null { return this.currentUser; }
@@ -175,11 +181,15 @@ export class Database {
             if (user) return user;
             
             // Sync failed? Try repair immediately.
-            const repaired = await this.repairProfile(data.user);
-            if (repaired) return repaired;
+            try {
+                const repaired = await this.repairProfile(data.user);
+                if (repaired) return repaired;
+            } catch (repairErr: any) {
+                console.error("Repair on Login Failed:", repairErr);
+            }
         }
     }
-    throw new Error("Login failed. Please check credentials or try signing up.");
+    throw new Error("Login failed. Profile could not be synchronized.");
   }
 
   static async createUser(name: string, email: string, password?: string, provider: string = 'email'): Promise<User> {
@@ -190,9 +200,6 @@ export class Database {
         });
         
         // --- ADMIN RECOVERY LOGIC ---
-        // If the Auth user already exists (because DB was wiped but Auth wasn't),
-        // we catch the error and try to log them in. This triggers 'repairProfile'
-        // which will re-create the Admin entry in the public table.
         if (error) {
             if (error.message.includes("registered") || error.message.includes("already exists")) {
                 console.log("User exists in Auth. Attempting recovery login...");
@@ -207,19 +214,23 @@ export class Database {
                 await supabase.auth.signInWithPassword({ email, password });
             }
 
-            // Wait for DB trigger with backoff
+            // Wait for DB trigger with backoff (Increased wait for initial)
             for (let i = 0; i < 3; i++) {
                 const user = await this.syncUser(data.user.id);
                 if (user) return user;
-                await new Promise(r => setTimeout(r, 500 * (i + 1)));
+                await new Promise(r => setTimeout(r, 1000 * (i + 1)));
             }
             
-            // If trigger failed, run self-healing
-            const repaired = await this.repairProfile(data.user);
-            if (repaired) return repaired;
+            // If trigger failed, run self-healing and catch errors
+            try {
+                const repaired = await this.repairProfile(data.user);
+                if (repaired) return repaired;
+            } catch (repairError: any) {
+                throw new Error(`Initialization failed: ${repairError.message}`);
+            }
         }
     }
-    throw new Error("Failed to initialize user account.");
+    throw new Error("Failed to initialize user account (Timeout or DB Error).");
   }
 
   static async logout() { await supabase.auth.signOut(); this.currentUser = null; }
