@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Database } from '../services/database';
 import { supabase } from '../services/supabaseClient';
 import { UserRole } from '../types';
-import { Lock, AlertCircle, Shield, ArrowRight, PlusCircle, Check, RefreshCw, Crown, KeyRound, UserPlus } from 'lucide-react';
+import { Lock, AlertCircle, Shield, ArrowRight, PlusCircle, Check, RefreshCw, Crown, KeyRound, UserPlus, Mail } from 'lucide-react';
 
 interface AdminLoginProps {
   onLogin: (user: any) => void;
@@ -64,6 +64,9 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             
             if (authError.message.includes("Invalid login credentials")) {
                 throw new Error("Account not found or wrong password. If this is your first time, please use 'Create Admin Access' below.");
+            }
+            if (authError.message.includes("Email not confirmed")) {
+                throw new Error("Your email address has not been verified yet. Please check your inbox for the confirmation link.");
             }
             throw new Error(authError.message);
         }
@@ -126,14 +129,6 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
       setError('');
       setSuccessMsg('');
 
-      // We allow creating new admins even if one exists, to prevent lockouts.
-      // The trigger in the DB will default them to USER if admins exist, 
-      // UNLESS we use a specific override or if the user table is empty.
-      
-      // NOTE: If you are locked out and the table is NOT empty, the new user will be a 'USER'.
-      // You will need to manually update them to 'ADMIN' in Supabase Dashboard > Table Editor > users
-      // OR use the 'Initial Setup' logic if the DB is empty.
-
       if (newAdminPassword !== newAdminConfirmPassword) {
           setError("Passwords do not match.");
           return;
@@ -154,8 +149,6 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
           const newUser = await Database.createUser('System Admin', finalEmail, newAdminPassword);
 
           // If this is the FIRST user, they become ADMIN automatically via DB Trigger.
-          // If not, they are a USER.
-          // Check role:
           if (newUser.role === UserRole.ADMIN) {
               setSuccessMsg("Root Admin Initialized Successfully.");
               setTimeout(() => {
@@ -167,16 +160,20 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                   setHasAdmin(true);
               }, 1500);
           } else {
-              // They were created as USER.
-              // If we are in "Recovery Mode", this is tricky.
-              // However, since we are using `Database.createUser` which handles Auth,
-              // let's tell them what happened.
-              setError("Account created, but 'Admin' role could not be auto-assigned (System already initialized). Please manually set role to 'ADMIN' in Supabase Dashboard, or contact support.");
+              setError("Account created, but 'Admin' role could not be auto-assigned. Please check settings.");
           }
 
       } catch (e: any) {
           console.error(e);
-          if (e.message.includes("registered")) {
+          if (e.message.includes("check your email")) {
+              // Handle Email Verification Case gracefully
+              setSuccessMsg("Account created! Verification email sent.");
+              setError(""); // Clear error if it was just verification warning
+              setTimeout(() => {
+                  setShowRegister(false);
+                  setEmail(newAdminEmail);
+              }, 2500);
+          } else if (e.message.includes("registered")) {
               setError("This email is already registered. Please log in.");
               setShowRegister(false);
               setEmail(newAdminEmail);
@@ -209,7 +206,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                 ) : (
                     <>
                         {error && <div className="mb-6 p-4 bg-red-900/30 border border-red-800 text-red-400 text-sm rounded-xl flex items-center gap-2 font-bold animate-pulse"><AlertCircle className="w-4 h-4 flex-shrink-0"/> <span>{error}</span></div>}
-                        {successMsg && <div className="mb-6 p-4 bg-green-900/30 border border-green-800 text-green-400 text-sm rounded-xl flex items-center gap-2 font-bold animate-bounce"><Check className="w-4 h-4"/> {successMsg}</div>}
+                        {successMsg && <div className="mb-6 p-4 bg-green-900/30 border border-green-800 text-green-400 text-sm rounded-xl flex items-center gap-2 font-bold animate-bounce"><Mail className="w-4 h-4"/> {successMsg}</div>}
 
                         {showRegister ? (
                              <form onSubmit={handleRegisterAdmin} className="space-y-4 animate-in fade-in">

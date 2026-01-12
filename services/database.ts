@@ -1,4 +1,3 @@
-
 import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, MoodEntry, JournalEntry, SessionFeedback, ArtEntry } from '../types';
 import { supabase } from './supabaseClient';
 
@@ -152,12 +151,32 @@ export class Database {
                 }
                 
                 // Wait briefly for propagation
-                await new Promise(r => setTimeout(r, 2000));
+                await new Promise(r => setTimeout(r, 1000));
                 
-                // Force sync
-                const user = await this.syncUser(authUser.id);
-                if (!user) throw new Error("Profile created but not visible. Please refresh the page.");
-                return user;
+                // Attempt standard sync first
+                for(let i=0; i<3; i++) {
+                    const user = await this.syncUser(authUser.id);
+                    if (user) return user;
+                    await new Promise(r => setTimeout(r, 500));
+                }
+
+                // OPTIMISTIC RETURN: If backend success but RLS read fails (e.g. Email Not Confirmed case), 
+                // return constructed user to prevent UI crash.
+                console.warn("Read-back failed (likely RLS). Returning optimistic user.");
+                const optimisticUser: User = {
+                    id: authUser.id,
+                    email: authUser.email,
+                    name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0],
+                    role: UserRole.USER, // Default to USER safely, unless we know better
+                    balance: 0,
+                    subscriptionStatus: 'ACTIVE',
+                    joinedAt: new Date().toISOString(),
+                    lastLoginDate: new Date().toISOString(),
+                    streak: 0,
+                    provider: 'email',
+                    emailPreferences: { marketing: true, updates: true }
+                };
+                return optimisticUser;
             }
 
             // Ignore duplicate key errors (race condition success)
@@ -252,7 +271,16 @@ export class Database {
         if (data.user) {
             // Force sign-in if session is missing (rare but happens with email confirm off)
             if (!data.session) {
-                await supabase.auth.signInWithPassword({ email, password });
+                try {
+                    await supabase.auth.signInWithPassword({ email, password });
+                } catch(e: any) {
+                    console.warn("Auto-login post-signup failed:", e.message);
+                    if (e.message.includes("not confirmed") || e.message.includes("Email not confirmed")) {
+                        // CRITICAL FIX: Ensure the profile exists even if login failed due to email confirmation
+                        try { await this.repairProfile(data.user); } catch(err) {}
+                        throw new Error("Account created! Please check your email to confirm verification, then log in.");
+                    }
+                }
             }
 
             // Wait for DB trigger with backoff (Increased wait for initial)
@@ -346,8 +374,8 @@ export class Database {
                   allowSignups: data.allow_signups,
                   siteName: data.site_name,
                   broadcastMessage: data.broadcast_message,
-                  maxConcurrentSessions: data.max_concurrent_sessions,
-                  multilingualMode: data.multilingual_mode
+                  max_concurrent_sessions: data.max_concurrent_sessions,
+                  multilingual_mode: data.multilingual_mode
               };
           } else {
               // Only save defaults if missing

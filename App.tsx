@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, ReactNode } from 'react';
+import React, { useState, useEffect, useRef, ReactNode, Component, ErrorInfo } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole, Companion } from './types';
 import LandingPage from './components/LandingPage';
@@ -22,7 +22,7 @@ interface ErrorBoundaryState {
 }
 
 // Fixed ErrorBoundary inheritance to include Component for setState and props access
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
@@ -32,7 +32,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Critical Application Error:", error, errorInfo);
     Database.logSystemEvent('ERROR', 'App Crash', error.message);
   }
