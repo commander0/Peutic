@@ -123,26 +123,32 @@ export class Database {
             if (error.code === '42501' || error.message.includes('row-level security')) {
                 console.warn("RLS blocking profile creation. Using Backend Bypass...");
                 
-                const { data, error: invokeError } = await supabase.functions.invoke('api-gateway', {
-                    body: {
-                        action: 'profile-create-bypass',
-                        payload: {
-                            id: authUser.id,
-                            email: authUser.email,
-                            name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0],
-                            provider: authUser.app_metadata?.provider || 'email'
+                try {
+                    const { data, error: invokeError } = await supabase.functions.invoke('api-gateway', {
+                        body: {
+                            action: 'profile-create-bypass',
+                            payload: {
+                                id: authUser.id,
+                                email: authUser.email,
+                                name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0],
+                                provider: authUser.app_metadata?.provider || 'email'
+                            }
                         }
-                    }
-                });
+                    });
 
-                if (invokeError) {
-                    console.error("Edge Function Invoke Error:", invokeError);
-                    throw new Error(`Server connection failed: ${invokeError.message}. (Did you deploy the backend?)`);
-                }
+                    if (invokeError) throw invokeError;
+                    if (data?.error) throw new Error(data.error);
 
-                if (data?.error) {
-                     console.error("Edge Function Logic Error:", data.error);
-                     throw new Error(`Server error: ${data.error}`);
+                } catch (backendErr: any) {
+                    console.error("Backend Bypass Failed:", backendErr);
+                    
+                    // Final attempt: Check if user exists anyway (race condition)
+                    await new Promise(r => setTimeout(r, 2000));
+                    const check = await this.syncUser(authUser.id);
+                    if (check) return check;
+
+                    // If still failing, it's a deployment issue
+                    throw new Error("Backend setup required. Please run: npm run backend:deploy");
                 }
                 
                 // Wait briefly for propagation

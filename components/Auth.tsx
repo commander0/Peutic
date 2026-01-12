@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { UserRole } from '../types';
-import { Facebook, AlertCircle, Send, Heart, Check, Loader2 } from 'lucide-react';
+import { Facebook, AlertCircle, Send, Heart, Check, Loader2, Server } from 'lucide-react';
 import { Database } from '../services/database';
 import { Shield } from 'lucide-react';
 
@@ -200,6 +200,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
           const formattedName = fullName.length > 1 ? (fullName.charAt(0).toUpperCase() + fullName.slice(1)) : "Buddy";
           await onLogin(UserRole.USER, formattedName, undefined, email, birthday, 'email', password);
       } catch (e: any) {
+          console.error(e);
           setError(e.message || "Account creation failed. Please try again.");
           setLoading(false);
       }
@@ -261,8 +262,13 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                                     <p className="text-gray-500">Your safe space is ready.</p>
                                  </div>
                                  {error && (
-                                    <div className="p-4 bg-red-50 text-red-600 rounded-xl font-bold text-sm flex items-center gap-2 justify-center">
-                                        <AlertCircle className="w-4 h-4"/> {error}
+                                    <div className="p-4 bg-red-50 text-red-600 rounded-xl font-bold text-sm flex flex-col gap-2 border border-red-200 text-left">
+                                        <div className="flex items-center gap-2"><AlertCircle className="w-4 h-4"/> Error: {error}</div>
+                                        {error.includes("deploy") && (
+                                            <div className="text-xs font-mono bg-red-100 p-2 rounded text-red-800 break-all">
+                                                npm run backend:deploy
+                                            </div>
+                                        )}
                                     </div>
                                  )}
                                  <button 
@@ -309,8 +315,15 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                 <p className="text-gray-500 mb-6 md:mb-8 text-sm md:text-base">{isLogin ? 'Access your private sanctuary.' : 'Join 1M+ users finding clarity.'}</p>
 
                 {error && (
-                    <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 text-sm rounded-xl flex items-center gap-2 font-bold">
-                        <AlertCircle className="w-4 h-4" /> {error}
+                    <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 text-sm rounded-xl flex flex-col gap-2">
+                        <div className="flex items-center gap-2 font-bold"><AlertCircle className="w-4 h-4" /> Error</div>
+                        <p>{error}</p>
+                        {error.includes("deploy") && (
+                            <div className="mt-2 text-xs font-mono bg-black/10 dark:bg-white/10 p-2 rounded text-black dark:text-white flex items-center justify-between">
+                                npm run backend:deploy
+                                <Server className="w-3 h-3 opacity-50"/>
+                            </div>
+                        )}
                     </div>
                 )}
 

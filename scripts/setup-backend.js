@@ -21,7 +21,7 @@ console.log("🚀 Initializing Peutic Backend...");
 // --- 1. API GATEWAY CODE ---
 const apiGatewayCode = `
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 import { GoogleGenAI } from 'https://esm.sh/@google/genai'
 import Stripe from 'https://esm.sh/stripe@14.14.0?target=deno'
 
@@ -41,7 +41,7 @@ serve(async (req) => {
   try {
     const { action, payload } = await req.json();
     
-    // Debug Log (View in Supabase Dashboard > Edge Functions > Logs)
+    // Debug Log
     console.log("Request Action:", action);
 
     // Initialize Supabase Admin Client (Service Role)
@@ -49,7 +49,8 @@ serve(async (req) => {
     const supKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!supUrl || !supKey) {
-        throw new Error("Server Misconfiguration: Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+        // Return 200 with error to prevent Gateway 500
+        return new Response(JSON.stringify({ error: "Server Misconfiguration: Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. Check your Supabase secrets." }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const supabaseClient = createClient(supUrl, supKey);
@@ -65,12 +66,10 @@ serve(async (req) => {
         if (payload.key === MASTER_KEY) {
             return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
-        // Return 200 with error to avoid generic 500 on client
         return new Response(JSON.stringify({ success: false, error: 'Invalid Credentials' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // --- EMERGENCY PROFILE CREATION (Bypasses RLS) ---
-    // This allows the frontend to create a profile even if SQL policies fail
     if (action === 'profile-create-bypass') {
         const { id, email, name, provider } = payload;
         
@@ -78,8 +77,9 @@ serve(async (req) => {
         const { count } = await supabaseClient.from('users').select('*', { count: 'exact', head: true });
         const isFirst = (count || 0) === 0;
 
-        // 2. Insert User with Service Role (Bypasses RLS Code 42501)
-        const { error } = await supabaseClient.from('users').insert({
+        // 2. UPSERT User with Service Role (Bypasses RLS Code 42501)
+        // Using Upsert handles cases where RLS blocked read but Insert succeeded partially
+        const { error } = await supabaseClient.from('users').upsert({
             id: id, // Must match Auth ID
             email: email,
             name: name,
@@ -88,19 +88,18 @@ serve(async (req) => {
             subscription_status: 'ACTIVE',
             provider: provider || 'email',
             created_at: new Date().toISOString()
-        });
+        }, { onConflict: 'id' });
 
         if (error) {
             console.error("Profile Bypass Error:", error);
-            // Ignore duplicate key error (23505) as it means success
-            if (error.code !== '23505') throw new Error(error.message);
+            return new Response(JSON.stringify({ error: error.message }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     if (action === 'process-topup') {
-        if (!stripe) throw new Error("Stripe not configured on server");
+        if (!stripe) return new Response(JSON.stringify({ error: "Stripe not configured on server" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         
         const { userId, amount, cost, paymentToken } = payload;
         
@@ -110,10 +109,10 @@ serve(async (req) => {
             .eq('id', userId)
             .single();
             
-        if (fetchError) throw new Error("User not found");
+        if (fetchError) return new Response(JSON.stringify({ error: "User not found" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
         if (cost > 0) {
-            if (!paymentToken) throw new Error("Missing payment token");
+            if (!paymentToken) return new Response(JSON.stringify({ error: "Missing payment token" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
             try {
                 const charge = await stripe.charges.create({
                     amount: Math.round(cost * 100),
@@ -121,10 +120,10 @@ serve(async (req) => {
                     source: paymentToken,
                     description: \`Peutic Credits Top-up for user \${userId}\`
                 });
-                if (charge.status !== 'succeeded') throw new Error("Payment failed");
+                if (charge.status !== 'succeeded') return new Response(JSON.stringify({ error: "Payment failed" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
             } catch (stripeError) {
                 console.error("Stripe Error:", stripeError);
-                throw new Error(\`Payment processing failed: \${stripeError.message}\`);
+                return new Response(JSON.stringify({ error: \`Payment processing failed: \${stripeError.message}\` }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
             }
         }
 
@@ -146,7 +145,7 @@ serve(async (req) => {
 
     if (action === 'gemini-generate') {
         const apiKey = Deno.env.get('GEMINI_API_KEY');
-        if (!apiKey) throw new Error("Server Misconfiguration: Missing GEMINI_API_KEY");
+        if (!apiKey) return new Response(JSON.stringify({ error: "Server Misconfiguration: Missing GEMINI_API_KEY" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         
         const ai = new GoogleGenAI({ apiKey: apiKey });
         const response = await ai.models.generateContent({
@@ -162,7 +161,7 @@ serve(async (req) => {
 
     if (action === 'gemini-speak') {
         const apiKey = Deno.env.get('GEMINI_API_KEY');
-        if (!apiKey) throw new Error("Server Misconfiguration: Missing GEMINI_API_KEY");
+        if (!apiKey) return new Response(JSON.stringify({ error: "Server Misconfiguration: Missing GEMINI_API_KEY" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
         const ai = new GoogleGenAI({ apiKey: apiKey });
         const response = await ai.models.generateContent({
@@ -179,16 +178,15 @@ serve(async (req) => {
         });
 
         const audioData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-        if (!audioData) throw new Error("No audio generated");
+        if (!audioData) return new Response(JSON.stringify({ error: "No audio generated" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
         return new Response(JSON.stringify({ audioData }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    throw new Error("Invalid Action");
+    return new Response(JSON.stringify({ error: "Invalid Action" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
     console.error("Gateway Error:", error);
-    // Return 200 with error property to bypass generic 500 handlers on client
     return new Response(JSON.stringify({ error: error.message }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });
@@ -215,7 +213,7 @@ serve(async (req) => {
 
   try {
     if (!TAVUS_API_KEY) {
-        throw new Error("Server Configuration Error: Missing TAVUS_API_KEY");
+        return new Response(JSON.stringify({ error: "Server Configuration Error: Missing TAVUS_API_KEY" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const { action, replicaId, userName, context, conversationId } = await req.json();
@@ -258,15 +256,15 @@ serve(async (req) => {
             const errorMsg = data.message || data.error || response.statusText;
             console.error("Tavus API Error:", errorMsg);
             if (response.status === 402 || errorMsg.includes('quota')) {
-                throw new Error("System Capacity Reached. Please try again later.");
+                return new Response(JSON.stringify({ error: "System Capacity Reached. Please try again later." }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
             }
-            throw new Error(errorMsg);
+            return new Response(JSON.stringify({ error: errorMsg }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
         return new Response(JSON.stringify(data), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     } else if (action === 'end') {
-        if (!conversationId) throw new Error("Missing conversation ID");
+        if (!conversationId) return new Response(JSON.stringify({ error: "Missing conversation ID" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         
         await fetch(\`\${TAVUS_API_URL}/conversations/\${conversationId}/end\`, {
             method: 'POST',
@@ -276,7 +274,7 @@ serve(async (req) => {
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    throw new Error("Invalid Action");
+    return new Response(JSON.stringify({ error: "Invalid Action" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
