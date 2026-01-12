@@ -167,8 +167,8 @@ export class Database {
                     id: authUser.id,
                     email: authUser.email,
                     name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0],
-                    role: UserRole.USER, // Default to USER safely, unless we know better
-                    balance: 0,
+                    role: isFirst ? UserRole.ADMIN : UserRole.USER, // FIXED: Correctly assign ADMIN if first user
+                    balance: isFirst ? 999 : 0,
                     subscriptionStatus: 'ACTIVE',
                     joinedAt: new Date().toISOString(),
                     lastLoginDate: new Date().toISOString(),
@@ -374,8 +374,8 @@ export class Database {
                   allowSignups: data.allow_signups,
                   siteName: data.site_name,
                   broadcastMessage: data.broadcast_message,
-                  max_concurrent_sessions: data.max_concurrent_sessions,
-                  multilingual_mode: data.multilingual_mode
+                  maxConcurrentSessions: data.max_concurrent_sessions, // Fixed property name
+                  multilingualMode: data.multilingual_mode // Fixed property name
               };
           } else {
               // Only save defaults if missing
@@ -396,7 +396,7 @@ export class Database {
           site_name: settings.siteName,
           broadcast_message: settings.broadcastMessage,
           max_concurrent_sessions: settings.maxConcurrentSessions,
-          multilingual_mode: settings.multilingualMode
+          multilingual_mode: settings.multilingualMode // Fixed property access
       });
   }
 

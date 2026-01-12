@@ -85,12 +85,19 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                      normalizedEmail, 
                      password // This path won't actually use password for creation, just reference
                  );
-                 if (repaired && repaired.role === UserRole.ADMIN) {
-                     onLogin(repaired);
-                     return;
+                 if (repaired) {
+                     if (repaired.role === UserRole.ADMIN) {
+                         onLogin(repaired);
+                         return;
+                     } else {
+                         throw new Error("Account exists but does not have Admin privileges.");
+                     }
                  }
-             } catch (repairErr) {
+             } catch (repairErr: any) {
                  console.error("Repair failed", repairErr);
+                 if (repairErr.message.includes("does not have Admin privileges")) {
+                     throw repairErr;
+                 }
              }
              
              setError("Profile sync error. Please try again.");
