@@ -83,13 +83,12 @@ export class Database {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        // Attempt to sync from public.users
-        const user = await this.syncUser(session.user.id);
+        let user = await this.syncUser(session.user.id);
         
-        // SELF-HEALING: If Auth exists but Public Profile is missing
+        // SELF-HEALING: If Auth exists but Profile missing
         if (!user) {
             console.warn("Auth active but Profile missing. Running self-healing...");
-            return await this.repairProfile(session.user);
+            user = await this.repairProfile(session.user);
         }
         return user;
       }
@@ -99,26 +98,24 @@ export class Database {
     return this.currentUser;
   }
 
-  // SELF-HEALING: Creates a profile if the Trigger failed or was too slow
+  // SELF-HEALING
   private static async repairProfile(authUser: any): Promise<User | null> {
     try {
         const { count } = await supabase.from('users').select('id', { count: 'exact', head: true });
-        // Double check admin status based on public DB emptiness
         const isFirst = (count || 0) === 0;
         
         const newUser = {
-            id: authUser.id, // Explicitly use the Auth UUID
+            id: authUser.id,
             email: authUser.email,
             name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0],
-            role: isFirst ? 'ADMIN' : 'USER', // Fallback role logic
+            role: isFirst ? 'ADMIN' : 'USER',
             balance: isFirst ? 999 : 0,
             provider: authUser.app_metadata?.provider || 'email'
         };
         
-        // Try inserting (relies on RLS)
         const { error } = await supabase.from('users').insert(newUser);
         
-        // OPTIMISTIC USER: Even if DB fails (e.g. RLS), allow UI to proceed if Auth worked.
+        // OPTIMISTIC USER
         const optimisticUser: User = {
             id: authUser.id,
             email: authUser.email,
@@ -137,7 +134,6 @@ export class Database {
             // FIX: If Permission Denied (42501), fallback to Edge Function bypass
             if (error.code === '42501' || error.message.includes('row-level security')) {
                 console.warn("RLS blocking profile creation. Using Backend Bypass...");
-                
                 try {
                     const { data, error: invokeError } = await supabase.functions.invoke('api-gateway', {
                         body: {
@@ -150,42 +146,29 @@ export class Database {
                             }
                         }
                     });
-
                     if (invokeError) throw invokeError;
                     if (data?.error) throw new Error(data.error);
-
                 } catch (backendErr: any) {
                     console.error("Backend Bypass Failed:", backendErr);
-                    // RLS Failed and Backend Failed -> Return Optimistic to unblock UI
                     return optimisticUser;
                 }
                 
-                // Wait briefly for propagation
                 await new Promise(r => setTimeout(r, 1000));
-                
-                // Attempt standard sync first
                 for(let i=0; i<3; i++) {
                     const user = await this.syncUser(authUser.id);
                     if (user) return user;
                     await new Promise(r => setTimeout(r, 500));
                 }
-
-                // If sync still fails (e.g. read policy issue), return optimistic
                 return optimisticUser;
             }
-
-            // Ignore duplicate key errors (race condition success)
             if (error.code === '23505') return await this.syncUser(authUser.id);
-            
             console.error("Repair Profile Error:", error);
-            // Even on error, return optimistic to prevent hang
             return optimisticUser;
         }
         
         return await this.syncUser(authUser.id) || optimisticUser;
     } catch (e: any) { 
         console.error("Repair failed", e); 
-        // Fallback for safety
         return {
             id: authUser.id,
             email: authUser.email,
@@ -247,8 +230,6 @@ export class Database {
         if (data.user) {
             const user = await this.syncUser(data.user.id);
             if (user) return user;
-            
-            // Sync failed? Try repair immediately.
             try {
                 const repaired = await this.repairProfile(data.user);
                 if (repaired) return repaired;
@@ -260,7 +241,6 @@ export class Database {
     throw new Error("Login failed. Profile could not be synchronized.");
   }
 
-  // NEW: Create Root Admin via Backend (Bypasses Email Verification)
   static async createRootAdmin(email: string, password?: string): Promise<User> {
       try {
           const { data, error } = await supabase.functions.invoke('api-gateway', {
@@ -268,8 +248,6 @@ export class Database {
           });
           if (error) throw error;
           if (data?.error) throw new Error(data.error);
-          
-          // Auto-login after creation since password is known
           return await this.login(email, password);
       } catch (e: any) {
           console.error("Root Admin Creation Failed:", e);
@@ -277,7 +255,6 @@ export class Database {
       }
   }
 
-  // NEW: Force verify email via backend if frontend is blocked
   static async forceVerifyEmail(email: string): Promise<boolean> {
       try {
           const { data, error } = await supabase.functions.invoke('api-gateway', {
@@ -299,45 +276,35 @@ export class Database {
             options: { data: { full_name: name } }
         });
         
-        // --- ADMIN RECOVERY LOGIC ---
         if (error) {
             if (error.message.includes("registered") || error.message.includes("already exists")) {
-                console.log("User exists in Auth. Attempting recovery login...");
                 return this.login(email, password);
             }
             throw new Error(error.message);
         }
         
         if (data.user) {
-            // Force sign-in if session is missing (rare but happens with email confirm off)
             if (!data.session) {
                 try {
                     await supabase.auth.signInWithPassword({ email, password });
                 } catch(e: any) {
-                    console.warn("Auto-login post-signup failed:", e.message);
                     if (e.message.includes("not confirmed") || e.message.includes("Email not confirmed")) {
-                        // CRITICAL FIX: Ensure the profile exists even if login failed due to email confirmation
                         try { await this.repairProfile(data.user); } catch(err) {}
                         throw new Error("Account created! Please check your email to confirm verification, then log in.");
                     }
                 }
             }
 
-            // Wait for DB trigger with backoff (Increased wait for initial)
             for (let i = 0; i < 3; i++) {
                 const user = await this.syncUser(data.user.id);
                 if (user) return user;
                 await new Promise(r => setTimeout(r, 1000 * (i + 1)));
             }
             
-            // If trigger failed, run self-healing and catch errors
-            // Use return value from repairProfile (which might be optimistic)
             try {
                 const repaired = await this.repairProfile(data.user);
                 if (repaired) return repaired;
             } catch (repairError: any) {
-                // If repair failed strictly, manually return optimistic
-                console.warn("Returning optimistic user due to timeout.");
                 return {
                     id: data.user.id,
                     name: name,
@@ -354,8 +321,6 @@ export class Database {
             }
         }
     } else if (provider !== 'email') {
-        // Optimistic return for OAuth to allow immediate UI feedback
-        // The actual user will be synced when Auth component detects session change
         return {
             id: 'temp',
             name: name,
@@ -408,7 +373,6 @@ export class Database {
   }
 
   static async getCompanions(): Promise<Companion[]> {
-      // READ ONLY - No Insertion
       try {
           const { data } = await supabase.from('companions').select('*');
           if (data && data.length > 0) {
@@ -422,7 +386,7 @@ export class Database {
       } catch (e) {
           console.error("Failed to fetch companions", e);
       }
-      // Return static list only if DB fails or is empty (but DO NOT WRITE)
+      // CRITICAL FALLBACK: If DB is empty or fails, return static 35 list to ensure grid isn't empty
       return INITIAL_COMPANIONS;
   }
 
@@ -443,11 +407,10 @@ export class Database {
                   allowSignups: data.allow_signups,
                   siteName: data.site_name,
                   broadcastMessage: data.broadcast_message,
-                  maxConcurrentSessions: data.max_concurrent_sessions, // Fixed property name
-                  multilingualMode: data.multilingual_mode // Fixed property name
+                  maxConcurrentSessions: data.max_concurrent_sessions,
+                  multilingualMode: data.multilingual_mode
               };
           } else {
-              // Only save defaults if missing
               await this.saveSettings(this.settingsCache);
           }
       } catch(e) {}
@@ -465,7 +428,7 @@ export class Database {
           site_name: settings.siteName,
           broadcast_message: settings.broadcastMessage,
           max_concurrent_sessions: settings.maxConcurrentSessions,
-          multilingual_mode: settings.multilingualMode // Fixed property access
+          multilingual_mode: settings.multilingualMode
       });
   }
 
@@ -510,33 +473,33 @@ export class Database {
   // --- CONTENT ---
 
   static async getJournals(userId: string): Promise<JournalEntry[]> {
-      const { data } = await supabase.from('journals').select('*').eq('user_id', userId).order('date', { ascending: false });
+      const { data } = await supabase.from('journal_entries').select('*').eq('user_id', userId).order('date', { ascending: false });
       return (data || []).map(j => ({ id: j.id, userId: j.user_id, date: j.date, content: j.content }));
   }
 
   static async saveJournal(entry: JournalEntry) {
-      await supabase.from('journals').insert({ id: entry.id, user_id: entry.userId, date: entry.date, content: entry.content });
+      await supabase.from('journal_entries').insert({ id: entry.id, user_id: entry.userId, date: entry.date, content: entry.content });
   }
 
   static async getMoods(userId: string): Promise<MoodEntry[]> {
-      const { data } = await supabase.from('moods').select('*').eq('user_id', userId).order('date', { ascending: false });
+      const { data } = await supabase.from('mood_log').select('*').eq('user_id', userId).order('date', { ascending: false });
       return (data || []).map(m => ({ id: m.id, userId: m.user_id, date: m.date, mood: m.mood as any }));
   }
 
   static async saveMood(userId: string, mood: 'confetti' | 'rain') {
-      await supabase.from('moods').insert({ user_id: userId, date: new Date().toISOString(), mood });
+      await supabase.from('mood_log').insert({ user_id: userId, date: new Date().toISOString(), mood });
   }
 
   static async getUserArt(userId: string): Promise<ArtEntry[]> {
-      const { data } = await supabase.from('user_art').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+      const { data } = await supabase.from('art_gallery').select('*').eq('user_id', userId).order('created_at', { ascending: false });
       return (data || []).map(a => ({ id: a.id, userId: a.user_id, imageUrl: a.image_url, prompt: a.prompt, createdAt: a.created_at, title: a.title }));
   }
 
   static async saveArt(entry: ArtEntry) {
-      await supabase.from('user_art').insert({ id: entry.id, user_id: entry.userId, image_url: entry.imageUrl, prompt: entry.prompt, title: entry.title, created_at: entry.createdAt });
+      await supabase.from('art_gallery').insert({ id: entry.id, user_id: entry.userId, image_url: entry.imageUrl, prompt: entry.prompt, title: entry.title, created_at: entry.createdAt });
   }
 
-  static async deleteArt(id: string) { await supabase.from('user_art').delete().eq('id', id); }
+  static async deleteArt(id: string) { await supabase.from('art_gallery').delete().eq('id', id); }
 
   static async getSystemLogs(): Promise<SystemLog[]> {
       const { data } = await supabase.from('system_logs').select('*').order('timestamp', { ascending: false }).limit(100);
@@ -548,8 +511,8 @@ export class Database {
   }
 
   static async saveFeedback(feedback: SessionFeedback) {
-      await supabase.from('feedback').insert({
-          user_id: feedback.userId, companion_name: feedback.companionName, rating: feedback.rating, tags: feedback.tags, date: feedback.date
+      await supabase.from('session_feedback').insert({
+          id: feedback.id, user_id: feedback.userId, companion_name: feedback.companionName, rating: feedback.rating, tags: feedback.tags, date: feedback.date, duration: feedback.duration
       });
   }
 
@@ -609,7 +572,7 @@ export class Database {
 
   static async getWeeklyProgress(userId: string): Promise<{ current: number, target: number, message: string }> {
       const oneWeekAgo = new Date(); oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      const { count: journalCount } = await supabase.from('journals').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', oneWeekAgo.toISOString());
+      const { count: journalCount } = await supabase.from('journal_entries').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', oneWeekAgo.toISOString());
       const { count: sessionCount } = await supabase.from('transactions').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'COMPLETED').gte('date', oneWeekAgo.toISOString());
       const current = (journalCount || 0) + (sessionCount || 0);
       return { current, target: 10, message: current >= 10 ? "Goal crushed!" : "Keep going!" };
