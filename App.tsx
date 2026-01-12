@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, ErrorInfo, ReactNode } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole, Companion } from './types';
@@ -21,6 +22,7 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
+// Fixed ErrorBoundary inheritance to include React.Component for setState and props access
 class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public state: ErrorBoundaryState = { hasError: false };
 
@@ -210,7 +212,7 @@ const MainApp: React.FC = () => {
       {/* TIMEOUT WARNING MODAL */}
       {showTimeoutWarning && (
           <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
-              <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl border border-yellow-500">
+              <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl max-sm w-full text-center shadow-2xl border border-yellow-500">
                   <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Clock className="w-8 h-8 text-yellow-600 dark:text-yellow-500" />
                   </div>
