@@ -101,30 +101,20 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         if (!user) {
              // Fallback: If auth succeeded but DB profile is missing, try to repair
              try {
-                 // Attempt to force-create the profile using the auth data
                  const repaired = await Database.createUser(
                      authData.user.user_metadata.full_name || 'Admin', 
                      normalizedEmail, 
-                     password // This path won't actually use password for creation, just reference
+                     password 
                  );
-                 if (repaired) {
-                     if (repaired.role === UserRole.ADMIN) {
-                         onLogin(repaired);
-                         return;
-                     } else {
-                         throw new Error("Account exists but does not have Admin privileges.");
-                     }
+                 if (repaired && repaired.role === UserRole.ADMIN) {
+                     onLogin(repaired);
+                     return;
                  }
+                 throw new Error("Account exists but does not have Admin privileges.");
              } catch (repairErr: any) {
                  console.error("Repair failed", repairErr);
-                 if (repairErr.message.includes("does not have Admin privileges")) {
-                     throw repairErr;
-                 }
+                 throw repairErr;
              }
-             
-             setError("Profile sync error. Please try again.");
-             setLoading(false);
-             return;
         }
 
         if (user.role === UserRole.ADMIN) {
@@ -146,11 +136,6 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
 
   const validatePasswordStrength = (pwd: string): string | null => {
       if (pwd.length < 8) return "Password must be at least 8 characters long.";
-      if (!/[A-Z]/.test(pwd)) return "Password must include at least one uppercase letter.";
-      if (!/[a-z]/.test(pwd)) return "Password must include at least one lowercase letter.";
-      if (!/[0-9]/.test(pwd)) return "Password must include at least one number.";
-      // Relaxed special char requirement for local dev ease, but keeping it for production feel
-      // if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) return "Password must include at least one special character.";
       return null;
   };
 
@@ -175,41 +160,21 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
       try {
           const finalEmail = newAdminEmail.toLowerCase().trim();
           
-          // Use standard creation. 
-          const newUser = await Database.createUser('System Admin', finalEmail, newAdminPassword);
+          // Use NEW Server-Side Creation Bypass
+          const newUser = await Database.createRootAdmin(finalEmail, newAdminPassword);
 
-          // If this is the FIRST user, they become ADMIN automatically via DB Trigger.
-          if (newUser.role === UserRole.ADMIN) {
+          if (newUser && newUser.role === UserRole.ADMIN) {
               setSuccessMsg("Root Admin Initialized Successfully.");
               setTimeout(() => {
-                  setShowRegister(false);
-                  setSuccessMsg('');
-                  setEmail(finalEmail);
-                  setNewAdminPassword('');
-                  setNewAdminConfirmPassword('');
-                  setHasAdmin(true);
+                  onLogin(newUser); // Auto Login
               }, 1500);
           } else {
-              setError("Account created, but 'Admin' role could not be auto-assigned. Please check settings.");
+              throw new Error("Account created, but admin role assignment failed.");
           }
 
       } catch (e: any) {
           console.error(e);
-          if (e.message.includes("check your email")) {
-              // Handle Email Verification Case gracefully
-              setSuccessMsg("Account created! Verification email sent.");
-              setError(""); // Clear error if it was just verification warning
-              setTimeout(() => {
-                  setShowRegister(false);
-                  setEmail(newAdminEmail);
-              }, 2500);
-          } else if (e.message.includes("registered")) {
-              setError("This email is already registered. Please log in.");
-              setShowRegister(false);
-              setEmail(newAdminEmail);
-          } else {
-              setError(e.message || "Initialization Failed.");
-          }
+          setError(e.message || "Initialization Failed.");
       } finally {
           setLoading(false);
       }
@@ -236,13 +201,13 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                 ) : (
                     <>
                         {error && <div className="mb-6 p-4 bg-red-900/30 border border-red-800 text-red-400 text-sm rounded-xl flex items-center gap-2 font-bold animate-pulse"><AlertCircle className="w-4 h-4 flex-shrink-0"/> <span>{error}</span></div>}
-                        {successMsg && <div className="mb-6 p-4 bg-green-900/30 border border-green-800 text-green-400 text-sm rounded-xl flex items-center gap-2 font-bold animate-bounce"><Mail className="w-4 h-4"/> {successMsg}</div>}
+                        {successMsg && <div className="mb-6 p-4 bg-green-900/30 border border-green-800 text-green-400 text-sm rounded-xl flex items-center gap-2 font-bold animate-bounce"><Check className="w-4 h-4"/> {successMsg}</div>}
 
                         {showRegister ? (
                              <form onSubmit={handleRegisterAdmin} className="space-y-4 animate-in fade-in">
                                 <div className="text-center mb-6 p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/30">
                                     <h3 className="text-white font-black text-lg flex items-center justify-center gap-2 uppercase tracking-wide"><Crown className="w-5 h-5 text-yellow-500"/> System Claim</h3>
-                                    <p className="text-[10px] text-gray-400 mt-1">Initialize or create new admin credentials.</p>
+                                    <p className="text-[10px] text-gray-400 mt-1">Initialize Root Admin Credentials.</p>
                                 </div>
                                 <input type="email" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="New Admin Email" value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} />
                                 <div className="grid grid-cols-2 gap-4">
@@ -274,11 +239,14 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                     {loading ? <span className="animate-pulse">{isVerifying ? "Verifying Access..." : "Authenticating..."}</span> : <><KeyRound className="w-4 h-4" /> ACCESS TERMINAL</>}
                                 </button>
                                 
-                                <div className="pt-4 text-center">
-                                    <button type="button" onClick={() => setShowRegister(true)} className="text-yellow-600 hover:text-yellow-500 text-xs font-bold transition-colors uppercase tracking-wide flex items-center justify-center gap-2 mx-auto">
-                                        <UserPlus className="w-3 h-3" /> Create / Claim Admin Access
-                                    </button>
-                                </div>
+                                {/* HIDE IF ADMIN EXISTS */}
+                                {!hasAdmin && (
+                                    <div className="pt-4 text-center">
+                                        <button type="button" onClick={() => setShowRegister(true)} className="text-yellow-600 hover:text-yellow-500 text-xs font-bold transition-colors uppercase tracking-wide flex items-center justify-center gap-2 mx-auto">
+                                            <UserPlus className="w-3 h-3" /> Create / Claim Admin Access
+                                        </button>
+                                    </div>
+                                )}
                             </form>
                         )}
                     </>

@@ -252,6 +252,23 @@ export class Database {
     throw new Error("Login failed. Profile could not be synchronized.");
   }
 
+  // NEW: Create Root Admin via Backend (Bypasses Email Verification)
+  static async createRootAdmin(email: string, password?: string): Promise<User> {
+      try {
+          const { data, error } = await supabase.functions.invoke('api-gateway', {
+              body: { action: 'admin-create', payload: { email, password } }
+          });
+          if (error) throw error;
+          if (data?.error) throw new Error(data.error);
+          
+          // Auto-login after creation since password is known
+          return await this.login(email, password);
+      } catch (e: any) {
+          console.error("Root Admin Creation Failed:", e);
+          throw e;
+      }
+  }
+
   // NEW: Force verify email via backend if frontend is blocked
   static async forceVerifyEmail(email: string): Promise<boolean> {
       try {
