@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { GoogleGenAI, Modality } from 'https://esm.sh/@google/genai'
+import { GoogleGenAI } from 'https://esm.sh/@google/genai'
 import Stripe from 'https://esm.sh/stripe@14.14.0?target=deno'
 
 declare const Deno: any;
@@ -127,7 +127,7 @@ serve(async (req) => {
             model: 'gemini-2.5-flash-preview-tts',
             contents: { parts: [{ text: payload.text }] },
             config: {
-                responseModalities: [Modality.AUDIO],
+                responseModalities: ['AUDIO'],
                 speechConfig: {
                     voiceConfig: {
                         prebuiltVoiceConfig: { voiceName: 'Kore' }, // 'Kore', 'Puck', 'Charon', 'Fenrir', 'Zephyr'

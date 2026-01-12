@@ -1,3 +1,4 @@
+
 import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, MoodEntry, JournalEntry, SessionFeedback, ArtEntry } from '../types';
 import { supabase } from './supabaseClient';
 
@@ -37,6 +38,29 @@ export const INITIAL_COMPANIONS: Companion[] = [
   { id: 'c45', name: 'Matthew', gender: 'Male', specialty: 'Tech Burnout', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=800", bio: 'Restoring digital balance.', replicaId: 'r92debe21318', licenseNumber: 'LMFT-WA-3399', degree: 'MA, Psychology', stateOfPractice: 'WA', yearsExperience: 7 },
   { id: 'c7', name: 'Olivia', gender: 'Female', specialty: 'Workplace Stress', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1619895862022-09114b41f16f?auto=format&fit=crop&q=80&w=800", bio: 'Burnout prevention strategies.', replicaId: 'rc2146c13e81', licenseNumber: 'PsyD-NY-1102', degree: 'PsyD, Org Psychology', stateOfPractice: 'NY', yearsExperience: 7 },
   { id: 'c10', name: 'Dr. Chen', gender: 'Male', specialty: 'Executive Burnout', status: 'BUSY', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=800", bio: 'High performance sustainability.', replicaId: 'rca8a38779a8', licenseNumber: 'PsyD-CA-9921', degree: 'PsyD, Org Psychology', stateOfPractice: 'CA', yearsExperience: 18 },
+  { id: 'c9', name: 'Elena', gender: 'Female', specialty: 'Postpartum Support', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&q=80&w=800", bio: 'Supporting new mothers.', replicaId: 're3a705cf66a', licenseNumber: 'LCSW-TX-3321', degree: 'MSW, Clinical Social Work', stateOfPractice: 'TX', yearsExperience: 6 },
+  { id: 'c12', name: 'Malik', gender: 'Male', specialty: 'Trauma & PTSD', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800", bio: 'Healing the past.', replicaId: 'r92debe21318', licenseNumber: 'LPC-IL-2210', degree: 'PhD, Clinical Psychology', stateOfPractice: 'IL', yearsExperience: 11 },
+  { id: 'c44', name: 'Avery', gender: 'Female', specialty: 'ADHD Support', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=800", bio: 'Thriving with neurodiversity.', replicaId: 'rc2146c13e81', licenseNumber: 'PsyD-MA-6622', degree: 'PsyD, Psychology', stateOfPractice: 'MA', yearsExperience: 10 },
+  { id: 'c14', name: 'Liam', gender: 'Male', specialty: 'Anger Management', status: 'AVAILABLE', rating: 4.7, imageUrl: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&q=80&w=800", bio: 'Constructive expression.', replicaId: 'rca8a38779a8', licenseNumber: 'LCSW-MA-8812', degree: 'MSW, Social Work', stateOfPractice: 'MA', yearsExperience: 13 },
+  { id: 'c11', name: 'Sarah', gender: 'Female', specialty: 'Eating Disorders', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=800", bio: 'Building a healthy relationship with food.', replicaId: 'r6ae5b6efc9d', licenseNumber: 'RD-NY-4421', degree: 'MS, Nutrition & Psychology', stateOfPractice: 'NY', yearsExperience: 9 },
+  { id: 'c16', name: 'Noah', gender: 'Male', specialty: 'Teen Anxiety', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?auto=format&fit=crop&q=80&w=800", bio: 'Helping teens navigate pressure.', replicaId: 'r92debe21318', licenseNumber: 'LMFT-WA-9921', degree: 'MA, Family Therapy', stateOfPractice: 'WA', yearsExperience: 6 },
+  { id: 'c13', name: 'Zoey', gender: 'Female', specialty: 'LGBTQ+ Issues', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&q=80&w=800", bio: 'Affirming and inclusive care.', replicaId: 're3a705cf66a', licenseNumber: 'LMFT-OR-5521', degree: 'MA, Counseling Psychology', stateOfPractice: 'OR', yearsExperience: 5 },
+  { id: 'c19', name: 'Jackson', gender: 'Male', specialty: 'Sports Psychology', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=800", bio: 'Peak performance mindset.', replicaId: 'rca8a38779a8', licenseNumber: 'PsyD-FL-4421', degree: 'PsyD, Sports Psychology', stateOfPractice: 'FL', yearsExperience: 8 },
+  { id: 'c17', name: 'Dr. Patel', gender: 'Female', specialty: 'Sleep Insomnia', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=800", bio: 'Restoring natural rhythms.', replicaId: 'rc2146c13e81', licenseNumber: 'MD-NY-1102', degree: 'MD, Psychiatry', stateOfPractice: 'NY', yearsExperience: 22 },
+  { id: 'c21', name: 'Lucas', gender: 'Male', specialty: 'Digital Addiction', status: 'AVAILABLE', rating: 4.7, imageUrl: "https://images.unsplash.com/photo-1463453091185-61582044d556?auto=format&fit=crop&q=80&w=800", bio: 'Unplugging for mental health.', replicaId: 'r92debe21318', licenseNumber: 'LCSW-NY-3321', degree: 'MSW, Social Work', stateOfPractice: 'NY', yearsExperience: 6 },
+  { id: 'c18', name: 'Sofia', gender: 'Female', specialty: 'Chronic Pain', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=800", bio: 'Mind-body healing.', replicaId: 're3a705cf66a', licenseNumber: 'PhD-CA-1123', degree: 'PhD, Health Psychology', stateOfPractice: 'CA', yearsExperience: 12 },
+  { id: 'c23', name: 'William', gender: 'Male', specialty: 'Divorce Recovery', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=800", bio: 'Navigating life transitions.', replicaId: 'rca8a38779a8', licenseNumber: 'LMFT-IL-5521', degree: 'MA, Family Therapy', stateOfPractice: 'IL', yearsExperience: 15 },
+  { id: 'c24', name: 'Maya', gender: 'Female', specialty: 'Cultural Identity', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&q=80&w=800", bio: 'Navigating dual cultures and belonging.', replicaId: 're3a705cf66a', licenseNumber: 'LCSW-CA-1102', degree: 'MSW, Social Work', stateOfPractice: 'CA', yearsExperience: 9 },
+  { id: 'c25', name: 'Caleb', gender: 'Male', specialty: 'Imposter Syndrome', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=800", bio: 'Owning your success with confidence.', replicaId: 'rca8a38779a8', licenseNumber: 'LPC-TX-9921', degree: 'MA, Counseling', stateOfPractice: 'TX', yearsExperience: 7 },
+  { id: 'c26', name: 'Chloe', gender: 'Female', specialty: 'Pet Loss Grief', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800", bio: 'Honoring the bond with our animal companions.', replicaId: 'r6ae5b6efc9d', licenseNumber: 'LMFT-NY-2210', degree: 'MS, Family Therapy', stateOfPractice: 'NY', yearsExperience: 12 },
+  { id: 'c27', name: 'Jordan', gender: 'Male', specialty: 'Military Transition', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=800", bio: 'From service to civilian life.', replicaId: 'r92debe21318', licenseNumber: 'LCSW-VA-4421', degree: 'MS, Clinical Social Work', stateOfPractice: 'VA', yearsExperience: 16 },
+  { id: 'c28', name: 'Layla', gender: 'Female', specialty: 'Fertility Support', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=800", bio: 'Supporting your path to parenthood.', replicaId: 're3a705cf66a', licenseNumber: 'PhD-CA-8821', degree: 'PhD, Health Psychology', stateOfPractice: 'CA', yearsExperience: 14 },
+  { id: 'c29', name: 'Henry', gender: 'Male', specialty: 'Retirement Adjustment', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1504257432389-52343af06ae3?auto=format&fit=crop&q=80&w=800", bio: 'Finding purpose in the next chapter.', replicaId: 'rca8a38779a8', licenseNumber: 'LMFT-FL-3321', degree: 'MA, Counseling', stateOfPractice: 'FL', yearsExperience: 25 },
+  { id: 'c30', name: 'Nora', gender: 'Female', specialty: 'Caregiver Stress', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=800", bio: 'Caring for yourself while caring for others.', replicaId: 'r4317e64d25a', licenseNumber: 'LCSW-OH-9912', degree: 'MSW, Social Work', stateOfPractice: 'OH', yearsExperience: 18 },
+  { id: 'c31', name: 'Owen', gender: 'Male', specialty: 'Gaming Addiction', status: 'AVAILABLE', rating: 4.7, imageUrl: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=800", bio: 'Balancing virtual worlds with reality.', replicaId: 'r92debe21318', licenseNumber: 'LPC-WA-2210', degree: 'MA, Psychology', stateOfPractice: 'WA', yearsExperience: 6 },
+  { id: 'c32', name: 'Luna', gender: 'Female', specialty: 'Spiritual Crisis', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=800", bio: 'Navigating faith transitions and meaning.', replicaId: 'rc2146c13e81', licenseNumber: 'LMFT-OR-5521', degree: 'MA, Transpersonal Psych', stateOfPractice: 'OR', yearsExperience: 11 },
+  { id: 'c33', name: 'Gabriel', gender: 'Male', specialty: 'Anger Regulation', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1480455624313-e29b44bbfde1?auto=format&fit=crop&q=80&w=800", bio: 'Transforming rage into constructive action.', replicaId: 'rca8a38779a8', licenseNumber: 'PsyD-IL-4421', degree: 'PsyD, Clinical Psychology', stateOfPractice: 'IL', yearsExperience: 13 },
+  { id: 'c34', name: 'Sophie', gender: 'Female', specialty: 'Social Anxiety', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=800", bio: 'Building confidence in connection.', replicaId: 'r6ae5b6efc9d', licenseNumber: 'LCSW-NY-3399', degree: 'MSW, Social Work', stateOfPractice: 'NY', yearsExperience: 8 },
   { id: 'c35', name: 'Ethan', gender: 'Male', specialty: 'Financial Anxiety', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&q=80&w=800", bio: 'Healing your relationship with money.', replicaId: 'r92debe21318', licenseNumber: 'LMFT-CA-2210', degree: 'MA, Financial Therapy', stateOfPractice: 'CA', yearsExperience: 10 }
 ];
 
@@ -53,46 +77,54 @@ export class Database {
       broadcastMessage: ''
   };
 
-  // --- SESSION MANAGEMENT ---
-  
+  // --- SESSION & USER SYNC ---
+
   static async restoreSession(): Promise<User | null> {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
+        // Attempt to sync from public.users
         const user = await this.syncUser(session.user.id);
+        
+        // SELF-HEALING: If Auth exists but Public Profile is missing
         if (!user) {
-            console.warn("Session valid but Profile not found. Attempting repair...");
+            console.warn("Auth active but Profile missing. Running self-healing...");
             return await this.repairProfile(session.user);
         }
         return user;
       }
     } catch (e) {
-      console.warn("Restore Session Failed");
+      console.warn("Restore Session Failed", e);
     }
     return this.currentUser;
   }
 
-  // SELF-HEALING REPAIR LOGIC
+  // SELF-HEALING: Creates a profile if the Trigger failed or was too slow
   private static async repairProfile(authUser: any): Promise<User | null> {
     try {
-        const isFirst = await this.isTableEmpty('users');
+        const { count } = await supabase.from('users').select('id', { count: 'exact', head: true });
+        // Double check admin status based on public DB emptiness
+        const isFirst = (count || 0) === 0;
+        
         const newUser = {
-            id: authUser.id,
+            id: authUser.id, // Explicitly use the Auth UUID
             email: authUser.email,
             name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0],
-            role: isFirst ? 'ADMIN' : 'USER',
+            role: isFirst ? 'ADMIN' : 'USER', // Fallback role logic
             balance: isFirst ? 999 : 0,
             provider: authUser.app_metadata?.provider || 'email'
         };
+        
+        // This INSERT works because of the RLS policy: "Users can insert own profile"
         const { error } = await supabase.from('users').insert(newUser);
-        if (!error) return this.mapUser(newUser);
-    } catch (e) { console.error("Repair failed", e); }
+        
+        if (!error || error.code === '23505') { // 23505 = duplicate key (race condition success)
+            return await this.syncUser(authUser.id);
+        }
+    } catch (e) { 
+        console.error("Repair failed", e); 
+    }
     return null;
-  }
-
-  private static async isTableEmpty(table: string): Promise<boolean> {
-    const { count } = await supabase.from(table).select('*', { count: 'exact', head: true });
-    return (count || 0) === 0;
   }
 
   static getUser(): User | null { return this.currentUser; }
@@ -101,10 +133,14 @@ export class Database {
 
   static async syncUser(userId: string): Promise<User | null> {
       if (!userId) return null;
-      const { data } = await supabase.from('users').select('*').eq('id', userId).single();
-      if (data) {
-          this.currentUser = this.mapUser(data);
-          return this.currentUser;
+      try {
+          const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();
+          if (data && !error) {
+              this.currentUser = this.mapUser(data);
+              return this.currentUser;
+          }
+      } catch (e) {
+          console.error("User sync error", e);
       }
       return null;
   }
@@ -137,11 +173,13 @@ export class Database {
         if (data.user) {
             const user = await this.syncUser(data.user.id);
             if (user) return user;
+            
+            // Sync failed? Try repair immediately.
             const repaired = await this.repairProfile(data.user);
             if (repaired) return repaired;
         }
     }
-    throw new Error("Login failed");
+    throw new Error("Login failed. Please check credentials or try signing up.");
   }
 
   static async createUser(name: string, email: string, password?: string, provider: string = 'email'): Promise<User> {
@@ -150,20 +188,38 @@ export class Database {
             email, password,
             options: { data: { full_name: name } }
         });
-        if (error) throw new Error(error.message);
+        
+        // --- ADMIN RECOVERY LOGIC ---
+        // If the Auth user already exists (because DB was wiped but Auth wasn't),
+        // we catch the error and try to log them in. This triggers 'repairProfile'
+        // which will re-create the Admin entry in the public table.
+        if (error) {
+            if (error.message.includes("registered") || error.message.includes("already exists")) {
+                console.log("User exists in Auth. Attempting recovery login...");
+                return this.login(email, password);
+            }
+            throw new Error(error.message);
+        }
+        
         if (data.user) {
-            // Wait for trigger to complete
-            for (let i = 0; i < 5; i++) {
+            // Force sign-in if session is missing (rare but happens with email confirm off)
+            if (!data.session) {
+                await supabase.auth.signInWithPassword({ email, password });
+            }
+
+            // Wait for DB trigger with backoff
+            for (let i = 0; i < 3; i++) {
                 const user = await this.syncUser(data.user.id);
                 if (user) return user;
-                await new Promise(r => setTimeout(r, 500));
+                await new Promise(r => setTimeout(r, 500 * (i + 1)));
             }
-            // Fallback to manual repair if trigger is slow
+            
+            // If trigger failed, run self-healing
             const repaired = await this.repairProfile(data.user);
             if (repaired) return repaired;
         }
     }
-    throw new Error("Creation failed");
+    throw new Error("Failed to initialize user account.");
   }
 
   static async logout() { await supabase.auth.signOut(); this.currentUser = null; }
@@ -187,13 +243,14 @@ export class Database {
   }
 
   static async hasAdmin(): Promise<boolean> {
-      const { count } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'ADMIN');
+      const { count, error } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'ADMIN');
+      if (error) return false;
       return (count || 0) > 0;
   }
 
   static checkAndIncrementStreak(user: User): User { return user; }
 
-  // --- DATA FETCHING ---
+  // --- COMPANION & SETTINGS ---
 
   static async getAllUsers(): Promise<User[]> {
       const { data } = await supabase.from('users').select('*');
@@ -201,23 +258,22 @@ export class Database {
   }
 
   static async getCompanions(): Promise<Companion[]> {
-      const { data } = await supabase.from('companions').select('*');
-      if (!data || data.length === 0) {
-          const toInsert = INITIAL_COMPANIONS.map(c => ({
-              id: c.id, name: c.name, gender: c.gender, specialty: c.specialty,
-              status: c.status, rating: c.rating, image_url: c.imageUrl,
-              bio: c.bio, replica_id: c.replicaId, license_number: c.licenseNumber,
-              degree: c.degree, state_of_practice: c.stateOfPractice, years_experience: c.yearsExperience
-          }));
-          await supabase.from('companions').insert(toInsert);
-          return INITIAL_COMPANIONS;
+      // READ ONLY - No Insertion
+      try {
+          const { data } = await supabase.from('companions').select('*');
+          if (data && data.length > 0) {
+              return data.map(d => ({
+                  id: d.id, name: d.name, gender: d.gender, specialty: d.specialty,
+                  status: d.status as any, rating: d.rating, imageUrl: d.image_url,
+                  bio: d.bio, replicaId: d.replica_id, licenseNumber: d.license_number,
+                  degree: d.degree, stateOfPractice: d.state_of_practice, yearsExperience: d.years_experience
+              }));
+          }
+      } catch (e) {
+          console.error("Failed to fetch companions", e);
       }
-      return data.map(d => ({
-          id: d.id, name: d.name, gender: d.gender, specialty: d.specialty,
-          status: d.status as any, rating: d.rating, imageUrl: d.image_url,
-          bio: d.bio, replicaId: d.replica_id, licenseNumber: d.license_number,
-          degree: d.degree, stateOfPractice: d.state_of_practice, yearsExperience: d.years_experience
-      }));
+      // Return static list only if DB fails or is empty (but DO NOT WRITE)
+      return INITIAL_COMPANIONS;
   }
 
   static async updateCompanion(companion: Companion) {
@@ -241,6 +297,7 @@ export class Database {
                   multilingualMode: data.multilingual_mode
               };
           } else {
+              // Only save defaults if missing
               await this.saveSettings(this.settingsCache);
           }
       } catch(e) {}
@@ -263,6 +320,7 @@ export class Database {
   }
 
   // --- TRANSACTIONS ---
+
   static async getUserTransactions(userId: string): Promise<Transaction[]> {
       const { data } = await supabase.from('transactions').select('*').eq('user_id', userId).order('date', { ascending: false });
       return (data || []).map(t => ({
@@ -300,6 +358,7 @@ export class Database {
   }
 
   // --- CONTENT ---
+
   static async getJournals(userId: string): Promise<JournalEntry[]> {
       const { data } = await supabase.from('journals').select('*').eq('user_id', userId).order('date', { ascending: false });
       return (data || []).map(j => ({ id: j.id, userId: j.user_id, date: j.date, content: j.content }));
@@ -346,7 +405,8 @@ export class Database {
 
   static recordBreathSession(userId: string, duration: number) { /* No-op */ }
 
-  // --- QUEUE ---
+  // --- QUEUE SYSTEM ---
+
   private static async runGlobalCleanup() {
       const cutoff = new Date(Date.now() - 15000).toISOString();
       await supabase.from('active_sessions').delete().lt('last_ping', cutoff);
@@ -412,6 +472,6 @@ export class Database {
   }
 
   static async recordAdminFailure() { await this.logSystemEvent('SECURITY', 'Admin Login Failed', 'Invalid credentials or key'); }
-  static async resetAdminFailure() { /* Managed by time */ }
+  static async resetAdminFailure() { /* Managed by window-based time in Postgres */ }
   static async resetAllUsers() { await supabase.from('users').delete().neq('role', 'ADMIN'); }
 }

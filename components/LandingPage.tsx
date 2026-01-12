@@ -47,11 +47,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
   const [scrolled, setScrolled] = useState(false);
   const [featuredSpecialists, setFeaturedSpecialists] = useState<Companion[]>([]);
   
-  // Default to Light Mode
   const [darkMode, setDarkMode] = useState(() => {
       const local = localStorage.getItem('peutic_theme');
       if (local) return local === 'dark';
-      return false; // Force light mode as default for brand
+      return false; 
   });
 
   const [lang, setLang] = useState<LanguageCode>('en');
@@ -83,9 +82,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
 
-    if (INITIAL_COMPANIONS && INITIAL_COMPANIONS.length > 0) {
-        setFeaturedSpecialists(INITIAL_COMPANIONS); 
-    }
+    // Initial load - Ensure we use unique IDs to prevent marquee key errors
+    const loadComps = async () => {
+        const fromDb = await Database.getCompanions();
+        // Fallback to static if DB empty
+        const list = (fromDb && fromDb.length > 0) ? fromDb : INITIAL_COMPANIONS;
+        // Deduplicate just in case
+        const unique = Array.from(new Map(list.map(item => [item.id, item])).values());
+        setFeaturedSpecialists(unique);
+    };
+    loadComps();
 
     const handleClickOutside = (event: MouseEvent) => {
         if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
@@ -115,8 +121,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
       setShowCookies(false);
   };
 
-  const row1 = featuredSpecialists.slice(0, Math.ceil(featuredSpecialists.length / 2));
-  const row2 = featuredSpecialists.slice(Math.ceil(featuredSpecialists.length / 2));
+  // Split into rows for marquee
+  const displayList = featuredSpecialists.length > 0 ? featuredSpecialists : INITIAL_COMPANIONS;
+  const half = Math.ceil(displayList.length / 2);
+  const row1 = displayList.slice(0, half);
+  const row2 = displayList.slice(half);
+
+  // Triple the list to ensure smooth looping without gaps (Standard Marquee Tech)
+  const marqueeRow1 = [...row1, ...row1, ...row1];
+  const marqueeRow2 = [...row2, ...row2, ...row2];
 
   return (
     <div className={`min-h-screen bg-[#FFFBEB] dark:bg-[#0A0A0A] font-sans text-[#0A0A0A] dark:text-[#F3F4F6] selection:bg-yellow-200 selection:text-black transition-colors duration-500 ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
@@ -132,7 +145,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                </div>
                <span className="text-xl md:text-2xl font-black tracking-tight dark:text-white">Peutic</span>
             </div>
-            {/* Increased gap here to prevent button overlap */}
             <div className="flex items-center gap-4 md:gap-6">
                <div className="relative" ref={langMenuRef}>
                    <button onClick={() => setShowLangMenu(!showLangMenu)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/50 dark:bg-black/50 backdrop-blur-md border border-gray-200 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-500 transition-all text-xs font-black uppercase tracking-wider shadow-sm group">
@@ -236,11 +248,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                   {t('roster_btn')} <ArrowRight className="w-3 h-3 text-[#FACC15]" />
               </button>
           </div>
+          {/* MARQUEE SECTION - Restored as requested, but optimized to prevent glitching */}
           <style>{`
             @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
             @keyframes marquee-reverse { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
-            .animate-marquee { animation: marquee 180s linear infinite; }
-            .animate-marquee-reverse { animation: marquee-reverse 180s linear infinite; }
+            .animate-marquee { animation: marquee 60s linear infinite; }
+            .animate-marquee-reverse { animation: marquee-reverse 60s linear infinite; }
             .marquee-container:hover .animate-marquee, .marquee-container:hover .animate-marquee-reverse { animation-play-state: paused; }
           `}</style>
           <div className="relative w-full marquee-container">
@@ -248,7 +261,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
               <div className="absolute right-0 top-0 bottom-0 w-12 md:w-60 bg-gradient-to-l from-[#FFFBEB] dark:from-[#0A0A0A] to-transparent z-20 pointer-events-none transition-colors"></div>
               <div className="flex flex-col gap-4 md:gap-6">
                   <div className="flex gap-4 md:gap-5 animate-marquee w-fit px-4">
-                      {[...row1, ...row1, ...row1, ...row1].map((spec, i) => (
+                      {marqueeRow1.map((spec, i) => (
                           <div key={`${spec.id}-1-${i}`} onClick={() => onLoginClick(true)} className="relative flex-shrink-0 w-36 h-48 md:w-52 md:h-64 bg-white dark:bg-gray-900 rounded-2xl md:rounded-[1.5rem] overflow-hidden shadow-lg border border-yellow-100 dark:border-gray-800 hover:scale-105 hover:shadow-2xl hover:border-yellow-400 transition-all duration-300 cursor-pointer group">
                               <div className="h-[75%] md:h-[80%] w-full relative">
                                   <AvatarImage src={spec.imageUrl} className="w-full h-full object-cover" alt={spec.name} />
@@ -261,7 +274,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                       ))}
                   </div>
                   <div className="flex gap-4 md:gap-5 animate-marquee-reverse w-fit px-4">
-                      {[...row2, ...row2, ...row2, ...row2].map((spec, i) => (
+                      {marqueeRow2.map((spec, i) => (
                           <div key={`${spec.id}-2-${i}`} onClick={() => onLoginClick(true)} className="relative flex-shrink-0 w-36 h-48 md:w-52 md:h-64 bg-white dark:bg-gray-900 rounded-2xl md:rounded-[1.5rem] overflow-hidden shadow-lg border border-yellow-100 dark:border-gray-800 hover:scale-105 hover:shadow-2xl hover:border-yellow-400 transition-all duration-300 cursor-pointer group">
                               <div className="h-[75%] md:h-[80%] w-full relative">
                                   <AvatarImage src={spec.imageUrl} className="w-full h-full object-cover" alt={spec.name} />

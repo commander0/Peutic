@@ -22,7 +22,7 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-// Fixed ErrorBoundary inheritance to include React.Component for setState and props access
+// Fixed ErrorBoundary inheritance to include Component for setState and props access
 class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public state: ErrorBoundaryState = { hasError: false };
 
