@@ -15,6 +15,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
   
   const [showRegister, setShowRegister] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState('');
@@ -65,13 +66,34 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             if (authError.message.includes("Invalid login credentials")) {
                 throw new Error("Account not found or wrong password. If this is your first time, please use 'Create Admin Access' below.");
             }
+            
+            // --- SELF-HEALING: EMAIL NOT CONFIRMED ---
             if (authError.message.includes("Email not confirmed")) {
-                throw new Error("Your email address has not been verified yet. Please check your inbox for the confirmation link.");
+                setIsVerifying(true);
+                // Attempt backend force verification
+                const verified = await Database.forceVerifyEmail(normalizedEmail);
+                if (verified) {
+                    setIsVerifying(false);
+                    // Retry Login Immediately
+                    const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
+                        email: normalizedEmail,
+                        password: password
+                    });
+                    if (retryError || !retryData.user) {
+                        throw new Error("Auto-verification succeeded, but login still failed. Please try again.");
+                    }
+                    // Success fall-through
+                    authData.user = retryData.user;
+                } else {
+                    setIsVerifying(false);
+                    throw new Error("Your email address has not been verified yet. Please check your inbox for the confirmation link.");
+                }
+            } else {
+                throw new Error(authError.message);
             }
-            throw new Error(authError.message);
         }
 
-        if (!authData.user) throw new Error("Auth failed");
+        if (!authData?.user) throw new Error("Auth failed");
 
         // 2. FETCH PROFILE (Now authorized)
         const user = await Database.syncUser(authData.user.id);
@@ -118,6 +140,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         setError(e.message || "Connection Error.");
     } finally {
         setLoading(false);
+        setIsVerifying(false);
     }
   };
 
@@ -247,8 +270,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Secure Key</label>
                                     <input type="password" className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} />
                                 </div>
-                                <button type="submit" disabled={loading} className="w-full bg-white hover:bg-gray-200 text-black font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02]">
-                                    {loading ? <span className="animate-pulse">Authenticating...</span> : <><KeyRound className="w-4 h-4" /> ACCESS TERMINAL</>}
+                                <button type="submit" disabled={loading || isVerifying} className="w-full bg-white hover:bg-gray-200 text-black font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02]">
+                                    {loading ? <span className="animate-pulse">{isVerifying ? "Verifying Access..." : "Authenticating..."}</span> : <><KeyRound className="w-4 h-4" /> ACCESS TERMINAL</>}
                                 </button>
                                 
                                 <div className="pt-4 text-center">

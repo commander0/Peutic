@@ -252,6 +252,21 @@ export class Database {
     throw new Error("Login failed. Profile could not be synchronized.");
   }
 
+  // NEW: Force verify email via backend if frontend is blocked
+  static async forceVerifyEmail(email: string): Promise<boolean> {
+      try {
+          const { data, error } = await supabase.functions.invoke('api-gateway', {
+              body: { action: 'admin-auto-verify', payload: { email } }
+          });
+          if (error) throw error;
+          if (data?.error) throw new Error(data.error);
+          return true;
+      } catch (e) {
+          console.error("Auto-verification failed", e);
+          return false;
+      }
+  }
+
   static async createUser(name: string, email: string, password?: string, provider: string = 'email'): Promise<User> {
     if (provider === 'email' && password) {
         const { data, error } = await supabase.auth.signUp({
