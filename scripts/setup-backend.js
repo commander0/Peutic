@@ -91,6 +91,7 @@ serve(async (req) => {
         });
 
         if (error) {
+            console.error("Profile Bypass Error:", error);
             // Ignore duplicate key error (23505) as it means success
             if (error.code !== '23505') throw new Error(error.message);
         }

@@ -123,7 +123,7 @@ export class Database {
             if (error.code === '42501' || error.message.includes('row-level security')) {
                 console.warn("RLS blocking profile creation. Using Backend Bypass...");
                 
-                await supabase.functions.invoke('api-gateway', {
+                const { data, error: invokeError } = await supabase.functions.invoke('api-gateway', {
                     body: {
                         action: 'profile-create-bypass',
                         payload: {
@@ -134,10 +134,24 @@ export class Database {
                         }
                     }
                 });
+
+                if (invokeError) {
+                    console.error("Edge Function Invoke Error:", invokeError);
+                    throw new Error(`Server connection failed: ${invokeError.message}. (Did you deploy the backend?)`);
+                }
+
+                if (data?.error) {
+                     console.error("Edge Function Logic Error:", data.error);
+                     throw new Error(`Server error: ${data.error}`);
+                }
                 
                 // Wait briefly for propagation
-                await new Promise(r => setTimeout(r, 1500));
-                return await this.syncUser(authUser.id);
+                await new Promise(r => setTimeout(r, 2000));
+                
+                // Force sync
+                const user = await this.syncUser(authUser.id);
+                if (!user) throw new Error("Profile created but not visible. Please refresh the page.");
+                return user;
             }
 
             // Ignore duplicate key errors (race condition success)
@@ -247,7 +261,8 @@ export class Database {
                 const repaired = await this.repairProfile(data.user);
                 if (repaired) return repaired;
             } catch (repairError: any) {
-                throw new Error(`Initialization failed: ${repairError.message}`);
+                // If repair failed with specific message, propagate it
+                throw new Error(repairError.message || "Initialization failed");
             }
         }
     }
