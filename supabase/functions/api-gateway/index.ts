@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { GoogleGenAI } from 'https://esm.sh/@google/genai'
+import { GoogleGenAI, Modality } from 'https://esm.sh/@google/genai'
 import Stripe from 'https://esm.sh/stripe@14.14.0?target=deno'
 
 declare const Deno: any;
@@ -35,30 +35,21 @@ serve(async (req) => {
     if (action === 'admin-create') {
         const { email, password } = payload;
         
-        // Double Check: Ensure no users exist (Security)
-        // Or check if specific 'admin-secret' is passed if you want multiple admins later
         const { count } = await supabaseClient.from('users').select('*', { count: 'exact', head: true });
         
-        // If users exist, only allow creation if this is a recovery or special key is provided
-        // For this specific request: "Once root admin is created, system plan page goes away"
-        // We strictly enforce 1 root admin for this setup to be safe.
         if ((count || 0) > 0) {
-             // If trying to create a 2nd admin via this public route, deny it.
-             // Real admins can add users via dashboard if needed later.
              return new Response(JSON.stringify({ error: "System already initialized. Admin exists." }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
-        // Create User via Admin API (Auto-confirm email)
         const { data: user, error: createError } = await supabaseClient.auth.admin.createUser({
             email,
             password,
-            email_confirm: true, // <--- BYPASS VERIFICATION
+            email_confirm: true, // BYPASS VERIFICATION
             user_metadata: { full_name: 'System Admin' }
         });
 
         if (createError) throw createError;
 
-        // Create Public Profile manually (Ensure Role is ADMIN)
         const { error: profileError } = await supabaseClient.from('users').insert({
             id: user.user.id,
             email: email,
@@ -70,12 +61,6 @@ serve(async (req) => {
             created_at: new Date().toISOString()
         });
 
-        if (profileError) {
-             console.error("Profile creation error:", profileError);
-             // If profile fails (e.g. duplicate), we still return success if auth worked,
-             // letting the client handle login.
-        }
-
         return new Response(JSON.stringify({ success: true, user: user.user }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -84,7 +69,6 @@ serve(async (req) => {
         const { email } = payload;
         if (!email) throw new Error("Email required");
 
-        // Use Admin Auth API to verify existing user
         const { data: { users }, error: listError } = await supabaseClient.auth.admin.listUsers();
         if (listError) throw listError;
         
@@ -149,10 +133,8 @@ serve(async (req) => {
 
     // --- 4. AI GENERATION ---
     if (action === 'gemini-generate') {
-        const apiKey = Deno.env.get('GEMINI_API_KEY');
-        if (!apiKey) throw new Error("Server Misconfiguration: Missing AI Key");
-        
-        const ai = new GoogleGenAI({ apiKey: apiKey });
+        // Fix: Use process.env.API_KEY directly for initialization as per guidelines
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: payload.prompt,
@@ -161,20 +143,21 @@ serve(async (req) => {
             }
         });
         
+        // Fix: Access .text property directly (not a method)
         return new Response(JSON.stringify({ text: response.text }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // --- 5. AI SPEECH ---
     if (action === 'gemini-speak') {
-        const apiKey = Deno.env.get('GEMINI_API_KEY');
-        if (!apiKey) throw new Error("Server Misconfiguration: Missing AI Key");
-
-        const ai = new GoogleGenAI({ apiKey: apiKey });
+        // Fix: Use process.env.API_KEY directly for initialization as per guidelines
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash-preview-tts',
-            contents: { parts: [{ text: payload.text }] },
+            // Fix: Standardize contents format to an array of parts
+            contents: [{ parts: [{ text: payload.text }] }],
             config: {
-                responseModalities: ['AUDIO'],
+                // Fix: Use Modality.AUDIO from enum
+                responseModalities: [Modality.AUDIO],
                 speechConfig: {
                     voiceConfig: {
                         prebuiltVoiceConfig: { voiceName: 'Kore' },
