@@ -159,6 +159,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
       setError('');
       
       // Safety Timeout to prevent infinite spinning
+      // Now combined with Database.createUser optimistic return for extra safety
       const timeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error("Creation timed out. Please refresh and try logging in.")), 15000)
       );
