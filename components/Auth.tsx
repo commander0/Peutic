@@ -40,13 +40,28 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   
+  useEffect(() => {
+      if (window.FB) return;
+      window.fbAsyncInit = function() {
+        window.FB.init({ appId: '1143120088010234', cookie: true, xfbml: true, version: 'v18.0' });
+      };
+      (function(d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) return;
+        js = d.createElement(s) as HTMLScriptElement; 
+        js.id = id;
+        js.src = "https://connect.facebook.net/en_US/sdk.js";
+        fjs.parentNode?.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));
+  }, []);
+
   const handleGoogleClick = async () => {
       setLoading(true);
       try {
           const { error } = await supabase.auth.signInWithOAuth({
               provider: 'google',
               options: {
-                  redirectTo: window.location.origin
+                  redirectTo: window.location.origin,
               }
           });
           if (error) throw error;
@@ -57,7 +72,31 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
   };
 
   const handleFacebookLogin = () => {
-      alert("Facebook Login is currently disabled for maintenance.");
+      if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+          alert("Facebook Login requires a secure HTTPS connection.");
+          return;
+      }
+      if (!window.FB) {
+          setError("Facebook SDK not loaded. Please verify your connection.");
+          return;
+      }
+      window.FB.login(function(response: any) {
+          if (response.authResponse) {
+             window.FB.api('/me', { fields: 'name, email, picture' }, async function(profile: any) {
+                 const name = profile.name || "Buddy";
+                 const pic = profile.picture?.data?.url;
+                 const fbEmail = profile.email || `${profile.id}@facebook.com`;
+                 setLoading(true);
+                 try {
+                    await onLogin(UserRole.USER, name, pic, fbEmail, undefined, 'facebook');
+                 } catch(e) {
+                    setError("Facebook Login Failed");
+                 } finally {
+                    setLoading(false);
+                 }
+             });
+          }
+      }, {scope: 'public_profile,email'});
   };
 
   const validatePasswordStrength = (pwd: string): string | null => {
@@ -65,6 +104,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
       if (!/[A-Z]/.test(pwd)) return "Password must include at least one uppercase letter.";
       if (!/[a-z]/.test(pwd)) return "Password must include at least one lowercase letter.";
       if (!/[0-9]/.test(pwd)) return "Password must include at least one number.";
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) return "Password must include at least one special character.";
       return null;
   };
 
@@ -86,6 +126,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
 
     try {
         if (isLogin) {
+            // DIRECT LOGIN: No pre-check. Supabase Auth handles invalid credentials securely.
             await onLogin(UserRole.USER, '', undefined, email, undefined, 'email', password);
         } else {
             if (!validateAge(birthday)) {
@@ -104,6 +145,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                 setLoading(false);
                 return;
             }
+            // Proceed to onboarding before final creation
             setShowOnboarding(true);
         }
     } catch (e: any) {
@@ -116,6 +158,8 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
       setLoading(true);
       setError('');
       
+      // Safety Timeout to prevent infinite spinning
+      // Now combined with Database.createUser optimistic return for extra safety
       const timeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error("Creation timed out. Please refresh and try logging in.")), 15000)
       );
@@ -130,10 +174,11 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
           ]);
       } catch (e: any) {
           console.error(e);
+          // If message is just a notification (like 'check email'), don't treat as fatal error for UI
           if (e.message && (e.message.includes("check your email") || e.message.includes("not confirmed"))) {
               setToast("Account created! Check your email to confirm.");
               setTimeout(() => {
-                  onCancel();
+                  onCancel(); // Go back to main
               }, 3000);
           } else {
               setError(e.message || "Account creation failed. Please try again.");
@@ -201,6 +246,11 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                                  {error && (
                                     <div className="p-4 bg-red-50 text-red-600 rounded-xl font-bold text-sm flex flex-col gap-2 border border-red-200 text-left">
                                         <div className="flex items-center gap-2"><AlertCircle className="w-4 h-4"/> Error: {error}</div>
+                                        {error.includes("deploy") && (
+                                            <div className="text-xs font-mono bg-red-100 p-2 rounded text-red-800 break-all">
+                                                npm run backend:deploy
+                                            </div>
+                                        )}
                                     </div>
                                  )}
                                  <button 
@@ -250,6 +300,12 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                     <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 text-sm rounded-xl flex flex-col gap-2">
                         <div className="flex items-center gap-2 font-bold"><AlertCircle className="w-4 h-4" /> Error</div>
                         <p>{error}</p>
+                        {error.includes("deploy") && (
+                            <div className="mt-2 text-xs font-mono bg-black/10 dark:bg-white/10 p-2 rounded text-black dark:text-white flex items-center justify-between">
+                                npm run backend:deploy
+                                <Server className="w-3 h-3 opacity-50"/>
+                            </div>
+                        )}
                     </div>
                 )}
 
