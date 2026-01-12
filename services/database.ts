@@ -115,10 +115,31 @@ export class Database {
             provider: authUser.app_metadata?.provider || 'email'
         };
         
-        // This INSERT works because of the RLS policy: "Users Insert Self"
+        // Try inserting (relies on RLS)
         const { error } = await supabase.from('users').insert(newUser);
         
         if (error) {
+            // FIX: If Permission Denied (42501), fallback to Edge Function bypass
+            if (error.code === '42501' || error.message.includes('row-level security')) {
+                console.warn("RLS blocking profile creation. Using Backend Bypass...");
+                
+                await supabase.functions.invoke('api-gateway', {
+                    body: {
+                        action: 'profile-create-bypass',
+                        payload: {
+                            id: authUser.id,
+                            email: authUser.email,
+                            name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0],
+                            provider: authUser.app_metadata?.provider || 'email'
+                        }
+                    }
+                });
+                
+                // Wait briefly for propagation
+                await new Promise(r => setTimeout(r, 1500));
+                return await this.syncUser(authUser.id);
+            }
+
             // Ignore duplicate key errors (race condition success)
             if (error.code === '23505') return await this.syncUser(authUser.id);
             

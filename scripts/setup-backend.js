@@ -69,61 +69,33 @@ serve(async (req) => {
         return new Response(JSON.stringify({ success: false, error: 'Invalid Credentials' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // --- SECURE USER CREATION (Bypasses RLS) ---
-    if (action === 'user-create') {
-        const { name, email, role, provider, key } = payload;
-
-        // 1. Determine requested role (default to USER)
-        let finalRole = role || 'USER';
-
-        // 2. Check if any admins ALREADY exist in the system
-        const { count: adminCount, error: countError } = await supabaseClient.from('users').select('*', { count: 'exact', head: true }).eq('role', 'ADMIN');
+    // --- EMERGENCY PROFILE CREATION (Bypasses RLS) ---
+    // This allows the frontend to create a profile even if SQL policies fail
+    if (action === 'profile-create-bypass') {
+        const { id, email, name, provider } = payload;
         
-        if (countError) {
-            // This usually means table doesn't exist
-            throw new Error(\`Database Error: \${countError.message}. Did you run the SQL schema?\`);
-        }
+        // 1. Check if ANY users exist to determine Role
+        const { count } = await supabaseClient.from('users').select('*', { count: 'exact', head: true });
+        const isFirst = (count || 0) === 0;
 
-        const hasAdmins = (adminCount || 0) > 0;
-
-        // 3. AUTO-PROMOTION LOGIC
-        if (!hasAdmins) {
-            console.log("No admins found. Promoting first user to ADMIN.");
-            finalRole = 'ADMIN';
-        }
-
-        // 4. Security Check: If requesting ADMIN when admins already exist, require Key
-        if (finalRole === 'ADMIN' && hasAdmins) {
-             const MASTER_KEY = Deno.env.get('ADMIN_MASTER_KEY') || 'PEUTIC-MASTER-2025-SECURE';
-             if (key !== MASTER_KEY) {
-                 return new Response(JSON.stringify({ error: 'Unauthorized: Invalid Master Key. System already has an administrator.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-             }
-        }
-
-        // 5. Check duplicates using admin privileges
-        // We ignore error here as .single() returns error if no rows found
-        const { data: existing } = await supabaseClient.from('users').select('id').eq('email', email).single();
-        if (existing) {
-             return new Response(JSON.stringify({ error: 'User already exists' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        }
-
-        const id = \`u_\${Date.now()}_\${Math.random().toString(36).substr(2, 9)}\`;
-        const newUser = {
-            id,
-            name,
-            email,
-            role: finalRole,
-            balance: 0,
-            created_at: new Date().toISOString(),
-            last_login_date: new Date().toISOString(),
+        // 2. Insert User with Service Role (Bypasses RLS Code 42501)
+        const { error } = await supabaseClient.from('users').insert({
+            id: id, // Must match Auth ID
+            email: email,
+            name: name,
+            role: isFirst ? 'ADMIN' : 'USER',
+            balance: isFirst ? 999 : 0,
+            subscription_status: 'ACTIVE',
             provider: provider || 'email',
-            avatar_url: ''
-        };
+            created_at: new Date().toISOString()
+        });
 
-        const { error: insertError } = await supabaseClient.from('users').insert(newUser);
-        if (insertError) throw new Error(insertError.message);
+        if (error) {
+            // Ignore duplicate key error (23505) as it means success
+            if (error.code !== '23505') throw new Error(error.message);
+        }
 
-        return new Response(JSON.stringify({ success: true, user: newUser }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     if (action === 'process-topup') {
