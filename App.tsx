@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useRef, ErrorInfo, ReactNode, Component } from 'react';
+import React, { useState, useEffect, useRef, ErrorInfo, ReactNode } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole, Companion } from './types';
 import LandingPage from './components/LandingPage';
@@ -23,7 +22,7 @@ interface ErrorBoundaryState {
 }
 
 // Fixed ErrorBoundary inheritance to include Component for setState and props access
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public state: ErrorBoundaryState = { hasError: false };
 
   static getDerivedStateFromError(_: Error): ErrorBoundaryState {
@@ -277,4 +276,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-    

@@ -22,7 +22,7 @@ console.log("🚀 Initializing Peutic Backend...");
 const apiGatewayCode = `
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { GoogleGenAI } from 'https://esm.sh/@google/genai@0.1.1'
+import { GoogleGenAI } from 'https://esm.sh/@google/genai'
 import Stripe from 'https://esm.sh/stripe@14.14.0?target=deno'
 
 declare const Deno: any;
@@ -329,4 +329,3 @@ try {
 } catch (e) {
     console.error("❌ Setup Failed:", e);
 }
-    
