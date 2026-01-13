@@ -277,6 +277,9 @@ export class Database {
     }
 
     static async createUser(name: string, email: string, password?: string, provider: string = 'email'): Promise<User> {
+        console.log("Creating user...", { name, email, provider });
+
+        // 1. Email Signup Flow
         if (provider === 'email' && password) {
             const { data, error } = await supabase.auth.signUp({
                 email, password,
@@ -284,6 +287,7 @@ export class Database {
             });
 
             if (error) {
+                console.error("SignUp Error:", error);
                 if (error.message.includes("registered") || error.message.includes("already exists")) {
                     console.log("User exists in Auth. Attempting recovery login...");
                     return this.login(email, password);
@@ -291,21 +295,24 @@ export class Database {
                 throw new Error(error.message);
             }
 
+            console.log("SignUp Success:", data);
+
             if (data.user) {
-                // Force sign-in if session is missing (rare but happens with email confirm off)
+                // Force sign-in if session is missing
                 if (!data.session) {
+                    console.warn("Session missing after signup. Attempting login...");
                     try {
                         await supabase.auth.signInWithPassword({ email, password });
                     } catch (e: any) {
                         console.warn("Auto-login post-signup failed:", e.message);
                         if (e.message.includes("not confirmed") || e.message.includes("Email not confirmed")) {
+                            console.log("Email confirmation required. Repairing profile if needed...");
                             try { await this.repairProfile(data.user); } catch (err) { }
                             throw new Error("Account created! Please check your email to confirm verification, then log in.");
                         }
                     }
                 }
 
-                // OPTIMISTIC USER: Return this immediately if DB sync is slow
                 const optimisticUser: User = {
                     id: data.user.id,
                     name: name || data.user.user_metadata?.full_name || email.split('@')[0],
@@ -320,16 +327,16 @@ export class Database {
                     emailPreferences: { marketing: true, updates: true }
                 };
 
-                // Attempt sync briefly (1s max)
                 await new Promise(r => setTimeout(r, 1000));
                 const syncedUser = await this.syncUser(data.user.id);
                 if (syncedUser) return syncedUser;
 
-                // If failed, fire repair in background and return optimistic to UNBLOCK UI
                 this.repairProfile(data.user).catch(console.error);
                 return optimisticUser;
             }
-        } else if (provider !== 'email') {
+        }
+        // 2. Fallback / Non-Email Flow
+        else if (provider !== 'email') {
             return {
                 id: 'temp',
                 name: name,
@@ -340,9 +347,11 @@ export class Database {
                 joinedAt: new Date().toISOString(),
                 lastLoginDate: new Date().toISOString(),
                 streak: 0,
-                provider: provider as any
+                provider: provider as any,
+                emailPreferences: { marketing: true, updates: true }
             };
         }
+
         throw new Error("Failed to initialize user account (Timeout or DB Error).");
     }
 
