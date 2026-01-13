@@ -133,8 +133,11 @@ serve(async (req) => {
 
     // --- 4. AI GENERATION ---
     if (action === 'gemini-generate') {
-        // Fix: Use process.env.API_KEY directly for initialization as per guidelines
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        // Correct usage for Deno Edge Environment
+        const apiKey = Deno.env.get('GEMINI_API_KEY');
+        if (!apiKey) throw new Error("GEMINI_API_KEY not configured");
+
+        const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: payload.prompt,
@@ -143,20 +146,20 @@ serve(async (req) => {
             }
         });
         
-        // Fix: Access .text property directly (not a method)
         return new Response(JSON.stringify({ text: response.text }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // --- 5. AI SPEECH ---
     if (action === 'gemini-speak') {
-        // Fix: Use process.env.API_KEY directly for initialization as per guidelines
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        // Correct usage for Deno Edge Environment
+        const apiKey = Deno.env.get('GEMINI_API_KEY');
+        if (!apiKey) throw new Error("GEMINI_API_KEY not configured");
+
+        const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash-preview-tts',
-            // Fix: Standardize contents format to an array of parts
             contents: [{ parts: [{ text: payload.text }] }],
             config: {
-                // Fix: Use Modality.AUDIO from enum
                 responseModalities: [Modality.AUDIO],
                 speechConfig: {
                     voiceConfig: {
