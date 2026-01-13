@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef, ReactNode, Component, ErrorInfo } from 'react';
+
+import React, { Component, useState, useEffect, useRef, ReactNode, ErrorInfo } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole, Companion } from './types';
 import LandingPage from './components/LandingPage';
@@ -21,10 +22,14 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-// Fixed ErrorBoundary inheritance to include Component for setState and props access
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+// Explicitly inheriting from React.Component with Generics to ensure proper 'props' and 'state' resolution in TypeScript
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  // Explicitly define state property to help TypeScript identify it as a class member
+  public state: ErrorBoundaryState = { hasError: false };
+
   constructor(props: ErrorBoundaryProps) {
     super(props);
+    // Properly initialize state in class constructor
     this.state = { hasError: false };
   }
 
@@ -38,6 +43,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   render() {
+    // Correctly access hasError from this.state
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center text-white">
@@ -45,6 +51,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
           <h1 className="text-3xl font-black mb-4">Something went wrong.</h1>
           <p className="text-gray-400 mb-8 max-w-md">Our systems detected an unexpected issue. We have logged this report and notified our engineering team.</p>
           <button 
+            // Correctly call this.setState to reset error state as part of the React Component life-cycle
             onClick={() => { this.setState({ hasError: false }); window.location.href = '/'; }} 
             className="bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform flex items-center gap-2"
           >
@@ -53,6 +60,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
         </div>
       );
     }
+    // Correctly return children from this.props which is provided by React.Component
     return this.props.children;
   }
 }

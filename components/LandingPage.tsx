@@ -127,9 +127,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
   const row1 = displayList.slice(0, half);
   const row2 = displayList.slice(half);
 
-  // Triple the list to ensure smooth looping without gaps (Standard Marquee Tech)
-  const marqueeRow1 = [...row1, ...row1, ...row1];
-  const marqueeRow2 = [...row2, ...row2, ...row2];
+  // EXACT DOUBLE to ensure perfect loop at -50% translation
+  const marqueeRow1 = [...row1, ...row1];
+  const marqueeRow2 = [...row2, ...row2];
 
   return (
     <div className={`min-h-screen bg-[#FFFBEB] dark:bg-[#0A0A0A] font-sans text-[#0A0A0A] dark:text-[#F3F4F6] selection:bg-yellow-200 selection:text-black transition-colors duration-500 ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
@@ -248,7 +248,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                   {t('roster_btn')} <ArrowRight className="w-3 h-3 text-[#FACC15]" />
               </button>
           </div>
-          {/* MARQUEE SECTION - Restored as requested, but optimized to prevent glitching */}
+          {/* MARQUEE SECTION - Seamless Loop Fixed */}
           <style>{`
             @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
             @keyframes marquee-reverse { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
@@ -260,6 +260,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
               <div className="absolute left-0 top-0 bottom-0 w-12 md:w-60 bg-gradient-to-r from-[#FFFBEB] dark:from-[#0A0A0A] to-transparent z-20 pointer-events-none transition-colors"></div>
               <div className="absolute right-0 top-0 bottom-0 w-12 md:w-60 bg-gradient-to-l from-[#FFFBEB] dark:from-[#0A0A0A] to-transparent z-20 pointer-events-none transition-colors"></div>
               <div className="flex flex-col gap-4 md:gap-6">
+                  {/* Row 1 */}
                   <div className="flex gap-4 md:gap-5 animate-marquee w-fit px-4">
                       {marqueeRow1.map((spec, i) => (
                           <div key={`${spec.id}-1-${i}`} onClick={() => onLoginClick(true)} className="relative flex-shrink-0 w-36 h-48 md:w-52 md:h-64 bg-white dark:bg-gray-900 rounded-2xl md:rounded-[1.5rem] overflow-hidden shadow-lg border border-yellow-100 dark:border-gray-800 hover:scale-105 hover:shadow-2xl hover:border-yellow-400 transition-all duration-300 cursor-pointer group">
@@ -273,6 +274,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                           </div>
                       ))}
                   </div>
+                  {/* Row 2 */}
                   <div className="flex gap-4 md:gap-5 animate-marquee-reverse w-fit px-4">
                       {marqueeRow2.map((spec, i) => (
                           <div key={`${spec.id}-2-${i}`} onClick={() => onLoginClick(true)} className="relative flex-shrink-0 w-36 h-48 md:w-52 md:h-64 bg-white dark:bg-gray-900 rounded-2xl md:rounded-[1.5rem] overflow-hidden shadow-lg border border-yellow-100 dark:border-gray-800 hover:scale-105 hover:shadow-2xl hover:border-yellow-400 transition-all duration-300 cursor-pointer group">
