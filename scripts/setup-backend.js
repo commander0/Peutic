@@ -22,7 +22,7 @@ console.log("🚀 Initializing Peutic Backend...");
 const apiGatewayCode = `
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
-import { GoogleGenAI, Modality } from 'https://esm.sh/@google/genai'
+import { GoogleGenAI } from 'https://esm.sh/@google/genai'
 import Stripe from 'https://esm.sh/stripe@14.14.0?target=deno'
 
 declare const Deno: any;
@@ -49,6 +49,7 @@ serve(async (req) => {
     const supKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!supUrl || !supKey) {
+        // Return 200 with error to prevent Gateway 500
         return new Response(JSON.stringify({ error: "Server Misconfiguration: Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. Check your Supabase secrets." }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -72,11 +73,14 @@ serve(async (req) => {
     if (action === 'profile-create-bypass') {
         const { id, email, name, provider } = payload;
         
+        // 1. Check if ANY users exist to determine Role
         const { count } = await supabaseClient.from('users').select('*', { count: 'exact', head: true });
         const isFirst = (count || 0) === 0;
 
+        // 2. UPSERT User with Service Role (Bypasses RLS Code 42501)
+        // Using Upsert handles cases where RLS blocked read but Insert succeeded partially
         const { error } = await supabaseClient.from('users').upsert({
-            id: id,
+            id: id, // Must match Auth ID
             email: email,
             name: name,
             role: isFirst ? 'ADMIN' : 'USER',
@@ -140,8 +144,10 @@ serve(async (req) => {
     }
 
     if (action === 'gemini-generate') {
-        // Fix: Use process.env.API_KEY directly for initialization as per guidelines
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const apiKey = Deno.env.get('GEMINI_API_KEY');
+        if (!apiKey) return new Response(JSON.stringify({ error: "Server Misconfiguration: Missing GEMINI_API_KEY" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        
+        const ai = new GoogleGenAI({ apiKey: apiKey });
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: payload.prompt,
@@ -150,20 +156,19 @@ serve(async (req) => {
             }
         });
         
-        // Fix: Access .text property directly (not a method)
         return new Response(JSON.stringify({ text: response.text }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     if (action === 'gemini-speak') {
-        // Fix: Use process.env.API_KEY directly for initialization as per guidelines
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const apiKey = Deno.env.get('GEMINI_API_KEY');
+        if (!apiKey) return new Response(JSON.stringify({ error: "Server Misconfiguration: Missing GEMINI_API_KEY" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+        const ai = new GoogleGenAI({ apiKey: apiKey });
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash-preview-tts',
-            // Fix: Standardize contents format to an array of parts
-            contents: [{ parts: [{ text: payload.text }] }],
+            contents: { parts: [{ text: payload.text }] },
             config: {
-                // Fix: Use Modality.AUDIO from enum
-                responseModalities: [Modality.AUDIO],
+                responseModalities: ['AUDIO'],
                 speechConfig: {
                     voiceConfig: {
                         prebuiltVoiceConfig: { voiceName: 'Kore' },
