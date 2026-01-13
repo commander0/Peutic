@@ -45,8 +45,8 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
           <AlertTriangle className="w-16 h-16 text-yellow-500 mb-6" />
           <h1 className="text-3xl font-black mb-4">Something went wrong.</h1>
           <p className="text-gray-400 mb-8 max-w-md">Our systems detected an unexpected issue. We have logged this report and notified our engineering team.</p>
-          <button 
-            onClick={() => { this.setState({ hasError: false }); window.location.href = '/'; }} 
+          <button
+            onClick={() => { this.setState({ hasError: false }); window.location.href = '/'; }}
             className="bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform flex items-center gap-2"
           >
             <RefreshCw className="w-4 h-4" /> Reload Application
@@ -66,7 +66,7 @@ const MainApp: React.FC = () => {
   const [isRestoring, setIsRestoring] = useState(true);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
-  
+
   const lastActivityRef = useRef<number>(Date.now());
   const location = useLocation();
   const navigate = useNavigate();
@@ -74,28 +74,28 @@ const MainApp: React.FC = () => {
   // Restore session
   useEffect(() => {
     const init = async () => {
-        const restored = await Database.restoreSession();
-        if (restored) {
-            setUser(restored);
-            // If admin is at root, redirect
-            if (restored.role === UserRole.ADMIN && location.pathname === '/') {
-                navigate('/admin/dashboard');
-            }
+      const restored = await Database.restoreSession();
+      if (restored) {
+        setUser(restored);
+        // If admin is at root, redirect
+        if (restored.role === UserRole.ADMIN && location.pathname === '/') {
+          navigate('/admin/dashboard');
         }
-        
-        await Database.syncGlobalSettings();
-        const settings = Database.getSettings();
-        setMaintenanceMode(settings.maintenanceMode);
-        
-        setIsRestoring(false);
+      }
+
+      await Database.syncGlobalSettings();
+      const settings = Database.getSettings();
+      setMaintenanceMode(settings.maintenanceMode);
+
+      setIsRestoring(false);
     };
     init();
 
     // Active Polling for Remote Settings (Maintenance/Sale Mode)
     const interval = setInterval(async () => {
-        await Database.syncGlobalSettings(); // Pull from remote
-        const currentSettings = Database.getSettings(); // Read updated local state
-        setMaintenanceMode(currentSettings.maintenanceMode);
+      await Database.syncGlobalSettings(); // Pull from remote
+      const currentSettings = Database.getSettings(); // Read updated local state
+      setMaintenanceMode(currentSettings.maintenanceMode);
     }, 5000);
 
     return () => clearInterval(interval);
@@ -103,9 +103,9 @@ const MainApp: React.FC = () => {
 
   // Session Timeout Logic
   useEffect(() => {
-    const updateActivity = () => { 
-        lastActivityRef.current = Date.now(); 
-        if (showTimeoutWarning) setShowTimeoutWarning(false);
+    const updateActivity = () => {
+      lastActivityRef.current = Date.now();
+      if (showTimeoutWarning) setShowTimeoutWarning(false);
     };
     const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
     events.forEach(event => document.addEventListener(event, updateActivity));
@@ -118,12 +118,12 @@ const MainApp: React.FC = () => {
       const now = Date.now();
       const elapsed = now - lastActivityRef.current;
       const timeoutLimit = user.role === UserRole.ADMIN ? 24 * 60 * 60 * 1000 : 15 * 60 * 1000;
-      
+
       // Warn 1 minute before
       if (elapsed > timeoutLimit - 60000 && elapsed < timeoutLimit) {
-          setShowTimeoutWarning(true);
+        setShowTimeoutWarning(true);
       }
-      
+
       if (elapsed > timeoutLimit) {
         setShowTimeoutWarning(false);
         handleLogout();
@@ -133,51 +133,52 @@ const MainApp: React.FC = () => {
     return () => clearInterval(interval);
   }, [user, activeSessionCompanion]);
 
-  const handleLogin = async (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email', password?: string): Promise<void> => {
+  const handleLogin = async (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email', password?: string, isSignup: boolean = false): Promise<void> => {
     const userEmail = email || `${name.toLowerCase().replace(/ /g, '.')}@example.com`;
     let currentUser: User;
 
     try {
-        // --- REAL SUPABASE AUTHENTICATION ---
-        // This ensures the session persists on refresh
-        if (provider === 'email' && password) {
-            // Attempt Login
-            try {
-                currentUser = await Database.login(userEmail, password);
-            } catch (loginError: any) {
-                // If login fails, try signup (if this was a signup attempt)
-                if (authMode === 'signup' || loginError.message.includes('Invalid login credentials') === false) {
-                     // Try creating user
-                     currentUser = await Database.createUser(name, userEmail, password, provider);
-                } else {
-                    throw loginError;
-                }
-            }
-        } else if (provider !== 'email') {
-            // Social Login handling
-            currentUser = await Database.createUser(name, userEmail, 'social-login-placeholder', provider);
-        } else {
-            throw new Error("Password required for email login");
+      // --- REAL SUPABASE AUTHENTICATION ---
+      // This ensures the session persists on refresh
+      if (provider === 'email' && password) {
+        // Attempt Login
+        try {
+          if (isSignup) throw new Error("Explicit Signup Requested");
+          currentUser = await Database.login(userEmail, password);
+        } catch (loginError: any) {
+          // If login fails, try signup (if this was a signup attempt)
+          if (isSignup || loginError.message.includes('Explicit Signup Requested') || loginError.message.includes('Invalid login credentials') === false) {
+            // Try creating user
+            currentUser = await Database.createUser(name, userEmail, password, provider);
+          } else {
+            throw loginError;
+          }
         }
-        
-        currentUser = Database.checkAndIncrementStreak(currentUser);
+      } else if (provider !== 'email') {
+        // Social Login handling
+        currentUser = await Database.createUser(name, userEmail, 'social-login-placeholder', provider);
+      } else {
+        throw new Error("Password required for email login");
+      }
 
-        setUser(currentUser);
-        Database.saveUserSession(currentUser);
-        lastActivityRef.current = Date.now();
-        setShowAuth(false);
-        
-        // Intelligent Redirect
-        if (currentUser.role === UserRole.ADMIN) {
-            navigate('/admin/dashboard');
-        } else {
-            navigate('/');
-        }
+      currentUser = Database.checkAndIncrementStreak(currentUser);
+
+      setUser(currentUser);
+      Database.saveUserSession(currentUser);
+      lastActivityRef.current = Date.now();
+      setShowAuth(false);
+
+      // Intelligent Redirect
+      if (currentUser.role === UserRole.ADMIN) {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/');
+      }
 
     } catch (e: any) {
-        console.error("Login Failed", e);
-        // Let the Auth component handle error display
-        throw e;
+      console.error("Login Failed", e);
+      // Let the Auth component handle error display
+      throw e;
     }
   };
 
@@ -193,14 +194,14 @@ const MainApp: React.FC = () => {
 
   // Maintenance Mode Lockout
   if (maintenanceMode && (!user || user.role !== UserRole.ADMIN) && !location.pathname.includes('/support') && !location.pathname.includes('/admin')) {
-      return (
-        <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-white p-6 text-center">
-            <Wrench className="w-16 h-16 text-yellow-500 mb-6 animate-pulse" />
-            <h1 className="text-4xl font-bold mb-4">System Maintenance</h1>
-            <p className="text-gray-400">We'll be back shortly.</p>
-            <button onClick={() => { setAuthMode('login'); setShowAuth(true); }} className="mt-8 opacity-0 hover:opacity-100 text-xs">Admin Entry</button>
-        </div>
-      );
+    return (
+      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-white p-6 text-center">
+        <Wrench className="w-16 h-16 text-yellow-500 mb-6 animate-pulse" />
+        <h1 className="text-4xl font-bold mb-4">System Maintenance</h1>
+        <p className="text-gray-400">We'll be back shortly.</p>
+        <button onClick={() => { setAuthMode('login'); setShowAuth(true); }} className="mt-8 opacity-0 hover:opacity-100 text-xs">Admin Entry</button>
+      </div>
+    );
   }
 
   if (activeSessionCompanion && user) {
@@ -210,53 +211,53 @@ const MainApp: React.FC = () => {
   return (
     <ErrorBoundary>
       {showAuth && <Auth onLogin={handleLogin} onCancel={() => setShowAuth(false)} initialMode={authMode} />}
-      
+
       {/* TIMEOUT WARNING MODAL */}
       {showTimeoutWarning && (
-          <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
-              <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl max-sm w-full text-center shadow-2xl border border-yellow-500">
-                  <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Clock className="w-8 h-8 text-yellow-600 dark:text-yellow-500" />
-                  </div>
-                  <h3 className="text-2xl font-black mb-2 dark:text-white">Are you still there?</h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">Your secure session will time out in 60 seconds to protect your privacy.</p>
-                  <button 
-                      onClick={() => { lastActivityRef.current = Date.now(); setShowTimeoutWarning(false); }}
-                      className="w-full py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:scale-105 transition-transform"
-                  >
-                      I'm still here
-                  </button>
-              </div>
+        <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl max-sm w-full text-center shadow-2xl border border-yellow-500">
+            <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock className="w-8 h-8 text-yellow-600 dark:text-yellow-500" />
+            </div>
+            <h3 className="text-2xl font-black mb-2 dark:text-white">Are you still there?</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">Your secure session will time out in 60 seconds to protect your privacy.</p>
+            <button
+              onClick={() => { lastActivityRef.current = Date.now(); setShowTimeoutWarning(false); }}
+              className="w-full py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:scale-105 transition-transform"
+            >
+              I'm still here
+            </button>
           </div>
+        </div>
       )}
 
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={
-            user ? (
-                user.role === UserRole.ADMIN ? <Navigate to="/admin/dashboard" /> : <Dashboard user={user} onLogout={handleLogout} onStartSession={(c) => setActiveSessionCompanion(c)} />
-            ) : (
-                <LandingPage onLoginClick={(signup) => { 
-                    const requestedMode = signup ? 'signup' : 'login';
-                    if (showAuth && authMode === requestedMode) {
-                        setShowAuth(false);
-                    } else {
-                        setAuthMode(requestedMode);
-                        setShowAuth(true);
-                    }
-                }} />
-            )
+          user ? (
+            user.role === UserRole.ADMIN ? <Navigate to="/admin/dashboard" /> : <Dashboard user={user} onLogout={handleLogout} onStartSession={(c) => setActiveSessionCompanion(c)} />
+          ) : (
+            <LandingPage onLoginClick={(signup) => {
+              const requestedMode = signup ? 'signup' : 'login';
+              if (showAuth && authMode === requestedMode) {
+                setShowAuth(false);
+              } else {
+                setAuthMode(requestedMode);
+                setShowAuth(true);
+              }
+            }} />
+          )
         } />
-        
+
         {/* Admin Sub-Site Routes */}
         <Route path="/admin" element={<Navigate to="/admin/login" />} />
         <Route path="/admin/login" element={<AdminLogin onLogin={(u) => { setUser(u); Database.saveUserSession(u); navigate('/admin/dashboard'); }} />} />
         <Route path="/admin/dashboard" element={
-            user && user.role === UserRole.ADMIN ? (
-                <AdminDashboard onLogout={handleLogout} />
-            ) : (
-                <Navigate to="/admin/login" />
-            )
+          user && user.role === UserRole.ADMIN ? (
+            <AdminDashboard onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/admin/login" />
+          )
         } />
 
         {/* Static Pages */}
@@ -264,7 +265,7 @@ const MainApp: React.FC = () => {
         <Route path="/press" element={<StaticPages type="press" />} />
         <Route path="/safety" element={<StaticPages type="safety" />} />
         <Route path="/crisis" element={<StaticPages type="crisis" />} />
-        
+
         <Route path="/privacy" element={<StaticPages type="privacy" />} />
         <Route path="/terms" element={<StaticPages type="terms" />} />
         <Route path="/support" element={<StaticPages type="support" />} />
