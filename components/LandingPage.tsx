@@ -388,7 +388,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
           </div>
       </footer>
       {showCookies && (
-          <div className="fixed bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-2xl bg-[#FFFBEB] dark:bg-gray-900 text-black dark:text-white p-4 md:p-6 z-[100] rounded-2xl md:rounded-[2rem] border-2 border-yellow-400 shadow-2xl animate-in slide-in-from-bottom-5">
+          <div className="fixed bottom-6 md:bottom-8 left-0 right-0 mx-auto w-[90%] max-w-2xl bg-[#FFFBEB] dark:bg-gray-900 text-black dark:text-white p-4 md:p-6 z-[100] rounded-2xl md:rounded-[2rem] border-2 border-yellow-400 shadow-2xl animate-slide-up-fade">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 text-center md:text-left">
                   <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
                       <Cookie className="w-8 h-8 md:w-10 md:h-10 text-yellow-600" />
