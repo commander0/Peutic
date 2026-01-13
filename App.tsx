@@ -22,8 +22,8 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-// Explicitly inheriting from React.Component with Generics to ensure proper 'props' and 'state' resolution in TypeScript
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+// Fixed ErrorBoundary inheritance to use Component for state and props access
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   // Explicitly define state property to help TypeScript identify it as a class member
   public state: ErrorBoundaryState = { hasError: false };
 
@@ -51,7 +51,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
           <h1 className="text-3xl font-black mb-4">Something went wrong.</h1>
           <p className="text-gray-400 mb-8 max-w-md">Our systems detected an unexpected issue. We have logged this report and notified our engineering team.</p>
           <button 
-            // Correctly call this.setState to reset error state as part of the React Component life-cycle
+            // Correctly call this.setState to reset error state
             onClick={() => { this.setState({ hasError: false }); window.location.href = '/'; }} 
             className="bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform flex items-center gap-2"
           >
@@ -60,7 +60,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
         </div>
       );
     }
-    // Correctly return children from this.props which is provided by React.Component
+    // Correctly return children from this.props
     return this.props.children;
   }
 }
