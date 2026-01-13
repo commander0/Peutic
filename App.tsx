@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, ReactNode, ErrorInfo } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole, Companion } from './types';
@@ -24,9 +23,10 @@ interface ErrorBoundaryState {
 
 // Explicitly inheriting from React.Component with Generics to ensure proper 'props' and 'state' resolution in TypeScript
 class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState = { hasError: false };
+
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false };
   }
 
   static getDerivedStateFromError(_: Error): ErrorBoundaryState {

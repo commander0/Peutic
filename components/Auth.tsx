@@ -144,7 +144,11 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
 
             await Promise.race([loginPromise, timeoutPromise]);
             
-            // If success, component unmounts via parent state change.
+            // SUCCESS PATH: Force cleanup explicitly
+            if (isMounted.current) {
+                setLoading(false);
+                onCancel(); // Force close the modal
+            }
             
         } catch (e: any) {
             console.error(e);
@@ -152,13 +156,14 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                 // If message is just a notification (like 'check email'), don't treat as fatal error for UI
                 if (e.message && (e.message.includes("check your email") || e.message.includes("not confirmed"))) {
                     setToast("Account created! Check your email to confirm.");
+                    setLoading(false);
                     setTimeout(() => {
-                        if (isMounted.current) onCancel(); // Go back to main
+                        if (isMounted.current) onCancel(); 
                     }, 1500);
                 } else {
                     setError(e.message || "Account creation failed. Please try again.");
+                    setLoading(false);
                 }
-                setLoading(false);
             }
         }
     };

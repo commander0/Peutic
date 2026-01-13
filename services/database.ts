@@ -1,4 +1,3 @@
-
 import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, MoodEntry, JournalEntry, SessionFeedback, ArtEntry } from '../types';
 import { supabase } from './supabaseClient';
 
@@ -94,7 +93,7 @@ export class Database {
 
   static async restoreSession(): Promise<User | null> {
     try {
-      const { data: { session } } = await withTimeout(supabase.auth.getSession(), 3000);
+      const { data: { session } } = (await withTimeout(supabase.auth.getSession(), 3000)) as any;
       if (session?.user) {
         const user = await this.syncUser(session.user.id);
         if (!user) {
@@ -331,9 +330,9 @@ export class Database {
   // ... (rest of class identical) ...
   static async createRootAdmin(email: string, password?: string): Promise<User> {
       try {
-          const { data, error } = await supabase.functions.invoke('api-gateway', {
+          const { data, error } = (await supabase.functions.invoke('api-gateway', {
               body: { action: 'admin-create', payload: { email, password } }
-          }) as any;
+          })) as any;
           if (error) throw error;
           if (data?.error) throw new Error(data.error);
           return await this.login(email, password);
@@ -345,9 +344,9 @@ export class Database {
 
   static async forceVerifyEmail(email: string): Promise<boolean> {
       try {
-          const { data, error } = await supabase.functions.invoke('api-gateway', {
+          const { data, error } = (await supabase.functions.invoke('api-gateway', {
               body: { action: 'admin-auto-verify', payload: { email } }
-          }) as any;
+          })) as any;
           if (error) throw error;
           if (data?.error) throw new Error(data.error);
           return true;
