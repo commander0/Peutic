@@ -15,7 +15,6 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
-  const [isVerifying, setIsVerifying] = useState(false);
   
   const [showRegister, setShowRegister] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState('');
@@ -66,34 +65,13 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             if (authError.message.includes("Invalid login credentials")) {
                 throw new Error("Account not found or wrong password. If this is your first time, please use 'Create Admin Access' below.");
             }
-            
-            // --- SELF-HEALING: EMAIL NOT CONFIRMED ---
             if (authError.message.includes("Email not confirmed")) {
-                setIsVerifying(true);
-                // Attempt backend force verification
-                const verified = await Database.forceVerifyEmail(normalizedEmail);
-                if (verified) {
-                    setIsVerifying(false);
-                    // Retry Login Immediately
-                    const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
-                        email: normalizedEmail,
-                        password: password
-                    });
-                    if (retryError || !retryData.user) {
-                        throw new Error("Auto-verification succeeded, but login still failed. Please try again.");
-                    }
-                    // Success fall-through
-                    authData.user = retryData.user;
-                } else {
-                    setIsVerifying(false);
-                    throw new Error("Your email address has not been verified yet. Please check your inbox for the confirmation link.");
-                }
-            } else {
-                throw new Error(authError.message);
+                throw new Error("Your email address has not been verified yet. Please check your inbox for the confirmation link.");
             }
+            throw new Error(authError.message);
         }
 
-        if (!authData?.user) throw new Error("Auth failed");
+        if (!authData.user) throw new Error("Auth failed");
 
         // 2. FETCH PROFILE (Now authorized)
         const user = await Database.syncUser(authData.user.id);
@@ -101,20 +79,23 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         if (!user) {
              // Fallback: If auth succeeded but DB profile is missing, try to repair
              try {
+                 // Attempt to force-create the profile using the auth data
                  const repaired = await Database.createUser(
                      authData.user.user_metadata.full_name || 'Admin', 
                      normalizedEmail, 
-                     password 
+                     password // This path won't actually use password for creation, just reference
                  );
                  if (repaired && repaired.role === UserRole.ADMIN) {
                      onLogin(repaired);
                      return;
                  }
-                 throw new Error("Account exists but does not have Admin privileges.");
-             } catch (repairErr: any) {
+             } catch (repairErr) {
                  console.error("Repair failed", repairErr);
-                 throw repairErr;
              }
+             
+             setError("Profile sync error. Please try again.");
+             setLoading(false);
+             return;
         }
 
         if (user.role === UserRole.ADMIN) {
@@ -130,12 +111,16 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         setError(e.message || "Connection Error.");
     } finally {
         setLoading(false);
-        setIsVerifying(false);
     }
   };
 
   const validatePasswordStrength = (pwd: string): string | null => {
       if (pwd.length < 8) return "Password must be at least 8 characters long.";
+      if (!/[A-Z]/.test(pwd)) return "Password must include at least one uppercase letter.";
+      if (!/[a-z]/.test(pwd)) return "Password must include at least one lowercase letter.";
+      if (!/[0-9]/.test(pwd)) return "Password must include at least one number.";
+      // Relaxed special char requirement for local dev ease, but keeping it for production feel
+      // if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) return "Password must include at least one special character.";
       return null;
   };
 
@@ -160,21 +145,41 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
       try {
           const finalEmail = newAdminEmail.toLowerCase().trim();
           
-          // Use NEW Server-Side Creation Bypass
-          const newUser = await Database.createRootAdmin(finalEmail, newAdminPassword);
+          // Use standard creation. 
+          const newUser = await Database.createUser('System Admin', finalEmail, newAdminPassword);
 
-          if (newUser && newUser.role === UserRole.ADMIN) {
+          // If this is the FIRST user, they become ADMIN automatically via DB Trigger.
+          if (newUser.role === UserRole.ADMIN) {
               setSuccessMsg("Root Admin Initialized Successfully.");
               setTimeout(() => {
-                  onLogin(newUser); // Auto Login
+                  setShowRegister(false);
+                  setSuccessMsg('');
+                  setEmail(finalEmail);
+                  setNewAdminPassword('');
+                  setNewAdminConfirmPassword('');
+                  setHasAdmin(true);
               }, 1500);
           } else {
-              throw new Error("Account created, but admin role assignment failed.");
+              setError("Account created, but 'Admin' role could not be auto-assigned. Please check settings.");
           }
 
       } catch (e: any) {
           console.error(e);
-          setError(e.message || "Initialization Failed.");
+          if (e.message.includes("check your email")) {
+              // Handle Email Verification Case gracefully
+              setSuccessMsg("Account created! Verification email sent.");
+              setError(""); // Clear error if it was just verification warning
+              setTimeout(() => {
+                  setShowRegister(false);
+                  setEmail(newAdminEmail);
+              }, 2500);
+          } else if (e.message.includes("registered")) {
+              setError("This email is already registered. Please log in.");
+              setShowRegister(false);
+              setEmail(newAdminEmail);
+          } else {
+              setError(e.message || "Initialization Failed.");
+          }
       } finally {
           setLoading(false);
       }
@@ -201,13 +206,13 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                 ) : (
                     <>
                         {error && <div className="mb-6 p-4 bg-red-900/30 border border-red-800 text-red-400 text-sm rounded-xl flex items-center gap-2 font-bold animate-pulse"><AlertCircle className="w-4 h-4 flex-shrink-0"/> <span>{error}</span></div>}
-                        {successMsg && <div className="mb-6 p-4 bg-green-900/30 border border-green-800 text-green-400 text-sm rounded-xl flex items-center gap-2 font-bold animate-bounce"><Check className="w-4 h-4"/> {successMsg}</div>}
+                        {successMsg && <div className="mb-6 p-4 bg-green-900/30 border border-green-800 text-green-400 text-sm rounded-xl flex items-center gap-2 font-bold animate-bounce"><Mail className="w-4 h-4"/> {successMsg}</div>}
 
                         {showRegister ? (
                              <form onSubmit={handleRegisterAdmin} className="space-y-4 animate-in fade-in">
                                 <div className="text-center mb-6 p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/30">
                                     <h3 className="text-white font-black text-lg flex items-center justify-center gap-2 uppercase tracking-wide"><Crown className="w-5 h-5 text-yellow-500"/> System Claim</h3>
-                                    <p className="text-[10px] text-gray-400 mt-1">Initialize Root Admin Credentials.</p>
+                                    <p className="text-[10px] text-gray-400 mt-1">Initialize or create new admin credentials.</p>
                                 </div>
                                 <input type="email" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="New Admin Email" value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} />
                                 <div className="grid grid-cols-2 gap-4">
@@ -235,18 +240,15 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Secure Key</label>
                                     <input type="password" className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} />
                                 </div>
-                                <button type="submit" disabled={loading || isVerifying} className="w-full bg-white hover:bg-gray-200 text-black font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02]">
-                                    {loading ? <span className="animate-pulse">{isVerifying ? "Verifying Access..." : "Authenticating..."}</span> : <><KeyRound className="w-4 h-4" /> ACCESS TERMINAL</>}
+                                <button type="submit" disabled={loading} className="w-full bg-white hover:bg-gray-200 text-black font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02]">
+                                    {loading ? <span className="animate-pulse">Authenticating...</span> : <><KeyRound className="w-4 h-4" /> ACCESS TERMINAL</>}
                                 </button>
                                 
-                                {/* HIDE IF ADMIN EXISTS */}
-                                {!hasAdmin && (
-                                    <div className="pt-4 text-center">
-                                        <button type="button" onClick={() => setShowRegister(true)} className="text-yellow-600 hover:text-yellow-500 text-xs font-bold transition-colors uppercase tracking-wide flex items-center justify-center gap-2 mx-auto">
-                                            <UserPlus className="w-3 h-3" /> Create / Claim Admin Access
-                                        </button>
-                                    </div>
-                                )}
+                                <div className="pt-4 text-center">
+                                    <button type="button" onClick={() => setShowRegister(true)} className="text-yellow-600 hover:text-yellow-500 text-xs font-bold transition-colors uppercase tracking-wide flex items-center justify-center gap-2 mx-auto">
+                                        <UserPlus className="w-3 h-3" /> Create / Claim Admin Access
+                                    </button>
+                                </div>
                             </form>
                         )}
                     </>

@@ -25,30 +25,29 @@ export const STABLE_AVATAR_POOL = [
     "https://images.unsplash.com/photo-1542596594-649edbc13630?auto=format&fit=crop&q=80&w=800"
 ];
 
-// --- SEED DATA (35 Specialists) ---
+// --- SEED DATA ---
 export const INITIAL_COMPANIONS: Companion[] = [
   { id: 'c1', name: 'Ruby', gender: 'Female', specialty: 'Anxiety & Panic', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800", bio: 'Specializing in grounding techniques and immediate panic reduction.', replicaId: 're3a705cf66a', licenseNumber: 'LCSW-NY-44021', degree: 'MSW, Columbia University', stateOfPractice: 'NY', yearsExperience: 8 },
   { id: 'c2', name: 'Carter', gender: 'Male', specialty: 'Life Coaching', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=800", bio: 'Success roadmap planning and career strategy.', replicaId: 'rca8a38779a8', licenseNumber: 'ICF-PCC-9921', degree: 'MBA, Stanford', stateOfPractice: 'CA', yearsExperience: 12 },
-  { id: 'c3', name: 'James', gender: 'Male', specialty: 'Men\'s Health', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?auto=format&fit=crop&q=80&w=800", bio: 'Safe space for men.', replicaId: 'r92debe21318', licenseNumber: 'LMFT-TX-2201', degree: 'PhD, Psychology', stateOfPractice: 'TX', yearsExperience: 15 },
-  { id: 'c4', name: 'Scarlett', gender: 'Female', specialty: 'Women\'s Issues', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&q=80&w=800", bio: 'Empowerment and health.', replicaId: 're3a705cf66a', licenseNumber: 'LCSW-NY-1188', degree: 'MSW, Social Work', stateOfPractice: 'NY', yearsExperience: 13 },
   { id: 'c5', name: 'Anna', gender: 'Female', specialty: 'Family Dynamics', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1614283233556-f35b0c801ef1?auto=format&fit=crop&q=80&w=800", bio: 'Navigating complex relationships.', replicaId: 'r6ae5b6efc9d', licenseNumber: 'LMFT-CA-9901', degree: 'MS, Family Therapy', stateOfPractice: 'CA', yearsExperience: 11 },
-  { id: 'c6', name: 'Gloria', gender: 'Female', specialty: 'Elder Care', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=80&w=800", bio: 'Support for caregivers.', replicaId: 'r4317e64d25a', licenseNumber: 'BSW-FL-3321', degree: 'BSW, Gerontology', stateOfPractice: 'FL', yearsExperience: 20 },
-  { id: 'c7', name: 'Olivia', gender: 'Female', specialty: 'Workplace Stress', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1619895862022-09114b41f16f?auto=format&fit=crop&q=80&w=800", bio: 'Burnout prevention strategies.', replicaId: 'rc2146c13e81', licenseNumber: 'PsyD-NY-1102', degree: 'PsyD, Org Psychology', stateOfPractice: 'NY', yearsExperience: 7 },
+  { id: 'c3', name: 'James', gender: 'Male', specialty: 'Men\'s Health', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?auto=format&fit=crop&q=80&w=800", bio: 'Safe space for men.', replicaId: 'r92debe21318', licenseNumber: 'LMFT-TX-2201', degree: 'PhD, Psychology', stateOfPractice: 'TX', yearsExperience: 15 },
+  { id: 'c46', name: 'Scarlett', gender: 'Female', specialty: 'Women\'s Issues', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&q=80&w=800", bio: 'Empowerment and health.', replicaId: 're3a705cf66a', licenseNumber: 'LCSW-NY-1188', degree: 'MSW, Social Work', stateOfPractice: 'NY', yearsExperience: 13 },
   { id: 'c8', name: 'Marcus', gender: 'Male', specialty: 'Addiction Recovery', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=800", bio: 'One day at a time.', replicaId: 'rca8a38779a8', licenseNumber: 'LAC-NJ-8821', degree: 'MA, Addiction Counseling', stateOfPractice: 'NJ', yearsExperience: 14 },
-  { id: 'c9', name: 'Elena', gender: 'Female', specialty: 'Postpartum Support', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&q=80&w=800", bio: 'Supporting new mothers.', replicaId: 're3a705cf66a', licenseNumber: 'LCSW-TX-3321', degree: 'MSW, Clinical Social Work', stateOfPractice: 'TX', yearsExperience: 6 },
+  { id: 'c6', name: 'Gloria', gender: 'Female', specialty: 'Elder Care', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=80&w=800", bio: 'Support for caregivers.', replicaId: 'r4317e64d25a', licenseNumber: 'BSW-FL-3321', degree: 'BSW, Gerontology', stateOfPractice: 'FL', yearsExperience: 20 },
+  { id: 'c45', name: 'Matthew', gender: 'Male', specialty: 'Tech Burnout', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=800", bio: 'Restoring digital balance.', replicaId: 'r92debe21318', licenseNumber: 'LMFT-WA-3399', degree: 'MA, Psychology', stateOfPractice: 'WA', yearsExperience: 7 },
+  { id: 'c7', name: 'Olivia', gender: 'Female', specialty: 'Workplace Stress', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1619895862022-09114b41f16f?auto=format&fit=crop&q=80&w=800", bio: 'Burnout prevention strategies.', replicaId: 'rc2146c13e81', licenseNumber: 'PsyD-NY-1102', degree: 'PsyD, Org Psychology', stateOfPractice: 'NY', yearsExperience: 7 },
   { id: 'c10', name: 'Dr. Chen', gender: 'Male', specialty: 'Executive Burnout', status: 'BUSY', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=800", bio: 'High performance sustainability.', replicaId: 'rca8a38779a8', licenseNumber: 'PsyD-CA-9921', degree: 'PsyD, Org Psychology', stateOfPractice: 'CA', yearsExperience: 18 },
-  { id: 'c11', name: 'Sarah', gender: 'Female', specialty: 'Eating Disorders', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=800", bio: 'Building a healthy relationship with food.', replicaId: 'r6ae5b6efc9d', licenseNumber: 'RD-NY-4421', degree: 'MS, Nutrition & Psychology', stateOfPractice: 'NY', yearsExperience: 9 },
+  { id: 'c9', name: 'Elena', gender: 'Female', specialty: 'Postpartum Support', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&q=80&w=800", bio: 'Supporting new mothers.', replicaId: 're3a705cf66a', licenseNumber: 'LCSW-TX-3321', degree: 'MSW, Clinical Social Work', stateOfPractice: 'TX', yearsExperience: 6 },
   { id: 'c12', name: 'Malik', gender: 'Male', specialty: 'Trauma & PTSD', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800", bio: 'Healing the past.', replicaId: 'r92debe21318', licenseNumber: 'LPC-IL-2210', degree: 'PhD, Clinical Psychology', stateOfPractice: 'IL', yearsExperience: 11 },
-  { id: 'c13', name: 'Zoey', gender: 'Female', specialty: 'LGBTQ+ Issues', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&q=80&w=800", bio: 'Affirming and inclusive care.', replicaId: 're3a705cf66a', licenseNumber: 'LMFT-OR-5521', degree: 'MA, Counseling Psychology', stateOfPractice: 'OR', yearsExperience: 5 },
+  { id: 'c44', name: 'Avery', gender: 'Female', specialty: 'ADHD Support', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=800", bio: 'Thriving with neurodiversity.', replicaId: 'rc2146c13e81', licenseNumber: 'PsyD-MA-6622', degree: 'PsyD, Psychology', stateOfPractice: 'MA', yearsExperience: 10 },
   { id: 'c14', name: 'Liam', gender: 'Male', specialty: 'Anger Management', status: 'AVAILABLE', rating: 4.7, imageUrl: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&q=80&w=800", bio: 'Constructive expression.', replicaId: 'rca8a38779a8', licenseNumber: 'LCSW-MA-8812', degree: 'MSW, Social Work', stateOfPractice: 'MA', yearsExperience: 13 },
-  { id: 'c15', name: 'Avery', gender: 'Female', specialty: 'ADHD Support', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=800", bio: 'Thriving with neurodiversity.', replicaId: 'rc2146c13e81', licenseNumber: 'PsyD-MA-6622', degree: 'PsyD, Psychology', stateOfPractice: 'MA', yearsExperience: 10 },
+  { id: 'c11', name: 'Sarah', gender: 'Female', specialty: 'Eating Disorders', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=800", bio: 'Building a healthy relationship with food.', replicaId: 'r6ae5b6efc9d', licenseNumber: 'RD-NY-4421', degree: 'MS, Nutrition & Psychology', stateOfPractice: 'NY', yearsExperience: 9 },
   { id: 'c16', name: 'Noah', gender: 'Male', specialty: 'Teen Anxiety', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?auto=format&fit=crop&q=80&w=800", bio: 'Helping teens navigate pressure.', replicaId: 'r92debe21318', licenseNumber: 'LMFT-WA-9921', degree: 'MA, Family Therapy', stateOfPractice: 'WA', yearsExperience: 6 },
-  { id: 'c17', name: 'Dr. Patel', gender: 'Female', specialty: 'Sleep Insomnia', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=800", bio: 'Restoring natural rhythms.', replicaId: 'rc2146c13e81', licenseNumber: 'MD-NY-1102', degree: 'MD, Psychiatry', stateOfPractice: 'NY', yearsExperience: 22 },
-  { id: 'c18', name: 'Sofia', gender: 'Female', specialty: 'Chronic Pain', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=800", bio: 'Mind-body healing.', replicaId: 're3a705cf66a', licenseNumber: 'PhD-CA-1123', degree: 'PhD, Health Psychology', stateOfPractice: 'CA', yearsExperience: 12 },
+  { id: 'c13', name: 'Zoey', gender: 'Female', specialty: 'LGBTQ+ Issues', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&q=80&w=800", bio: 'Affirming and inclusive care.', replicaId: 're3a705cf66a', licenseNumber: 'LMFT-OR-5521', degree: 'MA, Counseling Psychology', stateOfPractice: 'OR', yearsExperience: 5 },
   { id: 'c19', name: 'Jackson', gender: 'Male', specialty: 'Sports Psychology', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=800", bio: 'Peak performance mindset.', replicaId: 'rca8a38779a8', licenseNumber: 'PsyD-FL-4421', degree: 'PsyD, Sports Psychology', stateOfPractice: 'FL', yearsExperience: 8 },
-  { id: 'c20', name: 'Matthew', gender: 'Male', specialty: 'Tech Burnout', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=800", bio: 'Restoring digital balance.', replicaId: 'r92debe21318', licenseNumber: 'LMFT-WA-3399', degree: 'MA, Psychology', stateOfPractice: 'WA', yearsExperience: 7 },
+  { id: 'c17', name: 'Dr. Patel', gender: 'Female', specialty: 'Sleep Insomnia', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=800", bio: 'Restoring natural rhythms.', replicaId: 'rc2146c13e81', licenseNumber: 'MD-NY-1102', degree: 'MD, Psychiatry', stateOfPractice: 'NY', yearsExperience: 22 },
   { id: 'c21', name: 'Lucas', gender: 'Male', specialty: 'Digital Addiction', status: 'AVAILABLE', rating: 4.7, imageUrl: "https://images.unsplash.com/photo-1463453091185-61582044d556?auto=format&fit=crop&q=80&w=800", bio: 'Unplugging for mental health.', replicaId: 'r92debe21318', licenseNumber: 'LCSW-NY-3321', degree: 'MSW, Social Work', stateOfPractice: 'NY', yearsExperience: 6 },
-  { id: 'c22', name: 'Isabella', gender: 'Female', specialty: 'Grief Counseling', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=800", bio: 'Finding light in darkness.', replicaId: 're3a705cf66a', licenseNumber: 'LCSW-NY-1102', degree: 'MSW, Social Work', stateOfPractice: 'NY', yearsExperience: 14 },
+  { id: 'c18', name: 'Sofia', gender: 'Female', specialty: 'Chronic Pain', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=800", bio: 'Mind-body healing.', replicaId: 're3a705cf66a', licenseNumber: 'PhD-CA-1123', degree: 'PhD, Health Psychology', stateOfPractice: 'CA', yearsExperience: 12 },
   { id: 'c23', name: 'William', gender: 'Male', specialty: 'Divorce Recovery', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=800", bio: 'Navigating life transitions.', replicaId: 'rca8a38779a8', licenseNumber: 'LMFT-IL-5521', degree: 'MA, Family Therapy', stateOfPractice: 'IL', yearsExperience: 15 },
   { id: 'c24', name: 'Maya', gender: 'Female', specialty: 'Cultural Identity', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&q=80&w=800", bio: 'Navigating dual cultures and belonging.', replicaId: 're3a705cf66a', licenseNumber: 'LCSW-CA-1102', degree: 'MSW, Social Work', stateOfPractice: 'CA', yearsExperience: 9 },
   { id: 'c25', name: 'Caleb', gender: 'Male', specialty: 'Imposter Syndrome', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=800", bio: 'Owning your success with confidence.', replicaId: 'rca8a38779a8', licenseNumber: 'LPC-TX-9921', degree: 'MA, Counseling', stateOfPractice: 'TX', yearsExperience: 7 },
@@ -118,21 +117,6 @@ export class Database {
         // Try inserting (relies on RLS)
         const { error } = await supabase.from('users').insert(newUser);
         
-        // OPTIMISTIC USER: Even if DB fails (e.g. RLS), allow UI to proceed if Auth worked.
-        const optimisticUser: User = {
-            id: authUser.id,
-            email: authUser.email,
-            name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0],
-            role: isFirst ? UserRole.ADMIN : UserRole.USER,
-            balance: isFirst ? 999 : 0,
-            subscriptionStatus: 'ACTIVE',
-            joinedAt: new Date().toISOString(),
-            lastLoginDate: new Date().toISOString(),
-            streak: 0,
-            provider: authUser.app_metadata?.provider || 'email',
-            emailPreferences: { marketing: true, updates: true }
-        };
-
         if (error) {
             // FIX: If Permission Denied (42501), fallback to Edge Function bypass
             if (error.code === '42501' || error.message.includes('row-level security')) {
@@ -156,8 +140,14 @@ export class Database {
 
                 } catch (backendErr: any) {
                     console.error("Backend Bypass Failed:", backendErr);
-                    // RLS Failed and Backend Failed -> Return Optimistic to unblock UI
-                    return optimisticUser;
+                    
+                    // Final attempt: Check if user exists anyway (race condition)
+                    await new Promise(r => setTimeout(r, 2000));
+                    const check = await this.syncUser(authUser.id);
+                    if (check) return check;
+
+                    // If still failing, it's a deployment issue
+                    throw new Error("Backend setup required. Please run: npm run backend:deploy");
                 }
                 
                 // Wait briefly for propagation
@@ -170,7 +160,22 @@ export class Database {
                     await new Promise(r => setTimeout(r, 500));
                 }
 
-                // If sync still fails (e.g. read policy issue), return optimistic
+                // OPTIMISTIC RETURN: If backend success but RLS read fails (e.g. Email Not Confirmed case), 
+                // return constructed user to prevent UI crash.
+                console.warn("Read-back failed (likely RLS). Returning optimistic user.");
+                const optimisticUser: User = {
+                    id: authUser.id,
+                    email: authUser.email,
+                    name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0],
+                    role: UserRole.USER, // Default to USER safely, unless we know better
+                    balance: 0,
+                    subscriptionStatus: 'ACTIVE',
+                    joinedAt: new Date().toISOString(),
+                    lastLoginDate: new Date().toISOString(),
+                    streak: 0,
+                    provider: 'email',
+                    emailPreferences: { marketing: true, updates: true }
+                };
                 return optimisticUser;
             }
 
@@ -178,26 +183,13 @@ export class Database {
             if (error.code === '23505') return await this.syncUser(authUser.id);
             
             console.error("Repair Profile Error:", error);
-            // Even on error, return optimistic to prevent hang
-            return optimisticUser;
+            throw new Error(`Database Insert Failed: ${error.message} (Code: ${error.code})`);
         }
         
-        return await this.syncUser(authUser.id) || optimisticUser;
+        return await this.syncUser(authUser.id);
     } catch (e: any) { 
         console.error("Repair failed", e); 
-        // Fallback for safety
-        return {
-            id: authUser.id,
-            email: authUser.email,
-            name: authUser.user_metadata?.full_name || 'User',
-            role: UserRole.USER,
-            balance: 0,
-            subscriptionStatus: 'ACTIVE',
-            joinedAt: new Date().toISOString(),
-            lastLoginDate: new Date().toISOString(),
-            streak: 0,
-            provider: 'email'
-        };
+        throw e; // Propagate error to caller
     }
   }
 
@@ -260,38 +252,6 @@ export class Database {
     throw new Error("Login failed. Profile could not be synchronized.");
   }
 
-  // NEW: Create Root Admin via Backend (Bypasses Email Verification)
-  static async createRootAdmin(email: string, password?: string): Promise<User> {
-      try {
-          const { data, error } = await supabase.functions.invoke('api-gateway', {
-              body: { action: 'admin-create', payload: { email, password } }
-          });
-          if (error) throw error;
-          if (data?.error) throw new Error(data.error);
-          
-          // Auto-login after creation since password is known
-          return await this.login(email, password);
-      } catch (e: any) {
-          console.error("Root Admin Creation Failed:", e);
-          throw e;
-      }
-  }
-
-  // NEW: Force verify email via backend if frontend is blocked
-  static async forceVerifyEmail(email: string): Promise<boolean> {
-      try {
-          const { data, error } = await supabase.functions.invoke('api-gateway', {
-              body: { action: 'admin-auto-verify', payload: { email } }
-          });
-          if (error) throw error;
-          if (data?.error) throw new Error(data.error);
-          return true;
-      } catch (e) {
-          console.error("Auto-verification failed", e);
-          return false;
-      }
-  }
-
   static async createUser(name: string, email: string, password?: string, provider: string = 'email'): Promise<User> {
     if (provider === 'email' && password) {
         const { data, error } = await supabase.auth.signUp({
@@ -331,43 +291,14 @@ export class Database {
             }
             
             // If trigger failed, run self-healing and catch errors
-            // Use return value from repairProfile (which might be optimistic)
             try {
                 const repaired = await this.repairProfile(data.user);
                 if (repaired) return repaired;
             } catch (repairError: any) {
-                // If repair failed strictly, manually return optimistic
-                console.warn("Returning optimistic user due to timeout.");
-                return {
-                    id: data.user.id,
-                    name: name,
-                    email: email,
-                    role: UserRole.USER,
-                    balance: 0,
-                    subscriptionStatus: 'ACTIVE',
-                    joinedAt: new Date().toISOString(),
-                    lastLoginDate: new Date().toISOString(),
-                    streak: 0,
-                    provider: 'email',
-                    emailPreferences: { marketing: true, updates: true }
-                };
+                // If repair failed with specific message, propagate it
+                throw new Error(repairError.message || "Initialization failed");
             }
         }
-    } else if (provider !== 'email') {
-        // Optimistic return for OAuth to allow immediate UI feedback
-        // The actual user will be synced when Auth component detects session change
-        return {
-            id: 'temp',
-            name: name,
-            email: email,
-            role: UserRole.USER,
-            balance: 0,
-            subscriptionStatus: 'ACTIVE',
-            joinedAt: new Date().toISOString(),
-            lastLoginDate: new Date().toISOString(),
-            streak: 0,
-            provider: provider as any
-        };
     }
     throw new Error("Failed to initialize user account (Timeout or DB Error).");
   }
@@ -443,8 +374,8 @@ export class Database {
                   allowSignups: data.allow_signups,
                   siteName: data.site_name,
                   broadcastMessage: data.broadcast_message,
-                  maxConcurrentSessions: data.max_concurrent_sessions, // Fixed property name
-                  multilingualMode: data.multilingual_mode // Fixed property name
+                  max_concurrent_sessions: data.max_concurrent_sessions,
+                  multilingual_mode: data.multilingual_mode
               };
           } else {
               // Only save defaults if missing
@@ -465,7 +396,7 @@ export class Database {
           site_name: settings.siteName,
           broadcast_message: settings.broadcastMessage,
           max_concurrent_sessions: settings.maxConcurrentSessions,
-          multilingual_mode: settings.multilingualMode // Fixed property access
+          multilingual_mode: settings.multilingualMode
       });
   }
 

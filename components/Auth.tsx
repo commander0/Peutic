@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserRole } from '../types';
 import { Facebook, AlertCircle, Send, Heart, Check, Loader2, Server } from 'lucide-react';
-import { supabase } from '../services/supabaseClient';
+import { Database } from '../services/database';
 import { Shield } from 'lucide-react';
 
 interface AuthProps {
@@ -13,6 +13,7 @@ interface AuthProps {
 
 declare global {
     interface Window {
+        google?: any;
         FB?: any;
         fbAsyncInit?: any;
     }
@@ -20,6 +21,7 @@ declare global {
 
 const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' }) => {
   const [isLogin, setIsLogin] = useState(initialMode === 'login');
+  const GOOGLE_CLIENT_ID = process.env.VITE_GOOGLE_CLIENT_ID;
   
   useEffect(() => {
     setIsLogin(initialMode === 'login');
@@ -55,19 +57,55 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
       }(document, 'script', 'facebook-jssdk'));
   }, []);
 
-  const handleGoogleClick = async () => {
-      setLoading(true);
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return; // Prevent GSI_LOGGER error by skipping init if no ID
+
+    const handleGoogleCredentialResponse = async (response: any) => {
+        try {
+            setLoading(true);
+            const base64Url = response.credential.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            const data = JSON.parse(jsonPayload);
+            if (data.email) {
+                await onLogin(UserRole.USER, data.name || "Buddy", data.picture, data.email, undefined, 'google');
+            }
+        } catch (err) {
+            setError("Google Authentication Failed.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (window.google) {
+        try {
+            window.google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleGoogleCredentialResponse,
+                use_fedcm_for_prompt: false, 
+                auto_select: false
+            });
+        } catch (e) {
+            console.warn("Google Sign-In Init Failed:", e);
+        }
+    }
+  }, [onLogin, GOOGLE_CLIENT_ID]);
+
+  const handleGoogleClick = () => {
+      if (!GOOGLE_CLIENT_ID) {
+          setError("Google Sign-In is not configured.");
+          return;
+      }
+      if (!window.google) {
+          setError("Google Sign-In is currently unavailable.");
+          return;
+      }
       try {
-          const { error } = await supabase.auth.signInWithOAuth({
-              provider: 'google',
-              options: {
-                  redirectTo: window.location.origin,
-              }
-          });
-          if (error) throw error;
-      } catch (e: any) {
-          setError(e.message || "Google Sign-In failed.");
-          setLoading(false);
+          window.google.accounts.id.prompt();
+      } catch (e) {
+          setError("An error occurred with Google Sign-In.");
       }
   };
 
@@ -157,33 +195,13 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
   const finishOnboarding = async () => {
       setLoading(true);
       setError('');
-      
-      // Safety Timeout to prevent infinite spinning
-      // Now combined with Database.createUser optimistic return for extra safety
-      const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Creation timed out. Please refresh and try logging in.")), 15000)
-      );
-
       try {
           const fullName = `${firstName.trim()} ${lastName.trim()}`;
           const formattedName = fullName.length > 1 ? (fullName.charAt(0).toUpperCase() + fullName.slice(1)) : "Buddy";
-          
-          await Promise.race([
-              onLogin(UserRole.USER, formattedName, undefined, email, birthday, 'email', password),
-              timeoutPromise
-          ]);
+          await onLogin(UserRole.USER, formattedName, undefined, email, birthday, 'email', password);
       } catch (e: any) {
           console.error(e);
-          // If message is just a notification (like 'check email'), don't treat as fatal error for UI
-          if (e.message && (e.message.includes("check your email") || e.message.includes("not confirmed"))) {
-              setToast("Account created! Check your email to confirm.");
-              setTimeout(() => {
-                  onCancel(); // Go back to main
-              }, 3000);
-          } else {
-              setError(e.message || "Account creation failed. Please try again.");
-          }
-      } finally {
+          setError(e.message || "Account creation failed. Please try again.");
           setLoading(false);
       }
   };
@@ -310,7 +328,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                 )}
 
                 <div className="grid grid-cols-2 gap-3 md:gap-4 mb-6 md:mb-8">
-                    <button type="button" onClick={handleGoogleClick} className={`w-full h-12 md:h-14 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center hover:bg-white dark:hover:bg-gray-900 bg-white dark:bg-black shadow-sm transition-transform hover:scale-105 relative overflow-hidden`} title="Sign in with Google">
+                    <button type="button" onClick={handleGoogleClick} className={`w-full h-12 md:h-14 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center hover:bg-white dark:hover:bg-gray-900 bg-white dark:bg-black shadow-sm transition-transform hover:scale-105 relative overflow-hidden ${!GOOGLE_CLIENT_ID ? 'opacity-50 cursor-not-allowed' : ''}`} title={GOOGLE_CLIENT_ID ? "Sign in with Google" : "Google Sign-In Not Configured"}>
                             <svg width="24" height="24" viewBox="0 0 24 24" className="w-5 h-5 md:w-6 md:h-6"><path d="M23.52 12.29C23.52 11.43 23.45 10.61 23.31 9.82H12V14.46H18.46C18.18 15.92 17.32 17.16 16.03 18.02V20.99H19.91C22.18 18.9 23.52 15.83 23.52 12.29Z" fill="#4285F4"/><path d="M12 24C15.24 24 17.96 22.93 19.91 20.99L16.03 18.02C14.95 18.74 13.58 19.17 12 19.17C8.87 19.17 6.22 17.06 5.27 14.2H1.26V17.31C3.24 21.25 7.31 24 12 24Z" fill="#34A853"/><path d="M5.27 14.2C5.03 13.33 4.9 12.42 4.9 11.5C4.9 10.58 5.03 9.67 5.27 8.8V5.69H1.26C0.46 7.29 0 9.1 0 11.5C0 13.9 0.46 15.71 1.26 17.31L5.27 14.2Z" fill="#FBBC05"/><path d="M12 3.83C13.76 3.83 15.35 4.44 16.59 5.62L20 2.21C17.96 0.31 15.24 0 12 0C7.31 0 3.24 2.75 1.26 6.69L5.27 9.8C6.22 6.94 8.87 3.83 12 3.83Z" fill="#EA4335"/></svg>
                     </button>
                     <button type="button" onClick={handleFacebookLogin} className="w-full h-12 md:h-14 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-900/20 bg-white dark:bg-black shadow-sm transition-transform hover:scale-105" title="Sign in with Facebook">
