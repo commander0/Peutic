@@ -131,8 +131,9 @@ export class Database {
                 provider: optimisticUser.provider
             };
 
-            // Try inserting (relies on RLS)
-            const { error } = await supabase.from('users').insert(newUser);
+            // Try UPSERTING (Merge logic: if trigger made it, we update; if not, we insert)
+            // This fixes the "Duplicate Key" error if the trigger ran fast but sync missed it.
+            const { error } = await supabase.from('users').upsert(newUser, { onConflict: 'id' });
 
             if (error) {
                 // FIX: If Permission Denied (42501), fallback to Edge Function bypass
@@ -384,7 +385,7 @@ export class Database {
         try {
             const { data } = await supabase.from('companions').select('*');
             if (data && data.length > 0) {
-                return data.map(d => ({
+                return data.map((d: any) => ({
                     id: d.id, name: d.name, gender: d.gender, specialty: d.specialty,
                     status: d.status as any, rating: d.rating, imageUrl: d.image_url,
                     bio: d.bio, replicaId: d.replica_id, licenseNumber: d.license_number,
@@ -443,14 +444,14 @@ export class Database {
 
     static async getUserTransactions(userId: string): Promise<Transaction[]> {
         const { data } = await supabase.from('transactions').select('*').eq('user_id', userId).order('date', { ascending: false });
-        return (data || []).map(t => ({
+        return (data || []).map((t: any) => ({
             id: t.id, userId: t.user_id, date: t.date, amount: t.amount, cost: t.cost, description: t.description, status: t.status as any
         }));
     }
 
     static async getAllTransactions(): Promise<Transaction[]> {
         const { data } = await supabase.from('transactions').select('*').order('date', { ascending: false });
-        return (data || []).map(t => ({
+        return (data || []).map((t: any) => ({
             id: t.id, userId: t.user_id, date: t.date, amount: t.amount, cost: t.cost, description: t.description, status: t.status as any
         }));
     }
@@ -481,7 +482,7 @@ export class Database {
 
     static async getJournals(userId: string): Promise<JournalEntry[]> {
         const { data } = await supabase.from('journals').select('*').eq('user_id', userId).order('date', { ascending: false });
-        return (data || []).map(j => ({ id: j.id, userId: j.user_id, date: j.date, content: j.content }));
+        return (data || []).map((j: any) => ({ id: j.id, userId: j.user_id, date: j.date, content: j.content }));
     }
 
     static async saveJournal(entry: JournalEntry) {
@@ -490,7 +491,7 @@ export class Database {
 
     static async getMoods(userId: string): Promise<MoodEntry[]> {
         const { data } = await supabase.from('moods').select('*').eq('user_id', userId).order('date', { ascending: false });
-        return (data || []).map(m => ({ id: m.id, userId: m.user_id, date: m.date, mood: m.mood as any }));
+        return (data || []).map((m: any) => ({ id: m.id, userId: m.user_id, date: m.date, mood: m.mood as any }));
     }
 
     static async saveMood(userId: string, mood: 'confetti' | 'rain') {
@@ -499,7 +500,7 @@ export class Database {
 
     static async getUserArt(userId: string): Promise<ArtEntry[]> {
         const { data } = await supabase.from('user_art').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-        return (data || []).map(a => ({ id: a.id, userId: a.user_id, imageUrl: a.image_url, prompt: a.prompt, createdAt: a.created_at, title: a.title }));
+        return (data || []).map((a: any) => ({ id: a.id, userId: a.user_id, imageUrl: a.image_url, prompt: a.prompt, createdAt: a.created_at, title: a.title }));
     }
 
     static async saveArt(entry: ArtEntry) {

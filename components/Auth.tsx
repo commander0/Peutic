@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { UserRole } from '../types';
 import { Facebook, AlertCircle, Send, Heart, Check, Loader2, Server } from 'lucide-react';
 import { supabase } from '../services/supabaseClient';
-import { Shield } from 'lucide-react';
+
 
 interface AuthProps {
     onLogin: (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider?: 'email' | 'google' | 'facebook' | 'x', password?: string, isSignup?: boolean) => Promise<void>;
