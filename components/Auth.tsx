@@ -11,12 +11,6 @@ interface AuthProps {
     initialMode?: 'login' | 'signup';
 }
 
-declare global {
-    interface Window {
-        FB?: any;
-        fbAsyncInit?: any;
-    }
-}
 
 const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' }) => {
     const [isLogin, setIsLogin] = useState(initialMode === 'login');
@@ -40,21 +34,6 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
     const [onboardingStep, setOnboardingStep] = useState(0);
     const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
 
-    useEffect(() => {
-        if (window.FB) return;
-        window.fbAsyncInit = function () {
-            window.FB.init({ appId: '1143120088010234', cookie: true, xfbml: true, version: 'v18.0' });
-        };
-        (function (d, s, id) {
-            var js, fjs = d.getElementsByTagName(s)[0];
-            if (d.getElementById(id)) return;
-            js = d.createElement(s) as HTMLScriptElement;
-            js.id = id;
-            js.src = "https://connect.facebook.net/en_US/sdk.js";
-            fjs.parentNode?.insertBefore(js, fjs);
-        }(document, 'script', 'facebook-jssdk'));
-    }, []);
-
     const handleGoogleClick = async () => {
         setLoading(true);
         try {
@@ -71,32 +50,20 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
         }
     };
 
-    const handleFacebookLogin = () => {
-        if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
-            alert("Facebook Login requires a secure HTTPS connection.");
-            return;
+    const handleFacebookLogin = async () => {
+        setLoading(true);
+        try {
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'facebook',
+                options: {
+                    redirectTo: window.location.origin,
+                }
+            });
+            if (error) throw error;
+        } catch (e: any) {
+            setError(e.message || "Facebook Sign-In failed.");
+            setLoading(false);
         }
-        if (!window.FB) {
-            setError("Facebook SDK not loaded. Please verify your connection.");
-            return;
-        }
-        window.FB.login(function (response: any) {
-            if (response.authResponse) {
-                window.FB.api('/me', { fields: 'name, email, picture' }, async function (profile: any) {
-                    const name = profile.name || "Buddy";
-                    const pic = profile.picture?.data?.url;
-                    const fbEmail = profile.email || `${profile.id}@facebook.com`;
-                    setLoading(true);
-                    try {
-                        await onLogin(UserRole.USER, name, pic, fbEmail, undefined, 'facebook', undefined, true);
-                    } catch (e) {
-                        setError("Facebook Login Failed");
-                    } finally {
-                        setLoading(false);
-                    }
-                });
-            }
-        }, { scope: 'public_profile,email' });
     };
 
     const validatePasswordStrength = (pwd: string): string | null => {
