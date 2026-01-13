@@ -1,5 +1,5 @@
 
-import React, { Component, useState, useEffect, useRef, ReactNode, ErrorInfo } from 'react';
+import React, { useState, useEffect, useRef, ReactNode, ErrorInfo } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole, Companion } from './types';
 import LandingPage from './components/LandingPage';
@@ -22,8 +22,8 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-// Explicitly inheriting from Component with Generics to ensure proper 'props' and 'state' resolution in TypeScript
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+// Explicitly inheriting from React.Component with Generics to ensure proper 'props' and 'state' resolution in TypeScript
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
@@ -176,8 +176,7 @@ const MainApp: React.FC = () => {
 
     } catch (e: any) {
         console.error("Login Failed", e);
-        const msg = e.message || "Please check your internet connection.";
-        alert(`Login failed: ${msg}`);
+        // Let the Auth component handle error display
         throw e;
     }
   };
