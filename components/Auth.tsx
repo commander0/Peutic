@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { UserRole } from '../types';
 import { Facebook, AlertCircle, Send, Heart, Check, Loader2, Server } from 'lucide-react';
 import { supabase } from '../services/supabaseClient';
@@ -14,9 +14,11 @@ interface AuthProps {
 
 const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' }) => {
     const [isLogin, setIsLogin] = useState(initialMode === 'login');
+    const isMounted = useRef(true);
 
     useEffect(() => {
         setIsLogin(initialMode === 'login');
+        return () => { isMounted.current = false; };
     }, [initialMode]);
 
     const [email, setEmail] = useState('');
@@ -45,8 +47,10 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             });
             if (error) throw error;
         } catch (e: any) {
-            setError(e.message || "Google Sign-In failed.");
-            setLoading(false);
+            if (isMounted.current) {
+                setError(e.message || "Google Sign-In failed.");
+                setLoading(false);
+            }
         }
     };
 
@@ -61,8 +65,10 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             });
             if (error) throw error;
         } catch (e: any) {
-            setError(e.message || "Facebook Sign-In failed.");
-            setLoading(false);
+            if (isMounted.current) {
+                setError(e.message || "Facebook Sign-In failed.");
+                setLoading(false);
+            }
         }
     };
 
@@ -116,43 +122,44 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                 setShowOnboarding(true);
             }
         } catch (e: any) {
-            setError(e.message || "Connection failed. Please check internet.");
-            setLoading(false);
+            if (isMounted.current) {
+                setError(e.message || "Connection failed. Please check internet.");
+                setLoading(false);
+            }
         }
     };
 
     const finishOnboarding = async () => {
+        if (loading) return; 
         setLoading(true);
         setError('');
-
-        // Safety Timeout to prevent infinite spinning
-        // Now combined with Database.createUser optimistic return for extra safety
-        const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Creation timed out. Please refresh and try logging in.")), 15000)
-        );
 
         try {
             const fullName = `${firstName.trim()} ${lastName.trim()}`;
             const formattedName = fullName.length > 1 ? (fullName.charAt(0).toUpperCase() + fullName.slice(1)) : "Buddy";
 
-            await Promise.race([
-                // Explicitly pass isSignup = true
-                onLogin(UserRole.USER, formattedName, undefined, email, birthday, 'email', password, true),
-                timeoutPromise
-            ]);
+            // SAFETY: Force timeout after 15 seconds to unblock UI if network/DB hangs
+            const loginPromise = onLogin(UserRole.USER, formattedName, undefined, email, birthday, 'email', password, true);
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Setup taking too long. Please refresh and try logging in.")), 15000));
+
+            await Promise.race([loginPromise, timeoutPromise]);
+            
+            // If success, component unmounts via parent state change.
+            
         } catch (e: any) {
             console.error(e);
-            // If message is just a notification (like 'check email'), don't treat as fatal error for UI
-            if (e.message && (e.message.includes("check your email") || e.message.includes("not confirmed"))) {
-                setToast("Account created! Check your email to confirm.");
-                setTimeout(() => {
-                    onCancel(); // Go back to main
-                }, 3000);
-            } else {
-                setError(e.message || "Account creation failed. Please try again.");
+            if (isMounted.current) {
+                // If message is just a notification (like 'check email'), don't treat as fatal error for UI
+                if (e.message && (e.message.includes("check your email") || e.message.includes("not confirmed"))) {
+                    setToast("Account created! Check your email to confirm.");
+                    setTimeout(() => {
+                        if (isMounted.current) onCancel(); // Go back to main
+                    }, 1500);
+                } else {
+                    setError(e.message || "Account creation failed. Please try again.");
+                }
+                setLoading(false);
             }
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -224,7 +231,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                                     <button
                                         onClick={finishOnboarding}
                                         disabled={loading}
-                                        className="w-full bg-[#FACC15] text-black py-4 md:py-5 rounded-2xl font-black shadow-[0_20px_40px_-15px_rgba(250,204,21,0.5)] hover:bg-[#EAB308] hover:scale-105 transition-all text-base md:text-lg uppercase tracking-widest flex items-center justify-center gap-2"
+                                        className={`w-full bg-[#FACC15] text-black py-4 md:py-5 rounded-2xl font-black shadow-[0_20px_40px_-15px_rgba(250,204,21,0.5)] hover:bg-[#EAB308] hover:scale-105 transition-all text-base md:text-lg uppercase tracking-widest flex items-center justify-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                                     >
                                         {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> Creating Space...</> : "Enter Dashboard"}
                                     </button>
