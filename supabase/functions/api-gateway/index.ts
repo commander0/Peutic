@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 import { GoogleGenAI, Modality } from 'https://esm.sh/@google/genai'
 import Stripe from 'https://esm.sh/stripe@14.14.0?target=deno'
 
@@ -20,140 +20,116 @@ serve(async (req) => {
     const { action, payload } = await req.json();
     
     // Initialize Supabase Admin Client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '' // PRIVILEGED KEY
-    );
+    const supUrl = Deno.env.get('SUPABASE_URL');
+    const supKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-    // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
+    if (!supUrl || !supKey) {
+        throw new Error("Missing Server Secrets");
+    }
+
+    const supabaseClient = createClient(supUrl, supKey);
+    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+    const stripe = stripeKey ? new Stripe(stripeKey, {
         apiVersion: '2023-10-16',
         httpClient: Stripe.createFetchHttpClient(),
-    });
+    }) : null;
 
-    // --- 1. ADMIN CREATION BYPASS (NO EMAIL VERIFICATION) ---
+    // --- ADMIN CREATION ---
     if (action === 'admin-create') {
         const { email, password } = payload;
-        
         const { count } = await supabaseClient.from('users').select('*', { count: 'exact', head: true });
         
         if ((count || 0) > 0) {
-             return new Response(JSON.stringify({ error: "System already initialized. Admin exists." }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+             return new Response(JSON.stringify({ error: "System already initialized." }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
         const { data: user, error: createError } = await supabaseClient.auth.admin.createUser({
             email,
             password,
-            email_confirm: true, // BYPASS VERIFICATION
+            email_confirm: true,
             user_metadata: { full_name: 'System Admin' }
         });
 
         if (createError) throw createError;
 
-        const { error: profileError } = await supabaseClient.from('users').insert({
+        await supabaseClient.from('users').insert({
             id: user.user.id,
             email: email,
             name: 'System Admin',
             role: 'ADMIN',
             balance: 999,
             subscription_status: 'ACTIVE',
-            provider: 'email',
-            created_at: new Date().toISOString()
+            provider: 'email'
         });
 
         return new Response(JSON.stringify({ success: true, user: user.user }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // --- 2. ADMIN AUTO-VERIFY (REPAIR) ---
-    if (action === 'admin-auto-verify') {
-        const { email } = payload;
-        if (!email) throw new Error("Email required");
+    // --- PROFILE BYPASS (For self-healing) ---
+    if (action === 'profile-create-bypass') {
+        const { id, email, name, provider } = payload;
+        const { count } = await supabaseClient.from('users').select('*', { count: 'exact', head: true });
+        const isFirst = (count || 0) === 0;
 
-        const { data: { users }, error: listError } = await supabaseClient.auth.admin.listUsers();
-        if (listError) throw listError;
-        
-        const targetUser = users.find((u: any) => u.email === email);
-        
-        if (targetUser) {
-            const { error: updateError } = await supabaseClient.auth.admin.updateUserById(
-                targetUser.id,
-                { email_confirm_at: new Date().toISOString() }
-            );
-            
-            if (updateError) throw updateError;
-            return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        } else {
-            throw new Error("User not found in Auth");
-        }
+        const { error } = await supabaseClient.from('users').upsert({
+            id, email, name, provider,
+            role: isFirst ? 'ADMIN' : 'USER',
+            balance: isFirst ? 999 : 0,
+            subscription_status: 'ACTIVE'
+        });
+
+        if (error) throw error;
+        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // --- 3. PROCESS TOPUP ---
+    // --- PAYMENTS ---
     if (action === 'process-topup') {
+        if (!stripe) throw new Error("Stripe not configured");
         const { userId, amount, cost, paymentToken } = payload;
         
-        const { data: user, error: fetchError } = await supabaseClient
-            .from('users')
-            .select('balance')
-            .eq('id', userId)
-            .single();
-            
-        if (fetchError) throw new Error("User not found");
-
         if (cost > 0) {
-            if (!paymentToken) throw new Error("Missing payment token");
-            try {
-                const charge = await stripe.charges.create({
-                    amount: Math.round(cost * 100),
-                    currency: 'usd',
-                    source: paymentToken,
-                    description: `Peutic Credits Top-up for user ${userId}`
-                });
-                if (charge.status !== 'succeeded') throw new Error("Payment failed or was declined");
-            } catch (stripeError: any) {
-                console.error("Stripe Error:", stripeError);
-                throw new Error(`Payment processing failed: ${stripeError.message}`);
-            }
+            await stripe.charges.create({
+                amount: Math.round(cost * 100),
+                currency: 'usd',
+                source: paymentToken,
+                description: `Peutic Credits: ${userId}`
+            });
         }
 
-        const newBalance = (user.balance || 0) + amount;
-        await supabaseClient.from('users').update({ balance: newBalance }).eq('id', userId);
+        const { data: user } = await supabaseClient.from('users').select('balance').eq('id', userId).single();
+        const newBalance = (user?.balance || 0) + amount;
         
+        await supabaseClient.from('users').update({ balance: newBalance }).eq('id', userId);
         await supabaseClient.from('transactions').insert({
             id: `tx_${Date.now()}`,
             user_id: userId,
-            amount: amount,
-            cost: cost,
-            description: cost > 0 ? 'Credit Purchase' : 'Admin Grant',
-            status: 'COMPLETED',
-            date: new Date().toISOString()
+            amount, cost,
+            description: cost > 0 ? 'Credit Purchase' : 'System Grant',
+            status: 'COMPLETED'
         });
 
         return new Response(JSON.stringify({ success: true, newBalance }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // --- 4. AI GENERATION ---
+    // --- AI GENERATION ---
     if (action === 'gemini-generate') {
-        // Correct usage for Deno Edge Environment
         const apiKey = Deno.env.get('GEMINI_API_KEY');
-        if (!apiKey) throw new Error("GEMINI_API_KEY not configured");
+        if (!apiKey) throw new Error("GEMINI_API_KEY missing");
 
         const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: payload.prompt,
-            config: {
-                systemInstruction: "You are a warm, empathetic mental wellness companion. Be concise, supportive, and human-like. Do not give medical advice."
-            }
+            config: { systemInstruction: "You are a mental wellness companion. Be concise, warm, and supportive." }
         });
         
         return new Response(JSON.stringify({ text: response.text }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // --- 5. AI SPEECH ---
+    // --- AI TTS ---
     if (action === 'gemini-speak') {
-        // Correct usage for Deno Edge Environment
         const apiKey = Deno.env.get('GEMINI_API_KEY');
-        if (!apiKey) throw new Error("GEMINI_API_KEY not configured");
+        if (!apiKey) throw new Error("GEMINI_API_KEY missing");
 
         const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
@@ -161,21 +137,15 @@ serve(async (req) => {
             contents: [{ parts: [{ text: payload.text }] }],
             config: {
                 responseModalities: [Modality.AUDIO],
-                speechConfig: {
-                    voiceConfig: {
-                        prebuiltVoiceConfig: { voiceName: 'Kore' },
-                    },
-                },
+                speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } },
             },
         });
 
         const audioData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-        if (!audioData) throw new Error("No audio generated");
-
         return new Response(JSON.stringify({ audioData }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    throw new Error("Invalid Action");
+    return new Response(JSON.stringify({ error: "Invalid Action" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
