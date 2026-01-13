@@ -281,10 +281,24 @@ export class Database {
 
         // 1. Email Signup Flow
         if (provider === 'email' && password) {
-            const { data, error } = await supabase.auth.signUp({
+            // TIMEOUT WRAPPER: Protect against Supabase/Network hangs
+            const signUpPromise = supabase.auth.signUp({
                 email, password,
                 options: { data: { full_name: name } }
             });
+            const timeoutPromise = new Promise<{ data: any, error: any }>((_, reject) =>
+                setTimeout(() => reject(new Error("Auth Provider Timed Out")), 10000)
+            );
+
+            let result;
+            try {
+                result = await Promise.race([signUpPromise, timeoutPromise]);
+            } catch (err) {
+                console.error("SignUp Timeout:", err);
+                throw new Error("Unable to connect to authentication server. Please obtain a better signal or check your connection.");
+            }
+
+            const { data, error } = result as any;
 
             if (error) {
                 console.error("SignUp Error:", error);
