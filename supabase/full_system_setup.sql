@@ -28,7 +28,6 @@ CREATE TABLE IF NOT EXISTS public.users (
   subscription_status TEXT DEFAULT 'ACTIVE',
   provider TEXT DEFAULT 'email',
   avatar_url TEXT,
-  onboarding_completed BOOLEAN DEFAULT FALSE,
   email_preferences JSONB DEFAULT '{"marketing": true, "updates": true}',
   theme_preference TEXT DEFAULT 'light',
   language_preference TEXT DEFAULT 'en',

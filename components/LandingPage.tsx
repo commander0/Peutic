@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, CheckCircle, ArrowRight, Globe, ShieldCheck, Cookie, Instagram, Twitter, Linkedin, Play, Moon, Sun, ChevronDown } from 'lucide-react';
+import { Shield, Heart, CheckCircle, ArrowRight, Star, Globe, ShieldCheck, Sparkles, Cookie, Instagram, Twitter, Linkedin, Play, MessageCircle, Moon, Sun, ChevronDown } from 'lucide-react';
 import { LanguageCode, getTranslation } from '../services/i18n';
 import { Link } from 'react-router-dom';
 import { Database, STABLE_AVATAR_POOL, INITIAL_COMPANIONS } from '../services/database';
@@ -266,7 +266,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                                 <div key={`${spec.id}-1-${i}`} onClick={() => onLoginClick(true)} className="relative flex-shrink-0 w-36 h-48 md:w-52 md:h-64 bg-white dark:bg-gray-900 rounded-2xl md:rounded-[1.5rem] overflow-hidden shadow-lg border border-yellow-100 dark:border-gray-800 hover:scale-105 hover:shadow-2xl hover:border-yellow-400 transition-all duration-300 cursor-pointer group">
                                     <div className="h-[75%] md:h-[80%] w-full relative">
                                         <AvatarImage src={spec.imageUrl} className="w-full h-full object-cover" alt={spec.name} />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                                     </div>
                                     <div className="h-[25%] md:h-[20%] bg-[#FFFBEB] dark:bg-gray-900 p-2 flex flex-col justify-center items-center text-center relative z-10 transition-colors">
                                         <p className="text-[9px] md:text-[10px] font-black text-gray-800 dark:text-gray-200 uppercase tracking-widest line-clamp-1">{spec.specialty}</p>
@@ -280,7 +280,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                                 <div key={`${spec.id}-2-${i}`} onClick={() => onLoginClick(true)} className="relative flex-shrink-0 w-36 h-48 md:w-52 md:h-64 bg-white dark:bg-gray-900 rounded-2xl md:rounded-[1.5rem] overflow-hidden shadow-lg border border-yellow-100 dark:border-gray-800 hover:scale-105 hover:shadow-2xl hover:border-yellow-400 transition-all duration-300 cursor-pointer group">
                                     <div className="h-[75%] md:h-[80%] w-full relative">
                                         <AvatarImage src={spec.imageUrl} className="w-full h-full object-cover" alt={spec.name} />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                                     </div>
                                     <div className="h-[25%] md:h-[20%] bg-[#FFFBEB] dark:bg-gray-900 p-2 flex flex-col justify-center items-center text-center relative z-10 transition-colors">
                                         <p className="text-[9px] md:text-[10px] font-black text-gray-800 dark:text-gray-200 uppercase tracking-widest line-clamp-1">{spec.specialty}</p>

@@ -742,11 +742,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [weeklyGoal, setWeeklyGoal] = useState(0);
     const weeklyTarget = 10;
     const [weeklyMessage, setWeeklyMessage] = useState("Start your journey.");
-    const [lastMood, setLastMood] = useState<'confetti' | 'rain' | null>(null);
     const [dailyInsight, setDailyInsight] = useState<string>(() => INSPIRATIONAL_SAYINGS[Math.floor(Math.random() * INSPIRATIONAL_SAYINGS.length)]);
-
-    // Dynamic Accent Color
-    const accentClass = lastMood === 'rain' ? 'blue' : 'yellow';
     const [dashboardUser, setDashboardUser] = useState(user);
     const [showPayment, setShowPayment] = useState(false);
     const [paymentError, setPaymentError] = useState<string | undefined>(undefined);
@@ -798,8 +794,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             const prog = await Database.getWeeklyProgress(u.id);
             setWeeklyGoal(prog.current);
             setWeeklyMessage(prog.message);
-            const moods = await Database.getMoods(u.id);
-            if (moods.length > 0) setLastMood(moods[0].mood);
             setEditName(u.name);
             setEditEmail(u.email);
             setEmailNotifications(u.emailPreferences?.updates ?? true);
@@ -937,33 +931,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             <div className="hidden md:flex items-center gap-4">
                                 <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">{darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-600" />}</button>
                                 <button onClick={() => setShowPayment(true)} className={`px-5 py-2.5 rounded-2xl font-black shadow-lg transition-transform hover:scale-105 flex items-center gap-2 text-sm ${balance < 10 ? 'bg-red-500 text-white animate-pulse' : 'bg-black dark:bg-white text-white dark:text-black'}`}>
-                                    <div className={`w-2 h-2 bg-${accentClass}-400 rounded-full animate-pulse`}></div>{balance} mins<Plus className="w-3 h-3 ml-1 opacity-50" />
+                                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>{balance} mins<Plus className="w-3 h-3 ml-1 opacity-50" />
                                 </button>
-                                <button onClick={() => setShowProfile(true)} className={`w-12 h-12 rounded-xl overflow-hidden border-2 border-${accentClass}-400 shadow-xl hover:rotate-3 transition-transform`}><AvatarImage src={dashboardUser.avatar || ''} alt={dashboardUser.name} className="w-full h-full object-cover" isUser={true} /></button>
+                                <button onClick={() => setShowProfile(true)} className="w-12 h-12 rounded-xl overflow-hidden border-2 border-yellow-400 shadow-xl hover:rotate-3 transition-transform"><AvatarImage src={dashboardUser.avatar || ''} alt={dashboardUser.name} className="w-full h-full object-cover" isUser={true} /></button>
                             </div>
                         </header>
                         {activeTab === 'hub' && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
-                                    <div className={`bg-white dark:bg-gray-900 p-5 rounded-3xl border border-${accentClass}-100 dark:border-gray-800 shadow-sm col-span-1 md:col-span-2 relative overflow-hidden group transition-colors duration-500`}>
+                                    <div className="bg-white dark:bg-gray-900 p-5 rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm col-span-1 md:col-span-2 relative overflow-hidden group">
                                         {weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-4 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-20 h-20 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div><div className="absolute w-16 h-16 bg-blue-500/30 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-blue-400/10 rounded-full animate-ping"></div><div className="absolute w-10 h-10 bg-blue-400/50 rounded-full blur-lg animate-pulse"></div><Flame className="w-12 h-12 text-blue-500 fill-blue-500 drop-shadow-[0_0_20px_rgba(59,130,246,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy className="w-20 h-20 text-yellow-500" /></div>)}
                                         <div className="relative z-10"><h3 className="font-bold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3><div className="flex items-end gap-2 mb-3"><span className="text-3xl md:text-4xl font-black dark:text-white">{weeklyGoal}</span><span className="text-gray-400 text-xs md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span></div><div className="w-full h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-3"><div className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= weeklyTarget ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-pulse' : 'bg-yellow-400'}`} style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}></div></div><p className="text-xs md:text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}</p></div>
                                     </div>
                                     <MoodTracker onMoodSelect={handleMoodSelect} />
-                                </div>
-
-                                {/* Daily Zen Mini-Insight */}
-                                <div className={`bg-${accentClass}-50 dark:bg-gray-950 border-2 border-${accentClass}-400/30 p-4 rounded-3xl flex items-center gap-4 relative overflow-hidden group transition-colors duration-500 shadow-sm`}>
-                                    <div className={`absolute top-0 left-0 w-2 h-full bg-${accentClass}-500 transition-colors duration-500`}></div>
-                                    <div className={`p-3 bg-${accentClass}-100 dark:bg-${accentClass}-900/30 rounded-2xl transition-colors duration-500`}>
-                                        <Lightbulb className={`w-6 h-6 text-${accentClass}-600 dark:text-${accentClass}-400`} />
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Sanctuary Insight</p>
-                                        <p className="text-sm font-bold dark:text-gray-200">
-                                            {lastMood === 'rain' ? "Your calm is your strength today. Just breathe." : "Energy is flowing beautifully. Focus on what brings you joy."}
-                                        </p>
-                                    </div>
                                 </div>
                                 <CollapsibleSection title="Mindful Arcade" icon={Gamepad2}>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">

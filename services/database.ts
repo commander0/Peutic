@@ -95,8 +95,7 @@ export class Database {
         try {
             const { data: { session } } = (await withTimeout(supabase.auth.getSession(), 3000)) as any;
             if (session?.user) {
-                // Buffer sync to prevent flickering or race conditions
-                const user = await withTimeout(this.syncUser(session.user.id), 5000, "Session Sync Timeout");
+                const user = await this.syncUser(session.user.id);
                 if (!user) {
                     console.warn("Auth active but Profile missing. Running self-healing...");
                     return await this.repairProfile(session.user);
@@ -121,7 +120,6 @@ export class Database {
                 role: isFirst ? UserRole.ADMIN : UserRole.USER,
                 balance: isFirst ? 999 : 0,
                 subscriptionStatus: 'ACTIVE',
-                onboardingCompleted: false,
                 joinedAt: new Date().toISOString(),
                 lastLoginDate: new Date().toISOString(),
                 streak: 0,
@@ -172,7 +170,6 @@ export class Database {
                 name: authUser.user_metadata?.full_name || 'User',
                 role: UserRole.USER,
                 balance: 0,
-                onboardingCompleted: false,
                 subscriptionStatus: 'ACTIVE',
                 joinedAt: new Date().toISOString(),
                 lastLoginDate: new Date().toISOString(),
@@ -211,7 +208,6 @@ export class Database {
             email: data.email,
             role: data.role as UserRole,
             balance: data.balance || 0,
-            onboardingCompleted: !!data.onboarding_completed,
             subscriptionStatus: (data.subscription_status || 'ACTIVE') as any,
             joinedAt: data.created_at || new Date().toISOString(),
             lastLoginDate: data.last_login_date || new Date().toISOString(),
@@ -298,7 +294,6 @@ export class Database {
                     email: email,
                     role: UserRole.USER,
                     balance: 0,
-                    onboardingCompleted: false,
                     subscriptionStatus: 'ACTIVE',
                     joinedAt: new Date().toISOString(),
                     lastLoginDate: new Date().toISOString(),
@@ -330,7 +325,6 @@ export class Database {
                 email: email,
                 role: UserRole.USER,
                 balance: 0,
-                onboardingCompleted: false,
                 subscriptionStatus: 'ACTIVE',
                 joinedAt: new Date().toISOString(),
                 lastLoginDate: new Date().toISOString(),
@@ -426,12 +420,7 @@ export class Database {
     static getSettings(): GlobalSettings { return this.settingsCache; }
     static async syncGlobalSettings(): Promise<GlobalSettings> {
         try {
-            const { data, error } = await withTimeout(
-                supabase.from('global_settings').select('*').eq('id', 1).single(),
-                5000,
-                "Settings Sync Timeout"
-            ) as any;
-            if (error) throw error;
+            const { data } = await supabase.from('global_settings').select('*').eq('id', 1).single();
             if (data) {
                 this.settingsCache = {
                     pricePerMinute: data.price_per_minute,
@@ -444,9 +433,7 @@ export class Database {
                     multilingualMode: data.multilingual_mode
                 };
             } else { await this.saveSettings(this.settingsCache); }
-        } catch (e) {
-            console.warn("Global Settings Sync Failed - Using Cache", e);
-        }
+        } catch (e) { }
         return this.settingsCache;
     }
     static async saveSettings(settings: GlobalSettings) {
