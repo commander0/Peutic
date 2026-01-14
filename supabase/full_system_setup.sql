@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS public.users (
   subscription_status TEXT DEFAULT 'ACTIVE',
   provider TEXT DEFAULT 'email',
   avatar_url TEXT,
+  onboarding_completed BOOLEAN DEFAULT FALSE,
   email_preferences JSONB DEFAULT '{"marketing": true, "updates": true}',
   theme_preference TEXT DEFAULT 'light',
   language_preference TEXT DEFAULT 'en',
@@ -290,7 +291,23 @@ DO $$ BEGIN
     CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
--- 12. SEED DATA (Companions)
+-- 12. TRIGGER: Prevent Admin Deletion
+CREATE OR REPLACE FUNCTION public.prevent_admin_deletion()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF OLD.role = 'ADMIN' THEN
+    RAISE EXCEPTION 'CRITICAL: Admin accounts cannot be deleted to ensure system integrity.';
+  END IF;
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+DO $$ BEGIN
+    DROP TRIGGER IF EXISTS tr_prevent_admin_deletion ON public.users;
+    CREATE TRIGGER tr_prevent_admin_deletion BEFORE DELETE ON public.users FOR EACH ROW EXECUTE PROCEDURE public.prevent_admin_deletion();
+EXCEPTION WHEN OTHERS THEN NULL; END $$;
+
+-- 13. SEED DATA (Companions)
 -- (Simplified for brevity, use seed_companions.sql for full list)
 INSERT INTO public.companions (id, name, gender, specialty, status, bio) VALUES
 ('c1', 'Ruby', 'Female', 'Anxiety & Panic', 'AVAILABLE', 'Specializing in grounding techniques.'),

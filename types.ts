@@ -13,6 +13,7 @@ export interface User {
   balance: number;
   avatar?: string;
   subscriptionStatus: 'ACTIVE' | 'INACTIVE' | 'PREMIUM' | 'BANNED';
+  onboardingCompleted: boolean;
   joinedAt: string;
   lastActive?: string;
   birthday?: string;

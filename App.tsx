@@ -9,7 +9,7 @@ import Auth from './components/Auth';
 import VideoRoom from './components/VideoRoom';
 import StaticPages from './components/StaticPages';
 import { Database } from './services/database';
-import { Wrench, AlertTriangle, Clock, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Clock, RefreshCw, Lock } from 'lucide-react';
 
 // --- ERROR BOUNDARY (CRASH PREVENTION) ---
 
@@ -67,7 +67,8 @@ const MainApp: React.FC = () => {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
 
-  const lastActivityRef = useRef<number>(Date.now());
+  const savedActivity = localStorage.getItem('peutic_last_activity');
+  const lastActivityRef = useRef<number>(savedActivity ? parseInt(savedActivity) : Date.now());
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -93,10 +94,14 @@ const MainApp: React.FC = () => {
 
     // Active Polling for Remote Settings (Maintenance/Sale Mode)
     const interval = setInterval(async () => {
-      await Database.syncGlobalSettings(); // Pull from remote
-      const currentSettings = Database.getSettings(); // Read updated local state
-      setMaintenanceMode(currentSettings.maintenanceMode);
-    }, 5000);
+      try {
+        await Database.syncGlobalSettings(); // Pull from remote
+        const currentSettings = Database.getSettings(); // Read updated local state
+        setMaintenanceMode(currentSettings.maintenanceMode);
+      } catch (e) {
+        console.warn("Maintenance Polling Failed", e);
+      }
+    }, 10000); // Polling every 10s is sufficient and safer for rate limits
 
     return () => clearInterval(interval);
   }, []);
@@ -104,7 +109,9 @@ const MainApp: React.FC = () => {
   // Session Timeout Logic
   useEffect(() => {
     const updateActivity = () => {
-      lastActivityRef.current = Date.now();
+      const now = Date.now();
+      lastActivityRef.current = now;
+      localStorage.setItem('peutic_last_activity', now.toString());
       if (showTimeoutWarning) setShowTimeoutWarning(false);
     };
     const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
@@ -132,6 +139,15 @@ const MainApp: React.FC = () => {
     const interval = setInterval(checkTimeout, 5000); // Check more frequently
     return () => clearInterval(interval);
   }, [user, activeSessionCompanion]);
+
+  // --- ONBOARDING GUARD (OAuth Completion) ---
+  useEffect(() => {
+    if (user && !user.onboardingCompleted && user.role !== UserRole.ADMIN && !showAuth) {
+      console.log("OAuth/New User detected without onboarding. Triggering flow...");
+      setAuthMode('signup');
+      setShowAuth(true);
+    }
+  }, [user, showAuth]);
 
   const handleLogin = async (_role: UserRole, name: string, _avatar?: string, email?: string, _birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email', password?: string, isSignup: boolean = false): Promise<void> => {
     const userEmail = email || `${name.toLowerCase().replace(/ /g, '.')}@example.com`;
@@ -192,14 +208,53 @@ const MainApp: React.FC = () => {
 
   if (isRestoring) return <div className="min-h-screen flex items-center justify-center bg-[#FFFBEB]"><div className="w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div></div>;
 
-  // Maintenance Mode Lockout
+  // Maintenance Mode Lockout (Premium UI)
   if (maintenanceMode && (!user || user.role !== UserRole.ADMIN) && !location.pathname.includes('/support') && !location.pathname.includes('/admin')) {
     return (
-      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-white p-6 text-center">
-        <Wrench className="w-16 h-16 text-yellow-500 mb-6 animate-pulse" />
-        <h1 className="text-4xl font-bold mb-4">System Maintenance</h1>
-        <p className="text-gray-400">We'll be back shortly.</p>
-        <button onClick={() => { setAuthMode('login'); setShowAuth(true); }} className="mt-8 opacity-0 hover:opacity-100 text-xs">Admin Entry</button>
+      <div className="min-h-screen bg-[#FFFBEB] dark:bg-[#0A0A0A] flex flex-col items-center justify-center p-6 text-center transition-colors">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-[20%] left-[10%] w-[40%] h-[40%] bg-yellow-400/10 rounded-full blur-[120px]"></div>
+          <div className="absolute bottom-[20%] right-[10%] w-[30%] h-[30%] bg-orange-400/10 rounded-full blur-[100px]"></div>
+        </div>
+
+        <div className="relative z-10 max-w-md w-full animate-in zoom-in duration-500">
+          <div className="w-20 h-20 bg-yellow-400 rounded-2xl flex items-center justify-center shadow-2xl mx-auto mb-8 transform -rotate-6">
+            <Lock className="w-10 h-10 text-black" />
+          </div>
+
+          <h1 className="text-4xl font-black tracking-tighter mb-4 dark:text-white">Scheduled Sanctuary Care</h1>
+          <p className="text-gray-600 dark:text-gray-400 font-medium mb-10 leading-relaxed">
+            We're currently polishing the sanctuary to ensure your sessions are as tranquil as possible. We'll be back in just a moment.
+          </p>
+
+          <div className="space-y-4">
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-2xl font-black flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform shadow-xl"
+            >
+              <RefreshCw className="w-4 h-4" /> Check Status
+            </button>
+            <button
+              onClick={() => navigate('/support')}
+              className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              Visit Help Center
+            </button>
+          </div>
+
+          <div className="mt-12 flex items-center justify-center gap-2">
+            <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-pulse"></div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">System Optimization in Progress</span>
+          </div>
+
+          {/* Hidden Admin Entry */}
+          <button
+            onClick={() => { setAuthMode('login'); setShowAuth(true); }}
+            className="fixed bottom-4 right-4 opacity-5 hover:opacity-100 transition-opacity p-2 text-[10px] text-gray-400 font-bold"
+          >
+            Admin Portal
+          </button>
+        </div>
       </div>
     );
   }
