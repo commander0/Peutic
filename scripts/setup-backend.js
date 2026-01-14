@@ -8,12 +8,12 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 
 const ensureDirectoryExistence = (filePath) => {
-  const dirname = path.dirname(filePath);
-  if (fs.existsSync(dirname)) {
-    return true;
-  }
-  ensureDirectoryExistence(dirname);
-  fs.mkdirSync(dirname);
+    const dirname = path.dirname(filePath);
+    if (fs.existsSync(dirname)) {
+        return true;
+    }
+    ensureDirectoryExistence(dirname);
+    fs.mkdirSync(dirname);
 };
 
 console.log("🚀 Initializing Peutic Backend...");
@@ -117,10 +117,10 @@ serve(async (req) => {
             });
         }
 
-        const { data: user } = await supabaseClient.from('users').select('balance').eq('id', userId).single();
-        const newBalance = (user?.balance || 0) + amount;
+        const { data: balanceData, error: balanceError } = await supabaseClient.rpc('add_user_balance', { p_user_id: userId, p_amount: amount });
         
-        await supabaseClient.from('users').update({ balance: newBalance }).eq('id', userId);
+        if (balanceError) throw balanceError;
+        const newBalance = balanceData;
         await supabaseClient.from('transactions').insert({
             id: \`tx_\${Date.now()}\`,
             user_id: userId,
@@ -139,7 +139,7 @@ serve(async (req) => {
 
         const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-1.5-flash',
             contents: payload.prompt,
             config: { systemInstruction: "You are a mental wellness companion. Be concise, warm, and supportive." }
         });
@@ -154,7 +154,7 @@ serve(async (req) => {
 
         const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-preview-tts',
+            model: 'gemini-1.5-flash',
             contents: [{ parts: [{ text: payload.text }] }],
             config: {
                 responseModalities: [Modality.AUDIO],
@@ -195,14 +195,29 @@ serve(async (req) => {
     const { action, replicaId, userName, context, conversationId } = await req.json();
 
     if (action === 'create') {
+        const CRISIS_PROTOCOL = \`
+        CRITICAL SAFETY PROTOCOL:
+        If the user expresses intent of self-harm, suicide, or harm to others:
+        1. Immediately stop the roleplay.
+        2. Say exactly: "I am concerned about your safety. Please call 988 or your local emergency services immediately."
+        3. Do not attempt to treat a crisis situation yourself.
+        \`;
+
+        const systemContext = context || \`You are an empathetic, professional, and warm human specialist. You are speaking with \${userName}. Your role is to listen actively, provide emotional support, and help them process their thoughts. You are fluent in all languages. Detect the user's language instantly and respond in that same language with zero latency. \${CRISIS_PROTOCOL}\`;
+
         const response = await fetch(\`\${TAVUS_API_URL}/conversations\`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
             body: JSON.stringify({
                 replica_id: replicaId,
-                conversation_name: \`Session \${userName}\`,
-                conversational_context: context,
-                properties: { max_call_duration: 3600, enable_recording: true }
+                conversation_name: \`Session \${userName} - \${new Date().toISOString()}\`,
+                conversational_context: systemContext,
+                properties: { 
+                    max_call_duration: 3600, 
+                    enable_recording: true,
+                    enable_transcription: true,
+                    language: 'multilingual'
+                }
             }),
         });
         const data = await response.json();

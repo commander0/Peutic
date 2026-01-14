@@ -133,7 +133,7 @@ const MainApp: React.FC = () => {
     return () => clearInterval(interval);
   }, [user, activeSessionCompanion]);
 
-  const handleLogin = async (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email', password?: string, isSignup: boolean = false): Promise<void> => {
+  const handleLogin = async (_role: UserRole, name: string, _avatar?: string, email?: string, _birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email', password?: string, isSignup: boolean = false): Promise<void> => {
     const userEmail = email || `${name.toLowerCase().replace(/ /g, '.')}@example.com`;
     let currentUser: User;
 
@@ -205,7 +205,7 @@ const MainApp: React.FC = () => {
   }
 
   if (activeSessionCompanion && user) {
-    return <VideoRoom companion={activeSessionCompanion} onEndSession={() => setActiveSessionCompanion(null)} userName={user.name} />;
+    return <VideoRoom companion={activeSessionCompanion} onEndSession={() => setActiveSessionCompanion(null)} userName={user.name} userId={user.id} />;
   }
 
   return (
