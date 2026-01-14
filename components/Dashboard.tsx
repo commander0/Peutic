@@ -31,6 +31,24 @@ declare global {
     }
 }
 
+const INSPIRATIONAL_SAYINGS = [
+    "The only way out is through.",
+    "You are stronger than you think.",
+    "Small steps lead to big changes.",
+    "Peace is a journey, not a destination.",
+    "Be kind to your mind.",
+    "You deserve to take up space.",
+    "Rest is not a luxury, it's a necessity.",
+    "Your feelings are valid.",
+    "You are worthy of love and respect.",
+    "Breathe. You are here.",
+    "You don't have to be perfect to be amazing.",
+    "Growth takes time. Be patient with yourself.",
+    "Your potential is limitless.",
+    "Today is a new opportunity for peace.",
+    "Kindness starts with you."
+];
+
 const AvatarImage: React.FC<{ src: string; alt: string; className?: string; isUser?: boolean }> = ({ src, alt, className, isUser = false }) => {
     const [imgSrc, setImgSrc] = useState(src);
     const [hasError, setHasError] = useState(false);
@@ -77,7 +95,7 @@ const CollapsibleSection: React.FC<{ title: string; icon: any; children: React.R
     );
 };
 
-const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
+const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }> = ({ userId, onUpdate }) => {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [gallery, setGallery] = useState<ArtEntry[]>([]);
@@ -125,6 +143,7 @@ const WisdomGenerator: React.FC<{ userId: string }> = ({ userId }) => {
 
                 await Database.saveArt(newEntry);
                 await refreshGallery();
+                if (onUpdate) onUpdate(); // Real-time goal update
                 setInput('');
             }
         } catch (e) { console.error("Generation Error:", e); } finally { setLoading(false); }
@@ -475,7 +494,13 @@ const CloudHopGame: React.FC = () => {
             ctx.shadowBlur = 0; ctx.fillStyle = 'black';
             const eyeOff = p.width * 0.2;
             const eyeSize = p.width * 0.1;
-            ctx.beginPath(); ctx.arc(p.x + p.width / 2 - eyeOff, p.y + p.height / 2 - eyeOff, eyeSize, 0, Math.PI * 2); ctx.beginPath(); ctx.arc(p.x + p.width / 2 + eyeOff, p.y + p.height / 2 - eyeOff, eyeSize, 0, Math.PI * 2); ctx.fill();
+            // Left Eye
+            ctx.beginPath(); ctx.arc(p.x + p.width / 2 - eyeOff, p.y + p.height / 2 - eyeOff, eyeSize, 0, Math.PI * 2); ctx.fill();
+            // Right Eye
+            ctx.beginPath(); ctx.arc(p.x + p.width / 2 + eyeOff, p.y + p.height / 2 - eyeOff, eyeSize, 0, Math.PI * 2); ctx.fill();
+            // Mouth
+            ctx.beginPath(); ctx.arc(p.x + p.width / 2, p.y + p.height / 2 + eyeOff / 2, eyeOff * 0.8, 0, Math.PI);
+            ctx.lineWidth = 2; ctx.strokeStyle = 'black'; ctx.stroke();
             requestRef.current = requestAnimationFrame(update);
         };
         update();
@@ -523,14 +548,14 @@ const MoodTracker: React.FC<{ onMoodSelect: (m: 'confetti' | 'rain' | null) => v
     );
 };
 
-const JournalSection: React.FC<{ user: User }> = ({ user }) => {
+const JournalSection: React.FC<{ user: User, onUpdate?: () => void }> = ({ user, onUpdate }) => {
     const [entries, setEntries] = useState<JournalEntry[]>([]);
     const [content, setContent] = useState('');
     const [saved, setSaved] = useState(false);
     useEffect(() => {
         Database.getJournals(user.id).then(setEntries);
     }, [user.id]);
-    const handleSave = () => { if (!content.trim()) return; const entry: JournalEntry = { id: `j_${Date.now()}`, userId: user.id, date: new Date().toISOString(), content: content }; Database.saveJournal(entry).then(() => { setEntries([entry, ...entries]); setContent(''); setSaved(true); setTimeout(() => setSaved(false), 2000); }); };
+    const handleSave = () => { if (!content.trim()) return; const entry: JournalEntry = { id: `j_${Date.now()}`, userId: user.id, date: new Date().toISOString(), content: content }; Database.saveJournal(entry).then(() => { setEntries([entry, ...entries]); setContent(''); setSaved(true); if (onUpdate) onUpdate(); setTimeout(() => setSaved(false), 2000); }); };
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 h-[450px]">
             <div className="flex flex-col h-full bg-[#fdfbf7] dark:bg-[#1a1a1a] rounded-2xl p-5 border border-yellow-200 dark:border-gray-800 shadow-inner relative overflow-hidden group">
@@ -546,7 +571,7 @@ const JournalSection: React.FC<{ user: User }> = ({ user }) => {
                     {entries.map(entry => (<div key={entry.id} className="group p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all cursor-default shadow-sm hover:shadow-md"><div className="flex justify-between items-start mb-1.5"><span className="text-[9px] font-black text-yellow-600 dark:text-yellow-500 uppercase tracking-wide bg-yellow-50 dark:bg-yellow-900/20 px-1.5 py-0.5 rounded-md">{new Date(entry.date).toLocaleDateString()}</span><span className="text-[9px] text-gray-400 font-mono">{new Date(entry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div><p className="text-xs md:text-sm text-gray-600 dark:text-gray-300 line-clamp-3 leading-relaxed font-medium group-hover:text-black dark:group-hover:text-white transition-colors">{entry.content}</p></div>))}
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 
@@ -563,12 +588,18 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
     const mountNodeRef = useRef<HTMLDivElement | null>(null);
     useEffect(() => {
         if (!STRIPE_PUBLISHABLE_KEY) {
-            setError("Payment system configuration missing. Please verify your environment settings.");
+            console.error("CRITICAL: STRIPE_PUBLISHABLE_KEY is missing from environment variables.");
+            setError("Payment system configuration missing (Missing API Key). Please notify administration.");
             return;
         }
-        if (!window.Stripe) { setError("Stripe failed to load. Please refresh."); return; }
+        if (!window.Stripe) {
+            console.error("CRITICAL: Stripe.js script not loaded in window.");
+            setError("Stripe failed to load. Please check your internet connection and refresh.");
+            return;
+        }
         if (!stripeRef.current) {
             try {
+                console.log("Initializing Stripe with key:", STRIPE_PUBLISHABLE_KEY.substring(0, 8) + "...");
                 stripeRef.current = window.Stripe(STRIPE_PUBLISHABLE_KEY);
                 elementsRef.current = stripeRef.current.elements();
                 const style = { base: { color: "#32325d", fontFamily: '"Manrope", sans-serif', fontSmoothing: "antialiased", fontSize: "16px", "::placeholder": { color: "#aab7c4" } } };
@@ -576,9 +607,9 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
                     cardElementRef.current = elementsRef.current.create("card", { style: style, hidePostalCode: true });
                     if (mountNodeRef.current) cardElementRef.current.mount(mountNodeRef.current);
                 }
-            } catch (e) {
-                console.error("Stripe Init Error", e);
-                setError("Payment system unavailable. Please check your internet connection.");
+            } catch (e: any) {
+                console.error("Stripe Initialization Failed:", e);
+                setError(`Payment system unavailable (${e.message || "Init Error"}). Please retry in a moment.`);
             }
         }
     }, []);
@@ -711,7 +742,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [weeklyGoal, setWeeklyGoal] = useState(0);
     const weeklyTarget = 10;
     const [weeklyMessage, setWeeklyMessage] = useState("Start your journey.");
-    const [dailyInsight, setDailyInsight] = useState<string>('');
+    const [dailyInsight, setDailyInsight] = useState<string>(() => INSPIRATIONAL_SAYINGS[Math.floor(Math.random() * INSPIRATIONAL_SAYINGS.length)]);
     const [dashboardUser, setDashboardUser] = useState(user);
     const [showPayment, setShowPayment] = useState(false);
     const [paymentError, setPaymentError] = useState<string | undefined>(undefined);
@@ -737,7 +768,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         }
 
         refreshData();
-        generateDailyInsight(user.name).then(setDailyInsight);
+        generateDailyInsight(user.name).then(insight => {
+            if (insight) setDailyInsight(insight);
+        });
         setTimeout(() => {
             Database.getCompanions().then((comps) => {
                 setCompanions(comps);
@@ -782,7 +815,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         Database.updateUser(updatedUser);
     };
 
-    const handleMoodSelect = (m: 'confetti' | 'rain' | null) => { setMood(m); if (m) Database.saveMood(user.id, m); };
+    const handleMoodSelect = (m: 'confetti' | 'rain' | null) => {
+        setMood(m);
+        if (m) Database.saveMood(user.id, m).then(() => refreshData());
+    };
     const handlePaymentSuccess = async (minutesAdded: number, cost: number, token?: string) => {
         try {
             await Database.topUpWallet(minutesAdded, cost, user.id, token);

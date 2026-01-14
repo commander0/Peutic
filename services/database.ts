@@ -375,6 +375,15 @@ export class Database {
         }).eq('id', user.id);
     }
     static async deleteUser(id: string) {
+        // Manual Cascading Cleanup to ensure reliability
+        await supabase.from('journals').delete().eq('user_id', id);
+        await supabase.from('moods').delete().eq('user_id', id);
+        await supabase.from('user_art').delete().eq('user_id', id);
+        await supabase.from('transactions').delete().eq('user_id', id);
+        await supabase.from('feedback').delete().eq('user_id', id);
+        await supabase.from('active_sessions').delete().eq('user_id', id);
+        await supabase.from('session_queue').delete().eq('user_id', id);
+
         await supabase.from('users').delete().eq('id', id);
         if (this.currentUser?.id === id) this.currentUser = null;
     }
@@ -514,7 +523,29 @@ export class Database {
     static async sendQueueHeartbeat(userId: string) { await supabase.from('session_queue').update({ last_ping: new Date().toISOString() }).eq('user_id', userId); }
     static async endSession(userId: string) { await supabase.from('active_sessions').delete().eq('user_id', userId); await supabase.from('session_queue').delete().eq('user_id', userId); }
     static getEstimatedWaitTime(pos: number): number { return Math.max(0, (pos - 1) * 3); }
-    static async getWeeklyProgress(userId: string): Promise<{ current: number, target: number, message: string }> { const oneWeekAgo = new Date(); oneWeekAgo.setDate(oneWeekAgo.getDate() - 7); const { count: journalCount } = await supabase.from('journals').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', oneWeekAgo.toISOString()); const { count: sessionCount } = await supabase.from('transactions').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'COMPLETED').gte('date', oneWeekAgo.toISOString()); const current = (journalCount || 0) + (sessionCount || 0); return { current, target: 10, message: current >= 10 ? "Goal crushed!" : "Keep going!" }; }
+    static async getWeeklyProgress(userId: string): Promise<{ current: number, target: number, message: string }> {
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        const iso = oneWeekAgo.toISOString();
+
+        const { count: journalCount } = await supabase.from('journals').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', iso);
+        const { count: sessionCount } = await supabase.from('transactions').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'COMPLETED').gte('date', iso);
+        const { count: moodCount } = await supabase.from('moods').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', iso);
+        const { count: artCount } = await supabase.from('user_art').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', iso);
+
+        const current = (journalCount || 0) + (sessionCount || 0) + (moodCount || 0) + (artCount || 0);
+
+        const messages = [
+            "Keep going, you're doing great!",
+            "Every small step counts.",
+            "Consistency is key.",
+            "You're prioritizing your peace.",
+            "Goal crushed! Amazing work."
+        ];
+        const msg = current >= 10 ? messages[4] : messages[Math.min(3, Math.floor(current / 2.5))];
+
+        return { current, target: 10, message: msg };
+    }
     static async checkAdminLockout(): Promise<number> { const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString(); const { count } = await supabase.from('system_logs').select('*', { count: 'exact', head: true }).eq('type', 'SECURITY').eq('event', 'Admin Login Failed').gte('timestamp', fifteenMinsAgo); return (count || 0) >= 5 ? 15 : 0; }
     static async recordAdminFailure() { await this.logSystemEvent('SECURITY', 'Admin Login Failed', 'Invalid credentials or key'); }
     static async resetAdminFailure() { }
