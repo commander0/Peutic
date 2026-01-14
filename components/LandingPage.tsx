@@ -267,18 +267,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                                     <div className="h-[75%] md:h-[80%] w-full relative">
                                         <AvatarImage src={spec.imageUrl} className="w-full h-full object-cover" alt={spec.name} />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
-                                        <div className="absolute top-2 left-2 flex flex-col gap-1">
-                                            {spec.degree && (
-                                                <div className="px-1.5 py-0.5 bg-white/90 dark:bg-black/80 backdrop-blur-md rounded-md text-[7px] md:text-[8px] font-black uppercase tracking-tighter text-black dark:text-white border border-yellow-400/50">
-                                                    {spec.degree}
-                                                </div>
-                                            )}
-                                            {spec.licenseNumber && (
-                                                <div className="px-1.5 py-0.5 bg-green-500 text-white rounded-md text-[6px] md:text-[7px] font-black uppercase tracking-widest flex items-center gap-1 shadow-lg">
-                                                    <ShieldCheck className="w-2 h-2" /> VERIFIED
-                                                </div>
-                                            )}
-                                        </div>
                                     </div>
                                     <div className="h-[25%] md:h-[20%] bg-[#FFFBEB] dark:bg-gray-900 p-2 flex flex-col justify-center items-center text-center relative z-10 transition-colors">
                                         <p className="text-[9px] md:text-[10px] font-black text-gray-800 dark:text-gray-200 uppercase tracking-widest line-clamp-1">{spec.specialty}</p>
@@ -293,18 +281,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                                     <div className="h-[75%] md:h-[80%] w-full relative">
                                         <AvatarImage src={spec.imageUrl} className="w-full h-full object-cover" alt={spec.name} />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
-                                        <div className="absolute top-2 left-2 flex flex-col gap-1">
-                                            {spec.degree && (
-                                                <div className="px-1.5 py-0.5 bg-white/90 dark:bg-black/80 backdrop-blur-md rounded-md text-[7px] md:text-[8px] font-black uppercase tracking-tighter text-black dark:text-white border border-yellow-400/50">
-                                                    {spec.degree}
-                                                </div>
-                                            )}
-                                            {spec.licenseNumber && (
-                                                <div className="px-1.5 py-0.5 bg-green-500 text-white rounded-md text-[6px] md:text-[7px] font-black uppercase tracking-widest flex items-center gap-1 shadow-lg">
-                                                    <ShieldCheck className="w-2 h-2" /> VERIFIED
-                                                </div>
-                                            )}
-                                        </div>
                                     </div>
                                     <div className="h-[25%] md:h-[20%] bg-[#FFFBEB] dark:bg-gray-900 p-2 flex flex-col justify-center items-center text-center relative z-10 transition-colors">
                                         <p className="text-[9px] md:text-[10px] font-black text-gray-800 dark:text-gray-200 uppercase tracking-widest line-clamp-1">{spec.specialty}</p>
