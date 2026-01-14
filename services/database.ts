@@ -142,11 +142,15 @@ export class Database {
                 if (error.code === '42501' || error.message.includes('row-level security')) {
                     console.warn("RLS blocking profile creation. Using Backend Bypass...");
                     try {
-                        await supabase.functions.invoke('api-gateway', {
-                            body: { action: 'profile-create-bypass', payload: newUser }
-                        });
+                        await withTimeout(
+                            supabase.functions.invoke('api-gateway', {
+                                body: { action: 'profile-create-bypass', payload: newUser }
+                            }),
+                            10000,
+                            "Backend Bypass Timeout"
+                        );
                     } catch (backendErr: any) {
-                        console.error("Backend Bypass Warning:", backendErr);
+                        console.error("Backend Bypass failed:", backendErr);
                     }
                     return optimisticUser;
                 }
@@ -182,7 +186,11 @@ export class Database {
     static async syncUser(userId: string): Promise<User | null> {
         if (!userId) return null;
         try {
-            const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();
+            const { data, error } = (await withTimeout(
+                supabase.from('users').select('*').eq('id', userId).single(),
+                5000,
+                "User sync timeout"
+            )) as any;
             if (data && !error) {
                 this.currentUser = this.mapUser(data);
                 return this.currentUser;
@@ -511,4 +519,25 @@ export class Database {
     static async recordAdminFailure() { await this.logSystemEvent('SECURITY', 'Admin Login Failed', 'Invalid credentials or key'); }
     static async resetAdminFailure() { }
     static async resetAllUsers() { await supabase.from('users').delete().neq('role', 'ADMIN'); }
+
+    // --- SYSTEM RECLAMATION (MASTER KEY) ---
+    static verifyMasterKey(key: string): boolean {
+        const masterKey = (import.meta as any).env.VITE_MASTER_KEY || 'PEUTIC_MASTER_2026';
+        return key === masterKey;
+    }
+
+    static async resetAdminStatus(): Promise<void> {
+        // High-risk: Reset all ADMIN users to GUEST or USER to allow re-claiming
+        // This is triggered only after Master Key verification
+        const { data: admins } = await supabase.from('users').select('id').eq('role', 'ADMIN');
+        if (admins && admins.length > 0) {
+            for (const admin of admins) {
+                await supabase.from('users').update({ role: 'USER' }).eq('id', admin.id);
+            }
+        }
+        // Force log out current user if they are admin
+        if (this.currentUser?.role === 'ADMIN') {
+            this.clearSession();
+        }
+    }
 }

@@ -120,6 +120,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                 }
                 // Proceed to onboarding before final creation
                 setShowOnboarding(true);
+                setLoading(false); // CRITICAL: Reset loading so "Enter Dashboard" button is clickable
             }
         } catch (e: any) {
             if (isMounted.current) {
@@ -130,7 +131,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
     };
 
     const finishOnboarding = async () => {
-        if (loading) return; 
+        if (loading) return;
         setLoading(true);
         setError('');
 
@@ -138,18 +139,20 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             const fullName = `${firstName.trim()} ${lastName.trim()}`;
             const formattedName = fullName.length > 1 ? (fullName.charAt(0).toUpperCase() + fullName.slice(1)) : "Buddy";
 
+            console.log("Finishing onboarding for:", formattedName);
+
             // SAFETY: Force timeout after 15 seconds to unblock UI if network/DB hangs
             const loginPromise = onLogin(UserRole.USER, formattedName, undefined, email, birthday, 'email', password, true);
             const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Setup taking too long. Please refresh and try logging in.")), 15000));
 
             await Promise.race([loginPromise, timeoutPromise]);
-            
+
             // SUCCESS PATH: Force cleanup explicitly
             if (isMounted.current) {
                 setLoading(false);
                 onCancel(); // Force close the modal
             }
-            
+
         } catch (e: any) {
             console.error(e);
             if (isMounted.current) {
@@ -158,7 +161,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                     setToast("Account created! Check your email to confirm.");
                     setLoading(false);
                     setTimeout(() => {
-                        if (isMounted.current) onCancel(); 
+                        if (isMounted.current) onCancel();
                     }, 1500);
                 } else {
                     setError(e.message || "Account creation failed. Please try again.");

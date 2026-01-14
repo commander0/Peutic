@@ -337,14 +337,22 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         if (showSummary) return;
         if (connectionState !== 'CONNECTED') return;
 
+        // Deduct first minute immediately upon connection
+        // This ensures the user is charged for the initial connection time
+        Database.deductBalance(1);
+        setRemainingMinutes(prev => prev - 1);
+
         const interval = setInterval(() => {
             setDuration(d => {
                 const newDuration = d + 1;
-                if (newDuration % 60 === 0) {
+
+                // Deduct balance at the START of every new minute
+                if (newDuration > 0 && newDuration % 60 === 0) {
+                    Database.deductBalance(1);
                     setRemainingMinutes(prev => {
                         const nextVal = prev - 1;
                         if (nextVal <= 0) {
-                            // STRICT CUTOFF
+                            // STRICT CUTOFF: If credits hit zero, end session immediately
                             performCleanup();
                             handleEndSession();
                             return 0;
@@ -352,13 +360,23 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                         return nextVal;
                     });
                 }
-                if (remainingMinutes <= 1 && newDuration % 60 === 30) setLowBalanceWarning(true);
+
+                // Warn user when 30 seconds remain in their final credit minute
+                if (remainingMinutes <= 1 && newDuration % 60 === 30) {
+                    setLowBalanceWarning(true);
+                }
+
                 return newDuration;
             });
-            if (Math.random() > 0.9) setNetworkQuality(Math.max(2, Math.floor(Math.random() * 3) + 2));
+
+            // Randomly update network quality to make HUD feel alive
+            if (Math.random() > 0.9) {
+                setNetworkQuality(Math.max(2, Math.floor(Math.random() * 3) + 2));
+            }
         }, 1000);
+
         return () => clearInterval(interval);
-    }, [showSummary, remainingMinutes, connectionState, performCleanup]);
+    }, [showSummary, connectionState, performCleanup]); // Removed remainingMinutes from dependency array!
 
     const handleEndSession = () => {
         performCleanup(); // Strict API cutoff
@@ -370,10 +388,15 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         const minutesUsed = Math.ceil(duration / 60);
         const user = Database.getUser();
         if (minutesUsed > 0 && user) {
-            Database.deductBalance(minutesUsed);
+            // Note: Balance was already deducted incrementally during the session
+            // We only record the transaction history here for the user's records
             Database.addTransaction({
-                id: `sess_${Date.now()}`, userName: userName, date: new Date().toISOString(),
-                amount: -minutesUsed, description: `Session with ${companion.name}`, status: 'COMPLETED'
+                id: `sess_${Date.now()}`,
+                userName: userName,
+                date: new Date().toISOString(),
+                amount: -minutesUsed,
+                description: `Session with ${companion.name}`,
+                status: 'COMPLETED'
             });
 
             const feedback: SessionFeedback = {

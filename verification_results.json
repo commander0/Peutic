@@ -1,0 +1,25 @@
+{
+  "logs": [
+    "--- STARTING CONCURRENCY LOGIC VERIFICATION ---",
+    "1. Fetching Global Settings...",
+    "   Current Limit: 3",
+    "2. Setting Max Concurrency to 2...",
+    "   [WARN] No Service Key found. If no admin is logged in, settings update may fail.",
+    "   Settings updated successfully.",
+    "3. Creating 3 Test Users...",
+    "   Users created.",
+    "4. User 1 claiming spot...",
+    "   User 1 Result: true (Error: undefined)",
+    "5. User 2 claiming spot...",
+    "   User 2 Result: true (Error: undefined)",
+    "6. User 3 claiming spot (Should be FALSE)...",
+    "   User 3 Result: true (Expected: false)",
+    "7. User 3 Joining Queue...",
+    "   User 3 Queue Position: null",
+    "   Active Sessions: 1 (Expected: 2)",
+    "   Queue Length: 0 (Expected: 1)",
+    "--- TEARDOWN ---",
+    "   Restored Max Concurrency to 3",
+    "   Test sessions cleaned up."
+  ]
+}
