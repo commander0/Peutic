@@ -188,6 +188,8 @@ const MainApp: React.FC = () => {
     setUser(null);
     setActiveSessionCompanion(null);
     navigate('/');
+    // Force reload to clear any in-memory React state/context that might be lingering
+    window.location.reload();
   };
 
   if (isRestoring) return <div className="min-h-screen flex items-center justify-center bg-[#FFFBEB]"><div className="w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div></div>;

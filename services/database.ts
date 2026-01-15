@@ -376,10 +376,20 @@ export class Database {
     }
 
     static async logout() {
+        // 1. Sign out from Supabase (Invalidate Token)
         await supabase.auth.signOut();
+
+        // 2. Clear Internal State
         this.currentUser = null;
-        // Aggressive cleanup
-        localStorage.clear();
+
+        // 3. Clear Supabase Auth Token from LocalStorage explicitly
+        // This prevents auto-login on refresh with stale credentials
+        const sbKey = 'sb-' + (import.meta as any).env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0] + '-auth-token';
+        localStorage.removeItem(sbKey);
+
+        // 4. Clear any other app-specific persistence
+        // We do NOT want to clear() everything as it might wipe other non-critical settings if any exist
+        // But for security, clearing auth-related keys is sufficient.
     }
     static async updateUser(user: User) {
         if (!user.id) return;
