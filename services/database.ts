@@ -376,20 +376,22 @@ export class Database {
     }
 
     static async logout() {
-        // 1. Sign out from Supabase (Invalidate Token)
-        await supabase.auth.signOut();
+        try {
+            // 1. Sign out from Supabase (Invalidate Token)
+            await supabase.auth.signOut();
+        } catch (e) {
+            console.error("Supabase signOut failed (likely already invalid):", e);
+        }
 
         // 2. Clear Internal State
         this.currentUser = null;
 
-        // 3. Clear Supabase Auth Token from LocalStorage explicitly
-        // This prevents auto-login on refresh with stale credentials
-        const sbKey = 'sb-' + (import.meta as any).env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0] + '-auth-token';
-        localStorage.removeItem(sbKey);
+        // 3. NUCLEAR CLEANUP: Clear EVERYTHING from Browser Storage
+        // This ensures absolutely no stale keys remain.
+        localStorage.clear();
+        sessionStorage.clear();
 
-        // 4. Clear any other app-specific persistence
-        // We do NOT want to clear() everything as it might wipe other non-critical settings if any exist
-        // But for security, clearing auth-related keys is sufficient.
+        // 4. Force reload is handled by App.tsx, but this ensures data is gone.
     }
     static async updateUser(user: User) {
         if (!user.id) return;
@@ -500,7 +502,7 @@ export class Database {
     }
     static async saveSettings(settings: GlobalSettings) {
         this.settingsCache = settings;
-        await supabase.from('global_settings').upsert({
+        const { error } = await supabase.from('global_settings').upsert({
             id: 1,
             price_per_minute: settings.pricePerMinute,
             sale_mode: settings.saleMode,
@@ -511,6 +513,12 @@ export class Database {
             max_concurrent_sessions: settings.maxConcurrentSessions,
             multilingual_mode: settings.multilingualMode
         });
+
+        if (error) {
+            console.error("FATAL: Failed to save Global Settings.", error);
+            console.error("Check RLS Policies for 'global_settings'. Ensure user is ADMIN.");
+            alert("Failed to save settings. Check console for details.");
+        }
     }
     static async getUserTransactions(userId: string): Promise<Transaction[]> {
         const { data } = await supabase.from('transactions').select('*').eq('user_id', userId).order('date', { ascending: false });

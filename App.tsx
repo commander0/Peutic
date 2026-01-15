@@ -195,13 +195,13 @@ const MainApp: React.FC = () => {
   if (isRestoring) return <div className="min-h-screen flex items-center justify-center bg-[#FFFBEB]"><div className="w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div></div>;
 
   // Maintenance Mode Lockout
-  if (maintenanceMode && (!user || user.role !== UserRole.ADMIN) && !location.pathname.includes('/support') && !location.pathname.includes('/admin')) {
+  if (maintenanceMode && (!user || user.role !== UserRole.ADMIN) && !location.pathname.includes('/admin')) {
     return (
       <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-white p-6 text-center">
         <Wrench className="w-16 h-16 text-yellow-500 mb-6 animate-pulse" />
         <h1 className="text-4xl font-bold mb-4">System Maintenance</h1>
         <p className="text-gray-400">We'll be back shortly.</p>
-        <button onClick={() => { setAuthMode('login'); setShowAuth(true); }} className="mt-8 opacity-0 hover:opacity-100 text-xs">Admin Entry</button>
+        <button onClick={() => { setAuthMode('login'); setShowAuth(true); navigate('/admin/login'); }} className="mt-8 opacity-0 hover:opacity-100 text-xs">Admin Entry</button>
       </div>
     );
   }
