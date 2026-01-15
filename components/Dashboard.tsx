@@ -112,10 +112,10 @@ const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }> = ({ 
         if (!input.trim()) return;
         setLoading(true);
         try {
-            // Simulated delay for "thinking" feel
+            // Simulated delay for premium feel
             await new Promise(resolve => setTimeout(resolve, 800));
-            
-            // Use local engine only - removed external API call
+
+            // Use internal WisdomEngine instead of external API
             const wisdom = WisdomEngine.generate(input);
 
             const canvas = document.createElement('canvas');
