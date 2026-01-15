@@ -75,6 +75,26 @@ serve(async (req) => {
             return new Response(JSON.stringify({ success: true, user: user.user }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
+        // --- ADMIN AUTO VERIFY (Missing Action Fix) ---
+        if (action === 'admin-auto-verify') {
+            const { email } = payload;
+
+            // Find user by email
+            const { data: { users }, error: findError } = await supabaseClient.auth.admin.listUsers();
+            const targetUser = users?.find((u: any) => u.email === email);
+
+            if (!targetUser) throw new Error("User not found");
+
+            // Manually verify
+            const { data: user, error: updateError } = await supabaseClient.auth.admin.updateUserById(
+                targetUser.id,
+                { email_confirm: true }
+            );
+
+            if (updateError) throw updateError;
+            return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
         // --- PROFILE BYPASS (For self-healing) ---
         if (action === 'profile-create-bypass') {
             const { id, email, name, provider } = payload;
