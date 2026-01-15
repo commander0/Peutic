@@ -373,8 +373,9 @@ export class Database {
     }
 
     static async logout() {
-        // PRESERVE THEME BEFORE CLEARING
+        // PRESERVE SETTINGS BEFORE CLEARING
         const currentTheme = localStorage.getItem('peutic_theme');
+        const cookiesAccepted = localStorage.getItem('peutic_cookies_accepted');
         
         try {
             // 1. Sign out from Supabase (Invalidate Token)
@@ -390,9 +391,12 @@ export class Database {
         localStorage.clear();
         sessionStorage.clear();
 
-        // 4. RESTORE THEME
+        // 4. RESTORE SETTINGS
         if (currentTheme) {
             localStorage.setItem('peutic_theme', currentTheme);
+        }
+        if (cookiesAccepted) {
+            localStorage.setItem('peutic_cookies_accepted', cookiesAccepted);
         }
     }
     static async updateUser(user: User) {
