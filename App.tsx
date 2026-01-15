@@ -136,7 +136,7 @@ const MainApp: React.FC = () => {
     return () => clearInterval(interval);
   }, [user, activeSessionCompanion]);
 
-  const handleLogin = async (_role: UserRole, name: string, _avatar?: string, email?: string, _birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email', password?: string, isSignup: boolean = false): Promise<void> => {
+  const handleLogin = async (_role: UserRole, name: string, _avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email', password?: string, isSignup: boolean = false): Promise<void> => {
     const userEmail = email || `${name.toLowerCase().replace(/ /g, '.')}@example.com`;
     let currentUser: User;
 
@@ -151,15 +151,15 @@ const MainApp: React.FC = () => {
         } catch (loginError: any) {
           // If login fails, try signup (if this was a signup attempt)
           if (isSignup || loginError.message.includes('Explicit Signup Requested') || loginError.message.includes('Invalid login credentials') === false) {
-            // Try creating user
-            currentUser = await Database.createUser(name, userEmail, password, provider);
+            // Try creating user with birthday
+            currentUser = await Database.createUser(name, userEmail, password, provider, birthday);
           } else {
             throw loginError;
           }
         }
       } else if (provider !== 'email') {
         // Social Login handling
-        currentUser = await Database.createUser(name, userEmail, 'social-login-placeholder', provider);
+        currentUser = await Database.createUser(name, userEmail, 'social-login-placeholder', provider, birthday);
       } else {
         throw new Error("Password required for email login");
       }

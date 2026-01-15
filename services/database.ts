@@ -206,12 +206,13 @@ export class Database {
             id: data.id,
             name: data.name,
             email: data.email,
+            birthday: data.birthday,
             role: data.role as UserRole,
             balance: data.balance || 0,
             subscriptionStatus: (data.subscription_status || 'ACTIVE') as any,
             joinedAt: data.created_at || new Date().toISOString(),
             lastLoginDate: data.last_login_date || new Date().toISOString(),
-            streak: 0,
+            streak: data.streak || 0,
             provider: data.provider || 'email',
             avatar: data.avatar_url,
             emailPreferences: data.email_preferences || { marketing: true, updates: true },
@@ -246,15 +247,15 @@ export class Database {
         throw new Error("Login failed. Profile could not be synchronized.");
     }
 
-    static async createUser(name: string, email: string, password?: string, provider: string = 'email'): Promise<User> {
+    static async createUser(name: string, email: string, password?: string, provider: string = 'email', birthday?: string): Promise<User> {
         if (provider === 'email' && password) {
-            console.log("Creating user...", { name, email, provider });
+            console.log("Creating user...", { name, email, provider, birthday });
 
             // Timeout Protection for SignUp (12s)
             const { data, error } = (await withTimeout(
                 supabase.auth.signUp({
                     email, password,
-                    options: { data: { full_name: name } }
+                    options: { data: { full_name: name, birthday } }
                 }),
                 12000,
                 "Authentication service timed out"
@@ -299,7 +300,8 @@ export class Database {
                     lastLoginDate: new Date().toISOString(),
                     streak: 0,
                     provider: 'email',
-                    emailPreferences: { marketing: true, updates: true }
+                    emailPreferences: { marketing: true, updates: true },
+                    birthday: birthday
                 };
 
                 // Attempt strict sync with 2.5s timeout. If fails, return optimistic.
@@ -368,10 +370,12 @@ export class Database {
         await supabase.from('users').update({
             name: user.name,
             email: user.email,
+            birthday: user.birthday,
             avatar_url: user.avatar,
             email_preferences: user.emailPreferences,
             theme_preference: user.themePreference,
-            language_preference: user.languagePreference
+            language_preference: user.languagePreference,
+            last_login_date: new Date().toISOString()
         }).eq('id', user.id);
     }
     static async deleteUser(id: string) {
@@ -399,7 +403,38 @@ export class Database {
         if (error) return false;
         return (count || 0) > 0;
     }
-    static checkAndIncrementStreak(user: User): User { return user; }
+    static checkAndIncrementStreak(user: User): User {
+        const today = new Date().toDateString();
+        const lastLogin = user.lastLoginDate ? new Date(user.lastLoginDate).toDateString() : null;
+
+        if (lastLogin === today) {
+            // Already logged in today, no streak change
+            return user;
+        }
+
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toDateString();
+
+        let newStreak = user.streak || 0;
+        if (lastLogin === yesterdayStr) {
+            // Consecutive day login, increment streak
+            newStreak++;
+        } else if (lastLogin !== today) {
+            // Streak broken, reset to 1
+            newStreak = 1;
+        }
+
+        const updatedUser = { ...user, streak: newStreak, lastLoginDate: new Date().toISOString() };
+
+        // Async update to DB (fire and forget)
+        supabase.from('users').update({
+            streak: newStreak,
+            last_login_date: new Date().toISOString()
+        }).eq('id', user.id).then(() => { }).catch(console.error);
+
+        return updatedUser;
+    }
     static async getAllUsers(): Promise<User[]> {
         const { data } = await supabase.from('users').select('*');
         return (data || []).map(this.mapUser);

@@ -6,12 +6,22 @@ import Stripe from 'https://esm.sh/stripe@14.14.0?target=deno'
 
 declare const Deno: any;
 
-const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+// Production CORS - restrict to your domain
+const ALLOWED_ORIGINS = ['https://peutic.xyz', 'https://www.peutic.xyz', 'http://localhost:5173', 'http://localhost:3000'];
+
+const getCorsHeaders = (origin: string | null) => {
+    const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+    return {
+        'Access-Control-Allow-Origin': allowedOrigin,
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+        'Access-Control-Allow-Credentials': 'true',
+    };
+};
 
 serve(async (req) => {
+    const origin = req.headers.get('origin');
+    const corsHeaders = getCorsHeaders(origin);
+
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders })
     }
@@ -148,6 +158,8 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: "Invalid Action" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     } catch (error: any) {
+        const origin = req.headers.get('origin');
+        const corsHeaders = getCorsHeaders(origin);
         return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 })

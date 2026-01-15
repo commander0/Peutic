@@ -392,6 +392,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             // We only record the transaction history here for the user's records
             Database.addTransaction({
                 id: `sess_${Date.now()}`,
+                userId: user.id,
                 userName: userName,
                 date: new Date().toISOString(),
                 amount: -minutesUsed,
