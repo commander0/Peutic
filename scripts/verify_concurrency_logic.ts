@@ -20,7 +20,7 @@ const SUPABASE_ANON_KEY = env['VITE_SUPABASE_ANON_KEY'];
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     console.error("Missing Supabase credentials in .env");
-    process.exit(1);
+    (process as any).exit(1);
 }
 
 // --- LOGGING ---
@@ -42,6 +42,8 @@ async function runTest() {
     // Admin Client (Simulated with Anon key)
     const adminClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    const users: { id: string, client: any, email: string }[] = [];
+
     try {
         log("1. Fetching Global Settings...");
         const { data: settings } = await adminClient.from('global_settings').select('*').single();
@@ -55,8 +57,6 @@ async function runTest() {
         // We will try to create Limit + 1 users.
         const numUsers = limit + 1;
         log(`   Target: Create ${numUsers} users to force queueing.`);
-
-        const users: { id: string, client: any, email: string }[] = [];
 
         // 2. Create Users (with separate clients)
         for (let i = 0; i < numUsers; i++) {

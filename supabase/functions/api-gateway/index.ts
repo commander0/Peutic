@@ -111,6 +111,29 @@ serve(async (req) => {
             return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
+        // --- ADMIN RECLAIM ---
+        if (action === 'admin-reclaim') {
+            const { masterKey } = payload;
+            const systemMasterKey = Deno.env.get('MASTER_KEY') || 'PEUTIC_MASTER_2026';
+
+            if (masterKey !== systemMasterKey) {
+                return new Response(JSON.stringify({ error: "Invalid Master Key. Reclamation failed." }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+
+            // Reset all ADMINs to USER
+            const { error: resetError } = await supabaseClient
+                .from('users')
+                .update({ role: 'USER' })
+                .eq('role', 'ADMIN');
+
+            if (resetError) {
+                console.error("Reclaim Reset Error:", resetError);
+                throw resetError;
+            }
+
+            return new Response(JSON.stringify({ success: true, message: "System Ownership Reset." }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
         // --- PAYMENTS ---
         if (action === 'process-topup') {
             if (!stripe) throw new Error("Stripe not configured");
@@ -175,10 +198,12 @@ serve(async (req) => {
         }
 
         // --- DEBUG FALLBACK ---
+        console.warn(`Gateway received unhandled action: [${action}]`);
         return new Response(JSON.stringify({
             error: `Invalid Action: Received '${action}'`,
-            received_payload_keys: Object.keys(payload || {})
-        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            received_payload_keys: Object.keys(payload || {}),
+            repro_hint: "Check spelling in services/database.ts or geminiService.ts"
+        }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     } catch (error: any) {
         const origin = req.headers.get('origin');

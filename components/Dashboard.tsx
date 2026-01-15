@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Companion, Transaction, JournalEntry, ArtEntry } from '../types';
@@ -13,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Database, STABLE_AVATAR_POOL } from '../services/database';
 import { generateAffirmation, generateDailyInsight } from '../services/geminiService';
+import { WisdomEngine } from '../services/wisdomEngine';
 import TechCheck from './TechCheck';
 import GroundingMode from './GroundingMode';
 
@@ -22,7 +22,7 @@ interface DashboardProps {
     onStartSession: (companion: Companion) => void;
 }
 
-// Stripe publishable key (must start with pk_live_ or pk_test_)
+// Stripe publishable key
 const STRIPE_PUBLISHABLE_KEY = (import.meta as any).env?.VITE_STRIPE_PUBLISHABLE_KEY || '';
 
 declare global {
@@ -112,7 +112,14 @@ const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }> = ({ 
         if (!input.trim()) return;
         setLoading(true);
         try {
-            const wisdom = await generateAffirmation(input);
+            let wisdom;
+            try {
+                wisdom = await generateAffirmation(input);
+            } catch (apiError) {
+                console.warn("API failed, using WisdomEngine fallback:", apiError);
+                wisdom = WisdomEngine.generate(input);
+            }
+
             const canvas = document.createElement('canvas');
             canvas.width = 1080; canvas.height = 1080;
             const ctx = canvas.getContext('2d');
@@ -140,19 +147,23 @@ const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }> = ({ 
                 ctx.font = '500 30px Manrope, sans-serif'; ctx.fillStyle = '#666'; ctx.fillText('PEUTIC • DAILY WISDOM', 540, 980);
 
                 const imageUrl = canvas.toDataURL('image/jpeg', 0.4);
-                // Use crypto.randomUUID if available, otherwise fallback to a simple random uuid-like string
-                const newId = crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-                    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                    return v.toString(16);
-                });
+                // Use simple random ID generation for browser compatibility if crypto.randomUUID isn't available in all contexts
+                const newId = `wisdom_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+                
                 const newEntry: ArtEntry = { id: newId, userId: userId, imageUrl: imageUrl, prompt: input, createdAt: new Date().toISOString(), title: "Wisdom Card" };
 
                 await Database.saveArt(newEntry);
                 await refreshGallery();
-                if (onUpdate) onUpdate(); // Real-time goal update
+                if (onUpdate) onUpdate();
                 setInput('');
             }
-        } catch (e) { console.error("Generation Error:", e); } finally { setLoading(false); }
+
+        } catch (e: any) {
+            console.error("Critical Generation Error:", e);
+            alert("Failed to save Wisdom Art: " + (e.message || "Unknown error"));
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleDelete = async (e: React.MouseEvent, id: string) => {

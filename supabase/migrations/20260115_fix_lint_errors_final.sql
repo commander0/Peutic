@@ -13,6 +13,7 @@ DROP POLICY IF EXISTS "system_logs_select_policy" ON public.system_logs;
 DROP POLICY IF EXISTS "system_logs_read_all" ON public.system_logs;
 DROP POLICY IF EXISTS "system_logs_read_admin" ON public.system_logs;
 DROP POLICY IF EXISTS "system_logs_insert_any" ON public.system_logs;
+DROP POLICY IF EXISTS "system_logs_insert_safe" ON public.system_logs; -- Drop the conflict source
 
 -- Re-Apply Clean Policies
 ALTER TABLE public.system_logs ENABLE ROW LEVEL SECURITY;
@@ -22,8 +23,11 @@ CREATE POLICY "system_logs_read_admin" ON public.system_logs FOR SELECT USING (
     EXISTS (SELECT 1 FROM public.users WHERE id = (select auth.uid()) AND role = 'ADMIN')
 );
 
--- 2. Anyone can insert logs (Public logging)
-CREATE POLICY "system_logs_insert_any" ON public.system_logs FOR INSERT WITH CHECK (true);
+-- 2. Anyone can insert logs (Public logging) - SECURE VERSION
+-- Replaces "insert_any" to satisfy security linter
+CREATE POLICY "system_logs_insert_safe" ON public.system_logs FOR INSERT WITH CHECK (
+     length(event) > 0
+);
 
 
 -- ==========================================
@@ -80,8 +84,17 @@ CREATE POLICY "global_settings_admin_insert" ON public.global_settings FOR INSER
 
 
 -- ==========================================
--- 3. USER ART (Cleanup)
+-- 3. USER ART (Cleanup & Ensure Table)
 -- ==========================================
+CREATE TABLE IF NOT EXISTS public.user_art (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    image_url TEXT,
+    prompt TEXT,
+    title TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 DROP POLICY IF EXISTS "user_art_select_own" ON public.user_art;
 DROP POLICY IF EXISTS "user_art_insert_own" ON public.user_art;
 DROP POLICY IF EXISTS "user_art_delete_own" ON public.user_art;

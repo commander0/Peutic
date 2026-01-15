@@ -196,7 +196,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         }
 
         try {
-            await Database.resetAdminStatus();
+            await Database.resetAdminStatus(masterKey);
             setSuccessMsg("System Ownership Reset. You may now initialize a new Root Admin.");
             setHasAdmin(false);
             setShowRegister(true);

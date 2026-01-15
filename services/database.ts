@@ -642,18 +642,23 @@ export class Database {
         return key === masterKey;
     }
 
-    static async resetAdminStatus(): Promise<void> {
-        // High-risk: Reset all ADMIN users to GUEST or USER to allow re-claiming
-        // This is triggered only after Master Key verification
-        const { data: admins } = await supabase.from('users').select('id').eq('role', 'ADMIN');
-        if (admins && admins.length > 0) {
-            for (const admin of admins) {
-                await supabase.from('users').update({ role: 'USER' }).eq('id', admin.id);
+    static async resetAdminStatus(masterKey: string): Promise<void> {
+        // High-risk: Reset all ADMIN users to USER to allow re-claiming via Edge Function
+        try {
+            const { data, error } = await supabase.functions.invoke('api-gateway', {
+                body: { action: 'admin-reclaim', payload: { masterKey } }
+            });
+
+            if (error) throw error;
+            if (data?.error) throw new Error(data.error);
+
+            // Force log out current user if they are admin
+            if (this.currentUser?.role === 'ADMIN') {
+                await this.clearSession();
             }
-        }
-        // Force log out current user if they are admin
-        if (this.currentUser?.role === 'ADMIN') {
-            this.clearSession();
+        } catch (e: any) {
+            console.error("Admin Reset Failed:", e);
+            throw e;
         }
     }
 }
