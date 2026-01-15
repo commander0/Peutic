@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Shield, Lock, FileText, Mail, Send, MessageCircle, CheckCircle, Heart, Globe, Users, Phone, AlertTriangle, Play, Award, Star, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -14,9 +13,12 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
   const [sent, setSent] = useState(false);
 
   useEffect(() => {
-    // Just ensure dark mode class is respected if set by App or OS
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches && document.documentElement.classList.contains('dark')) {
+    // Check local storage for theme preference set on landing page or dashboard
+    const storedTheme = localStorage.getItem('peutic_theme');
+    if (storedTheme === 'dark' || (!storedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
     }
   }, []);
 

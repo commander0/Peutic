@@ -11,7 +11,7 @@ import {
     Mail, StopCircle, Eye, Minimize2, Flame as Fire
 } from 'lucide-react';
 import { Database, STABLE_AVATAR_POOL } from '../services/database';
-import { generateAffirmation, generateDailyInsight } from '../services/geminiService';
+import { generateDailyInsight } from '../services/geminiService';
 import { WisdomEngine } from '../services/wisdomEngine';
 import TechCheck from './TechCheck';
 import GroundingMode from './GroundingMode';
@@ -112,13 +112,11 @@ const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }> = ({ 
         if (!input.trim()) return;
         setLoading(true);
         try {
-            let wisdom;
-            try {
-                wisdom = await generateAffirmation(input);
-            } catch (apiError) {
-                console.warn("API failed, using WisdomEngine fallback:", apiError);
-                wisdom = WisdomEngine.generate(input);
-            }
+            // Simulated delay for "thinking" feel
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            // Use local engine only - removed external API call
+            const wisdom = WisdomEngine.generate(input);
 
             const canvas = document.createElement('canvas');
             canvas.width = 1080; canvas.height = 1080;
@@ -745,9 +743,12 @@ const ProfileModal: React.FC<{ user: User, onClose: () => void, onUpdate: () => 
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession }) => {
     const [activeTab, setActiveTab] = useState<'hub' | 'history' | 'settings'>('hub');
 
-    // Default to Light Mode
+    // Universal Theme Sync: Prioritize LocalStorage -> User Preference -> System
     const [darkMode, setDarkMode] = useState(() => {
-        return user.themePreference === 'dark';
+        const local = localStorage.getItem('peutic_theme');
+        if (local) return local === 'dark';
+        if (user.themePreference) return user.themePreference === 'dark';
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     });
 
     const [balance, setBalance] = useState(user.balance);
@@ -775,13 +776,25 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
     const [specialtyFilter, setSpecialtyFilter] = useState<string>('All');
 
+    // Theme Effect: Updates DOM, LocalStorage, and DB
     useEffect(() => {
+        const root = document.documentElement;
+        const themeStr = darkMode ? 'dark' : 'light';
+        
         if (darkMode) {
-            document.documentElement.classList.add('dark');
+            root.classList.add('dark');
         } else {
-            document.documentElement.classList.remove('dark');
+            root.classList.remove('dark');
         }
+        localStorage.setItem('peutic_theme', themeStr);
 
+        // Sync with DB if different (debounce could be added in production)
+        if (user.themePreference !== themeStr) {
+             Database.updateUser({ ...dashboardUser, themePreference: themeStr as 'light' | 'dark' });
+        }
+    }, [darkMode]);
+
+    useEffect(() => {
         refreshData();
         generateDailyInsight(user.name).then(insight => {
             if (insight) setDailyInsight(insight);
@@ -798,7 +811,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             refreshData();
         }, 5000);
         return () => clearInterval(interval);
-    }, [darkMode]);
+    }, []);
 
     const refreshData = async () => {
         const u = Database.getUser();
@@ -817,14 +830,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     };
 
     const toggleDarkMode = () => {
-        const newMode = !darkMode;
-        setDarkMode(newMode);
-        if (newMode) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-        Database.updateUser({ ...dashboardUser, themePreference: newMode ? 'dark' : 'light' });
+        setDarkMode(!darkMode);
     };
 
     const handleMoodSelect = (m: 'confetti' | 'rain' | null) => {
