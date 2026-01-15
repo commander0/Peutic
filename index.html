@@ -65,11 +65,21 @@
       }
     </script>
     <style>
+      :root {
+        /* Fluid typography: 14px at 320px width, up to 16px at 1200px width */
+        font-size: clamp(14px, 0.9vw + 11px, 16px);
+      }
       body {
         background-color: #FFFBEB;
         color: #0A0A0A;
         -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
         overflow-x: hidden;
+        line-height: 1.5;
+        font-weight: 400; /* Regular weight by default to reduce bulk */
+      }
+      h1, h2, h3, h4, h5, h6 {
+        letter-spacing: -0.02em; /* Tighten headings slightly */
       }
       .dark body {
         background-color: #0A0A0A;
@@ -77,6 +87,11 @@
       }
       ::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      
+      /* Reduce boldness of bold text slightly in dark mode for legibility */
+      .dark strong, .dark .font-bold {
+        font-weight: 600;
+      }
     </style>
 <script type="importmap">
 {
