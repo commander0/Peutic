@@ -491,16 +491,17 @@ export class Database {
     static async syncGlobalSettings(): Promise<GlobalSettings> {
         try {
             const { data } = await supabase.from('global_settings').select('*').eq('id', 1).single();
-            if (data) {
+            const settingsData = data as any;
+            if (settingsData) {
                 this.settingsCache = {
-                    pricePerMinute: data.price_per_minute,
-                    saleMode: data.sale_mode,
-                    maintenanceMode: data.maintenance_mode,
-                    allowSignups: data.allow_signups,
-                    siteName: data.site_name,
-                    broadcastMessage: data.broadcast_message,
-                    maxConcurrentSessions: data.max_concurrent_sessions,
-                    multilingualMode: data.multilingual_mode
+                    pricePerMinute: settingsData.price_per_minute,
+                    saleMode: settingsData.sale_mode,
+                    maintenanceMode: settingsData.maintenance_mode,
+                    allowSignups: settingsData.allow_signups,
+                    siteName: settingsData.site_name,
+                    broadcastMessage: settingsData.broadcast_message,
+                    maxConcurrentSessions: settingsData.max_concurrent_sessions,
+                    multilingualMode: settingsData.multilingual_mode
                 };
             } else { await this.saveSettings(this.settingsCache); }
         } catch (e) { }
@@ -626,7 +627,8 @@ export class Database {
         const { count: moodCount } = await supabase.from('moods').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', iso);
         const { count: artCount } = await supabase.from('user_art').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', iso);
 
-        const current = (journalCount || 0) + (sessionCount || 0) + (moodCount || 0) + (artCount || 0);
+        const totalActions = (journalCount || 0) + (sessionCount || 0) + (moodCount || 0) + (artCount || 0);
+        const current = totalActions * 0.5;
 
         const messages = [
             "Keep going, you're doing great!",
