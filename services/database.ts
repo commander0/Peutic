@@ -516,8 +516,9 @@ export class Database {
 
         if (error) {
             console.error("FATAL: Failed to save Global Settings.", error);
-            console.error("Check RLS Policies for 'global_settings'. Ensure user is ADMIN.");
-            alert("Failed to save settings. Check console for details.");
+            // Detailed alert for the user to help debug
+            alert(`Failed to save settings: ${error.message} (Code: ${error.code}). Hint: ${error.hint || "Check RLS or Admin Role"}`);
+
         }
     }
     static async getUserTransactions(userId: string): Promise<Transaction[]> {
