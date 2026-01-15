@@ -102,8 +102,15 @@ export class Database {
                 }
                 return user;
             }
+
+            // Explicitly clear session if no user found in Supabase auth
+            this.currentUser = null;
+            return null;
         } catch (e) {
             console.warn("Restore Session Failed", e);
+            // Safety: If restore fails, assume logged out to prevent leaks
+            this.currentUser = null;
+            return null;
         }
         return this.currentUser;
     }
@@ -181,7 +188,11 @@ export class Database {
 
     static getUser(): User | null { return this.currentUser; }
     static saveUserSession(user: User) { this.currentUser = user; }
-    static clearSession() { this.currentUser = null; supabase.auth.signOut(); }
+    static async clearSession() {
+        this.currentUser = null;
+        await supabase.auth.signOut();
+        localStorage.removeItem('sb-' + (import.meta as any).env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0] + '-auth-token');
+    }
 
     static async syncUser(userId: string): Promise<User | null> {
         if (!userId) return null;
@@ -217,7 +228,8 @@ export class Database {
             avatar: data.avatar_url,
             emailPreferences: data.email_preferences || { marketing: true, updates: true },
             themePreference: data.theme_preference,
-            languagePreference: data.language_preference
+            languagePreference: data.language_preference,
+            gameScores: data.game_scores || { match: 0, cloud: 0 }
         };
     }
 
@@ -363,7 +375,12 @@ export class Database {
         } catch (e) { return false; }
     }
 
-    static async logout() { await supabase.auth.signOut(); this.currentUser = null; }
+    static async logout() {
+        await supabase.auth.signOut();
+        this.currentUser = null;
+        // Aggressive cleanup
+        localStorage.clear();
+    }
     static async updateUser(user: User) {
         if (!user.id) return;
         this.currentUser = user;
@@ -517,6 +534,17 @@ export class Database {
             this.currentUser.balance = Math.max(0, this.currentUser.balance - p_amount);
         }
     }
+    static async updateGameScore(userId: string, game: 'match' | 'cloud', score: number) {
+        if (!this.currentUser || this.currentUser.id !== userId) return;
+
+        const currentScores = this.currentUser.gameScores || { match: 0, cloud: 0 };
+        const newScores = { ...currentScores, [game]: Math.max(currentScores[game] || 0, score) };
+
+        // Optimistic update
+        this.currentUser.gameScores = newScores;
+
+        await supabase.from('users').update({ game_scores: newScores }).eq('id', userId);
+    }
     static async getJournals(userId: string): Promise<JournalEntry[]> {
         const { data } = await supabase.from('journals').select('*').eq('user_id', userId).order('date', { ascending: false });
         return (data || []).map((j: any) => ({ id: j.id, userId: j.user_id, date: j.date, content: j.content }));
@@ -548,17 +576,15 @@ export class Database {
     static async leaveQueue(userId: string) { await supabase.from('session_queue').delete().eq('user_id', userId); }
     static async getQueuePosition(userId: string): Promise<number> {
         try {
-            const { data, error } = await supabase.from('session_queue').select('created_at').eq('user_id', userId).single();
-            if (error || !data) return 0;
-
-            const { count } = await supabase.from('session_queue')
-                .select('*', { count: 'exact', head: true })
-                .lt('created_at', data.created_at);
-
-            return (count || 0) + 1;
+            const { data, error } = await supabase.rpc('get_client_queue_position', { p_user_id: userId });
+            if (error) {
+                console.warn("Queue position RPC error:", error);
+                return 1; // Conservative fallback
+            }
+            return data;
         } catch (e) {
             console.warn("Queue position retrieval fallback:", e);
-            return 1; // Return 1 to allow entry attempt if schema is broken but user exists
+            return 1;
         }
     }
     static async sendKeepAlive(userId: string) { await supabase.from('active_sessions').upsert({ user_id: userId, last_ping: new Date().toISOString() }); }

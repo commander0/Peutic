@@ -67,8 +67,7 @@ const MainApp: React.FC = () => {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
 
-  const savedActivity = localStorage.getItem('peutic_last_activity');
-  const lastActivityRef = useRef<number>(savedActivity ? parseInt(savedActivity) : Date.now());
+  const lastActivityRef = useRef<number>(Date.now());
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -102,12 +101,10 @@ const MainApp: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Session Timeout Logic
+  // Session Timeout Logic (In-Memory Only)
   useEffect(() => {
     const updateActivity = () => {
-      const now = Date.now();
-      lastActivityRef.current = now;
-      localStorage.setItem('peutic_last_activity', now.toString());
+      lastActivityRef.current = Date.now();
       if (showTimeoutWarning) setShowTimeoutWarning(false);
     };
     const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];

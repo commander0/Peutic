@@ -203,8 +203,8 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                             key={item.id}
                             onClick={() => { setActiveTab(item.id as any); setSidebarOpen(false); }}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all duration-200 ${activeTab === item.id
-                                    ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20'
-                                    : 'text-gray-400 hover:bg-gray-900 hover:text-white'
+                                ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20'
+                                : 'text-gray-400 hover:bg-gray-900 hover:text-white'
                                 }`}
                         >
                             <item.icon className="w-3.5 h-3.5" /> {item.label}

@@ -21,6 +21,10 @@ export interface User {
     marketing: boolean;
     updates: boolean;
   };
+  gameScores?: {
+    match: number;
+    cloud: number;
+  };
   streak: number;
   lastLoginDate: string;
   themePreference?: 'light' | 'dark';

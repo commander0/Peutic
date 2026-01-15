@@ -22,7 +22,8 @@ interface DashboardProps {
     onStartSession: (companion: Companion) => void;
 }
 
-const STRIPE_PUBLISHABLE_KEY = (import.meta as any).env?.VITE_STRIPE_PUBLISHABLE_KEY || (process.env as any).STRIPE_KEY;
+// Stripe publishable key (must start with pk_live_ or pk_test_)
+const STRIPE_PUBLISHABLE_KEY = (import.meta as any).env?.VITE_STRIPE_PUBLISHABLE_KEY || '';
 
 declare global {
     interface Window {
@@ -281,16 +282,14 @@ const WeatherEffect: React.FC<{ type: 'confetti' | 'rain' }> = ({ type }) => {
     return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-[50]" />;
 };
 
-const MindfulMatchGame: React.FC = () => {
+const MindfulMatchGame: React.FC<{ dashboardUser: User }> = ({ dashboardUser }) => {
     const [cards, setCards] = useState<any[]>([]);
     const [flipped, setFlipped] = useState<number[]>([]);
     const [solved, setSolved] = useState<number[]>([]);
     const [won, setWon] = useState(false);
     const [moves, setMoves] = useState(0);
     const [bestScore, setBestScore] = useState(() => {
-        try {
-            return parseInt(localStorage.getItem('peutic_match_score') || '0');
-        } catch (e) { return 0; }
+        return dashboardUser?.gameScores?.match || 0;
     });
     const ICONS = [Sun, Heart, Music, Zap, Star, Anchor, Feather, Cloud];
     useEffect(() => { initGame(); }, []);
@@ -324,7 +323,9 @@ const MindfulMatchGame: React.FC = () => {
             setWon(true);
             if (bestScore === 0 || moves < bestScore) {
                 setBestScore(moves);
-                localStorage.setItem('peutic_match_score', moves.toString());
+                if (dashboardUser && dashboardUser.id) {
+                    Database.updateGameScore(dashboardUser.id, 'match', moves);
+                }
             }
         }
     }, [solved]);
@@ -341,16 +342,14 @@ const MindfulMatchGame: React.FC = () => {
     );
 };
 
-const CloudHopGame: React.FC = () => {
+const CloudHopGame: React.FC<{ dashboardUser: User }> = ({ dashboardUser }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const requestRef = useRef<number | undefined>(undefined);
     const [score, setScore] = useState(0);
     const [gameOver, setGameOver] = useState(false);
     const [gameStarted, setGameStarted] = useState(false);
     const [highScore, setHighScore] = useState(() => {
-        try {
-            return parseInt(localStorage.getItem('peutic_cloud_score') || '0');
-        } catch (e) { return 0; }
+        return dashboardUser?.gameScores?.cloud || 0;
     });
     const playerRef = useRef({ x: 150, y: 300, vx: 0, vy: 0, width: 30, height: 30 });
     const platformsRef = useRef<any[]>([]);
@@ -377,7 +376,9 @@ const CloudHopGame: React.FC = () => {
         if (gameOver) {
             if (score > highScore) {
                 setHighScore(score);
-                localStorage.setItem('peutic_cloud_score', score.toString());
+                if (dashboardUser && dashboardUser.id) {
+                    Database.updateGameScore(dashboardUser.id, 'cloud', score);
+                }
             }
         }
     }, [gameOver, score, highScore]);
@@ -587,9 +588,9 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
     const cardElementRef = useRef<any>(null);
     const mountNodeRef = useRef<HTMLDivElement | null>(null);
     useEffect(() => {
-        if (!STRIPE_PUBLISHABLE_KEY) {
-            console.error("CRITICAL: STRIPE_PUBLISHABLE_KEY is missing from environment variables.");
-            setError("Payment system configuration missing (Missing API Key). Please notify administration.");
+        if (!STRIPE_PUBLISHABLE_KEY || STRIPE_PUBLISHABLE_KEY.startsWith('sk_')) {
+            console.error("CRITICAL: VITE_STRIPE_PUBLISHABLE_KEY is missing or invalid. Must start with pk_");
+            setError("Payment system not configured. Add VITE_STRIPE_PUBLISHABLE_KEY (starts with pk_) to .env file.");
             return;
         }
         if (!window.Stripe) {
@@ -730,8 +731,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
     // Default to Light Mode
     const [darkMode, setDarkMode] = useState(() => {
-        const local = localStorage.getItem('peutic_theme');
-        if (local) return local === 'dark';
         return user.themePreference === 'dark';
     });
 
@@ -806,13 +805,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         setDarkMode(newMode);
         if (newMode) {
             document.documentElement.classList.add('dark');
-            localStorage.setItem('peutic_theme', 'dark');
         } else {
             document.documentElement.classList.remove('dark');
-            localStorage.setItem('peutic_theme', 'light');
         }
-        const updatedUser = { ...dashboardUser, themePreference: (newMode ? 'dark' : 'light') as 'light' | 'dark' };
-        Database.updateUser(updatedUser);
+        Database.updateUser({ ...dashboardUser, themePreference: newMode ? 'dark' : 'light' });
     };
 
     const handleMoodSelect = (m: 'confetti' | 'rain' | null) => {
@@ -947,8 +943,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 </div>
                                 <CollapsibleSection title="Mindful Arcade" icon={Gamepad2}>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
-                                        <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col bg-sky-50 dark:bg-gray-800"><div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none"><span className="text-[9px] font-black uppercase tracking-widest text-gray-500 bg-white/90 dark:bg-black/90 px-3 py-1.5 rounded-full shadow-sm">Mindful Match</span></div><MindfulMatchGame /></div>
-                                        <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col"><div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none"><span className="text-[9px] font-black uppercase tracking-widest text-gray-500 bg-white/90 dark:bg-black/90 px-3 py-1.5 rounded-full shadow-sm">Cloud Hop</span></div><CloudHopGame /></div>
+                                        <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col bg-sky-50 dark:bg-gray-800"><div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none"><span className="text-[9px] font-black uppercase tracking-widest text-gray-500 bg-white/90 dark:bg-black/90 px-3 py-1.5 rounded-full shadow-sm">Mindful Match</span></div><MindfulMatchGame dashboardUser={dashboardUser} /></div>
+                                        <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col"><div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none"><span className="text-[9px] font-black uppercase tracking-widest text-gray-500 bg-white/90 dark:bg-black/90 px-3 py-1.5 rounded-full shadow-sm">Cloud Hop</span></div><CloudHopGame dashboardUser={dashboardUser} /></div>
                                     </div>
                                 </CollapsibleSection>
                                 <CollapsibleSection title="Inner Sanctuary" icon={Feather}><div className="space-y-6"><JournalSection user={user} /><div className="border-t border-dashed border-yellow-200 dark:border-gray-700" /><WisdomGenerator userId={user.id} /></div></CollapsibleSection>
