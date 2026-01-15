@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { UserRole } from '../types';
 import { Facebook, AlertCircle, Send, Heart, Check, Loader2, Server } from 'lucide-react';
 import { supabase } from '../services/supabaseClient';
+import { NameValidator } from '../services/nameValidator';
 
 
 interface AuthProps {
@@ -130,6 +131,16 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
         }
     };
 
+    const handleOnboardingStepOne = () => {
+        setError('');
+        const nameValidation = NameValidator.validate(firstName, lastName);
+        if (!nameValidation.valid) {
+            setError(nameValidation.error || "Invalid name.");
+            return;
+        }
+        setOnboardingStep(1);
+    };
+
     const finishOnboarding = async () => {
         if (loading) return;
         setLoading(true);
@@ -137,6 +148,12 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
 
         try {
             const fullName = `${firstName.trim()} ${lastName.trim()}`;
+            // Double check validation before submission
+            const nameCheck = NameValidator.validate(firstName, lastName);
+            if (!nameCheck.valid) {
+                 throw new Error(nameCheck.error);
+            }
+
             const formattedName = fullName.length > 1 ? (fullName.charAt(0).toUpperCase() + fullName.slice(1)) : "Buddy";
 
             console.log("Finishing onboarding for:", formattedName);
@@ -188,7 +205,16 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                                         <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tight">Welcome, {firstName || 'Buddy'}.</h2>
                                         <p className="text-gray-500 dark:text-gray-400 text-lg md:text-xl font-medium leading-relaxed">Let's tailor your sanctuary.</p>
                                     </div>
-                                    <button onClick={() => setOnboardingStep(1)} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 md:py-5 rounded-2xl font-black hover:scale-[1.02] transition-transform text-base md:text-lg shadow-xl">Begin Setup</button>
+                                    <div className="grid grid-cols-2 gap-3 md:gap-4">
+                                        <input type="text" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="First Name" value={firstName} onChange={e => setFirstName(e.target.value)} />
+                                        <input type="text" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="Last Name" value={lastName} onChange={e => setLastName(e.target.value)} />
+                                    </div>
+                                    {error && (
+                                        <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm flex items-center gap-2">
+                                            <AlertCircle className="w-4 h-4" /> {error}
+                                        </div>
+                                    )}
+                                    <button onClick={handleOnboardingStepOne} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 md:py-5 rounded-2xl font-black hover:scale-[1.02] transition-transform text-base md:text-lg shadow-xl">Begin Setup</button>
                                 </div>
                             )}
                             {onboardingStep === 1 && (
@@ -304,10 +330,6 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                         <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
                             {!isLogin && (
                                 <>
-                                    <div className="grid grid-cols-2 gap-3 md:gap-4 animate-in slide-in-from-bottom-2 fade-in">
-                                        <input type="text" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="First Name" value={firstName} onChange={e => setFirstName(e.target.value)} />
-                                        <input type="text" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="Last Name" value={lastName} onChange={e => setLastName(e.target.value)} />
-                                    </div>
                                     <div className="space-y-1">
                                         <label className="text-xs font-bold text-gray-500 uppercase ml-1">Date of Birth</label>
                                         <input type="date" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all animate-in slide-in-from-bottom-3 fade-in text-sm md:text-base dark:text-white" value={birthday} onChange={e => setBirthday(e.target.value)} />
