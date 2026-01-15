@@ -98,13 +98,12 @@ serve(async (req) => {
         // --- PROFILE BYPASS (For self-healing) ---
         if (action === 'profile-create-bypass') {
             const { id, email, name, provider } = payload;
-            const { count } = await supabaseClient.from('users').select('*', { count: 'exact', head: true });
-            const isFirst = (count || 0) === 0;
 
+            // SECURITY: Removed 'isFirst' check. Always default to USER.
             const { error } = await supabaseClient.from('users').upsert({
                 id, email, name, provider,
-                role: isFirst ? 'ADMIN' : 'USER',
-                balance: isFirst ? 999 : 0,
+                role: 'USER',
+                balance: 0,
                 subscription_status: 'ACTIVE'
             });
 
@@ -175,7 +174,11 @@ serve(async (req) => {
             return new Response(JSON.stringify({ audioData }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
-        return new Response(JSON.stringify({ error: "Invalid Action" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        // --- DEBUG FALLBACK ---
+        return new Response(JSON.stringify({
+            error: `Invalid Action: Received '${action}'`,
+            received_payload_keys: Object.keys(payload || {})
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     } catch (error: any) {
         const origin = req.headers.get('origin');

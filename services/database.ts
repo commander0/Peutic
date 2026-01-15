@@ -117,15 +117,13 @@ export class Database {
 
     private static async repairProfile(authUser: any): Promise<User | null> {
         try {
-            const { count } = await supabase.from('users').select('id', { count: 'exact', head: true });
-            const isFirst = (count || 0) === 0;
-
+            // SECURITY: Removed 'isFirst' auto-admin check. Always default to USER.
             const optimisticUser: User = {
                 id: authUser.id,
                 email: authUser.email,
                 name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0],
-                role: isFirst ? UserRole.ADMIN : UserRole.USER,
-                balance: isFirst ? 999 : 0,
+                role: UserRole.USER,
+                balance: 0,
                 subscriptionStatus: 'ACTIVE',
                 joinedAt: new Date().toISOString(),
                 lastLoginDate: new Date().toISOString(),
