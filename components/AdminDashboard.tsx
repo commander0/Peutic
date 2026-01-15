@@ -59,6 +59,19 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     const [companions, setCompanions] = useState<Companion[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [settings, setSettings] = useState<GlobalSettings>(Database.getSettings());
+
+    // SECURITY: Double-check admin status on mount
+    // This prevents a user from accessing this component if they somehow bypassed the router guard
+    useEffect(() => {
+        const verifyAdmin = async () => {
+            const currentUser = Database.getUser();
+            if (!currentUser || currentUser.role !== 'ADMIN') {
+                console.warn("Security Violation: Non-admin attempted to access dashboard.");
+                onLogout(); // Force kick
+            }
+        };
+        verifyAdmin();
+    }, []);
     const [logs, setLogs] = useState<SystemLog[]>([]);
     const [activeCount, setActiveCount] = useState(0);
     const [waitingCount, setWaitingCount] = useState(0);
