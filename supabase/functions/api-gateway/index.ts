@@ -169,9 +169,8 @@ serve(async (req) => {
             if (!apiKey) throw new Error("GEMINI_API_KEY missing");
 
             const ai = new GoogleGenAI({ apiKey });
-            // Using gemini-3-flash-preview for text tasks as per coding guidelines
             const response = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
+                model: 'gemini-1.5-flash',
                 contents: payload.prompt,
                 config: { systemInstruction: "You are a mental wellness companion. Be concise, warm, and supportive." }
             });
@@ -185,9 +184,8 @@ serve(async (req) => {
             if (!apiKey) throw new Error("GEMINI_API_KEY missing");
 
             const ai = new GoogleGenAI({ apiKey });
-            // Using gemini-2.5-flash-preview-tts for high quality soothing voice
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash-preview-tts',
+                model: 'gemini-1.5-flash',
                 contents: [{ parts: [{ text: payload.text }] }],
                 config: {
                     responseModalities: [Modality.AUDIO],

@@ -1,7 +1,5 @@
-
 import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, MoodEntry, JournalEntry, SessionFeedback, ArtEntry } from '../types';
 import { supabase } from './supabaseClient';
-import { NameValidator } from './nameValidator';
 
 // --- HELPER: Promise with Timeout ---
 const withTimeout = <T>(promise: Promise<T>, ms: number, errorMessage = "Operation timed out"): Promise<T> => {
@@ -260,21 +258,14 @@ export class Database {
     }
 
     static async createUser(name: string, email: string, password?: string, provider: string = 'email', birthday?: string): Promise<User> {
-        // --- 1. VALIDATION GATE ---
-        const nameCheck = NameValidator.validate(name);
-        if (!nameCheck.valid) {
-            throw new Error(nameCheck.error || "Invalid name provided.");
-        }
-        const cleanName = NameValidator.sanitize(name);
-
         if (provider === 'email' && password) {
-            console.log("Creating user...", { name: cleanName, email, provider, birthday });
+            console.log("Creating user...", { name, email, provider, birthday });
 
             // Timeout Protection for SignUp (12s)
             const { data, error } = (await withTimeout(
                 supabase.auth.signUp({
                     email, password,
-                    options: { data: { full_name: cleanName, birthday } }
+                    options: { data: { full_name: name, birthday } }
                 }),
                 12000,
                 "Authentication service timed out"
@@ -310,7 +301,7 @@ export class Database {
                 // OPTIMISTIC USER
                 const optimisticUser: User = {
                     id: data.user.id,
-                    name: cleanName || data.user.user_metadata?.full_name || email.split('@')[0],
+                    name: name || data.user.user_metadata?.full_name || email.split('@')[0],
                     email: email,
                     role: UserRole.USER,
                     balance: 0,
@@ -342,7 +333,7 @@ export class Database {
         } else if (provider !== 'email') {
             return {
                 id: 'temp',
-                name: cleanName,
+                name: name,
                 email: email,
                 role: UserRole.USER,
                 balance: 0,
