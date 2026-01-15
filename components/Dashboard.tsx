@@ -879,7 +879,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             {mood && <WeatherEffect type={mood} />}
             <SoundscapePlayer />
 
-            <div className="md:hidden sticky top-8 bg-[#FFFBEB]/90 dark:bg-black/90 backdrop-blur-md border-b border-yellow-200 dark:border-gray-800 p-4 flex justify-between items-center z-40">
+            <div className="md:hidden sticky top-0 bg-[#FFFBEB]/90 dark:bg-black/90 backdrop-blur-md border-b border-yellow-200 dark:border-gray-800 p-4 flex justify-between items-center z-40">
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-yellow-400 rounded-lg flex items-center justify-center shadow-md">
                         <Heart className="w-5 h-5 text-black fill-black" />
