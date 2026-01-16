@@ -56,5 +56,11 @@ const strictDummyClient = {
 
 // Create client only if config exists, otherwise use strict dummy
 export const supabase = (supabaseUrl && supabaseKey && supabaseUrl.startsWith('http'))
-    ? createClient(supabaseUrl, supabaseKey)
+    ? createClient(supabaseUrl, supabaseKey, {
+        auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+        }
+    })
     : strictDummyClient;

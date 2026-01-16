@@ -170,9 +170,13 @@ export class UserService {
     }
 
     static async saveArt(entry: ArtEntry) {
-        await supabase.from('user_art').insert({
+        const { error } = await supabase.from('user_art').insert({
             id: entry.id, user_id: entry.userId, image_url: entry.imageUrl, prompt: entry.prompt, title: entry.title, created_at: entry.createdAt
         });
+        if (error) {
+            console.error("Save Art Failed:", error);
+            throw error;
+        }
     }
 
     static async deleteArt(id: string) {
@@ -197,9 +201,13 @@ export class UserService {
     }
 
     static async saveJournal(entry: JournalEntry) {
-        await supabase.from('journals').insert({
+        const { error } = await supabase.from('journals').insert({
             id: entry.id, user_id: entry.userId, date: entry.date, content: entry.content
         });
+        if (error) {
+            console.error("Save Journal Failed:", error);
+            throw error;
+        }
     }
 
     static async getMoods(userId: string): Promise<MoodEntry[]> {
@@ -208,7 +216,8 @@ export class UserService {
     }
 
     static async saveMood(userId: string, mood: 'confetti' | 'rain') {
-        await supabase.from('moods').insert({ user_id: userId, date: new Date().toISOString(), mood });
+        const { error } = await supabase.from('moods').insert({ user_id: userId, date: new Date().toISOString(), mood });
+        if (error) console.error("Save Mood Failed:", error);
     }
 
     static async getWeeklyProgress(userId: string): Promise<{ current: number, target: number, message: string }> {
