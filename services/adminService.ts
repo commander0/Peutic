@@ -67,8 +67,18 @@ export class AdminService {
 
 
     static async getAllUsers(): Promise<User[]> {
-        const { data } = await supabase.from('users').select('*');
-        return (data || []).map(UserService.mapUser);
+        try {
+            // Use API Gateway (bypasses RLS via service role)
+            const { data, error } = await BaseService.invokeGateway('admin-list-users');
+            if (error) {
+                logger.warn("getAllUsers Gateway Error", error.message || error);
+                return [];
+            }
+            return (data || []).map(UserService.mapUser);
+        } catch (e: any) {
+            logger.error("getAllUsers Failed", "", e);
+            return [];
+        }
     }
 
     static async deleteUser(userId: string) {
@@ -159,8 +169,7 @@ export class AdminService {
     }
 
     static async getCompanions(): Promise<Companion[]> {
-        const { data } = await supabase.from('companions').select('*').order('name');
-        return (data || []).map((c: any) => ({
+        const mapCompanion = (c: any) => ({
             id: c.id,
             name: c.name,
             gender: c.gender,
@@ -174,7 +183,28 @@ export class AdminService {
             degree: c.degree,
             stateOfPractice: c.state_of_practice,
             yearsExperience: c.years_experience
-        }));
+        });
+
+        try {
+            // Try API Gateway first (bypasses RLS)
+            const { data: gatewayData, error: gatewayError } = await BaseService.invokeGateway('admin-list-companions');
+            if (!gatewayError && gatewayData && gatewayData.length > 0) {
+                return gatewayData.map(mapCompanion);
+            }
+
+            // Fallback to direct Supabase (works if RLS is permissive)
+            const { data, error } = await supabase.from('companions').select('*').order('name');
+            if (error) {
+                logger.warn("getCompanions RLS Error", error.message);
+            }
+            if (!data || data.length === 0) {
+                logger.warn("getCompanions Empty", "No companions found - check if seed script was run");
+            }
+            return (data || []).map(mapCompanion);
+        } catch (e: any) {
+            logger.error("getCompanions Failed", "", e);
+            return [];
+        }
     }
 
     static async updateCompanion(companion: Companion): Promise<void> {

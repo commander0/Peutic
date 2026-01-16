@@ -237,12 +237,22 @@ serve(async (req: any) => {
         }
 
         // --- ADMIN ACTIONS (SECURE) ---
-        if (action === 'system-logs' || action === 'broadcast' || action === 'delete-user' || action === 'user-status') {
+        if (action === 'system-logs' || action === 'broadcast' || action === 'delete-user' || action === 'user-status' || action === 'admin-list-users' || action === 'admin-list-companions') {
             const user = await getAuthenticatedUser();
             if (!user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
 
             const { data: userData } = await supabaseClient.from('users').select('role').eq('id', user.id).single();
             if (userData?.role !== 'ADMIN') return new Response(JSON.stringify({ error: "Admin access required" }), { status: 403, headers: corsHeaders });
+
+            if (action === 'admin-list-users') {
+                const { data } = await supabaseClient.from('users').select('*').order('created_at', { ascending: false });
+                return new Response(JSON.stringify(data || []), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+
+            if (action === 'admin-list-companions') {
+                const { data } = await supabaseClient.from('companions').select('*').order('name');
+                return new Response(JSON.stringify(data || []), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
 
             if (action === 'system-logs') {
                 const { data } = await supabaseClient.from('system_logs').select('*').order('timestamp', { ascending: false }).limit(100);
