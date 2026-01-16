@@ -15,45 +15,34 @@ export class NameValidator {
             return { valid: false, error: "Name cannot exceed 50 characters." };
         }
 
-        // 2. Character Set Check
-        // Try Modern Unicode first, fallback to Basic Latin/Accents if environment forbids \p{L}
-        try {
-            // \p{L} matches any Unicode letter. /u flag is required.
-            const modernRegex = new RegExp("^[\\p{L}\\s\\-.']+$", "u");
-            if (!modernRegex.test(trimmed)) {
-                return { valid: false, error: "Name contains invalid characters (numbers or symbols not allowed)." };
-            }
-            
-            // Structural: Must start with a letter
-            const startRegex = new RegExp("^[\\p{L}]", "u");
-            if (!startRegex.test(trimmed)) {
-                return { valid: false, error: "Name must start with a letter." };
-            }
-
-            // Letter Count: Must have at least 2 letters (prevents ".-")
-            const letterMatch = trimmed.match(new RegExp("[\\p{L}]", "gu"));
-            if (!letterMatch || letterMatch.length < 2) {
-                 return { valid: false, error: "Name must contain at least 2 letters." };
-            }
-
-        } catch (e) {
-            // Fallback for environments that don't support Unicode Property Escapes
-            // Allows: a-z, A-Z, Latin-1 Supplement (Accents), spaces, dots, hyphens, apostrophes
-            const fallbackRegex = /^[a-zA-Z\u00C0-\u00FF\s\-.']+$/;
-            if (!fallbackRegex.test(trimmed)) {
-                return { valid: false, error: "Name contains invalid characters." };
-            }
-            if (!/^[a-zA-Z\u00C0-\u00FF]/.test(trimmed)) {
-                 return { valid: false, error: "Name must start with a letter." };
-            }
+        // 2. Character Set Check (Modern SaaS Standard)
+        // \p{L} matches any Unicode letter (English + Accents + Asian scripts etc)
+        // Allowed extras: spaces, hyphens, apostrophes, dots.
+        // The /u flag enables Unicode support.
+        const validCharsRegex = /^[\p{L}\s\-.']+$/u;
+        if (!validCharsRegex.test(trimmed)) {
+            return { valid: false, error: "Name contains invalid characters (no numbers or symbols)." };
         }
 
-        // 3. Anti-Gibberish Heuristics (Universal)
+        // 3. Structural Integrity
+        // Must start with a letter (e.g., "-John" is invalid)
+        if (!/^[\p{L}]/u.test(trimmed)) {
+             return { valid: false, error: "Name must start with a letter." };
+        }
+
+        // 4. Anti-Gibberish Heuristics
         // Prevent repeating characters (e.g. "Jaaaaames") - Limit 3 repeats
         if (/(.)\1\1\1/.test(trimmed)) {
             return { valid: false, error: "Name looks invalid (too many repeating characters)." };
         }
         
+        // Prevent names that are purely punctuation despite regex allowing them (e.g., ".-.'")
+        // We enforce at least 2 actual letters
+        const letterCount = (trimmed.match(/[\p{L}]/gu) || []).length;
+        if (letterCount < 2) {
+             return { valid: false, error: "Name must contain at least 2 letters." };
+        }
+
         return { valid: true };
     }
 
