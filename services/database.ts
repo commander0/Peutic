@@ -1,5 +1,7 @@
+
 import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, MoodEntry, JournalEntry, SessionFeedback, ArtEntry } from '../types';
 import { supabase } from './supabaseClient';
+import { NameValidator } from './nameValidator';
 
 // --- HELPER: Promise with Timeout ---
 const withTimeout = <T>(promise: Promise<T>, ms: number, errorMessage = "Operation timed out"): Promise<T> => {
@@ -258,14 +260,21 @@ export class Database {
     }
 
     static async createUser(name: string, email: string, password?: string, provider: string = 'email', birthday?: string): Promise<User> {
+        // --- 1. VALIDATION GATE ---
+        const nameCheck = NameValidator.validate(name);
+        if (!nameCheck.valid) {
+            throw new Error(nameCheck.error || "Invalid name provided.");
+        }
+        const cleanName = NameValidator.sanitize(name);
+
         if (provider === 'email' && password) {
-            console.log("Creating user...", { name, email, provider, birthday });
+            console.log("Creating user...", { name: cleanName, email, provider, birthday });
 
             // Timeout Protection for SignUp (12s)
             const { data, error } = (await withTimeout(
                 supabase.auth.signUp({
                     email, password,
-                    options: { data: { full_name: name, birthday } }
+                    options: { data: { full_name: cleanName, birthday } }
                 }),
                 12000,
                 "Authentication service timed out"
@@ -301,7 +310,7 @@ export class Database {
                 // OPTIMISTIC USER
                 const optimisticUser: User = {
                     id: data.user.id,
-                    name: name || data.user.user_metadata?.full_name || email.split('@')[0],
+                    name: cleanName || data.user.user_metadata?.full_name || email.split('@')[0],
                     email: email,
                     role: UserRole.USER,
                     balance: 0,
@@ -333,7 +342,7 @@ export class Database {
         } else if (provider !== 'email') {
             return {
                 id: 'temp',
-                name: name,
+                name: cleanName,
                 email: email,
                 role: UserRole.USER,
                 balance: 0,
@@ -488,25 +497,39 @@ export class Database {
     }
     static async updateCompanion(companion: Companion) { await supabase.from('companions').update({ status: companion.status }).eq('id', companion.id); }
     static getSettings(): GlobalSettings { return this.settingsCache; }
+    
     static async syncGlobalSettings(): Promise<GlobalSettings> {
         try {
-            const { data } = await supabase.from('global_settings').select('*').eq('id', 1).single();
+            const { data, error } = await supabase.from('global_settings').select('*').eq('id', 1).single();
+            
+            // Fix: Check for error and do not auto-save on failure to prevent alert loops
+            if (error || !data) {
+                if (error && error.code !== 'PGRST116') {
+                    // Real network error or permission error - silent fail, keep cache
+                    console.warn("Settings sync skipped:", error.message);
+                }
+                // If row missing (PGRST116), we rely on seed script or Admin dashboard to fix it later.
+                // Do NOT call saveSettings() here as it triggers RLS violation alerts for non-admins.
+                return this.settingsCache;
+            }
+
             const settingsData = data as any;
-            if (settingsData) {
-                this.settingsCache = {
-                    pricePerMinute: settingsData.price_per_minute,
-                    saleMode: settingsData.sale_mode,
-                    maintenanceMode: settingsData.maintenance_mode,
-                    allowSignups: settingsData.allow_signups,
-                    siteName: settingsData.site_name,
-                    broadcastMessage: settingsData.broadcast_message,
-                    maxConcurrentSessions: settingsData.max_concurrent_sessions,
-                    multilingualMode: settingsData.multilingual_mode
-                };
-            } else { await this.saveSettings(this.settingsCache); }
-        } catch (e) { }
+            this.settingsCache = {
+                pricePerMinute: settingsData.price_per_minute,
+                saleMode: settingsData.sale_mode,
+                maintenanceMode: settingsData.maintenance_mode,
+                allowSignups: settingsData.allow_signups,
+                siteName: settingsData.site_name,
+                broadcastMessage: settingsData.broadcast_message,
+                maxConcurrentSessions: settingsData.max_concurrent_sessions,
+                multilingualMode: settingsData.multilingual_mode
+            };
+        } catch (e) { 
+            console.warn("Settings sync exception:", e);
+        }
         return this.settingsCache;
     }
+
     static async saveSettings(settings: GlobalSettings) {
         this.settingsCache = settings;
         const { error } = await supabase.from('global_settings').upsert({
@@ -523,11 +546,11 @@ export class Database {
 
         if (error) {
             console.error("FATAL: Failed to save Global Settings.", error);
-            // Detailed alert for the user to help debug
+            // Detailed alert for the user to help debug - usually implies Admin action failed
             alert(`Failed to save settings: ${error.message} (Code: ${error.code}). Hint: ${error.hint || "Check RLS or Admin Role"}`);
-
         }
     }
+
     static async getUserTransactions(userId: string): Promise<Transaction[]> {
         const { data } = await supabase.from('transactions').select('*').eq('user_id', userId).order('date', { ascending: false });
         return (data || []).map((t: any) => ({

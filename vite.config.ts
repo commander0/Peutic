@@ -5,14 +5,18 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
-  // '' means load all env vars regardless of prefix
   const env = loadEnv(mode, (process as any).cwd(), '');
 
   return {
     plugins: [react()],
+    resolve: {
+      alias: {
+        // Map '@' to the project root directory
+        '@': (process as any).cwd(),
+      }
+    },
     define: {
       // Manually define specific process.env variables to ensure they are available
-      // SECURE: API_KEY removed. It is now handled server-side.
       'process.env.STRIPE_KEY': JSON.stringify(env.STRIPE_KEY || env.VITE_STRIPE_KEY || ''),
       'process.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL || ''),
       'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY || ''),
