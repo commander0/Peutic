@@ -85,8 +85,17 @@ export class AdminService {
     }
 
     static async deleteUser(userId: string) {
-        await BaseService.invokeGateway('delete-user', { userId });
-        logger.security("User Deleted", `ID: ${userId}`);
+        try {
+            const response = await BaseService.invokeGateway('delete-user', { userId });
+            if (response?.error) {
+                logger.error("Delete User Gateway Error", response.error);
+                throw new Error(response.error);
+            }
+            logger.security("User Deleted", `ID: ${userId}`);
+        } catch (e: any) {
+            logger.error("Delete User Failed", userId, e);
+            throw e; // Rethrow to show in UI
+        }
     }
 
     static async updateUserStatus(userId: string, status: 'ACTIVE' | 'BANNED' | 'TRIAL') {
