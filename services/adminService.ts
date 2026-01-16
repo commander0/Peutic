@@ -60,7 +60,11 @@ export class AdminService {
     }
 
     static async getSystemLogs(): Promise<SystemLog[]> {
-        const { data } = await BaseService.invokeGateway('system-logs');
+        const { data, error } = await supabase.from('system_logs').select('*').order('timestamp', { ascending: false }).limit(200);
+        if (error) {
+            logger.error("getSystemLogs Failed", "", error);
+            return [];
+        }
         return (data || []) as SystemLog[];
     }
 
@@ -68,10 +72,9 @@ export class AdminService {
 
     static async getAllUsers(): Promise<User[]> {
         try {
-            // Use API Gateway (bypasses RLS via service role)
-            const { data, error } = await BaseService.invokeGateway('admin-list-users');
+            const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
             if (error) {
-                logger.warn("getAllUsers Gateway Error", error.message || error);
+                logger.warn("getAllUsers Error", error.message);
                 return [];
             }
             return (data || []).map(UserService.mapUser);
@@ -186,21 +189,18 @@ export class AdminService {
         });
 
         try {
-            // Try API Gateway first (bypasses RLS)
-            const { data: gatewayData, error: gatewayError } = await BaseService.invokeGateway('admin-list-companions');
-            if (!gatewayError && gatewayData && gatewayData.length > 0) {
-                return gatewayData.map(mapCompanion);
+            const { data, error } = await supabase.from('companions').select('*').order('name');
+
+            if (error) {
+                logger.warn("getCompanions Error", error.message);
             }
 
-            // Fallback to direct Supabase (works if RLS is permissive)
-            const { data, error } = await supabase.from('companions').select('*').order('name');
-            if (error) {
-                logger.warn("getCompanions RLS Error", error.message);
-            }
             if (!data || data.length === 0) {
-                logger.warn("getCompanions Empty", "No companions found - check if seed script was run");
+                // Fallback or empty
+                return [];
             }
-            return (data || []).map(mapCompanion);
+
+            return data.map(mapCompanion);
         } catch (e: any) {
             logger.error("getCompanions Failed", "", e);
             return [];
