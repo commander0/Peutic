@@ -215,9 +215,9 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         }
     };
 
-    const handleDeleteUser = async (userId: string, idx: number) => {
-        if (idx === 0) {
-            showToast("SECURITY ALERT: Cannot delete Root Admin account.", "error");
+    const handleDeleteUser = async (userId: string, role: string) => {
+        if (role === 'ADMIN') {
+            showToast("SECURITY ALERT: Cannot delete Administrator accounts.", "error");
             return;
         }
         setConfirmState({
@@ -557,7 +557,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                                     <button onClick={() => handleTopUpPrompt(user.id)} className="text-blue-500 hover:text-blue-400 p-1.5 transition-colors bg-blue-500/10 rounded-lg" title="Top Up Credits">
                                                         <Gift className="w-3.5 h-3.5" />
                                                     </button>
-                                                    <button onClick={() => handleDeleteUser(user.id, idx)} className={`p-1.5 transition-colors rounded-lg ${idx === 0 ? 'text-gray-600 cursor-not-allowed' : 'text-red-500 hover:text-red-400 bg-red-500/10'}`} title={idx === 0 ? "Cannot delete Root Admin" : "Delete User"}>
+                                                    <button onClick={() => handleDeleteUser(user.id, user.role)} className={`p-1.5 transition-colors rounded-lg ${user.role === 'ADMIN' ? 'text-gray-600 cursor-not-allowed' : 'text-red-500 hover:text-red-400 bg-red-500/10'}`} title={user.role === 'ADMIN' ? "Cannot delete Administrator" : "Delete User"}>
                                                         <Trash2 className="w-3.5 h-3.5" />
                                                     </button>
                                                 </td>

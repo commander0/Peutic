@@ -154,9 +154,10 @@ serve(async (req) => {
              return new Response(JSON.stringify({ error: "Forbidden: Admin Access Required" }), { status: 403, headers: corsHeaders });
         }
 
-        // 2. Prevent Self-Deletion
-        if (userId === user.id) {
-             return new Response(JSON.stringify({ error: "Cannot delete yourself." }), { status: 400, headers: corsHeaders });
+        // 2. Prevent Deleting ANY Admin
+        const { data: targetUser } = await supabaseClient.from('users').select('role').eq('id', userId).single();
+        if (targetUser?.role === 'ADMIN') {
+             return new Response(JSON.stringify({ error: "Security Violation: Cannot delete Administrator accounts." }), { status: 403, headers: corsHeaders });
         }
 
         // 3. Execution
