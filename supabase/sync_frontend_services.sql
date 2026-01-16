@@ -62,11 +62,36 @@ ALTER TABLE public.users ADD COLUMN IF NOT EXISTS theme_preference TEXT DEFAULT 
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS language_preference TEXT DEFAULT 'en';
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS email_preferences JSONB DEFAULT '{"marketing": true, "updates": true}';
 
--- 5. PERFORMANCE INDEXES
+-- 5. QUEUE SYSTEM ENHANCEMENTS
+-- Requirement: VideoRoom Waiting HUD
+CREATE OR REPLACE FUNCTION public.get_client_queue_position(p_user_id UUID)
+RETURNS INTEGER AS $$
+DECLARE
+  v_pos INTEGER;
+  v_created_at TIMESTAMPTZ;
+BEGIN
+  -- Get user's join time
+  SELECT created_at INTO v_created_at FROM public.session_queue WHERE user_id = p_user_id;
+  
+  -- If not in queue, check if in active session (position 0)
+  IF v_created_at IS NULL THEN 
+    IF EXISTS (SELECT 1 FROM public.active_sessions WHERE user_id = p_user_id) THEN
+      RETURN 0;
+    END IF;
+    RETURN -1; -- Not in system
+  END IF;
+
+  -- Calculate position based on creation time
+  SELECT COUNT(*) + 1 INTO v_pos FROM public.session_queue WHERE created_at < v_created_at;
+  RETURN v_pos;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- 6. PERFORMANCE INDEXES
 CREATE INDEX IF NOT EXISTS idx_breath_user_id ON public.breath_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_game_scores_user_id ON public.game_scores(user_id);
 
--- 6. GRANT PERMISSIONS
+-- 7. GRANT PERMISSIONS
 GRANT ALL ON public.breath_sessions TO authenticated;
 GRANT ALL ON public.game_scores TO authenticated;
 
