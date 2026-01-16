@@ -1,7 +1,7 @@
 
+
 import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, MoodEntry, JournalEntry, SessionFeedback, ArtEntry } from '../types';
 import { supabase } from './supabaseClient';
-import { NameValidator } from './nameValidator';
 
 // --- HELPER: Promise with Timeout ---
 const withTimeout = <T>(promise: Promise<T>, ms: number, errorMessage = "Operation timed out"): Promise<T> => {
@@ -260,12 +260,8 @@ export class Database {
     }
 
     static async createUser(name: string, email: string, password?: string, provider: string = 'email', birthday?: string): Promise<User> {
-        // --- 1. VALIDATION GATE ---
-        const nameCheck = NameValidator.validate(name);
-        if (!nameCheck.valid) {
-            throw new Error(nameCheck.error || "Invalid name provided.");
-        }
-        const cleanName = NameValidator.sanitize(name);
+        // --- NAME VALIDATION REMOVED ---
+        const cleanName = name ? name.trim() : "User";
 
         if (provider === 'email' && password) {
             console.log("Creating user...", { name: cleanName, email, provider, birthday });
