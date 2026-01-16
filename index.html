@@ -26,6 +26,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <script>
+      // Immediate theme check to prevent flash of unstyled content (FOUC)
+      try {
+        const local = localStorage.getItem('peutic_theme');
+        const userPref = localStorage.getItem('supabase.auth.token') && JSON.parse(atob(localStorage.getItem('supabase.auth.token').split('.')[1] || '{}'))?.user_metadata?.theme_preference;
+        
+        if (local === 'dark' || (!local && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (e) {}
+
       tailwind.config = {
         darkMode: 'class', 
         theme: {

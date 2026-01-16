@@ -78,20 +78,25 @@ const MainApp: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Restore session
   // Restore session & Handle Auth Changes
   useEffect(() => {
-    // 1. Initial Load
-    UserService.restoreSession().then(async (restored) => {
+    // Parallelize Operations to Speed Up Load
+    const initApp = async () => {
+      // 1. Kick off Settings Sync immediately (don't await yet)
+      const settingsPromise = AdminService.syncGlobalSettings();
+
+      // 2. Initial Session Restore
+      const restored = await UserService.restoreSession();
       let activeUser = restored;
 
       // If DB failed but we have a session in localStorage, use fallback
       if (!activeUser) {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          console.warn("Initial Restore Failed - Using Fallback");
+          // Only warn if we genuinely had a session but failed to sync
+          console.warn("Using Session Fallback for faster load / recovery");
           activeUser = UserService.createFallbackUser(session.user);
-          UserService.repairUserRecord(session.user); // Heal self
+          UserService.repairUserRecord(session.user);
         }
       }
 
@@ -101,10 +106,16 @@ const MainApp: React.FC = () => {
           navigate('/admin/dashboard');
         }
       }
-      setIsRestoring(false);
-    });
 
-    // 2. Persistent Listener for Refresh/Changes
+      // 3. Complete init
+      await settingsPromise;
+      setMaintenanceMode(AdminService.getSettings().maintenanceMode);
+      setIsRestoring(false);
+    };
+
+    initApp();
+
+    // 4. Persistent Listener for Refresh/Changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
       // Handle both explicit Sign In and Initial Session recovery
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
@@ -128,11 +139,6 @@ const MainApp: React.FC = () => {
         setUser(null);
         navigate('/');
       }
-    });
-
-    // 3. Sync Settings
-    AdminService.syncGlobalSettings().then(() => {
-      setMaintenanceMode(AdminService.getSettings().maintenanceMode);
     });
 
     return () => {
