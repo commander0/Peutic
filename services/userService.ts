@@ -22,18 +22,26 @@ export class UserService {
     static async syncUser(userId: string): Promise<User | null> {
         if (!userId) return null;
         try {
+            // Using maybeSingle to handle RLS strictness gracefully
             const { data, error } = (await BaseService.withTimeout(
-                supabase.from('users').select('*').eq('id', userId).single(),
+                supabase.from('users').select('*').eq('id', userId).maybeSingle(),
                 5000,
                 "User sync timeout"
             )) as any;
 
-            if (data && !error) {
+            if (error) {
+                console.error("CRITICAL: User Sync Database Error", error);
+                return null;
+            }
+
+            if (data) {
                 this.currentUser = this.mapUser(data);
                 return this.currentUser;
+            } else {
+                console.warn("CRITICAL: User Sync Data Missing - RLS/ID Mismatch", { userId });
             }
         } catch (e) {
-            logger.error("User Sync Failed", `ID: ${userId}`, e);
+            logger.error("User Sync Exception", `ID: ${userId}`, e);
         }
         return null;
     }
@@ -221,28 +229,41 @@ export class UserService {
     }
 
     static async getWeeklyProgress(userId: string): Promise<{ current: number, target: number, message: string }> {
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        const iso = oneWeekAgo.toISOString();
+        try {
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            const iso = oneWeekAgo.toISOString();
 
-        const { count: journalCount } = await supabase.from('journals').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', iso);
-        const { count: sessionCount } = await supabase.from('transactions').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'COMPLETED').gte('date', iso);
-        const { count: moodCount } = await supabase.from('moods').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', iso);
-        const { count: artCount } = await supabase.from('user_art').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', iso);
+            // Run queries in parallel for performance, handling potential failures individually
+            const [jRes, sRes, mRes, aRes] = await Promise.all([
+                supabase.from('journals').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', iso),
+                supabase.from('transactions').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'COMPLETED').gte('date', iso),
+                supabase.from('moods').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', iso),
+                supabase.from('user_art').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', iso)
+            ]);
 
-        const totalActions = (journalCount || 0) + (sessionCount || 0) + (moodCount || 0) + (artCount || 0);
-        const current = totalActions * 0.5;
+            const journalCount = jRes.count || 0;
+            const sessionCount = sRes.count || 0;
+            const moodCount = mRes.count || 0;
+            const artCount = aRes.count || 0;
 
-        const messages = [
-            "Keep going, you're doing great!",
-            "Every small step counts.",
-            "Consistency is key.",
-            "You're prioritizing your peace.",
-            "Goal crushed! Amazing work."
-        ];
-        const msg = current >= 10 ? messages[4] : messages[Math.min(3, Math.floor(current / 2.5))];
+            const totalActions = journalCount + sessionCount + moodCount + artCount;
+            const current = totalActions * 0.5;
 
-        return { current, target: 10, message: msg };
+            const messages = [
+                "Keep going, you're doing great!",
+                "Every small step counts.",
+                "Consistency is key.",
+                "You're prioritizing your peace.",
+                "Goal crushed! Amazing work."
+            ];
+            const msg = current >= 10 ? messages[4] : messages[Math.min(3, Math.floor(current / 2.5))];
+
+            return { current, target: 10, message: msg };
+        } catch (e) {
+            console.warn("Weekly Progress Calculation Failed", e);
+            return { current: 0, target: 10, message: "Start your journey." };
+        }
     }
 
     static async endSession(userId: string) {
