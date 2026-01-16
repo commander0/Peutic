@@ -60,7 +60,8 @@ export const supabase = (supabaseUrl && supabaseKey && supabaseUrl.startsWith('h
         auth: {
             persistSession: true,
             autoRefreshToken: true,
-            detectSessionInUrl: true
+            detectSessionInUrl: true,
+            storage: window.localStorage
         }
     })
     : strictDummyClient;
