@@ -1,9 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { Database } from '../services/database';
+import { AdminService } from '../services/adminService';
+import { UserService } from '../services/userService';
+
 import { supabase } from '../services/supabaseClient';
 import { UserRole } from '../types';
-import { Lock, AlertCircle, Shield, ArrowRight, PlusCircle, Check, RefreshCw, Crown, KeyRound, UserPlus, Mail } from 'lucide-react';
+import { Lock, Shield, ArrowRight, KeyRound, AlertCircle, Check, Crown } from 'lucide-react';
+
 
 interface AdminLoginProps {
     onLogin: (user: any) => void;
@@ -30,25 +33,27 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
 
     useEffect(() => {
         // Check if admin exists to determine if we show "Initialize System"
-        Database.hasAdmin().then(exists => {
+        AdminService.hasAdmin().then(exists => {
             setHasAdmin(exists);
             // If no admin exists, default to Registration mode
             if (!exists) setShowRegister(true);
         });
-        Database.checkAdminLockout().then(setLockout);
+        AdminService.getAdminLockoutStatus().then(setLockout);
     }, []);
+
 
     const handleAdminLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
 
         // Check fresh lockout status
-        const currentLockout = await Database.checkAdminLockout();
+        const currentLockout = await AdminService.getAdminLockoutStatus();
         if (currentLockout > 0) {
             setLockout(currentLockout);
             setError(`System Locked. Try again in ${currentLockout} minutes.`);
             return;
         }
+
 
         setLoading(true);
 
@@ -62,8 +67,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             });
 
             if (authError) {
-                await Database.recordAdminFailure();
-                const newLock = await Database.checkAdminLockout();
+                await AdminService.recordAdminFailure();
+                const newLock = await AdminService.getAdminLockoutStatus();
                 if (newLock > 0) setLockout(newLock);
 
                 if (authError.message.includes("Invalid login credentials")) {
@@ -74,7 +79,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                 if (authError.message.includes("Email not confirmed")) {
                     setIsVerifying(true);
                     // Attempt backend force verification
-                    const verified = await Database.forceVerifyEmail(normalizedEmail);
+                    const verified = await AdminService.forceVerifyEmail(normalizedEmail);
                     if (verified) {
                         setIsVerifying(false);
                         // Retry Login Immediately
@@ -99,12 +104,12 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             if (!authData?.user) throw new Error("Auth failed");
 
             // 2. FETCH PROFILE (Now authorized)
-            const user = await Database.syncUser(authData.user.id);
+            const user = await UserService.syncUser(authData.user.id);
 
             if (!user) {
                 // Fallback: If auth succeeded but DB profile is missing, try to repair
                 try {
-                    const repaired = await Database.createUser(
+                    const repaired = await UserService.createUser(
                         authData.user.user_metadata.full_name || 'Admin',
                         normalizedEmail,
                         password
@@ -121,13 +126,14 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             }
 
             if (user.role === UserRole.ADMIN) {
-                Database.resetAdminFailure();
+                AdminService.resetAdminFailure();
                 onLogin(user);
             } else {
-                await Database.recordAdminFailure();
+                await AdminService.recordAdminFailure();
                 setError("Access Denied. This account is not an Administrator.");
-                await supabase.auth.signOut();
+                await UserService.logout();
             }
+
         } catch (e: any) {
             console.error(e);
             setError(e.message || "Connection Error.");
@@ -164,7 +170,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             const finalEmail = newAdminEmail.toLowerCase().trim();
 
             // Use NEW Server-Side Creation Bypass
-            const newUser = await Database.createRootAdmin(finalEmail, newAdminPassword);
+            const newUser = await AdminService.createRootAdmin(finalEmail, newAdminPassword);
+
 
             if (newUser && newUser.role === UserRole.ADMIN) {
                 setSuccessMsg("Root Admin Initialized Successfully.");
@@ -188,7 +195,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         setError('');
         setLoading(true);
 
-        const isValid = Database.verifyMasterKey(masterKey);
+        const isValid = AdminService.verifyMasterKey(masterKey);
+
         if (!isValid) {
             setError("Invalid Master Key. Reclamation failed.");
             setLoading(false);
@@ -196,7 +204,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         }
 
         try {
-            await Database.resetAdminStatus(masterKey);
+            await AdminService.resetAdminStatus(masterKey);
+
             setSuccessMsg("System Ownership Reset. You may now initialize a new Root Admin.");
             setHasAdmin(false);
             setShowRegister(true);

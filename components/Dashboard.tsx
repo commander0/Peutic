@@ -10,8 +10,14 @@ import {
     Twitter, Instagram, Linkedin, LifeBuoy, Volume2, Music, Smile, Trees,
     Mail, StopCircle, Eye, Minimize2, Flame as Fire
 } from 'lucide-react';
-import { Database, STABLE_AVATAR_POOL } from '../services/database';
+import { STABLE_AVATAR_POOL } from '../services/database';
+import { UserService } from '../services/userService';
+import { AdminService } from '../services/adminService';
+import { useToast } from './common/Toast';
+import { CompanionSkeleton, StatSkeleton } from './common/SkeletonLoader';
+
 import { NameValidator } from '../services/nameValidator';
+
 import { generateDailyInsight } from '../services/geminiService';
 
 import { WisdomEngine } from '../services/wisdomEngine';
@@ -102,11 +108,14 @@ const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }> = ({ 
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [gallery, setGallery] = useState<ArtEntry[]>([]);
+    const { showToast } = useToast();
+
 
     const refreshGallery = async () => {
-        const art = await Database.getUserArt(userId);
+        const art = await UserService.getUserArt(userId);
         setGallery(art);
     };
+
 
     useEffect(() => { refreshGallery(); }, [userId]);
 
@@ -152,7 +161,7 @@ const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }> = ({ 
 
                 const newEntry: ArtEntry = { id: newId, userId: userId, imageUrl: imageUrl, prompt: input, createdAt: new Date().toISOString(), title: "Wisdom Card" };
 
-                await Database.saveArt(newEntry);
+                await UserService.saveArt(newEntry);
                 await refreshGallery();
                 if (onUpdate) onUpdate();
                 setInput('');
@@ -160,7 +169,8 @@ const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }> = ({ 
 
         } catch (e: any) {
             console.error("Critical Generation Error:", e);
-            alert("Failed to save Wisdom Art: " + (e.message || "Unknown error"));
+            showToast("Failed to save Wisdom Art: " + (e.message || "Unknown error"), "error");
+
         } finally {
             setLoading(false);
         }
@@ -168,8 +178,9 @@ const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }> = ({ 
 
     const handleDelete = async (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
-        if (confirm("Delete this card?")) { await Database.deleteArt(id); await refreshGallery(); }
+        if (window.confirm("Delete this card?")) { await UserService.deleteArt(id); await refreshGallery(); }
     };
+
 
     return (
         <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-100 dark:border-gray-800 p-4 md:p-5 shadow-sm">
@@ -340,8 +351,9 @@ const MindfulMatchGame: React.FC<{ dashboardUser: User }> = ({ dashboardUser }) 
             if (bestScore === 0 || moves < bestScore) {
                 setBestScore(moves);
                 if (dashboardUser && dashboardUser.id) {
-                    Database.updateGameScore(dashboardUser.id, 'match', moves);
+                    UserService.updateGameScore(dashboardUser.id, 'match', moves);
                 }
+
             }
         }
     }, [solved]);
@@ -393,8 +405,9 @@ const CloudHopGame: React.FC<{ dashboardUser: User }> = ({ dashboardUser }) => {
             if (score > highScore) {
                 setHighScore(score);
                 if (dashboardUser && dashboardUser.id) {
-                    Database.updateGameScore(dashboardUser.id, 'cloud', score);
+                    UserService.updateGameScore(dashboardUser.id, 'cloud', score);
                 }
+
             }
         }
     }, [gameOver, score, highScore]);
@@ -570,9 +583,10 @@ const JournalSection: React.FC<{ user: User, onUpdate?: () => void }> = ({ user,
     const [content, setContent] = useState('');
     const [saved, setSaved] = useState(false);
     useEffect(() => {
-        Database.getJournals(user.id).then(setEntries);
+        UserService.getJournals(user.id).then(setEntries);
     }, [user.id]);
-    const handleSave = () => { if (!content.trim()) return; const entry: JournalEntry = { id: `j_${Date.now()}`, userId: user.id, date: new Date().toISOString(), content: content }; Database.saveJournal(entry).then(() => { setEntries([entry, ...entries]); setContent(''); setSaved(true); if (onUpdate) onUpdate(); setTimeout(() => setSaved(false), 2000); }); };
+    const handleSave = () => { if (!content.trim()) return; const entry: JournalEntry = { id: `j_${Date.now()}`, userId: user.id, date: new Date().toISOString(), content: content }; UserService.saveJournal(entry).then(() => { setEntries([entry, ...entries]); setContent(''); setSaved(true); if (onUpdate) onUpdate(); setTimeout(() => setSaved(false), 2000); }); };
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 h-[450px]">
             <div className="flex flex-col h-full bg-[#fdfbf7] dark:bg-[#1a1a1a] rounded-2xl p-5 border border-yellow-200 dark:border-gray-800 shadow-inner relative overflow-hidden group">
@@ -597,7 +611,8 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
     const [isCustom, setIsCustom] = useState(false);
     const [processing, setProcessing] = useState(false);
     const [error, setError] = useState(initialError || '');
-    const settings = Database.getSettings();
+    const settings = AdminService.getSettings();
+
     const pricePerMin = settings.saleMode ? 1.59 : 1.99;
     const stripeRef = useRef<any>(null);
     const elementsRef = useRef<any>(null);
@@ -701,7 +716,8 @@ const BreathingExercise: React.FC<{ userId: string, onClose: () => void }> = ({ 
     const [isActive, setIsActive] = useState(true);
     useEffect(() => {
         if (!isActive) return;
-        const timer = setInterval(() => { setTimeLeft(t => { if (t <= 1) { setIsActive(false); Database.recordBreathSession(userId, 60); return 0; } return t - 1; }); }, 1000);
+        const timer = setInterval(() => { setTimeLeft(t => { if (t <= 1) { setIsActive(false); UserService.recordBreathSession(userId, 60); return 0; } return t - 1; }); }, 1000);
+
         const cycle = setInterval(() => { setPhase(p => { if (p === 'Inhale') return 'Hold'; if (p === 'Hold') return 'Exhale'; return 'Inhale'; }); }, 4000);
         return () => { clearInterval(timer); clearInterval(cycle); };
     }, [isActive, userId]);
@@ -735,8 +751,9 @@ const ProfileModal: React.FC<{ user: User, onClose: () => void, onUpdate: () => 
             return;
         }
         setLoading(true);
-        Database.updateUser({ ...user, name }).then(() => { onUpdate(); onClose(); });
+        UserService.updateUser({ ...user, name }).then(() => { onUpdate(); onClose(); });
     };
+
     return (
         <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
             <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl p-8 border border-yellow-200 dark:border-gray-800 shadow-2xl relative">
@@ -778,7 +795,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [paymentError, setPaymentError] = useState<string | undefined>(undefined);
     const [showBreathing, setShowBreathing] = useState(false);
     const [showProfile, setShowProfile] = useState(false);
-    const [showCookies, setShowCookies] = useState(false);
+
     const [showGrounding, setShowGrounding] = useState(false);
     const [mood, setMood] = useState<'confetti' | 'rain' | null>(null);
     const [emailNotifications, setEmailNotifications] = useState(user.emailPreferences?.updates ?? true);
@@ -789,6 +806,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [showTechCheck, setShowTechCheck] = useState(false);
     const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
     const [specialtyFilter, setSpecialtyFilter] = useState<string>('All');
+    const { showToast } = useToast();
+
 
     // Theme Effect: Updates DOM, LocalStorage, and DB
     useEffect(() => {
@@ -804,8 +823,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
         // Sync with DB if different (debounce could be added in production)
         if (user.themePreference !== themeStr) {
-            Database.updateUser({ ...dashboardUser, themePreference: themeStr as 'light' | 'dark' });
+            UserService.updateUser({ ...dashboardUser, themePreference: themeStr as 'light' | 'dark' });
         }
+
     }, [darkMode]);
 
     useEffect(() => {
@@ -814,34 +834,39 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             if (insight) setDailyInsight(insight);
         });
         setTimeout(() => {
-            Database.getCompanions().then((comps) => {
+            AdminService.getCompanions().then((comps) => {
                 setCompanions(comps);
                 setLoadingCompanions(false);
             });
         }, 500);
 
+
         const interval = setInterval(async () => {
-            await Database.syncUser(user.id);
+            await UserService.syncUser(user.id);
             refreshData();
         }, 5000);
+
         return () => clearInterval(interval);
     }, []);
 
     const refreshData = async () => {
-        const u = Database.getUser();
+        const u = UserService.getUser();
         if (u) {
             setDashboardUser(u);
             setBalance(u.balance);
-            Database.getUserTransactions(u.id).then(setTransactions);
-            const prog = await Database.getWeeklyProgress(u.id);
+            UserService.getUserTransactions(u.id).then(setTransactions);
+            const prog = await UserService.getWeeklyProgress(u.id);
             setWeeklyGoal(prog.current);
             setWeeklyMessage(prog.message);
+
             setEditName(u.name);
             setEditEmail(u.email);
             setEmailNotifications(u.emailPreferences?.updates ?? true);
         }
-        Database.getCompanions().then(setCompanions);
+        AdminService.getCompanions().then(setCompanions);
     };
+
+
 
     const toggleDarkMode = () => {
         setDarkMode(!darkMode);
@@ -849,18 +874,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
     const handleMoodSelect = (m: 'confetti' | 'rain' | null) => {
         setMood(m);
-        if (m) Database.saveMood(user.id, m).then(() => refreshData());
+        if (m) UserService.saveMood(user.id, m).then(() => refreshData());
     };
+
     const handlePaymentSuccess = async (minutesAdded: number, cost: number, token?: string) => {
         try {
-            await Database.topUpWallet(minutesAdded, cost, user.id, token);
+            await UserService.topUpWallet(minutesAdded, cost, user.id, token);
             refreshData();
+
             setShowPayment(false);
-            alert("Payment successful! Credits added.");
+            showToast("Payment successful! Credits added.", 'success');
         } catch (e: any) {
             setPaymentError(e.message || "Payment verification failed.");
+            showToast(e.message || "Payment failed", 'error');
         }
     };
+
     const handleStartConnection = (c: Companion) => {
         if (dashboardUser.balance <= 0) { setPaymentError("Insufficient credits. Please add funds to start a session."); setShowPayment(true); return; }
         setPendingCompanion(c);
@@ -870,9 +899,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const saveProfileChanges = () => {
         const check = NameValidator.validateFullName(editName);
         if (!check.valid) {
-            alert(check.error);
+            showToast(check.error || "Invalid name", 'error');
             return;
         }
+
         setIsSavingProfile(true);
         setTimeout(() => {
 
@@ -885,12 +915,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     marketing: dashboardUser.emailPreferences?.marketing ?? true
                 }
             };
-            Database.updateUser(updatedUser);
-            setDashboardUser(updatedUser);
-            setIsSavingProfile(false);
+            UserService.updateUser(updatedUser).then(() => {
+                showToast("Profile updated successfully", 'success');
+                setDashboardUser(updatedUser);
+                setIsSavingProfile(false);
+            });
         }, 500);
+
     };
-    const handleDeleteAccount = () => { Database.deleteUser(user.id); onLogout(); };
+    const handleDeleteAccount = () => { UserService.deleteUser(user.id); onLogout(); };
+
     const filteredCompanions = specialtyFilter === 'All' ? companions : companions.filter(c => c.specialty.includes(specialtyFilter) || c.specialty === specialtyFilter);
     const uniqueSpecialties = Array.from(new Set(companions.map(c => c.specialty))).sort();
 
@@ -969,12 +1003,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         {activeTab === 'hub' && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
-                                    <div className="bg-white dark:bg-gray-900 p-5 rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm col-span-1 md:col-span-2 relative overflow-hidden group">
-                                        {weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-4 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-20 h-20 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div><div className="absolute w-16 h-16 bg-blue-500/30 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-blue-400/10 rounded-full animate-ping"></div><div className="absolute w-10 h-10 bg-blue-400/50 rounded-full blur-lg animate-pulse"></div><Flame className="w-12 h-12 text-blue-500 fill-blue-500 drop-shadow-[0_0_20px_rgba(59,130,246,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy className="w-20 h-20 text-yellow-500" /></div>)}
-                                        <div className="relative z-10"><h3 className="font-bold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3><div className="flex items-end gap-2 mb-3"><span className="text-3xl md:text-4xl font-black dark:text-white">{weeklyGoal}</span><span className="text-gray-400 text-xs md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span></div><div className="w-full h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-3"><div className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= weeklyTarget ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-pulse' : 'bg-yellow-400'}`} style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}></div></div><p className="text-xs md:text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}</p></div>
-                                    </div>
+                                    {dashboardUser ? (
+                                        <div className="bg-white dark:bg-gray-900 p-5 rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm col-span-1 md:col-span-2 relative overflow-hidden group">
+                                            {weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-4 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-20 h-20 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div><div className="absolute w-16 h-16 bg-blue-500/30 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-blue-400/10 rounded-full animate-ping"></div><div className="absolute w-10 h-10 bg-blue-400/50 rounded-full blur-lg animate-pulse"></div><Flame className="w-12 h-12 text-blue-500 fill-blue-500 drop-shadow-[0_0_20px_rgba(59,130,246,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy className="w-20 h-20 text-yellow-500" /></div>)}
+                                            <div className="relative z-10"><h3 className="font-bold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3><div className="flex items-end gap-2 mb-3"><span className="text-3xl md:text-4xl font-black dark:text-white">{weeklyGoal}</span><span className="text-gray-400 text-xs md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span></div><div className="w-full h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-3"><div className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= weeklyTarget ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-pulse' : 'bg-yellow-400'}`} style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}></div></div><p className="text-xs md:text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}</p></div>
+                                        </div>
+                                    ) : <StatSkeleton />}
                                     <MoodTracker onMoodSelect={handleMoodSelect} />
                                 </div>
+
                                 <CollapsibleSection title="Mindful Arcade" icon={Gamepad2}>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
                                         <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col bg-sky-50 dark:bg-gray-800"><div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none"><span className="text-[9px] font-black uppercase tracking-widest text-gray-500 bg-white/90 dark:bg-black/90 px-3 py-1.5 rounded-full shadow-sm">Mindful Match</span></div><MindfulMatchGame dashboardUser={dashboardUser} /></div>
@@ -984,14 +1021,26 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <CollapsibleSection title="Inner Sanctuary" icon={Feather}><div className="space-y-6"><JournalSection user={user} /><div className="border-t border-dashed border-yellow-200 dark:border-gray-700" /><WisdomGenerator userId={user.id} /></div></CollapsibleSection>
                                 <div>
                                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-5"><div><h2 className="text-xl md:text-2xl font-black dark:text-white">Available Specialists</h2><p className="text-gray-500 text-xs md:text-sm">Select a guide to begin your session.</p></div><div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide"><button onClick={() => setSpecialtyFilter('All')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === 'All' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>All</button>{uniqueSpecialties.map(spec => (<button key={spec} onClick={() => setSpecialtyFilter(spec)} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === spec ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>{spec}</button>))}</div></div>
-                                    {loadingCompanions ? (<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">{[1, 2, 3, 4, 5].map(i => <div key={i} className="h-60 bg-gray-100 dark:bg-gray-900 rounded-3xl animate-pulse"></div>)}</div>) : (<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">{filteredCompanions.map((companion) => (<div key={companion.id} onClick={() => handleStartConnection(companion)} className="group relative bg-white dark:bg-gray-900 rounded-[1.8rem] overflow-hidden border border-yellow-100 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all duration-300 hover:shadow-2xl cursor-pointer flex flex-col h-full"><div className="aspect-[4/5] relative overflow-hidden bg-gray-100 dark:bg-gray-800"><AvatarImage src={companion.imageUrl} alt={companion.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" /><div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                                        <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-5 flex flex-col justify-center text-center">
-                                            <p className="text-yellow-400 text-[10px] font-black uppercase tracking-widest mb-2">About {companion.name}</p>
-                                            <p className="text-white text-xs leading-relaxed mb-3">"{companion.bio}"</p>
-                                            <div className="grid grid-cols-2 gap-2 text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-3"><div className="bg-white/10 p-1.5 rounded-lg">{companion.yearsExperience} Yrs Exp</div><div className="bg-white/10 p-1.5 rounded-lg">{companion.degree}</div></div>
-                                            <button className="bg-white text-black px-4 py-2 rounded-full font-bold text-[10px] flex items-center justify-center gap-2 hover:bg-yellow-400 transition-colors"><Video className="w-3 h-3" /> Connect Now</button>
+                                    {loadingCompanions ? (
+                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                                            {[1, 2, 3, 4, 5].map(i => <CompanionSkeleton key={i} />)}
                                         </div>
-                                        <div className="absolute top-3 left-3 flex gap-2"><div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md ${companion.status === 'AVAILABLE' ? 'bg-green-500/90 text-white shadow-lg shadow-green-500/20' : 'bg-gray-500/90 text-white'}`}>{companion.status === 'AVAILABLE' ? 'Online' : 'Busy'}</div></div><div className="absolute bottom-3 left-3 right-3 group-hover:opacity-0 transition-opacity"><h3 className="text-white font-black text-lg leading-tight mb-0.5 shadow-sm drop-shadow-md">{companion.name}</h3><p className="text-yellow-400 text-[9px] font-bold uppercase tracking-wider truncate">{companion.specialty}</p></div></div><div className="p-3 bg-white dark:bg-gray-900 flex justify-between items-center border-t border-gray-100 dark:border-gray-800"><div className="flex items-center gap-1"><Star className="w-3 h-3 text-yellow-400 fill-yellow-400" /><span className="text-gray-500 dark:text-gray-400 text-xs font-bold">{companion.rating}</span></div><button className="bg-gray-100 dark:bg-gray-800 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black rounded-lg p-2 transition-colors"><Eye className="w-3.5 h-3.5" /></button></div></div>))}</div>)}
+                                    ) : (
+                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
+                                            {filteredCompanions.map((companion) => (
+                                                <div key={companion.id} onClick={() => handleStartConnection(companion)} className="group relative bg-white dark:bg-gray-900 rounded-[1.8rem] overflow-hidden border border-yellow-100 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all duration-300 hover:shadow-2xl cursor-pointer flex flex-col h-full">
+                                                    <div className="aspect-[4/5] relative overflow-hidden bg-gray-100 dark:bg-gray-800">
+                                                        <AvatarImage src={companion.imageUrl} alt={companion.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+
+
+                                                        <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-5 flex flex-col justify-center text-center">
+                                                            <p className="text-yellow-400 text-[10px] font-black uppercase tracking-widest mb-2">About {companion.name}</p>
+                                                            <p className="text-white text-xs leading-relaxed mb-3">"{companion.bio}"</p>
+                                                            <div className="grid grid-cols-2 gap-2 text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-3"><div className="bg-white/10 p-1.5 rounded-lg">{companion.yearsExperience} Yrs Exp</div><div className="bg-white/10 p-1.5 rounded-lg">{companion.degree}</div></div>
+                                                            <button className="bg-white text-black px-4 py-2 rounded-full font-bold text-[10px] flex items-center justify-center gap-2 hover:bg-yellow-400 transition-colors"><Video className="w-3 h-3" /> Connect Now</button>
+                                                        </div>
+                                                        <div className="absolute top-3 left-3 flex gap-2"><div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md ${companion.status === 'AVAILABLE' ? 'bg-green-500/90 text-white shadow-lg shadow-green-500/20' : 'bg-gray-500/90 text-white'}`}>{companion.status === 'AVAILABLE' ? 'Online' : 'Busy'}</div></div><div className="absolute bottom-3 left-3 right-3 group-hover:opacity-0 transition-opacity"><h3 className="text-white font-black text-lg leading-tight mb-0.5 shadow-sm drop-shadow-md">{companion.name}</h3><p className="text-yellow-400 text-[9px] font-bold uppercase tracking-wider truncate">{companion.specialty}</p></div></div><div className="p-3 bg-white dark:bg-gray-900 flex justify-between items-center border-t border-gray-100 dark:border-gray-800"><div className="flex items-center gap-1"><Star className="w-3 h-3 text-yellow-400 fill-yellow-400" /><span className="text-gray-500 dark:text-gray-400 text-xs font-bold">{companion.rating}</span></div><button className="bg-gray-100 dark:bg-gray-800 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black rounded-lg p-2 transition-colors"><Eye className="w-3.5 h-3.5" /></button></div></div>))}</div>)}
                                     {filteredCompanions.length === 0 && (<div className="text-center py-16 bg-gray-50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800"><p className="text-gray-500 font-bold text-sm">No specialists found in this category.</p><button onClick={() => setSpecialtyFilter('All')} className="text-yellow-600 text-xs font-bold mt-2 hover:underline">View All</button></div>)}
                                 </div>
                             </div>
@@ -1031,7 +1080,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     marketing: dashboardUser.emailPreferences?.marketing ?? true
                                                 }
                                             };
-                                            Database.updateUser(updated);
+                                            UserService.updateUser(updated);
+
                                         }} className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${emailNotifications ? 'bg-yellow-500' : 'bg-gray-200'}`}>
                                             <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${emailNotifications ? 'translate-x-5' : 'translate-x-1'}`} /></button></div>
                                     </div>
@@ -1052,7 +1102,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="md:col-span-5 space-y-4"><div className="flex items-center gap-2"><div className="w-7 h-7 bg-yellow-400 rounded-xl flex items-center justify-center"><Heart className="w-4 h-4 fill-black text-black" /></div><span className="text-xl font-black tracking-tight">Peutic</span></div><p className="text-gray-800 dark:text-gray-500 text-xs leading-relaxed max-w-md">Connecting the disconnected through elite-level human specialists and cutting-edge secure technology.</p><div className="flex gap-4">{[Twitter, Instagram, Linkedin].map((Icon, i) => (<button key={i} className="text-gray-800 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors hover:scale-110 transform"><Icon className="w-4 h-4" /></button>))}</div></div>
                                 <div className="grid grid-cols-2 md:grid-cols-1 gap-6 md:col-span-2"><div><h4 className="font-black mb-3 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Global</h4><ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500"><li><Link to="/about" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">About</Link></li><li><Link to="/press" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Media</Link></li></ul></div></div>
                                 <div className="grid grid-cols-2 md:grid-cols-1 gap-6 md:col-span-2"><div><h4 className="font-black mb-3 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Support</h4><ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500"><li><Link to="/support" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Help Center</Link></li><li><Link to="/safety" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Safety Standards</Link></li><li><Link to="/crisis" className="text-red-600 hover:text-red-700 transition-colors">Crisis Hub</Link></li></ul></div></div>
-                                <div className="md:col-span-3"><h4 className="font-black mb-3 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Regulatory</h4><ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500"><li><Link to="/privacy" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Privacy Policy</Link></li><li><Link to="/terms" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Terms of Service</Link></li><li><button onClick={() => setShowCookies(true)} className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Cookie Controls</button></li></ul></div>
+                                <div className="md:col-span-3"><h4 className="font-black mb-3 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Regulatory</h4><ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500"><li><Link to="/privacy" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Privacy Policy</Link></li><li><Link to="/terms" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Terms of Service</Link></li></ul></div>
+
                             </div>
                             <div className="mb-8 p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 border border-yellow-100 dark:border-yellow-900/20">
                                 <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-500 font-bold text-xs">

@@ -3,11 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 
 // Robust Environment Variable Retrieval
 const getEnv = (key: string) => {
-  // @ts-ignore
-  if (typeof process !== 'undefined' && process.env?.[key]) return process.env[key];
-  // @ts-ignore
-  if (typeof import.meta !== 'undefined' && import.meta.env?.[key]) return import.meta.env[key];
-  return '';
+    // @ts-ignore
+    if (typeof process !== 'undefined' && process.env?.[key]) return process.env[key];
+    // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env?.[key]) return import.meta.env[key];
+    return '';
 };
 
 const supabaseUrl = getEnv('VITE_SUPABASE_URL');
@@ -44,8 +44,9 @@ const strictDummyClient = {
         signInWithOAuth: () => Promise.reject(new Error("Supabase Auth Not Configured")),
         signInWithOtp: () => Promise.reject(new Error("Supabase Auth Not Configured")),
         signOut: () => Promise.resolve({ error: null }),
-        getUser: () => Promise.resolve({ data: { user: null } }),
-        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
+        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => { } } } })
     },
     functions: {
         invoke: () => Promise.reject(new Error("Supabase Functions Not Configured: Missing API Keys"))
@@ -54,6 +55,6 @@ const strictDummyClient = {
 } as any;
 
 // Create client only if config exists, otherwise use strict dummy
-export const supabase = (supabaseUrl && supabaseKey && supabaseUrl.startsWith('http')) 
-    ? createClient(supabaseUrl, supabaseKey) 
+export const supabase = (supabaseUrl && supabaseKey && supabaseUrl.startsWith('http'))
+    ? createClient(supabaseUrl, supabaseKey)
     : strictDummyClient;

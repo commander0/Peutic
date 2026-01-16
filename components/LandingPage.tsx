@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, Heart, CheckCircle, ArrowRight, Star, Globe, ShieldCheck, Sparkles, Cookie, Instagram, Twitter, Linkedin, Play, MessageCircle, Moon, Sun, ChevronDown } from 'lucide-react';
+import { Heart, CheckCircle, ArrowRight, Globe, ShieldCheck, Cookie, Instagram, Twitter, Linkedin, Play, Moon, Sun, ChevronDown } from 'lucide-react';
 import { LanguageCode, getTranslation } from '../services/i18n';
 import { Link } from 'react-router-dom';
-import { Database, STABLE_AVATAR_POOL, INITIAL_COMPANIONS } from '../services/database';
+import { AdminService } from '../services/adminService';
+import { STABLE_AVATAR_POOL, INITIAL_COMPANIONS } from '../services/database';
+
 import { Companion } from '../types';
 
 const AvatarImage: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className }) => {
@@ -56,7 +58,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     const [showLangMenu, setShowLangMenu] = useState(false);
     const langMenuRef = useRef<HTMLDivElement>(null);
 
-    const settings = Database.getSettings();
+    const settings = AdminService.getSettings();
+
     const t = (key: any) => getTranslation(lang, key);
 
     useEffect(() => {
@@ -83,7 +86,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
 
         // Initial load - Ensure we use unique IDs to prevent marquee key errors
         const loadComps = async () => {
-            const fromDb = await Database.getCompanions();
+            const fromDb = await AdminService.getCompanions();
+
             // Fallback to static if DB empty
             const list = (fromDb && fromDb.length > 0) ? fromDb : INITIAL_COMPANIONS;
             // Deduplicate just in case

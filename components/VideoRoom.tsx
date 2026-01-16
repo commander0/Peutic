@@ -6,7 +6,11 @@ import {
     Loader2, AlertCircle, RefreshCcw, Star, CheckCircle, Clock, Sparkles, Download
 } from 'lucide-react';
 import { createTavusConversation, endTavusConversation } from '../services/tavusService';
-import { Database } from '../services/database';
+import { UserService } from '../services/userService';
+import { AdminService } from '../services/adminService';
+
+
+import { useToast } from './common/Toast';
 
 interface VideoRoomProps {
     companion: Companion;
@@ -14,6 +18,7 @@ interface VideoRoomProps {
     userName: string;
     userId: string;
 }
+
 
 // --- ICEBREAKER DATA ---
 const ICEBREAKERS = [
@@ -139,6 +144,8 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
     const [summaryImage, setSummaryImage] = useState<string>(''); // Artifact URL
     const [rating, setRating] = useState(0);
     const [feedbackTags, setFeedbackTags] = useState<string[]>([]);
+    const { showToast } = useToast();
+
 
     // Credit Tracking
     const [remainingMinutes, setRemainingMinutes] = useState(0);
@@ -161,7 +168,8 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         }
 
         // 2. Update Database state (Clean both Active and Queue)
-        Database.endSession(userId);
+        UserService.endSession(userId);
+
     }, [userId]);
 
     // --- Session Initialization ---
@@ -170,7 +178,8 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         const initQueue = async () => {
             try {
                 // Join Queue (Remote)
-                const pos = await Database.joinQueue(userId);
+                const pos = await UserService.joinQueue(userId);
+
 
                 if (pos === -1) {
                     setConnectionState('QUEUE_FULL');
@@ -185,7 +194,8 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 }
 
                 setQueuePos(pos);
-                setEstWait(Database.getEstimatedWaitTime(pos));
+                setEstWait(UserService.getEstimatedWaitTime(pos));
+
 
                 // If we are #1 or inactive (pos 0 implies potential active state in some logics, but mostly 1)
                 // Note: DB returns 0 if active, 1+ if waiting.
@@ -201,7 +211,8 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
         const tryStart = async () => {
             // Attempt to claim spot securely via Supabase
-            const canEnter = await Database.claimActiveSpot(userId);
+            const canEnter = await UserService.claimActiveSpot(userId);
+
             if (canEnter) {
                 // SAFETY DELAY: Wait 1s to ensure TechCheck hardware is fully released by browser
                 // This prevents "Camera Busy" errors on mobile devices
@@ -214,13 +225,15 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         // Polling Interval for Queue Position & Heartbeat
         const queueInterval = setInterval(async () => {
             if (connectionState === 'QUEUED') {
-                await Database.sendQueueHeartbeat(userId); // Prevent Zombie Queue
-                let pos = await Database.getQueuePosition(userId);
+                await UserService.sendQueueHeartbeat(userId); // Prevent Zombie Queue
+                let pos = await UserService.getQueuePosition(userId);
+
 
                 // Failsafe: If queue dropped us but we are still waiting
                 if (pos === 0) {
-                    pos = await Database.joinQueue(userId);
+                    pos = await UserService.joinQueue(userId);
                 }
+
 
                 if (pos === -1) {
                     setConnectionState('QUEUE_FULL');
@@ -234,7 +247,8 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 }
 
                 setQueuePos(pos);
-                setEstWait(Database.getEstimatedWaitTime(pos));
+                setEstWait(UserService.getEstimatedWaitTime(pos));
+
 
                 if (pos === 1) {
                     // We are next in line, try to enter
@@ -242,7 +256,8 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 }
             } else if (connectionState === 'CONNECTED') {
                 // HEARTBEAT: Keep alive every 3s to prevent zombie cleanup (15s timeout)
-                Database.sendKeepAlive(userId);
+                UserService.sendKeepAlive(userId);
+
             }
         }, 3000);
 
@@ -275,7 +290,8 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         if (connectionInitiated.current) return;
 
         // FINAL DOUBLE CHECK: Ensure we still have the spot before burning API credits
-        const stillHasSpot = await Database.claimActiveSpot(userId);
+        const stillHasSpot = await UserService.claimActiveSpot(userId);
+
         if (!stillHasSpot) {
             console.warn("Lost spot during initialization latency.");
             setConnectionState('QUEUED'); // Re-queue
@@ -287,7 +303,8 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         setErrorMsg('');
 
         try {
-            const user = Database.getUser();
+            const user = UserService.getUser();
+
             if (!user || user.balance <= 0) {
                 throw new Error("Insufficient Credits: Session Access Denied.");
             }
@@ -297,8 +314,9 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
             // --- INTELLIGENT CONTEXT INJECTION ---
             // 1. Fetch recent mood
-            const moods = await Database.getMoods(user.id);
+            const moods = await UserService.getMoods(user.id);
             const recentMood = moods.length > 0 ? moods[moods.length - 1].mood : null;
+
             let moodContext = "";
             if (recentMood === 'rain') moodContext = "The user recently indicated they are feeling down or melancholic. Approach with extra gentleness.";
             else if (recentMood === 'confetti') moodContext = "The user recently indicated they are in a celebratory or good mood. Match their energy.";
@@ -322,7 +340,8 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         } catch (err: any) {
             connectionInitiated.current = false; // Reset on error
             if (err.message.includes("Insufficient Credits")) {
-                alert("Your session ended because you are out of credits.");
+                showToast("Your session ended because you are out of credits.", "error");
+
                 handleEndSession();
                 return;
             }
@@ -339,8 +358,9 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
         // Deduct first minute immediately upon connection
         // This ensures the user is charged for the initial connection time
-        Database.deductBalance(1);
+        UserService.deductBalance(1);
         setRemainingMinutes(prev => prev - 1);
+
 
         const interval = setInterval(() => {
             setDuration(d => {
@@ -348,8 +368,9 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
                 // Deduct balance at the START of every new minute
                 if (newDuration > 0 && newDuration % 60 === 0) {
-                    Database.deductBalance(1);
+                    UserService.deductBalance(1);
                     setRemainingMinutes(prev => {
+
                         const nextVal = prev - 1;
                         if (nextVal <= 0) {
                             // STRICT CUTOFF: If credits hit zero, end session immediately
@@ -386,11 +407,11 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
     const submitFeedbackAndClose = () => {
         const minutesUsed = Math.ceil(duration / 60);
-        const user = Database.getUser();
+        const user = UserService.getUser();
         if (minutesUsed > 0 && user) {
             // Note: Balance was already deducted incrementally during the session
             // We only record the transaction history here for the user's records
-            Database.addTransaction({
+            UserService.saveTransaction({
                 id: `sess_${Date.now()}`,
                 userId: user.id,
                 userName: userName,
@@ -410,18 +431,20 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 date: new Date().toISOString(),
                 duration: minutesUsed
             };
-            Database.saveFeedback(feedback);
+            UserService.saveFeedback(feedback);
         }
         onEndSession();
     };
+
 
     const toggleFeedbackTag = (tag: string) => { if (feedbackTags.includes(tag)) setFeedbackTags(feedbackTags.filter(t => t !== tag)); else setFeedbackTags([...feedbackTags, tag]); };
     const formatTime = (seconds: number) => { const mins = Math.floor(seconds / 60); const secs = seconds % 60; return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`; };
 
     // Calculate cost dynamically based on active sale mode setting
-    const settings = Database.getSettings();
+    const settings = AdminService.getSettings();
     const currentRate = settings.saleMode ? 1.59 : 1.99;
     const cost = Math.ceil(duration / 60) * currentRate;
+
 
     // --- HELPER: Pre-fill Name to Skip Input Screen ---
     const getIframeUrl = () => {

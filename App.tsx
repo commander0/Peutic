@@ -8,8 +8,13 @@ import AdminLogin from './components/AdminLogin';
 import Auth from './components/Auth';
 import VideoRoom from './components/VideoRoom';
 import StaticPages from './components/StaticPages';
-import { Database } from './services/database';
+import { UserService } from './services/userService';
+import { AdminService } from './services/adminService';
+
+
 import { Wrench, AlertTriangle, Clock, RefreshCw } from 'lucide-react';
+import { ToastProvider } from './components/common/Toast';
+
 
 // --- ERROR BOUNDARY (CRASH PREVENTION) ---
 
@@ -35,8 +40,9 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Critical Application Error:", error, errorInfo);
-    Database.logSystemEvent('ERROR', 'App Crash', error.message);
+    AdminService.logSystemEvent('ERROR', 'App Crash', error.message);
   }
+
 
   render() {
     if (this.state.hasError) {
@@ -74,7 +80,8 @@ const MainApp: React.FC = () => {
   // Restore session
   useEffect(() => {
     const init = async () => {
-      const restored = await Database.restoreSession();
+      const restored = await UserService.restoreSession();
+
       if (restored) {
         setUser(restored);
         // If admin is at root, redirect
@@ -83,8 +90,9 @@ const MainApp: React.FC = () => {
         }
       }
 
-      await Database.syncGlobalSettings();
-      const settings = Database.getSettings();
+      await AdminService.syncGlobalSettings();
+      const settings = AdminService.getSettings();
+
       setMaintenanceMode(settings.maintenanceMode);
 
       setIsRestoring(false);
@@ -93,10 +101,11 @@ const MainApp: React.FC = () => {
 
     // Active Polling for Remote Settings (Maintenance/Sale Mode)
     const interval = setInterval(async () => {
-      await Database.syncGlobalSettings(); // Pull from remote
-      const currentSettings = Database.getSettings(); // Read updated local state
+      await AdminService.syncGlobalSettings(); // Pull from remote
+      const currentSettings = AdminService.getSettings(); // Read updated local state
       setMaintenanceMode(currentSettings.maintenanceMode);
     }, 5000);
+
 
     return () => clearInterval(interval);
   }, []);
@@ -144,27 +153,27 @@ const MainApp: React.FC = () => {
         // Attempt Login
         try {
           if (isSignup) throw new Error("Explicit Signup Requested");
-          currentUser = await Database.login(userEmail, password);
+          currentUser = await UserService.login(userEmail, password);
         } catch (loginError: any) {
+
           // If login fails, try signup (if this was a signup attempt)
           if (isSignup || loginError.message.includes('Explicit Signup Requested') || loginError.message.includes('Invalid login credentials') === false) {
             // Try creating user with birthday
-            currentUser = await Database.createUser(name, userEmail, password, provider, birthday);
+            currentUser = await UserService.createUser(name, userEmail, password, provider, birthday);
           } else {
             throw loginError;
           }
         }
       } else if (provider !== 'email') {
         // Social Login handling
-        currentUser = await Database.createUser(name, userEmail, 'social-login-placeholder', provider, birthday);
+        currentUser = await UserService.createUser(name, userEmail, 'social-login-placeholder', provider, birthday);
       } else {
         throw new Error("Password required for email login");
       }
 
-      currentUser = Database.checkAndIncrementStreak(currentUser);
+      currentUser = UserService.checkAndIncrementStreak(currentUser);
 
       setUser(currentUser);
-      Database.saveUserSession(currentUser);
       lastActivityRef.current = Date.now();
       setShowAuth(false);
 
@@ -183,9 +192,9 @@ const MainApp: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    await Database.logout();
-    Database.clearSession();
+    await UserService.logout();
     setUser(null);
+
     setActiveSessionCompanion(null);
     navigate('/');
     // Force reload to clear any in-memory React state/context that might be lingering
@@ -212,70 +221,75 @@ const MainApp: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      {showAuth && <Auth onLogin={handleLogin} onCancel={() => setShowAuth(false)} initialMode={authMode} />}
+      <ToastProvider>
+        {showAuth && <Auth onLogin={handleLogin} onCancel={() => setShowAuth(false)} initialMode={authMode} />}
 
-      {/* TIMEOUT WARNING MODAL */}
-      {showTimeoutWarning && (
-        <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl max-sm w-full text-center shadow-2xl border border-yellow-500">
-            <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Clock className="w-8 h-8 text-yellow-600 dark:text-yellow-500" />
+
+        {/* TIMEOUT WARNING MODAL */}
+        {showTimeoutWarning && (
+          <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl max-sm w-full text-center shadow-2xl border border-yellow-500">
+              <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Clock className="w-8 h-8 text-yellow-600 dark:text-yellow-500" />
+              </div>
+              <h3 className="text-2xl font-black mb-2 dark:text-white">Are you still there?</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">Your secure session will time out in 60 seconds to protect your privacy.</p>
+              <button
+                onClick={() => { lastActivityRef.current = Date.now(); setShowTimeoutWarning(false); }}
+                className="w-full py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:scale-105 transition-transform"
+              >
+                I'm still here
+              </button>
             </div>
-            <h3 className="text-2xl font-black mb-2 dark:text-white">Are you still there?</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">Your secure session will time out in 60 seconds to protect your privacy.</p>
-            <button
-              onClick={() => { lastActivityRef.current = Date.now(); setShowTimeoutWarning(false); }}
-              className="w-full py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:scale-105 transition-transform"
-            >
-              I'm still here
-            </button>
           </div>
-        </div>
-      )}
+        )}
 
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={
-          user ? (
-            user.role === UserRole.ADMIN ? <Navigate to="/admin/dashboard" /> : <Dashboard user={user} onLogout={handleLogout} onStartSession={(c) => setActiveSessionCompanion(c)} />
-          ) : (
-            <LandingPage onLoginClick={(signup) => {
-              const requestedMode = signup ? 'signup' : 'login';
-              if (showAuth && authMode === requestedMode) {
-                setShowAuth(false);
-              } else {
-                setAuthMode(requestedMode);
-                setShowAuth(true);
-              }
-            }} />
-          )
-        } />
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={
+            user ? (
+              user.role === UserRole.ADMIN ? <Navigate to="/admin/dashboard" /> : <Dashboard user={user} onLogout={handleLogout} onStartSession={(c) => setActiveSessionCompanion(c)} />
+            ) : (
+              <LandingPage onLoginClick={(signup) => {
+                const requestedMode = signup ? 'signup' : 'login';
+                if (showAuth && authMode === requestedMode) {
+                  setShowAuth(false);
+                } else {
+                  setAuthMode(requestedMode);
+                  setShowAuth(true);
+                }
+              }} />
+            )
+          } />
 
-        {/* Admin Sub-Site Routes */}
-        <Route path="/admin" element={<Navigate to="/admin/login" />} />
-        <Route path="/admin/login" element={<AdminLogin onLogin={(u) => { setUser(u); Database.saveUserSession(u); navigate('/admin/dashboard'); }} />} />
-        <Route path="/admin/dashboard" element={
-          user && user.role === UserRole.ADMIN ? (
-            <AdminDashboard onLogout={handleLogout} />
-          ) : (
-            <Navigate to="/admin/login" />
-          )
-        } />
+          {/* Admin Sub-Site Routes */}
+          <Route path="/admin" element={<Navigate to="/admin/login" />} />
+          <Route path="/admin/login" element={<AdminLogin onLogin={(u) => { setUser(u); UserService.saveUserSession(u); navigate('/admin/dashboard'); }} />} />
 
-        {/* Static Pages */}
-        <Route path="/about" element={<StaticPages type="about" />} />
-        <Route path="/press" element={<StaticPages type="press" />} />
-        <Route path="/safety" element={<StaticPages type="safety" />} />
-        <Route path="/crisis" element={<StaticPages type="crisis" />} />
+          <Route path="/admin/dashboard" element={
+            user && user.role === UserRole.ADMIN ? (
+              <AdminDashboard onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/admin/login" />
+            )
+          } />
 
-        <Route path="/privacy" element={<StaticPages type="privacy" />} />
-        <Route path="/terms" element={<StaticPages type="terms" />} />
-        <Route path="/support" element={<StaticPages type="support" />} />
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
+          {/* Static Pages */}
+          <Route path="/about" element={<StaticPages type="about" />} />
+          <Route path="/press" element={<StaticPages type="press" />} />
+          <Route path="/safety" element={<StaticPages type="safety" />} />
+          <Route path="/crisis" element={<StaticPages type="crisis" />} />
+
+          <Route path="/privacy" element={<StaticPages type="privacy" />} />
+          <Route path="/terms" element={<StaticPages type="terms" />} />
+          <Route path="/support" element={<StaticPages type="support" />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </ToastProvider>
     </ErrorBoundary>
   );
 };
+
 
 const App: React.FC = () => {
   return <MainApp />;

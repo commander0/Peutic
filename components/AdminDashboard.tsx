@@ -6,36 +6,24 @@ import {
     Users, DollarSign, Activity, LogOut, Settings, Video,
     Ban, Zap, ShieldAlert,
     Megaphone, Menu, X, Gift,
-    Clock, Server, Shield, CheckCircle, Power, Lock, Crown, AlertTriangle, LayoutGrid, List, Trash2
-} from 'lucide-react';
-import { Database, STABLE_AVATAR_POOL } from '../services/database';
-import { User, Companion, Transaction, GlobalSettings, SystemLog } from '../types';
+    Clock, Server, Shield, CheckCircle, Lock, Crown, AlertTriangle, LayoutGrid, List, Trash2
 
-// --- STAT CARD ---
-const StatCard = ({ title, value, icon: Icon, subValue, subLabel, progress, color = "yellow" }: any) => (
-    <div className={`bg-gray-900/50 backdrop-blur-xl border border-gray-800 p-5 rounded-2xl shadow-lg hover:border-${color}-500/30 transition-all group relative overflow-hidden`}>
-        <div className="flex justify-between items-start mb-3">
-            <div>
-                <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">{title}</p>
-                <h3 className="text-2xl font-black text-white tracking-tight">{value}</h3>
-            </div>
-            <div className={`p-2.5 rounded-xl bg-black border border-gray-800 group-hover:text-${color}-500 transition-colors`}>
-                <Icon className={`w-4 h-4 text-gray-400 group-hover:text-${color}-500 transition-colors`} />
-            </div>
-        </div>
-        {subValue && (
-            <div className="flex items-center gap-2 text-[10px]">
-                <span className={`font-bold ${subValue.toString().includes('FULL') || subValue.toString().includes('-') ? 'text-red-500' : subValue.toString().includes('+') ? 'text-green-500' : 'text-gray-300'}`}>{subValue}</span>
-                <span className="text-gray-600">{subLabel}</span>
-            </div>
-        )}
-        {progress !== undefined && (
-            <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-800">
-                <div className={`h-full transition-all duration-700 ease-out ${progress >= 90 ? 'bg-red-500' : `bg-${color}-500`}`} style={{ width: `${Math.min(progress, 100)}%` }} />
-            </div>
-        )}
-    </div>
-);
+} from 'lucide-react';
+import { STABLE_AVATAR_POOL } from '../services/database';
+
+import { AdminService } from '../services/adminService';
+import { UserService } from '../services/userService';
+import { User, Companion, Transaction, GlobalSettings, SystemLog, UserRole } from '../types';
+import { useToast } from './common/Toast';
+import StatCard from './admin/StatCard';
+import { StatSkeleton, TableSkeleton } from './common/SkeletonLoader';
+
+
+
+
+
+
+
 
 // --- AVATAR COMPONENT ---
 const AvatarImage: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className }) => {
@@ -50,28 +38,96 @@ const AvatarImage: React.FC<{ src: string; alt: string; className?: string }> = 
     return <img src={imgSrc} alt={alt} className={className} onError={() => setHasError(true)} />;
 };
 
+const ConfirmModal: React.FC<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    type?: 'danger' | 'info';
+    onConfirm: () => void;
+    onCancel: () => void;
+}> = ({ isOpen, title, message, confirmLabel = 'Confirm', cancelLabel = 'Cancel', type = 'info', onConfirm, onCancel }) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-gray-950 border border-gray-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in duration-200">
+                <div className="p-6 text-center">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${type === 'danger' ? 'bg-red-500/10 text-red-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                        {type === 'danger' ? <AlertTriangle className="w-6 h-6" /> : <Shield className="w-6 h-6" />}
+                    </div>
+                    <h3 className="text-xl font-black text-white mb-2">{title}</h3>
+                    <p className="text-gray-400 text-[10px] mb-6 leading-relaxed px-4 uppercase tracking-widest font-bold opacity-60">{message}</p>
+                    <div className="flex gap-3">
+                        <button onClick={onCancel} className="flex-1 py-3 bg-gray-900 hover:bg-gray-800 text-gray-400 font-bold rounded-xl transition-colors text-[10px] uppercase tracking-widest">{cancelLabel}</button>
+                        <button onClick={() => { onConfirm(); onCancel(); }} className={`flex-1 py-3 font-bold rounded-xl transition-transform hover:scale-105 text-[10px] uppercase tracking-widest ${type === 'danger' ? 'bg-red-600 text-white shadow-lg shadow-red-600/20' : 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20'}`}>{confirmLabel}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const InputModal: React.FC<{
+    isOpen: boolean;
+    title: string;
+    placeholder: string;
+    onConfirm: (val: string) => void;
+    onCancel: () => void;
+}> = ({ isOpen, title, placeholder, onConfirm, onCancel }) => {
+    const [val, setVal] = useState('');
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-gray-950 border border-gray-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in duration-200">
+                <div className="p-6">
+                    <h3 className="text-xl font-black text-white mb-4 text-center">{title}</h3>
+                    <input
+                        type="number"
+                        value={val}
+                        onChange={e => setVal(e.target.value)}
+                        placeholder={placeholder}
+                        className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white mb-6 focus:border-yellow-500 outline-none text-center font-mono"
+                        autoFocus
+                    />
+                    <div className="flex gap-3">
+                        <button onClick={onCancel} className="flex-1 py-3 bg-gray-900 hover:bg-gray-800 text-gray-400 font-bold rounded-xl transition-colors text-[10px] uppercase tracking-widest">Cancel</button>
+                        <button onClick={() => { onConfirm(val); onCancel(); setVal(''); }} className="flex-1 py-3 bg-yellow-500 text-black font-bold rounded-xl transition-all hover:scale-105 shadow-lg shadow-yellow-500/20 text-[10px] uppercase tracking-widest">Grant Credits</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     const [activeTab, setActiveTab] = useState<'overview' | 'safety' | 'users' | 'specialists' | 'financials' | 'settings' | 'claim'>('overview');
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const { showToast } = useToast();
+
 
     // Data States
     const [users, setUsers] = useState<User[]>([]);
     const [companions, setCompanions] = useState<Companion[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [settings, setSettings] = useState<GlobalSettings>(Database.getSettings());
+    const [settings, setSettings] = useState<GlobalSettings>(AdminService.getSettings());
+    const [loading, setLoading] = useState(true);
+
 
     // SECURITY: Double-check admin status on mount
     // This prevents a user from accessing this component if they somehow bypassed the router guard
     useEffect(() => {
         const verifyAdmin = async () => {
-            const currentUser = Database.getUser();
-            if (!currentUser || currentUser.role !== 'ADMIN') {
+            const currentUser = UserService.getUser();
+            if (!currentUser || currentUser.role !== UserRole.ADMIN) {
                 console.warn("Security Violation: Non-admin attempted to access dashboard.");
                 onLogout(); // Force kick
             }
         };
         verifyAdmin();
     }, []);
+
     const [logs, setLogs] = useState<SystemLog[]>([]);
     const [activeCount, setActiveCount] = useState(0);
     const [waitingCount, setWaitingCount] = useState(0);
@@ -80,6 +136,11 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [specialistView, setSpecialistView] = useState<'grid' | 'list'>('list');
     const [broadcastMsg, setBroadcastMsg] = useState('');
+
+    // Modal States
+    const [confirmState, setConfirmState] = useState<{ open: boolean; title: string; message: string; type: 'danger' | 'info'; action: () => void }>({ open: false, title: '', message: '', type: 'info', action: () => { } });
+    const [inputState, setInputState] = useState<{ open: boolean; title: string; placeholder: string; userId: string }>({ open: false, title: '', placeholder: '', userId: '' });
+
 
     // Computed
     const MAX_CONCURRENT_CAPACITY = settings.maxConcurrentSessions || 15;
@@ -106,34 +167,49 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         });
     }, [transactions]);
 
-    // Sync Data
-    useEffect(() => {
-        const fetchData = async () => {
-            setUsers(await Database.getAllUsers());
-            setCompanions(await Database.getCompanions());
-            setTransactions(await Database.getAllTransactions());
-            const s = await Database.syncGlobalSettings();
+    const fetchData = async (isInitial = false) => {
+        if (isInitial) setLoading(true);
+
+        try {
+            const s = await AdminService.syncGlobalSettings();
             setSettings(s);
             setBroadcastMsg(s.broadcastMessage || '');
-            setLogs(await Database.getSystemLogs());
+            setLogs(await AdminService.getSystemLogs());
+            setUsers(await AdminService.getAllUsers());
+            setCompanions(await AdminService.getCompanions());
+            setTransactions(await AdminService.getAllTransactions());
+
+
             try {
-                const count = await Database.getActiveSessionCount();
+                const count = await AdminService.getActiveSessionCount();
                 setActiveCount(count);
-                const queue = await Database.getQueueLength();
+                const queue = await AdminService.getQueueLength();
                 setWaitingCount(queue);
             } catch (e) { }
-        };
-        fetchData();
-        const interval = setInterval(fetchData, 3000);
+
+        } catch (e) {
+            console.error("Fetch failed", e);
+        } finally {
+            if (isInitial) setLoading(false);
+        }
+    };
+
+
+    useEffect(() => {
+        fetchData(true);
+        const interval = setInterval(() => fetchData(false), 3000);
         return () => clearInterval(interval);
     }, []);
+
+
 
     const handleToggleStatus = async (id: string, current: string) => {
         const comp = companions.find(c => c.id === id);
         if (comp) {
             const next = current === 'AVAILABLE' ? 'BUSY' : current === 'BUSY' ? 'OFFLINE' : 'AVAILABLE';
             const updated = { ...comp, status: next as any };
-            await Database.updateCompanion(updated);
+            await AdminService.updateCompanion(updated);
+
             // Optimistic update
             setCompanions(prev => prev.map(c => c.id === id ? updated : c));
         }
@@ -141,43 +217,70 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
     const handleDeleteUser = async (userId: string, idx: number) => {
         if (idx === 0) {
-            alert("SECURITY ALERT: Cannot delete Root Admin account.");
+            showToast("SECURITY ALERT: Cannot delete Root Admin account.", "error");
             return;
         }
-        if (window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
-            await Database.deleteUser(userId);
-            setUsers(users.filter(u => u.id !== userId));
+        setConfirmState({
+            open: true,
+            title: "Delete User?",
+            message: "This action is permanent and will purge the account and all associated data from the system.",
+            type: 'danger',
+            action: async () => {
+                try {
+                    await AdminService.deleteUser(userId);
+                    setUsers(users.filter(u => u.id !== userId));
+                    showToast("User successfully purged", "success");
+                } catch (e: any) {
+                    showToast(e.message || "Deletion failed", "error");
+                }
+            }
+        });
+    };
+
+
+
+    const handleTopUpCredit = async (userId: string, amount: string) => {
+        if (amount && !isNaN(parseInt(amount))) {
+            try {
+                await AdminService.addCredits(userId, parseInt(amount));
+                showToast(`Successfully granted ${amount} minutes`, "success");
+                setUsers(await AdminService.getAllUsers());
+            } catch (e: any) {
+                showToast(e.message || "Top-up failed", "error");
+            }
         }
     };
 
-    const handleTopUp = async (userId: string) => {
-        const amount = prompt("Enter minutes to add:");
-        if (amount && !isNaN(parseInt(amount))) {
-            await Database.topUpWallet(parseInt(amount), 0, userId);
-            alert("Credits added successfully.");
-            setUsers(await Database.getAllUsers());
-        }
+    const handleTopUpPrompt = (userId: string) => {
+        setInputState({
+            open: true,
+            title: "Grant Credits",
+            placeholder: "Enter minutes...",
+            userId: userId
+        });
     };
+
 
     const handleBroadcast = async () => {
-        const updated = { ...settings, broadcastMessage: broadcastMsg };
-        await Database.saveSettings(updated);
-        setSettings(updated);
-        alert("Broadcast updated for all users.");
+        await AdminService.broadcastMessage(broadcastMsg);
+        setSettings({ ...settings, broadcastMessage: broadcastMsg });
+        showToast("System broadcast deployed", "success");
     };
 
     const clearBroadcast = async () => {
-        const updated = { ...settings, broadcastMessage: '' };
-        await Database.saveSettings(updated);
-        setSettings(updated);
+        await AdminService.broadcastMessage('');
+        setSettings({ ...settings, broadcastMessage: '' });
         setBroadcastMsg('');
+        showToast("Broadcast terminated", "info");
     };
 
     const handleSettingChange = async (key: keyof GlobalSettings, value: any) => {
         const updated = { ...settings, [key]: value };
         setSettings(updated);
-        await Database.saveSettings(updated);
+        await AdminService.saveSettings(updated);
+        showToast("Configuration updated", "info");
     };
+
 
     const filteredUsers = users.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase()));
 
@@ -250,11 +353,23 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                                <StatCard title="Active Sessions" value={activeCount} icon={Video} subValue={`${MAX_CONCURRENT_CAPACITY} Max`} subLabel="Capacity" progress={(activeCount / MAX_CONCURRENT_CAPACITY) * 100} color="purple" />
-                                <StatCard title="Waiting Room" value={waitingCount} icon={Clock} subValue={`${WAITING_ROOM_CAPACITY} Max`} subLabel="Capacity" progress={(waitingCount / WAITING_ROOM_CAPACITY) * 100} color="yellow" />
-                                <StatCard title="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon={DollarSign} subValue="Real-Time" subLabel="Gross" color="green" />
-                                <StatCard title="Total Users" value={users.length} icon={Users} subValue="+12" subLabel="Today" color="blue" />
+                                {loading ? (
+                                    <>
+                                        <StatSkeleton />
+                                        <StatSkeleton />
+                                        <StatSkeleton />
+                                        <StatSkeleton />
+                                    </>
+                                ) : (
+                                    <>
+                                        <StatCard title="Active Sessions" value={activeCount} icon={Video} subValue={`${MAX_CONCURRENT_CAPACITY} Max`} subLabel="Capacity" progress={(activeCount / MAX_CONCURRENT_CAPACITY) * 100} color="purple" />
+                                        <StatCard title="Waiting Room" value={waitingCount} icon={Clock} subValue={`${WAITING_ROOM_CAPACITY} Max`} subLabel="Capacity" progress={(waitingCount / WAITING_ROOM_CAPACITY) * 100} color="yellow" />
+                                        <StatCard title="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon={DollarSign} subValue="Real-Time" subLabel="Gross" color="green" />
+                                        <StatCard title="Total Users" value={users.length} icon={Users} subValue="+12" subLabel="Today" color="blue" />
+                                    </>
+                                )}
                             </div>
+
 
                             <div className="grid lg:grid-cols-3 gap-6">
                                 {/* Live Concurrency & Waiting Meters */}
@@ -322,7 +437,9 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                 <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
                                     <h3 className="font-bold text-white mb-4 flex items-center gap-2 text-sm"><Activity className="w-4 h-4 text-yellow-500" /> Activity Log</h3>
                                     <div className="space-y-2">
-                                        {logs.slice(0, 8).map(log => (
+                                        {loading ? (
+                                            [1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-10 bg-gray-800/30 rounded-lg animate-pulse border border-gray-800/50" />)
+                                        ) : logs.slice(0, 8).map(log => (
                                             <div key={log.id} className="flex justify-between items-center bg-black/50 p-2.5 rounded-lg border border-gray-800/50">
                                                 <div className="flex items-center gap-2">
                                                     <div className={`w-1.5 h-1.5 rounded-full ${log.type === 'ERROR' ? 'bg-red-500' : log.type === 'WARNING' ? 'bg-yellow-500' : 'bg-blue-500'}`}></div>
@@ -332,6 +449,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                             </div>
                                         ))}
                                     </div>
+
                                 </div>
                             </div>
                         </div>
@@ -374,12 +492,32 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                         users.filter(u => u.subscriptionStatus === 'BANNED').map(u => (
                                             <div key={u.id} className="flex justify-between items-center bg-black p-3 rounded-lg border border-red-900/30">
                                                 <span className="text-red-400 font-bold text-xs">{u.email}</span>
-                                                <button onClick={() => { if (confirm("Unban?")) Database.updateUser({ ...u, subscriptionStatus: 'ACTIVE' }); }} className="text-gray-500 hover:text-white text-[10px] uppercase font-bold">Unban</button>
+                                                <button
+                                                    onClick={() => setConfirmState({
+                                                        open: true,
+                                                        title: "Unban User?",
+                                                        message: `Restore system access for ${u.email}?`,
+                                                        type: 'info',
+                                                        action: async () => {
+                                                            try {
+                                                                await AdminService.updateUserStatus(u.id, 'ACTIVE');
+                                                                showToast("User access restored", "success");
+                                                                setUsers(await AdminService.getAllUsers());
+                                                            } catch (e: any) {
+                                                                showToast(e.message || "Unban failed", "error");
+                                                            }
+                                                        }
+                                                    })}
+                                                    className="text-gray-500 hover:text-white text-[10px] uppercase font-bold"
+                                                >
+                                                    Unban
+                                                </button>
                                             </div>
                                         ))
                                     )}
                                 </div>
                             </div>
+
                         </div>
                     )}
 
@@ -407,14 +545,16 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-800">
-                                        {filteredUsers.map((user, idx) => (
+                                        {loading ? (
+                                            <tr><td colSpan={5} className="p-0"><TableSkeleton rows={8} cols={5} /></td></tr>
+                                        ) : filteredUsers.map((user, idx) => (
                                             <tr key={user.id} className="hover:bg-gray-800/50">
                                                 <td className="p-4 font-bold text-white text-xs">{user.name} <span className="text-gray-500 font-normal ml-1">({user.email})</span></td>
                                                 <td className="p-4 text-[10px] text-gray-400">{user.role}</td>
                                                 <td className="p-4 text-green-400 font-mono font-bold text-xs">{user.balance}m</td>
                                                 <td className="p-4 text-right text-gray-500 text-[10px] font-mono">{new Date(user.joinedAt).toLocaleDateString()}</td>
                                                 <td className="p-4 text-right flex justify-end gap-2">
-                                                    <button onClick={() => handleTopUp(user.id)} className="text-blue-500 hover:text-blue-400 p-1.5 transition-colors bg-blue-500/10 rounded-lg" title="Top Up Credits">
+                                                    <button onClick={() => handleTopUpPrompt(user.id)} className="text-blue-500 hover:text-blue-400 p-1.5 transition-colors bg-blue-500/10 rounded-lg" title="Top Up Credits">
                                                         <Gift className="w-3.5 h-3.5" />
                                                     </button>
                                                     <button onClick={() => handleDeleteUser(user.id, idx)} className={`p-1.5 transition-colors rounded-lg ${idx === 0 ? 'text-gray-600 cursor-not-allowed' : 'text-red-500 hover:text-red-400 bg-red-500/10'}`} title={idx === 0 ? "Cannot delete Root Admin" : "Delete User"}>
@@ -424,6 +564,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                             </tr>
                                         ))}
                                     </tbody>
+
                                 </table>
                             </div>
                         </div>
@@ -487,7 +628,9 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-800">
-                                            {companions.map((comp) => (
+                                            {loading ? (
+                                                <tr><td colSpan={5} className="p-0"><TableSkeleton rows={6} cols={5} /></td></tr>
+                                            ) : companions.map((comp) => (
                                                 <tr key={comp.id} className="hover:bg-gray-800/50">
                                                     <td className="p-4 flex items-center gap-3">
                                                         <AvatarImage src={comp.imageUrl} alt={comp.name} className="w-7 h-7 rounded-full object-cover" />
@@ -506,11 +649,20 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                                 </tr>
                                             ))}
                                         </tbody>
+
                                     </table>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    {companions.map((comp) => (
+                                    {loading ? (
+                                        [1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                                            <div key={i} className="bg-gray-950 border border-gray-900 p-4 rounded-xl flex flex-col items-center gap-3 animate-pulse">
+                                                <div className="w-12 h-12 rounded-full bg-gray-900" />
+                                                <div className="h-3 w-20 bg-gray-900 rounded" />
+                                                <div className="h-2 w-16 bg-gray-900 rounded" />
+                                            </div>
+                                        ))
+                                    ) : companions.map((comp) => (
                                         <div key={comp.id} className="bg-gray-900 border border-gray-800 p-4 rounded-xl flex flex-col items-center text-center">
                                             <AvatarImage src={comp.imageUrl} alt={comp.name} className="w-12 h-12 rounded-full object-cover mb-2" />
                                             <h3 className="font-bold text-white text-xs">{comp.name}</h3>
@@ -521,6 +673,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                         </div>
                                     ))}
                                 </div>
+
                             )}
                         </div>
                     )}
@@ -671,8 +824,26 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                     )}
                 </div>
             </main>
+
+            <ConfirmModal
+                isOpen={confirmState.open}
+                title={confirmState.title}
+                message={confirmState.message}
+                type={confirmState.type}
+                onConfirm={confirmState.action}
+                onCancel={() => setConfirmState({ ...confirmState, open: false })}
+            />
+
+            <InputModal
+                isOpen={inputState.open}
+                title={inputState.title}
+                placeholder={inputState.placeholder}
+                onConfirm={(val) => handleTopUpCredit(inputState.userId, val)}
+                onCancel={() => setInputState({ ...inputState, open: false })}
+            />
         </div>
     );
 };
+
 
 export default AdminDashboard;
