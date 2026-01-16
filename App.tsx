@@ -10,6 +10,7 @@ import VideoRoom from './components/VideoRoom';
 import StaticPages from './components/StaticPages';
 import { UserService } from './services/userService';
 import { AdminService } from './services/adminService';
+import { supabase } from './services/supabaseClient';
 
 
 import { Wrench, AlertTriangle, Clock, RefreshCw } from 'lucide-react';
@@ -78,35 +79,50 @@ const MainApp: React.FC = () => {
   const navigate = useNavigate();
 
   // Restore session
+  // Restore session & Handle Auth Changes
   useEffect(() => {
-    const init = async () => {
-      const restored = await UserService.restoreSession();
-
+    // 1. Initial Load
+    UserService.restoreSession().then((restored) => {
       if (restored) {
         setUser(restored);
-        // If admin is at root, redirect
         if (restored.role === UserRole.ADMIN && location.pathname === '/') {
           navigate('/admin/dashboard');
         }
       }
-
-      await AdminService.syncGlobalSettings();
-      const settings = AdminService.getSettings();
-
-      setMaintenanceMode(settings.maintenanceMode);
-
       setIsRestoring(false);
+    });
+
+    // 2. Persistent Listener for Refresh/Changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
+      // Handle both explicit Sign In and Initial Session recovery
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+        // Prevent unnecessary re-sync if we already have the correct user
+        if (!user || user.id !== session.user.id) {
+          const syncedUser = await UserService.syncUser(session.user.id);
+          if (syncedUser) setUser(syncedUser);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        navigate('/');
+      }
+    });
+
+    // 3. Sync Settings
+    AdminService.syncGlobalSettings().then(() => {
+      setMaintenanceMode(AdminService.getSettings().maintenanceMode);
+    });
+
+    return () => {
+      subscription.unsubscribe();
     };
-    init();
+  }, []);
 
-    // Active Polling for Remote Settings (Maintenance/Sale Mode)
+  // Poll Settings separate from Auth logic
+  useEffect(() => {
     const interval = setInterval(async () => {
-      await AdminService.syncGlobalSettings(); // Pull from remote
-      const currentSettings = AdminService.getSettings(); // Read updated local state
-      setMaintenanceMode(currentSettings.maintenanceMode);
+      await AdminService.syncGlobalSettings();
+      setMaintenanceMode(AdminService.getSettings().maintenanceMode);
     }, 5000);
-
-
     return () => clearInterval(interval);
   }, []);
 
