@@ -141,12 +141,31 @@ serve(async (req) => {
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // 5. Delete User
-    if (action === 'delete-user') {
+    // 5. Delete User (Secure Alias)
+    if (action === 'delete-user' || action === 'admin-delete-user') {
         const { userId } = payload;
-        // Delete from Auth (cascades usually, but let's be safe)
-        const { error } = await supabaseClient.auth.admin.deleteUser(userId);
-        if (error) throw error;
+        
+        // 1. Security Check
+        const user = await getAuthenticatedUser();
+        if (!user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+        
+        const { data: callerData } = await supabaseClient.from('users').select('role').eq('id', user.id).single();
+        if (callerData?.role !== 'ADMIN') {
+             return new Response(JSON.stringify({ error: "Forbidden: Admin Access Required" }), { status: 403, headers: corsHeaders });
+        }
+
+        // 2. Prevent Self-Deletion
+        if (userId === user.id) {
+             return new Response(JSON.stringify({ error: "Cannot delete yourself." }), { status: 400, headers: corsHeaders });
+        }
+
+        // 3. Execution
+        const { error: deleteError } = await supabaseClient.auth.admin.deleteUser(userId);
+        if (deleteError) throw deleteError;
+        
+        // Cleanup public profile explicit (though trigger might handle, safer here)
+        await supabaseClient.from('users').delete().eq('id', userId);
+
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 

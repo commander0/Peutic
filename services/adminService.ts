@@ -86,7 +86,7 @@ export class AdminService {
 
     static async deleteUser(userId: string) {
         try {
-            const response = await BaseService.invokeGateway('delete-user', { userId });
+            const response = await BaseService.invokeGateway('admin-delete-user', { userId });
             if (response?.error) {
                 logger.error("Delete User Gateway Error", response.error);
                 throw new Error(response.error);
