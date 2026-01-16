@@ -27,12 +27,13 @@ npx supabase link --project-ref YOUR_PROJECT_REF_ID
 ### 3. Setup Database Tables (CRITICAL)
 **You must do this for the app to work.**
 1.  Go to your **Supabase Dashboard** > **SQL Editor**.
-2.  Open the file `supabase/schema.sql` from this project.
-3.  Copy the content and paste it into the Supabase SQL Editor.
-4.  Click **Run**.
+2.  Run the fundamental schema from `supabase/schema.sql`.
+3.  **IMPORTANT**: Run `supabase/sync_frontend_services.sql` to synchronize the latest Service Architecture and security policies.
+4.  **CLEANUP**: Run `supabase/cleanup_duplicate_policies.sql` to remove any duplicate RLS policies (fixes linter warnings).
+5.  (Optional) Run `supabase/seed_companions.sql` to populate the specialist list.
 
 ### 4. Deploy Backend (Do this once)
-This pushes your server-side logic (`api-gateway`) to the cloud.
+This pushes your secure `api-gateway` and AI proxies to Supabase.
 
 ```bash
 # Set Production Secrets first

@@ -103,6 +103,106 @@ serve(async (req) => {
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // --- ADMIN DASHBOARD ACTIONS ---
+    
+    // 1. List Users
+    if (action === 'admin-list-users') {
+        const { data, error } = await supabaseClient.from('users').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        return new Response(JSON.stringify(data), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // 2. List Companions
+    if (action === 'admin-list-companions') {
+        const { data, error } = await supabaseClient.from('companions').select('*').order('name');
+        if (error) throw error;
+        return new Response(JSON.stringify(data), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // 3. System Logs
+    if (action === 'system-logs') {
+        const { data, error } = await supabaseClient.from('system_logs').select('*').order('timestamp', { ascending: false }).limit(100);
+        if (error) throw error;
+        return new Response(JSON.stringify(data), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // 4. Update User Status (Ban/Unban)
+    if (action === 'user-status') {
+        const { userId, status } = payload;
+        // status is 'ACTIVE' or 'BANNED'
+        const { error } = await supabaseClient.from('users').update({ subscription_status: status }).eq('id', userId);
+        if (error) throw error;
+        
+        // If banning, maybe revoke sessions? (Advanced)
+        if (status === 'BANNED') {
+           await supabaseClient.auth.admin.signOut(userId);
+        }
+        
+        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // 5. Delete User
+    if (action === 'delete-user') {
+        const { userId } = payload;
+        // Delete from Auth (cascades usually, but let's be safe)
+        const { error } = await supabaseClient.auth.admin.deleteUser(userId);
+        if (error) throw error;
+        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // 6. Broadcast Message
+    if (action === 'broadcast') {
+        const { message } = payload;
+        const { error } = await supabaseClient.from('global_settings').update({ broadcast_message: message }).eq('id', 1);
+        if (error) throw error;
+        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // 7. Auto Verify Email
+    if (action === 'admin-auto-verify') {
+        const { email } = payload;
+        // Search by email to get ID (Auth Admin)
+        // Or if we have ID. payload usually has email from the UI for this specific call in adminService
+        // adminService says: admin-auto-verify { email }
+        
+        // We need to list users to find the ID by email, OR just use updateUserById if we had ID.
+        // Assuming we need to find them first.
+        const { data: { users } } = await supabaseClient.auth.admin.listUsers();
+        const target = users.find((u: any) => u.email === email);
+        
+        if (!target) return new Response(JSON.stringify({ error: "User not found" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+        const { error } = await supabaseClient.auth.admin.updateUserById(target.id, { email_confirm: true });
+        if (error) throw error;
+
+        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // 8. Reclaim Admin (Security)
+    if (action === 'admin-reclaim') {
+         const { masterKey } = payload;
+         const VALID_KEY = Deno.env.get('MASTER_KEY') || 'PEUTIC_MASTER_2026'; // Fallback for dev
+         if (masterKey !== VALID_KEY) {
+             return new Response(JSON.stringify({ error: "Invalid Master Key" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+         }
+
+         // Find current user calling this? No, payload usually has userId if authenticated, 
+         // BUT this might be called when user IS logged in as basic user.
+         // We get the user from the Authorization header usually.
+         
+         const authHeader = req.headers.get('Authorization');
+         if (!authHeader) return new Response(JSON.stringify({ error: "No Session" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+         const token = authHeader.replace('Bearer ', '');
+         const { data: { user }, error: uErr } = await supabaseClient.auth.getUser(token);
+         
+         if (uErr || !user) return new Response(JSON.stringify({ error: "Invalid Session" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+         const { error } = await supabaseClient.from('users').update({ role: 'ADMIN' }).eq('id', user.id);
+         if (error) throw error;
+         
+         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     // --- PAYMENTS ---
     if (action === 'process-topup') {
         if (!stripe) throw new Error("Stripe not configured");

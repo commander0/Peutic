@@ -84,8 +84,9 @@ async function runTest() {
 
             // Use the user's own client to call RPC
             // Note: claim_active_spot calls cleanup_stale_sessions inside it.
-            const { data: result, error } = await u.client.rpc('claim_active_spot', { p_user_id: u.id });
-            log(`      Result: ${result} (Error: ${error?.message})`);
+            const result = await u.client.rpc('claim_active_spot', { p_user_id: u.id });
+            const now = new Date().toISOString().split('T')[1];
+            log(`      [${now}] Result: ${result.data} (Error: ${result.error?.message})`);
 
             // Query DB directly to see who is active
             const { count } = await adminClient.from('active_sessions').select('*', { count: 'exact', head: true });

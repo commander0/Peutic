@@ -392,11 +392,11 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 CREATE OR REPLACE FUNCTION public.cleanup_stale_sessions()
 RETURNS void AS $$
 BEGIN
-  -- Remove stale active sessions (> 15s no ping for extra strictness)
-  DELETE FROM public.active_sessions WHERE last_ping < NOW() - INTERVAL '15 seconds';
+  -- Remove stale active sessions (> 60s no ping for better UX/testing)
+  DELETE FROM public.active_sessions WHERE last_ping < NOW() - INTERVAL '60 seconds';
   
-  -- Remove stale queue entries (> 15s no ping)
-  DELETE FROM public.session_queue WHERE last_ping < NOW() - INTERVAL '15 seconds';
+  -- Remove stale queue entries (> 60s no ping)
+  DELETE FROM public.session_queue WHERE last_ping < NOW() - INTERVAL '60 seconds';
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
@@ -430,6 +430,9 @@ DECLARE
   v_max INTEGER;
   v_exists BOOLEAN;
 BEGIN
+  -- Prevent Race Conditions
+  PERFORM pg_advisory_xact_lock(hashtext('active_sessions_lock'));
+
   PERFORM public.cleanup_stale_sessions();
 
   SELECT EXISTS (SELECT 1 FROM public.active_sessions WHERE user_id = p_user_id) INTO v_exists;
