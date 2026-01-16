@@ -525,82 +525,136 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
     }
 
     return (
-        <div ref={containerRef} className="fixed inset-0 bg-black z-50 flex items-center justify-center overflow-hidden">
+        <div ref={containerRef} className="fixed inset-0 bg-[#0A0A0A] z-50 flex items-center justify-center overflow-hidden font-sans">
             {/* Background / Placeholder */}
-            <div className="absolute inset-0 bg-gray-900">
-                {/* If we have a companion image, show it blurred as background */}
-                <img src={companion.imageUrl} className="w-full h-full object-cover opacity-30 blur-xl" alt="Background" />
+            <div className="absolute inset-0 z-0">
+                {/* Layered Gradients for Depth */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-yellow-500/10 via-transparent to-blue-500/5"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0A0A0A_70%)]"></div>
+
+                {/* Blurred Identity */}
+                <img
+                    src={companion.imageUrl}
+                    className="w-full h-full object-cover opacity-20 blur-[100px] scale-110"
+                    alt="Background"
+                />
             </div>
 
             {/* State: CONNECTING / QUEUED */}
             {(connectionState === 'CONNECTING' || connectionState === 'QUEUED') && (
-                <div className="relative z-10 w-full max-w-2xl mx-auto p-6 md:p-12 flex flex-col md:flex-row items-center gap-8 md:gap-12 animate-in fade-in slide-in-from-bottom-10 duration-700">
-                    {/* Left: Companion Presence */}
-                    <div className="w-full md:w-1/2 text-center">
-                        <div className="relative w-32 h-32 md:w-48 md:h-48 mx-auto mb-6">
-                            <div className="absolute inset-0 rounded-full bg-yellow-500/20 animate-ping"></div>
-                            <img src={companion.imageUrl} className="w-full h-full rounded-full object-cover border-4 border-yellow-500 shadow-[0_0_50px_rgba(250,204,21,0.3)] relative z-10" alt={companion.name} />
-                            <div className="absolute bottom-2 right-2 md:bottom-4 md:right-4 bg-green-500 w-6 h-6 md:w-8 md:h-8 rounded-full border-4 border-black z-20 animate-pulse shadow-lg"></div>
-                        </div>
-                        <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Meeting {companion.name}</h2>
-                        <div className="flex items-center justify-center gap-2 text-yellow-500 font-bold uppercase text-[10px] tracking-widest">
-                            <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
-                            {connectionState === 'QUEUED' ? 'Waiting in Queue' : 'Handshaking Server'}
-                        </div>
-                    </div>
+                <div className="relative z-10 w-full max-w-4xl mx-auto p-4 md:p-8 flex flex-col items-center justify-center min-h-screen">
+                    {/* Background Glows for Wow Factor */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-yellow-500/10 rounded-full blur-[120px] pointer-events-none animate-pulse-slow"></div>
+                    <div className="absolute top-1/4 left-1/3 w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none animate-pulse-slow pulse-delay-1000"></div>
 
-                    {/* Right: Info & Engagement */}
-                    <div className="w-full md:w-1/2 space-y-6">
-                        {connectionState === 'QUEUED' && (
-                            <div className="bg-white/5 backdrop-blur-md rounded-3xl p-6 border border-white/10 shadow-2xl">
-                                <div className="flex justify-between items-end mb-4">
-                                    <div>
-                                        <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Queue Position</p>
-                                        <p className="text-4xl font-black text-white">{queuePos}</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Est. Wait</p>
-                                        <p className="text-xl font-bold text-yellow-500">{estWait > 0 ? `${estWait}s` : 'Next'}</p>
-                                    </div>
-                                </div>
-                                <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-yellow-500 transition-all duration-1000 ease-out"
-                                        style={{ width: `${Math.max(5, 100 - (queuePos * 10))}%` }}
-                                    ></div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center w-full animate-in animate-fade-in duration-1000">
+                        {/* Left: Companion Presence */}
+                        <div className="text-center space-y-6">
+                            <div className="relative inline-block">
+                                {/* Holographic Ring */}
+                                <div className="absolute inset-[-20px] rounded-full border border-yellow-500/20 animate-spin-slow"></div>
+                                <div className="absolute inset-[-10px] rounded-full border border-yellow-400/10 animate-spin-slow" style={{ animationDirection: 'reverse' }}></div>
+
+                                <div className="relative w-40 h-40 md:w-64 md:h-64 mx-auto">
+                                    <div className="absolute inset-0 rounded-full bg-yellow-500/20 animate-ping"></div>
+                                    <div className="absolute inset-0 rounded-full border-4 border-yellow-500/30 z-20"></div>
+                                    <img
+                                        src={companion.imageUrl}
+                                        className="w-full h-full rounded-full object-cover border-4 border-yellow-500/50 shadow-[0_0_80px_rgba(250,204,21,0.2)] relative z-10"
+                                        alt={companion.name}
+                                    />
+                                    <div className="absolute bottom-4 right-4 bg-green-500 w-8 h-8 rounded-full border-4 border-[#0A0A0A] z-30 animate-pulse shadow-xl"></div>
                                 </div>
                             </div>
-                        )}
 
-                        {connectionState === 'CONNECTING' && (
-                            <div className="bg-white/5 backdrop-blur-md rounded-3xl p-6 border border-white/10 shadow-2xl">
-                                <div className="flex items-center gap-4 mb-4">
-                                    <div className="p-3 bg-yellow-500/20 rounded-2xl">
-                                        <Loader2 className="w-6 h-6 text-yellow-500 animate-spin" />
+                            <div className="space-y-2">
+                                <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter">
+                                    {companion.name} <span className="text-yellow-500">is ready</span>
+                                </h2>
+                                <p className="text-gray-400 font-medium tracking-wide uppercase text-xs flex items-center justify-center gap-2">
+                                    <span className="w-1 h-1 rounded-full bg-yellow-500"></span>
+                                    {connectionState === 'QUEUED' ? 'Priority Queue Active' : 'Establishing Secure Line'}
+                                    <span className="w-1 h-1 rounded-full bg-yellow-500"></span>
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Right: Info & Engagement */}
+                        <div className="space-y-8">
+                            {/* Status Card */}
+                            <div className="bg-white/5 backdrop-blur-2xl rounded-[40px] p-8 border border-white/10 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)]">
+                                {connectionState === 'QUEUED' ? (
+                                    <div className="space-y-8">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Queue Position</p>
+                                                <div className="flex items-baseline gap-2">
+                                                    <span className="text-6xl font-black text-white leading-none">{queuePos}</span>
+                                                    <span className="text-gray-500 font-bold">/ 15</span>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Estimated Arrival</p>
+                                                <div className="px-4 py-2 bg-yellow-500/10 rounded-2xl border border-yellow-500/20 inline-block">
+                                                    <span className="text-xl font-black text-yellow-500">{estWait > 0 ? `~${estWait}s` : 'Next'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden p-[2px] border border-white/5">
+                                                <div
+                                                    className="h-full bg-gradient-to-r from-yellow-600 to-yellow-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(250,204,21,0.5)]"
+                                                    style={{ width: `${Math.max(5, 100 - (queuePos * 10))}%` }}
+                                                ></div>
+                                            </div>
+                                            <p className="text-[10px] text-gray-500 font-bold text-center italic">Your time is valuable. We are preparing the room with highest priority.</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h3 className="text-white font-bold">Initializing Room</h3>
-                                        <p className="text-gray-400 text-xs">Securing encrypted video stream...</p>
-                                    </div>
-                                </div>
-                                {serviceDelay && (
-                                    <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl flex items-start gap-3 animate-in fade-in zoom-in">
-                                        <Clock className="w-4 h-4 text-blue-400 mt-0.5" />
-                                        <p className="text-[11px] text-blue-200 leading-tight">High traffic detected. We're prioritizing your connection, thank you for your patience.</p>
+                                ) : (
+                                    <div className="py-4 space-y-6">
+                                        <div className="flex items-center gap-6">
+                                            <div className="relative">
+                                                <div className="absolute inset-0 bg-yellow-500/20 blur-xl animate-pulse"></div>
+                                                <div className="relative p-5 bg-yellow-500/10 rounded-[24px] border border-yellow-500/20">
+                                                    <Loader2 className="w-8 h-8 text-yellow-500 animate-spin" />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xl font-black text-white">Initializing Stream</h3>
+                                                <p className="text-gray-400 text-sm">Perfecting audio and video quality...</p>
+                                            </div>
+                                        </div>
+
+                                        {serviceDelay && (
+                                            <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-3xl flex items-start gap-3 animate-in fade-in">
+                                                <div className="p-2 bg-blue-500/20 rounded-full mt-0.5">
+                                                    <Clock className="w-4 h-4 text-blue-400" />
+                                                </div>
+                                                <p className="text-xs text-blue-200/80 leading-relaxed font-medium">
+                                                    High demand detected. We're tuning your private room for the best experience. Just a moment.
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
-                        )}
 
-                        {/* Ambient Tip Card */}
-                        <div className="bg-black/40 backdrop-blur-sm rounded-3xl p-6 border border-white/5 min-h-[140px] flex flex-col justify-between">
-                            <div className="flex items-center gap-2 mb-3">
-                                <Sparkles className="w-3.5 h-3.5 text-yellow-500/50" />
-                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Preparation Tip</span>
+                            {/* Engagement Card */}
+                            <div className="bg-black/60 backdrop-blur-xl rounded-[40px] p-8 border border-white/5 min-h-[160px] flex flex-col justify-center relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <Sparkles className="w-12 h-12 text-yellow-500" />
+                                </div>
+                                <div className="relative z-10 space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <span className="w-8 h-[1px] bg-yellow-500/50"></span>
+                                        <span className="text-[10px] font-black text-yellow-500/70 uppercase tracking-[0.3em]">Moment of Peace</span>
+                                    </div>
+                                    <p className="text-gray-200 text-lg md:text-xl font-medium leading-relaxed italic animate-in animate-fade-in" key={currentTipIndex}>
+                                        "{WELLNESS_TIPS[currentTipIndex]}"
+                                    </p>
+                                </div>
                             </div>
-                            <p className="text-gray-200 text-sm font-medium leading-relaxed italic animate-in fade-in slide-in-from-left-5 duration-500" key={currentTipIndex}>
-                                "{WELLNESS_TIPS[currentTipIndex]}"
-                            </p>
                         </div>
                     </div>
                 </div>

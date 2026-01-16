@@ -215,76 +215,83 @@ const MainApp: React.FC = () => {
     );
   }
 
-  if (activeSessionCompanion && user) {
-    return <VideoRoom companion={activeSessionCompanion} onEndSession={() => setActiveSessionCompanion(null)} userName={user.name} userId={user.id} />;
-  }
-
   return (
     <ErrorBoundary>
       <ToastProvider>
-        {showAuth && <Auth onLogin={handleLogin} onCancel={() => setShowAuth(false)} initialMode={authMode} />}
+        {activeSessionCompanion && user ? (
+          <VideoRoom
+            companion={activeSessionCompanion}
+            onEndSession={() => setActiveSessionCompanion(null)}
+            userName={user.name}
+            userId={user.id}
+          />
+        ) : (
+          <>
+            {showAuth && <Auth onLogin={handleLogin} onCancel={() => setShowAuth(false)} initialMode={authMode} />}
 
 
-        {/* TIMEOUT WARNING MODAL */}
-        {showTimeoutWarning && (
-          <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl max-sm w-full text-center shadow-2xl border border-yellow-500">
-              <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Clock className="w-8 h-8 text-yellow-600 dark:text-yellow-500" />
+            {/* TIMEOUT WARNING MODAL */}
+            {showTimeoutWarning && (
+              <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+                <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl max-sm w-full text-center shadow-2xl border border-yellow-500">
+                  <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Clock className="w-8 h-8 text-yellow-600 dark:text-yellow-500" />
+                  </div>
+                  <h3 className="text-2xl font-black mb-2 dark:text-white">Are you still there?</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">Your secure session will time out in 60 seconds to protect your privacy.</p>
+                  <button
+                    onClick={() => { lastActivityRef.current = Date.now(); setShowTimeoutWarning(false); }}
+                    className="w-full py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:scale-105 transition-transform"
+                  >
+                    I'm still here
+                  </button>
+                </div>
               </div>
-              <h3 className="text-2xl font-black mb-2 dark:text-white">Are you still there?</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">Your secure session will time out in 60 seconds to protect your privacy.</p>
-              <button
-                onClick={() => { lastActivityRef.current = Date.now(); setShowTimeoutWarning(false); }}
-                className="w-full py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:scale-105 transition-transform"
-              >
-                I'm still here
-              </button>
-            </div>
-          </div>
+            )}
+
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={
+                user ? (
+                  user.role === UserRole.ADMIN ? <Navigate to="/admin/dashboard" /> : <Dashboard user={user} onLogout={handleLogout} onStartSession={(c) => setActiveSessionCompanion(c)} />
+                ) : (
+                  <LandingPage onLoginClick={(signup) => {
+                    const requestedMode = signup ? 'signup' : 'login';
+                    if (showAuth && authMode === requestedMode) {
+                      setShowAuth(false);
+                    } else {
+                      setAuthMode(requestedMode);
+                      setShowAuth(true);
+                    }
+                  }} />
+                )
+              } />
+
+              {/* Admin Sub-Site Routes */}
+              <Route path="/admin" element={<Navigate to="/admin/login" />} />
+              <Route path="/admin/login" element={<AdminLogin onLogin={(u) => { setUser(u); UserService.saveUserSession(u); navigate('/admin/dashboard'); }} />} />
+
+              <Route path="/admin/dashboard" element={
+                user && user.role === UserRole.ADMIN ? (
+                  <AdminDashboard onLogout={handleLogout} />
+                ) : (
+                  <Navigate to="/admin/login" />
+                )
+              } />
+
+              {/* Static Pages */}
+              <Route path="/about" element={<StaticPages type="about" />} />
+              <Route path="/press" element={<StaticPages type="press" />} />
+              <Route path="/safety" element={<StaticPages type="safety" />} />
+              <Route path="/crisis" element={<StaticPages type="crisis" />} />
+
+              <Route path="/privacy" element={<StaticPages type="privacy" />} />
+              <Route path="/terms" element={<StaticPages type="terms" />} />
+              <Route path="/support" element={<StaticPages type="support" />} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </>
         )}
-
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={
-            user ? (
-              user.role === UserRole.ADMIN ? <Navigate to="/admin/dashboard" /> : <Dashboard user={user} onLogout={handleLogout} onStartSession={(c) => setActiveSessionCompanion(c)} />
-            ) : (
-              <LandingPage onLoginClick={(signup) => {
-                const requestedMode = signup ? 'signup' : 'login';
-                if (showAuth && authMode === requestedMode) {
-                  setShowAuth(false);
-                } else {
-                  setAuthMode(requestedMode);
-                  setShowAuth(true);
-                }
-              }} />
-            )
-          } />
-
-          {/* Admin Sub-Site Routes */}
-          <Route path="/admin" element={<Navigate to="/admin/login" />} />
-          <Route path="/admin/login" element={<AdminLogin onLogin={(u) => { setUser(u); UserService.saveUserSession(u); navigate('/admin/dashboard'); }} />} />
-
-          <Route path="/admin/dashboard" element={
-            user && user.role === UserRole.ADMIN ? (
-              <AdminDashboard onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/admin/login" />
-            )
-          } />
-
-          {/* Static Pages */}
-          <Route path="/about" element={<StaticPages type="about" />} />
-          <Route path="/press" element={<StaticPages type="press" />} />
-          <Route path="/safety" element={<StaticPages type="safety" />} />
-          <Route path="/crisis" element={<StaticPages type="crisis" />} />
-
-          <Route path="/privacy" element={<StaticPages type="privacy" />} />
-          <Route path="/terms" element={<StaticPages type="terms" />} />
-          <Route path="/support" element={<StaticPages type="support" />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
       </ToastProvider>
     </ErrorBoundary>
   );
