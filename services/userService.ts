@@ -67,6 +67,56 @@ export class UserService {
         };
     }
 
+    // FALLBACK: Construct a temporary user object from Auth Session to prevent logout
+    static createFallbackUser(sessionUser: any): User {
+        return {
+            id: sessionUser.id,
+            name: sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || "User",
+            email: sessionUser.email || "",
+            role: UserRole.USER, // Default to USER, Admin dashboard handles its own checks
+            balance: 0,
+            subscriptionStatus: 'ACTIVE',
+            joinedAt: new Date().toISOString(),
+            lastLoginDate: new Date().toISOString(),
+            streak: 0,
+            provider: sessionUser.app_metadata?.provider || 'email',
+            avatar: sessionUser.user_metadata?.avatar_url,
+            emailPreferences: { marketing: true, updates: true },
+            themePreference: 'light',
+            languagePreference: 'en',
+            gameScores: { match: 0, cloud: 0 }
+        };
+    }
+
+    // REPAIR: Attempt to fix missing public.users record
+    static async repairUserRecord(sessionUser: any): Promise<User | null> {
+        try {
+            console.log("Attempting to repair user profile...", sessionUser.id);
+            const fallback = this.createFallbackUser(sessionUser);
+
+            // Try explicit UPSERT to fix missing row
+            const { error } = await supabase.from('users').upsert({
+                id: fallback.id,
+                email: fallback.email,
+                name: fallback.name,
+                role: 'USER',
+                provider: fallback.provider,
+                last_login_date: new Date().toISOString()
+            });
+
+            if (error) {
+                console.error("Repair failed (likely RLS denied):", error);
+                return null;
+            }
+
+            // Retry Sync
+            return await this.syncUser(sessionUser.id);
+        } catch (e) {
+            console.error("Repair Exception:", e);
+            return null;
+        }
+    }
+
     static async login(email: string, password?: string): Promise<User> {
         if (!password) throw new Error("Password required");
         const { data, error } = (await BaseService.withTimeout(

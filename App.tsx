@@ -82,10 +82,22 @@ const MainApp: React.FC = () => {
   // Restore session & Handle Auth Changes
   useEffect(() => {
     // 1. Initial Load
-    UserService.restoreSession().then((restored) => {
-      if (restored) {
-        setUser(restored);
-        if (restored.role === UserRole.ADMIN && location.pathname === '/') {
+    UserService.restoreSession().then(async (restored) => {
+      let activeUser = restored;
+
+      // If DB failed but we have a session in localStorage, use fallback
+      if (!activeUser) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          console.warn("Initial Restore Failed - Using Fallback");
+          activeUser = UserService.createFallbackUser(session.user);
+          UserService.repairUserRecord(session.user); // Heal self
+        }
+      }
+
+      if (activeUser) {
+        setUser(activeUser);
+        if (activeUser.role === UserRole.ADMIN && location.pathname === '/') {
           navigate('/admin/dashboard');
         }
       }
@@ -98,7 +110,18 @@ const MainApp: React.FC = () => {
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
         // Prevent unnecessary re-sync if we already have the correct user
         if (!user || user.id !== session.user.id) {
-          const syncedUser = await UserService.syncUser(session.user.id);
+          let syncedUser = await UserService.syncUser(session.user.id);
+
+          if (!syncedUser) {
+            console.warn("User Sync Failed - Using Fallback & Attempting Repair");
+            syncedUser = UserService.createFallbackUser(session.user);
+
+            // Attempt background repair
+            UserService.repairUserRecord(session.user).then(repaired => {
+              if (repaired) setUser(repaired);
+            });
+          }
+
           if (syncedUser) setUser(syncedUser);
         }
       } else if (event === 'SIGNED_OUT') {
