@@ -37,6 +37,16 @@ const ICEBREAKERS = [
     "What's a song that always lifts your mood?"
 ];
 
+// --- AMBIENT ENGAGEMENT CONTENT ---
+const WELLNESS_TIPS = [
+    "Focus on your breath. Inhale for 4 seconds, hold for 4, exhale for 4.",
+    "Notice three things in your room that are the color yellow.",
+    "Relax your shoulders and unclench your jaw. You're in a safe space.",
+    "Remember that it's okay to take things one step at a time.",
+    "Think of one thing you're looking forward to this month.",
+    "You're doing something brave by showing up for yourself today."
+];
+
 // --- ARTIFACT GENERATOR ---
 const renderSessionArtifact = (companionName: string, durationStr: string, dateStr: string): string => {
     const canvas = document.createElement('canvas');
@@ -138,6 +148,8 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
     // Queue State
     const [queuePos, setQueuePos] = useState(0);
     const [estWait, setEstWait] = useState(0);
+    const [currentTipIndex, setCurrentTipIndex] = useState(0);
+    const [serviceDelay, setServiceDelay] = useState(false);
 
     // Post Session State
     const [showSummary, setShowSummary] = useState(false);
@@ -263,6 +275,11 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
         initQueue();
 
+        // Rotate Wellness Tips
+        const tipInterval = setInterval(() => {
+            setCurrentTipIndex(prev => (prev + 1) % WELLNESS_TIPS.length);
+        }, 8000);
+
         // HANDLE MOBILE & DESKTOP TAB CLOSE / REFRESH
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
             performCleanup();
@@ -279,6 +296,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
         return () => {
             clearInterval(queueInterval);
+            clearInterval(tipInterval);
             window.removeEventListener('beforeunload', handleBeforeUnload);
             window.removeEventListener('pagehide', handlePageHide);
             performCleanup();
@@ -301,6 +319,11 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         connectionInitiated.current = true;
         setConnectionState('CONNECTING');
         setErrorMsg('');
+
+        // SERVICE DELAY MONITOR: If API takes > 7s, show "High Traffic" HUD
+        const delayTimer = setTimeout(() => {
+            setServiceDelay(true);
+        }, 7000);
 
         try {
             const user = UserService.getUser();
@@ -330,6 +353,8 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             const response = await createTavusConversation(companion.replicaId, userName, context);
 
             if (response.conversation_url) {
+                clearTimeout(delayTimer);
+                setServiceDelay(false);
                 setConversationUrl(response.conversation_url);
                 conversationIdRef.current = response.conversation_id;
                 setConnectionState('CONNECTED');
@@ -509,27 +534,75 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
             {/* State: CONNECTING / QUEUED */}
             {(connectionState === 'CONNECTING' || connectionState === 'QUEUED') && (
-                <div className="relative z-10 text-center p-8 bg-black/40 backdrop-blur-md rounded-3xl border border-white/10 max-w-md w-full animate-in fade-in">
-                    <div className="relative w-24 h-24 mx-auto mb-6">
-                        <img src={companion.imageUrl} className="w-full h-full rounded-full object-cover border-4 border-yellow-500 shadow-lg" alt={companion.name} />
-                        <div className="absolute bottom-0 right-0 bg-green-500 w-6 h-6 rounded-full border-4 border-black animate-pulse"></div>
+                <div className="relative z-10 w-full max-w-2xl mx-auto p-6 md:p-12 flex flex-col md:flex-row items-center gap-8 md:gap-12 animate-in fade-in slide-in-from-bottom-10 duration-700">
+                    {/* Left: Companion Presence */}
+                    <div className="w-full md:w-1/2 text-center">
+                        <div className="relative w-32 h-32 md:w-48 md:h-48 mx-auto mb-6">
+                            <div className="absolute inset-0 rounded-full bg-yellow-500/20 animate-ping"></div>
+                            <img src={companion.imageUrl} className="w-full h-full rounded-full object-cover border-4 border-yellow-500 shadow-[0_0_50px_rgba(250,204,21,0.3)] relative z-10" alt={companion.name} />
+                            <div className="absolute bottom-2 right-2 md:bottom-4 md:right-4 bg-green-500 w-6 h-6 md:w-8 md:h-8 rounded-full border-4 border-black z-20 animate-pulse shadow-lg"></div>
+                        </div>
+                        <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Meeting {companion.name}</h2>
+                        <div className="flex items-center justify-center gap-2 text-yellow-500 font-bold uppercase text-[10px] tracking-widest">
+                            <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
+                            {connectionState === 'QUEUED' ? 'Waiting in Queue' : 'Handshaking Server'}
+                        </div>
                     </div>
-                    <h2 className="text-2xl font-black text-white mb-2">Connecting to {companion.name}...</h2>
 
-                    {connectionState === 'QUEUED' && (
-                        <div className="mt-4 bg-yellow-500/10 border border-yellow-500/30 p-4 rounded-xl">
-                            <p className="text-yellow-400 font-bold text-sm uppercase tracking-wider mb-1">In Queue</p>
-                            <p className="text-white text-lg">Position: <span className="font-mono font-black">{queuePos}</span></p>
-                            <p className="text-gray-400 text-xs mt-1">Est. Wait: {estWait > 0 ? `${estWait}s` : 'Momentarily'}</p>
-                        </div>
-                    )}
+                    {/* Right: Info & Engagement */}
+                    <div className="w-full md:w-1/2 space-y-6">
+                        {connectionState === 'QUEUED' && (
+                            <div className="bg-white/5 backdrop-blur-md rounded-3xl p-6 border border-white/10 shadow-2xl">
+                                <div className="flex justify-between items-end mb-4">
+                                    <div>
+                                        <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Queue Position</p>
+                                        <p className="text-4xl font-black text-white">{queuePos}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Est. Wait</p>
+                                        <p className="text-xl font-bold text-yellow-500">{estWait > 0 ? `${estWait}s` : 'Next'}</p>
+                                    </div>
+                                </div>
+                                <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-yellow-500 transition-all duration-1000 ease-out"
+                                        style={{ width: `${Math.max(5, 100 - (queuePos * 10))}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+                        )}
 
-                    {connectionState === 'CONNECTING' && (
-                        <div className="mt-4 flex flex-col items-center gap-2">
-                            <Loader2 className="w-8 h-8 text-yellow-500 animate-spin" />
-                            <p className="text-gray-300 text-sm">Securing encrypted line...</p>
+                        {connectionState === 'CONNECTING' && (
+                            <div className="bg-white/5 backdrop-blur-md rounded-3xl p-6 border border-white/10 shadow-2xl">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="p-3 bg-yellow-500/20 rounded-2xl">
+                                        <Loader2 className="w-6 h-6 text-yellow-500 animate-spin" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-white font-bold">Initializing Room</h3>
+                                        <p className="text-gray-400 text-xs">Securing encrypted video stream...</p>
+                                    </div>
+                                </div>
+                                {serviceDelay && (
+                                    <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl flex items-start gap-3 animate-in fade-in zoom-in">
+                                        <Clock className="w-4 h-4 text-blue-400 mt-0.5" />
+                                        <p className="text-[11px] text-blue-200 leading-tight">High traffic detected. We're prioritizing your connection, thank you for your patience.</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Ambient Tip Card */}
+                        <div className="bg-black/40 backdrop-blur-sm rounded-3xl p-6 border border-white/5 min-h-[140px] flex flex-col justify-between">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Sparkles className="w-3.5 h-3.5 text-yellow-500/50" />
+                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Preparation Tip</span>
+                            </div>
+                            <p className="text-gray-200 text-sm font-medium leading-relaxed italic animate-in fade-in slide-in-from-left-5 duration-500" key={currentTipIndex}>
+                                "{WELLNESS_TIPS[currentTipIndex]}"
+                            </p>
                         </div>
-                    )}
+                    </div>
                 </div>
             )}
 
