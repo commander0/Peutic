@@ -11,7 +11,9 @@ import {
     Mail, StopCircle, Eye, Minimize2, Flame as Fire
 } from 'lucide-react';
 import { Database, STABLE_AVATAR_POOL } from '../services/database';
+import { NameValidator } from '../services/nameValidator';
 import { generateDailyInsight } from '../services/geminiService';
+
 import { WisdomEngine } from '../services/wisdomEngine';
 import TechCheck from './TechCheck';
 import GroundingMode from './GroundingMode';
@@ -147,7 +149,7 @@ const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }> = ({ 
                 const imageUrl = canvas.toDataURL('image/jpeg', 0.4);
                 // Use simple random ID generation for browser compatibility if crypto.randomUUID isn't available in all contexts
                 const newId = `wisdom_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-                
+
                 const newEntry: ArtEntry = { id: newId, userId: userId, imageUrl: imageUrl, prompt: input, createdAt: new Date().toISOString(), title: "Wisdom Card" };
 
                 await Database.saveArt(newEntry);
@@ -724,13 +726,25 @@ const BreathingExercise: React.FC<{ userId: string, onClose: () => void }> = ({ 
 const ProfileModal: React.FC<{ user: User, onClose: () => void, onUpdate: () => void }> = ({ user, onClose, onUpdate }) => {
     const [name, setName] = useState(user.name);
     const [loading, setLoading] = useState(false);
-    const handleSave = () => { setLoading(true); Database.updateUser({ ...user, name }).then(() => { onUpdate(); onClose(); }); };
+    const [error, setError] = useState<string | null>(null);
+    const handleSave = () => {
+        setError(null);
+        const check = NameValidator.validateFullName(name);
+        if (!check.valid) {
+            setError(check.error || "Invalid name.");
+            return;
+        }
+        setLoading(true);
+        Database.updateUser({ ...user, name }).then(() => { onUpdate(); onClose(); });
+    };
     return (
         <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
             <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl p-8 border border-yellow-200 dark:border-gray-800 shadow-2xl relative">
                 <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-black dark:hover:text-white"><X className="w-5 h-5" /></button>
                 <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-6">Edit Profile</h2>
+                {error && <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-xs font-bold border border-red-100">{error}</div>}
                 <div className="space-y-4 mb-8">
+
                     <div><label className="text-xs font-bold text-gray-500 uppercase block mb-2">Display Name</label><input className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none dark:text-white" value={name} onChange={e => setName(e.target.value)} /></div>
                     <div><label className="text-xs font-bold text-gray-500 uppercase block mb-2">Email</label><input className="w-full p-3 bg-gray-100 dark:bg-gray-800/50 border border-transparent rounded-xl text-gray-500 cursor-not-allowed" value={user.email} disabled /></div>
                 </div>
@@ -780,7 +794,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     useEffect(() => {
         const root = document.documentElement;
         const themeStr = darkMode ? 'dark' : 'light';
-        
+
         if (darkMode) {
             root.classList.add('dark');
         } else {
@@ -790,7 +804,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
         // Sync with DB if different (debounce could be added in production)
         if (user.themePreference !== themeStr) {
-             Database.updateUser({ ...dashboardUser, themePreference: themeStr as 'light' | 'dark' });
+            Database.updateUser({ ...dashboardUser, themePreference: themeStr as 'light' | 'dark' });
         }
     }, [darkMode]);
 
@@ -854,8 +868,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     };
     const confirmSession = () => { setShowTechCheck(false); if (pendingCompanion) onStartSession(pendingCompanion); };
     const saveProfileChanges = () => {
+        const check = NameValidator.validateFullName(editName);
+        if (!check.valid) {
+            alert(check.error);
+            return;
+        }
         setIsSavingProfile(true);
         setTimeout(() => {
+
             const updatedUser: User = {
                 ...dashboardUser,
                 name: editName,

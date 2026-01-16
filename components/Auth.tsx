@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { UserRole } from '../types';
 import { Facebook, AlertCircle, Send, Heart, Check, Loader2, Server } from 'lucide-react';
 import { supabase } from '../services/supabaseClient';
+import { NameValidator } from '../services/nameValidator';
+
 
 
 interface AuthProps {
@@ -102,7 +104,16 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                 // DIRECT LOGIN: No pre-check. Supabase Auth handles invalid credentials securely.
                 await onLogin(UserRole.USER, '', undefined, email, undefined, 'email', password, false);
             } else {
+                // 1. Name Validation
+                const nameCheck = NameValidator.validate(firstName, lastName);
+                if (!nameCheck.valid) {
+                    setError(nameCheck.error || "Invalid name provided.");
+                    setLoading(false);
+                    return;
+                }
+
                 if (!validateAge(birthday)) {
+
                     setError("You must be at least 18 years old to create an account.");
                     setLoading(false);
                     return;

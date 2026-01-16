@@ -2,6 +2,8 @@
 
 import { User, UserRole, Transaction, Companion, GlobalSettings, SystemLog, MoodEntry, JournalEntry, SessionFeedback, ArtEntry } from '../types';
 import { supabase } from './supabaseClient';
+import { NameValidator } from './nameValidator';
+
 
 // --- HELPER: Promise with Timeout ---
 const withTimeout = <T>(promise: Promise<T>, ms: number, errorMessage = "Operation timed out"): Promise<T> => {
@@ -70,7 +72,7 @@ export const INITIAL_COMPANIONS: Companion[] = [
     { id: 'c27', name: 'Jordan', gender: 'Male', specialty: 'Military Transition', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=800", bio: 'From service to civilian life.', replicaId: 'r92debe21318', licenseNumber: 'LCSW-VA-4421', degree: 'MS, Clinical Social Work', stateOfPractice: 'VA', yearsExperience: 16 },
     { id: 'c28', name: 'Layla', gender: 'Female', specialty: 'Fertility Support', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=800", bio: 'Supporting your path to parenthood.', replicaId: 're3a705cf66a', licenseNumber: 'PhD-CA-8821', degree: 'PhD, Health Psychology', stateOfPractice: 'CA', yearsExperience: 14 },
     { id: 'c29', name: 'Henry', gender: 'Male', specialty: 'Retirement Adjustment', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1504257432389-52343af06ae3?auto=format&fit=crop&q=80&w=800", bio: 'Finding purpose in the next chapter.', replicaId: 'rca8a38779a8', licenseNumber: 'LMFT-FL-3321', degree: 'MA, Counseling', stateOfPractice: 'FL', yearsExperience: 25 },
-    { id: 'c30', name: 'Nora', gender: 'Female', specialty: 'Caregiver Stress', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=800", bio: 'Caring for yourself while caring for others.', replicaId: 'r4317e64d25a', licenseNumber: 'LCSW-OH-9912', degree: 'MSW, Social Work',stateOfPractice: 'OH', yearsExperience: 18 },
+    { id: 'c30', name: 'Nora', gender: 'Female', specialty: 'Caregiver Stress', status: 'AVAILABLE', rating: 4.9, imageUrl: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=800", bio: 'Caring for yourself while caring for others.', replicaId: 'r4317e64d25a', licenseNumber: 'LCSW-OH-9912', degree: 'MSW, Social Work', stateOfPractice: 'OH', yearsExperience: 18 },
     { id: 'c31', name: 'Owen', gender: 'Male', specialty: 'Gaming Addiction', status: 'AVAILABLE', rating: 4.7, imageUrl: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=800", bio: 'Balancing virtual worlds with reality.', replicaId: 'r92debe21318', licenseNumber: 'LPC-WA-2210', degree: 'MA, Psychology', stateOfPractice: 'WA', yearsExperience: 6 },
     { id: 'c32', name: 'Luna', gender: 'Female', specialty: 'Spiritual Crisis', status: 'AVAILABLE', rating: 5.0, imageUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=800", bio: 'Navigating faith transitions and meaning.', replicaId: 'rc2146c13e81', licenseNumber: 'LMFT-OR-5521', degree: 'MA, Transpersonal Psych', stateOfPractice: 'OR', yearsExperience: 11 },
     { id: 'c33', name: 'Gabriel', gender: 'Male', specialty: 'Anger Regulation', status: 'AVAILABLE', rating: 4.8, imageUrl: "https://images.unsplash.com/photo-1480455624313-e29b44bbfde1?auto=format&fit=crop&q=80&w=800", bio: 'Transforming rage into constructive action.', replicaId: 'rca8a38779a8', licenseNumber: 'PsyD-IL-4421', degree: 'PsyD, Clinical Psychology', stateOfPractice: 'IL', yearsExperience: 13 },
@@ -260,8 +262,12 @@ export class Database {
     }
 
     static async createUser(name: string, email: string, password?: string, provider: string = 'email', birthday?: string): Promise<User> {
-        // --- NAME VALIDATION REMOVED ---
-        const cleanName = name ? name.trim() : "User";
+        // --- NAME VALIDATION RESTORED & ENHANCED ---
+        const cleanName = NameValidator.sanitize(name) || "User";
+
+        // Secondary check: If name is still just "User" and we have an email, we might want to flag it
+        // but for now we follow the frontend validation mostly.
+
 
         if (provider === 'email' && password) {
             console.log("Creating user...", { name: cleanName, email, provider, birthday });
@@ -381,7 +387,7 @@ export class Database {
         // PRESERVE SETTINGS BEFORE CLEARING
         const currentTheme = localStorage.getItem('peutic_theme');
         const cookiesAccepted = localStorage.getItem('peutic_cookies_accepted');
-        
+
         try {
             // 1. Sign out from Supabase (Invalidate Token)
             await supabase.auth.signOut();
@@ -493,11 +499,11 @@ export class Database {
     }
     static async updateCompanion(companion: Companion) { await supabase.from('companions').update({ status: companion.status }).eq('id', companion.id); }
     static getSettings(): GlobalSettings { return this.settingsCache; }
-    
+
     static async syncGlobalSettings(): Promise<GlobalSettings> {
         try {
             const { data, error } = await supabase.from('global_settings').select('*').eq('id', 1).single();
-            
+
             // Fix: Check for error and do not auto-save on failure to prevent alert loops
             if (error || !data) {
                 if (error && error.code !== 'PGRST116') {
@@ -520,7 +526,7 @@ export class Database {
                 maxConcurrentSessions: settingsData.max_concurrent_sessions,
                 multilingualMode: settingsData.multilingual_mode
             };
-        } catch (e) { 
+        } catch (e) {
             console.warn("Settings sync exception:", e);
         }
         return this.settingsCache;
