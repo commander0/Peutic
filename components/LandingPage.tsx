@@ -385,7 +385,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         </div>
                     </div>
                     <div className="pt-6 md:pt-8 flex flex-col md:flex-row justify-between items-center text-[9px] font-black uppercase tracking-[0.2em] text-gray-700 dark:text-gray-600 gap-4 md:gap-0">
-                        <p>&copy; 2025 Peutic Global Inc. | ISO 27001 Certified</p>
+                        <p>&copy; {new Date().getFullYear()} Peutic Global Inc. | ISO 27001 Certified</p>
                         <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div><span>Network Optimal</span></div>
                     </div>
                 </div>

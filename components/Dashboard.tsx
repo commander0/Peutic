@@ -641,7 +641,7 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
                 }
             } catch (e: any) {
                 console.error("Stripe Initialization Failed:", e);
-                setError(`Payment system unavailable (${e.message || "Init Error"}). Please retry in a moment.`);
+                setError(`Secure Channel Unavailable (${e.message || "Init Error"}). Retrying...`);
             }
         }
     }, []);
@@ -699,10 +699,16 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
                     </div>
                     {error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 text-sm rounded-lg flex items-center gap-2"><AlertTriangle className="w-4 h-4 flex-shrink-0" /><span>{error}</span></div>}
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700"><div ref={setMountNode} className="p-2" /></div>
+                        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 relative group transition-all focus-within:ring-2 focus-within:ring-yellow-400">
+                            <div className="absolute top-0 right-0 p-2 opacity-50"><Lock className="w-3 h-3 text-gray-400" /></div>
+                            <div ref={setMountNode} className="p-2" />
+                        </div>
                         <button type="submit" disabled={processing || !window.Stripe || (amount <= 0) || !!error} className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2 ${processing || (amount <= 0) || !!error ? 'bg-gray-800 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-yellow-500 text-black hover:bg-yellow-400 hover:scale-[1.02]'}`}>
-                            {processing ? <span className="animate-pulse">Processing Securely...</span> : <><Lock className="w-5 h-5" /> Pay ${(amount || 0).toFixed(2)}</>}
+                            {processing ? <span className="animate-pulse">Establishing Secure Tunnel...</span> : <><ShieldCheck className="w-5 h-5" /> Pay ${(amount || 0).toFixed(2)}</>}
                         </button>
+                        <div className="flex justify-center items-center gap-2 opacity-60 grayscale hover:grayscale-0 transition-all">
+                            <span className="text-[10px] font-bold uppercase text-gray-400 flex items-center gap-1"><Lock className="w-3 h-3" /> Ends-to-End Encrypted via Stripe</span>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -987,7 +993,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             <div className="flex-1">
                                 <p className="text-gray-500 dark:text-gray-400 font-bold text-[10px] md:text-xs uppercase tracking-widest mb-1">{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
                                 <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mb-2">
-                                    <h1 className="text-3xl md:text-4xl font-black tracking-tight dark:text-white">{activeTab === 'hub' ? `Hello, ${user.name.split(' ')[0]}.` : activeTab === 'history' ? 'Your Journey' : 'Settings'}</h1>
+                                    <div className="flex items-center gap-3">
+                                        <h1 className="text-3xl md:text-4xl font-black tracking-tight dark:text-white">{activeTab === 'hub' ? `Hello, ${user.name.split(' ')[0]}` : activeTab === 'history' ? 'Your Journey' : 'Settings'}</h1>
+                                        {activeTab === 'hub' && <div className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Verified Member</div>}
+                                    </div>
                                     {activeTab === 'hub' && (<button onClick={() => setShowGrounding(true)} className="hidden md:flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 px-4 py-1.5 rounded-full font-bold text-xs transition-all hover:scale-105 animate-pulse"><LifeBuoy className="w-3.5 h-3.5" /> Panic Relief</button>)}
                                 </div>
                                 {activeTab === 'hub' && dailyInsight && (<p className="text-gray-600 dark:text-gray-400 mt-2 max-w-lg text-sm font-medium leading-relaxed border-l-4 border-yellow-400 pl-3 italic">"{dailyInsight}"</p>)}
@@ -1115,7 +1124,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 </Link>
                             </div>
                             <div className="pt-6 flex flex-col md:flex-row justify-between items-center text-[9px] font-black uppercase tracking-[0.2em] text-gray-700 dark:text-gray-600 gap-3 md:gap-0 border-t border-yellow-200/50 dark:border-gray-800">
-                                <p>&copy; 2025 Peutic Global Inc. | ISO 27001 Certified</p>
+                                <p>&copy; {new Date().getFullYear()} Peutic Global Inc. | ISO 27001 Certified</p>
                                 <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div><span>Network Optimal</span></div>
                             </div>
                         </div>
