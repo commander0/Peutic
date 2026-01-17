@@ -24,6 +24,11 @@ export class UserService {
         return null;
     }
 
+    static clearCache() {
+        localStorage.removeItem(this.CACHE_KEY);
+    }
+
+
 
     static getUser(): User | null { return this.currentUser; }
 

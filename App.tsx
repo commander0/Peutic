@@ -67,11 +67,11 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 }
 
 const MainApp: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(UserService.getCachedUser());
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [activeSessionCompanion, setActiveSessionCompanion] = useState<Companion | null>(null);
-  const [isRestoring, setIsRestoring] = useState(true);
+  const [isRestoring, setIsRestoring] = useState(!UserService.getCachedUser());
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
 
@@ -104,12 +104,14 @@ const MainApp: React.FC = () => {
       if (activeUser) {
         setUser(activeUser);
 
-
-
         if (activeUser.role === UserRole.ADMIN && location.pathname === '/') {
           navigate('/admin/dashboard');
         }
+      } else {
+        UserService.clearCache();
+        setUser(null);
       }
+
 
       // 3. Complete init
       // We don't strictly need to await settingsPromise if we are okay using cache for 1s

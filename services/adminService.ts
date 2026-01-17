@@ -192,6 +192,8 @@ export class AdminService {
         }
     }
 
+    private static COMPANION_CACHE_KEY = 'peutic_companions';
+
     static async getCompanions(): Promise<Companion[]> {
         const mapCompanion = (c: any) => ({
             id: c.id,
@@ -209,24 +211,26 @@ export class AdminService {
             yearsExperience: c.years_experience
         });
 
+        // Try cache first
+        try {
+            const cached = localStorage.getItem(this.COMPANION_CACHE_KEY);
+            if (cached) return JSON.parse(cached);
+        } catch (e) { }
+
         try {
             const { data, error } = await supabase.from('companions').select('*').order('name');
+            if (error) logger.warn("getCompanions Error", error.message);
+            if (!data || data.length === 0) return [];
 
-            if (error) {
-                logger.warn("getCompanions Error", error.message);
-            }
-
-            if (!data || data.length === 0) {
-                // Fallback or empty
-                return [];
-            }
-
-            return data.map(mapCompanion);
+            const mapped = data.map(mapCompanion);
+            localStorage.setItem(this.COMPANION_CACHE_KEY, JSON.stringify(mapped));
+            return mapped;
         } catch (e: any) {
             logger.error("getCompanions Failed", "", e);
             return [];
         }
     }
+
 
     static async updateCompanion(companion: Companion): Promise<void> {
         const { error } = await supabase.from('companions').update({

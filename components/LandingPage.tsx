@@ -150,9 +150,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     </div>
                     <div className="flex items-center gap-1.5 md:gap-6">
                         <div className="relative" ref={langMenuRef}>
-                            <button onClick={() => setShowLangMenu(!showLangMenu)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/50 dark:bg-black/50 backdrop-blur-md border border-gray-200 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-500 transition-all text-xs font-black uppercase tracking-wider shadow-sm group">
+                            <button onClick={() => setShowLangMenu(!showLangMenu)} className="flex items-center gap-1 px-2 md:gap-1.5 md:px-3 py-1.5 rounded-full bg-white/50 dark:bg-black/50 backdrop-blur-md border border-gray-200 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-500 transition-all text-[10px] md:text-xs font-black uppercase tracking-wider shadow-sm group">
                                 <Globe className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400 group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors" />
-                                <span className="text-gray-800 dark:text-gray-200 hidden sm:inline">{lang}</span>
+                                <span className="text-gray-800 dark:text-gray-200 hidden md:inline">{lang}</span>
                                 <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform duration-300 ${showLangMenu ? 'rotate-180' : ''} hidden md:block`} />
                             </button>
                             {showLangMenu && (
