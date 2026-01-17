@@ -1,19 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { User, Companion, Transaction, JournalEntry, ArtEntry } from '../types';
 import {
     Video, Clock, Settings, LogOut,
     LayoutDashboard, Plus, X, Lock, CheckCircle, AlertTriangle, ShieldCheck, Heart,
     BookOpen, Save, Sparkles, Flame, Trophy,
-    Sun, Cloud, Feather, Anchor, RefreshCw, Play, Zap, Star, Edit2, Trash2, Bell,
-    CloudRain, Download, Lightbulb, Moon,
-    LifeBuoy, Volume2, Music, Smile, Trees,
-    StopCircle, Minimize2, Flame as Fire
+    Sun, Cloud, Feather, Anchor, Gamepad2, RefreshCw, Play, Zap, Star, Edit2, Trash2, Bell,
+    CloudRain, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Moon,
+    Twitter, Instagram, Linkedin, LifeBuoy, Volume2, Music, Smile, Trees,
+    Mail, StopCircle, Eye, Minimize2, Flame as Fire
 } from 'lucide-react';
 import { STABLE_AVATAR_POOL } from '../services/database';
 import { UserService } from '../services/userService';
 import { AdminService } from '../services/adminService';
 import { useToast } from './common/Toast';
-import { CompanionSkeleton } from './common/SkeletonLoader';
+import { CompanionSkeleton, StatSkeleton } from './common/SkeletonLoader';
 
 import { NameValidator } from '../services/nameValidator';
 
@@ -87,7 +88,21 @@ const AvatarImage: React.FC<{ src: string; alt: string; className?: string; isUs
     return <img src={imgSrc} alt={alt} className={className} onError={() => setHasError(true)} loading="lazy" />;
 };
 
-
+const CollapsibleSection: React.FC<{ title: string; icon: any; children: React.ReactNode; defaultOpen?: boolean }> = ({ title, icon: Icon, children, defaultOpen = false }) => {
+    const [isOpen, setIsOpen] = useState(defaultOpen);
+    return (
+        <div className="bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-200 dark:border-gray-800 rounded-3xl overflow-hidden mb-4 transition-colors shadow-sm">
+            <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-4 md:p-5 hover:bg-yellow-50 dark:hover:bg-gray-800 transition-colors">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-yellow-100 dark:bg-gray-800 rounded-lg"><Icon className="w-4 h-4 md:w-5 md:h-5 text-yellow-600 dark:text-yellow-500" /></div>
+                    <span className="font-bold text-base dark:text-white">{title}</span>
+                </div>
+                {isOpen ? <ChevronUp className="w-4 h-4 md:w-5 md:h-5 text-gray-400" /> : <ChevronDown className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />}
+            </button>
+            {isOpen && <div className="p-4 md:p-5 pt-0 border-t border-yellow-100 dark:border-gray-800 animate-in slide-in-from-top-2">{children}</div>}
+        </div>
+    );
+};
 
 const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }> = ({ userId, onUpdate }) => {
     const [input, setInput] = useState('');
@@ -182,7 +197,7 @@ const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }> = ({ 
                     <div className="mt-4 space-y-3">
                         <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Your Cards ({gallery.length})</h4>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            {gallery.map((art: ArtEntry) => (
+                            {gallery.map((art) => (
                                 <div key={art.id} className="relative group aspect-square bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm animate-in zoom-in duration-300">
                                     <img src={art.imageUrl} alt="Wisdom Card" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
@@ -762,277 +777,6 @@ const ProfileModal: React.FC<{ user: User, onClose: () => void, onUpdate: () => 
     );
 };
 
-// --- VISUAL OVERHAUL COMPONENTS ---
-const GlassCard: React.FC<{ children: React.ReactNode; className?: string; onClick?: () => void }> = ({ children, className = '', onClick }) => (
-    <div onClick={onClick} className={`bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-white/40 dark:border-gray-800 shadow-xl shadow-yellow-500/5 dark:shadow-none rounded-[2rem] transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl ${className}`}>
-        {children}
-    </div>
-);
-
-
-
-const DashboardMobileHeader: React.FC<{
-    darkMode: boolean;
-    toggleDarkMode: () => void;
-    setShowGrounding: (v: boolean) => void;
-    setShowPayment: (v: boolean) => void;
-    setShowProfile: (v: boolean) => void;
-    dashboardUser: User
-}> = ({ darkMode, toggleDarkMode, setShowGrounding, setShowPayment, setShowProfile, dashboardUser }) => (
-    <div className="md:hidden fixed top-0 left-0 right-0 h-[70px] bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-white/20 dark:border-gray-800 z-50 px-6 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-yellow-400 rounded-2xl flex items-center justify-center shadow-lg shadow-yellow-400/20">
-                <Heart className="w-5 h-5 text-black fill-black" />
-            </div>
-            <span className="text-xl font-black tracking-tighter dark:text-white">Peutic</span>
-        </div>
-        <div className="flex items-center gap-3 pl-4">
-            <button onClick={toggleDarkMode} className="p-2.5 rounded-full bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                {darkMode ? <Sun className="w-4 h-4 text-yellow-600" /> : <Moon className="w-4 h-4 text-gray-600" />}
-            </button>
-            <button onClick={() => setShowGrounding(true)} className="p-2.5 bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition-colors animate-pulse border border-red-100">
-                <LifeBuoy className="w-4 h-4" />
-            </button>
-            <button onClick={() => setShowPayment(true)} className="bg-black dark:bg-white text-white dark:text-black w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shadow-lg">
-                <Plus className="w-4 h-4" />
-            </button>
-            <button onClick={() => setShowProfile(true)} className="w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-gray-800 shadow-md">
-                <AvatarImage src={dashboardUser.avatar || ''} alt="User" className="w-full h-full object-cover" isUser={true} />
-            </button>
-        </div>
-    </div>
-);
-
-const DashboardSidebar: React.FC<{
-    activeTab: 'hub' | 'history' | 'settings';
-    setActiveTab: (t: 'hub' | 'history' | 'settings') => void;
-    onLogout: () => void
-}> = ({ activeTab, setActiveTab, onLogout }) => (
-    <aside className="hidden md:flex fixed left-6 top-6 bottom-6 w-24 flex-col bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl border border-white/20 dark:border-gray-800 rounded-[2.5rem] shadow-2xl z-40 items-center py-8">
-        <div className="w-12 h-12 bg-yellow-400 rounded-2xl flex items-center justify-center shadow-lg shadow-yellow-400/20 mb-12 hover:scale-110 transition-transform cursor-pointer">
-            <Heart className="w-6 h-6 text-black fill-black" />
-        </div>
-        <nav className="flex-1 flex flex-col gap-6 w-full px-4">
-            {[{ id: 'hub', icon: LayoutDashboard }, { id: 'history', icon: Clock }, { id: 'settings', icon: Settings }].map((item) => (
-                <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id as any)}
-                    className={`w-full aspect-square rounded-2xl flex items-center justify-center transition-all duration-300 group relative ${activeTab === item.id ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg scale-110' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
-                >
-                    <item.icon className={`w-6 h-6 ${activeTab === item.id ? 'text-yellow-400 dark:text-yellow-600' : 'group-hover:text-black dark:group-hover:text-white'}`} />
-                    {activeTab === item.id && <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-1 h-8 bg-yellow-400 rounded-l-full md:hidden"></div>}
-                </button>
-            ))}
-        </nav>
-        <div className="mt-auto">
-            <button onClick={onLogout} className="p-4 text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-colors">
-                <LogOut className="w-6 h-6" />
-            </button>
-        </div>
-    </aside>
-);
-
-const HubTab: React.FC<{
-    user: User;
-    weeklyGoal: number;
-    weeklyTarget: number;
-    handleMoodSelect: (m: 'confetti' | 'rain' | null) => void;
-    setShowGrounding: (v: boolean) => void;
-    dashboardUser: User;
-    uniqueSpecialties: string[];
-    specialtyFilter: string;
-    setSpecialtyFilter: (v: string) => void;
-    loadingCompanions: boolean;
-    filteredCompanions: Companion[];
-    handleStartConnection: (c: Companion) => void;
-    refreshData: () => void;
-}> = ({ user, weeklyGoal, weeklyTarget, handleMoodSelect, setShowGrounding, dashboardUser, uniqueSpecialties, specialtyFilter, setSpecialtyFilter, loadingCompanions, filteredCompanions, handleStartConnection, refreshData }) => (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-5 duration-700">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            <GlassCard className="col-span-1 md:col-span-2 row-span-2 relative overflow-hidden group p-8 flex flex-col justify-between min-h-[300px]">
-                <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity bg-gradient-to-bl from-yellow-400 to-transparent w-full h-full"></div>
-                <div className="relative z-10 flex justify-between items-start">
-                    <div>
-                        <div className="flex items-center gap-2 mb-2"><Flame className="w-5 h-5 text-orange-500" /><span className="text-xs font-bold text-orange-500 uppercase tracking-widest">Weekly Goal</span></div>
-                        <h2 className="text-5xl font-black text-gray-900 dark:text-white mb-2">{weeklyGoal}<span className="text-2xl text-gray-400">/{weeklyTarget}</span></h2>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 max-w-xs">{weeklyGoal >= weeklyTarget ? "You are absolutely crushing it! 🔥" : "Keep going, every step counts toward your peace."}</p>
-                    </div>
-                    <div className="w-24 h-24 relative">
-                        <svg className="w-full h-full transform -rotate-90"><circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-gray-100 dark:text-gray-800" /><circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray={251.2} strokeDashoffset={251.2 - (251.2 * Math.min(100, (weeklyGoal / weeklyTarget) * 100)) / 100} className="text-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.5)] transition-all duration-1000" /></svg>
-                    </div>
-                </div>
-                <div className="relative z-10 mt-6">
-                    <button className="bg-black dark:bg-white text-white dark:text-black px-6 py-3 rounded-full font-bold text-sm shadow-lg hover:translate-y-[-2px] transition-transform">View Progress</button>
-                </div>
-            </GlassCard>
-
-            <GlassCard className="col-span-1 p-6 flex flex-col justify-center items-center text-center bg-blue-50/50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800">
-                <h3 className="text-xs font-bold text-blue-500 uppercase tracking-widest mb-4">Mood Check-in</h3>
-                <MoodTracker onMoodSelect={handleMoodSelect} />
-            </GlassCard>
-
-            <GlassCard onClick={() => setShowGrounding(true)} className="col-span-1 p-6 flex flex-col justify-center items-center text-center bg-red-50/50 dark:bg-red-900/20 border-red-100 dark:border-red-800 cursor-pointer group">
-                <div className="w-16 h-16 bg-red-100 dark:bg-red-900/50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <LifeBuoy className="w-8 h-8 text-red-500 animate-pulse" />
-                </div>
-                <h3 className="text-lg font-black text-red-600 dark:text-red-400">Panic Relief</h3>
-                <p className="text-xs text-red-400 dark:text-red-500/70 font-bold mt-1">Tap for Grounding</p>
-            </GlassCard>
-
-            <GlassCard className="col-span-1 md:col-span-3 lg:col-span-2 p-1 relative overflow-hidden h-[240px]">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10 opacity-50"></div>
-                <div className="grid grid-cols-2 h-full gap-1">
-                    <div className="relative rounded-l-[1.8rem] overflow-hidden bg-sky-100/50 dark:bg-sky-900/20 group cursor-pointer">
-                        <div className="absolute top-4 left-4 z-10"><span className="bg-white/90 dark:bg-black/90 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">Card Match</span></div>
-                        <MindfulMatchGame dashboardUser={dashboardUser} />
-                    </div>
-                    <div className="relative rounded-r-[1.8rem] overflow-hidden bg-indigo-100/50 dark:bg-indigo-900/20 group cursor-pointer">
-                        <div className="absolute top-4 left-4 z-10"><span className="bg-white/90 dark:bg-black/90 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">Cloud Hop</span></div>
-                        <CloudHopGame dashboardUser={dashboardUser} />
-                    </div>
-                </div>
-            </GlassCard>
-        </div>
-
-        <section>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
-                <div>
-                    <h2 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2"><Sparkles className="w-5 h-5 text-yellow-400" /> Specialist Sanctuary</h2>
-                    <p className="text-gray-500 text-sm mt-1">Select a guide to begin your journey.</p>
-                </div>
-                <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 max-w-full">
-                    {['All', ...uniqueSpecialties].map(spec => (
-                        <button key={spec} onClick={() => setSpecialtyFilter(spec)} className={`px-4 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap ${specialtyFilter === spec ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200'}`}>{spec}</button>
-                    ))}
-                </div>
-            </div>
-            {loadingCompanions ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                    {[1, 2, 3, 4, 5].map(i => <CompanionSkeleton key={i} />)}
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                    {filteredCompanions.map((companion: Companion) => (
-                        <div key={companion.id} onClick={() => handleStartConnection(companion)} className="group relative aspect-[3/4] rounded-[2.5rem] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
-                            <AvatarImage src={companion.imageUrl} alt={companion.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
-                            <div className="absolute bottom-0 left-0 right-0 p-6 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className={`w-2 h-2 rounded-full ${companion.status === 'AVAILABLE' ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`}></div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-300">{companion.status === 'AVAILABLE' ? 'Live Now' : 'Busy'}</span>
-                                </div>
-                                <h3 className="text-2xl font-black text-white leading-none mb-1">{companion.name}</h3>
-                                <p className="text-yellow-400 font-bold text-xs uppercase tracking-wider mb-3">{companion.specialty}</p>
-                                <div className="h-0 group-hover:h-auto overflow-hidden transition-all opacity-0 group-hover:opacity-100">
-                                    <button className="w-full bg-white text-black py-3 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-yellow-400 transition-colors">
-                                        <Video className="w-3 h-3" /> Connect
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-        </section>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-12">
-            <GlassCard className="p-8">
-                <h3 className="font-black text-xl text-gray-900 dark:text-white flex items-center gap-2 mb-6"><BookOpen className="w-5 h-5 text-blue-500" /> Journal</h3>
-                <JournalSection user={user} />
-            </GlassCard>
-            <GlassCard className="p-8">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-black text-xl text-gray-900 dark:text-white flex items-center gap-2"><Sparkles className="w-5 h-5 text-purple-500" /> Wisdom Art</h3>
-                    <button onClick={() => refreshData()} className="text-xs font-bold text-gray-400 hover:text-black">Refresh</button>
-                </div>
-                <WisdomGenerator userId={user.id} />
-            </GlassCard>
-        </div>
-    </div>
-);
-
-const HistoryTab: React.FC<{ transactions: Transaction[] }> = ({ transactions }) => (
-    <div className="animate-in fade-in slide-in-from-right-5 duration-500">
-        <GlassCard className="p-8 overflow-hidden">
-            <h3 className="font-black text-2xl text-gray-900 dark:text-white mb-6">Transaction History</h3>
-            <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                    <thead className="bg-gray-50/50 dark:bg-gray-800/50 text-xs font-bold text-gray-500 uppercase tracking-wider"><tr><th className="p-4 rounded-l-xl">Date</th><th className="p-4">Description</th><th className="p-4 text-right">Amount</th><th className="p-4 text-right rounded-r-xl">Status</th></tr></thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                        {transactions.length === 0 ? (<tr><td colSpan={4} className="p-8 text-center text-gray-400 text-sm">No history found.</td></tr>) : (transactions.map((tx) => (<tr key={tx.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors"><td className="p-4 text-sm dark:text-gray-300 font-mono">{new Date(tx.date).toLocaleDateString()}</td><td className="p-4 text-sm font-bold dark:text-white">{tx.description}</td><td className={`p-4 text-sm text-right font-mono font-bold ${tx.amount > 0 ? 'text-green-500' : 'text-gray-900 dark:text-white'}`}>{tx.amount > 0 ? '+' : ''}{tx.amount}m</td><td className="p-4 text-right"><span className="px-2 py-1 rounded text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 uppercase tracking-wide">{tx.status}</span></td></tr>)))}
-                    </tbody>
-                </table>
-            </div>
-        </GlassCard>
-    </div>
-);
-
-const SettingsTab: React.FC<{
-    editName: string;
-    setEditName: (v: string) => void;
-    editEmail: string;
-    setEditEmail: (v: string) => void;
-    saveProfileChanges: () => void;
-    isSavingProfile: boolean;
-    darkMode: boolean;
-    toggleDarkMode: () => void;
-    emailNotifications: boolean;
-    setEmailNotifications: (v: boolean) => void;
-    dashboardUser: User;
-    setShowDeleteConfirm: (v: boolean) => void;
-    showDeleteConfirm: boolean;
-    handleDeleteAccount: () => void;
-}> = ({ editName, setEditName, editEmail, setEditEmail, saveProfileChanges, isSavingProfile, darkMode, toggleDarkMode, emailNotifications, setEmailNotifications, dashboardUser, setShowDeleteConfirm, showDeleteConfirm, handleDeleteAccount }) => (
-    <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in slide-in-from-right-5 duration-500">
-        <GlassCard className="p-8">
-            <h3 className="font-black text-xl dark:text-white mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">Profile & Identity</h3>
-            <div className="space-y-6">
-                <div className="flex flex-col md:flex-row items-center gap-6">
-                    <div className="relative group cursor-pointer">
-                        <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gray-100 dark:border-gray-800 group-hover:border-yellow-400 transition-colors">
-                            <AvatarImage src={dashboardUser.avatar || ''} alt="Profile" className="w-full h-full object-cover" isUser={true} />
-                        </div>
-                        <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Edit2 className="w-6 h-6 text-white" />
-                        </div>
-                    </div>
-                    <div className="flex-1 w-full space-y-4">
-                        <div><label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 block">Display Name</label><input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none font-bold" /></div>
-                        <div><label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 block">Email</label><input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none font-bold" /></div>
-                    </div>
-                </div>
-                <div className="flex justify-end"><button onClick={saveProfileChanges} disabled={isSavingProfile} className="px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold text-sm hover:scale-105 transition-transform flex items-center gap-2">{isSavingProfile ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Updates</button></div>
-            </div>
-        </GlassCard>
-
-        <GlassCard className="p-8">
-            <h3 className="font-black text-xl dark:text-white mb-6">Preferences</h3>
-            <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/30 rounded-2xl">
-                    <div className="flex items-center gap-4"><div className="p-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm"><Moon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></div><div><p className="font-bold dark:text-white text-sm">Dark Mode</p><p className="text-[10px] text-gray-500">Easier on the eyes.</p></div></div>
-                    <button onClick={toggleDarkMode} className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors ${darkMode ? 'bg-yellow-500' : 'bg-gray-300'}`}><span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${darkMode ? 'translate-x-7' : 'translate-x-1'}`} /></button>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/30 rounded-2xl">
-                    <div className="flex items-center gap-4"><div className="p-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm"><Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" /></div><div><p className="font-bold dark:text-white text-sm">Email Alerts</p><p className="text-[10px] text-gray-500">Session summaries.</p></div></div>
-                    <button onClick={() => { const newVal = !emailNotifications; setEmailNotifications(newVal); const updated: User = { ...dashboardUser, emailPreferences: { updates: newVal, marketing: true } }; UserService.updateUser(updated); }} className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors ${emailNotifications ? 'bg-yellow-500' : 'bg-gray-300'}`}><span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${emailNotifications ? 'translate-x-7' : 'translate-x-1'}`} /></button>
-                </div>
-                <div className="pt-6">
-                    <button onClick={() => setShowDeleteConfirm(true)} className="text-red-500 font-bold text-xs hover:text-red-600 transition-colors uppercase tracking-widest flex items-center gap-2"><Trash2 className="w-4 h-4" /> Delete Account</button>
-                    {showDeleteConfirm && (
-                        <div className="mt-4 p-6 bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-100 dark:border-red-900/50 text-center animate-in zoom-in">
-                            <p className="text-red-600 font-bold mb-4 text-sm">Are you sure? This is permanent.</p>
-                            <div className="flex gap-4 justify-center">
-                                <button onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2 bg-white rounded-lg text-xs font-bold shadow-sm">Cancel</button>
-                                <button onClick={handleDeleteAccount} className="px-4 py-2 bg-red-600 text-white rounded-lg text-xs font-bold shadow-sm hover:bg-red-700">Yes, Goodbye</button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </GlassCard>
-    </div>
-);
-
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession }) => {
     const [activeTab, setActiveTab] = useState<'hub' | 'history' | 'settings'>('hub');
 
@@ -1050,6 +794,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [loadingCompanions, setLoadingCompanions] = useState(true);
     const [weeklyGoal, setWeeklyGoal] = useState(0);
     const weeklyTarget = 10;
+    const [weeklyMessage, setWeeklyMessage] = useState("Start your journey.");
     const [dailyInsight, setDailyInsight] = useState<string>(() => INSPIRATIONAL_SAYINGS[Math.floor(Math.random() * INSPIRATIONAL_SAYINGS.length)]);
     const [dashboardUser, setDashboardUser] = useState(user);
     const [showPayment, setShowPayment] = useState(false);
@@ -1118,6 +863,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             UserService.getUserTransactions(u.id).then(setTransactions);
             const prog = await UserService.getWeeklyProgress(u.id);
             setWeeklyGoal(prog.current);
+            setWeeklyMessage(prog.message);
 
             setEditName(u.name);
             setEditEmail(u.email);
@@ -1189,119 +935,210 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const uniqueSpecialties = Array.from(new Set(companions.map(c => c.specialty))).sort();
 
     return (
-        <div className={`min-h-screen font-sans selection:bg-yellow-500/30 ${darkMode ? 'dark bg-[#050505] text-white' : 'bg-[#FDFBF7] text-black'}`}>
-            {/* AMBIENT BACKGROUND */}
-            <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-500/5 dark:bg-purple-900/10 rounded-full blur-[120px] animate-pulse"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-yellow-500/5 dark:bg-yellow-900/10 rounded-full blur-[100px] animate-pulse delay-1000"></div>
-                <div className="absolute top-[40%] left-[30%] w-[40%] h-[40%] bg-blue-500/5 dark:bg-blue-900/10 rounded-full blur-[150px] animate-pulse delay-2000"></div>
-            </div>
-
+        <div className={`min-h-screen transition-colors duration-500 font-sans ${darkMode ? 'dark bg-[#0A0A0A] text-white' : 'bg-[#FFFBEB] text-black'}`}>
             {mood && <WeatherEffect type={mood} />}
             <SoundscapePlayer />
 
-            {/* MOBILE HEADER */}
-            <DashboardMobileHeader
-                darkMode={darkMode}
-                toggleDarkMode={toggleDarkMode}
-                setShowGrounding={setShowGrounding}
-                setShowPayment={setShowPayment}
-                setShowProfile={setShowProfile}
-                dashboardUser={dashboardUser}
-            />
-
-            {/* SIDEBAR */}
-            <DashboardSidebar
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                onLogout={onLogout}
-            />
-
-            {/* MAIN CONTENT AREA */}
-            <main className="flex-1 md:ml-32 min-h-screen pt-24 md:pt-10 px-4 md:px-8 pb-12 overflow-x-hidden relative z-10">
-                <header className="max-w-[1600px] mx-auto mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-3">
-                            <div className="px-3 py-1 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-full border border-gray-200 dark:border-gray-700 inline-flex items-center gap-2">
-                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{Math.floor(Math.random() * (450 - 320 + 1) + 320)} healing now</span>
-                            </div>
-                            {activeTab === 'hub' && <div className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Verified</div>}
-                        </div>
-                        <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-gray-900 dark:text-white">
-                            {activeTab === 'hub' ? `Hello, ${user.name.split(' ')[0]}` : activeTab === 'history' ? 'Journey' : 'Settings'}
-                            <span className="text-yellow-500">.</span>
-                        </h1>
-                        {activeTab === 'hub' && dailyInsight && <p className="text-gray-500 dark:text-gray-400 font-medium italic max-w-xl">"{dailyInsight}"</p>}
+            <div className="md:hidden sticky top-0 bg-[#FFFBEB]/90 dark:bg-black/90 backdrop-blur-md border-b border-yellow-200 dark:border-gray-800 p-4 flex justify-between items-center z-40">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-yellow-400 rounded-lg flex items-center justify-center shadow-md">
+                        <Heart className="w-5 h-5 text-black fill-black" />
                     </div>
-
-                    <div className="hidden md:flex items-center gap-4">
-                        <button onClick={toggleDarkMode} className="p-3 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
-                            {darkMode ? <Sun className="w-6 h-6 text-yellow-500" /> : <Moon className="w-6 h-6 text-gray-400" />}
-                        </button>
-                        <div onClick={() => setShowPayment(true)} className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-2 pr-6 rounded-full border border-gray-100 dark:border-gray-700 shadow-sm flex items-center gap-3 cursor-pointer hover:shadow-md transition-all hover:scale-105">
-                            <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center font-black text-black text-xs shadow-inner">{balance}m</div>
-                            <div className="flex flex-col">
-                                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Balance</span>
-                                <span className="text-sm font-black text-gray-900 dark:text-white">Add Credits</span>
-                            </div>
-                        </div>
-                        <button onClick={() => setShowProfile(true)} className="w-14 h-14 rounded-full p-1 border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-yellow-400 transition-colors">
-                            <div className="w-full h-full rounded-full overflow-hidden">
-                                <AvatarImage src={dashboardUser.avatar || ''} alt="User" className="w-full h-full object-cover" isUser={true} />
-                            </div>
-                        </button>
-                    </div>
-                </header>
-
-                <div className="max-w-[1600px] mx-auto">
-                    {activeTab === 'hub' && (
-                        <HubTab
-                            user={user}
-                            weeklyGoal={weeklyGoal}
-                            weeklyTarget={weeklyTarget}
-                            handleMoodSelect={handleMoodSelect}
-                            setShowGrounding={setShowGrounding}
-                            dashboardUser={dashboardUser}
-                            uniqueSpecialties={uniqueSpecialties}
-                            specialtyFilter={specialtyFilter}
-                            setSpecialtyFilter={setSpecialtyFilter}
-                            loadingCompanions={loadingCompanions}
-                            filteredCompanions={filteredCompanions}
-                            handleStartConnection={handleStartConnection}
-                            refreshData={refreshData}
-                        />
-                    )}
-
-                    {activeTab === 'history' && <HistoryTab transactions={transactions} />}
-
-                    {activeTab === 'settings' && (
-                        <SettingsTab
-                            editName={editName}
-                            setEditName={setEditName}
-                            editEmail={editEmail}
-                            setEditEmail={setEditEmail}
-                            saveProfileChanges={saveProfileChanges}
-                            isSavingProfile={isSavingProfile}
-                            darkMode={darkMode}
-                            toggleDarkMode={toggleDarkMode}
-                            emailNotifications={emailNotifications}
-                            setEmailNotifications={setEmailNotifications}
-                            dashboardUser={dashboardUser}
-                            setShowDeleteConfirm={setShowDeleteConfirm}
-                            showDeleteConfirm={showDeleteConfirm}
-                            handleDeleteAccount={handleDeleteAccount}
-                        />
-                    )}
+                    <span className="font-black tracking-tight text-lg">Peutic</span>
                 </div>
+                <div className="flex items-center gap-3">
+                    <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+                        {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4 text-gray-600" />}
+                    </button>
+                    <button onClick={() => setShowGrounding(true)} className="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors animate-pulse" title="Panic Relief">
+                        <LifeBuoy className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => setShowPayment(true)} className="bg-black dark:bg-white text-white dark:text-black px-3 py-1.5 rounded-full text-xs font-bold shadow-md flex items-center gap-1 active:scale-95 transition-transform">
+                        <span>{balance}m</span>
+                        <Plus className="w-3 h-3 text-yellow-400" />
+                    </button>
+                    <button onClick={() => setShowProfile(true)} className="w-8 h-8 rounded-full overflow-hidden border border-gray-300 dark:border-gray-700">
+                        <AvatarImage src={dashboardUser.avatar || ''} alt="User" className="w-full h-full object-cover" isUser={true} />
+                    </button>
+                    <button onClick={onLogout} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors" title="Sign Out">
+                        <LogOut className="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+            <div className="flex h-screen overflow-hidden pt-[60px] md:pt-0">
+                <aside className="hidden md:flex w-20 lg:w-64 flex-col border-r border-yellow-200 dark:border-gray-800 bg-[#FFFBEB]/50 dark:bg-black/50 backdrop-blur-xl">
+                    <div className="p-6 lg:p-8 flex items-center justify-center lg:justify-start gap-3">
+                        <div className="w-9 h-9 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg group hover:scale-110 transition-transform">
+                            <Heart className="w-5 h-5 text-black fill-black" />
+                        </div>
+                        <span className="hidden lg:block text-xl font-black tracking-tight dark:text-white">Peutic</span>
+                    </div>
+                    <nav className="flex-1 px-3 lg:px-4 py-6 lg:py-8 space-y-2 lg:space-y-3">
+                        {[{ id: 'hub', icon: LayoutDashboard, label: 'Sanctuary' }, { id: 'history', icon: Clock, label: 'Journey' }, { id: 'settings', icon: Settings, label: 'Config' }].map((item) => (
+                            <button key={item.id} onClick={() => setActiveTab(item.id as any)} className={`w-full flex items-center justify-center lg:justify-start gap-3 p-3 lg:p-4 rounded-xl transition-all duration-300 group ${activeTab === item.id ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg' : 'text-gray-500 hover:bg-yellow-100 dark:hover:bg-gray-800 dark:text-gray-400'}`}>
+                                <item.icon className={`w-5 h-5 lg:w-6 lg:h-6 ${activeTab === item.id ? 'text-yellow-400 dark:text-yellow-600' : 'group-hover:text-yellow-600 dark:group-hover:text-white'}`} />
+                                <span className="hidden lg:block font-bold text-xs lg:text-sm tracking-wide">{item.label}</span>
+                            </button>
+                        ))}
+                    </nav>
+                    <div className="p-4 lg:p-6 border-t border-yellow-200 dark:border-gray-800">
+                        <button onClick={onLogout} className="w-full flex items-center justify-center gap-3 p-3 lg:p-4 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-bold text-xs lg:text-sm">
+                            <LogOut className="w-5 h-5" /><span className="hidden lg:block">Disconnect</span>
+                        </button>
+                    </div>
+                </aside>
+                <main className="flex-1 overflow-y-auto relative scroll-smooth">
+                    <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-10 pb-24">
+                        <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                            <div className="flex-1">
+                                <p className="text-gray-500 dark:text-gray-400 font-bold text-[10px] md:text-xs uppercase tracking-widest mb-1">{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                                <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mb-2">
+                                    <div className="flex items-center gap-3">
+                                        <h1 className="text-3xl md:text-4xl font-black tracking-tight dark:text-white">{activeTab === 'hub' ? `Hello, ${user.name.split(' ')[0]}` : activeTab === 'history' ? 'Your Journey' : 'Settings'}</h1>
+                                        {activeTab === 'hub' && (
+                                            <div className="flex flex-col md:flex-row gap-2">
+                                                <div className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Verified Member</div>
+                                                <div className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1 animate-pulse">
+                                                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                                                    {Math.floor(Math.random() * (450 - 320 + 1) + 320)} healing now
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {activeTab === 'hub' && (<button onClick={() => setShowGrounding(true)} className="hidden md:flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 px-4 py-1.5 rounded-full font-bold text-xs transition-all hover:scale-105 animate-pulse"><LifeBuoy className="w-3.5 h-3.5" /> Panic Relief</button>)}
+                                </div>
+                                {activeTab === 'hub' && dailyInsight && (<p className="text-gray-600 dark:text-gray-400 mt-2 max-w-lg text-sm font-medium leading-relaxed border-l-4 border-yellow-400 pl-3 italic">"{dailyInsight}"</p>)}
+                            </div>
+                            <div className="hidden md:flex items-center gap-4">
+                                <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">{darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-600" />}</button>
+                                <button onClick={() => setShowPayment(true)} className={`px-5 py-2.5 rounded-2xl font-black shadow-lg transition-transform hover:scale-105 flex items-center gap-2 text-sm ${balance < 10 ? 'bg-red-500 text-white animate-pulse' : 'bg-black dark:bg-white text-white dark:text-black'}`}>
+                                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>{balance} mins<Plus className="w-3 h-3 ml-1 opacity-50" />
+                                </button>
+                                <button onClick={() => setShowProfile(true)} className="w-12 h-12 rounded-xl overflow-hidden border-2 border-yellow-400 shadow-xl hover:rotate-3 transition-transform"><AvatarImage src={dashboardUser.avatar || ''} alt={dashboardUser.name} className="w-full h-full object-cover" isUser={true} /></button>
+                            </div>
+                        </header>
+                        {activeTab === 'hub' && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
+                                    {dashboardUser ? (
+                                        <div className="bg-white dark:bg-gray-900 p-5 rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm col-span-1 md:col-span-2 relative overflow-hidden group">
+                                            {weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-4 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-20 h-20 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div><div className="absolute w-16 h-16 bg-blue-500/30 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-blue-400/10 rounded-full animate-ping"></div><div className="absolute w-10 h-10 bg-blue-400/50 rounded-full blur-lg animate-pulse"></div><Flame className="w-12 h-12 text-blue-500 fill-blue-500 drop-shadow-[0_0_20px_rgba(59,130,246,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy className="w-20 h-20 text-yellow-500" /></div>)}
+                                            <div className="relative z-10"><h3 className="font-bold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3><div className="flex items-end gap-2 mb-3"><span className="text-3xl md:text-4xl font-black dark:text-white">{weeklyGoal}</span><span className="text-gray-400 text-xs md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span></div><div className="w-full h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-3"><div className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= weeklyTarget ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-pulse' : 'bg-yellow-400'}`} style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}></div></div><p className="text-xs md:text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}</p></div>
+                                        </div>
+                                    ) : <StatSkeleton />}
+                                    <MoodTracker onMoodSelect={handleMoodSelect} />
+                                </div>
 
-                <footer className="mt-24 pt-12 border-t border-gray-200 dark:border-gray-800 text-center pb-8">
-                    <div className="flex items-center justify-center gap-2 mb-4 opacity-50 dark:text-white"><Heart className="w-4 h-4" /><span className="font-black tracking-tight text-sm">Peutic Inc.</span></div>
-                    <p className="text-[10px] text-gray-400 font-medium tracking-widest uppercase">&copy; {new Date().getFullYear()} All Rights Reserved. ISO 27001 Certified.</p>
-                </footer>
-            </main>
+                                <CollapsibleSection title="Mindful Arcade" icon={Gamepad2}>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
+                                        <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col bg-sky-50 dark:bg-gray-800"><div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none"><span className="text-[9px] font-black uppercase tracking-widest text-gray-500 bg-white/90 dark:bg-black/90 px-3 py-1.5 rounded-full shadow-sm">Mindful Match</span></div><MindfulMatchGame dashboardUser={dashboardUser} /></div>
+                                        <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col"><div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none"><span className="text-[9px] font-black uppercase tracking-widest text-gray-500 bg-white/90 dark:bg-black/90 px-3 py-1.5 rounded-full shadow-sm">Cloud Hop</span></div><CloudHopGame dashboardUser={dashboardUser} /></div>
+                                    </div>
+                                </CollapsibleSection>
+                                <CollapsibleSection title="Inner Sanctuary" icon={Feather}><div className="space-y-6"><JournalSection user={user} /><div className="border-t border-dashed border-yellow-200 dark:border-gray-700" /><WisdomGenerator userId={user.id} /></div></CollapsibleSection>
+                                <div>
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-5"><div><h2 className="text-xl md:text-2xl font-black dark:text-white">Available Specialists</h2><p className="text-gray-500 text-xs md:text-sm">Select a guide to begin your session.</p></div><div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide"><button onClick={() => setSpecialtyFilter('All')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === 'All' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>All</button>{uniqueSpecialties.map(spec => (<button key={spec} onClick={() => setSpecialtyFilter(spec)} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === spec ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>{spec}</button>))}</div></div>
+                                    {loadingCompanions ? (
+                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                                            {[1, 2, 3, 4, 5].map(i => <CompanionSkeleton key={i} />)}
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
+                                            {filteredCompanions.map((companion) => (
+                                                <div key={companion.id} onClick={() => handleStartConnection(companion)} className="group relative bg-white dark:bg-gray-900 rounded-[1.8rem] overflow-hidden border border-yellow-100 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all duration-300 hover:shadow-2xl cursor-pointer flex flex-col h-full">
+                                                    <div className="aspect-[4/5] relative overflow-hidden bg-gray-100 dark:bg-gray-800">
+                                                        <AvatarImage src={companion.imageUrl} alt={companion.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
 
-            {/* MODALS */}
+
+                                                        <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-5 flex flex-col justify-center text-center">
+                                                            <p className="text-yellow-400 text-[10px] font-black uppercase tracking-widest mb-2">About {companion.name}</p>
+                                                            <p className="text-white text-xs leading-relaxed mb-3">"{companion.bio}"</p>
+                                                            <div className="grid grid-cols-2 gap-2 text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-3"><div className="bg-white/10 p-1.5 rounded-lg">{companion.yearsExperience} Yrs Exp</div><div className="bg-white/10 p-1.5 rounded-lg">{companion.degree}</div></div>
+                                                            <button className="bg-white text-black px-4 py-2 rounded-full font-bold text-[10px] flex items-center justify-center gap-2 hover:bg-yellow-400 transition-colors"><Video className="w-3 h-3" /> Connect Now</button>
+                                                        </div>
+                                                        <div className="absolute top-3 left-3 flex gap-2"><div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md ${companion.status === 'AVAILABLE' ? 'bg-green-500/90 text-white shadow-lg shadow-green-500/20' : 'bg-gray-500/90 text-white'}`}>{companion.status === 'AVAILABLE' ? 'Online' : 'Busy'}</div></div><div className="absolute bottom-3 left-3 right-3 group-hover:opacity-0 transition-opacity"><h3 className="text-white font-black text-lg leading-tight mb-0.5 shadow-sm drop-shadow-md">{companion.name}</h3><p className="text-yellow-400 text-[9px] font-bold uppercase tracking-wider truncate">{companion.specialty}</p></div></div><div className="p-3 bg-white dark:bg-gray-900 flex justify-between items-center border-t border-gray-100 dark:border-gray-800"><div className="flex items-center gap-1"><Star className="w-3 h-3 text-yellow-400 fill-yellow-400" /><span className="text-gray-500 dark:text-gray-400 text-xs font-bold">{companion.rating}</span></div><button className="bg-gray-100 dark:bg-gray-800 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black rounded-lg p-2 transition-colors"><Eye className="w-3.5 h-3.5" /></button></div></div>))}</div>)}
+                                    {filteredCompanions.length === 0 && (<div className="text-center py-16 bg-gray-50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800"><p className="text-gray-500 font-bold text-sm">No specialists found in this category.</p><button onClick={() => setSpecialtyFilter('All')} className="text-yellow-600 text-xs font-bold mt-2 hover:underline">View All</button></div>)}
+                                </div>
+                            </div>
+                        )}
+                        {activeTab === 'history' && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-500">
+                                <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-100 dark:border-gray-800 overflow-hidden">
+                                    <table className="w-full text-left">
+                                        <thead className="bg-gray-50 dark:bg-gray-800 text-xs font-bold text-gray-500 uppercase tracking-wider"><tr><th className="p-4 md:p-5">Date</th><th className="p-4 md:p-5">Description</th><th className="p-4 md:p-5 text-right">Amount</th><th className="p-4 md:p-5 text-right">Status</th></tr></thead>
+                                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                            {transactions.length === 0 ? (<tr><td colSpan={4} className="p-8 text-center text-gray-400 text-sm">No history found.</td></tr>) : (transactions.map((tx) => (<tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"><td className="p-4 md:p-5 text-sm dark:text-gray-300 font-mono">{new Date(tx.date).toLocaleDateString()}</td><td className="p-4 md:p-5 text-sm font-bold dark:text-white">{tx.description}</td><td className={`p-4 md:p-5 text-sm text-right font-mono font-bold ${tx.amount > 0 ? 'text-green-500' : 'text-gray-900 dark:text-white'}`}>{tx.amount > 0 ? '+' : ''}{tx.amount}m</td><td className="p-4 md:p-5 text-right"><span className="px-2 py-1 rounded text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 uppercase tracking-wide">{tx.status}</span></td></tr>)))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+                        {activeTab === 'settings' && (
+                            <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in slide-in-from-right-5 duration-500">
+                                <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
+                                    <div className="p-5 md:p-6 border-b border-yellow-100 dark:border-gray-800"><h3 className="font-black text-lg md:text-xl dark:text-white mb-1">Profile & Identity</h3><p className="text-gray-500 text-xs">Manage your personal information.</p></div>
+                                    <div className="p-5 md:p-6 space-y-5">
+                                        <div className="flex items-center gap-5"><div className="relative"><div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-4 border-yellow-100 dark:border-gray-800"><AvatarImage src={dashboardUser.avatar || ''} alt="Profile" className="w-full h-full object-cover" isUser={true} /></div><button onClick={() => setShowProfile(true)} className="absolute bottom-0 right-0 p-1.5 bg-black text-white rounded-full hover:bg-gray-800 transition-colors shadow-lg"><Edit2 className="w-3 h-3" /></button></div><div className="flex-1 space-y-3"><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Display Name</label><div className="relative"><UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none transition-colors text-sm font-bold dark:text-white" /></div></div><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Email Address</label><div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none transition-colors text-sm font-bold dark:text-white" /></div></div></div></div>
+                                        <div className="flex justify-end pt-2"><button onClick={saveProfileChanges} disabled={isSavingProfile} className="px-5 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-bold text-xs hover:opacity-80 transition-opacity flex items-center gap-2">{isSavingProfile ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}Save Changes</button></div>
+                                    </div>
+                                </div>
+                                <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
+                                    <div className="p-5 md:p-6 border-b border-yellow-100 dark:border-gray-800"><h3 className="font-black text-lg md:text-xl dark:text-white mb-1">Preferences</h3><p className="text-gray-500 text-xs">Customize your sanctuary experience.</p></div>
+                                    <div className="p-5 md:p-6 space-y-5">
+                                        <div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Moon className="w-4 h-4 text-gray-600 dark:text-gray-400" /></div><div><p className="font-bold text-gray-900 dark:text-white text-sm">Dark Mode</p><p className="text-[10px] text-gray-500">Reduce eye strain.</p></div></div><button onClick={toggleDarkMode} className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${darkMode ? 'bg-yellow-500' : 'bg-gray-200'}`}><span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${darkMode ? 'translate-x-5' : 'translate-x-1'}`} /></button></div>
+                                        <div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Bell className="w-4 h-4 text-gray-600 dark:text-gray-400" /></div><div><p className="font-bold text-gray-900 dark:text-white text-sm">Email Notifications</p><p className="text-[10px] text-gray-500">Receive session summaries and insights.</p></div></div><button onClick={() => {
+                                            const newVal = !emailNotifications;
+                                            setEmailNotifications(newVal);
+                                            const updated: User = {
+                                                ...dashboardUser,
+                                                emailPreferences: {
+                                                    updates: newVal,
+                                                    marketing: dashboardUser.emailPreferences?.marketing ?? true
+                                                }
+                                            };
+                                            UserService.updateUser(updated);
+
+                                        }} className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${emailNotifications ? 'bg-yellow-500' : 'bg-gray-200'}`}>
+                                            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${emailNotifications ? 'translate-x-5' : 'translate-x-1'}`} /></button></div>
+                                    </div>
+                                </div>
+                                <div className="bg-red-50 dark:bg-red-950/20 rounded-3xl border border-red-100 dark:border-red-900 overflow-hidden shadow-sm">
+                                    <div className="p-5 md:p-6 border-b border-red-100 dark:border-red-900"><h3 className="font-black text-lg md:text-xl text-red-900 dark:text-red-400 mb-1">Danger Zone</h3><p className="text-red-600/70 dark:text-red-400/60 text-xs">Permanent actions for your data.</p></div>
+                                    <div className="p-5 md:p-6">
+                                        {showDeleteConfirm ? (<div className="bg-white dark:bg-black p-5 rounded-2xl border border-red-200 dark:border-red-900 text-center animate-in zoom-in duration-200"><AlertTriangle className="w-10 h-10 text-red-500 mx-auto mb-3" /><h4 className="font-bold text-base mb-1 dark:text-white">Are you absolutely sure?</h4><p className="text-gray-500 text-xs mb-4">This action cannot be undone. This will permanently delete your account, journal entries, and remaining balance.</p><div className="flex gap-3 justify-center"><button onClick={() => setShowDeleteConfirm(false)} className="px-5 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg font-bold text-xs hover:bg-gray-200">Cancel</button><button onClick={handleDeleteAccount} className="px-5 py-2 bg-red-600 text-white rounded-lg font-bold text-xs hover:bg-red-700 shadow-lg">Yes, Delete Everything</button></div></div>) : (<div className="flex items-center justify-between"><div><p className="font-bold text-red-900 dark:text-red-400 text-sm">Delete Account</p><p className="text-[10px] text-red-700/60 dark:text-red-400/50">Remove all data and access.</p></div><button onClick={() => setShowDeleteConfirm(true)} className="px-5 py-2.5 bg-white dark:bg-transparent border border-red-200 dark:border-red-800 text-red-600 rounded-xl font-bold text-[10px] uppercase tracking-wider hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">Delete Account</button></div>)}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <div className="mt-8 mb-4 max-w-4xl mx-auto px-4"><div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30 p-3 rounded-xl text-center"><p className="text-[9px] md:text-[10px] font-bold text-yellow-800 dark:text-yellow-500 uppercase tracking-wide leading-relaxed">Note: Specialist availability is subject to change frequently due to high demand. If your selected specialist is unavailable, a specialist of equal or greater qualifications will be automatically substituted to ensure immediate support.</p></div></div>
+                    <footer className="bg-[#FFFBEB] dark:bg-[#0A0A0A] text-black dark:text-white py-10 md:py-12 px-6 border-t border-yellow-200 dark:border-gray-800 transition-colors">
+                        <div className="max-w-7xl mx-auto">
+                            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 mb-8 md:mb-10">
+                                <div className="md:col-span-5 space-y-4"><div className="flex items-center gap-2"><div className="w-7 h-7 bg-yellow-400 rounded-xl flex items-center justify-center"><Heart className="w-4 h-4 fill-black text-black" /></div><span className="text-xl font-black tracking-tight">Peutic</span></div><p className="text-gray-800 dark:text-gray-500 text-xs leading-relaxed max-w-md">Connecting the disconnected through elite-level human specialists and cutting-edge secure technology.</p><div className="flex gap-4">{[Twitter, Instagram, Linkedin].map((Icon, i) => (<button key={i} className="text-gray-800 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors hover:scale-110 transform"><Icon className="w-4 h-4" /></button>))}</div></div>
+                                <div className="grid grid-cols-2 md:grid-cols-1 gap-6 md:col-span-2"><div><h4 className="font-black mb-3 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Global</h4><ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500"><li><Link to="/about" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">About</Link></li><li><Link to="/press" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Media</Link></li></ul></div></div>
+                                <div className="grid grid-cols-2 md:grid-cols-1 gap-6 md:col-span-2"><div><h4 className="font-black mb-3 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Support</h4><ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500"><li><Link to="/support" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Help Center</Link></li><li><Link to="/safety" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Safety Standards</Link></li><li><Link to="/crisis" className="text-red-600 hover:text-red-700 transition-colors">Crisis Hub</Link></li></ul></div></div>
+                                <div className="md:col-span-3"><h4 className="font-black mb-3 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Regulatory</h4><ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500"><li><Link to="/privacy" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Privacy Policy</Link></li><li><Link to="/terms" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Terms of Service</Link></li></ul></div>
+
+                            </div>
+                            <div className="mb-8 p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 border border-yellow-100 dark:border-yellow-900/20">
+                                <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-500 font-bold text-xs">
+                                    <AlertTriangle className="w-4 h-4" />
+                                    <span>Not a Medical Service. For entertainment & companionship only.</span>
+                                </div>
+                                <Link to="/crisis" className="bg-red-100 text-red-600 hover:bg-red-200 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-colors">
+                                    In Crisis?
+                                </Link>
+                            </div>
+                            <div className="pt-6 flex flex-col md:flex-row justify-between items-center text-[9px] font-black uppercase tracking-[0.2em] text-gray-700 dark:text-gray-600 gap-3 md:gap-0 border-t border-yellow-200/50 dark:border-gray-800">
+                                <p>&copy; {new Date().getFullYear()} Peutic Inc. | ISO 27001 Certified</p>
+                                <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div><span>Network Optimal</span></div>
+                            </div>
+                        </div>
+                    </footer>
+                </main>
+            </div>
             {showPayment && <PaymentModal onClose={() => { setShowPayment(false); setPaymentError(undefined); }} onSuccess={handlePaymentSuccess} initialError={paymentError} />}
             {showBreathing && <BreathingExercise userId={user.id} onClose={() => setShowBreathing(false)} />}
             {showProfile && <ProfileModal user={dashboardUser} onClose={() => setShowProfile(false)} onUpdate={refreshData} />}
