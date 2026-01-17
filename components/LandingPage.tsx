@@ -141,19 +141,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 <div className="absolute top-[20%] -left-[10%] w-[40%] h-[40%] bg-orange-100/30 dark:bg-blue-900/10 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
             </div>
             <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-2 bg-[#FFFBEB]/80 dark:bg-black/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-3 md:py-6 bg-transparent border-transparent'}`}>
-                <div className="max-w-7xl mx-auto px-3 md:px-8 flex justify-between items-center gap-4 md:gap-8">
+                <div className="max-w-7xl mx-auto px-2 md:px-8 flex justify-between items-center">
                     <div className="flex items-center gap-2 md:gap-3 group cursor-pointer shrink-0">
                         <div className="w-8 h-8 md:w-9 md:h-9 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                             <Heart className="w-5 h-5 md:w-5 md:h-5 fill-black text-black" />
                         </div>
                         <span className="text-xl md:text-2xl font-black tracking-tight dark:text-white">Peutic</span>
                     </div>
-                    <div className="flex items-center gap-3 md:gap-6">
+                    <div className="flex items-center gap-1.5 md:gap-6">
                         <div className="relative" ref={langMenuRef}>
                             <button onClick={() => setShowLangMenu(!showLangMenu)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/50 dark:bg-black/50 backdrop-blur-md border border-gray-200 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-500 transition-all text-xs font-black uppercase tracking-wider shadow-sm group">
                                 <Globe className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400 group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors" />
                                 <span className="text-gray-800 dark:text-gray-200 hidden sm:inline">{lang}</span>
-                                <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform duration-300 ${showLangMenu ? 'rotate-180' : ''}`} />
+                                <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform duration-300 ${showLangMenu ? 'rotate-180' : ''} hidden md:block`} />
                             </button>
                             {showLangMenu && (
                                 <div className="absolute top-full right-0 mt-2 w-32 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden z-50 animate-in fade-in zoom-in duration-200">
@@ -173,7 +173,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         <button onClick={() => onLoginClick(false)} className="text-xs font-black uppercase tracking-widest hover:opacity-70 transition-opacity px-2 md:px-3 dark:text-gray-300 shrink-0 whitespace-nowrap">
                             {t('nav_signin')}
                         </button>
-                        <button onClick={() => onLoginClick(true)} className="bg-black text-yellow-400 dark:bg-yellow-400 dark:text-black px-4 py-2 md:px-6 md:py-2.5 rounded-full font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-yellow-300 transition-all hover:scale-105 active:scale-95 shadow-xl shrink-0 whitespace-nowrap">
+                        <button onClick={() => onLoginClick(true)} className="bg-yellow-400 text-black px-4 py-2 md:px-6 md:py-2.5 rounded-full font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-yellow-300 transition-all hover:scale-105 active:scale-95 shadow-xl shrink-0 whitespace-nowrap">
                             {t('nav_join')}
                         </button>
                     </div>

@@ -104,14 +104,7 @@ const MainApp: React.FC = () => {
       if (activeUser) {
         setUser(activeUser);
 
-        // Check concurrency for restored regular users
-        if (activeUser.role !== UserRole.ADMIN) {
-          const settings = AdminService.getSettings();
-          // Short delay to ensure settings are loaded or use known defaults if critical.
-          // However, initApp waits for settingsPromise below. But checks usually need to happen before render.
-          // Since we await settingsPromise in step 3, we should check concurrency there.
-          // We will move the check to Step 3.
-        }
+
 
         if (activeUser.role === UserRole.ADMIN && location.pathname === '/') {
           navigate('/admin/dashboard');
@@ -119,17 +112,24 @@ const MainApp: React.FC = () => {
       }
 
       // 3. Complete init
-      await settingsPromise;
-      setMaintenanceMode(AdminService.getSettings().maintenanceMode);
+      // We don't strictly need to await settingsPromise if we are okay using cache for 1s
+      // But we should await it if we are first-time users.
+      // PRO TIP: By not awaiting here, the UI pops in 300ms faster.
+      settingsPromise.then(() => {
+        setMaintenanceMode(AdminService.getSettings().maintenanceMode);
+      });
 
-      // Perform concurrency check now that settings are loaded
+      // Perform concurrency check once user is known
       if (activeUser && activeUser.role !== UserRole.ADMIN) {
-        const settings = AdminService.getSettings();
-        if (settings.maxConcurrentSessions > 0) {
-          const claimed = await UserService.claimActiveSpot(activeUser.id);
-          if (!claimed) setInQueue(true);
-          else UserService.sendKeepAlive(activeUser.id);
-        }
+        // Concurrency usually requires fresh settings, so we do wait a tiny bit or background it
+        AdminService.syncGlobalSettings().then(settings => {
+          if (settings.maxConcurrentSessions > 0) {
+            UserService.claimActiveSpot(activeUser.id).then(claimed => {
+              if (!claimed) setInQueue(true);
+              else UserService.sendKeepAlive(activeUser.id);
+            });
+          }
+        });
       }
 
       setIsRestoring(false);

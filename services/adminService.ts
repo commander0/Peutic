@@ -7,16 +7,24 @@ import { logger } from './logger';
 import { UserService } from './userService';
 
 export class AdminService {
-    private static settingsCache: GlobalSettings = {
-        pricePerMinute: 1.99,
-        saleMode: false,
-        maintenanceMode: false,
-        allowSignups: true,
-        siteName: 'Peutic',
-        maxConcurrentSessions: 15,
-        multilingualMode: true,
-        broadcastMessage: ''
-    };
+    private static CACHE_KEY = 'peutic_global_settings';
+    private static settingsCache: GlobalSettings = (() => {
+        try {
+            const cached = localStorage.getItem('peutic_global_settings');
+            if (cached) return JSON.parse(cached);
+        } catch (e) { }
+        return {
+            pricePerMinute: 1.99,
+            saleMode: false,
+            maintenanceMode: false,
+            allowSignups: true,
+            siteName: 'Peutic',
+            maxConcurrentSessions: 15,
+            multilingualMode: true,
+            broadcastMessage: ''
+        };
+    })();
+
 
     static getSettings(): GlobalSettings { return this.settingsCache; }
 
@@ -28,13 +36,14 @@ export class AdminService {
                 this.settingsCache = {
                     pricePerMinute: settingsData.price_per_minute,
                     saleMode: settingsData.sale_mode,
-                    maintenanceMode: settingsData.maintenance_mode,
                     allowSignups: settingsData.allow_signups,
                     siteName: settingsData.site_name,
                     broadcastMessage: settingsData.broadcast_message,
                     maxConcurrentSessions: settingsData.max_concurrent_sessions,
-                    multilingualMode: settingsData.multilingual_mode
+                    multilingualMode: settingsData.multilingual_mode,
+                    maintenanceMode: settingsData.maintenance_mode
                 };
+                localStorage.setItem(this.CACHE_KEY, JSON.stringify(this.settingsCache));
 
             }
         } catch (e) {
@@ -56,6 +65,9 @@ export class AdminService {
             max_concurrent_sessions: settings.maxConcurrentSessions,
             multilingual_mode: settings.multilingualMode
         });
+        if (!error) {
+            localStorage.setItem(this.CACHE_KEY, JSON.stringify(settings));
+        }
         if (error) logger.error("Save Settings Failed", "", error);
     }
 
