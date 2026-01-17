@@ -17,8 +17,8 @@ interface VideoRoomProps {
     onEndSession: () => void;
     userName: string;
     userId: string;
+    initialMood?: string | null;
 }
-
 
 // --- ICEBREAKER DATA ---
 const ICEBREAKERS = [
@@ -132,7 +132,7 @@ const renderSessionArtifact = (companionName: string, durationStr: string, dateS
     return canvas.toDataURL('image/png');
 };
 
-const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName, userId }) => {
+const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName, userId, initialMood }) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Media State
@@ -144,6 +144,9 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
     const [errorMsg, setErrorMsg] = useState<string>('');
     const [conversationUrl, setConversationUrl] = useState<string | null>(null);
     const [networkQuality, setNetworkQuality] = useState(4);
+
+    // Explicit reset helper
+    const setConnectionInitiated = (val: boolean) => { connectionInitiated.current = val; };
 
     // Queue State
     const [queuePos, setQueuePos] = useState(0);
@@ -336,13 +339,18 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             if (!companion.replicaId) throw new Error("Invalid Specialist Configuration");
 
             // --- INTELLIGENT CONTEXT INJECTION ---
-            // 1. Fetch recent mood
+            // 1. Fetch recent mood (Database Fallback)
             const moods = await UserService.getMoods(user.id);
             const recentMood = moods.length > 0 ? moods[moods.length - 1].mood : null;
 
             let moodContext = "";
-            if (recentMood === 'rain') moodContext = "The user recently indicated they are feeling down or melancholic. Approach with extra gentleness.";
-            else if (recentMood === 'confetti') moodContext = "The user recently indicated they are in a celebratory or good mood. Match their energy.";
+            // Priority: Immediate Mood (from Waiting Room) > Recent Mood (Database)
+            const mood = initialMood || recentMood;
+
+            if (mood === 'Sad' || mood === 'rain') moodContext = "The user is feeling sad or down right now. Approach with extra gentleness and validation.";
+            else if (mood === 'Good' || mood === 'confetti') moodContext = "The user is feeling good. Celebrate this positive energy.";
+            else if (mood === 'Anxious' || mood === '😰') moodContext = "The user reported feeling anxious immediately before this call. Focus on grounding techniques first.";
+            else if (mood === 'Angry' || mood === '😤') moodContext = "The user is feeling frustrated or angry. Allow them space to vent and validate their feelings.";
 
             // 2. Fetch language preference from User Object (was localStorage)
             const savedLang = user.languagePreference || 'en';
@@ -664,9 +672,12 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             {(connectionState === 'ERROR' || connectionState === 'QUEUE_FULL') && (
                 <div className="relative z-10 text-center p-8 bg-red-900/80 backdrop-blur-md rounded-3xl border border-red-500/30 max-w-md w-full animate-in zoom-in">
                     <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                    <h2 className="text-2xl font-black text-white mb-2">Connection Failed</h2>
+                    <h2 className="text-2xl font-black text-white mb-2">Connection Interrupted</h2>
                     <p className="text-gray-300 mb-6">{errorMsg || "System is currently at capacity. Please try again later."}</p>
-                    <button onClick={onEndSession} className="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-gray-200 transition-colors">Return to Dashboard</button>
+                    <div className="flex gap-4 justify-center">
+                        <button onClick={onEndSession} className="bg-gray-800 text-white px-6 py-3 rounded-full font-bold hover:bg-gray-700 transition-colors">Return</button>
+                        <button onClick={() => { setConnectionState('QUEUED'); setConnectionInitiated(false); }} className="bg-yellow-500 text-black px-8 py-3 rounded-full font-bold hover:bg-yellow-400 transition-colors flex items-center gap-2"><RefreshCcw className="w-4 h-4" /> Retry Connection</button>
+                    </div>
                 </div>
             )}
 
@@ -686,11 +697,19 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                                 <Clock className="w-4 h-4 text-white" />
                                 <span className="font-mono font-bold text-white text-sm">{formatTime(duration)}</span>
                             </div>
-                            <div className="px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center gap-2">
-                                <div className={`w-2 h-2 rounded-full ${networkQuality > 2 ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                                <span className="text-xs font-bold text-gray-300 uppercase hidden md:inline">HD Secure</span>
+                            <div className={`px-3 py-1 rounded-full backdrop-blur-md border border-white/10 flex items-center gap-2 ${networkQuality < 2 ? 'bg-red-900/50 border-red-500/30' : 'bg-black/40'}`}>
+                                <div className={`w-2 h-2 rounded-full ${networkQuality > 2 ? 'bg-green-500' : 'bg-red-500 animate-pulse'}`}></div>
+                                <span className={`text-xs font-bold uppercase hidden md:inline ${networkQuality < 2 ? 'text-red-300' : 'text-gray-300'}`}>
+                                    {networkQuality < 2 ? 'Unstable Signal' : 'HD Secure'}
+                                </span>
                             </div>
                         </div>
+
+                        {networkQuality < 2 && (
+                            <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-red-500/90 text-white px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest shadow-xl animate-pulse flex items-center gap-2 backdrop-blur-md">
+                                <RefreshCcw className="w-3 h-3 animate-spin" /> Reconnecting Stream...
+                            </div>
+                        )}
 
                         <button
                             onClick={handleEndSession}

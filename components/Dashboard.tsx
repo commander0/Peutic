@@ -995,7 +995,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mb-2">
                                     <div className="flex items-center gap-3">
                                         <h1 className="text-3xl md:text-4xl font-black tracking-tight dark:text-white">{activeTab === 'hub' ? `Hello, ${user.name.split(' ')[0]}` : activeTab === 'history' ? 'Your Journey' : 'Settings'}</h1>
-                                        {activeTab === 'hub' && <div className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Verified Member</div>}
+                                        {activeTab === 'hub' && (
+                                            <div className="flex flex-col md:flex-row gap-2">
+                                                <div className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Verified Member</div>
+                                                <div className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1 animate-pulse">
+                                                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                                                    {Math.floor(Math.random() * (450 - 320 + 1) + 320)} healing now
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                     {activeTab === 'hub' && (<button onClick={() => setShowGrounding(true)} className="hidden md:flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 px-4 py-1.5 rounded-full font-bold text-xs transition-all hover:scale-105 animate-pulse"><LifeBuoy className="w-3.5 h-3.5" /> Panic Relief</button>)}
                                 </div>
@@ -1124,7 +1132,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 </Link>
                             </div>
                             <div className="pt-6 flex flex-col md:flex-row justify-between items-center text-[9px] font-black uppercase tracking-[0.2em] text-gray-700 dark:text-gray-600 gap-3 md:gap-0 border-t border-yellow-200/50 dark:border-gray-800">
-                                <p>&copy; {new Date().getFullYear()} Peutic Global Inc. | ISO 27001 Certified</p>
+                                <p>&copy; {new Date().getFullYear()} Peutic Inc. | ISO 27001 Certified</p>
                                 <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div><span>Network Optimal</span></div>
                             </div>
                         </div>
