@@ -254,7 +254,7 @@ const MainApp: React.FC = () => {
       if (!user || activeSessionCompanion) return;
       const now = Date.now();
       const elapsed = now - lastActivityRef.current;
-      const timeoutLimit = user.role === UserRole.ADMIN ? 24 * 60 * 60 * 1000 : 15 * 60 * 1000;
+      const timeoutLimit = 15 * 60 * 1000; // 15 mins for everyone
 
       // Warn 1 minute before
       if (elapsed > timeoutLimit - 60000 && elapsed < timeoutLimit) {
