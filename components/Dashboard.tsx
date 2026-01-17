@@ -835,17 +835,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     }, [darkMode]);
 
     useEffect(() => {
+        // Kick off all data fetching in parallel
         refreshData();
+
         generateDailyInsight(user.name).then(insight => {
             if (insight) setDailyInsight(insight);
         });
-        setTimeout(() => {
-            AdminService.getCompanions().then((comps) => {
-                setCompanions(comps);
-                setLoadingCompanions(false);
-            });
-        }, 500);
 
+        // Get companions immediately without delay
+        AdminService.getCompanions().then((comps) => {
+            setCompanions(comps);
+            setLoadingCompanions(false);
+        });
 
         const interval = setInterval(async () => {
             await UserService.syncUser(user.id);
@@ -855,22 +856,26 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         return () => clearInterval(interval);
     }, []);
 
+
     const refreshData = async () => {
         const u = UserService.getUser();
         if (u) {
             setDashboardUser(u);
             setBalance(u.balance);
-            UserService.getUserTransactions(u.id).then(setTransactions);
-            const prog = await UserService.getWeeklyProgress(u.id);
-            setWeeklyGoal(prog.current);
-            setWeeklyMessage(prog.message);
-
             setEditName(u.name);
             setEditEmail(u.email);
             setEmailNotifications(u.emailPreferences?.updates ?? true);
+
+            // Fetch secondary data in background without blocking
+            UserService.getUserTransactions(u.id).then(setTransactions);
+            UserService.getWeeklyProgress(u.id).then(prog => {
+                setWeeklyGoal(prog.current);
+                setWeeklyMessage(prog.message);
+            });
         }
         AdminService.getCompanions().then(setCompanions);
     };
+
 
 
 

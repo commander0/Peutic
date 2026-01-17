@@ -8,16 +8,41 @@ import { logger } from './logger';
 
 export class UserService {
     private static currentUser: User | null = null;
+    private static CACHE_KEY = 'peutic_user_profile';
+
+    static saveUserToCache(user: User) {
+        try {
+            localStorage.setItem(this.CACHE_KEY, JSON.stringify(user));
+        } catch (e) { }
+    }
+
+    static getCachedUser(): User | null {
+        try {
+            const cached = localStorage.getItem(this.CACHE_KEY);
+            if (cached) return JSON.parse(cached);
+        } catch (e) { }
+        return null;
+    }
+
 
     static getUser(): User | null { return this.currentUser; }
 
     static async restoreSession(): Promise<User | null> {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
+            // Check cache first for instant boot
+            const cached = this.getCachedUser();
+            if (cached && cached.id === session.user.id) {
+                this.currentUser = cached;
+                // Still fire sync in background
+                this.syncUser(session.user.id);
+                return cached;
+            }
             return await this.syncUser(session.user.id);
         }
         return null;
     }
+
 
     static async syncUser(userId: string): Promise<User | null> {
         if (!userId) return null;
@@ -36,6 +61,7 @@ export class UserService {
 
             if (data) {
                 this.currentUser = this.mapUser(data);
+                this.saveUserToCache(this.currentUser);
                 return this.currentUser;
             } else {
                 console.warn("CRITICAL: User Sync Data Missing - RLS/ID Mismatch", { userId });
