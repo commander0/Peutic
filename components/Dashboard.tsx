@@ -804,11 +804,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
     const [showGrounding, setShowGrounding] = useState(false);
     const [mood, setMood] = useState<'confetti' | 'rain' | null>(null);
-    const [emailNotifications, setEmailNotifications] = useState(user.emailPreferences?.updates ?? true);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [editName, setEditName] = useState(user.name);
     const [editEmail, setEditEmail] = useState(user.email);
     const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+
     const [showTechCheck, setShowTechCheck] = useState(false);
     const [isGhostMode, setIsGhostMode] = useState(() => localStorage.getItem('peutic_ghost_mode') === 'true');
     const [simulatedBaseCount, setSimulatedBaseCount] = useState(() => Math.floor(Math.random() * (450 - 320 + 1) + 320));
@@ -882,7 +883,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             setBalance(u.balance);
             setEditName(u.name);
             setEditEmail(u.email);
-            setEmailNotifications(u.emailPreferences?.updates ?? true);
+
 
             // Fetch secondary data in background without blocking
             UserService.getUserTransactions(u.id).then(setTransactions);
@@ -945,12 +946,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             const updatedUser: User = {
                 ...dashboardUser,
                 name: editName,
-                email: editEmail,
-                emailPreferences: {
-                    updates: emailNotifications,
-                    marketing: dashboardUser.emailPreferences?.marketing ?? true
-                }
+                email: editEmail
             };
+
             UserService.updateUser(updatedUser).then(() => {
                 showToast("Profile updated successfully", 'success');
                 setDashboardUser(updatedUser);
@@ -1146,20 +1144,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${isGhostMode ? 'translate-x-5' : 'translate-x-1'}`} />
                                             </button>
                                         </div>
-                                        <div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Bell className="w-4 h-4 text-gray-600 dark:text-gray-400" /></div><div><p className="font-bold text-gray-900 dark:text-white text-sm">Email Notifications</p><p className="text-[10px] text-gray-500">Receive session summaries and insights.</p></div></div><button onClick={() => {
-                                            const newVal = !emailNotifications;
-                                            setEmailNotifications(newVal);
-                                            const updated: User = {
-                                                ...dashboardUser,
-                                                emailPreferences: {
-                                                    updates: newVal,
-                                                    marketing: dashboardUser.emailPreferences?.marketing ?? true
-                                                }
-                                            };
-                                            UserService.updateUser(updated);
 
-                                        }} className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${emailNotifications ? 'bg-yellow-500' : 'bg-gray-200'}`}>
-                                            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${emailNotifications ? 'translate-x-5' : 'translate-x-1'}`} /></button></div>
                                     </div>
                                 </div>
                                 <div className="bg-red-50 dark:bg-red-950/20 rounded-3xl border border-red-100 dark:border-red-900 overflow-hidden shadow-sm">

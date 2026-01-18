@@ -22,6 +22,22 @@ DROP CONSTRAINT IF EXISTS session_feedback_user_id_fkey,
 ADD CONSTRAINT session_feedback_user_id_fkey 
     FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
+ALTER TABLE IF EXISTS public.moods 
+DROP CONSTRAINT IF EXISTS moods_user_id_fkey,
+ADD CONSTRAINT moods_user_id_fkey 
+    FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+ALTER TABLE IF EXISTS public.active_sessions 
+DROP CONSTRAINT IF EXISTS active_sessions_user_id_fkey,
+ADD CONSTRAINT active_sessions_user_id_fkey 
+    FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+ALTER TABLE IF EXISTS public.session_queue 
+DROP CONSTRAINT IF EXISTS session_queue_user_id_fkey,
+ADD CONSTRAINT session_queue_user_id_fkey 
+    FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
 -- 2. Create a secure function for account deletion that can be called via Edge Function
 -- (To be used with service_role if needed, but RLS allows user to delete own row)
 CREATE OR REPLACE FUNCTION public.request_account_deletion()

@@ -469,16 +469,17 @@ export class UserService {
 
     static async deleteUser(id: string) {
         try {
-            // 1. Try secure gateway first
+            // 1. Try secure gateway first (handles Auth deletion)
             await BaseService.invokeGateway('delete-user', { userId: id });
         } catch (e) {
-            logger.warn("Gateway delete failed, attempting direct database wipe...", (e as any)?.message || String(e));
-            // 2. Fallback to direct client-side delete (RLS will check permission)
-            const { error } = await supabase.from('users').delete().eq('id', id);
+            logger.warn("Gateway delete failed, attempting secure RPC wipe...", (e as any)?.message || String(e));
+            // 2. Fallback to secure database RPC (cleans up metadata via cascades mentioned in SQL)
+            const { error } = await supabase.rpc('request_account_deletion');
             if (error) throw error;
         }
         await this.logout();
     }
+
 
 
     static async topUpWallet(amount: number, cost: number, userId?: string, paymentToken?: string) {
