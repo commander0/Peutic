@@ -1,7 +1,14 @@
 -- PEUTIC SYSTEM UPDATE: Cascading Deletion & Cleanup
 -- This script ensures that when a user deletes their account, all related metadata is wiped.
 
+-- 0. Ensure Public Users record wipes when Auth User is deleted
+ALTER TABLE IF EXISTS public.users 
+DROP CONSTRAINT IF EXISTS users_id_fkey,
+ADD CONSTRAINT users_id_fkey 
+    FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
 -- 1. Ensure Cascading Deletions for User Metadata
+
 ALTER TABLE IF EXISTS public.journals 
 DROP CONSTRAINT IF EXISTS journals_user_id_fkey,
 ADD CONSTRAINT journals_user_id_fkey 
@@ -46,6 +53,10 @@ BEGIN
     DELETE FROM public.users WHERE id = auth.uid();
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Grant permissions for authenticated users to delete themselves
+GRANT EXECUTE ON FUNCTION public.request_account_deletion() TO authenticated;
+
 
 -- 3. Optimization: Indexing for Speed
 CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role);
