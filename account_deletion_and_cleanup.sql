@@ -50,9 +50,11 @@ ADD CONSTRAINT session_queue_user_id_fkey
 CREATE OR REPLACE FUNCTION public.request_account_deletion()
 RETURNS void AS $$
 BEGIN
-    DELETE FROM public.users WHERE id = auth.uid();
+    -- This will delete the user from AUTH, which then cascades to public.users via the FK users_id_fkey
+    -- which in turn cascades to all other metadata tables.
+    DELETE FROM auth.users WHERE id = auth.uid();
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth;
 
 -- Grant permissions for authenticated users to delete themselves
 GRANT EXECUTE ON FUNCTION public.request_account_deletion() TO authenticated;

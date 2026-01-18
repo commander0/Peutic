@@ -469,16 +469,21 @@ export class UserService {
 
     static async deleteUser(id: string) {
         try {
-            // 1. Try secure gateway first (handles Auth deletion)
-            await BaseService.invokeGateway('delete-user', { userId: id });
+            // Priority 1: Instant atomic database wipe (Deletes Auth record which then cascades)
+            const { error: rpcError } = await supabase.rpc('request_account_deletion');
+            if (rpcError) throw rpcError;
+
+            // Priority 2: Cleanup Auth via Gateway as backup (ensures session invalidation)
+            await BaseService.invokeGateway('delete-user', { userId: id }).catch(e => {
+                logger.warn("Gateway cleanup skipped - database wipe was successful", e.message);
+            });
         } catch (e) {
-            logger.warn("Gateway delete failed, attempting secure RPC wipe...", (e as any)?.message || String(e));
-            // 2. Fallback to secure database RPC (cleans up metadata via cascades mentioned in SQL)
-            const { error } = await supabase.rpc('request_account_deletion');
-            if (error) throw error;
+            logger.error("Total system wipe failed", id, e);
+            throw e;
         }
         await this.logout();
     }
+
 
 
 

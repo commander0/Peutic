@@ -5,8 +5,9 @@ import {
     Video, Clock, Settings, LogOut,
     LayoutDashboard, Plus, X, Lock, CheckCircle, AlertTriangle, ShieldCheck, Heart,
     BookOpen, Save, Sparkles, Flame, Trophy,
-    Sun, Cloud, Feather, Anchor, Gamepad2, RefreshCw, Play, Zap, Star, Edit2, Trash2, Bell,
+    Sun, Cloud, Feather, Anchor, Gamepad2, RefreshCw, Play, Zap, Star, Edit2, Trash2,
     CloudRain, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Moon,
+
     Twitter, Instagram, Linkedin, LifeBuoy, Volume2, Music, Smile, Trees,
     Mail, StopCircle, Eye, Minimize2, Flame as Fire, EyeOff
 } from 'lucide-react';
@@ -803,11 +804,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [showProfile, setShowProfile] = useState(false);
 
     const [showGrounding, setShowGrounding] = useState(false);
-    const [mood, setMood] = useState<'confetti' | 'rain' | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [mood, setMood] = useState<'confetti' | 'rain' | null>(null);
     const [editName, setEditName] = useState(user.name);
     const [editEmail, setEditEmail] = useState(user.email);
     const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+
+
 
 
     const [showTechCheck, setShowTechCheck] = useState(false);
