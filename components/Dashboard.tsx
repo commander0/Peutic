@@ -8,7 +8,7 @@ import {
     Sun, Cloud, Feather, Anchor, Gamepad2, RefreshCw, Play, Zap, Star, Edit2, Trash2, Bell,
     CloudRain, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Moon,
     Twitter, Instagram, Linkedin, LifeBuoy, Volume2, Music, Smile, Trees,
-    Mail, StopCircle, Eye, Minimize2, Flame as Fire
+    Mail, StopCircle, Eye, Minimize2, Flame as Fire, EyeOff
 } from 'lucide-react';
 import { STABLE_AVATAR_POOL } from '../services/database';
 import { UserService } from '../services/userService';
@@ -810,9 +810,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [editEmail, setEditEmail] = useState(user.email);
     const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [showTechCheck, setShowTechCheck] = useState(false);
+    const [isGhostMode, setIsGhostMode] = useState(() => localStorage.getItem('peutic_ghost_mode') === 'true');
+    const [activeCount, setActiveCount] = useState(0);
     const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
     const [specialtyFilter, setSpecialtyFilter] = useState<string>('All');
     const { showToast } = useToast();
+
 
 
     // Theme Effect: Updates DOM, LocalStorage, and DB
@@ -848,9 +851,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             setLoadingCompanions(false);
         });
 
+        // Initial active count fetch
+        AdminService.getActiveSessionCount().then(setActiveCount);
+
         const interval = setInterval(async () => {
             await UserService.syncUser(user.id);
             refreshData();
+            AdminService.getActiveSessionCount().then(setActiveCount);
         }, 5000);
 
         return () => clearInterval(interval);
@@ -881,6 +888,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
     const toggleDarkMode = () => {
         setDarkMode(!darkMode);
+    };
+
+    const toggleGhostMode = () => {
+        const newVal = !isGhostMode;
+        setIsGhostMode(newVal);
+        localStorage.setItem('peutic_ghost_mode', String(newVal));
+        showToast(newVal ? "Ghost Mode Active: Identity Hidden" : "Ghost Mode Inactive", 'success');
     };
 
     const handleMoodSelect = (m: 'confetti' | 'rain' | null) => {
@@ -962,9 +976,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         <span>{balance}m</span>
                         <Plus className="w-3 h-3 text-yellow-400" />
                     </button>
-                    <button onClick={() => setShowProfile(true)} className="w-8 h-8 rounded-full overflow-hidden border border-gray-300 dark:border-gray-700">
-                        <AvatarImage src={dashboardUser.avatar || ''} alt="User" className="w-full h-full object-cover" isUser={true} />
+                    <button onClick={() => setShowProfile(true)} className={`w-8 h-8 rounded-full overflow-hidden border border-gray-300 dark:border-gray-700 ${isGhostMode ? 'grayscale contrast-125' : ''}`}>
+                        <AvatarImage src={isGhostMode ? '' : (dashboardUser.avatar || '')} alt={isGhostMode ? 'Member' : 'User'} className="w-full h-full object-cover" isUser={true} />
                     </button>
+
                     <button onClick={onLogout} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors" title="Sign Out">
                         <LogOut className="w-4 h-4" />
                     </button>
@@ -999,13 +1014,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <p className="text-gray-500 dark:text-gray-400 font-bold text-[10px] md:text-xs uppercase tracking-widest mb-1">{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
                                 <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mb-2">
                                     <div className="flex items-center gap-3">
-                                        <h1 className="text-3xl md:text-4xl font-black tracking-tight dark:text-white">{activeTab === 'hub' ? `Hello, ${user.name.split(' ')[0]}` : activeTab === 'history' ? 'Your Journey' : 'Settings'}</h1>
+                                        <h1 className="text-3xl md:text-4xl font-black tracking-tight dark:text-white">
+                                            {activeTab === 'hub'
+                                                ? (isGhostMode ? `Hello, Member` : `Hello, ${user.name.split(' ')[0]}`)
+                                                : activeTab === 'history' ? 'Your Journey' : 'Settings'}
+                                        </h1>
                                         {activeTab === 'hub' && (
                                             <div className="flex flex-col md:flex-row gap-2">
                                                 <div className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Verified Member</div>
                                                 <div className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1 animate-pulse">
                                                     <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                                                    {Math.floor(Math.random() * (450 - 320 + 1) + 320)} healing now
+                                                    {activeCount > 0 ? activeCount : '...'} healing now
                                                 </div>
                                             </div>
                                         )}
@@ -1019,7 +1038,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <button onClick={() => setShowPayment(true)} className={`px-5 py-2.5 rounded-2xl font-black shadow-lg transition-transform hover:scale-105 flex items-center gap-2 text-sm ${balance < 10 ? 'bg-red-500 text-white animate-pulse' : 'bg-black dark:bg-white text-white dark:text-black'}`}>
                                     <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>{balance} mins<Plus className="w-3 h-3 ml-1 opacity-50" />
                                 </button>
-                                <button onClick={() => setShowProfile(true)} className="w-12 h-12 rounded-xl overflow-hidden border-2 border-yellow-400 shadow-xl hover:rotate-3 transition-transform"><AvatarImage src={dashboardUser.avatar || ''} alt={dashboardUser.name} className="w-full h-full object-cover" isUser={true} /></button>
+                                <button onClick={() => setShowProfile(true)} className={`w-12 h-12 rounded-xl overflow-hidden border-2 border-yellow-400 shadow-xl hover:rotate-3 transition-transform ${isGhostMode ? 'grayscale contrast-125' : ''}`}>
+                                    <AvatarImage src={isGhostMode ? '' : (dashboardUser.avatar || '')} alt={isGhostMode ? 'Member' : dashboardUser.name} className="w-full h-full object-cover" isUser={true} />
+                                </button>
                             </div>
                         </header>
                         {activeTab === 'hub' && (
@@ -1092,6 +1113,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     <div className="p-5 md:p-6 border-b border-yellow-100 dark:border-gray-800"><h3 className="font-black text-lg md:text-xl dark:text-white mb-1">Preferences</h3><p className="text-gray-500 text-xs">Customize your sanctuary experience.</p></div>
                                     <div className="p-5 md:p-6 space-y-5">
                                         <div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Moon className="w-4 h-4 text-gray-600 dark:text-gray-400" /></div><div><p className="font-bold text-gray-900 dark:text-white text-sm">Dark Mode</p><p className="text-[10px] text-gray-500">Reduce eye strain.</p></div></div><button onClick={toggleDarkMode} className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${darkMode ? 'bg-yellow-500' : 'bg-gray-200'}`}><span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${darkMode ? 'translate-x-5' : 'translate-x-1'}`} /></button></div>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><EyeOff className="w-4 h-4 text-red-500" /></div>
+                                                <div>
+                                                    <p className="font-bold text-gray-900 dark:text-white text-sm">Ghost Mode</p>
+                                                    <p className="text-[10px] text-gray-500">Hide name and photo for public browsing.</p>
+                                                </div>
+                                            </div>
+                                            <button onClick={toggleGhostMode} className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${isGhostMode ? 'bg-red-500' : 'bg-gray-200'}`}>
+                                                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${isGhostMode ? 'translate-x-5' : 'translate-x-1'}`} />
+                                            </button>
+                                        </div>
                                         <div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Bell className="w-4 h-4 text-gray-600 dark:text-gray-400" /></div><div><p className="font-bold text-gray-900 dark:text-white text-sm">Email Notifications</p><p className="text-[10px] text-gray-500">Receive session summaries and insights.</p></div></div><button onClick={() => {
                                             const newVal = !emailNotifications;
                                             setEmailNotifications(newVal);

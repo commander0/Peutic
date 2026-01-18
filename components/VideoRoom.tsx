@@ -7,9 +7,8 @@ import {
 } from 'lucide-react';
 import { createTavusConversation, endTavusConversation } from '../services/tavusService';
 import { UserService } from '../services/userService';
+import { generateWisdomCard } from '../services/geminiService';
 import { AdminService } from '../services/adminService';
-
-
 import { useToast } from './common/Toast';
 
 interface VideoRoomProps {
@@ -159,7 +158,10 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
     const [summaryImage, setSummaryImage] = useState<string>(''); // Artifact URL
     const [rating, setRating] = useState(0);
     const [feedbackTags, setFeedbackTags] = useState<string[]>([]);
+    const [wisdomCard, setWisdomCard] = useState<{ wisdom: string, title: string, color: string } | null>(null);
     const { showToast } = useToast();
+
+
 
 
     // Credit Tracking
@@ -432,11 +434,20 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         return () => clearInterval(interval);
     }, [showSummary, connectionState, performCleanup]); // Removed remainingMinutes from dependency array!
 
-    const handleEndSession = () => {
+    const handleEndSession = async () => {
         performCleanup(); // Strict API cutoff
         setSummaryImage(renderSessionArtifact(companion.name, formatTime(duration), new Date().toLocaleDateString()));
         setShowSummary(true);
+
+        // Generate AI Wisdom Card
+        const user = UserService.getUser();
+        if (user && duration > 30) {
+            const summary = `Session with ${companion.name} for ${formatTime(duration)}.`;
+            const card = await generateWisdomCard(user.name, summary);
+            setWisdomCard(card);
+        }
     };
+
 
     const submitFeedbackAndClose = () => {
         const minutesUsed = Math.ceil(duration / 60);
@@ -503,8 +514,22 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                     <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/50"><CheckCircle className="w-8 h-8 text-green-500" /></div>
                     <h2 className="text-2xl font-black text-white mb-6 tracking-tight">Session Complete</h2>
 
+                    {/* AI WISDOM CARD */}
+                    {wisdomCard && (
+                        <div className="mb-6 animate-in slide-in-from-top-4 duration-700">
+                            <div
+                                className="p-6 rounded-2xl text-center shadow-lg border border-white/10"
+                                style={{ backgroundColor: wisdomCard.color }}
+                            >
+                                <Sparkles className="w-5 h-5 text-yellow-600 mx-auto mb-2 animate-pulse" />
+                                <h3 className="text-black font-black text-[10px] uppercase tracking-[0.2em] mb-2">{wisdomCard.title}</h3>
+                                <p className="text-gray-800 font-bold text-sm leading-relaxed italic">"{wisdomCard.wisdom}"</p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* ARTIFACT DISPLAY */}
-                    {summaryImage && (
+                    {summaryImage && !wisdomCard && (
                         <div className="mb-6 relative group">
                             <img src={summaryImage} alt="Session Artifact" className="w-full rounded-xl shadow-lg border border-gray-700" />
                             <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl">

@@ -244,10 +244,12 @@ const MainApp: React.FC = () => {
       lastActivityRef.current = Date.now();
       if (showTimeoutWarning) setShowTimeoutWarning(false);
     };
-    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
-    events.forEach(event => document.addEventListener(event, updateActivity));
-    return () => events.forEach(event => document.removeEventListener(event, updateActivity));
+    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+    events.forEach(event => window.addEventListener(event, updateActivity, { capture: true, passive: true }));
+    return () => events.forEach(event => window.removeEventListener(event, updateActivity, { capture: true }));
   }, [showTimeoutWarning]);
+
+
 
   useEffect(() => {
     const checkTimeout = () => {
@@ -323,15 +325,25 @@ const MainApp: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    if (user) UserService.endSession(user.id); // Clear active session (important!)
-    await UserService.logout();
-    setUser(null);
+    const userId = user?.id;
 
+    // 1. Instant UI cleanup (Synchronous)
+    setUser(null);
     setActiveSessionCompanion(null);
-    navigate('/');
-    // Force reload to clear any in-memory React state/context that might be lingering
-    window.location.reload();
+    UserService.clearCache();
+
+    // 2. Navigation (Synchronous)
+    navigate('/', { replace: true });
+
+    // 3. Background Cleanup (Async)
+    if (userId) UserService.endSession(userId);
+    await UserService.logout();
+
+    // 4. Force hard reload to ensure absolutely no stale state remains in memory
+    window.location.assign('/');
+    setTimeout(() => window.location.reload(), 100);
   };
+
 
   if (isRestoring) return <div className="min-h-screen flex items-center justify-center bg-[#FFFBEB]"><div className="w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div></div>;
 

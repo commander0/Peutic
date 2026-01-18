@@ -16,6 +16,12 @@ export class UserService {
         } catch (e) { }
     }
 
+    static clearCache() {
+        localStorage.removeItem(this.CACHE_KEY);
+        localStorage.removeItem('peutic_companions');
+        localStorage.removeItem('peutic_settings');
+    }
+
     static getCachedUser(): User | null {
         try {
             const cached = localStorage.getItem(this.CACHE_KEY);
@@ -24,9 +30,7 @@ export class UserService {
         return null;
     }
 
-    static clearCache() {
-        localStorage.removeItem(this.CACHE_KEY);
-    }
+
 
 
 
@@ -245,10 +249,13 @@ export class UserService {
 
 
     static async logout() {
+        this.clearCache();
         await supabase.auth.signOut();
         this.currentUser = null;
         logger.info("User Logout", "Session cleared");
     }
+
+
 
     static async getUserArt(userId: string): Promise<ArtEntry[]> {
 
@@ -461,10 +468,18 @@ export class UserService {
 
 
     static async deleteUser(id: string) {
-        const { error } = await BaseService.invokeGateway('delete-user', { userId: id });
-        if (error) throw new Error(error.message);
+        try {
+            // 1. Try secure gateway first
+            await BaseService.invokeGateway('delete-user', { userId: id });
+        } catch (e) {
+            logger.warn("Gateway delete failed, attempting direct database wipe...", (e as any)?.message || String(e));
+            // 2. Fallback to direct client-side delete (RLS will check permission)
+            const { error } = await supabase.from('users').delete().eq('id', id);
+            if (error) throw error;
+        }
         await this.logout();
     }
+
 
     static async topUpWallet(amount: number, cost: number, userId?: string, paymentToken?: string) {
         const uid = userId || this.getUser()?.id;

@@ -1,0 +1,36 @@
+-- PEUTIC SYSTEM UPDATE: Cascading Deletion & Cleanup
+-- This script ensures that when a user deletes their account, all related metadata is wiped.
+
+-- 1. Ensure Cascading Deletions for User Metadata
+ALTER TABLE IF EXISTS public.journals 
+DROP CONSTRAINT IF EXISTS journals_user_id_fkey,
+ADD CONSTRAINT journals_user_id_fkey 
+    FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+ALTER TABLE IF EXISTS public.user_art 
+DROP CONSTRAINT IF EXISTS user_art_user_id_fkey,
+ADD CONSTRAINT user_art_user_id_fkey 
+    FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+ALTER TABLE IF EXISTS public.transactions 
+DROP CONSTRAINT IF EXISTS transactions_user_id_fkey,
+ADD CONSTRAINT transactions_user_id_fkey 
+    FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+ALTER TABLE IF EXISTS public.session_feedback 
+DROP CONSTRAINT IF EXISTS session_feedback_user_id_fkey,
+ADD CONSTRAINT session_feedback_user_id_fkey 
+    FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+-- 2. Create a secure function for account deletion that can be called via Edge Function
+-- (To be used with service_role if needed, but RLS allows user to delete own row)
+CREATE OR REPLACE FUNCTION public.request_account_deletion()
+RETURNS void AS $$
+BEGIN
+    DELETE FROM public.users WHERE id = auth.uid();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- 3. Optimization: Indexing for Speed
+CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role);
+CREATE INDEX IF NOT EXISTS idx_transactions_user_date ON public.transactions(user_id, date DESC);
