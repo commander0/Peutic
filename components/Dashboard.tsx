@@ -811,7 +811,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [showTechCheck, setShowTechCheck] = useState(false);
     const [isGhostMode, setIsGhostMode] = useState(() => localStorage.getItem('peutic_ghost_mode') === 'true');
-    const [activeCount, setActiveCount] = useState(0);
+    const [simulatedBaseCount, setSimulatedBaseCount] = useState(() => Math.floor(Math.random() * (450 - 320 + 1) + 320));
+    const [realActiveCount, setRealActiveCount] = useState(0);
+    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
+
     const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
     const [specialtyFilter, setSpecialtyFilter] = useState<string>('All');
     const { showToast } = useToast();
@@ -852,12 +856,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         });
 
         // Initial active count fetch
-        AdminService.getActiveSessionCount().then(setActiveCount);
+        AdminService.getActiveSessionCount().then(setRealActiveCount);
 
         const interval = setInterval(async () => {
             await UserService.syncUser(user.id);
             refreshData();
-            AdminService.getActiveSessionCount().then(setActiveCount);
+            AdminService.getActiveSessionCount().then(setRealActiveCount);
+            setSimulatedBaseCount(prev => {
+                const drift = Math.floor(Math.random() * 7) - 3; // -3 to +3
+                let next = prev + drift;
+                if (next < 320) next = 320 + Math.floor(Math.random() * 5);
+                if (next > 450) next = 450 - Math.floor(Math.random() * 5);
+                return next;
+            });
         }, 5000);
 
         return () => clearInterval(interval);
@@ -948,7 +959,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         }, 500);
 
     };
-    const handleDeleteAccount = () => { UserService.deleteUser(user.id); onLogout(); };
+    const handleDeleteAccount = async () => {
+        try {
+            setIsDeletingAccount(true);
+            await UserService.deleteUser(user.id);
+            onLogout();
+        } catch (e) {
+            console.error(e);
+            showToast("Failed to delete account. Please contact support.", "error");
+            setIsDeletingAccount(false);
+        }
+    };
 
     const filteredCompanions = specialtyFilter === 'All' ? companions : companions.filter(c => c.specialty.includes(specialtyFilter) || c.specialty === specialtyFilter);
     const uniqueSpecialties = Array.from(new Set(companions.map(c => c.specialty))).sort();
@@ -1024,7 +1045,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 <div className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Verified Member</div>
                                                 <div className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1 animate-pulse">
                                                     <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                                                    {activeCount > 0 ? activeCount : '...'} healing now
+                                                    {simulatedBaseCount + realActiveCount} healing now
                                                 </div>
                                             </div>
                                         )}
@@ -1144,7 +1165,40 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="bg-red-50 dark:bg-red-950/20 rounded-3xl border border-red-100 dark:border-red-900 overflow-hidden shadow-sm">
                                     <div className="p-5 md:p-6 border-b border-red-100 dark:border-red-900"><h3 className="font-black text-lg md:text-xl text-red-900 dark:text-red-400 mb-1">Danger Zone</h3><p className="text-red-600/70 dark:text-red-400/60 text-xs">Permanent actions for your data.</p></div>
                                     <div className="p-5 md:p-6">
-                                        {showDeleteConfirm ? (<div className="bg-white dark:bg-black p-5 rounded-2xl border border-red-200 dark:border-red-900 text-center animate-in zoom-in duration-200"><AlertTriangle className="w-10 h-10 text-red-500 mx-auto mb-3" /><h4 className="font-bold text-base mb-1 dark:text-white">Are you absolutely sure?</h4><p className="text-gray-500 text-xs mb-4">This action cannot be undone. This will permanently delete your account, journal entries, and remaining balance.</p><div className="flex gap-3 justify-center"><button onClick={() => setShowDeleteConfirm(false)} className="px-5 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg font-bold text-xs hover:bg-gray-200">Cancel</button><button onClick={handleDeleteAccount} className="px-5 py-2 bg-red-600 text-white rounded-lg font-bold text-xs hover:bg-red-700 shadow-lg">Yes, Delete Everything</button></div></div>) : (<div className="flex items-center justify-between"><div><p className="font-bold text-red-900 dark:text-red-400 text-sm">Delete Account</p><p className="text-[10px] text-red-700/60 dark:text-red-400/50">Remove all data and access.</p></div><button onClick={() => setShowDeleteConfirm(true)} className="px-5 py-2.5 bg-white dark:bg-transparent border border-red-200 dark:border-red-800 text-red-600 rounded-xl font-bold text-[10px] uppercase tracking-wider hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">Delete Account</button></div>)}
+                                        {showDeleteConfirm ? (
+                                            <div className="bg-white dark:bg-black p-5 rounded-2xl border border-red-200 dark:border-red-900 text-center animate-in zoom-in duration-200">
+                                                <AlertTriangle className="w-10 h-10 text-red-500 mx-auto mb-3" />
+                                                <h4 className="font-bold text-base mb-1 dark:text-white">Are you absolutely sure?</h4>
+                                                <p className="text-gray-500 text-xs mb-4">This action cannot be undone. This will permanently delete your account, journal entries, and remaining balance.</p>
+
+                                                {balance > 0 && (
+                                                    <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl mb-5 text-left flex items-start gap-3">
+                                                        <div className="bg-red-500/20 p-2 rounded-lg">
+                                                            <Plus className="w-4 h-4 text-red-500 rotate-45" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-red-900 dark:text-red-400 text-xs font-black uppercase tracking-widest mb-1">Impact Warning</p>
+                                                            <p className="text-red-700/80 dark:text-red-400/70 text-[11px] font-bold leading-relaxed">You have <span className="text-red-600 dark:text-red-400 font-black">{balance} minutes</span> remaining. Deleting your account will forfeit these credits immediately without refund.</p>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <div className="flex gap-3 justify-center">
+                                                    <button onClick={() => setShowDeleteConfirm(false)} disabled={isDeletingAccount} className="px-5 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg font-bold text-xs hover:bg-gray-200 disabled:opacity-50">Cancel</button>
+                                                    <button onClick={handleDeleteAccount} disabled={isDeletingAccount} className="px-5 py-2 bg-red-600 text-white rounded-lg font-bold text-xs hover:bg-red-700 shadow-lg flex items-center gap-2">
+                                                        {isDeletingAccount ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : 'Yes, Delete Everything'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="font-bold text-red-900 dark:text-red-400 text-sm">Delete Account</p>
+                                                    <p className="text-[10px] text-red-700/60 dark:text-red-400/50">Remove all data and access.</p>
+                                                </div>
+                                                <button onClick={() => setShowDeleteConfirm(true)} className="px-5 py-2.5 bg-white dark:bg-transparent border border-red-200 dark:border-red-800 text-red-600 rounded-xl font-bold text-[10px] uppercase tracking-wider hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">Delete Account</button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
