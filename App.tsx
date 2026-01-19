@@ -162,7 +162,7 @@ const MainApp: React.FC = () => {
             // AVATAR ROTATION LOGIC: Change user icon if not locked
             if (!syncedUser.avatarLocked) {
               const seed = Math.random().toString(36).substring(7);
-              syncedUser.avatar = `https://api.dicebear.com/7.x/lorelei/svg?seed=${seed}`;
+              syncedUser.avatar = `https://api.dicebear.com/7.x/lorelei/svg?seed=${seed}&backgroundColor=FCD34D`;
             }
             setUser(syncedUser);
             // Check concurrency

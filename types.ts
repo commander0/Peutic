@@ -166,3 +166,12 @@ export interface WisdomEntry {
   likes: number;
   createdAt: string;
 }
+
+export interface TimeCapsule {
+  id: string;
+  userId: string;
+  content: string;
+  unlockDate: string;
+  createdAt: string;
+  isRevealed: boolean;
+}

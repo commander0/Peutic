@@ -35,6 +35,21 @@ serve(async (req) => {
 
         const supabaseClient = createClient(supUrl, supKey);
 
+        // --- SECURITY: VERIFY JWT ---
+        const authHeader = req.headers.get('Authorization');
+        const authToken = authHeader ? authHeader.replace('Bearer ', '') : null;
+        let authenticatedUser = null;
+
+        if (authToken) {
+            const { data: { user }, error: authError } = await supabaseClient.auth.getUser(authToken);
+            if (!authError && user) authenticatedUser = user;
+        }
+
+        const requireAuth = (targetUserId: string) => {
+            if (!authenticatedUser) throw new Error("Unauthorized: No session found");
+            if (authenticatedUser.id !== targetUserId) throw new Error("Forbidden: ID Mismatch");
+        };
+
         // --- SAFETY MONITOR HELPER ---
         const scanContent = async (userId: string, type: string, content: string) => {
             const keywords = ["self-harm", "suicide", "kill myself", "end my life", "hurt myself", "danger", "weapon", "abuse", "emergency", "drug", "illegal", "die"];
@@ -85,6 +100,7 @@ serve(async (req) => {
         // --- USER ACTIONS (SENSITIVE) ---
         if (action === 'save-journal') {
             const { userId, entry } = payload;
+            requireAuth(userId); // <--- ENFORCE SECURITY
             await scanContent(userId, 'JOURNAL', entry.content);
             const insertData: any = {
                 user_id: userId,
@@ -102,6 +118,7 @@ serve(async (req) => {
 
         if (action === 'user-update') {
             const user = payload;
+            requireAuth(user.id);
             // Map keys back to snake_case for DB
             const updateData: any = {
                 name: user.name,
@@ -121,6 +138,7 @@ serve(async (req) => {
 
         if (action === 'save-art') {
             const { userId, entry } = payload;
+            requireAuth(userId);
             const insertData: any = {
                 user_id: userId,
                 image_url: entry.imageUrl,
@@ -139,6 +157,10 @@ serve(async (req) => {
 
         if (action === 'delete-art') {
             const { artId } = payload;
+            // Verify ownership
+            const { data: art } = await supabaseClient.from('user_art').select('user_id').eq('id', artId).single();
+            if (art) requireAuth(art.user_id);
+
             const { error } = await supabaseClient.from('user_art').delete().eq('id', artId);
             if (error) throw error;
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });

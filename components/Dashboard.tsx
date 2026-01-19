@@ -28,7 +28,8 @@ import { GardenState } from '../types';
 import { GardenService } from '../services/gardenService';
 import GardenCanvas from './garden/GardenCanvas';
 import EmergencyOverlay from './safety/EmergencyOverlay';
-import WisdomCircle from './wisdom/WisdomCircle';
+import TimeCapsuleComponent from './retention/TimeCapsule';
+import Soundscapes from './focus/Soundscapes';
 
 interface DashboardProps {
     user: User;
@@ -732,7 +733,7 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
 const ProfileModal: React.FC<{ user: User, onClose: () => void, onUpdate: () => void }> = ({ user, onClose, onUpdate }) => {
     const [name, setName] = useState(user.name);
     const [avatarLocked, setAvatarLocked] = useState(user.avatarLocked || false);
-    const [previewAvatar, setPreviewAvatar] = useState(user.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${user.id}`);
+    const [previewAvatar, setPreviewAvatar] = useState(user.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${user.id}&backgroundColor=FCD34D`);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const handleSave = () => {
@@ -748,7 +749,7 @@ const ProfileModal: React.FC<{ user: User, onClose: () => void, onUpdate: () => 
 
     const randomizeAvatar = () => {
         const seed = Math.random().toString(36).substring(7);
-        setPreviewAvatar(`https://api.dicebear.com/7.x/lorelei/svg?seed=${seed}`);
+        setPreviewAvatar(`https://api.dicebear.com/7.x/lorelei/svg?seed=${seed}&backgroundColor=FCD34D`);
     };
 
     const handleExport = async () => {
@@ -1173,7 +1174,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     ) : <StatSkeleton />}
                                     <MoodTracker onMoodSelect={handleMoodSelect} />
                                 </div>
-                                <WisdomCircle userId={user.id} />
+
+                                <CollapsibleSection title="Time Capsule" icon={Clock}>
+                                    <TimeCapsuleComponent userId={user.id} />
+                                </CollapsibleSection>
+
+                                <CollapsibleSection title="Soundscapes" icon={Volume2}>
+                                    <Soundscapes />
+                                </CollapsibleSection>
 
                                 <CollapsibleSection title="Mindful Arcade" icon={Gamepad2}>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
