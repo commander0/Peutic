@@ -13,21 +13,17 @@ CREATE TABLE IF NOT EXISTS public.time_capsules (
 -- RLS
 ALTER TABLE public.time_capsules ENABLE ROW LEVEL SECURITY;
 
+-- Index for performance
+CREATE INDEX IF NOT EXISTS idx_time_capsules_user_id ON public.time_capsules(user_id);
+
 -- 1. Users can INSERT their own capsules
 CREATE POLICY "Users can create capsules" ON public.time_capsules
-FOR INSERT WITH CHECK (auth.uid() = user_id);
+FOR INSERT WITH CHECK ((select auth.uid()) = user_id);
 
--- 2. Users can READ their own capsules ONLY IF unlock_date <= now() OR they are listing metadata
--- We split into two policies:
--- A. Read metadata (id, created_at, unlock_date) - We can't really hide columns with RLS easily in standard SELECT *
--- S. So we allow reading the row, but the Frontend must handle the "Locked" UI.
--- Ideally, we'd use a View or separate table, but for MVP, we allow SELECT ALL for owner, 
--- and trust the UI to hide content, OR we could make content NULL if locked? (Hard in SQL w/o complex views)
--- Let's just allow owner to read everything. The App Logic ensures "Lock".
+-- 2. Users can READ their own capsules
 CREATE POLICY "Users can read own capsules" ON public.time_capsules
-FOR SELECT USING (auth.uid() = user_id);
+FOR SELECT USING ((select auth.uid()) = user_id);
 
--- 3. Users can DELETE their own capsules (if they regret it?)
--- Let's allow it.
+-- 3. Users can DELETE their own capsules
 CREATE POLICY "Users can delete own capsules" ON public.time_capsules
-FOR DELETE USING (auth.uid() = user_id);
+FOR DELETE USING ((select auth.uid()) = user_id);

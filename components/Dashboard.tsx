@@ -8,7 +8,7 @@ import {
     Sun, Cloud, Feather, Anchor, Gamepad2, RefreshCw, Play, Zap, Star, Edit2, Trash2,
     CloudRain, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Moon,
 
-    Twitter, Instagram, Linkedin, LifeBuoy, Volume2, Music, Smile, Trees,
+    Twitter, Instagram, Linkedin, Volume2, Music, Smile, Trees,
     Mail, StopCircle, Eye, Minimize2, Flame as Fire, EyeOff, Megaphone
 } from 'lucide-react';
 import { STABLE_AVATAR_POOL } from '../services/database';
@@ -1095,8 +1095,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
                         {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4 text-gray-600" />}
                     </button>
-                    <button onClick={() => setShowGrounding(true)} className="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors animate-pulse" title="Panic Relief">
-                        <LifeBuoy className="w-4 h-4" />
+                    <button onClick={() => setShowGrounding(true)} className="p-2 bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 rounded-full hover:bg-red-500/20 transition-all active:scale-95 animate-pulse" title="Panic Relief">
+                        <Anchor className="w-4 h-4" />
                     </button>
                     <button onClick={() => setShowPayment(true)} className="bg-black dark:bg-white text-white dark:text-black px-3 py-1.5 rounded-full text-xs font-bold shadow-md flex items-center gap-1 active:scale-95 transition-transform">
                         <span>{balance}m</span>
@@ -1155,7 +1155,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             </div>
                                         )}
                                     </div>
-                                    {activeTab === 'hub' && (<button onClick={() => setShowGrounding(true)} className="hidden md:flex items-center gap-2 bg-red-100 hover:bg-red-200 text-red-600 px-4 py-2 rounded-full font-bold text-xs transition-colors"><LifeBuoy className="w-4 h-4" /> Panic Anchor</button>)}
+                                    {activeTab === 'hub' && (
+                                        <button onClick={() => setShowGrounding(true)} className="hidden md:flex items-center gap-2 bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 px-4 py-2 rounded-full font-black uppercase tracking-widest text-[10px] transition-all hover:bg-red-500/20 shadow-sm" title="Panic Relief">
+                                            <Anchor className="w-3.5 h-3.5" /> Panic Anchor
+                                        </button>
+                                    )}
                                 </div>
                                 {activeTab === 'hub' && dailyInsight && (<p className="text-gray-600 dark:text-gray-400 mt-2 max-w-lg text-sm font-medium leading-relaxed border-l-4 border-yellow-400 pl-3 italic">"{dailyInsight}"</p>)}
                             </div>
@@ -1174,31 +1178,82 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                                 {/* GARDEN SECTION */}
                                 {garden && (
-                                    <div className="bg-gradient-to-r from-[#f0fdf4] to-[#dcfce7] dark:from-green-900/10 dark:to-green-900/5 rounded-3xl p-6 border border-green-100 dark:border-green-900/30 flex flex-col md:flex-row items-center gap-8 shadow-sm relative overflow-hidden">
-                                        <div className="absolute top-0 right-0 p-3 opacity-10"><Trees className="w-32 h-32 text-green-600" /></div>
-                                        <div className="relative z-10 bg-white/40 dark:bg-black/20 rounded-full p-4 border border-white/50 backdrop-blur-sm shadow-sm">
-                                            <GardenCanvas garden={garden} width={200} height={200} />
+                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                                        <div className="lg:col-span-6 bg-gradient-to-r from-[#f0fdf4] to-[#dcfce7] dark:from-green-900/10 dark:to-green-900/5 rounded-3xl p-4 border border-green-100 dark:border-green-900/30 flex flex-col md:flex-row items-center gap-6 shadow-sm relative overflow-hidden">
+                                            <div className="absolute top-0 right-0 p-3 opacity-10"><Trees className="w-24 h-24 text-green-600" /></div>
+                                            <div className="relative z-10 bg-white/40 dark:bg-black/20 rounded-full p-2 border border-white/50 backdrop-blur-sm shadow-sm flex-shrink-0">
+                                                <GardenCanvas garden={garden} width={110} height={110} />
+                                            </div>
+                                            <div className="flex-1 text-center md:text-left relative z-10">
+                                                <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
+                                                    <div className="bg-green-100 dark:bg-green-900/40 p-1 rounded-lg"><Feather className="w-3.5 h-3.5 text-green-600 dark:text-green-400" /></div>
+                                                    <h2 className="text-lg font-black text-green-900 dark:text-green-300 tracking-tight">Inner Garden</h2>
+                                                </div>
+                                                <p className="text-green-800/70 dark:text-green-400/70 text-[9px] font-bold mb-3 max-w-sm mx-auto md:mx-0 leading-relaxed uppercase tracking-wider">
+                                                    Consistency nurtures growth.
+                                                </p>
+                                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                                                    <div className="bg-white/60 dark:bg-black/40 px-2 py-1 rounded-lg border border-green-100 dark:border-green-900/50 flex items-center gap-1.5">
+                                                        <span className="text-[9px] font-black uppercase tracking-wider text-green-700 dark:text-green-400">Lv.{garden.level}</span>
+                                                    </div>
+                                                    <div className="bg-white/60 dark:bg-black/40 px-2 py-1 rounded-lg border border-green-100 dark:border-green-900/50 flex items-center gap-1.5">
+                                                        <Flame className="w-2.5 h-2.5 text-orange-500" />
+                                                        <span className="text-[9px] font-black uppercase tracking-wider text-green-700 dark:text-green-400">{garden.streakCurrent} Day Streak</span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="flex-1 text-center md:text-left relative z-10">
-                                            <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                                                <div className="bg-green-100 dark:bg-green-900/40 p-1.5 rounded-lg"><Feather className="w-4 h-4 text-green-600 dark:text-green-400" /></div>
-                                                <h2 className="text-xl md:text-2xl font-black text-green-900 dark:text-green-300 tracking-tight">Your Inner Garden</h2>
-                                            </div>
-                                            <p className="text-green-800/70 dark:text-green-400/70 text-sm font-medium mb-4 max-w-md mx-auto md:mx-0">
-                                                Consistency nurtures growth. Every check-in waters your soul.
-                                            </p>
-                                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-                                                <div className="bg-white/60 dark:bg-black/40 px-3 py-1.5 rounded-xl border border-green-100 dark:border-green-900/50 flex items-center gap-2">
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-green-700 dark:text-green-400">Level {garden.level}</span>
-                                                </div>
-                                                <div className="bg-white/60 dark:bg-black/40 px-3 py-1.5 rounded-xl border border-green-100 dark:border-green-900/50 flex items-center gap-2">
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-green-700 dark:text-green-400">{garden.currentPlantType}</span>
-                                                </div>
-                                                <div className="bg-white/60 dark:bg-black/40 px-3 py-1.5 rounded-xl border border-green-100 dark:border-green-900/50 flex items-center gap-2">
-                                                    <Flame className="w-3 h-3 text-orange-500" />
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-green-700 dark:text-green-400">{garden.streakCurrent} Day Streak</span>
-                                                </div>
-                                            </div>
+
+                                        {/* BOOK OF YOU CARD */}
+                                        <div className="lg:col-span-6 h-full">
+                                            {(() => {
+                                                const joinedDate = new Date(dashboardUser.joinedAt || new Date().toISOString());
+                                                const now = new Date();
+                                                const diffTime = Math.abs(now.getTime() - joinedDate.getTime());
+                                                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                                                const isLocked = diffDays < 7;
+                                                const daysRemaining = 7 - diffDays;
+
+                                                return (
+                                                    <button
+                                                        onClick={() => {
+                                                            if (!isLocked) {
+                                                                setActiveTab('history');
+                                                                showToast("Chronicle Unlocked!", "success");
+                                                            } else {
+                                                                showToast(`Your book is still being written... ${daysRemaining} days left.`, "info");
+                                                            }
+                                                        }}
+                                                        className={`w-full h-full p-4 rounded-3xl border flex items-center gap-4 transition-all duration-500 group relative overflow-hidden ${isLocked
+                                                            ? 'bg-gray-50/50 dark:bg-gray-900/20 border-gray-100 dark:border-gray-800 cursor-help opacity-40 hover:opacity-100'
+                                                            : 'bg-white dark:bg-gray-900 border-yellow-200 dark:border-yellow-700 cursor-pointer shadow-xl hover:-translate-y-1 animate-pulse border-4'
+                                                            }`}
+                                                    >
+                                                        {isLocked && <div className="absolute inset-0 bg-gray-500/[0.03] backdrop-grayscale-[0.5]"></div>}
+                                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center self-center transition-all duration-700 ${isLocked ? 'bg-gray-200 dark:bg-gray-800' : 'bg-yellow-400 shadow-lg shadow-yellow-400/50 rotate-[-5deg] group-hover:rotate-0 flex-shrink-0'}`}>
+                                                            {isLocked ? <Lock className="w-6 h-6 text-gray-400" /> : <BookOpen className="w-6 h-6 text-black fill-black" />}
+                                                        </div>
+                                                        <div className="text-left relative z-10">
+                                                            <h3 className={`font-black tracking-tight text-base mb-0.5 ${isLocked ? 'text-gray-400' : 'text-gray-900 dark:text-white'}`}>The Book of You</h3>
+                                                            {isLocked ? (
+                                                                <div className="flex flex-col gap-1 items-start">
+                                                                    <div className="w-16 h-1 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+                                                                        <div className="h-full bg-gray-400" style={{ width: `${Math.min(100, (diffDays / 7) * 100)}%` }}></div>
+                                                                    </div>
+                                                                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Locked: D-{daysRemaining}</span>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex flex-col gap-1 items-start">
+                                                                    <span className="text-[9px] font-black uppercase tracking-widest text-yellow-600 dark:text-yellow-400 flex items-center gap-1">
+                                                                        <Sparkles className="w-3 h-3 animate-spin" /> Unlocked & Ready
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        {!isLocked && <div className="absolute -bottom-2 -right-2 p-4 opacity-10"><BookOpen className="w-12 h-12" /></div>}
+                                                    </button>
+                                                );
+                                            })()}
                                         </div>
                                     </div>
                                 )}

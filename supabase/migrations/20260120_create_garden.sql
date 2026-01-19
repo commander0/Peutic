@@ -28,13 +28,13 @@ ALTER TABLE public.garden_log ENABLE ROW LEVEL SECURITY;
 -- 4. Create RLS Policies
 -- Garden Policies
 CREATE POLICY "Garden Own Access" ON public.user_garden 
-FOR ALL USING (user_id = auth.uid()) 
-WITH CHECK (user_id = auth.uid());
+FOR ALL USING (user_id = (select auth.uid())) 
+WITH CHECK (user_id = (select auth.uid()));
 
 -- Log Policies
 CREATE POLICY "Garden Log Own Access" ON public.garden_log 
-FOR ALL USING (user_id = auth.uid()) 
-WITH CHECK (user_id = auth.uid());
+FOR ALL USING (user_id = (select auth.uid())) 
+WITH CHECK (user_id = (select auth.uid()));
 
 -- 5. Create Indices for performance
 CREATE INDEX IF NOT EXISTS idx_garden_user_id ON public.user_garden(user_id);

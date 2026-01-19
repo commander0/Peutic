@@ -11,15 +11,18 @@ create table if not exists public.voice_journals (
 -- Enable RLS
 alter table public.voice_journals enable row level security;
 
+-- Index for performance
+create index if not exists idx_voice_journals_user_id on public.voice_journals(user_id);
+
 -- Policies
 create policy "Users can view own voice journals"
   on public.voice_journals for select
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 create policy "Users can insert own voice journals"
   on public.voice_journals for insert
-  with check (auth.uid() = user_id);
+  with check ((select auth.uid()) = user_id);
 
 create policy "Users can delete own voice journals"
   on public.voice_journals for delete
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
