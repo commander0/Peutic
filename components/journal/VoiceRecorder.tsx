@@ -11,6 +11,7 @@ interface VoiceRecorderProps {
 export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userId, onSave }) => {
     const [recording, setRecording] = useState(false);
     const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+    const [previewPlaying, setPreviewPlaying] = useState(false);
     const [duration, setDuration] = useState(0);
     const [saving, setSaving] = useState(false);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -160,9 +161,25 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userId, onSave }) 
                         <button onClick={() => setAudioBlob(null)} className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-red-100 hover:text-red-500 flex items-center justify-center transition-colors">
                             <Trash2 className="w-5 h-5" />
                         </button>
+                        <button
+                            onClick={() => setPreviewPlaying(!previewPlaying)}
+                            className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${previewPlaying ? 'bg-black text-white dark:bg-yellow-400 dark:text-black' : 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400'}`}
+                        >
+                            {previewPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-1" />}
+                        </button>
                         <button onClick={handleSave} disabled={saving} className="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95">
                             {saving ? <RefreshCw className="w-6 h-6 animate-spin" /> : <CheckCircle className="w-6 h-6" />}
                         </button>
+                        <audio
+                            src={audioBlob ? URL.createObjectURL(audioBlob) : ''}
+                            ref={(el) => {
+                                if (el) {
+                                    if (previewPlaying) el.play(); else el.pause();
+                                    el.onended = () => setPreviewPlaying(false);
+                                }
+                            }}
+                            className="hidden"
+                        />
                     </>
                 )}
             </div>
@@ -183,6 +200,8 @@ const getSharedAudioCtx = () => {
 // Also define a mini player for list view
 export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id: string) => void }> = ({ entry, onDelete }) => {
     const [playing, setPlaying] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(entry.durationSeconds || 0);
     const [isBoosted, setIsBoosted] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);
     const gainNodeRef = useRef<GainNode | null>(null);
@@ -196,17 +215,30 @@ export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id:
         const onPlay = () => setPlaying(true);
         const onPause = () => setPlaying(false);
         const onEnded = () => setPlaying(false);
+        const onTimeUpdate = () => setCurrentTime(audio.currentTime);
+        const onLoadedMetadata = () => setDuration(audio.duration);
 
         audio.addEventListener('play', onPlay);
         audio.addEventListener('pause', onPause);
         audio.addEventListener('ended', onEnded);
+        audio.addEventListener('timeupdate', onTimeUpdate);
+        audio.addEventListener('loadedmetadata', onLoadedMetadata);
 
         return () => {
             audio.removeEventListener('play', onPlay);
             audio.removeEventListener('pause', onPause);
             audio.removeEventListener('ended', onEnded);
+            audio.removeEventListener('timeupdate', onTimeUpdate);
+            audio.removeEventListener('loadedmetadata', onLoadedMetadata);
         };
     }, []);
+
+    const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!audioRef.current) return;
+        const time = parseFloat(e.target.value);
+        audioRef.current.currentTime = time;
+        setCurrentTime(time);
+    };
 
     const togglePlay = async () => {
         if (!audioRef.current) return;
@@ -301,12 +333,25 @@ export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id:
                     </button>
                     <div>
                         <h4 className="text-sm font-black text-gray-900 dark:text-white tracking-tight leading-tight">{entry.title || 'Untitled Audio Reflection'}</h4>
-                        <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{new Date(entry.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-                            <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                            <span className="text-[10px] font-black text-yellow-600/70 dark:text-yellow-400/50 uppercase tracking-widest">
-                                {Math.floor(entry.durationSeconds / 60)}:{(entry.durationSeconds % 60).toString().padStart(2, '0')}
-                            </span>
+                        <div className="flex flex-col gap-2 mt-2">
+                            <div className="flex items-center gap-3 w-48 md:w-64">
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max={duration || 100}
+                                    value={currentTime}
+                                    onChange={handleSeek}
+                                    className="flex-1 h-1 bg-gray-100 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-yellow-400"
+                                />
+                                <span className="text-[9px] font-mono text-gray-400 w-8">{Math.floor(currentTime)}s</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{new Date(entry.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+                                <span className="text-[10px] font-black text-yellow-600/70 dark:text-yellow-400/50 uppercase tracking-widest">
+                                    {Math.floor(duration / 60)}:{(Math.floor(duration) % 60).toString().padStart(2, '0')}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>

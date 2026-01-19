@@ -1,25 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Clock, Calendar, TrendingUp, ChevronLeft, Download, Eye, Sparkles } from 'lucide-react';
-import { User, JournalEntry, MoodEntry } from '../../types';
+import { User, JournalEntry, MoodEntry, GardenState, VoiceJournalEntry } from '../../types';
 import { UserService } from '../../services/userService';
+import GardenCanvas from '../garden/GardenCanvas';
+import { VoiceEntryItem } from '../journal/VoiceRecorder';
 
 interface BookOfYouViewProps {
     user: User;
+    garden: GardenState | null;
     onClose: () => void;
 }
 
-const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
+const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, garden, onClose }) => {
     const [journals, setJournals] = useState<JournalEntry[]>([]);
     const [moods, setMoods] = useState<MoodEntry[]>([]);
+    const [voiceEntries, setVoiceEntries] = useState<VoiceJournalEntry[]>([]);
 
     useEffect(() => {
         const load = async () => {
-            const [j, m] = await Promise.all([
+            const [j, m, v] = await Promise.all([
                 UserService.getJournals(user.id),
-                UserService.getMoods(user.id)
+                UserService.getMoods(user.id),
+                UserService.getVoiceJournals(user.id)
             ]);
             setJournals(j);
             setMoods(m);
+            setVoiceEntries(v);
         };
         load();
     }, [user.id]);
@@ -89,20 +95,55 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                     </div>
 
                     {/* RECENT JOURNEY TIMELINE */}
-                    <div className="space-y-6">
-                        <h3 className="text-xl font-black uppercase tracking-widest flex items-center gap-3">
-                            <Clock className="w-6 h-6 text-gray-400" /> Recent Milestones
-                        </h3>
-                        <div className="space-y-4">
-                            {journals.slice(0, 3).map((j, i) => (
-                                <div key={i} className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 flex gap-4">
-                                    <div className="w-1 h-auto bg-yellow-400 rounded-full"></div>
-                                    <div>
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">{new Date(j.date).toLocaleDateString()}</p>
-                                        <p className="text-sm font-medium line-clamp-2 leading-relaxed">{j.content}</p>
+                    <div className="space-y-8">
+                        <div>
+                            <h3 className="text-xl font-black uppercase tracking-widest flex items-center gap-3 mb-6">
+                                <Clock className="w-6 h-6 text-gray-400" /> Recent Milestones
+                            </h3>
+                            <div className="space-y-4">
+                                {journals.slice(0, 2).map((j, i) => (
+                                    <div key={i} className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 flex gap-4">
+                                        <div className="w-1 h-auto bg-yellow-400 rounded-full"></div>
+                                        <div>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">{new Date(j.date).toLocaleDateString()}</p>
+                                            <p className="text-sm font-medium line-clamp-2 leading-relaxed">{j.content}</p>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+
+                                {/* GARDEN SYNERGY CARD */}
+                                {garden && (
+                                    <div className="bg-green-50 dark:bg-green-950/20 p-5 rounded-3xl border border-green-100 dark:border-green-900/30 flex items-center gap-6 group/garden">
+                                        <div className="w-24 h-24 bg-black/5 dark:bg-black/40 rounded-2xl overflow-hidden flex-shrink-0 relative">
+                                            <div className="scale-50 origin-center absolute inset-[-50%] transition-transform group-hover/garden:scale-[0.55] duration-700">
+                                                <GardenCanvas garden={garden} width={200} height={200} />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-black text-green-700 dark:text-green-400 uppercase tracking-widest mb-1">Garden Vitality</h4>
+                                            <p className="text-xs font-bold text-green-600/60 dark:text-green-400/50 mb-3">Level {garden.level} &bull; {garden.streakCurrent} Day Streak</p>
+                                            <div className="flex gap-2">
+                                                {[...Array(5)].map((_, i) => (
+                                                    <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < garden.level ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-gray-200 dark:bg-gray-800'}`}></div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* ECHOES SECTION (VOICE) */}
+                        <div className="pt-4">
+                            <h3 className="text-xl font-black uppercase tracking-widest flex items-center gap-3 mb-6">
+                                <Sparkles className="w-6 h-6 text-yellow-500" /> Recorded Echoes
+                            </h3>
+                            <div className="space-y-4">
+                                {voiceEntries.length === 0 && <p className="text-xs text-gray-400 uppercase tracking-widest">No voice echoes found.</p>}
+                                {voiceEntries.slice(0, 3).map(entry => (
+                                    <VoiceEntryItem key={entry.id} entry={entry} onDelete={() => { }} />
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>

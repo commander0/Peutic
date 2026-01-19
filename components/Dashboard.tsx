@@ -7,7 +7,7 @@ import {
     Video, Clock, Settings, LogOut,
     LayoutDashboard, Plus, X, Mic, Lock, CheckCircle, AlertTriangle, ShieldCheck, Heart,
     BookOpen, Save, Sparkles, Flame, Trophy,
-    Sun, Feather, Anchor, RefreshCw, Play, Star, Edit2, Trash2, Zap,
+    Sun, Feather, Anchor, RefreshCw, Play, Star, Edit2, Trash2, Zap, Gamepad2,
     CloudRain, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Moon,
 
     Twitter, Instagram, Linkedin, Volume2, Music, Trees,
@@ -750,8 +750,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     {darkMode ? <Sun className="w-5 h-5 text-yellow-500" /> : <Moon className="w-5 h-5 text-gray-400" />}
                                 </button>
 
-                                <button onClick={() => setShowPayment(true)} className="px-3 md:px-5 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-2xl font-black shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2 text-[10px] md:text-xs">
-                                    {balance}m <Plus className="w-3 h-3 md:w-3.5 md:h-3.5 opacity-50" />
+                                <button
+                                    onClick={() => setShowPayment(true)}
+                                    className={`px-3 md:px-5 py-2.5 rounded-2xl font-black shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2 text-[10px] md:text-xs ${balance === 0
+                                            ? 'bg-red-500 text-white animate-pulse'
+                                            : 'bg-emerald-500 text-white dark:bg-emerald-600'
+                                        }`}
+                                >
+                                    <span className="md:inline">{balance}m</span>
+                                    <Plus className="hidden md:block w-3.5 h-3.5 opacity-70" />
                                 </button>
 
                                 <button onClick={() => setShowProfile(true)} className="w-10 h-10 md:w-11 md:h-11 rounded-2xl overflow-hidden border-2 border-yellow-400 shadow-premium transition-all hover:rotate-3 active:scale-90 flex-shrink-0">
@@ -861,7 +868,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     <MoodTracker onMoodSelect={handleMoodSelect} />
                                 </div>
 
-                                <CollapsibleSection title="Arcade" icon={Zap}>
+                                <CollapsibleSection title="Arcade" icon={Gamepad2}>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
                                         <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col bg-sky-50 dark:bg-gray-800">
                                             <div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none">
@@ -1076,9 +1083,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     </footer>
                 </main>
             </div >
-            {showPayment && <PaymentModal onClose={() => { setShowPayment(false); setPaymentError(undefined); }} onSuccess={handlePaymentSuccess} initialError={paymentError} />}
+            {showPayment && (
+                <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Secure Payment node...</div>}>
+                    <PaymentModal onClose={() => { setShowPayment(false); setPaymentError(undefined); }} onSuccess={handlePaymentSuccess} initialError={paymentError} />
+                </Suspense>
+            )}
             {showBreathing && <EmergencyOverlay userId={user.id} onClose={() => { setShowBreathing(false); refreshGarden(); }} />}
-            {showProfile && <ProfileModal user={dashboardUser} onClose={() => setShowProfile(false)} onUpdate={refreshData} />}
+            {showProfile && (
+                <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Identity Node...</div>}>
+                    <ProfileModal user={dashboardUser} onClose={() => setShowProfile(false)} onUpdate={refreshData} />
+                </Suspense>
+            )}
             {showGrounding && <GroundingMode onClose={() => setShowGrounding(false)} />}
             {showTechCheck && (<TechCheck onConfirm={confirmSession} onCancel={() => setShowTechCheck(false)} />)}
 
@@ -1127,7 +1142,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             }
             {showBookFull && dashboardUser && (
                 <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Opening the Book...</div>}>
-                    <BookOfYouView user={dashboardUser} onClose={() => setShowBookFull(false)} />
+                    <BookOfYouView user={dashboardUser} garden={garden} onClose={() => setShowBookFull(false)} />
                 </Suspense>
             )}
             {showGardenFull && garden && (
