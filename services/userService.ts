@@ -333,6 +333,14 @@ export class UserService {
         }
     }
 
+    static async deleteJournal(id: string) {
+        const { error } = await supabase.from('journals').delete().eq('id', id);
+        if (error) {
+            logger.error("Delete Journal Failed", id, error);
+            throw error;
+        }
+    }
+
     static async getMoods(userId: string): Promise<MoodEntry[]> {
         const { data } = await supabase.from('moods').select('*').eq('user_id', userId).order('date', { ascending: false });
         return (data || []).map((m: any) => ({ id: m.id, userId: m.user_id, date: m.date, mood: m.mood as any }));

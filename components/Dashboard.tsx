@@ -592,6 +592,7 @@ const MoodTracker: React.FC<{ onMoodSelect: (m: 'confetti' | 'rain' | null) => v
 };
 
 const JournalSection: React.FC<{ user: User, onUpdate?: () => void }> = ({ user, onUpdate }) => {
+    const { showToast } = useToast();
     const [entries, setEntries] = useState<JournalEntry[]>([]);
     const [content, setContent] = useState('');
     const [saved, setSaved] = useState(false);
@@ -599,6 +600,7 @@ const JournalSection: React.FC<{ user: User, onUpdate?: () => void }> = ({ user,
         UserService.getJournals(user.id).then(setEntries);
     }, [user.id]);
     const handleSave = () => { if (!content.trim()) return; const entry: JournalEntry = { id: crypto.randomUUID(), userId: user.id, date: new Date().toISOString(), content: content }; UserService.saveJournal(entry).then(async () => { await GardenService.waterPlant(user.id); setEntries([entry, ...entries]); setContent(''); setSaved(true); if (onUpdate) onUpdate(); setTimeout(() => setSaved(false), 2000); }); };
+    const handleDelete = async (id: string, e: React.MouseEvent) => { e.stopPropagation(); try { await UserService.deleteJournal(id); setEntries(prev => prev.filter(e => e.id !== id)); showToast("Entry deleted", "success"); } catch (error) { showToast("Failed to delete", "error"); } };
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 h-[450px]">
@@ -612,7 +614,20 @@ const JournalSection: React.FC<{ user: User, onUpdate?: () => void }> = ({ user,
                 <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex justify-between items-center"><h3 className="font-bold text-gray-500 text-xs uppercase tracking-wider flex items-center gap-2"><Clock className="w-3 h-3" /> Timeline</h3><span className="text-[10px] font-bold bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full text-gray-600 dark:text-gray-300">{entries.length} Entries</span></div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-yellow-200 dark:scrollbar-thumb-gray-700">
                     {entries.length === 0 && (<div className="h-full flex flex-col items-center justify-center text-gray-400 opacity-50"><BookOpen className="w-10 h-10 mb-2 stroke-1" /><p className="text-xs">Your story begins here.</p></div>)}
-                    {entries.map(entry => (<div key={entry.id} className="group p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all cursor-default shadow-sm hover:shadow-md"><div className="flex justify-between items-start mb-1.5"><span className="text-[9px] font-black text-yellow-600 dark:text-yellow-500 uppercase tracking-wide bg-yellow-50 dark:bg-yellow-900/20 px-1.5 py-0.5 rounded-md">{new Date(entry.date).toLocaleDateString()}</span><span className="text-[9px] text-gray-400 font-mono">{new Date(entry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div><p className="text-xs md:text-sm text-gray-600 dark:text-gray-300 line-clamp-3 leading-relaxed font-medium group-hover:text-black dark:group-hover:text-white transition-colors">{entry.content}</p></div>))}
+                    {entries.map(entry => (
+                        <div key={entry.id} className="group p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all cursor-default shadow-sm hover:shadow-md relative">
+                            <div className="flex justify-between items-start mb-1.5">
+                                <span className="text-[9px] font-black text-yellow-600 dark:text-yellow-500 uppercase tracking-wide bg-yellow-50 dark:bg-yellow-900/20 px-1.5 py-0.5 rounded-md">{new Date(entry.date).toLocaleDateString()}</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[9px] text-gray-400 font-mono">{new Date(entry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    <button onClick={(e) => handleDelete(entry.id, e)} className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity p-0.5">
+                                        <Trash2 className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            </div>
+                            <p className="text-xs md:text-sm text-gray-600 dark:text-gray-300 line-clamp-3 leading-relaxed font-medium group-hover:text-black dark:group-hover:text-white transition-colors">{entry.content}</p>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div >
@@ -1163,8 +1178,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         )}
                                     </div>
                                     {activeTab === 'hub' && (
-                                        <button onClick={() => setShowGrounding(true)} className="hidden md:flex items-center gap-2 bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 px-4 py-2 rounded-full font-black uppercase tracking-widest text-[10px] transition-all hover:bg-red-500/20 shadow-sm" title="Panic Relief">
-                                            <Anchor className="w-3.5 h-3.5" /> Panic Anchor
+                                        <button onClick={() => setShowGrounding(true)} className="hidden md:flex items-center gap-1.5 bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full font-black uppercase tracking-widest text-[9px] transition-all hover:bg-red-500/20 shadow-sm" title="Panic Relief">
+                                            <Anchor className="w-3 h-3" /> Panic Anchor
                                         </button>
                                     )}
                                 </div>
