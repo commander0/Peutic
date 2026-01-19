@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UserRole } from '../types';
 import { Facebook, AlertCircle, Send, Heart, Check, Loader2, Server, Megaphone } from 'lucide-react';
+import { useLanguage } from './common/LanguageContext';
 import { AdminService } from '../services/adminService';
 import { supabase } from '../services/supabaseClient';
 import { NameValidator } from '../services/nameValidator';
@@ -16,6 +17,7 @@ interface AuthProps {
 
 
 const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' }) => {
+    const { t } = useLanguage();
     const [isLogin, setIsLogin] = useState(initialMode === 'login');
     const isMounted = useRef(true);
     const [settings, setSettings] = useState(AdminService.getSettings());
@@ -213,36 +215,36 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                             {onboardingStep === 0 && (
                                 <div className="animate-in slide-in-from-bottom-5 fade-in duration-500 space-y-6">
                                     <div>
-                                        <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tight">Welcome, {firstName || 'Buddy'}.</h2>
-                                        <p className="text-gray-500 dark:text-gray-400 text-lg md:text-xl font-medium leading-relaxed">Let's tailor your sanctuary.</p>
+                                        <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tight">{t('auth_welcome_prefix')}, {firstName || 'Buddy'}.</h2>
+                                        <p className="text-gray-500 dark:text-gray-400 text-lg md:text-xl font-medium leading-relaxed">{t('auth_tailor_desc')}</p>
                                     </div>
-                                    <button onClick={() => setOnboardingStep(1)} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 md:py-5 rounded-2xl font-black hover:scale-[1.02] transition-transform text-base md:text-lg shadow-xl">Begin Setup</button>
+                                    <button onClick={() => setOnboardingStep(1)} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 md:py-5 rounded-2xl font-black hover:scale-[1.02] transition-transform text-base md:text-lg shadow-xl">{t('auth_begin_setup')}</button>
                                 </div>
                             )}
                             {onboardingStep === 1 && (
                                 <div className="animate-in slide-in-from-bottom-5 fade-in duration-500 space-y-6">
                                     <div>
-                                        <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tight">Privacy First</h2>
-                                        <p className="text-gray-500 dark:text-gray-400 text-lg md:text-xl font-medium leading-relaxed">Your sessions are 100% encrypted. No one listens but you.</p>
+                                        <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tight">{t('auth_privacy_title')}</h2>
+                                        <p className="text-gray-500 dark:text-gray-400 text-lg md:text-xl font-medium leading-relaxed">{t('auth_privacy_desc')}</p>
                                     </div>
-                                    <button onClick={() => setOnboardingStep(2)} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 md:py-5 rounded-2xl font-black hover:scale-[1.02] transition-transform text-base md:text-lg shadow-xl">I Understand</button>
+                                    <button onClick={() => setOnboardingStep(2)} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 md:py-5 rounded-2xl font-black hover:scale-[1.02] transition-transform text-base md:text-lg shadow-xl">{t('auth_i_understand')}</button>
                                 </div>
                             )}
                             {onboardingStep === 2 && (
                                 <div className="animate-in slide-in-from-bottom-5 fade-in duration-500 space-y-6">
                                     <div>
-                                        <h2 className="text-3xl md:text-4xl font-black mb-2 tracking-tight">Focus Areas</h2>
-                                        <p className="text-gray-500 dark:text-gray-400 text-base md:text-lg mb-6">Select what's on your mind.</p>
+                                        <h2 className="text-3xl md:text-4xl font-black mb-2 tracking-tight">{t('auth_focus_areas')}</h2>
+                                        <p className="text-gray-500 dark:text-gray-400 text-base md:text-lg mb-6">{t('auth_focus_desc')}</p>
                                         <div className="flex flex-wrap gap-2 md:gap-3 mb-8">
-                                            {["Anxiety", "Stress", "Career", "Relationships", "Grief", "Sleep", "Confidence"].map(t => (
-                                                <button key={t} onClick={() => {
-                                                    if (selectedTopics.includes(t)) setSelectedTopics(selectedTopics.filter(topic => topic !== t));
-                                                    else if (selectedTopics.length < 5) setSelectedTopics([...selectedTopics, t]);
-                                                }} className={`px-4 py-2.5 md:px-5 md:py-3 text-sm md:text-base border rounded-full font-bold transition-all ${selectedTopics.includes(t) ? 'bg-black dark:bg-white text-white dark:text-black border-black dark:border-white shadow-md' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-black dark:hover:border-white'}`}>{t}</button>
+                                            {["Anxiety", "Stress", "Career", "Relationships", "Grief", "Sleep", "Confidence"].map(t_topic => (
+                                                <button key={t_topic} onClick={() => {
+                                                    if (selectedTopics.includes(t_topic)) setSelectedTopics(selectedTopics.filter(topic => topic !== t_topic));
+                                                    else if (selectedTopics.length < 5) setSelectedTopics([...selectedTopics, t_topic]);
+                                                }} className={`px-4 py-2.5 md:px-5 md:py-3 text-sm md:text-base border rounded-full font-bold transition-all ${selectedTopics.includes(t_topic) ? 'bg-black dark:bg-white text-white dark:text-black border-black dark:border-white shadow-md' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-black dark:hover:border-white'}`}>{t_topic}</button>
                                             ))}
                                         </div>
                                     </div>
-                                    <button onClick={() => setOnboardingStep(3)} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 md:py-5 rounded-2xl font-black hover:scale-[1.02] transition-transform text-base md:text-lg shadow-xl">Finalize Profile</button>
+                                    <button onClick={() => setOnboardingStep(3)} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 md:py-5 rounded-2xl font-black hover:scale-[1.02] transition-transform text-base md:text-lg shadow-xl">{t('auth_finalize')}</button>
                                 </div>
                             )}
                             {onboardingStep === 3 && (
@@ -251,8 +253,8 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                                         <Check className="w-10 h-10 md:w-12 md:h-12 text-green-600 dark:text-green-400" />
                                     </div>
                                     <div>
-                                        <h2 className="text-3xl md:text-4xl font-black mb-2 tracking-tight">All Set!</h2>
-                                        <p className="text-gray-500">Your safe space is ready.</p>
+                                        <h2 className="text-3xl md:text-4xl font-black mb-2 tracking-tight">{t('auth_all_set')}</h2>
+                                        <p className="text-gray-500">{t('auth_ready_desc')}</p>
                                     </div>
                                     {error && (
                                         <div className="p-4 bg-red-50 text-red-600 rounded-xl font-bold text-sm flex flex-col gap-2 border border-red-200 text-left">
@@ -269,7 +271,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                                         disabled={loading}
                                         className={`w-full bg-[#FACC15] text-black py-4 md:py-5 rounded-2xl font-black shadow-[0_20px_40px_-15px_rgba(250,204,21,0.5)] hover:bg-[#EAB308] hover:scale-105 transition-all text-base md:text-lg uppercase tracking-widest flex items-center justify-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                                     >
-                                        {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> Creating Space...</> : "Enter Dashboard"}
+                                        {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> {t('ui_loading')}...</> : t('auth_enter_dash')}
                                     </button>
                                 </div>
                             )}
@@ -316,8 +318,8 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
 
                 <div className="max-w-md w-full mx-auto pt-10 md:pt-0">
                     <div className="animate-in slide-in-from-left-10 fade-in duration-300">
-                        <h2 className="text-2xl md:text-3xl font-bold mb-2">{isLogin ? 'Member Login' : 'Create Account'}</h2>
-                        <p className="text-gray-500 mb-6 md:mb-8 text-sm md:text-base">{isLogin ? 'Access your private sanctuary.' : 'Join 1M+ users finding clarity.'}</p>
+                        <h2 className="text-2xl md:text-3xl font-bold mb-2">{isLogin ? t('auth_login_title') : t('auth_signup_title')}</h2>
+                        <p className="text-gray-500 mb-6 md:mb-8 text-sm md:text-base">{isLogin ? t('pricing_sub') : t('trusted_by')}</p>
 
                         {error && (
                             <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 text-sm rounded-xl flex flex-col gap-2">
@@ -345,26 +347,26 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                             {!isLogin && (
                                 <>
                                     <div className="grid grid-cols-2 gap-3 md:gap-4 animate-in slide-in-from-bottom-2 fade-in">
-                                        <input type="text" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="First Name" value={firstName} onChange={e => setFirstName(e.target.value)} />
-                                        <input type="text" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="Last Name" value={lastName} onChange={e => setLastName(e.target.value)} />
+                                        <input type="text" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder={t('auth_first_name')} value={firstName} onChange={e => setFirstName(e.target.value)} />
+                                        <input type="text" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder={t('auth_last_name')} value={lastName} onChange={e => setLastName(e.target.value)} />
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs font-bold text-gray-500 uppercase ml-1">Date of Birth</label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase ml-1">{t('auth_dob')}</label>
                                         <input type="date" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all animate-in slide-in-from-bottom-3 fade-in text-sm md:text-base dark:text-white" value={birthday} onChange={e => setBirthday(e.target.value)} />
                                     </div>
                                 </>
                             )}
-                            <input type="email" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} />
-                            <input type="password" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
+                            <input type="email" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder={t('auth_email')} value={email} onChange={e => setEmail(e.target.value)} />
+                            <input type="password" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all text-sm md:text-base dark:text-white" placeholder={t('auth_password')} value={password} onChange={e => setPassword(e.target.value)} />
                             {!isLogin && (
                                 <>
-                                    <input type="password" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all animate-in slide-in-from-bottom-4 fade-in text-sm md:text-base dark:text-white" placeholder="Confirm Password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+                                    <input type="password" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all animate-in slide-in-from-bottom-4 fade-in text-sm md:text-base dark:text-white" placeholder={t('auth_password')} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
                                     <p className="text-[10px] text-gray-500 dark:text-gray-400 px-1 leading-tight">Password must be 8+ chars with uppercase, lowercase, number, & symbol.</p>
                                 </>
                             )}
 
                             <button type="submit" disabled={loading} className="w-full bg-black dark:bg-white text-white dark:text-black py-3 md:py-4 rounded-xl font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-all flex justify-center gap-2 shadow-xl text-sm md:text-base">
-                                {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</> : (isLogin ? 'Sign In' : 'Create Account')}
+                                {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> {t('ui_loading')}...</> : (isLogin ? t('auth_submit_login') : t('auth_submit_signup'))}
                             </button>
                         </form>
 

@@ -31,7 +31,11 @@ export class AdminService {
 
     static async syncGlobalSettings(): Promise<GlobalSettings> {
         try {
-            const { data, error } = await supabase.from('global_settings').select('*').eq('id', 1).single();
+            const fields = 'price_per_minute, sale_mode, allow_signups, site_name, broadcast_message, dashboard_broadcast_message, max_concurrent_sessions, multilingual_mode, maintenance_mode';
+            const { data, error } = await supabase.from('global_settings')
+                .select(fields)
+                .eq('id', 1)
+                .single();
             if (data && !error) {
                 const settingsData = data as any;
                 this.settingsCache = {
@@ -46,7 +50,6 @@ export class AdminService {
                     maintenanceMode: settingsData.maintenance_mode
                 };
                 localStorage.setItem(this.CACHE_KEY, JSON.stringify(this.settingsCache));
-
             }
         } catch (e) {
             console.warn("Settings sync failed", e);
@@ -64,28 +67,55 @@ export class AdminService {
     }
 
     static async getSystemLogs(): Promise<SystemLog[]> {
-        const { data, error } = await supabase.from('system_logs').select('*').order('timestamp', { ascending: false }).limit(200);
-        if (error) {
-            logger.error("getSystemLogs Failed", "", error);
-            return [];
+        const cacheKey = 'peutic_admin_logs';
+        const cached = localStorage.getItem(cacheKey);
+
+        const fetcher = async () => {
+            const { data, error } = await supabase.from('system_logs')
+                .select('id, timestamp, type, event, details')
+                .order('timestamp', { ascending: false })
+                .limit(200);
+            if (error) {
+                logger.error("getSystemLogs Failed", "", error);
+                return [];
+            }
+            return (data || []) as SystemLog[];
+        };
+
+        if (cached) {
+            fetcher().then(data => localStorage.setItem(cacheKey, JSON.stringify(data)));
+            return JSON.parse(cached);
         }
-        return (data || []) as SystemLog[];
+
+        const data = await fetcher();
+        localStorage.setItem(cacheKey, JSON.stringify(data));
+        return data;
     }
 
 
 
     static async getAllUsers(): Promise<User[]> {
-        try {
-            const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
+        const cacheKey = 'peutic_admin_users';
+        const cached = localStorage.getItem(cacheKey);
+
+        const fetcher = async () => {
+            const fields = 'id, name, email, birthday, role, balance, subscription_status, created_at, last_login_date, streak, provider, avatar_url, avatar_locked, email_preferences, theme_preference, language_preference, game_scores';
+            const { data, error } = await supabase.from('users').select(fields).order('created_at', { ascending: false });
             if (error) {
                 logger.warn("getAllUsers Error", error.message);
                 return [];
             }
             return (data || []).map(UserService.mapUser);
-        } catch (e: any) {
-            logger.error("getAllUsers Failed", "", e);
-            return [];
+        };
+
+        if (cached) {
+            fetcher().then(data => localStorage.setItem(cacheKey, JSON.stringify(data)));
+            return JSON.parse(cached);
         }
+
+        const data = await fetcher();
+        localStorage.setItem(cacheKey, JSON.stringify(data));
+        return data;
     }
 
     static async deleteUser(userId: string) {
@@ -219,24 +249,26 @@ export class AdminService {
             yearsExperience: c.years_experience
         });
 
-        // Try cache first
-        try {
-            const cached = localStorage.getItem(this.COMPANION_CACHE_KEY);
-            if (cached) return JSON.parse(cached);
-        } catch (e) { }
+        const cached = localStorage.getItem(this.COMPANION_CACHE_KEY);
 
-        try {
-            const { data, error } = await supabase.from('companions').select('*').order('name');
-            if (error) logger.warn("getCompanions Error", error.message);
-            if (!data || data.length === 0) return [];
+        const fetcher = async () => {
+            const fields = 'id, name, gender, specialty, status, rating, image_url, bio, replica_id, license_number, degree, state_of_practice, years_experience';
+            const { data, error } = await supabase.from('companions').select(fields).order('name');
+            if (error) {
+                logger.warn("getCompanions Error", error.message);
+                return [];
+            }
+            return (data || []).map(mapCompanion);
+        };
 
-            const mapped = data.map(mapCompanion);
-            localStorage.setItem(this.COMPANION_CACHE_KEY, JSON.stringify(mapped));
-            return mapped;
-        } catch (e: any) {
-            logger.error("getCompanions Failed", "", e);
-            return [];
+        if (cached) {
+            fetcher().then(data => localStorage.setItem(this.COMPANION_CACHE_KEY, JSON.stringify(data)));
+            return JSON.parse(cached);
         }
+
+        const data = await fetcher();
+        localStorage.setItem(this.COMPANION_CACHE_KEY, JSON.stringify(data));
+        return data;
     }
 
 
@@ -246,17 +278,32 @@ export class AdminService {
     }
 
     static async getAllTransactions(): Promise<Transaction[]> {
-        const { data } = await supabase.from('transactions').select('*').order('date', { ascending: false });
-        return (data || []).map((t: any) => ({
-            id: t.id,
-            userId: t.user_id,
-            userName: t.user_name,
-            date: t.date,
-            amount: t.amount,
-            cost: t.cost,
-            description: t.description,
-            status: t.status as any
-        }));
+        const cacheKey = 'peutic_admin_transactions';
+        const cached = localStorage.getItem(cacheKey);
+
+        const fetcher = async () => {
+            const fields = 'id, user_id, user_name, date, amount, cost, description, status';
+            const { data } = await supabase.from('transactions').select(fields).order('date', { ascending: false });
+            return (data || []).map((t: any) => ({
+                id: t.id,
+                userId: t.user_id,
+                userName: t.user_name,
+                date: t.date,
+                amount: t.amount,
+                cost: t.cost,
+                description: t.description,
+                status: t.status as any
+            }));
+        };
+
+        if (cached) {
+            fetcher().then(data => localStorage.setItem(cacheKey, JSON.stringify(data)));
+            return JSON.parse(cached);
+        }
+
+        const data = await fetcher();
+        localStorage.setItem(cacheKey, JSON.stringify(data));
+        return data;
     }
 
     static async addCredits(userId: string, minutes: number) {

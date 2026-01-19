@@ -1,59 +1,91 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Globe, ChevronDown } from 'lucide-react';
-import { useLanguage } from './LanguageContext';
+import React, { useState, useEffect } from 'react';
+import { Globe, Check } from 'lucide-react';
 import { LanguageCode } from '../../services/i18n';
 
-const LANGUAGES: { code: LanguageCode; label: string }[] = [
-    { code: 'en', label: 'English' },
-    { code: 'es', label: 'Español' },
-    { code: 'fr', label: 'Français' },
-    { code: 'zh', label: '中文' },
-    { code: 'ar', label: 'العربية' }
-];
-
 interface LanguageSelectorProps {
-    className?: string;
+    currentLanguage: LanguageCode;
+    onLanguageChange: (lang: LanguageCode) => void;
+    variant?: 'minimal' | 'full';
 }
 
-export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = "" }) => {
-    const { lang, setLang } = useLanguage();
-    const [showLangMenu, setShowLangMenu] = useState(false);
-    const langMenuRef = useRef<HTMLDivElement>(null);
+const LANGUAGES: { code: LanguageCode; label: string; flag: string }[] = [
+    { code: 'en', label: 'English', flag: '🇺🇸' },
+    { code: 'es', label: 'Español', flag: '🇪🇸' },
+    { code: 'fr', label: 'Français', flag: '🇫🇷' },
+    { code: 'zh', label: '中文', flag: '🇨🇳' },
+    { code: 'ar', label: 'العربية', flag: '🇸🇦' }
+];
 
+export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
+    currentLanguage,
+    onLanguageChange,
+    variant = 'minimal'
+}) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    // Close when clicking outside
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
-                setShowLangMenu(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+        if (!isOpen) return;
+        const handleClick = () => setIsOpen(false);
+        window.addEventListener('click', handleClick);
+        return () => window.removeEventListener('click', handleClick);
+    }, [isOpen]);
+
+    if (variant === 'minimal') {
+        return (
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
+                <button
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 dark:bg-gray-800/50 dark:hover:bg-gray-700/50 border border-white/20 dark:border-gray-700/50 transition-all text-sm font-bold backdrop-blur-md"
+                >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span className="uppercase">{currentLanguage}</span>
+                </button>
+
+                {isOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="p-2 space-y-1">
+                            {LANGUAGES.map((lang) => (
+                                <button
+                                    key={lang.code}
+                                    onClick={() => {
+                                        onLanguageChange(lang.code);
+                                        setIsOpen(false);
+                                    }}
+                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-colors ${currentLanguage === lang.code
+                                        ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-500'
+                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-base">{lang.flag}</span>
+                                        <span>{lang.label}</span>
+                                    </div>
+                                    {currentLanguage === lang.code && <Check className="w-3.5 h-3.5" />}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     return (
-        <div className={`relative ${className}`} ref={langMenuRef}>
-            <button
-                onClick={() => setShowLangMenu(!showLangMenu)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/50 dark:bg-black/50 backdrop-blur-md border border-gray-200 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-500 transition-all text-[10px] md:text-xs font-black uppercase tracking-wider shadow-sm group"
-            >
-                <Globe className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400 group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors" />
-                <span className="text-gray-800 dark:text-gray-200 hidden md:inline">{lang}</span>
-                <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform duration-300 ${showLangMenu ? 'rotate-180' : ''} hidden md:block`} />
-            </button>
-            {showLangMenu && (
-                <div className="absolute top-full right-0 mt-2 w-32 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden z-[100] animate-in fade-in zoom-in duration-200">
-                    {LANGUAGES.map((l) => (
-                        <button
-                            key={l.code}
-                            onClick={() => { setLang(l.code); setShowLangMenu(false); }}
-                            className={`w-full text-left px-4 py-3 text-xs font-bold hover:bg-yellow-50 dark:hover:bg-gray-800 transition-colors flex justify-between items-center ${lang === l.code ? 'text-yellow-600 dark:text-yellow-500 bg-yellow-50/50' : 'text-gray-700 dark:text-gray-300'}`}
-                        >
-                            {l.label}
-                            {lang === l.code && <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>}
-                        </button>
-                    ))}
-                </div>
-            )}
+        <div className="flex flex-wrap gap-2">
+            {LANGUAGES.map((lang) => (
+                <button
+                    key={lang.code}
+                    onClick={() => onLanguageChange(lang.code)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${currentLanguage === lang.code
+                        ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg scale-105'
+                        : 'bg-white dark:bg-gray-800 text-gray-500 hover:bg-gray-100 border border-gray-100 dark:border-gray-700'
+                        }`}
+                >
+                    <span className="mr-2">{lang.flag}</span>
+                    {lang.label}
+                </button>
+            ))}
         </div>
     );
 };

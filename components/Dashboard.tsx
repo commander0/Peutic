@@ -1,18 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Companion, Transaction, JournalEntry, ArtEntry, VoiceJournalEntry } from '../types';
 import { LanguageSelector } from './common/LanguageSelector';
+import { useLanguage } from './common/LanguageContext';
 import {
     Video, Clock, Settings, LogOut,
     LayoutDashboard, Plus, X, Mic, Lock, CheckCircle, AlertTriangle, ShieldCheck, Heart,
     BookOpen, Save, Sparkles, Flame, Trophy,
-    Sun, Cloud, Feather, Anchor, Gamepad2, RefreshCw, Play, Zap, Star, Edit2, Trash2,
+    Sun, Feather, Anchor, Gamepad2, RefreshCw, Play, Star, Edit2, Trash2,
     CloudRain, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Moon,
 
-    Twitter, Instagram, Linkedin, Volume2, Music, Smile, Trees,
+    Twitter, Instagram, Linkedin, Volume2, Music, Trees,
     Mail, StopCircle, Eye, Minimize2, Flame as Fire, EyeOff, Megaphone
 } from 'lucide-react';
-import { STABLE_AVATAR_POOL } from '../services/database';
 import { UserService } from '../services/userService';
 import { AdminService } from '../services/adminService';
 import { useToast } from './common/Toast';
@@ -27,7 +27,14 @@ import TechCheck from './TechCheck';
 import GroundingMode from './GroundingMode';
 import { GardenState } from '../types';
 import { GardenService } from '../services/gardenService';
-import GardenCanvas from './garden/GardenCanvas';
+
+// LAZY LOAD HEAVY COMPONENTS
+const GardenCanvas = lazy(() => import('./garden/GardenCanvas'));
+const MindfulMatchGame = lazy(() => import('./MindfulMatchGame.tsx').catch(() => ({ default: () => <div className="p-10 text-center">Game Loading...</div> })));
+const CloudHopGame = lazy(() => import('./CloudHopGame.tsx').catch(() => ({ default: () => <div className="p-10 text-center">Game Loading...</div> })));
+const PaymentModal = lazy(() => import('./PaymentModal.tsx').catch(() => ({ default: () => <div className="p-10 text-center">Secure Payment Node Loading...</div> })));
+const ProfileModal = lazy(() => import('./ProfileModal.tsx').catch(() => ({ default: () => <div className="p-10 text-center">Profile Settings Loading...</div> })));
+
 import EmergencyOverlay from './safety/EmergencyOverlay';
 import Confetti from './common/Confetti';
 
@@ -35,6 +42,7 @@ import { VoiceRecorder, VoiceEntryItem } from './journal/VoiceRecorder';
 
 // Stripe publishable key
 const STRIPE_PUBLISHABLE_KEY = (import.meta as any).env?.VITE_STRIPE_PUBLISHABLE_KEY || '';
+console.log("Stripe Key Loaded:", STRIPE_PUBLISHABLE_KEY ? "Yes" : "No");
 
 declare global {
     interface Window {
@@ -67,51 +75,36 @@ const INSPIRATIONAL_SAYINGS = [
     "Kindness starts with you."
 ];
 
-const AvatarImage: React.FC<{ src: string; alt: string; className?: string; isUser?: boolean }> = ({ src, alt, className, isUser = false }) => {
-    const [imgSrc, setImgSrc] = useState(src);
-    const [hasError, setHasError] = useState(false);
+const AvatarImage = React.memo(({ src, alt, className, isUser = false }: { src?: string, alt: string, className?: string, isUser?: boolean }) => (
+    <div className={`relative ${className} overflow-hidden`}>
+        {src ? (
+            <img src={src} alt={alt} className="w-full h-full object-cover" />
+        ) : (
+            <div className="w-full h-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+                <UserIcon className="w-1/2 h-1/2 text-yellow-600 dark:text-yellow-500" />
+            </div>
+        )}
+        {isUser && <div className="absolute inset-0 ring-1 ring-inset ring-black/10"></div>}
+    </div>
+));
+AvatarImage.displayName = 'AvatarImage';
 
-    useEffect(() => {
-        if (src && src.length > 10) {
-            setImgSrc(src);
-            setHasError(false);
-        } else {
-            setHasError(true);
-        }
-    }, [src]);
-
-    if (hasError || !imgSrc) {
-        if (isUser) {
-            return (
-                <div className={`bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center ${className}`}>
-                    <Smile className="w-3/5 h-3/5 text-yellow-600 dark:text-yellow-400" />
-                </div>
-            );
-        }
-        let hash = 0;
-        for (let i = 0; i < alt.length; i++) hash = alt.charCodeAt(i) + ((hash << 5) - hash);
-        const index = Math.abs(hash) % STABLE_AVATAR_POOL.length;
-        return <img src={STABLE_AVATAR_POOL[index]} alt={alt} className={className} loading="lazy" />;
-    }
-
-    return <img src={imgSrc} alt={alt} className={className} onError={() => setHasError(true)} loading="lazy" />;
-};
-
-const CollapsibleSection: React.FC<{ title: string; icon: any; children: React.ReactNode; defaultOpen?: boolean }> = ({ title, icon: Icon, children, defaultOpen = false }) => {
+const CollapsibleSection = React.memo(({ title, icon: Icon, children, defaultOpen = false }: { title: string, icon: any, children: React.ReactNode, defaultOpen?: boolean }) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
     return (
-        <div className="bg-[#FFFBEB] dark:bg-gray-900 border border-yellow-200 dark:border-gray-800 rounded-3xl overflow-hidden mb-4 transition-colors shadow-sm">
-            <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-4 md:p-5 hover:bg-yellow-50 dark:hover:bg-gray-800 transition-colors">
+        <div className="bg-white/40 dark:bg-gray-900/40 rounded-3xl border border-yellow-100/50 dark:border-gray-800/50 overflow-hidden backdrop-blur-md shadow-sm transition-all duration-300">
+            <button onClick={() => setIsOpen(!isOpen)} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-yellow-50/50 dark:hover:bg-gray-800/30 transition-colors bg-[#FFFBEB] dark:bg-gray-900">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-yellow-100 dark:bg-gray-800 rounded-lg"><Icon className="w-4 h-4 md:w-5 md:h-5 text-yellow-600 dark:text-yellow-500" /></div>
+                    <div className="p-2 bg-yellow-100 dark:bg-gray-800 rounded-lg text-yellow-600 dark:text-yellow-500"><Icon className="w-5 h-5" /></div>
                     <span className="font-bold text-base dark:text-white">{title}</span>
                 </div>
                 {isOpen ? <ChevronUp className="w-4 h-4 md:w-5 md:h-5 text-gray-400" /> : <ChevronDown className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />}
             </button>
-            {isOpen && <div className="p-4 md:p-5 pt-0 border-t border-yellow-100 dark:border-gray-800 animate-in slide-in-from-top-2">{children}</div>}
+            {isOpen && <div className="p-4 lg:p-6 pt-0 animate-in slide-in-from-top-2 duration-300 dark:bg-gray-900">{children}</div>}
         </div>
     );
-};
+});
+CollapsibleSection.displayName = 'CollapsibleSection';
 
 const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }> = ({ userId, onUpdate }) => {
     const [input, setInput] = useState('');
@@ -323,250 +316,9 @@ const WeatherEffect: React.FC<{ type: 'confetti' | 'rain' }> = ({ type }) => {
     return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-[50]" />;
 };
 
-const MindfulMatchGame: React.FC<{ dashboardUser: User }> = ({ dashboardUser }) => {
-    const [cards, setCards] = useState<any[]>([]);
-    const [flipped, setFlipped] = useState<number[]>([]);
-    const [solved, setSolved] = useState<number[]>([]);
-    const [won, setWon] = useState(false);
-    const [moves, setMoves] = useState(0);
-    const [bestScore, setBestScore] = useState(() => {
-        return dashboardUser?.gameScores?.match || 0;
-    });
-    const ICONS = [Sun, Heart, Music, Zap, Star, Anchor, Feather, Cloud];
-    useEffect(() => { initGame(); }, []);
-    const initGame = () => {
-        const duplicated = [...ICONS, ...ICONS];
-        const shuffled = duplicated.sort(() => Math.random() - 0.5).map((icon, i) => ({ id: i, icon }));
-        setCards(shuffled);
-        setFlipped([]);
-        setSolved([]);
-        setWon(false);
-        setMoves(0);
-    };
-    const handleCardClick = (index: number) => {
-        if (flipped.length === 2 || solved.includes(index) || flipped.includes(index)) return;
-        const newFlipped = [...flipped, index];
-        setFlipped(newFlipped);
-        if (newFlipped.length === 2) {
-            setMoves(m => m + 1);
-            const card1 = cards[newFlipped[0]];
-            const card2 = cards[newFlipped[1]];
-            if (card1.icon === card2.icon) {
-                setSolved([...solved, newFlipped[0], newFlipped[1]]);
-                setFlipped([]);
-            } else {
-                setTimeout(() => setFlipped([]), 1000);
-            }
-        }
-    };
-    useEffect(() => {
-        if (cards.length > 0 && solved.length === cards.length) {
-            setWon(true);
-            if (bestScore === 0 || moves < bestScore) {
-                setBestScore(moves);
-                if (dashboardUser && dashboardUser.id) {
-                    UserService.updateGameScore(dashboardUser.id, 'match', moves);
-                }
+// MindfulMatchGame extracted to separate file
 
-            }
-        }
-    }, [solved]);
-    return (
-        <div className="bg-gradient-to-br from-yellow-50/50 to-white dark:from-gray-800 dark:to-gray-900 w-full h-full flex flex-col rounded-2xl p-4 border border-yellow-100 dark:border-gray-700 overflow-hidden relative shadow-inner items-center justify-center">
-            <div className="absolute top-3 left-4 z-20 flex gap-2"><span className="text-[10px] font-bold bg-white/50 dark:bg-black/50 px-2 py-1 rounded-full text-gray-500">Moves: {moves}</span>{bestScore > 0 && <span className="text-[10px] font-bold bg-yellow-100 dark:bg-yellow-900/50 px-2 py-1 rounded-full text-yellow-700 dark:text-yellow-500">Best: {bestScore}</span>}</div>
-            <button onClick={initGame} className="absolute top-3 right-3 p-2 hover:bg-yellow-100 dark:hover:bg-gray-700 rounded-full transition-colors z-20"><RefreshCw className="w-4 h-4 text-yellow-600 dark:text-yellow-400" /></button>
-            {won ? (<div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in"><Trophy className="w-16 h-16 text-yellow-500 mb-4 animate-bounce" /><p className="font-black text-2xl text-yellow-900 dark:text-white">Zen Master!</p><p className="text-sm text-gray-500 mb-6">Completed in {moves} moves</p><button onClick={initGame} className="bg-black dark:bg-white dark:text-black text-white px-8 py-3 rounded-full font-bold text-sm hover:scale-105 transition-transform">Replay</button></div>) : (
-                <div className="w-full h-full grid grid-cols-4 grid-rows-4 gap-px p-0.5">
-                    {cards.map((card, i) => { const isVisible = flipped.includes(i) || solved.includes(i); const Icon = card.icon; return (<div key={i} className="perspective-1000 w-full h-full"><button onClick={() => handleCardClick(i)} className={`w-full h-full rounded-xl flex items-center justify-center transition-all duration-500 transform-style-3d ${isVisible ? 'bg-white dark:bg-gray-700 border-2 border-yellow-400 shadow-lg rotate-y-180' : 'bg-gray-900 dark:bg-gray-800 shadow-md'}`}>{isVisible ? <Icon className="w-5 h-5 md:w-8 md:h-8 text-yellow-500 animate-in zoom-in" /> : <div className="w-2 h-2 bg-gray-700 rounded-full"></div>}</button></div>); })}
-                </div>
-            )}
-        </div>
-    );
-};
-
-const CloudHopGame: React.FC<{ dashboardUser: User }> = ({ dashboardUser }) => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const requestRef = useRef<number | undefined>(undefined);
-    const [score, setScore] = useState(0);
-    const [gameOver, setGameOver] = useState(false);
-    const [gameStarted, setGameStarted] = useState(false);
-    const [highScore, setHighScore] = useState(() => {
-        return dashboardUser?.gameScores?.cloud || 0;
-    });
-    const playerRef = useRef({ x: 150, y: 300, vx: 0, vy: 0, width: 30, height: 30 });
-    const platformsRef = useRef<any[]>([]);
-    useEffect(() => {
-        const resizeCanvas = () => {
-            const canvas = canvasRef.current;
-            if (canvas && canvas.parentElement) {
-                const dpr = window.devicePixelRatio || 1;
-                const rect = canvas.parentElement.getBoundingClientRect();
-                canvas.style.width = `${rect.width}px`;
-                canvas.style.height = `${rect.height}px`;
-                canvas.width = rect.width * dpr;
-                canvas.height = rect.height * dpr;
-                const ctx = canvas.getContext('2d');
-                if (ctx) ctx.scale(dpr, dpr);
-                if (gameStarted) { setGameOver(true); setGameStarted(false); }
-            }
-        };
-        window.addEventListener('resize', resizeCanvas);
-        setTimeout(resizeCanvas, 100);
-        return () => window.removeEventListener('resize', resizeCanvas);
-    }, []);
-    useEffect(() => {
-        if (gameOver) {
-            if (score > highScore) {
-                setHighScore(score);
-                if (dashboardUser && dashboardUser.id) {
-                    UserService.updateGameScore(dashboardUser.id, 'cloud', score);
-                }
-
-            }
-        }
-    }, [gameOver, score, highScore]);
-    const initGame = () => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const dpr = window.devicePixelRatio || 1;
-        const W = canvas.width / dpr;
-        const H = canvas.height / dpr;
-        const isMobile = W < 600;
-        const pSize = isMobile ? 24 : 32;
-        const basePlatW = isMobile ? 80 : 100;
-        platformsRef.current = [{ x: 0, y: H - 30, w: W, h: 30, type: 'ground' }];
-        let py = H - 80;
-        while (py > -2000) {
-            platformsRef.current.push({
-                x: Math.random() * (W - basePlatW),
-                y: py,
-                w: basePlatW + Math.random() * (isMobile ? 20 : 30),
-                h: isMobile ? 12 : 15,
-                type: Math.random() > 0.9 ? 'moving' : 'cloud',
-                vx: Math.random() > 0.5 ? 1 : -1
-            });
-            py -= (isMobile ? 60 : 70) + Math.random() * 25;
-        }
-        playerRef.current = { x: W / 2 - (pSize / 2), y: H - 80, vx: 0, vy: 0, width: pSize, height: pSize };
-        setScore(0);
-        setGameOver(false);
-        setGameStarted(true);
-    };
-    useEffect(() => {
-        if (!gameStarted) return;
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        const dpr = window.devicePixelRatio || 1;
-        const W = canvas.width / dpr;
-        const H = canvas.height / dpr;
-        const isMobile = W < 600;
-        const GRAVITY = H > 400 ? 0.4 : 0.35;
-        const JUMP_FORCE = H > 400 ? -9 : -8;
-        const MOVE_SPEED = isMobile ? 3.5 : 4.5;
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'ArrowLeft') playerRef.current.vx = -MOVE_SPEED;
-            if (e.key === 'ArrowRight') playerRef.current.vx = MOVE_SPEED;
-        };
-        const handleKeyUp = () => { playerRef.current.vx = 0; };
-        window.addEventListener('keydown', handleKeyDown);
-        window.addEventListener('keyup', handleKeyUp);
-        const drawCloud = (x: number, y: number, w: number, h: number, type: string) => {
-            ctx.fillStyle = type === 'moving' ? '#E0F2FE' : 'white';
-            if (type === 'moving') ctx.shadowColor = '#38BDF8';
-            ctx.fillRect(x, y, w, h);
-            const bumpSize = h * 0.8;
-            ctx.beginPath(); ctx.arc(x + 10, y, bumpSize, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(x + w - 10, y, bumpSize, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(x + w / 2, y - 5, bumpSize * 1.2, 0, Math.PI * 2); ctx.fill();
-            ctx.shadowColor = 'transparent';
-        };
-        const update = () => {
-            const p = playerRef.current;
-            p.x += p.vx;
-            if (p.x < -p.width) p.x = W;
-            if (p.x > W) p.x = -p.width;
-            p.vy += GRAVITY;
-            p.y += p.vy;
-            if (p.y < H / 2) {
-                const diff = (H / 2) - p.y;
-                p.y = H / 2;
-                setScore(s => s + Math.floor(diff));
-                platformsRef.current.forEach(pl => {
-                    pl.y += diff;
-                    if (pl.y > H + 50) {
-                        pl.y = -20;
-                        pl.x = Math.random() * (W - (isMobile ? 50 : 70));
-                        pl.type = Math.random() > 0.85 ? 'moving' : 'cloud';
-                    }
-                });
-            }
-            if (p.vy > 0) {
-                platformsRef.current.forEach(pl => {
-                    if (p.y + p.height > pl.y && p.y + p.height < pl.y + 40 && p.x + p.width > pl.x && p.x < pl.x + pl.w) {
-                        p.vy = JUMP_FORCE;
-                    }
-                });
-            }
-            platformsRef.current.forEach(pl => {
-                if (pl.type === 'moving') {
-                    pl.x += pl.vx;
-                    if (pl.x < 0 || pl.x + pl.w > W) pl.vx *= -1;
-                }
-            });
-            if (p.y > H + 50) {
-                setGameOver(true);
-                setGameStarted(false);
-                if (requestRef.current !== undefined) cancelAnimationFrame(requestRef.current);
-                return;
-            }
-            const grad = ctx.createLinearGradient(0, 0, 0, H);
-            grad.addColorStop(0, '#0EA5E9');
-            grad.addColorStop(1, '#BAE6FD');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, W, H);
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            for (let i = 0; i < 10; i++) ctx.fillRect((i * 50 + Date.now() / 50) % W, (i * 30 + Date.now() / 20) % H, 2, 2);
-            platformsRef.current.forEach(pl => {
-                if (pl.type === 'ground') { ctx.fillStyle = '#4ade80'; ctx.fillRect(pl.x, pl.y, pl.w, pl.h); }
-                else { drawCloud(pl.x, pl.y, pl.w, pl.h, pl.type); }
-            });
-            ctx.shadowBlur = 10; ctx.shadowColor = 'white';
-            ctx.fillStyle = '#FACC15';
-            ctx.beginPath(); ctx.arc(p.x + p.width / 2, p.y + p.height / 2, p.width / 2, 0, Math.PI * 2); ctx.fill();
-            ctx.shadowBlur = 0; ctx.fillStyle = 'black';
-            const eyeOff = p.width * 0.2;
-            const eyeSize = p.width * 0.1;
-            // Left Eye
-            ctx.beginPath(); ctx.arc(p.x + p.width / 2 - eyeOff, p.y + p.height / 2 - eyeOff, eyeSize, 0, Math.PI * 2); ctx.fill();
-            // Right Eye
-            ctx.beginPath(); ctx.arc(p.x + p.width / 2 + eyeOff, p.y + p.height / 2 - eyeOff, eyeSize, 0, Math.PI * 2); ctx.fill();
-            // Mouth
-            ctx.beginPath(); ctx.arc(p.x + p.width / 2, p.y + p.height / 2 + eyeOff / 2, eyeOff * 0.8, 0, Math.PI);
-            ctx.lineWidth = 2; ctx.strokeStyle = 'black'; ctx.stroke();
-            requestRef.current = requestAnimationFrame(update);
-        };
-        update();
-        return () => {
-            if (requestRef.current !== undefined) cancelAnimationFrame(requestRef.current);
-            window.removeEventListener('keydown', handleKeyDown);
-            window.removeEventListener('keyup', handleKeyUp);
-        };
-    }, [gameStarted]);
-    const handleTap = (e: React.MouseEvent | React.TouchEvent) => {
-        if (!canvasRef.current) return;
-        const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
-        const rect = canvasRef.current.getBoundingClientRect();
-        if (clientX - rect.left < rect.width / 2) playerRef.current.vx = -3; else playerRef.current.vx = 3;
-    };
-    const handleRelease = () => { playerRef.current.vx = 0; };
-    return (
-        <div className="relative h-full w-full bg-sky-300 overflow-hidden rounded-2xl border-4 border-white dark:border-gray-700 shadow-inner cursor-pointer" onMouseDown={handleTap} onMouseUp={handleRelease} onTouchStart={handleTap} onTouchEnd={handleRelease}><div className="absolute top-2 right-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full font-black text-white text-base md:text-lg z-10">{score}m</div>
-            {highScore > 0 && <div className="absolute top-2 left-2 bg-yellow-400/20 backdrop-blur-sm px-3 py-1 rounded-full font-black text-white text-xs md:text-sm z-10 border border-yellow-400/50">Best: {highScore}</div>}
-            <canvas ref={canvasRef} className="w-full h-full block" />{(!gameStarted || gameOver) && (<div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20 animate-in fade-in"><div className="text-center">{gameOver && <p className="text-white font-black text-2xl mb-4 drop-shadow-md">Fall!</p>}<button onClick={initGame} className="bg-yellow-400 text-yellow-900 px-6 py-2 md:px-8 md:py-3 rounded-full font-black text-sm md:text-lg shadow-xl hover:scale-110 transition-transform flex items-center gap-2"><Play className="w-4 h-4 md:w-5 md:h-5 fill-current" /> {gameOver ? 'Try Again' : 'Play'}</button></div></div>)}</div>
-    );
-};
+// CloudHopGame extracted to separate file
 
 const MoodTracker: React.FC<{ onMoodSelect: (m: 'confetti' | 'rain' | null) => void }> = ({ onMoodSelect }) => {
     return (
@@ -635,204 +387,14 @@ const JournalSection: React.FC<{ user: User, onUpdate?: () => void }> = ({ user,
     );
 };
 
-const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, cost: number, token?: string) => void, initialError?: string }> = ({ onClose, onSuccess, initialError }) => {
-    const [amount, setAmount] = useState(20);
-    const [isCustom, setIsCustom] = useState(false);
-    const [processing, setProcessing] = useState(false);
-    const [error, setError] = useState(initialError || '');
-    const settings = AdminService.getSettings();
-
-    const pricePerMin = settings.saleMode ? 1.59 : 1.99;
-    const stripeRef = useRef<any>(null);
-    const elementsRef = useRef<any>(null);
-    const cardElementRef = useRef<any>(null);
-    const mountNodeRef = useRef<HTMLDivElement | null>(null);
-    useEffect(() => {
-        if (!STRIPE_PUBLISHABLE_KEY || STRIPE_PUBLISHABLE_KEY.startsWith('sk_')) {
-            console.error("CRITICAL: VITE_STRIPE_PUBLISHABLE_KEY is missing or invalid. Must start with pk_");
-            setError("Payment system not configured. Add VITE_STRIPE_PUBLISHABLE_KEY (starts with pk_) to .env file.");
-            return;
-        }
-        if (!window.Stripe) {
-            console.error("CRITICAL: Stripe.js script not loaded in window.");
-            setError("Stripe failed to load. Please check your internet connection and refresh.");
-            return;
-        }
-        if (!stripeRef.current) {
-            try {
-                console.log("Initializing Stripe with key:", STRIPE_PUBLISHABLE_KEY.substring(0, 8) + "...");
-                stripeRef.current = window.Stripe(STRIPE_PUBLISHABLE_KEY);
-                elementsRef.current = stripeRef.current.elements();
-                const style = { base: { color: "#32325d", fontFamily: '"Manrope", sans-serif', fontSmoothing: "antialiased", fontSize: "16px", "::placeholder": { color: "#aab7c4" } } };
-                if (!cardElementRef.current) {
-                    cardElementRef.current = elementsRef.current.create("card", { style: style, hidePostalCode: true });
-                    if (mountNodeRef.current) cardElementRef.current.mount(mountNodeRef.current);
-                }
-            } catch (e: any) {
-                console.error("Stripe Initialization Failed:", e);
-                setError(`Secure Channel Unavailable (${e.message || "Init Error"}). Retrying...`);
-            }
-        }
-    }, []);
-    const setMountNode = (node: HTMLDivElement | null) => {
-        mountNodeRef.current = node;
-        if (node && cardElementRef.current) {
-            try { cardElementRef.current.mount(node); } catch (e) { }
-        }
-    };
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setProcessing(true);
-        setError('');
-        if (!amount || amount <= 0) { setError("Please enter a valid amount."); setProcessing(false); return; }
-        if (!stripeRef.current || !cardElementRef.current) { setError("Payment system not initialized. Please try again later."); setProcessing(false); return; }
-        try {
-            const result = await stripeRef.current.createToken(cardElementRef.current);
-            if (result.error) {
-                setError(result.error.message);
-                setProcessing(false);
-            } else {
-                const paymentToken = result.token.id;
-                const minutesAdded = Math.floor(amount / pricePerMin);
-                setTimeout(() => {
-                    setProcessing(false);
-                    onSuccess(minutesAdded, amount, paymentToken);
-                }, 500);
-            }
-        } catch (err: any) {
-            setError(err.message || "Payment failed.");
-            setProcessing(false);
-        }
-    };
-    return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in duration-300 border border-gray-100 dark:border-gray-800">
-                <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800">
-                    <div className="flex items-center gap-2">
-                        <ShieldCheck className="w-5 h-5 text-green-600" />
-                        <span className="font-bold text-gray-700 dark:text-white">Secure Checkout</span>
-                    </div>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition"><X className="w-5 h-5 dark:text-white" /></button>
-                </div>
-                <div className="p-8">
-                    <div className="mb-8 text-center">
-                        <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 font-medium">Select Amount to Add</p>
-                        {!isCustom && <h2 className="text-5xl font-extrabold tracking-tight mb-6 dark:text-white">${amount.toFixed(2)}</h2>}
-                        <div className="flex justify-center gap-2 mb-6 flex-wrap">
-                            {[20, 50, 100, 250].map((val) => (
-                                <button key={val} type="button" onClick={() => { setAmount(val); setIsCustom(false); }} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${!isCustom && amount === val ? 'bg-black dark:bg-white dark:text-black text-white shadow-lg transform scale-105' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>${val}</button>
-                            ))}
-                            <button type="button" onClick={() => { setIsCustom(true); setAmount(0); }} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${isCustom ? 'bg-black dark:bg-white dark:text-black text-white shadow-lg transform scale-105' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>Custom</button>
-                        </div>
-                        <p className="text-xs text-gray-400 mt-2">Adds approx. <span className="font-bold text-black dark:text-white">{Math.floor((amount || 0) / pricePerMin)} mins</span> of talk time.</p>
-                    </div>
-                    {error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 text-sm rounded-lg flex items-center gap-2"><AlertTriangle className="w-4 h-4 flex-shrink-0" /><span>{error}</span></div>}
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 relative group transition-all focus-within:ring-2 focus-within:ring-yellow-400">
-                            <div className="absolute top-0 right-0 p-2 opacity-50"><Lock className="w-3 h-3 text-gray-400" /></div>
-                            <div ref={setMountNode} className="p-2" />
-                        </div>
-                        <button type="submit" disabled={processing || !window.Stripe || (amount <= 0) || !!error} className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2 ${processing || (amount <= 0) || !!error ? 'bg-gray-800 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-yellow-500 text-black hover:bg-yellow-400 hover:scale-[1.02]'}`}>
-                            {processing ? <span className="animate-pulse">Establishing Secure Tunnel...</span> : <><ShieldCheck className="w-5 h-5" /> Pay ${(amount || 0).toFixed(2)}</>}
-                        </button>
-                        <div className="flex justify-center items-center gap-2 opacity-60 grayscale hover:grayscale-0 transition-all">
-                            <span className="text-[10px] font-bold uppercase text-gray-400 flex items-center gap-1"><Lock className="w-3 h-3" /> Ends-to-End Encrypted via Stripe</span>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    );
-};
+// PaymentModal extracted to separate file
 
 
 
-const ProfileModal: React.FC<{ user: User, onClose: () => void, onUpdate: () => void }> = ({ user, onClose, onUpdate }) => {
-    const [name, setName] = useState(user.name);
-    const [avatarLocked, setAvatarLocked] = useState(user.avatarLocked || false);
-    const [previewAvatar, setPreviewAvatar] = useState(user.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${user.id}&backgroundColor=FCD34D`);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const handleSave = () => {
-        setError(null);
-        const check = NameValidator.validateFullName(name);
-        if (!check.valid) {
-            setError(check.error || "Invalid name.");
-            return;
-        }
-        setLoading(true);
-        UserService.updateUser({ ...user, name, avatar: previewAvatar, avatarLocked }).then(() => { onUpdate(); onClose(); });
-    };
-
-    const randomizeAvatar = () => {
-        const seed = Math.random().toString(36).substring(7);
-        setPreviewAvatar(`https://api.dicebear.com/7.x/lorelei/svg?seed=${seed}&backgroundColor=FCD34D`);
-    };
-
-    const handleExport = async () => {
-        const journals = await UserService.getJournals(user.id);
-        const moods = await UserService.getMoods(user.id);
-        const data = {
-            meta: { exportedAt: new Date().toISOString(), user: { name: user.name, email: user.email } },
-            journals, moods
-        };
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `peutic-journey-${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    };
-
-    return (
-        <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl p-8 border border-yellow-200 dark:border-gray-800 shadow-2xl relative">
-                <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-black dark:hover:text-white"><X className="w-5 h-5" /></button>
-                <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-6">Edit Profile</h2>
-                {error && <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-xs font-bold border border-red-100">{error}</div>}
-                <div className="space-y-4 mb-8">
-                    {/* AVATAR CUSTOMIZER */}
-                    <div className="flex items-center gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
-                        <img src={previewAvatar} alt="Avatar" className="w-16 h-16 rounded-full bg-white shadow-sm" />
-                        <div className="flex-1">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-bold uppercase text-gray-500">Avatar</span>
-                                <button onClick={randomizeAvatar} className="text-[10px] font-bold bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-1">
-                                    <RefreshCw className="w-3 h-3" /> New Look
-                                </button>
-                            </div>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <div className={`w-8 h-4 rounded-full transition-colors relative ${avatarLocked ? 'bg-green-500' : 'bg-gray-300'}`} onClick={() => setAvatarLocked(!avatarLocked)}>
-                                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform shadow-sm ${avatarLocked ? 'left-4.5 translate-x-3.5' : 'left-0.5'}`}></div>
-                                </div>
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{avatarLocked ? 'Saved as Default' : 'Auto-Rotate on Login'}</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div><label className="text-xs font-bold text-gray-500 uppercase block mb-2">Display Name</label><input className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none dark:text-white" value={name} onChange={e => setName(e.target.value)} /></div>
-                    <div><label className="text-xs font-bold text-gray-500 uppercase block mb-2">Email</label><input className="w-full p-3 bg-gray-100 dark:bg-gray-800/50 border border-transparent rounded-xl text-gray-500 cursor-not-allowed" value={user.email} disabled /></div>
-                </div>
-                <button onClick={handleSave} disabled={loading} className="w-full py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:opacity-80 transition-opacity mb-4">{loading ? 'Saving...' : 'Save Changes'}</button>
-
-                <div className="border-t border-gray-100 dark:border-gray-800 pt-4 grid grid-cols-2 gap-3">
-                    <button onClick={handleExport} className="py-3 flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-black dark:hover:text-white transition-colors text-[10px] font-bold uppercase tracking-wider bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700">
-                        <Download className="w-4 h-4 mb-1" /> Export Data
-                    </button>
-                    <Link to="/book-of-you" target="_blank" className="py-3 flex flex-col items-center justify-center gap-1 text-yellow-600 hover:text-yellow-700 dark:text-yellow-500 dark:hover:text-yellow-400 transition-colors text-[10px] font-bold uppercase tracking-wider bg-yellow-50 dark:bg-yellow-900/20 rounded-xl hover:bg-yellow-100 dark:hover:bg-yellow-900/40">
-                        <BookOpen className="w-4 h-4 mb-1" /> Print Book
-                    </Link>
-                </div>
-                <p className="text-center text-[9px] text-gray-400 mt-3">Export raw data or print your journey as a PDF.</p>
-            </div>
-        </div>
-    );
-};
+// ProfileModal extracted to separate file
 
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession }) => {
+    const { lang, setLang, t } = useLanguage();
     const [activeTab, setActiveTab] = useState<'hub' | 'history' | 'settings'>('hub');
 
     // Universal Theme Sync: Prioritize LocalStorage -> User Preference -> System
@@ -1117,11 +679,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             {/* DAILY PULSE SPARKLE (Mobile Only) */}
             <button
                 onClick={handleVoiceCheckIn}
-                className="md:hidden fixed bottom-6 left-6 z-[80] w-12 h-12 bg-white dark:bg-gray-900 rounded-full border border-blue-200 dark:border-blue-900/50 shadow-2xl flex items-center justify-center animate-bounce hover:scale-110 active:scale-95 transition-all group"
+                className="md:hidden fixed top-24 left-6 z-[80] w-12 h-12 bg-yellow-400 dark:bg-yellow-500 rounded-full border border-yellow-200 dark:border-yellow-600 shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all group"
                 title="Daily Pulse Check"
             >
-                <div className="absolute inset-0 bg-blue-400/20 rounded-full animate-ping group-hover:bg-blue-400/40"></div>
-                <Sparkles className="w-5 h-5 text-blue-500 fill-blue-500 group-hover:rotate-12 transition-transform" />
+                <Sparkles className="w-5 h-5 text-black group-hover:rotate-12 transition-transform" />
             </button>
 
             {/* BROADCAST BANNER */}
@@ -1144,7 +705,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     <span className="font-black text-sm tracking-tight dark:text-white">Peutic</span>
                 </div>
                 <div className="flex items-center gap-3">
-                    <LanguageSelector />
+                    <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
                     <div className="flex items-center gap-4">
                         {[
                             { id: 'hub', icon: LayoutDashboard },
@@ -1178,7 +739,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         <span className="hidden lg:block text-xl font-black tracking-tight dark:text-white">Peutic</span>
                     </div>
                     <nav className="flex-1 px-3 lg:px-4 py-6 lg:py-8 space-y-2 lg:space-y-3">
-                        {[{ id: 'hub', icon: LayoutDashboard, label: 'Sanctuary' }, { id: 'history', icon: Clock, label: 'Journey' }, { id: 'settings', icon: Settings, label: 'Config' }].map((item) => (
+                        {[
+                            { id: 'hub', icon: LayoutDashboard, label: t('dash_hub') },
+                            { id: 'history', icon: Clock, label: t('dash_journal') },
+                            { id: 'settings', icon: Settings, label: t('dash_settings') }
+                        ].map((item) => (
                             <button key={item.id} onClick={() => setActiveTab(item.id as any)} className={`w-full flex items-center justify-center lg:justify-start gap-3 p-3 lg:p-4 rounded-xl transition-all duration-300 group ${activeTab === item.id ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg' : 'text-gray-500 hover:bg-yellow-100 dark:hover:bg-gray-800 dark:text-gray-400'}`}>
                                 <item.icon className={`w-5 h-5 lg:w-6 lg:h-6 ${activeTab === item.id ? 'text-yellow-400 dark:text-yellow-600' : 'group-hover:text-yellow-600 dark:group-hover:text-white'}`} />
                                 <span className="hidden lg:block font-bold text-xs lg:text-sm tracking-wide">{item.label}</span>
@@ -1187,7 +752,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     </nav>
                     <div className="p-4 lg:p-6 border-t border-yellow-200 dark:border-gray-800">
                         <button onClick={onLogout} className="w-full flex items-center justify-center gap-3 p-3 lg:p-4 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-bold text-xs lg:text-sm">
-                            <LogOut className="w-5 h-5" /><span className="hidden lg:block">Disconnect</span>
+                            <LogOut className="w-5 h-5" /><span className="hidden lg:block">{t('dash_logout')}</span>
                         </button>
                     </div>
                 </aside>
@@ -1210,7 +775,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         <h1 className="text-3xl md:text-4xl font-black tracking-tight dark:text-white">
                                             {activeTab === 'hub'
                                                 ? (isGhostMode ? `Hello, Member` : `Hello, ${user.name.split(' ')[0]}`)
-                                                : activeTab === 'history' ? 'Your Journey' : 'Settings'}
+                                                : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
                                         </h1>
                                         {activeTab === 'hub' && (
                                             <div className="flex flex-col md:flex-row gap-2">
@@ -1231,10 +796,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 {activeTab === 'hub' && dailyInsight && (<p className="text-gray-600 dark:text-gray-400 mt-2 max-w-lg text-sm font-medium leading-relaxed border-l-4 border-yellow-400 pl-3 italic">"{dailyInsight}"</p>)}
                             </div>
                             <div className="hidden md:flex items-center gap-4">
-                                <LanguageSelector />
+                                <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
                                 <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">{darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-600" />}</button>
                                 <button onClick={() => setShowPayment(true)} className={`px-5 py-2.5 rounded-2xl font-black shadow-lg transition-transform hover:scale-105 flex items-center gap-2 text-sm ${balance < 10 ? 'bg-red-500 text-white animate-pulse' : 'bg-black dark:bg-white text-white dark:text-black'}`}>
-                                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>{balance} mins<Plus className="w-3 h-3 ml-1 opacity-50" />
+                                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>{balance} {t('dash_minutes')}<Plus className="w-3 h-3 ml-1 opacity-50" />
                                 </button>
                                 <button onClick={() => setShowProfile(true)} className={`w-12 h-12 rounded-xl overflow-hidden border-2 border-yellow-400 shadow-xl hover:rotate-3 transition-transform ${isGhostMode ? 'grayscale contrast-125' : ''}`}>
                                     <AvatarImage src={isGhostMode ? '' : (dashboardUser.avatar || '')} alt={isGhostMode ? 'Member' : dashboardUser.name} className="w-full h-full object-cover" isUser={true} />
@@ -1250,12 +815,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         <div className="lg:col-span-6 bg-gradient-to-r from-[#f0fdf4] to-[#dcfce7] dark:from-green-900/10 dark:to-green-900/5 rounded-3xl p-4 md:p-5 border border-green-100 dark:border-green-900/30 flex flex-row items-center gap-4 md:gap-6 shadow-sm relative overflow-hidden min-h-[120px] md:min-h-[140px]">
                                             <div className="absolute top-0 right-0 p-3 opacity-10 hidden md:block"><Trees className="w-24 h-24 text-green-600" /></div>
                                             <div className="relative z-10 bg-white/40 dark:bg-black/20 rounded-full p-1.5 border border-white/50 backdrop-blur-sm shadow-sm flex-shrink-0">
-                                                <div className="md:hidden">
-                                                    <GardenCanvas garden={garden} width={70} height={70} />
-                                                </div>
-                                                <div className="hidden md:block">
-                                                    <GardenCanvas garden={garden} width={100} height={100} />
-                                                </div>
+                                                <Suspense fallback={<div className="w-[100px] h-[100px] bg-green-200/20 rounded-full animate-pulse"></div>}>
+                                                    <div className="md:hidden">
+                                                        <GardenCanvas garden={garden} width={70} height={70} />
+                                                    </div>
+                                                    <div className="hidden md:block">
+                                                        <GardenCanvas garden={garden} width={100} height={100} />
+                                                    </div>
+                                                </Suspense>
                                             </div>
                                             <div className="flex-1 text-left relative z-10">
                                                 <div className="flex items-center justify-start gap-2 mb-0.5 md:mb-1">
@@ -1271,7 +838,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     </div>
                                                     <div className="bg-white/60 dark:bg-black/40 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg border border-green-100 dark:border-green-900/50 flex items-center gap-1">
                                                         <Flame className="w-2 md:w-2.5 h-2 md:h-2.5 text-orange-500" />
-                                                        <span className="text-[8px] md:text-[9px] font-black uppercase tracking-wider text-green-700 dark:text-green-400">{garden.streakCurrent}d Streak</span>
+                                                        <span className="text-[8px] md:text-[9px] font-black uppercase tracking-wider text-green-700 dark:text-green-400">{garden.streakCurrent}{t('dash_streak_days')}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1347,15 +914,29 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     <MoodTracker onMoodSelect={handleMoodSelect} />
                                 </div>
 
-                                <CollapsibleSection title="Mindful Arcade" icon={Gamepad2}>
+                                <CollapsibleSection title={t('sec_games')} icon={Gamepad2}>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
-                                        <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col bg-sky-50 dark:bg-gray-800"><div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none"><span className="text-[9px] font-black uppercase tracking-widest text-gray-500 bg-white/90 dark:bg-black/90 px-3 py-1.5 rounded-full shadow-sm">Mindful Match</span></div><MindfulMatchGame dashboardUser={dashboardUser} /></div>
-                                        <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col"><div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none"><span className="text-[9px] font-black uppercase tracking-widest text-gray-500 bg-white/90 dark:bg-black/90 px-3 py-1.5 rounded-full shadow-sm">Cloud Hop</span></div><CloudHopGame dashboardUser={dashboardUser} /></div>
+                                        <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col bg-sky-50 dark:bg-gray-800">
+                                            <div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none">
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-gray-500 bg-white/90 dark:bg-black/90 px-3 py-1.5 rounded-full shadow-sm">Mindful Match</span>
+                                            </div>
+                                            <Suspense fallback={<div className="flex-1 flex items-center justify-center text-xs font-bold text-gray-400 animate-pulse">Initializing Neural Match...</div>}>
+                                                <MindfulMatchGame dashboardUser={dashboardUser} />
+                                            </Suspense>
+                                        </div>
+                                        <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col">
+                                            <div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none">
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-gray-500 bg-white/90 dark:bg-black/90 px-3 py-1.5 rounded-full shadow-sm">Cloud Hop</span>
+                                            </div>
+                                            <Suspense fallback={<div className="flex-1 flex items-center justify-center text-xs font-bold text-gray-400 animate-pulse">Launching Cloud Engine...</div>}>
+                                                <CloudHopGame dashboardUser={dashboardUser} />
+                                            </Suspense>
+                                        </div>
                                     </div>
                                 </CollapsibleSection>
-                                <CollapsibleSection title="Inner Sanctuary" icon={Feather}><div className="space-y-6"><JournalSection user={user} /><div className="border-t border-dashed border-yellow-200 dark:border-gray-700" /><WisdomGenerator userId={user.id} /></div></CollapsibleSection>
+                                <CollapsibleSection title={t('dash_hub')} icon={Feather}><div className="space-y-6"><JournalSection user={user} /><div className="border-t border-dashed border-yellow-200 dark:border-gray-700" /><WisdomGenerator userId={user.id} /></div></CollapsibleSection>
                                 <div>
-                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-5"><div><h2 className="text-xl md:text-2xl font-black dark:text-white">Available Specialists</h2><p className="text-gray-500 text-xs md:text-sm">Select a guide to begin your session.</p></div><div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide"><button onClick={() => setSpecialtyFilter('All')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === 'All' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>All</button>{uniqueSpecialties.map(spec => (<button key={spec} onClick={() => setSpecialtyFilter(spec)} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === spec ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>{spec}</button>))}</div></div>
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-5"><div><h2 className="text-xl md:text-2xl font-black dark:text-white">{t('sec_specialists')}</h2><p className="text-gray-500 text-xs md:text-sm">{t('roster_heading')}</p></div><div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide"><button onClick={() => setSpecialtyFilter('All')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === 'All' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>All</button>{uniqueSpecialties.map(spec => (<button key={spec} onClick={() => setSpecialtyFilter(spec)} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === spec ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>{spec}</button>))}</div></div>
                                     {loadingCompanions ? (
                                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                                             {[1, 2, 3, 4, 5].map(i => <CompanionSkeleton key={i} />)}
@@ -1384,7 +965,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-500">
                                 <div className="bg-white/70 dark:bg-gray-900/40 rounded-3xl border border-yellow-100/50 dark:border-gray-800/50 overflow-hidden backdrop-blur-md shadow-xl hover:shadow-2xl transition-shadow duration-500">
                                     <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
-                                        <h3 className="font-black text-lg dark:text-white">Journey Log</h3>
+                                        <h3 className="font-black text-lg dark:text-white">{t('sec_history')}</h3>
                                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Financials & Check-ins</span>
                                     </div>
                                     <table className="w-full text-left">
@@ -1432,10 +1013,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         {activeTab === 'settings' && (
                             <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in slide-in-from-right-5 duration-500">
                                 <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
-                                    <div className="p-5 md:p-6 border-b border-yellow-100 dark:border-gray-800"><h3 className="font-black text-lg md:text-xl dark:text-white mb-1">Profile & Identity</h3><p className="text-gray-500 text-xs">Manage your personal information.</p></div>
+                                    <div className="p-5 md:p-6 border-b border-yellow-100 dark:border-gray-800"><h3 className="font-black text-lg md:text-xl dark:text-white mb-1">{t('dash_settings')}</h3><p className="text-gray-500 text-xs">Manage your personal information.</p></div>
                                     <div className="p-5 md:p-6 space-y-5">
                                         <div className="flex items-center gap-5"><div className="relative"><div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-4 border-yellow-100 dark:border-gray-800"><AvatarImage src={dashboardUser.avatar || ''} alt="Profile" className="w-full h-full object-cover" isUser={true} /></div><button onClick={() => setShowProfile(true)} className="absolute bottom-0 right-0 p-1.5 bg-black text-white rounded-full hover:bg-gray-800 transition-colors shadow-lg"><Edit2 className="w-3 h-3" /></button></div><div className="flex-1 space-y-3"><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Display Name</label><div className="relative"><UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none transition-colors text-sm font-bold dark:text-white" /></div></div><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Email Address</label><div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none transition-colors text-sm font-bold dark:text-white" /></div></div></div></div>
-                                        <div className="flex justify-end pt-2"><button onClick={saveProfileChanges} disabled={isSavingProfile} className="px-5 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-bold text-xs hover:opacity-80 transition-opacity flex items-center gap-2">{isSavingProfile ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}Save Changes</button></div>
+                                        <div className="flex justify-end pt-2"><button onClick={saveProfileChanges} disabled={isSavingProfile} className="px-5 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-bold text-xs hover:opacity-80 transition-opacity flex items-center gap-2">{isSavingProfile ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}{t('ui_save')}</button></div>
                                     </div>
                                 </div>
                                 <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
@@ -1501,7 +1082,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 )}
 
                                                 <div className="flex gap-3 justify-center">
-                                                    <button onClick={() => setShowDeleteConfirm(false)} disabled={isDeletingAccount} className="px-5 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg font-bold text-xs hover:bg-gray-200 disabled:opacity-50">Cancel</button>
+                                                    <button onClick={() => setShowDeleteConfirm(false)} disabled={isDeletingAccount} className="px-5 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg font-bold text-xs hover:bg-gray-200 disabled:opacity-50">{t('ui_cancel')}</button>
                                                     <button onClick={handleDeleteAccount} disabled={isDeletingAccount} className="px-5 py-2 bg-red-600 text-white rounded-lg font-bold text-xs hover:bg-red-700 shadow-lg flex items-center gap-2">
                                                         {isDeletingAccount ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : 'Yes, Delete Everything'}
                                                     </button>

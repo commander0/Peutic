@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Shield, Lock, FileText, Mail, Send, MessageCircle, CheckCircle, Heart, Globe, Users, Phone, AlertTriangle, Play, Award, Star, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Shield, Lock, FileText, Mail, Send, MessageCircle, CheckCircle, Heart, Globe, Users, Phone, AlertTriangle, Award, Star, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { STABLE_AVATAR_POOL } from '../services/database';
+import { useLanguage } from './common/LanguageContext';
 
 interface StaticPageProps {
   type: 'privacy' | 'terms' | 'support' | 'about' | 'press' | 'safety' | 'crisis';
 }
 
 const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [sent, setSent] = useState(false);
@@ -35,7 +37,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
           <div className="space-y-8 md:space-y-12 animate-in fade-in duration-500">
             <div className="text-center pb-6 md:pb-8 border-b border-yellow-200 dark:border-gray-700">
               <Heart className="w-12 h-12 md:w-16 md:h-16 text-yellow-500 fill-yellow-500 mx-auto mb-4 animate-pulse" />
-              <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4 tracking-tight">Humanity On Demand</h1>
+              <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4 tracking-tight">{t('hero_title_1')} {t('hero_title_2')}</h1>
               <p className="text-base md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">We are building the future of emotional support by combining the warmth of human connection with the accessibility of modern technology.</p>
             </div>
 
@@ -89,7 +91,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
               <div className="inline-flex items-center gap-2 bg-black dark:bg-white text-white dark:text-black px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
                 <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" /> Impact Report
               </div>
-              <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">Lives Changed</h1>
+              <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">{t('page_press')}</h1>
               <p className="text-base md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">Real stories from the Peutic community. See how instant connection is transforming mental wellness.</p>
             </div>
 
@@ -135,7 +137,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
           <div className="space-y-8 md:space-y-12 animate-in fade-in duration-500">
             <div className="text-center pb-6 md:pb-8 border-b border-yellow-200 dark:border-gray-700">
               <ShieldCheck className="w-12 h-12 md:w-16 md:h-16 text-green-600 mx-auto mb-4" />
-              <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">Safety Standards</h1>
+              <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">{t('page_safety')}</h1>
               <p className="text-base md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">Your safety and privacy are the foundation of our platform. We go beyond industry standards.</p>
             </div>
 
@@ -175,7 +177,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
               <div className="w-16 h-16 md:w-20 md:h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
                 <AlertTriangle className="w-8 h-8 md:w-10 md:h-10 text-red-600 dark:text-red-500" />
               </div>
-              <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">Crisis Resources</h1>
+              <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">{t('page_crisis')}</h1>
               <p className="text-lg md:text-xl text-red-600 dark:text-red-400 font-bold max-w-2xl mx-auto">Peutic is not a replacement for emergency services.</p>
               <p className="text-gray-600 dark:text-gray-400 mt-4 max-w-2xl mx-auto text-sm md:text-base">If you or someone you know is in immediate danger, please use the following resources immediately.</p>
             </div>
@@ -231,7 +233,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
         return (
           <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300">
             <div className="border-b border-yellow-200 dark:border-gray-700 pb-4 md:pb-6">
-              <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2">Privacy Policy</h1>
+              <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2">{t('page_privacy')}</h1>
               <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">Last Updated: October 24, 2025</p>
             </div>
 
@@ -271,7 +273,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
         return (
           <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300">
             <div className="border-b border-yellow-200 dark:border-gray-700 pb-4 md:pb-6">
-              <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2">Terms of Service</h1>
+              <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2">{t('page_terms')}</h1>
               <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">Effective Date: October 24, 2025</p>
             </div>
 
@@ -310,7 +312,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
         return (
           <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300">
             <div className="border-b border-yellow-200 dark:border-gray-700 pb-4 md:pb-6">
-              <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2">Support Center</h1>
+              <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2">{t('page_support')}</h1>
               <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">We are here to help, 24/7.</p>
             </div>
 
@@ -383,7 +385,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
     <div className="min-h-screen bg-[#FFFBEB] dark:bg-black font-sans transition-colors duration-500">
       <div className="max-w-4xl mx-auto px-4 py-8 md:py-12">
         <Link to="/" className="inline-flex items-center gap-2 font-bold text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white mb-6 md:mb-8 transition-colors text-sm md:text-base">
-          <ArrowLeft className="w-3 h-3 md:w-4 md:h-4" /> Back to Home
+          <ArrowLeft className="w-3 h-3 md:w-4 md:h-4" /> {t('ui_cancel')}
         </Link>
 
         <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-3xl p-6 md:p-16 border border-yellow-100 dark:border-gray-800 shadow-xl transition-colors duration-500">

@@ -30,6 +30,29 @@ export class UserService {
         return null;
     }
 
+    /**
+     * SWR (Stale-While-Revalidate) Helper
+     * Returns cached data immediately, then fetches and updates cache in background.
+     */
+    static async getWithSWR<T>(key: string, fetcher: () => Promise<T>, onUpdate?: (data: T) => void): Promise<T | null> {
+        try {
+            const cached = localStorage.getItem(key);
+            const staleData = cached ? JSON.parse(cached) : null;
+
+            // Background Revalidate
+            fetcher().then(newData => {
+                if (newData) {
+                    localStorage.setItem(key, JSON.stringify(newData));
+                    if (onUpdate) onUpdate(newData);
+                }
+            }).catch(e => console.error(`SWR revalidation failed for ${key}`, e));
+
+            return staleData;
+        } catch (e) {
+            return null;
+        }
+    }
+
 
 
 
@@ -56,9 +79,10 @@ export class UserService {
     static async syncUser(userId: string): Promise<User | null> {
         if (!userId) return null;
         try {
-            // Using maybeSingle to handle RLS strictness gracefully
+            // OPTIMIZED: Select specific fields instead of *
+            const fields = 'id, name, email, birthday, role, balance, subscription_status, created_at, last_login_date, streak, provider, avatar_url, avatar_locked, email_preferences, theme_preference, language_preference, game_scores';
             const { data, error } = (await BaseService.withTimeout(
-                supabase.from('users').select('*').eq('id', userId).maybeSingle(),
+                supabase.from('users').select(fields).eq('id', userId).maybeSingle(),
                 5000,
                 "User sync timeout"
             )) as any;
@@ -276,11 +300,28 @@ export class UserService {
 
 
     static async getUserArt(userId: string): Promise<ArtEntry[]> {
+        const cacheKey = `peutic_art_${userId}`;
+        const cached = localStorage.getItem(cacheKey);
 
-        const { data } = await supabase.from('user_art').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-        return (data || []).map((a: any) => ({
-            id: a.id, userId: a.user_id, imageUrl: a.image_url, prompt: a.prompt, createdAt: a.created_at, title: a.title
-        }));
+        const fetcher = async () => {
+            const { data } = await supabase.from('user_art')
+                .select('id, user_id, image_url, prompt, created_at, title')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
+            return (data || []).map((a: any) => ({
+                id: a.id, userId: a.user_id, imageUrl: a.image_url, prompt: a.prompt, createdAt: a.created_at, title: a.title
+            }));
+        };
+
+        // If no cache, wait for fetch. Otherwise, fetch in background.
+        if (!cached) {
+            const data = await fetcher();
+            localStorage.setItem(cacheKey, JSON.stringify(data));
+            return data;
+        }
+
+        fetcher().then(data => localStorage.setItem(cacheKey, JSON.stringify(data)));
+        return JSON.parse(cached);
     }
 
     static async saveArt(entry: ArtEntry) {
@@ -309,15 +350,35 @@ export class UserService {
 
 
     static async getUserTransactions(userId: string): Promise<Transaction[]> {
-        const { data } = await supabase.from('transactions').select('*').eq('user_id', userId).order('date', { ascending: false });
+        const { data } = await supabase.from('transactions')
+            .select('id, user_id, date, amount, cost, description, status')
+            .eq('user_id', userId)
+            .order('date', { ascending: false });
         return (data || []).map((t: any) => ({
             id: t.id, userId: t.user_id, date: t.date, amount: t.amount, cost: t.cost, description: t.description, status: t.status as any
         }));
     }
 
     static async getJournals(userId: string): Promise<JournalEntry[]> {
-        const { data } = await supabase.from('journals').select('*').eq('user_id', userId).order('date', { ascending: false });
-        return (data || []).map((j: any) => ({ id: j.id, userId: j.user_id, date: j.date, content: j.content }));
+        const cacheKey = `peutic_journals_${userId}`;
+        const cached = localStorage.getItem(cacheKey);
+
+        const fetcher = async () => {
+            const { data } = await supabase.from('journals')
+                .select('id, user_id, date, content')
+                .eq('user_id', userId)
+                .order('date', { ascending: false });
+            return (data || []).map((j: any) => ({ id: j.id, userId: j.user_id, date: j.date, content: j.content }));
+        };
+
+        if (!cached) {
+            const data = await fetcher();
+            localStorage.setItem(cacheKey, JSON.stringify(data));
+            return data;
+        }
+
+        fetcher().then(data => localStorage.setItem(cacheKey, JSON.stringify(data)));
+        return JSON.parse(cached);
     }
 
     static async saveJournal(entry: JournalEntry) {
@@ -342,7 +403,10 @@ export class UserService {
     }
 
     static async getMoods(userId: string): Promise<MoodEntry[]> {
-        const { data } = await supabase.from('moods').select('*').eq('user_id', userId).order('date', { ascending: false });
+        const { data } = await supabase.from('moods')
+            .select('id, user_id, date, mood')
+            .eq('user_id', userId)
+            .order('date', { ascending: false });
         return (data || []).map((m: any) => ({ id: m.id, userId: m.user_id, date: m.date, mood: m.mood as any }));
     }
 
@@ -553,19 +617,36 @@ export class UserService {
 
     // --- VOICE JOURNALS ---
     static async getVoiceJournals(userId: string): Promise<VoiceJournalEntry[]> {
-        const { data, error } = await supabase.from('voice_journals').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-        if (error) {
-            console.error("Error fetching voice journals:", error);
-            return [];
+        const cacheKey = `peutic_voice_${userId}`;
+        const cached = localStorage.getItem(cacheKey);
+
+        const fetcher = async () => {
+            const { data, error } = await supabase.from('voice_journals')
+                .select('id, user_id, audio_url, duration_seconds, title, created_at')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
+            if (error) {
+                console.error("Error fetching voice journals:", error);
+                return [];
+            }
+            return (data || []).map((d: any) => ({
+                id: d.id,
+                userId: d.user_id,
+                audioUrl: d.audio_url,
+                durationSeconds: d.duration_seconds,
+                title: d.title,
+                createdAt: d.created_at
+            }));
+        };
+
+        if (!cached) {
+            const data = await fetcher();
+            localStorage.setItem(cacheKey, JSON.stringify(data));
+            return data;
         }
-        return (data || []).map((d: any) => ({
-            id: d.id,
-            userId: d.user_id,
-            audioUrl: d.audio_url,
-            durationSeconds: d.duration_seconds,
-            title: d.title,
-            createdAt: d.created_at
-        }));
+
+        fetcher().then(data => localStorage.setItem(cacheKey, JSON.stringify(data)));
+        return JSON.parse(cached);
     }
 
     static async saveVoiceJournal(entry: VoiceJournalEntry) {

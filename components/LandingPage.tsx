@@ -40,7 +40,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     const [showCookies, setShowCookies] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [featuredSpecialists, setFeaturedSpecialists] = useState<Companion[]>([]);
-    const { lang, t } = useLanguage();
+    const { lang, setLang, t } = useLanguage();
 
     const [darkMode, setDarkMode] = useState(() => {
         const local = localStorage.getItem('peutic_theme');
@@ -142,7 +142,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         <span className="text-xl md:text-2xl font-black tracking-tight dark:text-white">Peutic</span>
                     </div>
                     <div className="flex items-center gap-1.5 md:gap-6">
-                        <LanguageSelector />
+                        <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
                         <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors shrink-0">
                             {darkMode ? <Sun className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" /> : <Moon className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />}
                         </button>
@@ -212,7 +212,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                                     <div className="p-2 bg-green-50 dark:bg-green-900/30 rounded-xl"><CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-green-500" /></div>
                                     <div>
                                         <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-gray-400">Connection</p>
-                                        <p className="text-sm md:text-base font-black dark:text-white">100% Secure</p>
+                                        <p className="text-sm md:text-base font-black dark:text-white">{t('secure_conn')}</p>
                                     </div>
                                 </div>
                             </div>
@@ -317,7 +317,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                                         <span className="text-sm md:text-base mt-1">$</span>1.99<span className="text-[9px] md:text-[10px] text-black/60 dark:text-white/60 mt-4">/min</span>
                                     </div>
                                 )}
-                                {settings.saleMode && <div className="bg-black dark:bg-white text-white dark:text-black px-2 py-0.5 rounded-full font-black text-[8px] uppercase tracking-widest animate-pulse mt-1">Lifetime Rate Locked</div>}
+                                {settings.saleMode && <div className="bg-black dark:bg-white text-white dark:text-black px-2 py-0.5 rounded-full font-black text-[8px] uppercase tracking-widest animate-pulse mt-1">{t('pricing_rate_locked')}</div>}
                             </div>
                             <p className="text-black/70 dark:text-white/70 text-[10px] md:text-xs max-w-sm mx-auto font-medium leading-relaxed">{t('pricing_sub')}</p>
                             <button onClick={() => onLoginClick(true)} className="bg-black dark:bg-white text-white dark:text-black px-6 py-2.5 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-gray-200 transition-all hover:scale-105 shadow-md mt-2">{t('pricing_btn')}</button>
@@ -363,7 +363,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     </div>
                     <div className="pt-6 md:pt-8 flex flex-col md:flex-row justify-between items-center text-[9px] font-black uppercase tracking-[0.2em] text-gray-700 dark:text-gray-600 gap-4 md:gap-0">
                         <p>&copy; {new Date().getFullYear()} Peutic Inc. | ISO 27001 Certified</p>
-                        <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div><span>Network Optimal</span></div>
+                        <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div><span>{t('ui_network_optimal')}</span></div>
                     </div>
                 </div>
             </footer>
@@ -372,9 +372,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 text-center md:text-left">
                         <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
                             <Cookie className="w-8 h-8 md:w-10 md:h-10 text-yellow-600" />
-                            <p className="text-[10px] md:text-xs font-bold leading-relaxed uppercase tracking-wider">Secure connectivity cookies are active to ensure low-latency video. <Link to="/privacy" className="underline">Policy</Link></p>
+                            <p className="text-[10px] md:text-xs font-bold leading-relaxed uppercase tracking-wider">{t('cookie_banner_text')} <Link to="/privacy" className="underline">{t('ui_policy')}</Link></p>
                         </div>
-                        <div className="flex gap-4"><button onClick={acceptCookies} className="px-6 py-2 md:px-8 md:py-3 bg-black dark:bg-white text-white dark:text-black rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-gray-200 transition-all">Accept</button></div>
+                        <div className="flex gap-4"><button onClick={acceptCookies} className="px-6 py-2 md:px-8 md:py-3 bg-black dark:bg-white text-white dark:text-black rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-gray-200 transition-all">{t('ui_accept')}</button></div>
                     </div>
                 </div>
             )}

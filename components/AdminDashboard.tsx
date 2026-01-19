@@ -12,6 +12,7 @@ import { AdminService } from '../services/adminService';
 import { UserService } from '../services/userService';
 import { User, Companion, Transaction, GlobalSettings, SystemLog, UserRole } from '../types';
 import { useToast } from './common/Toast';
+import { useLanguage } from './common/LanguageContext';
 import StatCard from './admin/StatCard';
 import { StatSkeleton, TableSkeleton } from './common/SkeletonLoader';
 
@@ -102,6 +103,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     const [activeTab, setActiveTab] = useState<'overview' | 'safety' | 'users' | 'specialists' | 'financials' | 'settings' | 'claim'>('overview');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { showToast } = useToast();
+    const { t } = useLanguage();
 
 
     // Data States
@@ -332,13 +334,13 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
                 <nav className="flex-1 overflow-y-auto p-3 space-y-1">
                     {[
-                        { id: 'overview', icon: LayoutGrid, label: 'Mission Control' },
-                        { id: 'safety', icon: ShieldAlert, label: 'Safety HQ' },
-                        { id: 'users', icon: Users, label: 'User Database' },
-                        { id: 'specialists', icon: Video, label: 'Specialist Grid' },
-                        { id: 'financials', icon: DollarSign, label: 'Financial Intelligence' },
-                        { id: 'claim', icon: Shield, label: 'System Claim' },
-                        { id: 'settings', icon: Settings, label: 'Configuration' },
+                        { id: 'overview', icon: LayoutGrid, label: t('admin_mission_control') },
+                        { id: 'safety', icon: ShieldAlert, label: t('admin_safety_hq') },
+                        { id: 'users', icon: Users, label: t('admin_user_db') },
+                        { id: 'specialists', icon: Video, label: t('admin_spec_grid') },
+                        { id: 'financials', icon: DollarSign, label: t('admin_fin_intel') },
+                        { id: 'claim', icon: Shield, label: t('admin_sys_claim') },
+                        { id: 'settings', icon: Settings, label: t('admin_config') },
                     ].map((item) => (
                         <button
                             key={item.id}
@@ -355,7 +357,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
                 <div className="p-3 border-t border-gray-800">
                     <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-900/10 text-red-500 hover:bg-red-900/30 border border-red-900/30 font-bold text-[10px] uppercase tracking-widest transition-all">
-                        <LogOut className="w-3.5 h-3.5" /> Terminate Session
+                        <LogOut className="w-3.5 h-3.5" /> {t('admin_terminate')}
                     </button>
                 </div>
             </aside>
@@ -373,7 +375,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                     {activeTab === 'overview' && (
                         <div className="space-y-6 animate-in fade-in duration-500">
                             <div>
-                                <h2 className="text-2xl font-black tracking-tight mb-1">System Overview</h2>
+                                <h2 className="text-2xl font-black tracking-tight mb-1">{t('admin_mission_control')}</h2>
                                 <p className="text-gray-500 text-xs">Real-time command center.</p>
                             </div>
 
@@ -637,7 +639,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                     {activeTab === 'users' && (
                         <div className="space-y-6 animate-in fade-in duration-500">
                             <div className="flex justify-between items-center">
-                                <h2 className="text-2xl font-black">User Database</h2>
+                                <h2 className="text-2xl font-black">{t('admin_user_db')}</h2>
                                 <input
                                     className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 text-xs focus:border-yellow-500 outline-none w-64"
                                     placeholder="Search users..."
@@ -685,7 +687,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                     {/* --- FINANCIAL INTELLIGENCE --- */}
                     {activeTab === 'financials' && (
                         <div className="space-y-6 animate-in fade-in duration-500">
-                            <h2 className="text-2xl font-black mb-1">Financial Intelligence</h2>
+                            <h2 className="text-2xl font-black mb-1">{t('admin_fin_intel')}</h2>
                             <p className="text-gray-500 text-xs mb-6">Real-time insights from your Stripe account.</p>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -878,7 +880,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                     <Shield className="w-6 h-6 text-black" />
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-black">System Claim Status</h2>
+                                    <h2 className="text-2xl font-black">{t('admin_sys_claim')}</h2>
                                     <p className="text-gray-500 text-xs uppercase tracking-widest font-mono">Verification Level: Maximum</p>
                                 </div>
                             </div>
@@ -943,7 +945,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                     {/* --- SETTINGS --- */}
                     {activeTab === 'settings' && (
                         <div className="space-y-6 animate-in fade-in duration-500">
-                            <h2 className="text-2xl font-black">System Configuration</h2>
+                            <h2 className="text-2xl font-black">{t('admin_config')}</h2>
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl space-y-4">
                                     <h3 className="font-bold text-white mb-2 text-sm">Pricing Control</h3>

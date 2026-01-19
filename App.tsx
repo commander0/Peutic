@@ -84,26 +84,35 @@ const MainApp: React.FC = () => {
   useEffect(() => {
     // Parallelize Operations to Speed Up Load
     const initApp = async () => {
-      // 1. Kick off Settings Sync immediately (don't await yet)
-      const settingsPromise = AdminService.syncGlobalSettings();
+      // 1. Run Core Initialization in Parallel
+      const [restored, settings] = await Promise.all([
+        UserService.restoreSession(),
+        AdminService.syncGlobalSettings()
+      ]);
 
-      // 2. Initial Session Restore
-      const restored = await UserService.restoreSession();
       let activeUser = restored;
+      setMaintenanceMode(settings.maintenanceMode);
 
-      // If DB failed but we have a session in localStorage, use fallback
+      // 2. Recovery Logic
       if (!activeUser) {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          // Only warn if we genuinely had a session but failed to sync
           console.warn("Using Session Fallback for faster load / recovery");
           activeUser = UserService.createFallbackUser(session.user);
           UserService.repairUserRecord(session.user);
         }
       }
 
+      // 3. Update UI State
       if (activeUser) {
         setUser(activeUser);
+
+        // PREFETCH DASHBOARD DATA (Non-blocking)
+        AdminService.getCompanions();
+        UserService.getJournals(activeUser.id);
+        UserService.getUserArt(activeUser.id);
+        UserService.getVoiceJournals(activeUser.id);
+        UserService.getWeeklyProgress(activeUser.id);
 
         if (activeUser.role === UserRole.ADMIN && location.pathname === '/') {
           navigate('/admin/dashboard');
@@ -113,12 +122,7 @@ const MainApp: React.FC = () => {
         setUser(null);
       }
 
-
-      // 3. Complete init
-      settingsPromise.then(() => {
-        setMaintenanceMode(AdminService.getSettings().maintenanceMode);
-      });
-
+      setMaintenanceMode(AdminService.getSettings().maintenanceMode);
       setIsRestoring(false);
     };
 
