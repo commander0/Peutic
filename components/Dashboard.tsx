@@ -1300,17 +1300,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                             }
                                                         }}
                                                         className={`w-full h-full p-4 rounded-3xl border flex items-center gap-4 transition-all duration-500 group relative overflow-hidden ${isLocked
-                                                            ? 'bg-gray-50/50 dark:bg-gray-900/20 border-gray-100 dark:border-gray-800 cursor-help opacity-40 hover:opacity-100'
+                                                            ? 'bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-gray-900 dark:to-black border-yellow-100 dark:border-gray-800 cursor-help'
                                                             : 'bg-white dark:bg-gray-900 border-yellow-200 dark:border-yellow-700 cursor-pointer shadow-xl hover:-translate-y-1 animate-pulse border-4'
                                                             }`}
                                                     >
-                                                        {isLocked && <div className="absolute inset-0 bg-gray-500/[0.03] backdrop-grayscale-[0.5]"></div>}
-                                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center self-center transition-all duration-700 ${isLocked ? 'bg-gray-200 dark:bg-gray-800' : 'bg-yellow-400 shadow-lg shadow-yellow-400/50 rotate-[-5deg] group-hover:rotate-0 flex-shrink-0'}`}>
-                                                            {isLocked ? <Lock className="w-6 h-6 text-gray-400" /> : <BookOpen className="w-6 h-6 text-black fill-black" />}
+                                                        {isLocked && <div className="absolute inset-0 bg-white/40 dark:bg-black/20 pointer-events-none"></div>}
+                                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center self-center transition-all duration-700 ${isLocked ? 'bg-white dark:bg-gray-800 shadow-sm border border-yellow-200 dark:border-gray-700 animate-pulse' : 'bg-yellow-400 shadow-lg shadow-yellow-400/50 rotate-[-5deg] group-hover:rotate-0 flex-shrink-0'}`}>
+                                                            {isLocked ? <Lock className="w-6 h-6 text-yellow-600 dark:text-yellow-500" /> : <BookOpen className="w-6 h-6 text-black fill-black" />}
                                                         </div>
                                                         <div className="text-left relative z-10">
-                                                            <h3 className={`font-black tracking-tight text-base mb-0.5 ${isLocked ? 'text-gray-400' : 'text-gray-900 dark:text-white'}`}>The Book of You</h3>
-                                                            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold leading-tight mb-2 max-w-[200px]">Your story evolves as you grow. This is your weekly chronicle of personal evolution.</p>
+                                                            <div className="flex items-center gap-2 mb-0.5">
+                                                                <h3 className="font-black tracking-tight text-base text-gray-900 dark:text-white">The Book of You</h3>
+                                                                {isLocked && <span className="text-[8px] font-black uppercase tracking-[0.1em] bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-500 px-2 py-0.5 rounded-full border border-yellow-200/50">Coming Soon</span>}
+                                                            </div>
+                                                            <p className={`text-[10px] font-bold leading-tight mb-2 max-w-[200px] ${isLocked ? 'text-gray-600 dark:text-gray-400' : 'text-gray-500 dark:text-gray-400'}`}>Your story evolves as you grow. This is your weekly chronicle of personal evolution.</p>
                                                             {isLocked ? (
                                                                 <div className="flex flex-col gap-1 items-start">
                                                                     <div className="w-16 h-1 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
