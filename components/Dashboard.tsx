@@ -36,10 +36,12 @@ const PaymentModal = lazy(() => import('./PaymentModal').catch(() => ({ default:
 const ProfileModal = lazy(() => import('./ProfileModal').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Profile Experience...</div> })));
 const GardenFullView = lazy(() => import('./garden/GardenFullView'));
 const BookOfYouView = lazy(() => import('./retention/BookOfYouView'));
+const PocketPetView = lazy(() => import('./pocket/PocketPetView'));
 
 import EmergencyOverlay from './safety/EmergencyOverlay';
-
 import { VoiceRecorder, VoiceEntryItem } from './journal/VoiceRecorder';
+import { PetService } from '../services/petService';
+import { PocketPet } from '../types';
 
 // Stripe publishable key
 const STRIPE_PUBLISHABLE_KEY = (import.meta as any).env?.VITE_STRIPE_PUBLISHABLE_KEY || '';
@@ -431,9 +433,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [showTechCheck, setShowTechCheck] = useState(false);
     const [isGhostMode, setIsGhostMode] = useState(() => localStorage.getItem('peutic_ghost_mode') === 'true');
     const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-    const [isVaultOpen, setIsVaultOpen] = useState(false);
-    const [showGardenFull, setShowGardenFull] = useState(false);
     const [showBookFull, setShowBookFull] = useState(false);
+    const [showGardenFull, setShowGardenFull] = useState(false);
+    const [showPocketPet, setShowPocketPet] = useState(false);
+    const [userPet, setUserPet] = useState<PocketPet | null>(null);
+    const [isVaultOpen, setIsVaultOpen] = useState(true);
 
 
     const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
@@ -501,7 +505,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         const g = await GardenService.getGarden(user.id);
         setGarden(g);
     };
-    useEffect(() => { refreshGarden(); }, [user.id]);
+
+    const refreshPet = async () => {
+        if (!user.id) return;
+        const p = await PetService.getPet(user.id);
+        setUserPet(p);
+    };
+
+    useEffect(() => {
+        refreshGarden();
+        refreshPet();
+    }, [user.id]);
 
 
 
@@ -753,8 +767,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <button
                                     onClick={() => setShowPayment(true)}
                                     className={`px-3 md:px-5 py-2.5 rounded-2xl font-black shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2 text-[10px] md:text-xs ${balance === 0
-                                            ? 'bg-red-500 text-white animate-pulse'
-                                            : 'bg-emerald-500 text-white dark:bg-emerald-600'
+                                        ? 'bg-red-500 text-white animate-pulse'
+                                        : 'bg-emerald-500 text-white dark:bg-emerald-600'
                                         }`}
                                 >
                                     <span className="md:inline">{balance}m</span>
@@ -847,12 +861,24 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 );
                                             })()}
 
-                                            {/* TILE 3: COMING SOON */}
-                                            <div className="relative bg-white/50 dark:bg-gray-900/50 rounded-xl md:rounded-3xl border border-dashed border-gray-200 dark:border-gray-800 h-[100px] md:h-[220px] flex flex-col items-center justify-center grayscale opacity-60">
-                                                <div className="w-8 h-8 md:w-16 md:h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-1 md:mb-4">
-                                                    <Sparkles className="w-3 h-3 md:w-6 md:h-6 text-gray-300" />
+                                            {/* TILE 3: POCKET PET */}
+                                            <div
+                                                onClick={() => setShowPocketPet(true)}
+                                                className="group relative bg-[#0a1515] dark:bg-black rounded-xl md:rounded-3xl border border-cyan-500/30 dark:border-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.1)] hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                            >
+                                                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 pointer-events-none"></div>
+                                                <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
+                                                    <div className="relative mb-1 md:mb-4">
+                                                        <div className="absolute -inset-4 bg-cyan-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                        <div className="w-10 h-10 md:w-20 md:h-20 bg-black/40 border border-cyan-500/50 rounded-2xl flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform">
+                                                            <Gamepad2 className="w-5 h-5 md:w-10 md:h-10 animate-bounce" />
+                                                        </div>
+                                                    </div>
+                                                    <h3 className="text-[7px] md:text-sm font-black text-white dark:text-cyan-50 uppercase tracking-[0.2em] mb-1">Pocket Pet</h3>
+                                                    <p className="hidden md:block text-[10px] font-bold text-cyan-400/50 uppercase tracking-widest">
+                                                        {userPet ? `${userPet.name} Lvl ${userPet.level}` : 'Summon Friend'}
+                                                    </p>
                                                 </div>
-                                                <h3 className="text-[7px] md:text-sm font-black text-gray-400 uppercase tracking-widest text-center">SOON</h3>
                                             </div>
                                         </div>
                                     )}
@@ -1148,6 +1174,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             {showGardenFull && garden && (
                 <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Entering the Garden...</div>}>
                     <GardenFullView garden={garden} onClose={() => setShowGardenFull(false)} onUpdate={refreshGarden} />
+                </Suspense>
+            )}
+            {showPocketPet && dashboardUser && (
+                <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Bridging Digital Reality...</div>}>
+                    <PocketPetView user={dashboardUser} onClose={() => { setShowPocketPet(false); refreshPet(); }} />
                 </Suspense>
             )}
         </div>

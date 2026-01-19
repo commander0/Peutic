@@ -184,3 +184,20 @@ export interface VoiceJournalEntry {
   createdAt: string;
   title: string;
 }
+
+export interface PocketPet {
+  id: string;
+  userId: string;
+  name: string;
+  species: 'Holo-Hamu' | 'Digi-Dino' | 'Neo-Shiba' | 'Zen-Sloth';
+  level: number;
+  experience: number;
+  health: number; // 0-100
+  hunger: number; // 0-100
+  happiness: number; // 0-100
+  cleanliness: number; // 0-100
+  energy: number; // 0-100
+  isSleeping: boolean;
+  lastInteractionAt: string;
+  createdAt: string;
+}
