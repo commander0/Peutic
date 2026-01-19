@@ -263,30 +263,23 @@ export class UserService {
     }
 
     static async saveArt(entry: ArtEntry) {
-        try {
-            const result = await BaseService.invokeGateway('save-art', { userId: entry.userId, entry });
-            if (result?.error) throw new Error(result.error);
-        } catch (gatewayError) {
-            console.warn("Gateway save-art failed, using direct fallback:", gatewayError);
-            // Fallback to direct Supabase insert
-            const { error } = await supabase.from('user_art').insert({
-                user_id: entry.userId,
-                image_url: entry.imageUrl,
-                prompt: entry.prompt,
-                title: entry.title,
-                created_at: entry.createdAt || new Date().toISOString()
-            });
-            if (error) {
-                console.error("Direct save-art also failed:", error);
-                throw error;
-            }
+        const { error } = await supabase.from('user_art').insert({
+            user_id: entry.userId,
+            image_url: entry.imageUrl,
+            prompt: entry.prompt,
+            title: entry.title,
+            created_at: entry.createdAt || new Date().toISOString()
+        });
+        if (error) {
+            logger.error("Save Art Failed", entry.userId, error);
+            throw error;
         }
     }
 
     static async deleteArt(id: string) {
-        const { error } = await BaseService.invokeGateway('delete-art', { artId: id });
+        const { error } = await supabase.from('user_art').delete().eq('id', id);
         if (error) {
-            logger.error("Delete Art via Gateway Failed", id, error);
+            logger.error("Delete Art Failed", id, error);
             throw error;
         }
     }
@@ -305,21 +298,14 @@ export class UserService {
     }
 
     static async saveJournal(entry: JournalEntry) {
-        try {
-            const result = await BaseService.invokeGateway('save-journal', { userId: entry.userId, entry });
-            if (result?.error) throw new Error(result.error);
-        } catch (gatewayError) {
-            console.warn("Gateway save-journal failed, using direct fallback:", gatewayError);
-            // Fallback to direct Supabase insert
-            const { error } = await supabase.from('journals').insert({
-                user_id: entry.userId,
-                date: entry.date || new Date().toISOString(),
-                content: entry.content
-            });
-            if (error) {
-                console.error("Direct save-journal also failed:", error);
-                throw error;
-            }
+        const { error } = await supabase.from('journals').insert({
+            user_id: entry.userId,
+            date: entry.date || new Date().toISOString(),
+            content: entry.content
+        });
+        if (error) {
+            logger.error("Save Journal Failed", entry.userId, error);
+            throw error;
         }
     }
 
@@ -329,8 +315,12 @@ export class UserService {
     }
 
     static async saveMood(userId: string, mood: 'confetti' | 'rain') {
-        const { error } = await BaseService.invokeGateway('save-mood', { userId, mood });
-        if (error) console.error("Save Mood via Gateway Failed:", error);
+        const { error } = await supabase.from('moods').insert({
+            user_id: userId,
+            date: new Date().toISOString(),
+            mood: mood
+        });
+        if (error) console.error("Save Mood Failed:", error);
     }
 
     static async getWeeklyProgress(userId: string): Promise<{ current: number, target: number, message: string }> {
@@ -444,11 +434,27 @@ export class UserService {
     }
 
     static async saveTransaction(tx: Transaction) {
-        await BaseService.invokeGateway('save-transaction', { userId: tx.userId, tx });
+        const { error } = await supabase.from('transactions').insert({
+            id: tx.id,
+            user_id: tx.userId,
+            date: tx.date || new Date().toISOString(),
+            amount: tx.amount,
+            cost: tx.cost,
+            description: tx.description,
+            status: tx.status
+        });
+        if (error) logger.error("Save Transaction Failed", tx.id, error);
     }
 
     static async saveFeedback(feedback: SessionFeedback) {
-        await BaseService.invokeGateway('save-feedback', { userId: feedback.userId, feedback });
+        const { error } = await supabase.from('feedback').insert({
+            user_id: feedback.userId,
+            companion_name: feedback.companionName,
+            rating: feedback.rating,
+            tags: feedback.tags,
+            date: feedback.date || new Date().toISOString()
+        });
+        if (error) logger.error("Save Feedback Failed", feedback.userId, error);
     }
 
     static async updateGameScore(userId: string, game: 'match' | 'cloud', score: number) {
@@ -460,11 +466,9 @@ export class UserService {
         const newScores = { ...currentScores, [game]: Math.max(currentScores[game] || 0, score) };
         user.gameScores = newScores;
 
-        const { data, error } = await BaseService.invokeGateway('update-game-score', { userId, game, score });
+        const { error } = await supabase.from('users').update({ game_scores: newScores }).eq('id', userId);
         if (error) {
-            logger.error("Update Game Score via Gateway Failed", userId, error);
-        } else if (data?.scores) {
-            user.gameScores = data.scores;
+            logger.error("Update Game Score Failed", userId, error);
         }
     }
 
