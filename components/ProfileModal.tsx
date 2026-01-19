@@ -75,16 +75,22 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
                         <img src={previewAvatar} alt="Avatar" className="w-16 h-16 rounded-full bg-white shadow-sm" />
                         <div className="flex-1">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-bold uppercase text-gray-500">Avatar</span>
+                                <span className="text-xs font-bold uppercase text-gray-500">Avatar Design</span>
                                 <button onClick={randomizeAvatar} className="text-[10px] font-bold bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-1">
-                                    <RefreshCw className="w-3 h-3" /> New Look
+                                    <RefreshCw className="w-3 h-3" /> Randomize
                                 </button>
                             </div>
+                            <input
+                                className="w-full text-[10px] p-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-yellow-500 mb-3 font-mono"
+                                value={previewAvatar.split('seed=')[1]?.split('&')[0] || ''}
+                                onChange={(e) => setPreviewAvatar(`https://api.dicebear.com/7.x/lorelei/svg?seed=${e.target.value}&backgroundColor=FCD34D`)}
+                                placeholder="Enter Style Seed..."
+                            />
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <div className={`w-8 h-4 rounded-full transition-colors relative ${avatarLocked ? 'bg-green-500' : 'bg-gray-300'}`} onClick={() => setAvatarLocked(!avatarLocked)}>
                                     <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform shadow-sm ${avatarLocked ? 'left-5' : 'left-0.5'}`}></div>
                                 </div>
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{avatarLocked ? 'Saved as Default' : 'Auto-Rotate on Login'}</span>
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{avatarLocked ? 'Layout Locked' : 'Auto-Rotate'}</span>
                             </label>
                         </div>
                     </div>

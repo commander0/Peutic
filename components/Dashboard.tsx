@@ -430,7 +430,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [showTechCheck, setShowTechCheck] = useState(false);
     const [isGhostMode, setIsGhostMode] = useState(() => localStorage.getItem('peutic_ghost_mode') === 'true');
     const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-    const [isVaultOpen, setIsVaultOpen] = useState(true);
+    const [isVaultOpen, setIsVaultOpen] = useState(false);
 
 
     const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
@@ -516,7 +516,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         localStorage.setItem('peutic_theme', themeStr);
 
         // Sync with DB if different (debounce could be added in production)
-        if (user.themePreference !== themeStr) {
+        if (dashboardUser && user.themePreference !== themeStr) {
             UserService.updateUser({ ...dashboardUser, themePreference: themeStr as 'light' | 'dark' });
         }
 
@@ -608,7 +608,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     };
 
     const handleStartConnection = (c: Companion) => {
-        if (dashboardUser.balance <= 0) { setPaymentError("Insufficient credits. Please add funds to start a session."); setShowPayment(true); return; }
+        if ((dashboardUser?.balance || 0) <= 0) { setPaymentError("Insufficient credits. Please add funds to start a session."); setShowPayment(true); return; }
         setPendingCompanion(c);
         setShowTechCheck(true);
     };
@@ -623,6 +623,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         setIsSavingProfile(true);
         setTimeout(() => {
 
+            if (!dashboardUser) return;
             const updatedUser: User = {
                 ...dashboardUser,
                 name: editName,
@@ -727,7 +728,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         <header className="mb-10 flex items-center justify-between">
                             <div className="flex flex-col">
                                 <h1 className="text-2xl md:text-3xl font-black tracking-tight dark:text-white flex items-center gap-3">
-                                    {activeTab === 'inner_sanctuary' ? `Hello, ${dashboardUser.name.split(' ')[0]}` : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
+                                    {activeTab === 'inner_sanctuary' ? `Hello, ${(dashboardUser?.name || 'Friend').split(' ')[0]}` : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
                                     {activeTab === 'inner_sanctuary' && <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>}
                                 </h1>
                                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
@@ -735,16 +736,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 </p>
                             </div>
 
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 md:gap-3">
                                 <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
+
+                                <button onClick={() => setShowGrounding(true)} className="p-2.5 rounded-2xl bg-white dark:bg-gray-800 border border-blue-100 dark:border-gray-700 shadow-sm hover:scale-105 transition-all text-blue-500" title="Grounding Mode">
+                                    <Anchor className="w-5 h-5" />
+                                </button>
+
                                 <button onClick={toggleDarkMode} className="p-2.5 rounded-2xl bg-white dark:bg-gray-800 border border-yellow-100 dark:border-gray-700 shadow-sm hover:scale-105 transition-all">
                                     {darkMode ? <Sun className="w-5 h-5 text-yellow-500" /> : <Moon className="w-5 h-5 text-gray-400" />}
                                 </button>
-                                <button onClick={() => setShowPayment(true)} className="px-5 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-2xl font-black shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2 text-xs">
-                                    {balance}m <Plus className="w-3.5 h-3.5 opacity-50" />
+
+                                <button onClick={() => setShowPayment(true)} className="px-3 md:px-5 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-2xl font-black shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2 text-[10px] md:text-xs">
+                                    {balance}m <Plus className="w-3 h-3 md:w-3.5 md:h-3.5 opacity-50" />
                                 </button>
-                                <button onClick={() => setShowProfile(true)} className="w-11 h-11 rounded-2xl overflow-hidden border-2 border-yellow-400 shadow-premium transition-all hover:rotate-3 active:scale-90">
-                                    <AvatarImage src={isGhostMode ? '' : (dashboardUser.avatar || '')} alt={isGhostMode ? 'Member' : dashboardUser.name} className="w-full h-full object-cover" isUser={true} />
+
+                                <button onClick={() => setShowProfile(true)} className="w-10 h-10 md:w-11 md:h-11 rounded-2xl overflow-hidden border-2 border-yellow-400 shadow-premium transition-all hover:rotate-3 active:scale-90 flex-shrink-0">
+                                    <AvatarImage src={isGhostMode ? '' : (dashboardUser?.avatar || '')} alt={isGhostMode ? 'Member' : (dashboardUser?.name || 'User')} className="w-full h-full object-cover" isUser={true} />
+                                </button>
+
+                                <button onClick={onLogout} className="md:hidden p-2.5 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-100 dark:border-red-900/50 shadow-sm hover:scale-105 transition-all">
+                                    <LogOut className="w-5 h-5" />
                                 </button>
                             </div>
                         </header>
@@ -767,27 +779,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     </button>
 
                                     {isVaultOpen && (
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
+                                        <div className="grid grid-cols-3 gap-2 md:gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
                                             {/* TILE 1: INNER GARDEN */}
                                             {garden && (
-                                                <div className="group relative bg-[#081508] dark:bg-black rounded-3xl border-2 border-green-500/30 dark:border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)] hover:shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-all overflow-hidden flex flex-col h-[220px]">
+                                                <div className="group relative bg-[#081508] dark:bg-black rounded-2xl md:rounded-3xl border-2 border-green-500/30 dark:border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)] hover:shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-all overflow-hidden flex flex-col h-[140px] md:h-[220px]">
                                                     <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 pointer-events-none"></div>
-                                                    <div className="flex-1 p-6 relative flex flex-col items-center justify-center">
+                                                    <div className="flex-1 p-3 md:p-6 relative flex flex-col items-center justify-center">
                                                         <div className="absolute inset-0 bg-green-400/20 blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
-                                                        <Suspense fallback={<div className="w-20 h-20 rounded-full animate-pulse bg-green-100"></div>}>
-                                                            <div className="w-24 h-24 mb-3 transition-transform group-hover:scale-110 duration-700 relative z-10 drop-shadow-[0_0_10px_rgba(34,197,94,0.8)]">
+                                                        <Suspense fallback={<div className="w-12 h-12 md:w-20 md:h-20 rounded-full animate-pulse bg-green-100"></div>}>
+                                                            <div className="w-16 h-16 md:w-24 md:h-24 mb-2 md:mb-3 transition-transform group-hover:scale-110 duration-700 relative z-10 drop-shadow-[0_0_10px_rgba(34,197,94,0.8)]">
                                                                 <GardenCanvas garden={garden} width={100} height={100} />
                                                             </div>
                                                         </Suspense>
-                                                        <h3 className="text-sm font-black text-green-400 uppercase tracking-widest drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]">Inner Garden</h3>
-                                                        <p className="text-[10px] font-bold text-green-500/80 uppercase tracking-tighter">Level {garden.level} &bull; Growing</p>
+                                                        <h3 className="text-[8px] md:text-sm font-black text-green-400 uppercase tracking-widest drop-shadow-[0_0_8px_rgba(34,197,94,0.8)] text-center">Inner Garden</h3>
+                                                        <p className="hidden md:block text-[10px] font-bold text-green-500/80 uppercase tracking-tighter">Level {garden.level} &bull; Growing</p>
                                                     </div>
                                                 </div>
                                             )}
 
                                             {/* TILE 2: BOOK OF YOU */}
                                             {(() => {
-                                                const joinedDate = new Date(dashboardUser.joinedAt || new Date().toISOString());
+                                                const joinedDate = new Date(dashboardUser?.joinedAt || new Date().toISOString());
                                                 const now = new Date();
                                                 const diffTime = Math.abs(now.getTime() - joinedDate.getTime());
                                                 const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -805,32 +817,32 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                                 showToast(`Locked for ${daysRemaining} more days.`, "info");
                                                             }
                                                         }}
-                                                        className="group relative bg-[#1a1a1a] dark:bg-black rounded-3xl border-2 border-white/20 dark:border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all overflow-hidden cursor-pointer h-[220px]"
+                                                        className="group relative bg-[#1a1a1a] dark:bg-black rounded-2xl md:rounded-3xl border-2 border-white/20 dark:border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all overflow-hidden cursor-pointer h-[140px] md:h-[220px]"
                                                     >
                                                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')] opacity-[0.05] pointer-events-none"></div>
                                                         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
-                                                        <div className="flex flex-col items-center justify-center h-full p-6 text-center relative z-10">
-                                                            <div className="relative mb-4">
-                                                                {isLocked && <div className="absolute -inset-4 border-2 border-white/20 rounded-full animate-aura-glow"></div>}
-                                                                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-2xl transition-all ${isLocked ? 'bg-black text-gray-700 border border-white/5' : 'bg-white text-black shadow-white/20'}`}>
-                                                                    {isLocked ? <Lock className="w-8 h-8" /> : <BookOpen className="w-8 h-8" />}
+                                                        <div className="flex flex-col items-center justify-center h-full p-3 md:p-6 text-center relative z-10">
+                                                            <div className="relative mb-2 md:mb-4">
+                                                                {isLocked && <div className="absolute -inset-2 md:-inset-4 border-2 border-white/20 rounded-full animate-aura-glow"></div>}
+                                                                <div className={`w-12 h-12 md:w-20 md:h-20 rounded-xl md:rounded-2xl flex items-center justify-center shadow-2xl transition-all ${isLocked ? 'bg-black text-gray-700 border border-white/5' : 'bg-white text-black shadow-white/20'}`}>
+                                                                    {isLocked ? <Lock className="w-5 h-5 md:w-8 md:h-8" /> : <BookOpen className="w-5 h-5 md:w-8 md:h-8" />}
                                                                 </div>
                                                             </div>
-                                                            <h3 className="text-sm font-black text-white uppercase tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]">Book of You</h3>
-                                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{isLocked ? `Unlocks in ${daysRemaining}d` : 'Digital Legacy'}</p>
+                                                            <h3 className="text-[8px] md:text-sm font-black text-white uppercase tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] text-center">Book of You</h3>
+                                                            <p className="hidden md:block text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{isLocked ? `Unlocks in ${daysRemaining}d` : 'Digital Legacy'}</p>
                                                         </div>
                                                     </div>
                                                 );
                                             })()}
 
                                             {/* TILE 3: COMING SOON */}
-                                            <div className="relative bg-white/50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800 h-[220px] flex flex-col items-center justify-center grayscale opacity-60">
-                                                <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-                                                    <Sparkles className="w-6 h-6 text-gray-300" />
+                                            <div className="relative bg-white/50 dark:bg-gray-900/50 rounded-2xl md:rounded-3xl border border-dashed border-gray-200 dark:border-gray-800 h-[140px] md:h-[220px] flex flex-col items-center justify-center grayscale opacity-60">
+                                                <div className="w-10 h-10 md:w-16 md:h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-2 md:mb-4">
+                                                    <Sparkles className="w-4 h-4 md:w-6 md:h-6 text-gray-300" />
                                                 </div>
-                                                <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest">Next Feature</h3>
-                                                <div className="mt-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
-                                                    <span className="text-[9px] font-black uppercase text-gray-500">Coming Soon</span>
+                                                <h3 className="text-[8px] md:text-sm font-black text-gray-400 uppercase tracking-widest text-center">Next Feature</h3>
+                                                <div className="mt-1 md:mt-2 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full">
+                                                    <span className="text-[7px] md:text-[9px] font-black uppercase text-gray-500">Soon</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -948,7 +960,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
                                     <div className="p-5 md:p-6 border-b border-yellow-100 dark:border-gray-800"><h3 className="font-black text-lg md:text-xl dark:text-yellow-400 mb-1">{t('dash_settings')}</h3><p className="text-gray-500 text-xs">Manage your personal information.</p></div>
                                     <div className="p-5 md:p-6 space-y-5">
-                                        <div className="flex items-center gap-5"><div className="relative"><div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-4 border-yellow-100 dark:border-gray-800"><AvatarImage src={dashboardUser.avatar || ''} alt="Profile" className="w-full h-full object-cover" isUser={true} /></div><button onClick={() => setShowProfile(true)} className="absolute bottom-0 right-0 p-1.5 bg-black text-white rounded-full hover:bg-gray-800 transition-colors shadow-lg"><Edit2 className="w-3 h-3" /></button></div><div className="flex-1 space-y-3"><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Display Name</label><div className="relative"><UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none transition-colors text-sm font-bold dark:text-white" /></div></div><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Email Address</label><div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none transition-colors text-sm font-bold dark:text-white" /></div></div></div></div>
+                                        <div className="flex items-center gap-5"><div className="relative"><div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-4 border-yellow-100 dark:border-gray-800"><AvatarImage src={dashboardUser?.avatar || ''} alt="Profile" className="w-full h-full object-cover" isUser={true} /></div><button onClick={() => setShowProfile(true)} className="absolute bottom-0 right-0 p-1.5 bg-black text-white rounded-full hover:bg-gray-800 transition-colors shadow-lg"><Edit2 className="w-3 h-3" /></button></div><div className="flex-1 space-y-3"><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Display Name</label><div className="relative"><UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none transition-colors text-sm font-bold dark:text-white" /></div></div><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Email Address</label><div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none transition-colors text-sm font-bold dark:text-white" /></div></div></div></div>
                                         <div className="flex justify-end pt-2"><button onClick={saveProfileChanges} disabled={isSavingProfile} className="px-5 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-bold text-xs hover:opacity-80 transition-opacity flex items-center gap-2">{isSavingProfile ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}{t('ui_save')}</button></div>
                                     </div>
                                 </div>
