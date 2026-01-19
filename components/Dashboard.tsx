@@ -677,10 +677,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             <SoundscapePlayer />
 
             {/* DAILY PULSE SPARKLE (Mobile Only) */}
-            {/* DAILY PULSE SPARKLE (Mobile Only - Bottom Left) */}
+            {/* DAILY PULSE SPARKLE (Floating Action Button) */}
             <button
                 onClick={handleVoiceCheckIn}
-                className="md:hidden fixed bottom-6 left-6 z-[80] w-12 h-12 bg-yellow-400 dark:bg-yellow-500 rounded-full border border-yellow-200 dark:border-yellow-600 shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all group animate-float"
+                className="fixed bottom-6 left-6 z-[80] w-12 h-12 bg-yellow-400 dark:bg-yellow-500 rounded-full border border-yellow-200 dark:border-yellow-600 shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all group animate-float"
                 title="Daily Pulse Check"
             >
                 <Sparkles className="w-5 h-5 text-black group-hover:rotate-12 transition-transform" />
@@ -867,32 +867,33 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                                 showToast(`Your book is still being written... ${daysRemaining} days left.`, "info");
                                                             }
                                                         }}
-                                                        className={`w-full h-full p-5 rounded-3xl border flex items-center gap-5 transition-all duration-500 group relative overflow-hidden ${isLocked
-                                                            ? 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 cursor-help'
-                                                            : 'bg-white dark:bg-gray-900 border-yellow-200 dark:border-yellow-700 cursor-pointer shadow-xl hover:-translate-y-1 animate-pulse border-4'
+                                                        className={`w-full h-full p-4 md:p-5 rounded-3xl border flex items-center gap-4 md:gap-6 transition-all duration-500 group relative overflow-hidden backdrop-blur-sm shadow-sm ${isLocked
+                                                            ? 'bg-slate-50/80 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 cursor-help shadow-[0_0_20px_rgba(200,200,200,0.4)] dark:shadow-[0_0_20px_rgba(200,200,200,0.1)]'
+                                                            : 'bg-white/80 dark:bg-black/50 border-slate-300 dark:border-slate-700 cursor-pointer hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(255,255,255,0.8)] dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]'
                                                             }`}
                                                     >
-                                                        {isLocked && <div className="absolute inset-0 bg-white/40 dark:bg-black/20 pointer-events-none"></div>}
-                                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center self-center transition-all duration-700 ${isLocked ? 'bg-white dark:bg-gray-800 shadow-[0_0_25px_rgba(250,204,21,0.5)] dark:shadow-[0_0_25px_rgba(250,204,21,0.2)] border border-yellow-200 dark:border-gray-700 animate-pulse' : 'bg-yellow-400 shadow-lg shadow-yellow-400/50 rotate-[-5deg] group-hover:rotate-0 flex-shrink-0'}`}>
-                                                            {isLocked ? <Lock className="w-7 h-7 text-yellow-500 fill-yellow-500/20" /> : <BookOpen className="w-7 h-7 text-black fill-black" />}
+                                                        {isLocked && <div className="absolute inset-0 bg-gradient-to-br from-slate-100/50 to-gray-100/50 dark:from-slate-900/50 dark:to-black/50 pointer-events-none"></div>}
+                                                        <div className={`w-14 h-14 rounded-full flex items-center justify-center self-center transition-all duration-700 relative z-10 ${isLocked ? 'bg-white/90 dark:bg-black/80 shadow-[0_0_35px_rgba(255,255,255,0.9)] border border-slate-200 dark:border-slate-800' : 'bg-slate-200 dark:bg-slate-800 shadow-xl group-hover:scale-110'}`}>
+                                                            {isLocked ? <Lock className="w-6 h-6 text-slate-400 dark:text-slate-500 animate-pulse" /> : <BookOpen className="w-6 h-6 text-slate-800 dark:text-slate-200" />}
                                                         </div>
                                                         <div className="text-left relative z-10">
                                                             <div className="flex items-center gap-2 mb-0.5">
-                                                                <h3 className="font-black tracking-tight text-base text-gray-900 dark:text-white">The Book of You</h3>
-                                                                {isLocked && <span className="text-[8px] font-black uppercase tracking-[0.1em] bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-500 px-2 py-0.5 rounded-full border border-yellow-200/50">Coming Soon</span>}
+                                                                <div className="bg-slate-100 dark:bg-slate-900/50 p-1 rounded-lg"><BookOpen className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" /></div>
+                                                                <h3 className="text-lg font-black tracking-tight text-slate-800 dark:text-slate-200">The Book of You</h3>
+                                                                {isLocked && <span className="text-[8px] font-black uppercase tracking-[0.1em] bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">Locked</span>}
                                                             </div>
                                                             <p className={`text-xs font-bold leading-relaxed mb-3 ${isLocked ? 'text-gray-600 dark:text-gray-400' : 'text-gray-500 dark:text-gray-400'}`}>Your story evolves as you grow. This is your weekly chronicle of personal evolution.</p>
                                                             {isLocked ? (
                                                                 <div className="flex flex-col gap-1 items-start">
-                                                                    <div className="w-16 h-1 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
-                                                                        <div className="h-full bg-gray-400" style={{ width: `${Math.min(100, (diffDays / 7) * 100)}%` }}></div>
+                                                                    <div className="w-16 h-1 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                                        <div className="h-full bg-slate-400" style={{ width: `${Math.min(100, (diffDays / 7) * 100)}%` }}></div>
                                                                     </div>
-                                                                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Locked: D-{daysRemaining}</span>
+                                                                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Locked: D-{daysRemaining}</span>
                                                                 </div>
                                                             ) : (
-                                                                <div className="flex flex-col gap-1 items-start">
-                                                                    <span className="text-[9px] font-black uppercase tracking-widest text-yellow-600 dark:text-yellow-400 flex items-center gap-1">
-                                                                        <Sparkles className="w-3 h-3 animate-spin" /> Unlocked & Ready
+                                                                <div className="flex flex-col gap-1 items-start mt-3">
+                                                                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                                                                        <Sparkles className="w-3 h-3 animate-spin text-slate-400" /> Unlocked
                                                                     </span>
                                                                 </div>
                                                             )}
@@ -1137,24 +1138,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             {showTechCheck && (<TechCheck onConfirm={confirmSession} onCancel={() => setShowTechCheck(false)} />)}
 
             {/* MOOD PULSE ALERT */}
+            {/* MOOD PULSE ALERT (Removed Banner, Logic Kept for Floating Button) */}
             {moodRiskAlert && (
-                <div className="fixed bottom-6 left-6 z-[90] bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-2xl border-l-4 border-blue-400 hidden md:flex flex-col gap-3 animate-in slide-in-from-left w-80">
-                    <div className="flex justify-between items-start">
-                        <div className="flex gap-3">
-                            <div className="bg-blue-100 p-2 rounded-full text-blue-600"><Sparkles className="w-5 h-5" /></div>
-                            <div>
-                                <h4 className="font-bold text-gray-800 dark:text-white">Daily Pulse Check</h4>
-                                <p className="text-xs text-gray-500 mt-1">We noticed it's been a bit rainy lately. Want to talk it out?</p>
-                            </div>
-                        </div>
-                        <button onClick={() => setMoodRiskAlert(false)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
-                    </div>
-                    <div className="flex gap-2 mt-1">
-                        <button onClick={handleVoiceCheckIn} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-95 transition-transform">
-                            <Mic className="w-4 h-4" /> Start Voice Check-in
-                        </button>
-                    </div>
-                </div>
+                // Hidden banner logic - now relying on user initiative or smaller cues
+                <></>
             )}
 
             <Confetti active={showConfetti} />
