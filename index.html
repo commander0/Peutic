@@ -1,111 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="referrer" content="origin-when-cross-origin" />
-    
-    <!-- SEO & Social Media Metadata -->
-    <title>Peutic | Premium Human Connection</title>
-    <meta name="description" content="Experience the gold standard in emotional support. Connect instantly via video with a dedicated specialist tailored just for you. 24/7 Availability." />
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23FACC15'/%3E%3Cpath d='M50 85 C50 85 20 58 20 38 C20 22 38 18 50 30 C62 18 80 22 80 38 C80 58 50 85 50 85 Z' fill='%23000000'/%3E%3C/svg%3E" />
 
-    <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://peutic.xyz/" />
-    <meta property="og:title" content="Peutic | Your Private Confidant & Friend" />
-    <meta property="og:description" content="Instant access to premium mental wellness specialists. No waitlists. End-to-end encrypted video sessions." />
-    <meta property="og:image" content="https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=1200&auto=format&fit=crop" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="referrer" content="origin-when-cross-origin" />
 
-    <!-- Dependencies -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://js.stripe.com/v3/"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <script>
-      // Immediate theme check to prevent flash of unstyled content (FOUC)
-      try {
-        const local = localStorage.getItem('peutic_theme');
-        const userPref = localStorage.getItem('supabase.auth.token') && JSON.parse(atob(localStorage.getItem('supabase.auth.token').split('.')[1] || '{}'))?.user_metadata?.theme_preference;
-        
-        if (local === 'dark' || (!local && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-      } catch (e) {}
+  <!-- SEO & Social Media Metadata -->
+  <title>Peutic | Premium Human Connection</title>
+  <meta name="description"
+    content="Experience the gold standard in emotional support. Connect instantly via video with a dedicated specialist tailored just for you. 24/7 Availability." />
 
-      tailwind.config = {
-        darkMode: 'class', 
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Manrope', 'sans-serif'],
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23FACC15'/%3E%3Cpath d='M50 85 C50 85 20 58 20 38 C20 22 38 18 50 30 C62 18 80 22 80 38 C80 58 50 85 50 85 Z' fill='%23000000'/%3E%3C/svg%3E" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://peutic.xyz/" />
+  <meta property="og:title" content="Peutic | Your Private Confidant & Friend" />
+  <meta property="og:description"
+    content="Instant access to premium mental wellness specialists. No waitlists. End-to-end encrypted video sessions." />
+  <meta property="og:image"
+    content="https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=1200&auto=format&fit=crop" />
+
+  <!-- Dependencies -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://js.stripe.com/v3/"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <script>
+    // Immediate theme check to prevent flash of unstyled content (FOUC)
+    try {
+      const local = localStorage.getItem('peutic_theme');
+      const userPref = localStorage.getItem('supabase.auth.token') && JSON.parse(atob(localStorage.getItem('supabase.auth.token').split('.')[1] || '{}'))?.user_metadata?.theme_preference;
+
+      if (local === 'dark' || (!local && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    } catch (e) { }
+
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Manrope', 'sans-serif'],
+          },
+          colors: {
+            peutic: {
+              yellow: '#FACC15',
+              black: '#0A0A0A',
+            }
+          },
+          animation: {
+            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'spin-slow': 'spin 12s linear infinite',
+            'in': 'in 0.5s ease-out',
+            'fade-in': 'fade-in 0.5s ease-out',
+            'slide-up-fade': 'slide-up-fade 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+            'breathing': 'breathing 6s ease-in-out infinite',
+            'float': 'float 6s ease-in-out infinite',
+            'shimmer': 'shimmer 2.5s linear infinite',
+            'aura-glow': 'aura-glow 4s ease-in-out infinite',
+          },
+          boxShadow: {
+            'inner-glow': 'inset 0 0 20px rgba(250, 204, 21, 0.15)',
+            'premium-alt': '0 20px 40px -15px rgba(0, 0, 0, 0.3)',
+          },
+          keyframes: {
+            'aura-glow': {
+              '0%, 100%': { transform: 'scale(1)', opacity: '0.3' },
+              '50%': { transform: 'scale(1.1)', opacity: '0.6' }
             },
-            colors: {
-              peutic: {
-                yellow: '#FACC15',
-                black: '#0A0A0A',
-              }
+            in: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
             },
-            animation: {
-              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              'spin-slow': 'spin 12s linear infinite',
-              'in': 'in 0.5s ease-out',
-              'fade-in': 'fade-in 0.5s ease-out',
-              'slide-up-fade': 'slide-up-fade 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
-              'breathing': 'breathing 6s ease-in-out infinite',
-              'float': 'float 6s ease-in-out infinite',
-              'shimmer': 'shimmer 2.5s linear infinite',
+            'fade-in': {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' }
             },
-            keyframes: {
-              in: {
-                  '0%': { opacity: '0', transform: 'translateY(20px)' },
-                  '100%': { opacity: '1', transform: 'translateY(0)' }
-              },
-              'fade-in': {
-                  '0%': { opacity: '0' },
-                  '100%': { opacity: '1' }
-              },
-              'slide-up-fade': {
-                  '0%': { opacity: '0', transform: 'translateY(4rem)' },
-                  '100%': { opacity: '1', transform: 'translateY(0)' }
-              },
-              'breathing': {
-                  '0%, 100%': { transform: 'scale(1)', filter: 'brightness(1)' },
-                  '50%': { transform: 'scale(1.01)', filter: 'brightness(1.02)' }
-              },
-              'float': {
-                  '0%, 100%': { transform: 'translateY(0)' },
-                  '50%': { transform: 'translateY(-6px)' }
-              },
-              'shimmer': {
-                  '0%': { backgroundPosition: '-200% 0' },
-                  '100%': { backgroundPosition: '200% 0' }
-              }
+            'slide-up-fade': {
+              '0%': { opacity: '0', transform: 'translateY(4rem)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            },
+            'breathing': {
+              '0%, 100%': { transform: 'scale(1)', filter: 'brightness(1)' },
+              '50%': { transform: 'scale(1.01)', filter: 'brightness(1.02)' }
+            },
+            'float': {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-6px)' }
+            },
+            'shimmer': {
+              '0%': { backgroundPosition: '-200% 0' },
+              '100%': { backgroundPosition: '200% 0' }
             }
           }
         }
       }
-    </script>
-    <style>
-      body {
-        background-color: #FFFBEB;
-        color: #0A0A0A;
-        -webkit-font-smoothing: antialiased;
-        overflow-x: hidden;
-      }
-      .dark body {
-        background-color: #0A0A0A;
-        color: #F3F4F6;
-      }
-      ::-webkit-scrollbar { display: none; }
-      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
-<script type="importmap">
+    }
+  </script>
+  <style>
+    body {
+      background-color: #FFFBEB;
+      color: #0A0A0A;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    .dark body {
+      background-color: #0A0A0A;
+      color: #F3F4F6;
+    }
+
+    ::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+  <script type="importmap">
 {
   "imports": {
     "react/": "https://esm.sh/react@^19.2.3/",
@@ -125,10 +148,12 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
+  <link rel="stylesheet" href="/index.css">
 </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
 </html>

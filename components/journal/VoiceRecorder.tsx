@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, Square, Play, Trash2, RefreshCw, Pause, CheckCircle } from 'lucide-react';
+import { Mic, Square, Play, Trash2, RefreshCw, Pause, CheckCircle, Volume2 } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import { VoiceJournalEntry } from '../../types';
 
@@ -278,26 +278,58 @@ export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id:
     };
 
     return (
-        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 group">
-            <div className="flex items-center gap-3">
-                <button onClick={togglePlay} className="w-10 h-10 rounded-full bg-white dark:bg-black flex items-center justify-center shadow-sm text-yellow-600 hover:scale-105 active:scale-95 transition-transform">
-                    {playing ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
-                </button>
-                <div>
-                    <h4 className="text-xs font-bold text-gray-800 dark:text-gray-200">{entry.title || 'Audio Note'}</h4>
-                    <p className="text-[10px] text-gray-400">{new Date(entry.createdAt).toLocaleDateString()} • {Math.floor(entry.durationSeconds / 60)}:{(entry.durationSeconds % 60).toString().padStart(2, '0')}</p>
-                </div>
+        <div className="group relative p-4 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] overflow-hidden">
+            {/* Waveform Visualization Simulation (Animated on hover) */}
+            <div className="absolute inset-0 flex items-center justify-center gap-1 opacity-[0.03] dark:opacity-[0.07] pointer-events-none group-hover:opacity-20 transition-opacity duration-700 h-full w-full px-8">
+                {[...Array(24)].map((_, i) => (
+                    <div
+                        key={i}
+                        className="w-1 bg-yellow-400 rounded-full transition-all duration-500"
+                        style={{
+                            height: `${20 + Math.random() * 60}%`,
+                            animation: playing ? `breathing ${2 + Math.random() * 2}s ease-in-out infinite` : 'none',
+                            animationDelay: `${i * 0.1}s`
+                        }}
+                    ></div>
+                ))}
             </div>
 
-            <div className="flex items-center gap-2">
-                <button
-                    onClick={toggleBoost}
-                    className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest transition-all ${isBoosted ? 'bg-yellow-400 text-black shadow-lg shadow-yellow-400/30' : 'bg-gray-100 dark:bg-gray-700 text-gray-400 hover:text-gray-600'}`}
-                    title="Volume Boost (2.5x)"
-                >
-                    {isBoosted ? 'Boosted' : 'Boost'}
-                </button>
-                <button onClick={() => onDelete(entry.id)} className="text-gray-400 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4" /></button>
+            <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={togglePlay}
+                        className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-lg ${playing ? 'bg-black text-white dark:bg-yellow-400 dark:text-black scale-110' : 'bg-gray-100 dark:bg-gray-800 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'}`}
+                    >
+                        {playing ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-1" />}
+                    </button>
+                    <div>
+                        <h4 className="text-sm font-black text-gray-900 dark:text-white tracking-tight leading-tight">{entry.title || 'Untitled Audio Reflection'}</h4>
+                        <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{new Date(entry.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                            <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+                            <span className="text-[10px] font-black text-yellow-600/70 dark:text-yellow-400/50 uppercase tracking-widest">
+                                {Math.floor(entry.durationSeconds / 60)}:{(entry.durationSeconds % 60).toString().padStart(2, '0')}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={toggleBoost}
+                        className={`group/boost px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] transition-all duration-500 flex items-center gap-1.5 ${isBoosted ? 'bg-yellow-400 text-black shadow-[0_0_20px_rgba(250,204,21,0.4)]' : 'bg-gray-50 dark:bg-gray-800/50 text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 border border-transparent hover:border-yellow-200/50'}`}
+                    >
+                        <Volume2 className={`w-3 h-3 ${isBoosted ? 'animate-pulse' : ''}`} />
+                        {isBoosted ? 'Boosted 2.5x' : 'Boost Audio'}
+                    </button>
+                    <button
+                        onClick={() => onDelete(entry.id)}
+                        className="p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 duration-500"
+                        title="Delete Entry"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
             </div>
 
             <audio

@@ -418,8 +418,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
     const [showTechCheck, setShowTechCheck] = useState(false);
     const [isGhostMode, setIsGhostMode] = useState(() => localStorage.getItem('peutic_ghost_mode') === 'true');
-    const [simulatedBaseCount, setSimulatedBaseCount] = useState(() => Math.floor(Math.random() * (450 - 320 + 1) + 320));
-    const [realActiveCount, setRealActiveCount] = useState(0);
     const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
 
@@ -537,20 +535,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             });
         });
 
-        // Initial active count fetch
-        AdminService.getActiveSessionCount().then(setRealActiveCount);
-
         const interval = setInterval(async () => {
             await UserService.syncUser(user.id);
             refreshData();
-            AdminService.getActiveSessionCount().then(setRealActiveCount);
-            setSimulatedBaseCount(prev => {
-                const drift = Math.floor(Math.random() * 7) - 3; // -3 to +3
-                let next = prev + drift;
-                if (next < 320) next = 320 + Math.floor(Math.random() * 5);
-                if (next > 450) next = 450 - Math.floor(Math.random() * 5);
-                return next;
-            });
         }, 5000);
 
         return () => clearInterval(interval);
@@ -664,7 +651,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     return (
         <div className={`min-h-screen transition-colors duration-500 font-sans ${darkMode ? 'dark bg-[#0A0A0A] text-white' : 'bg-[#FFFBEB] text-black'}`}>
             {mood && <WeatherEffect type={mood} />}
-            <div className="fixed bottom-6 right-6 z-[80] flex items-end gap-4 pointer-events-none">
+            {/* FLOATING CONTROLS: Bottom-Right for easier access */}
+            <div className="fixed bottom-6 right-6 z-[80] flex items-center gap-4 pointer-events-none">
                 <div className="pointer-events-auto">
                     <button
                         onClick={handleVoiceCheckIn}
@@ -761,63 +749,44 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         </div>
                     )}
                     <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-10 pb-24">
-                        <header className="mb-10 flex flex-col gap-6 p-6 md:p-8 bg-white/40 dark:bg-black/40 rounded-[2.5rem] border border-yellow-100/50 dark:border-gray-800/50 backdrop-blur-xl shadow-sm transition-all duration-500 hover:shadow-md">
-                            <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
-                                {/* LEFT: Branding & Dynamic Greeting */}
-                                <div className="flex flex-col md:flex-row items-center gap-4 text-center md:text-left">
-                                    <div className="flex-1">
-                                        <p className="text-gray-500 dark:text-gray-400 font-bold text-[10px] md:text-xs uppercase tracking-widest mb-1">{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-                                        <div className="flex items-center gap-3">
-                                            <h1 className="text-3xl md:text-4xl font-black tracking-tight dark:text-yellow-400">
-                                                {activeTab === 'inner_sanctuary'
-                                                    ? (isGhostMode ? `Hello, Member` : `Hello, ${user.name.split(' ')[0]}`)
-                                                    : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
-                                            </h1>
-                                            {activeTab === 'inner_sanctuary' && (
-                                                <div className="hidden sm:flex items-center gap-2">
-                                                    <div className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm"><CheckCircle className="w-3.5 h-3.5" /> Verified</div>
-                                                    <div className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 animate-pulse shadow-sm">
-                                                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                                                        {simulatedBaseCount + realActiveCount} healing
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
+                        {/* SLEEK HORIZONTAL TOOLBAR */}
+                        <header className="mb-8 flex items-center justify-between p-4 md:p-5 bg-white/20 dark:bg-black/20 rounded-2xl border border-yellow-100/30 dark:border-gray-800/30 backdrop-blur-md transition-all duration-500 hover:bg-white/30 dark:hover:bg-black/30">
+                            <div className="flex items-center gap-4">
+                                <div className="flex flex-col">
+                                    <h1 className="text-xl md:text-2xl font-black tracking-tight dark:text-yellow-400">
+                                        {activeTab === 'inner_sanctuary' ? `Hello` : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
+                                    </h1>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mt-1">
+                                        {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                                    </p>
+                                </div>
+                                {activeTab === 'inner_sanctuary' && (
+                                    <div className="hidden lg:flex items-center gap-3 ml-4 py-1 px-3 bg-white/10 dark:bg-black/20 rounded-xl border border-white/5 shadow-inner">
+                                        <p className="text-gray-500 dark:text-gray-400 text-[11px] font-medium italic animate-in fade-in duration-1000">
+                                            "{currentQuote}"
+                                        </p>
                                     </div>
-                                </div>
-
-                                {/* RIGHT: Consolidated Professional Controls */}
-                                <div className="flex items-center gap-3 md:gap-4 flex-wrap justify-center">
-                                    {activeTab === 'inner_sanctuary' && (
-                                        <button onClick={() => setShowGrounding(true)} className="flex items-center gap-2 bg-red-500 text-white dark:bg-red-500/20 dark:text-red-400 border border-red-500/30 px-4 py-2 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all hover:scale-105 active:scale-95 shadow-lg shadow-red-500/20" title="Panic Relief">
-                                            <Heart className="w-3.5 h-3.5 fill-current" /> Panic Relief
-                                        </button>
-                                    )}
-                                    <div className="h-8 w-[1px] bg-gray-200 dark:bg-gray-800 mx-1 hidden md:block" />
-                                    <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
-                                    <button onClick={toggleDarkMode} className="p-3 rounded-2xl bg-gray-100 dark:bg-gray-800/50 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-all hover:rotate-12 group">
-                                        {darkMode ? <Sun className="w-5 h-5 text-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]" /> : <Moon className="w-5 h-5 text-gray-600" />}
-                                    </button>
-                                    <button onClick={() => setShowPayment(true)} className={`px-5 py-2.5 rounded-2xl font-black shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-2 text-sm ${balance < 10 ? 'bg-red-500 text-white animate-pulse' : 'bg-black dark:bg-white text-white dark:text-black hover:shadow-yellow-400/20'}`}>
-                                        <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>{balance} {t('dash_minutes')}<Plus className="w-3.5 h-3.5 ml-1 opacity-50" />
-                                    </button>
-                                    <button onClick={() => setShowProfile(true)} className={`w-12 h-12 rounded-2xl overflow-hidden border-2 border-yellow-400 shadow-xl hover:rotate-3 hover:scale-110 transition-all ${isGhostMode ? 'grayscale contrast-125' : ''}`}>
-                                        <AvatarImage src={isGhostMode ? '' : (dashboardUser.avatar || '')} alt={isGhostMode ? 'Member' : dashboardUser.name} className="w-full h-full object-cover" isUser={true} />
-                                    </button>
-                                </div>
+                                )}
                             </div>
 
-                            {/* QUOTE SECTION: Stabilized & Premium Styled */}
-                            {activeTab === 'inner_sanctuary' && (
-                                <div className="relative overflow-hidden py-3 px-4 bg-yellow-50/50 dark:bg-gray-800/20 rounded-2xl border-l-4 border-yellow-400 group">
-                                    <p className="text-gray-600 dark:text-gray-400 max-w-2xl text-sm font-medium leading-relaxed italic animate-in fade-in slide-in-from-left-2 duration-1000">
-                                        "{currentQuote}"
-                                    </p>
-                                    <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Sparkles className="w-4 h-4 text-yellow-400/50" />
-                                    </div>
-                                </div>
-                            )}
+                            <div className="flex items-center gap-2 md:gap-3">
+                                {activeTab === 'inner_sanctuary' && (
+                                    <button onClick={() => setShowGrounding(true)} className="flex items-center gap-1.5 bg-red-500/10 text-red-500 border border-red-500/20 px-3 py-1.5 rounded-xl font-bold uppercase tracking-widest text-[9px] transition-all hover:bg-red-500 hover:text-white" title="Panic Relief">
+                                        <Heart className="w-3 h-3 fill-current" /> Relief
+                                    </button>
+                                )}
+                                <div className="h-6 w-[1px] bg-gray-200 dark:bg-gray-800 mx-1 hidden md:block" />
+                                <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
+                                <button onClick={toggleDarkMode} className="p-2 rounded-xl bg-white/10 dark:bg-white/5 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-all group">
+                                    {darkMode ? <Sun className="w-4 h-4 text-yellow-400" /> : <Moon className="w-4 h-4 text-gray-500" />}
+                                </button>
+                                <button onClick={() => setShowPayment(true)} className={`px-4 py-2 rounded-xl font-black shadow-sm transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 text-xs ${balance < 10 ? 'bg-red-500 text-white animate-pulse' : 'bg-black dark:bg-white text-white dark:text-black'}`}>
+                                    {balance}m <Plus className="w-3 h-3 opacity-50" />
+                                </button>
+                                <button onClick={() => setShowProfile(true)} className="w-10 h-10 rounded-xl overflow-hidden border-2 border-yellow-400/50 hover:border-yellow-400 shadow-md transition-all">
+                                    <AvatarImage src={isGhostMode ? '' : (dashboardUser.avatar || '')} alt={isGhostMode ? 'Member' : dashboardUser.name} className="w-full h-full object-cover" isUser={true} />
+                                </button>
+                            </div>
                         </header>
                         {activeTab === 'inner_sanctuary' && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
@@ -832,21 +801,33 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     const daysRemaining = 7 - diffDays;
 
                                     return (
-                                        <div className="bg-white dark:bg-black rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col lg:flex-row h-auto lg:h-[160px]">
+                                        <div className="group relative bg-white dark:bg-black rounded-[2rem] border border-yellow-100 dark:border-gray-800 shadow-premium-alt overflow-hidden flex flex-col lg:flex-row h-auto lg:h-[180px] transition-all hover:shadow-2xl">
+                                            {/* PREMUM INNER GLOW */}
+                                            <div className="absolute inset-0 pointer-events-none shadow-inner-glow opacity-50"></div>
 
-                                            {/* LEFT HALF: GARDEN */}
-                                            <div className="flex-1 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10 p-5 relative overflow-hidden flex items-center border-b lg:border-b-0 lg:border-r border-green-100 dark:border-green-900/30">
-                                                <div className="relative z-10 mr-5">
-                                                    <Suspense fallback={<div className="w-20 h-20 bg-green-200/20 rounded-full animate-pulse"></div>}>
-                                                        <div className="w-[80px] h-[80px] lg:w-[100px] lg:h-[100px]">
-                                                            <GardenCanvas garden={garden} width={100} height={100} />
-                                                        </div>
-                                                    </Suspense>
+                                            {/* LEFT HALF: GARDEN (Elevated with Deep Glow) */}
+                                            <div className="flex-1 bg-gradient-to-br from-green-50/50 to-emerald-50/50 dark:from-green-900/20 dark:to-emerald-900/20 p-6 relative overflow-hidden flex items-center border-b lg:border-b-0 lg:border-r border-green-100/50 dark:border-green-900/30">
+                                                {/* Ambient Floating Particles Background */}
+                                                <div className="absolute inset-0 opacity-20 pointer-events-none">
+                                                    <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-green-400/30 rounded-full blur-[60px] animate-float"></div>
+                                                    <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-emerald-400/20 rounded-full blur-[80px] animate-float" style={{ animationDelay: '2s' }}></div>
+                                                </div>
+
+                                                <div className="relative z-10 mr-6">
+                                                    <div className="relative">
+                                                        {/* Radiant Glow Behind Plant */}
+                                                        <div className="absolute inset-0 bg-green-400/20 blur-2xl rounded-full scale-150 animate-pulse"></div>
+                                                        <Suspense fallback={<div className="w-24 h-24 bg-green-200/20 rounded-full animate-pulse"></div>}>
+                                                            <div className="w-[100px] h-[100px] lg:w-[120px] lg:h-[120px] relative z-10 transition-transform group-hover:scale-110 duration-700">
+                                                                <GardenCanvas garden={garden} width={120} height={120} />
+                                                            </div>
+                                                        </Suspense>
+                                                    </div>
                                                 </div>
                                                 <div className="flex-1 z-10">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <div className="p-1.5 bg-green-100 dark:bg-green-900/40 rounded-lg"><Feather className="w-3.5 h-3.5 text-green-600 dark:text-green-400" /></div>
-                                                        <h3 className="font-bold text-base lg:text-lg text-green-900 dark:text-green-300">Inner Garden</h3>
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <div className="p-2 bg-green-100 dark:bg-green-900/40 rounded-xl shadow-sm"><Feather className="w-4 h-4 text-green-600 dark:text-green-400" /></div>
+                                                        <h3 className="font-black text-xl text-green-900 dark:text-green-300 tracking-tight">Inner Garden</h3>
                                                     </div>
                                                     <div className="flex gap-2 text-[10px] font-bold uppercase tracking-wider text-green-700 dark:text-green-500">
                                                         <span className="bg-white/50 dark:bg-black/40 px-2 py-1 rounded-md">Lv.{garden.level}</span>
@@ -873,26 +854,34 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     <div className="absolute inset-0 bg-gradient-to-br from-gray-300/10 to-transparent dark:from-white/5"></div>
                                                 </div>
 
-                                                <div className={`relative z-10 w-16 h-16 rounded-2xl flex items-center justify-center mr-5 shadow-lg transition-all duration-500 ${isLocked ? 'bg-black border border-gray-800 shadow-[0_0_20px_rgba(255,255,255,0.1)]' : 'bg-white border border-gray-200 group-hover:scale-110 shadow-[0_0_25px_rgba(192,192,192,0.4)]'}`}>
-                                                    {isLocked ? <Lock className="w-6 h-6 text-gray-400 animate-pulse" /> : <BookOpen className="w-6 h-6 text-black" />}
-                                                </div>
-
-                                                <div className="flex-1 z-10">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <h3 className="font-bold text-base lg:text-lg text-gray-900 dark:text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.3)]">The Book of You</h3>
-                                                        {isLocked && <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 border border-gray-200 dark:border-gray-800 px-2 py-0.5 rounded-full animate-pulse shadow-[0_0_10px_rgba(255,255,255,0.1)]">Coming Soon</span>}
-                                                    </div>
-                                                    {isLocked ? (
-                                                        <div className="space-y-1.5">
-                                                            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium italic">Unlocks in {daysRemaining} days...</p>
-                                                            <div className="w-full h-1 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
-                                                                <div className="h-full bg-gray-400 dark:bg-gray-600 shadow-[0_0_10px_rgba(255,255,255,0.3)]" style={{ width: `${Math.min(100, (diffDays / 7) * 100)}%` }}></div>
-                                                            </div>
+                                                <div className="relative z-10 mr-6">
+                                                    <div className="relative">
+                                                        {/* Aura Ring Animation */}
+                                                        {isLocked && <div className="absolute -inset-4 border-2 border-yellow-400/30 rounded-full animate-aura-glow"></div>}
+                                                        <div className={`w-20 h-20 md:w-24 md:h-24 rounded-[1.75rem] flex items-center justify-center transition-all duration-700 shadow-2xl relative z-10 ${isLocked ? 'bg-black border border-gray-800/50 shadow-[0_0_30px_rgba(255,255,255,0.05)]' : 'bg-white border border-gray-100 group-hover/book:rotate-2 shadow-premium-alt'}`}>
+                                                            {isLocked ? (
+                                                                <div className="text-center">
+                                                                    <Lock className="w-8 h-8 text-gray-500 mx-auto mb-1 animate-pulse" />
+                                                                    <p className="text-[10px] font-black uppercase text-gray-500 tabular-nums">{daysRemaining}d</p>
+                                                                </div>
+                                                            ) : (
+                                                                <BookOpen className="w-10 h-10 text-black fill-current" />
+                                                            )}
                                                         </div>
-                                                    ) : (
-                                                        <p className="text-xs text-silver dark:text-gray-400 font-medium">Your story is ready.</p>
-                                                    )}
+                                                    </div>
                                                 </div>
+                                                <div className="flex-1 z-10">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <div className="p-2 bg-blue-100 dark:bg-blue-900/40 rounded-xl shadow-sm"><BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" /></div>
+                                                        <h3 className="font-black text-xl text-blue-900 dark:text-blue-300 tracking-tight">The Book of You</h3>
+                                                    </div>
+                                                    <p className="text-sm text-blue-700/70 dark:text-blue-400/60 leading-tight font-medium">Your story, illuminated. {isLocked ? 'Unveiling soon.' : 'Read your journey.'}</p>
+                                                </div>
+                                                {!isLocked && (
+                                                    <div className="absolute top-4 right-4 animate-in fade-in duration-1000">
+                                                        <div className="bg-yellow-400 text-black text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow-lg shimmer">Original</div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     );
