@@ -266,6 +266,7 @@ export class UserService {
 
     static async saveArt(entry: ArtEntry) {
         const { error } = await supabase.from('user_art').insert({
+            id: entry.id || crypto.randomUUID(),
             user_id: entry.userId,
             image_url: entry.imageUrl,
             prompt: entry.prompt,
@@ -301,6 +302,7 @@ export class UserService {
 
     static async saveJournal(entry: JournalEntry) {
         const { error } = await supabase.from('journals').insert({
+            id: entry.id || crypto.randomUUID(),
             user_id: entry.userId,
             date: entry.date || new Date().toISOString(),
             content: entry.content
