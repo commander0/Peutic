@@ -34,9 +34,10 @@ const MindfulMatchGame = lazy(() => import('./MindfulMatchGame').catch(() => ({ 
 const CloudHopGame = lazy(() => import('./CloudHopGame').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Cloud Engine...</div> })));
 const PaymentModal = lazy(() => import('./PaymentModal').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Payment Secure Node...</div> })));
 const ProfileModal = lazy(() => import('./ProfileModal').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Profile Experience...</div> })));
+const GardenFullView = lazy(() => import('./garden/GardenFullView'));
+const BookOfYouView = lazy(() => import('./retention/BookOfYouView'));
 
 import EmergencyOverlay from './safety/EmergencyOverlay';
-import Confetti from './common/Confetti';
 
 import { VoiceRecorder, VoiceEntryItem } from './journal/VoiceRecorder';
 
@@ -431,6 +432,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [isGhostMode, setIsGhostMode] = useState(() => localStorage.getItem('peutic_ghost_mode') === 'true');
     const [isDeletingAccount, setIsDeletingAccount] = useState(false);
     const [isVaultOpen, setIsVaultOpen] = useState(false);
+    const [showGardenFull, setShowGardenFull] = useState(false);
+    const [showBookFull, setShowBookFull] = useState(false);
 
 
     const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
@@ -441,7 +444,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [showVoiceJournal, setShowVoiceJournal] = useState(false);
     const [voiceEntries, setVoiceEntries] = useState<VoiceJournalEntry[]>([]);
     const [moodRiskAlert, setMoodRiskAlert] = useState(false);
-    const [showConfetti, setShowConfetti] = useState(false);
 
     const resetIdleTimer = () => {
         setIsIdle(false);
@@ -727,10 +729,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         {/* CLEAN TOP BAR (SIDEBAR-CENTRIC) */}
                         <header className="mb-10 flex items-center justify-between">
                             <div className="flex flex-col">
-                                <h1 className="text-2xl md:text-3xl font-black tracking-tight dark:text-white flex items-center gap-3">
-                                    {activeTab === 'inner_sanctuary' ? `Hello, ${(dashboardUser?.name || 'Friend').split(' ')[0]}` : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
-                                    {activeTab === 'inner_sanctuary' && <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>}
-                                </h1>
+                                {activeTab !== 'inner_sanctuary' && (
+                                    <h1 className="text-2xl md:text-3xl font-black tracking-tight dark:text-white flex items-center gap-3">
+                                        {activeTab === 'history' ? t('sec_history') : t('dash_settings')}
+                                    </h1>
+                                )}
                                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
                                     {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
                                 </p>
@@ -782,12 +785,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         <div className="grid grid-cols-3 gap-1 md:gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
                                             {/* TILE 1: INNER GARDEN */}
                                             {garden && (
-                                                <div className="group relative bg-[#081508] dark:bg-black rounded-xl md:rounded-3xl border border-green-500/30 dark:border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.1)] hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px]">
+                                                <div
+                                                    onClick={() => setShowGardenFull(true)}
+                                                    className="group relative bg-[#081508] dark:bg-black rounded-xl md:rounded-3xl border border-green-500/30 dark:border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.1)] hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                >
                                                     <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 pointer-events-none"></div>
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
                                                         <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
                                                         <Suspense fallback={<div className="w-8 h-8 md:w-20 md:h-20 rounded-full animate-pulse bg-green-100"></div>}>
-                                                            <div className="w-12 h-12 md:w-24 md:h-24 mb-1 md:mb-3 transition-transform group-hover:scale-110 duration-700 relative z-10 drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]">
+                                                            <div className="w-10 h-10 md:w-24 md:h-24 mb-1 md:mb-3 transition-transform group-hover:scale-110 duration-700 relative z-10 drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]">
                                                                 <GardenCanvas garden={garden} width={100} height={100} />
                                                             </div>
                                                         </Suspense>
@@ -810,9 +816,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     <div
                                                         onClick={() => {
                                                             if (!isLocked) {
-                                                                setActiveTab('history');
-                                                                setShowConfetti(true);
-                                                                setTimeout(() => setShowConfetti(false), 5000);
+                                                                setShowBookFull(true);
                                                             } else {
                                                                 showToast(`Locked for ${daysRemaining} more days.`, "info");
                                                             }
@@ -1087,7 +1091,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                 )
             }
 
-            <Confetti active={showConfetti} />
 
 
             {/* VOICE JOURNAL MODAL */}
@@ -1122,7 +1125,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     </div>
                 )
             }
-        </div >
+            {showBookFull && dashboardUser && (
+                <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Opening the Book...</div>}>
+                    <BookOfYouView user={dashboardUser} onClose={() => setShowBookFull(false)} />
+                </Suspense>
+            )}
+            {showGardenFull && garden && (
+                <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Entering the Garden...</div>}>
+                    <GardenFullView garden={garden} onClose={() => setShowGardenFull(false)} onUpdate={refreshGarden} />
+                </Suspense>
+            )}
+        </div>
     );
 };
 

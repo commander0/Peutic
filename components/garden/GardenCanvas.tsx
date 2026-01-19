@@ -107,8 +107,8 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
         }
 
         if (level >= 3) { // Branches
-            drawBranch(ctx, topX, topY, -1, level);
-            drawBranch(ctx, topX, topY, 1, level);
+            drawBranch(ctx, topX, topY, -1);
+            drawBranch(ctx, topX, topY, 1);
         }
 
         if (level >= 4) { // Bud or Bloom
@@ -127,7 +127,7 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
         ctx.fill();
     };
 
-    const drawBranch = (ctx: CanvasRenderingContext2D, x: number, y: number, dir: number, level: number) => {
+    const drawBranch = (ctx: CanvasRenderingContext2D, x: number, y: number, dir: number) => {
         ctx.beginPath();
         ctx.moveTo(x, y);
         ctx.lineTo(x + (20 * dir), y - 20);
@@ -175,7 +175,7 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
         }
     };
 
-    return <canvas ref={canvasRef} width={width} height={height} className="animate-in fade-in zoom-in duration-1000" />;
+    return <canvas ref={canvasRef} width={width} height={height} className="w-full h-full animate-in fade-in zoom-in duration-1000" />;
 };
 
 export default GardenCanvas;
