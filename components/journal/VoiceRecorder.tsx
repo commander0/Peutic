@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, Square, Play, Trash2, RefreshCw, Pause } from 'lucide-react';
+import { Mic, Square, Play, Trash2, RefreshCw, Pause, CheckCircle } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import { VoiceJournalEntry } from '../../types';
 
@@ -234,9 +234,14 @@ export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id:
             } else {
                 audioRef.current.pause();
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error("Playback operation failed", e);
             setPlaying(false);
+            if (e.name === 'NotAllowedError') {
+                console.warn("Playback blocked. Please interact with the page first.");
+            } else {
+                console.warn("Audio playback failed. This may be due to a server connection or CORS issue.");
+            }
         }
     };
 
@@ -308,4 +313,3 @@ export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id:
     );
 };
 
-import { CheckCircle } from 'lucide-react';

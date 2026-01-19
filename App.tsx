@@ -246,8 +246,6 @@ const MainApp: React.FC = () => {
       lastActivityRef.current = Date.now();
       setShowAuth(false);
 
-      setShowAuth(false);
-
       // Intelligent Redirect
       if (currentUser.role === UserRole.ADMIN) {
         navigate('/admin/dashboard');

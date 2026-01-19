@@ -100,7 +100,7 @@ const EmergencyOverlay: React.FC<EmergencyOverlayProps> = ({ userId, onClose }) 
                             </div>
 
                             <div className="space-y-2">
-                                <p className="text-blue-200/60 text-xs font-bold uppercase tracking-[0.2em]">Panic Anchor Active</p>
+                                <p className="text-blue-200/60 text-xs font-bold uppercase tracking-[0.2em]">Panic Relief Active</p>
                                 <p className="text-5xl font-mono text-white font-light">{timeLeft}s</p>
                                 <p className="text-white/40 text-sm mt-4">Follow the rhythm. You are safe.</p>
                             </div>

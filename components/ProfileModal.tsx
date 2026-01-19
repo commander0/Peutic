@@ -12,6 +12,7 @@ interface ProfileModalProps {
 }
 
 const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) => {
+    if (!user) return null;
     const [name, setName] = useState(user.name);
     const [avatarLocked, setAvatarLocked] = useState(user.avatarLocked || false);
     const [previewAvatar, setPreviewAvatar] = useState(user.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${user.id}&backgroundColor=FCD34D`);
@@ -74,7 +75,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
                             </div>
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <div className={`w-8 h-4 rounded-full transition-colors relative ${avatarLocked ? 'bg-green-500' : 'bg-gray-300'}`} onClick={() => setAvatarLocked(!avatarLocked)}>
-                                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform shadow-sm ${avatarLocked ? 'left-4.5 translate-x-3.5' : 'left-0.5'}`}></div>
+                                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform shadow-sm ${avatarLocked ? 'left-5' : 'left-0.5'}`}></div>
                                 </div>
                                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{avatarLocked ? 'Saved as Default' : 'Auto-Rotate on Login'}</span>
                             </label>

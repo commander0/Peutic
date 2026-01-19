@@ -31,10 +31,10 @@ import { GardenService } from '../services/gardenService';
 
 // LAZY LOAD HEAVY COMPONENTS
 const GardenCanvas = lazy(() => import('./garden/GardenCanvas'));
-const MindfulMatchGame = lazy(() => import('./MindfulMatchGame.tsx').catch(() => ({ default: () => <div className="p-10 text-center">Game Loading...</div> })));
-const CloudHopGame = lazy(() => import('./CloudHopGame.tsx').catch(() => ({ default: () => <div className="p-10 text-center">Game Loading...</div> })));
-const PaymentModal = lazy(() => import('./PaymentModal.tsx').catch(() => ({ default: () => <div className="p-10 text-center">Secure Payment Node Loading...</div> })));
-const ProfileModal = lazy(() => import('./ProfileModal.tsx').catch(() => ({ default: () => <div className="p-10 text-center">Profile Settings Loading...</div> })));
+const MindfulMatchGame = lazy(() => import('./MindfulMatchGame').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Game Engine...</div> })));
+const CloudHopGame = lazy(() => import('./CloudHopGame').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Cloud Engine...</div> })));
+const PaymentModal = lazy(() => import('./PaymentModal').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Payment Secure Node...</div> })));
+const ProfileModal = lazy(() => import('./ProfileModal').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Profile Experience...</div> })));
 
 import EmergencyOverlay from './safety/EmergencyOverlay';
 import Confetti from './common/Confetti';
@@ -432,6 +432,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [voiceEntries, setVoiceEntries] = useState<VoiceJournalEntry[]>([]);
     const [moodRiskAlert, setMoodRiskAlert] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
+    const [currentQuote, setCurrentQuote] = useState(() => getDynamicQuote());
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentQuote(getDynamicQuote());
+        }, 15000); // Stable 15s rotation
+        return () => clearInterval(interval);
+    }, []);
 
     const resetIdleTimer = () => {
         setIsIdle(false);
@@ -742,7 +750,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         </button>
                     </div>
                 </aside>
-                <main className={`flex-1 overflow-y-auto relative scroll-smooth transition-all duration-1000 ${isIdle ? 'blur-2xl grayscale brightness-50 pointer-events-none' : ''}`}>
+                <main className={`flex-1 overflow-y-auto relative scroll-smooth transition-all duration-1000 will-change-transform ${isIdle ? 'blur-2xl grayscale brightness-50 pointer-events-none' : ''}`}>
                     {isIdle && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-auto">
                             <div className="bg-white/20 backdrop-blur-md p-8 rounded-3xl border border-white/30 text-center shadow-2xl">
@@ -753,44 +761,63 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         </div>
                     )}
                     <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-10 pb-24">
-                        <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-                            <div className="flex-1">
-                                <p className="text-gray-500 dark:text-gray-400 font-bold text-[10px] md:text-xs uppercase tracking-widest mb-1">{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-                                <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mb-2">
-                                    <div className="flex items-center gap-3">
-                                        <h1 className="text-3xl md:text-4xl font-black tracking-tight dark:text-yellow-400">
-                                            {activeTab === 'inner_sanctuary'
-                                                ? (isGhostMode ? `Hello, Member` : `Hello, ${user.name.split(' ')[0]}`)
-                                                : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
-                                        </h1>
-                                        {activeTab === 'inner_sanctuary' && (
-                                            <div className="flex flex-col md:flex-row gap-2">
-                                                <div className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Verified Member</div>
-                                                <div className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1 animate-pulse">
-                                                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                                                    {simulatedBaseCount + realActiveCount} healing now
+                        <header className="mb-10 flex flex-col gap-6 p-6 md:p-8 bg-white/40 dark:bg-black/40 rounded-[2.5rem] border border-yellow-100/50 dark:border-gray-800/50 backdrop-blur-xl shadow-sm transition-all duration-500 hover:shadow-md">
+                            <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
+                                {/* LEFT: Branding & Dynamic Greeting */}
+                                <div className="flex flex-col md:flex-row items-center gap-4 text-center md:text-left">
+                                    <div className="flex-1">
+                                        <p className="text-gray-500 dark:text-gray-400 font-bold text-[10px] md:text-xs uppercase tracking-widest mb-1">{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                                        <div className="flex items-center gap-3">
+                                            <h1 className="text-3xl md:text-4xl font-black tracking-tight dark:text-yellow-400">
+                                                {activeTab === 'inner_sanctuary'
+                                                    ? (isGhostMode ? `Hello, Member` : `Hello, ${user.name.split(' ')[0]}`)
+                                                    : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
+                                            </h1>
+                                            {activeTab === 'inner_sanctuary' && (
+                                                <div className="hidden sm:flex items-center gap-2">
+                                                    <div className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm"><CheckCircle className="w-3.5 h-3.5" /> Verified</div>
+                                                    <div className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 animate-pulse shadow-sm">
+                                                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                                                        {simulatedBaseCount + realActiveCount} healing
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
+                                            )}
+                                        </div>
                                     </div>
+                                </div>
+
+                                {/* RIGHT: Consolidated Professional Controls */}
+                                <div className="flex items-center gap-3 md:gap-4 flex-wrap justify-center">
                                     {activeTab === 'inner_sanctuary' && (
-                                        <button onClick={() => setShowGrounding(true)} className="hidden md:flex items-center gap-1.5 bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full font-black uppercase tracking-widest text-[9px] transition-all hover:bg-red-500/20 shadow-sm" title="Panic Relief">
-                                            <Anchor className="w-3 h-3" /> Panic Anchor
+                                        <button onClick={() => setShowGrounding(true)} className="flex items-center gap-2 bg-red-500 text-white dark:bg-red-500/20 dark:text-red-400 border border-red-500/30 px-4 py-2 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all hover:scale-105 active:scale-95 shadow-lg shadow-red-500/20" title="Panic Relief">
+                                            <Heart className="w-3.5 h-3.5 fill-current" /> Panic Relief
                                         </button>
                                     )}
+                                    <div className="h-8 w-[1px] bg-gray-200 dark:bg-gray-800 mx-1 hidden md:block" />
+                                    <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
+                                    <button onClick={toggleDarkMode} className="p-3 rounded-2xl bg-gray-100 dark:bg-gray-800/50 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-all hover:rotate-12 group">
+                                        {darkMode ? <Sun className="w-5 h-5 text-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]" /> : <Moon className="w-5 h-5 text-gray-600" />}
+                                    </button>
+                                    <button onClick={() => setShowPayment(true)} className={`px-5 py-2.5 rounded-2xl font-black shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-2 text-sm ${balance < 10 ? 'bg-red-500 text-white animate-pulse' : 'bg-black dark:bg-white text-white dark:text-black hover:shadow-yellow-400/20'}`}>
+                                        <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>{balance} {t('dash_minutes')}<Plus className="w-3.5 h-3.5 ml-1 opacity-50" />
+                                    </button>
+                                    <button onClick={() => setShowProfile(true)} className={`w-12 h-12 rounded-2xl overflow-hidden border-2 border-yellow-400 shadow-xl hover:rotate-3 hover:scale-110 transition-all ${isGhostMode ? 'grayscale contrast-125' : ''}`}>
+                                        <AvatarImage src={isGhostMode ? '' : (dashboardUser.avatar || '')} alt={isGhostMode ? 'Member' : dashboardUser.name} className="w-full h-full object-cover" isUser={true} />
+                                    </button>
                                 </div>
-                                {activeTab === 'inner_sanctuary' && (<p className="text-gray-600 dark:text-gray-400 mt-2 max-w-lg text-sm font-medium leading-relaxed border-l-4 border-yellow-400 pl-3 italic">"{getDynamicQuote()}"</p>)}
                             </div>
-                            <div className="hidden md:flex items-center gap-4">
-                                <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
-                                <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">{darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-600" />}</button>
-                                <button onClick={() => setShowPayment(true)} className={`px-5 py-2.5 rounded-2xl font-black shadow-lg transition-transform hover:scale-105 flex items-center gap-2 text-sm ${balance < 10 ? 'bg-red-500 text-white animate-pulse' : 'bg-black dark:bg-white text-white dark:text-black'}`}>
-                                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>{balance} {t('dash_minutes')}<Plus className="w-3 h-3 ml-1 opacity-50" />
-                                </button>
-                                <button onClick={() => setShowProfile(true)} className={`w-12 h-12 rounded-xl overflow-hidden border-2 border-yellow-400 shadow-xl hover:rotate-3 transition-transform ${isGhostMode ? 'grayscale contrast-125' : ''}`}>
-                                    <AvatarImage src={isGhostMode ? '' : (dashboardUser.avatar || '')} alt={isGhostMode ? 'Member' : dashboardUser.name} className="w-full h-full object-cover" isUser={true} />
-                                </button>
-                            </div>
+
+                            {/* QUOTE SECTION: Stabilized & Premium Styled */}
+                            {activeTab === 'inner_sanctuary' && (
+                                <div className="relative overflow-hidden py-3 px-4 bg-yellow-50/50 dark:bg-gray-800/20 rounded-2xl border-l-4 border-yellow-400 group">
+                                    <p className="text-gray-600 dark:text-gray-400 max-w-2xl text-sm font-medium leading-relaxed italic animate-in fade-in slide-in-from-left-2 duration-1000">
+                                        "{currentQuote}"
+                                    </p>
+                                    <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Sparkles className="w-4 h-4 text-yellow-400/50" />
+                                    </div>
+                                </div>
+                            )}
                         </header>
                         {activeTab === 'inner_sanctuary' && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
