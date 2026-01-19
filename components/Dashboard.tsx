@@ -28,8 +28,6 @@ import { GardenState } from '../types';
 import { GardenService } from '../services/gardenService';
 import GardenCanvas from './garden/GardenCanvas';
 import EmergencyOverlay from './safety/EmergencyOverlay';
-import TimeCapsuleComponent from './retention/TimeCapsule';
-import Soundscapes from './focus/Soundscapes';
 
 interface DashboardProps {
     user: User;
@@ -1117,7 +1115,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             </div>
                                         )}
                                     </div>
-                                    {activeTab === 'hub' && (<button onClick={() => setShowGrounding(true)} className="hidden md:flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 px-4 py-1.5 rounded-full font-bold text-xs transition-all hover:scale-105 animate-pulse"><LifeBuoy className="w-3.5 h-3.5" /> Panic Relief</button>)}
+                                    {activeTab === 'hub' && (<button onClick={() => setShowGrounding(true)} className="hidden md:flex items-center gap-2 bg-gradient-to-r from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 text-red-600 dark:text-red-400 dark:bg-gray-800 dark:border-red-500/30 border border-red-200 px-5 py-2 rounded-full font-bold text-xs transition-all hover:scale-105 shadow-sm animate-pulse"><LifeBuoy className="w-4 h-4" /> Panic Anchor</button>)}
                                 </div>
                                 {activeTab === 'hub' && dailyInsight && (<p className="text-gray-600 dark:text-gray-400 mt-2 max-w-lg text-sm font-medium leading-relaxed border-l-4 border-yellow-400 pl-3 italic">"{dailyInsight}"</p>)}
                             </div>
@@ -1174,14 +1172,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     ) : <StatSkeleton />}
                                     <MoodTracker onMoodSelect={handleMoodSelect} />
                                 </div>
-
-                                <CollapsibleSection title="Time Capsule" icon={Clock}>
-                                    <TimeCapsuleComponent userId={user.id} />
-                                </CollapsibleSection>
-
-                                <CollapsibleSection title="Soundscapes" icon={Volume2}>
-                                    <Soundscapes />
-                                </CollapsibleSection>
 
                                 <CollapsibleSection title="Mindful Arcade" icon={Gamepad2}>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
