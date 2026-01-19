@@ -170,55 +170,75 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userId, onSave }) 
     );
 };
 
+// Singleton AudioContext to avoid browser limits
+let sharedAudioCtx: AudioContext | null = null;
+const getSharedAudioCtx = () => {
+    if (!sharedAudioCtx) {
+        const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
+        if (AudioContextClass) sharedAudioCtx = new AudioContextClass();
+    }
+    return sharedAudioCtx;
+};
+
 // Also define a mini player for list view
 export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id: string) => void }> = ({ entry, onDelete }) => {
     const [playing, setPlaying] = useState(false);
     const [isBoosted, setIsBoosted] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);
-    const audioCtxRef = useRef<AudioContext | null>(null);
     const gainNodeRef = useRef<GainNode | null>(null);
     const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
 
-    const togglePlay = () => {
+    const togglePlay = async () => {
         if (!audioRef.current) return;
 
+        const ctx = getSharedAudioCtx();
+        if (!ctx) return;
+
         // Initialize Audio Context for Volume Boosting on first play
-        if (!audioCtxRef.current && audioRef.current) {
+        if (!sourceRef.current && audioRef.current) {
             try {
-                const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
-                const ctx = new AudioContextClass();
                 const source = ctx.createMediaElementSource(audioRef.current);
                 const gain = ctx.createGain();
 
                 source.connect(gain);
                 gain.connect(ctx.destination);
 
-                audioCtxRef.current = ctx;
                 gainNodeRef.current = gain;
                 sourceRef.current = source;
             } catch (e) {
-                console.error("Audio Context initialization failed", e);
+                console.warn("Audio Context connection failed (likely already connected)", e);
             }
         }
 
-        if (audioCtxRef.current?.state === 'suspended') {
-            audioCtxRef.current.resume();
+        if (ctx.state === 'suspended') {
+            await ctx.resume();
         }
 
-        if (playing) {
-            audioRef.current.pause();
-        } else {
-            audioRef.current.play();
+        try {
+            if (playing) {
+                audioRef.current.pause();
+                setPlaying(false);
+            } else {
+                // Ensure we start from the beginning if the audio has ended
+                if (audioRef.current.ended || audioRef.current.currentTime >= audioRef.current.duration) {
+                    audioRef.current.currentTime = 0;
+                }
+                await audioRef.current.play();
+                setPlaying(true);
+            }
+        } catch (e) {
+            console.error("Audio playback error:", e);
+            setPlaying(false);
         }
-        setPlaying(!playing);
     };
 
     const toggleBoost = () => {
         const newBoost = !isBoosted;
         setIsBoosted(newBoost);
-        if (gainNodeRef.current) {
+        const ctx = getSharedAudioCtx();
+        if (gainNodeRef.current && ctx) {
             // Apply 2x gain boost
-            gainNodeRef.current.gain.setTargetAtTime(newBoost ? 2.5 : 1.0, audioCtxRef.current?.currentTime || 0, 0.1);
+            gainNodeRef.current.gain.setTargetAtTime(newBoost ? 2.5 : 1.0, ctx.currentTime, 0.1);
         }
     };
 

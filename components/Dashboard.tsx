@@ -1124,6 +1124,37 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                 </div>
             )}
 
+            {/* MOBILE TOP NAVIGATION (Restored & Cleaned) */}
+            <div className="md:hidden bg-white/95 dark:bg-black/95 border-b border-yellow-100/50 dark:border-gray-800/50 px-4 py-3 flex items-center justify-between sticky top-0 z-[60] backdrop-blur-md">
+                <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 bg-yellow-400 rounded-lg flex items-center justify-center">
+                        <Heart className="w-4 h-4 text-black fill-black" />
+                    </div>
+                    <span className="font-black text-sm tracking-tight dark:text-white">Peutic</span>
+                </div>
+                <div className="flex items-center gap-4">
+                    {[
+                        { id: 'hub', icon: LayoutDashboard },
+                        { id: 'history', icon: Clock },
+                        { id: 'emergency', icon: Anchor, color: 'text-red-500' },
+                        { id: 'settings', icon: Settings },
+                        { id: 'profile', icon: UserIcon }
+                    ].map((item) => (
+                        <button
+                            key={item.id}
+                            onClick={() => {
+                                if (item.id === 'emergency') setShowGrounding(true);
+                                else if (item.id === 'profile') setShowProfile(true);
+                                else setActiveTab(item.id as any);
+                            }}
+                            className={`transition-all ${activeTab === item.id ? 'text-yellow-500 scale-110' : item.color || 'text-gray-400'}`}
+                        >
+                            <item.icon className="w-5 h-5" />
+                        </button>
+                    ))}
+                </div>
+            </div>
+
             <div className="flex h-screen overflow-hidden pt-0">
                 <aside className="hidden md:flex w-20 lg:w-64 flex-col border-r border-yellow-200/30 dark:border-gray-800/50 bg-[#FFFBEB]/40 dark:bg-black/40 backdrop-blur-2xl transition-all duration-500 hover:w-24 lg:hover:w-72">
                     <div className="p-6 lg:p-8 flex items-center justify-center lg:justify-start gap-3">
@@ -1201,15 +1232,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 {/* GARDEN SECTION */}
                                 {garden && (
                                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                                        <div className="lg:col-span-6 bg-gradient-to-r from-[#f0fdf4] to-[#dcfce7] dark:from-green-900/10 dark:to-green-900/5 rounded-3xl p-4 border border-green-100 dark:border-green-900/30 flex flex-col md:flex-row items-center gap-6 shadow-sm relative overflow-hidden">
+                                        <div className="lg:col-span-6 bg-gradient-to-r from-[#f0fdf4] to-[#dcfce7] dark:from-green-900/10 dark:to-green-900/5 rounded-3xl p-5 border border-green-100 dark:border-green-900/30 flex flex-col md:flex-row items-center gap-6 shadow-sm relative overflow-hidden min-h-[140px]">
                                             <div className="absolute top-0 right-0 p-3 opacity-10"><Trees className="w-24 h-24 text-green-600" /></div>
                                             <div className="relative z-10 bg-white/40 dark:bg-black/20 rounded-full p-2 border border-white/50 backdrop-blur-sm shadow-sm flex-shrink-0">
-                                                <GardenCanvas garden={garden} width={110} height={110} />
+                                                <GardenCanvas garden={garden} width={100} height={100} />
                                             </div>
                                             <div className="flex-1 text-center md:text-left relative z-10">
                                                 <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
                                                     <div className="bg-green-100 dark:bg-green-900/40 p-1 rounded-lg"><Feather className="w-3.5 h-3.5 text-green-600 dark:text-green-400" /></div>
-                                                    <h2 className="text-lg font-black text-green-900 dark:text-green-300 tracking-tight">Inner Garden</h2>
+                                                    <h2 className="text-lg font-black text-green-900 dark:text-green-300 tracking-tight text-sm md:text-lg">Inner Garden</h2>
                                                 </div>
                                                 <p className="text-green-800/70 dark:text-green-400/70 text-[9px] font-bold mb-3 max-w-sm mx-auto md:mx-0 leading-relaxed uppercase tracking-wider">
                                                     Consistency nurtures growth.
@@ -1284,7 +1315,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                                     {dashboardUser ? (
-                                        <div className="bg-white dark:bg-gray-900 p-5 rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm col-span-1 md:col-span-2 relative overflow-hidden group">
+                                        <div className="bg-white dark:bg-gray-900 p-5 rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm col-span-1 md:col-span-2 relative overflow-hidden group min-h-[140px]">
                                             {weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-4 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-20 h-20 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div><div className="absolute w-16 h-16 bg-blue-500/30 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-blue-400/10 rounded-full animate-ping"></div><div className="absolute w-10 h-10 bg-blue-400/50 rounded-full blur-lg animate-pulse"></div><Flame className="w-12 h-12 text-blue-500 fill-blue-500 drop-shadow-[0_0_20px_rgba(59,130,246,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy className="w-20 h-20 text-yellow-500" /></div>)}
                                             <div className="relative z-10"><h3 className="font-bold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3><div className="flex items-end gap-2 mb-3"><span className="text-3xl md:text-4xl font-black dark:text-white">{weeklyGoal}</span><span className="text-gray-400 text-xs md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span></div><div className="w-full h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-3"><div className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= weeklyTarget ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-pulse' : 'bg-yellow-400'}`} style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}></div></div><p className="text-xs md:text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}</p></div>
                                         </div>
@@ -1522,30 +1553,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
             <Confetti active={showConfetti} />
 
-            {/* MOBILE BOTTOM NAVIGATION */}
-            <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/80 dark:bg-black/80 backdrop-blur-xl border border-white/20 dark:border-gray-800 px-6 py-3 rounded-full z-[60] flex items-center gap-8 shadow-2xl ring-1 ring-black/5">
-                {[
-                    { id: 'hub', icon: LayoutDashboard, label: 'Hub' },
-                    { id: 'history', icon: Clock, label: 'Journey' },
-                    { id: 'emergency', icon: Anchor, isAction: true },
-                    { id: 'settings', icon: Settings, label: 'Config' },
-                    { id: 'profile', icon: UserIcon, isAction: true }
-                ].map((item) => (
-                    <button
-                        key={item.id}
-                        onClick={() => {
-                            if (item.id === 'emergency') setShowGrounding(true);
-                            else if (item.id === 'profile') setShowProfile(true);
-                            else setActiveTab(item.id as any);
-                        }}
-                        className={`flex flex-col items-center justify-center transition-all ${activeTab === item.id ? 'text-yellow-500 scale-110' : 'text-gray-400 hover:text-gray-600'}`}
-                    >
-                        <div className={`p-1 rounded-lg ${item.id === 'emergency' ? 'bg-red-500 text-white shadow-lg shadow-red-500/20 px-2' : ''}`}>
-                            <item.icon className="w-5 h-5" />
-                        </div>
-                    </button>
-                ))}
-            </div>
 
             {/* VOICE JOURNAL MODAL */}
             {showVoiceJournal && (
