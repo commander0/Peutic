@@ -5,7 +5,7 @@ import { UserService } from '../services/userService';
 
 import { supabase } from '../services/supabaseClient';
 import { UserRole } from '../types';
-import { Lock, Shield, ArrowRight, KeyRound, AlertCircle, Check, Crown } from 'lucide-react';
+import { Lock, Shield, ArrowRight, KeyRound, AlertCircle, Check, Crown, Megaphone } from 'lucide-react';
 
 
 interface AdminLoginProps {
@@ -31,8 +31,10 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
 
     const [showReclaim, setShowReclaim] = useState(false);
     const [masterKey, setMasterKey] = useState('');
+    const [settings, setSettings] = useState(AdminService.getSettings());
 
     useEffect(() => {
+        AdminService.syncGlobalSettings().then(setSettings);
         // Check if admin exists to determine if we show "Initialize System"
         AdminService.hasAdmin().then(exists => {
             setHasAdmin(exists);
@@ -219,7 +221,19 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
     };
 
     return (
-        <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+
+            {/* PUBLIC BROADCAST BANNER */}
+            {settings.broadcastMessage && (
+                <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-black py-2 px-4 shadow-lg z-[110] overflow-hidden group">
+                    <div className="absolute inset-0 bg-white/30 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-[-20deg]"></div>
+                    <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
+                        <Megaphone className="w-3.5 h-3.5 animate-bounce" />
+                        <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-center">{settings.broadcastMessage}</span>
+                    </div>
+                </div>
+            )}
+
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
                     <div className="w-16 h-16 bg-yellow-500 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-[0_0_30px_rgba(234,179,8,0.5)]">

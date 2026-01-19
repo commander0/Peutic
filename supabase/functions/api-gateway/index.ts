@@ -37,7 +37,7 @@ serve(async (req) => {
         // --- ADMIN CREATION ---
         if (action === 'admin-create') {
             const { email, password, masterKey } = payload;
-            
+
             // Security: Require Master Key for claim
             const VALID_KEY = Deno.env.get('MASTER_KEY') || 'PEUTIC_ADMIN_ACCESS_2026';
             if (masterKey !== VALID_KEY) {
@@ -163,10 +163,18 @@ serve(async (req) => {
         }
 
 
-        // 6. Broadcast Message
+        // 6. Broadcast Message (Public/Landing)
         if (action === 'broadcast') {
             const { message } = payload;
             const { error } = await supabaseClient.from('global_settings').update({ broadcast_message: message }).eq('id', 1);
+            if (error) throw error;
+            return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        // 6b. Broadcast Message (Members/Dashboard)
+        if (action === 'dashboard-broadcast') {
+            const { message } = payload;
+            const { error } = await supabaseClient.from('global_settings').update({ dashboard_broadcast_message: message }).eq('id', 1);
             if (error) throw error;
             return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
@@ -243,6 +251,32 @@ serve(async (req) => {
             });
 
             return new Response(JSON.stringify({ success: true, newBalance }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        // --- FINANCIAL INTELLIGENCE ---
+        if (action === 'admin-stripe-stats') {
+            if (!stripe) throw new Error("Stripe not configured");
+
+            // 1. Get Balance
+            const balance = await stripe.balance.retrieve();
+
+            // 2. Get Recent Charges
+            const charges = await stripe.charges.list({ limit: 10 });
+
+            return new Response(JSON.stringify({
+                balance: {
+                    available: balance.available.reduce((acc: number, b: any) => acc + b.amount, 0) / 100,
+                    pending: balance.pending.reduce((acc: number, b: any) => acc + b.amount, 0) / 100,
+                    currency: balance.available[0]?.currency || 'usd'
+                },
+                recentSales: charges.data.map((c: any) => ({
+                    id: c.id,
+                    amount: c.amount / 100,
+                    customer: c.billing_details.email || 'Anonymous',
+                    date: new Date(c.created * 1000).toISOString(),
+                    status: c.status
+                }))
+            }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
         // --- AI GENERATION ---

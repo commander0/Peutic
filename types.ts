@@ -66,6 +66,7 @@ export interface GlobalSettings {
   allowSignups: boolean;
   siteName: string;
   broadcastMessage?: string;
+  dashboardBroadcastMessage?: string;
   maxConcurrentSessions: number;
   multilingualMode: boolean;
 }

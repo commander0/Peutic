@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
@@ -141,6 +141,12 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     const [confirmState, setConfirmState] = useState<{ open: boolean; title: string; message: string; type: 'danger' | 'info'; action: () => void }>({ open: false, title: '', message: '', type: 'info', action: () => { } });
     const [inputState, setInputState] = useState<{ open: boolean; title: string; placeholder: string; userId: string }>({ open: false, title: '', placeholder: '', userId: '' });
 
+    // Financial Intelligence States
+    const [stripeStats, setStripeStats] = useState<{ balance: { available: number; pending: number; currency: string }; recentSales: any[] } | null>(null);
+    const lastStripeFetch = useRef<number>(0);
+    const [loadingFinancials, setLoadingFinancials] = useState(false);
+    const [dashboardBroadcastMsg, setDashboardBroadcastMsg] = useState('');
+
 
     // Computed
     const MAX_CONCURRENT_CAPACITY = settings.maxConcurrentSessions || 15;
@@ -174,10 +180,23 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
             const s = await AdminService.syncGlobalSettings();
             setSettings(s);
             setBroadcastMsg(s.broadcastMessage || '');
+            setDashboardBroadcastMsg(s.dashboardBroadcastMessage || '');
             setLogs(await AdminService.getSystemLogs());
             setUsers(await AdminService.getAllUsers());
             setCompanions(await AdminService.getCompanions());
             setTransactions(await AdminService.getAllTransactions());
+
+            if (activeTab === 'financials') {
+                const now = Date.now();
+                if (now - lastStripeFetch.current > 30000 || !stripeStats) {
+                    setLoadingFinancials(true);
+                    lastStripeFetch.current = now;
+                    AdminService.getStripeStats()
+                        .then(setStripeStats)
+                        .catch(console.warn)
+                        .finally(() => setLoadingFinancials(false));
+                }
+            }
 
 
             try {
@@ -264,14 +283,27 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     const handleBroadcast = async () => {
         await AdminService.broadcastMessage(broadcastMsg);
         setSettings({ ...settings, broadcastMessage: broadcastMsg });
-        showToast("System broadcast deployed", "success");
+        showToast("Public broadcast deployed", "success");
+    };
+
+    const handleDashboardBroadcast = async () => {
+        await AdminService.broadcastDashboardMessage(dashboardBroadcastMsg);
+        setSettings({ ...settings, dashboardBroadcastMessage: dashboardBroadcastMsg });
+        showToast("Member announcement deployed", "success");
     };
 
     const clearBroadcast = async () => {
         await AdminService.broadcastMessage('');
         setSettings({ ...settings, broadcastMessage: '' });
         setBroadcastMsg('');
-        showToast("Broadcast terminated", "info");
+        showToast("Public broadcast terminated", "info");
+    };
+
+    const clearDashboardBroadcast = async () => {
+        await AdminService.broadcastDashboardMessage('');
+        setSettings({ ...settings, dashboardBroadcastMessage: '' });
+        setDashboardBroadcastMsg('');
+        showToast("Member announcement terminated", "info");
     };
 
     const handleSettingChange = async (key: keyof GlobalSettings, value: any) => {
@@ -417,19 +449,38 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
                                     {/* Global Broadcaster */}
                                     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 relative overflow-hidden">
-                                        <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none"><Megaphone className="w-20 h-20 text-white" /></div>
-                                        <h3 className="font-bold text-white mb-4 flex items-center gap-2 text-sm"><Megaphone className="w-4 h-4 text-blue-500" /> Global Broadcast System</h3>
-                                        <div className="flex gap-3">
-                                            <input
-                                                value={broadcastMsg}
-                                                onChange={(e) => setBroadcastMsg(e.target.value)}
-                                                placeholder="Enter emergency or system message for all users..."
-                                                className="flex-1 bg-black border border-gray-700 rounded-xl px-4 py-2 text-xs text-white focus:border-blue-500 outline-none"
-                                            />
-                                            <button onClick={handleBroadcast} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-bold transition-colors text-xs">Send</button>
-                                            {settings.broadcastMessage && <button onClick={clearBroadcast} className="bg-gray-800 hover:bg-gray-700 text-gray-400 px-5 py-2 rounded-xl font-bold transition-colors text-xs">Clear</button>}
+                                        <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><Megaphone className="w-20 h-20 text-white" /></div>
+                                        <h3 className="font-bold text-white mb-4 flex items-center gap-2 text-sm"><Megaphone className="w-4 h-4 text-blue-500" /> Multi-Channel Broadcast System</h3>
+
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="text-[9px] text-gray-500 font-black uppercase mb-2 block">Landing Page (Public)</label>
+                                                <div className="flex gap-3">
+                                                    <input
+                                                        value={broadcastMsg}
+                                                        onChange={(e) => setBroadcastMsg(e.target.value)}
+                                                        placeholder="Public message (Login/Landing)..."
+                                                        className="flex-1 bg-black border border-gray-700 rounded-xl px-4 py-2 text-xs text-white focus:border-yellow-500 outline-none"
+                                                    />
+                                                    <button onClick={handleBroadcast} className="bg-yellow-600 hover:bg-yellow-700 text-black px-5 py-2 rounded-xl font-bold transition-colors text-xs">Deploy</button>
+                                                    {settings.broadcastMessage && <button onClick={clearBroadcast} className="bg-gray-800 hover:bg-gray-700 text-gray-400 px-3 py-2 rounded-xl font-bold transition-colors text-xs">Clear</button>}
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="text-[9px] text-gray-500 font-black uppercase mb-2 block">Developer/Member Dashboard</label>
+                                                <div className="flex gap-3">
+                                                    <input
+                                                        value={dashboardBroadcastMsg}
+                                                        onChange={(e) => setDashboardBroadcastMsg(e.target.value)}
+                                                        placeholder="Sanctuary message (Logged-in Users)..."
+                                                        className="flex-1 bg-black border border-gray-700 rounded-xl px-4 py-2 text-xs text-white focus:border-blue-500 outline-none"
+                                                    />
+                                                    <button onClick={handleDashboardBroadcast} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-bold transition-colors text-xs">Deploy</button>
+                                                    {settings.dashboardBroadcastMessage && <button onClick={clearDashboardBroadcast} className="bg-gray-800 hover:bg-gray-700 text-gray-400 px-3 py-2 rounded-xl font-bold transition-colors text-xs">Clear</button>}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <p className="text-[10px] text-gray-500 mt-2 ml-1">Message appears on user dashboards immediately.</p>
                                     </div>
                                 </div>
 
@@ -547,7 +598,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                     <tbody className="divide-y divide-gray-800">
                                         {loading ? (
                                             <tr><td colSpan={5} className="p-0"><TableSkeleton rows={8} cols={5} /></td></tr>
-                                        ) : filteredUsers.map((user, idx) => (
+                                        ) : filteredUsers.map((user) => (
                                             <tr key={user.id} className="hover:bg-gray-800/50">
                                                 <td className="p-4 font-bold text-white text-xs">{user.name} <span className="text-gray-500 font-normal ml-1">({user.email})</span></td>
                                                 <td className="p-4 text-[10px] text-gray-400">{user.role}</td>
@@ -570,12 +621,12 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                         </div>
                     )}
 
-                    {/* --- FINANCIAL INTELLIGENCE (Replaces Analytics) --- */}
+                    {/* --- FINANCIAL INTELLIGENCE --- */}
                     {activeTab === 'financials' && (
                         <div className="space-y-6 animate-in fade-in duration-500">
                             <h2 className="text-2xl font-black">Financial Intelligence</h2>
                             <div className="grid md:grid-cols-3 gap-6">
-                                <div className="md:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                                <div className="md:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-5 text-white">
                                     <h3 className="font-bold text-white mb-5 text-sm">Revenue Trend (Last 7 Days)</h3>
                                     <div className="h-[250px]">
                                         <ResponsiveContainer width="100%" height="100%">
@@ -590,12 +641,56 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                     </div>
                                 </div>
 
-                                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 flex flex-col justify-center items-center text-center">
-                                    <div className="p-5 bg-green-500/10 rounded-full mb-5 border border-green-500/30">
-                                        <DollarSign className="w-10 h-10 text-green-500" />
+                                <div className="space-y-6">
+                                    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 flex flex-col justify-center items-center text-center">
+                                        <div className="p-3 bg-green-500/10 rounded-full mb-3 border border-green-500/30">
+                                            <DollarSign className="w-6 h-6 text-green-500" />
+                                        </div>
+                                        <h3 className="text-xl font-black text-white mb-1">${totalRevenue.toFixed(2)}</h3>
+                                        <p className="text-gray-500 text-[9px] uppercase tracking-widest">Internal System Total</p>
                                     </div>
-                                    <h3 className="text-2xl font-black text-white mb-1">${totalRevenue.toFixed(2)}</h3>
-                                    <p className="text-gray-500 text-[10px] uppercase tracking-widest">Total Gross Revenue</p>
+
+                                    {/* Stripe Real-time Data */}
+                                    <div className="bg-indigo-950/20 border border-indigo-500/30 rounded-2xl p-5">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="font-bold text-indigo-400 text-xs uppercase tracking-widest">Stripe Live</h3>
+                                            <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(99,102,241,1)]"></div>
+                                        </div>
+                                        {loadingFinancials ? (
+                                            <div className="py-4 space-y-3">
+                                                <div className="h-8 bg-indigo-500/10 rounded animate-pulse" />
+                                                <div className="h-8 bg-indigo-500/10 rounded animate-pulse" />
+                                            </div>
+                                        ) : stripeStats ? (
+                                            <div className="space-y-4">
+                                                <div className="flex justify-between items-end border-b border-indigo-500/20 pb-2">
+                                                    <div>
+                                                        <p className="text-[9px] text-indigo-300/60 uppercase font-black">Available</p>
+                                                        <p className="text-xl font-black text-white">${stripeStats.balance.available.toFixed(2)}</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-[9px] text-indigo-300/60 uppercase font-black">Pending</p>
+                                                        <p className="text-sm font-bold text-indigo-300">${stripeStats.balance.pending.toFixed(2)}</p>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[9px] text-indigo-300/60 uppercase font-black mb-2">Recent Stripe Charges</p>
+                                                    <div className="space-y-2">
+                                                        {stripeStats.recentSales.slice(0, 3).map((sale: any) => (
+                                                            <div key={sale.id} className="flex justify-between items-center text-[10px] bg-black/40 p-2 rounded-lg border border-indigo-500/10">
+                                                                <span className="text-gray-400 truncate max-w-[100px]">{sale.customer}</span>
+                                                                <span className="font-bold text-green-400">+${sale.amount}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-4 text-indigo-300/40 text-[9px] uppercase font-black italic">
+                                                Stripe API Connectivity Required
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>

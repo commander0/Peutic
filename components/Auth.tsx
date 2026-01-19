@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { UserRole } from '../types';
-import { Facebook, AlertCircle, Send, Heart, Check, Loader2, Server } from 'lucide-react';
+import { Facebook, AlertCircle, Send, Heart, Check, Loader2, Server, Megaphone } from 'lucide-react';
+import { AdminService } from '../services/adminService';
 import { supabase } from '../services/supabaseClient';
 import { NameValidator } from '../services/nameValidator';
 
@@ -17,8 +18,12 @@ interface AuthProps {
 const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' }) => {
     const [isLogin, setIsLogin] = useState(initialMode === 'login');
     const isMounted = useRef(true);
+    const [settings, setSettings] = useState(AdminService.getSettings());
 
     useEffect(() => {
+        AdminService.syncGlobalSettings().then(s => {
+            if (isMounted.current) setSettings(s);
+        });
         setIsLogin(initialMode === 'login');
         return () => { isMounted.current = false; };
     }, [initialMode]);
@@ -185,6 +190,18 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
     if (showOnboarding) {
         return (
             <div className="fixed inset-0 bg-[#FFFBEB] dark:bg-black z-[100] flex flex-col md:flex-row animate-in fade-in slide-in-from-bottom-5 duration-500">
+
+                {/* PUBLIC BROADCAST BANNER */}
+                {settings.broadcastMessage && (
+                    <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-black py-2 px-4 shadow-lg z-[110] overflow-hidden group">
+                        <div className="absolute inset-0 bg-white/30 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-[-20deg]"></div>
+                        <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
+                            <Megaphone className="w-3.5 h-3.5 animate-bounce" />
+                            <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-center">{settings.broadcastMessage}</span>
+                        </div>
+                    </div>
+                )}
+
                 <div className="hidden md:block w-1/2 bg-[#FACC15] dark:bg-yellow-600 relative overflow-hidden">
                     <div className="absolute inset-0 flex items-center justify-center">
                         <Heart className="w-64 h-64 text-black opacity-10 animate-pulse" />
@@ -265,6 +282,18 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
 
     return (
         <div className="fixed inset-0 bg-[#FFFBEB] dark:bg-black z-[100] flex flex-col md:flex-row transition-colors">
+
+            {/* PUBLIC BROADCAST BANNER */}
+            {settings.broadcastMessage && (
+                <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-black py-2 px-4 shadow-lg z-[110] overflow-hidden group">
+                    <div className="absolute inset-0 bg-white/30 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-[-20deg]"></div>
+                    <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
+                        <Megaphone className="w-3.5 h-3.5 animate-bounce" />
+                        <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-center">{settings.broadcastMessage}</span>
+                    </div>
+                </div>
+            )}
+
             {toast && (
                 <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-black dark:bg-white text-white dark:text-black px-6 py-3 rounded-full shadow-2xl z-[110] flex items-center gap-2 animate-in slide-in-from-top-5 fade-in">
                     <Send className="w-4 h-4" /> {toast}

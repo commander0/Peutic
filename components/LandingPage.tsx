@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, CheckCircle, ArrowRight, Globe, ShieldCheck, Cookie, Instagram, Twitter, Linkedin, Play, Moon, Sun, ChevronDown } from 'lucide-react';
+import { Heart, CheckCircle, ArrowRight, Globe, ShieldCheck, Cookie, Instagram, Twitter, Linkedin, Play, Moon, Sun, ChevronDown, Megaphone } from 'lucide-react';
 import { LanguageCode, getTranslation } from '../services/i18n';
 import { Link } from 'react-router-dom';
 import { AdminService } from '../services/adminService';
@@ -58,11 +58,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     const [showLangMenu, setShowLangMenu] = useState(false);
     const langMenuRef = useRef<HTMLDivElement>(null);
 
-    const settings = AdminService.getSettings();
+    const [settings, setSettings] = useState(AdminService.getSettings());
 
     const t = (key: any) => getTranslation(lang, key);
 
     useEffect(() => {
+        AdminService.syncGlobalSettings().then(setSettings);
         const hasAccepted = localStorage.getItem('peutic_cookies_accepted');
         if (!hasAccepted) {
             const timer = setTimeout(() => {
@@ -136,6 +137,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
 
     return (
         <div className={`min-h-screen bg-[#FFFBEB] dark:bg-[#0A0A0A] font-sans text-[#0A0A0A] dark:text-[#F3F4F6] selection:bg-yellow-200 selection:text-black transition-colors duration-500 ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+
+            {/* PUBLIC BROADCAST BANNER */}
+            {settings.broadcastMessage && (
+                <div className="bg-yellow-500 text-black py-2 px-4 shadow-lg animate-in slide-in-from-top duration-500 relative z-50 overflow-hidden group">
+                    <div className="absolute inset-0 bg-white/30 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-[-20deg]"></div>
+                    <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
+                        <Megaphone className="w-3.5 h-3.5 animate-bounce" />
+                        <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-center">{settings.broadcastMessage}</span>
+                    </div>
+                </div>
+            )}
+
             <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
                 <div className="absolute -top-[10%] -right-[5%] w-[60%] h-[60%] bg-yellow-200/40 dark:bg-yellow-900/10 rounded-full blur-[120px] animate-pulse-slow"></div>
                 <div className="absolute top-[20%] -left-[10%] w-[40%] h-[40%] bg-orange-100/30 dark:bg-blue-900/10 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '2s' }}></div>

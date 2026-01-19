@@ -21,7 +21,8 @@ export class AdminService {
             siteName: 'Peutic',
             maxConcurrentSessions: 15,
             multilingualMode: true,
-            broadcastMessage: ''
+            broadcastMessage: '',
+            dashboardBroadcastMessage: ''
         };
     })();
 
@@ -39,6 +40,7 @@ export class AdminService {
                     allowSignups: settingsData.allow_signups,
                     siteName: settingsData.site_name,
                     broadcastMessage: settingsData.broadcast_message,
+                    dashboardBroadcastMessage: settingsData.dashboard_broadcast_message,
                     maxConcurrentSessions: settingsData.max_concurrent_sessions,
                     multilingualMode: settingsData.multilingual_mode,
                     maintenanceMode: settingsData.maintenance_mode
@@ -62,6 +64,7 @@ export class AdminService {
             allow_signups: settings.allowSignups,
             site_name: settings.siteName,
             broadcast_message: settings.broadcastMessage,
+            dashboard_broadcast_message: settings.dashboardBroadcastMessage,
             max_concurrent_sessions: settings.maxConcurrentSessions,
             multilingual_mode: settings.multilingualMode
         });
@@ -122,6 +125,19 @@ export class AdminService {
         const data = await BaseService.invokeGateway('broadcast', { message });
         this.settingsCache.broadcastMessage = message;
         logger.info("Global Broadcast Sent", message);
+        return data;
+    }
+
+    static async broadcastDashboardMessage(message: string) {
+        const data = await BaseService.invokeGateway('dashboard-broadcast', { message });
+        this.settingsCache.dashboardBroadcastMessage = message;
+        logger.info("Dashboard Broadcast Sent", message);
+        return data;
+    }
+
+    static async getStripeStats() {
+        const { data, error } = await BaseService.invokeGateway('admin-stripe-stats', {});
+        if (error) throw error;
         return data;
     }
 

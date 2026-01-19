@@ -9,7 +9,7 @@ import {
     CloudRain, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Moon,
 
     Twitter, Instagram, Linkedin, LifeBuoy, Volume2, Music, Smile, Trees,
-    Mail, StopCircle, Eye, Minimize2, Flame as Fire, EyeOff
+    Mail, StopCircle, Eye, Minimize2, Flame as Fire, EyeOff, Megaphone
 } from 'lucide-react';
 import { STABLE_AVATAR_POOL } from '../services/database';
 import { UserService } from '../services/userService';
@@ -798,6 +798,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [weeklyMessage, setWeeklyMessage] = useState("Start your journey.");
     const [dailyInsight, setDailyInsight] = useState<string>(() => INSPIRATIONAL_SAYINGS[Math.floor(Math.random() * INSPIRATIONAL_SAYINGS.length)]);
     const [dashboardUser, setDashboardUser] = useState(user);
+    const [settings, setSettings] = useState(AdminService.getSettings());
     const [showPayment, setShowPayment] = useState(false);
     const [paymentError, setPaymentError] = useState<string | undefined>(undefined);
     const [showBreathing, setShowBreathing] = useState(false);
@@ -881,6 +882,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
 
     const refreshData = async () => {
+        AdminService.syncGlobalSettings().then(setSettings);
         const u = UserService.getUser();
         if (u) {
             setDashboardUser(u);
@@ -980,6 +982,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         <div className={`min-h-screen transition-colors duration-500 font-sans ${darkMode ? 'dark bg-[#0A0A0A] text-white' : 'bg-[#FFFBEB] text-black'}`}>
             {mood && <WeatherEffect type={mood} />}
             <SoundscapePlayer />
+
+            {/* BROADCAST BANNER */}
+            {settings.dashboardBroadcastMessage && (
+                <div className="bg-blue-600 text-white py-2 px-4 shadow-lg animate-in slide-in-from-top duration-500 relative z-50 overflow-hidden group">
+                    <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-[-20deg]"></div>
+                    <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
+                        <Megaphone className="w-4 h-4 text-white/80 animate-bounce" />
+                        <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-center shadow-sm">{settings.dashboardBroadcastMessage}</span>
+                    </div>
+                </div>
+            )}
 
             <div className="md:hidden sticky top-0 bg-[#FFFBEB]/90 dark:bg-black/90 backdrop-blur-md border-b border-yellow-200 dark:border-gray-800 p-4 flex justify-between items-center z-40">
                 <div className="flex items-center gap-2">
