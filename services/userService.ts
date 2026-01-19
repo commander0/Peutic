@@ -130,11 +130,13 @@ export class UserService {
             const fallback = this.createFallbackUser(sessionUser);
 
             // Try explicit UPSERT to fix missing row
+            // IMPORTANT: Do NOT include 'role' here - let the DB trigger handle it for new users
+            // and preserve existing roles for existing users
             const { error } = await supabase.from('users').upsert({
                 id: fallback.id,
                 email: fallback.email,
                 name: fallback.name,
-                role: 'USER',
+                // role is intentionally omitted to prevent admin demotion
                 provider: fallback.provider,
                 last_login_date: new Date().toISOString()
             });
