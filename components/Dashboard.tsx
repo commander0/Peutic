@@ -395,7 +395,7 @@ const JournalSection: React.FC<{ user: User, onUpdate?: () => void }> = ({ user,
 
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession }) => {
     const { lang, setLang, t } = useLanguage();
-    const [activeTab, setActiveTab] = useState<'hub' | 'history' | 'settings'>('hub');
+    const [activeTab, setActiveTab] = useState<'inner_sanctuary' | 'history' | 'settings'>('inner_sanctuary');
 
     // Universal Theme Sync: Prioritize LocalStorage -> User Preference -> System
     const [darkMode, setDarkMode] = useState(() => {
@@ -677,9 +677,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             <SoundscapePlayer />
 
             {/* DAILY PULSE SPARKLE (Mobile Only) */}
+            {/* DAILY PULSE SPARKLE (Mobile Only - Bottom Left) */}
             <button
                 onClick={handleVoiceCheckIn}
-                className="md:hidden fixed top-24 left-6 z-[80] w-12 h-12 bg-yellow-400 dark:bg-yellow-500 rounded-full border border-yellow-200 dark:border-yellow-600 shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all group"
+                className="md:hidden fixed bottom-6 left-6 z-[80] w-12 h-12 bg-yellow-400 dark:bg-yellow-500 rounded-full border border-yellow-200 dark:border-yellow-600 shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all group animate-float"
                 title="Daily Pulse Check"
             >
                 <Sparkles className="w-5 h-5 text-black group-hover:rotate-12 transition-transform" />
@@ -708,7 +709,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
                     <div className="flex items-center gap-4">
                         {[
-                            { id: 'hub', icon: LayoutDashboard },
+                            { id: 'inner_sanctuary', icon: LayoutDashboard },
                             { id: 'history', icon: Clock },
                             { id: 'emergency', icon: Anchor, color: 'text-red-500' },
                             { id: 'settings', icon: Settings },
@@ -740,7 +741,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     </div>
                     <nav className="flex-1 px-3 lg:px-4 py-6 lg:py-8 space-y-2 lg:space-y-3">
                         {[
-                            { id: 'hub', icon: LayoutDashboard, label: t('dash_hub') },
+                            { id: 'inner_sanctuary', icon: LayoutDashboard, label: t('dash_hub') },
                             { id: 'history', icon: Clock, label: t('dash_journal') },
                             { id: 'settings', icon: Settings, label: t('dash_settings') }
                         ].map((item) => (
@@ -773,11 +774,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mb-2">
                                     <div className="flex items-center gap-3">
                                         <h1 className="text-3xl md:text-4xl font-black tracking-tight dark:text-white">
-                                            {activeTab === 'hub'
+                                            {activeTab === 'inner_sanctuary'
                                                 ? (isGhostMode ? `Hello, Member` : `Hello, ${user.name.split(' ')[0]}`)
                                                 : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
                                         </h1>
-                                        {activeTab === 'hub' && (
+                                        {activeTab === 'inner_sanctuary' && (
                                             <div className="flex flex-col md:flex-row gap-2">
                                                 <div className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Verified Member</div>
                                                 <div className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1 animate-pulse">
@@ -787,13 +788,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             </div>
                                         )}
                                     </div>
-                                    {activeTab === 'hub' && (
+                                    {activeTab === 'inner_sanctuary' && (
                                         <button onClick={() => setShowGrounding(true)} className="hidden md:flex items-center gap-1.5 bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full font-black uppercase tracking-widest text-[9px] transition-all hover:bg-red-500/20 shadow-sm" title="Panic Relief">
                                             <Anchor className="w-3 h-3" /> Panic Anchor
                                         </button>
                                     )}
                                 </div>
-                                {activeTab === 'hub' && dailyInsight && (<p className="text-gray-600 dark:text-gray-400 mt-2 max-w-lg text-sm font-medium leading-relaxed border-l-4 border-yellow-400 pl-3 italic">"{dailyInsight}"</p>)}
+                                {activeTab === 'inner_sanctuary' && dailyInsight && (<p className="text-gray-600 dark:text-gray-400 mt-2 max-w-lg text-sm font-medium leading-relaxed border-l-4 border-yellow-400 pl-3 italic">"{dailyInsight}"</p>)}
                             </div>
                             <div className="hidden md:flex items-center gap-4">
                                 <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
@@ -806,7 +807,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 </button>
                             </div>
                         </header>
-                        {activeTab === 'hub' && (
+                        {activeTab === 'inner_sanctuary' && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
 
                                 {/* GARDEN SECTION */}
@@ -946,7 +947,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             {filteredCompanions.map((companion) => (
                                                 <div key={companion.id} onClick={() => handleStartConnection(companion)} className="group relative bg-white dark:bg-gray-900 rounded-[1.8rem] overflow-hidden border border-yellow-100 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all duration-300 hover:shadow-2xl cursor-pointer flex flex-col h-full">
                                                     <div className="aspect-[4/5] relative overflow-hidden bg-gray-100 dark:bg-gray-800">
-                                                        <AvatarImage src={companion.imageUrl} alt={companion.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                                        <AvatarImage src={companion.imageUrl} alt={companion.name} className="w-full h-full object-cover group-hover:scale-110 group-hover:animate-breathing transition-transform duration-700" />
                                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
 
 
@@ -1137,7 +1138,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
             {/* MOOD PULSE ALERT */}
             {moodRiskAlert && (
-                <div className="fixed bottom-6 right-6 z-[90] bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-2xl border-l-4 border-blue-400 flex flex-col gap-3 animate-in slide-in-from-right w-80">
+                <div className="fixed bottom-6 left-6 z-[90] bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-2xl border-l-4 border-blue-400 hidden md:flex flex-col gap-3 animate-in slide-in-from-left w-80">
                     <div className="flex justify-between items-start">
                         <div className="flex gap-3">
                             <div className="bg-blue-100 p-2 rounded-full text-blue-600"><Sparkles className="w-5 h-5" /></div>

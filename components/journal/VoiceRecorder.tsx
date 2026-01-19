@@ -224,12 +224,18 @@ export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id:
                     audioRef.current.currentTime = 0;
                 }
 
-                await audioRef.current.play();
+                const playPromise = audioRef.current.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.error("Playback failed (Autoplay/Source):", error);
+                        setPlaying(false);
+                    });
+                }
             } else {
                 audioRef.current.pause();
             }
         } catch (e) {
-            console.error("Playback failed", e);
+            console.error("Playback operation failed", e);
             setPlaying(false);
         }
     };
@@ -292,9 +298,11 @@ export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id:
             <audio
                 ref={audioRef}
                 src={entry.audioUrl}
+                crossOrigin="anonymous"
                 onEnded={() => setPlaying(false)}
                 className="hidden"
-                preload="auto"
+                preload="metadata"
+                controls={false}
             />
         </div>
     );
