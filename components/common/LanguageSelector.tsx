@@ -36,10 +36,10 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
             <div className="relative" onClick={(e) => e.stopPropagation()}>
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 dark:bg-gray-800/50 dark:hover:bg-gray-700/50 border border-white/20 dark:border-gray-700/50 transition-all text-sm font-bold backdrop-blur-md"
+                    className="p-2.5 rounded-2xl bg-white dark:bg-gray-800 border border-yellow-100 dark:border-gray-700 shadow-sm hover:scale-105 transition-all flex items-center justify-center"
+                    title="Change Language"
                 >
-                    <Globe className="w-3.5 h-3.5" />
-                    <span className="uppercase">{currentLanguage}</span>
+                    <Globe className="w-5 h-5 text-gray-500" />
                 </button>
 
                 {isOpen && (

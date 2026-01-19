@@ -743,13 +743,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         {/* CLEAN TOP BAR (SIDEBAR-CENTRIC) */}
                         <header className="mb-10 flex items-center justify-between">
                             <div className="flex flex-col">
+                                <div className="md:hidden flex items-center gap-2 mb-2">
+                                    <div className="w-8 h-8 bg-yellow-400 rounded-lg flex items-center justify-center shadow-md">
+                                        <Heart className="w-4 h-4 text-black fill-black" />
+                                    </div>
+                                    <span className="text-lg font-black tracking-tight dark:text-white">Peutic</span>
+                                </div>
                                 {activeTab !== 'inner_sanctuary' && (
                                     <h1 className="text-2xl md:text-3xl font-black tracking-tight dark:text-white flex items-center gap-3">
                                         {activeTab === 'history' ? t('sec_history') : t('dash_settings')}
                                     </h1>
-                                )}
-                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
-                                    {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+                                ) || <h1 className="md:hidden text-2xl font-black tracking-tight dark:text-white">{t('dash_hub')}</h1>}
+                                <p className="text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-widest mt-0.5">
+                                    {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                                 </p>
                             </div>
 
@@ -791,11 +797,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="space-y-4">
                                     <button
                                         onClick={() => setIsVaultOpen(!isVaultOpen)}
-                                        className="w-full flex items-center justify-between p-4 bg-white/40 dark:bg-gray-900/40 rounded-2xl border border-yellow-100/50 dark:border-gray-800/50 backdrop-blur-sm group hover:bg-white/60 dark:hover:bg-gray-900/60 transition-all shadow-[0_0_15px_rgba(0,0,0,0.05)]"
+                                        className="w-full flex items-center justify-between p-4 bg-[#FFFBEB] dark:bg-gray-900 rounded-2xl border border-yellow-100/50 dark:border-gray-800/50 group transition-all shadow-[0_4px_15px_rgba(0,0,0,0.05)]"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-yellow-400 rounded-xl shadow-[0_4px_10px_rgba(250,204,21,0.3)]">
-                                                <Zap className="w-4 h-4 text-black" />
+                                            <div className="p-2 bg-yellow-100 dark:bg-gray-800 rounded-lg text-yellow-600 dark:text-yellow-500">
+                                                <Zap className="w-5 h-5" />
                                             </div>
                                             <h2 className="text-sm font-black uppercase tracking-widest dark:text-white">The Playground</h2>
                                         </div>
