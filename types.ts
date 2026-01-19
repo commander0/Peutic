@@ -175,3 +175,12 @@ export interface TimeCapsule {
   createdAt: string;
   isRevealed: boolean;
 }
+
+export interface VoiceJournalEntry {
+  id: string;
+  userId: string;
+  audioUrl: string;
+  durationSeconds: number;
+  createdAt: string;
+  title: string;
+}

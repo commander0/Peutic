@@ -1,5 +1,5 @@
 
-import { User, UserRole, Transaction, MoodEntry, JournalEntry, ArtEntry, SessionFeedback } from '../types';
+import { User, UserRole, Transaction, MoodEntry, JournalEntry, ArtEntry, SessionFeedback, VoiceJournalEntry } from '../types';
 
 import { supabase } from './supabaseClient';
 import { BaseService } from './baseService';
@@ -531,6 +531,62 @@ export class UserService {
     }
 
     static saveUserSession(user: User) { this.currentUser = user; }
+
+    // --- VOICE JOURNALS ---
+    static async getVoiceJournals(userId: string): Promise<VoiceJournalEntry[]> {
+        const { data, error } = await supabase.from('voice_journals').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+        if (error) {
+            console.error("Error fetching voice journals:", error);
+            return [];
+        }
+        return (data || []).map((d: any) => ({
+            id: d.id,
+            userId: d.user_id,
+            audioUrl: d.audio_url,
+            durationSeconds: d.duration_seconds,
+            title: d.title,
+            createdAt: d.created_at
+        }));
+    }
+
+    static async saveVoiceJournal(entry: VoiceJournalEntry) {
+        const { error } = await supabase.from('voice_journals').insert({
+            id: entry.id,
+            user_id: entry.userId,
+            audio_url: entry.audioUrl,
+            duration_seconds: entry.durationSeconds,
+            title: entry.title,
+            created_at: entry.createdAt
+        });
+        if (error) throw error;
+    }
+
+    static async deleteVoiceJournal(id: string) {
+        const { error } = await supabase.from('voice_journals').delete().eq('id', id);
+        if (error) throw error;
+    }
+
+    // --- MOOD PREDICTION (DAILY PULSE) ---
+    static async predictMoodRisk(userId: string): Promise<boolean> {
+        try {
+            const threeDaysAgo = new Date();
+            threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+            const { data, error } = await supabase
+                .from('moods')
+                .select('mood')
+                .eq('user_id', userId)
+                .gte('date', threeDaysAgo.toISOString());
+
+            if (error || !data || data.length < 3) return false;
+
+            const rainCount = data.filter((m: any) => m.mood === 'rain' || m.mood === 'Anxious' || m.mood === 'Sad').length;
+            return (rainCount / data.length) > 0.5;
+        } catch (e) {
+            console.error("Mood Prediction Failed", e);
+            return false;
+        }
+    }
 }
 
 

@@ -20,6 +20,22 @@ interface VideoRoomProps {
     initialMood?: string | null;
 }
 
+const ConcurrencyManager: React.FC<{ userId: string }> = ({ userId }) => {
+    useEffect(() => {
+        const init = async () => {
+            await UserService.claimActiveSpot(userId);
+            await UserService.sendKeepAlive(userId);
+        };
+        init();
+        const interval = setInterval(() => UserService.sendKeepAlive(userId), 30000); // 30s heartbeat
+        return () => {
+            clearInterval(interval);
+            UserService.endSession(userId);
+        };
+    }, [userId]);
+    return null;
+};
+
 // --- ICEBREAKER DATA ---
 const ICEBREAKERS = [
     "What is one small win you had this week?",

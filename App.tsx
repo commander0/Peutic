@@ -11,7 +11,6 @@ import StaticPages from './components/StaticPages';
 import { UserService } from './services/userService';
 import { AdminService } from './services/adminService';
 import { supabase } from './services/supabaseClient';
-import WaitingRoom from './components/WaitingRoom';
 import BookOfYou from './components/wisdom/BookOfYou';
 
 
@@ -115,25 +114,9 @@ const MainApp: React.FC = () => {
 
 
       // 3. Complete init
-      // We don't strictly need to await settingsPromise if we are okay using cache for 1s
-      // But we should await it if we are first-time users.
-      // PRO TIP: By not awaiting here, the UI pops in 300ms faster.
       settingsPromise.then(() => {
         setMaintenanceMode(AdminService.getSettings().maintenanceMode);
       });
-
-      // Perform concurrency check once user is known
-      if (activeUser && activeUser.role !== UserRole.ADMIN) {
-        // Concurrency usually requires fresh settings, so we do wait a tiny bit or background it
-        AdminService.syncGlobalSettings().then(settings => {
-          if (settings.maxConcurrentSessions > 0) {
-            UserService.claimActiveSpot(activeUser.id).then(claimed => {
-              if (!claimed) setInQueue(true);
-              else UserService.sendKeepAlive(activeUser.id);
-            });
-          }
-        });
-      }
 
       setIsRestoring(false);
     };
@@ -165,14 +148,6 @@ const MainApp: React.FC = () => {
               syncedUser.avatar = `https://api.dicebear.com/7.x/lorelei/svg?seed=${seed}&backgroundColor=FCD34D`;
             }
             setUser(syncedUser);
-            // Check concurrency
-            const settings = AdminService.getSettings();
-            if (syncedUser.role !== UserRole.ADMIN && settings.maxConcurrentSessions > 0) {
-              UserService.claimActiveSpot(syncedUser.id).then(claimed => {
-                if (!claimed) setInQueue(true);
-                else UserService.sendKeepAlive(syncedUser.id);
-              });
-            }
           }
         }
       } else if (event === 'SIGNED_OUT') {
@@ -186,11 +161,6 @@ const MainApp: React.FC = () => {
     };
   }, []);
 
-  // Queue & Concurrency State
-  const [inQueue, setInQueue] = useState(false);
-  const [queuePosition, setQueuePosition] = useState(0);
-  const [queueWait, setQueueWait] = useState(0);
-
   // Poll Settings separate from Auth logic
   useEffect(() => {
     const interval = setInterval(async () => {
@@ -200,49 +170,7 @@ const MainApp: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Queue Management Logic
-  useEffect(() => {
-    if (!user || user.role === UserRole.ADMIN || !inQueue) return;
-
-    const manageQueue = async () => {
-      // Heartbeat & Position Check
-      const pos = await UserService.joinQueue(user.id);
-      const wait = UserService.getEstimatedWaitTime(pos);
-
-      setQueuePosition(pos);
-      setQueueWait(wait);
-      await UserService.sendQueueHeartbeat(user.id);
-
-      // Try to enter if at front
-      if (pos <= 1) {
-        const claimed = await UserService.claimActiveSpot(user.id);
-        if (claimed) {
-          setInQueue(false);
-          UserService.sendKeepAlive(user.id);
-        }
-      }
-    };
-
-    manageQueue(); // Initial call
-    const interval = setInterval(manageQueue, 5000);
-    return () => clearInterval(interval);
-  }, [user, inQueue]);
-
-  // Initial Concurrency Check on User Load
-  const checkConcurrency = async (u: User) => {
-    if (u.role === UserRole.ADMIN) return;
-
-    const settings = AdminService.getSettings();
-    if (settings.maxConcurrentSessions > 0) {
-      const claimed = await UserService.claimActiveSpot(u.id);
-      if (!claimed) {
-        setInQueue(true);
-      } else {
-        // We are in, start keep-alive
-        UserService.sendKeepAlive(u.id);
-      }
-    }
-  };
+  // Session Timeout Logic (In-Memory Only)
 
   // Session Timeout Logic (In-Memory Only)
   useEffect(() => {
@@ -313,8 +241,7 @@ const MainApp: React.FC = () => {
       lastActivityRef.current = Date.now();
       setShowAuth(false);
 
-      // Concurrency Check
-      checkConcurrency(currentUser);
+      setShowAuth(false);
 
       // Intelligent Redirect
       if (currentUser.role === UserRole.ADMIN) {
@@ -352,10 +279,6 @@ const MainApp: React.FC = () => {
 
 
   if (isRestoring) return <div className="min-h-screen flex items-center justify-center bg-[#FFFBEB]"><div className="w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div></div>;
-
-  if (inQueue) {
-    return <WaitingRoom position={queuePosition} wait={queueWait} />;
-  }
 
   // Maintenance Mode Lockout
   if (maintenanceMode && (!user || user.role !== UserRole.ADMIN) && !location.pathname.includes('/admin')) {

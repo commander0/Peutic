@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Companion, Transaction, JournalEntry, ArtEntry } from '../types';
+import { User, Companion, Transaction, JournalEntry, ArtEntry, VoiceJournalEntry } from '../types';
 import {
     Video, Clock, Settings, LogOut,
-    LayoutDashboard, Plus, X, Lock, CheckCircle, AlertTriangle, ShieldCheck, Heart,
+    LayoutDashboard, Plus, X, Mic, Lock, CheckCircle, AlertTriangle, ShieldCheck, Heart,
     BookOpen, Save, Sparkles, Flame, Trophy,
     Sun, Cloud, Feather, Anchor, Gamepad2, RefreshCw, Play, Zap, Star, Edit2, Trash2,
     CloudRain, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Moon,
@@ -29,11 +29,7 @@ import { GardenService } from '../services/gardenService';
 import GardenCanvas from './garden/GardenCanvas';
 import EmergencyOverlay from './safety/EmergencyOverlay';
 
-interface DashboardProps {
-    user: User;
-    onLogout: () => void;
-    onStartSession: (companion: Companion) => void;
-}
+import { VoiceRecorder, VoiceEntryItem } from './journal/VoiceRecorder';
 
 // Stripe publishable key
 const STRIPE_PUBLISHABLE_KEY = (import.meta as any).env?.VITE_STRIPE_PUBLISHABLE_KEY || '';
@@ -43,6 +39,12 @@ declare global {
         Stripe?: any;
         webkitAudioContext?: typeof AudioContext;
     }
+}
+
+interface DashboardProps {
+    user: User;
+    onLogout: () => void;
+    onStartSession: (companion: Companion) => void;
 }
 
 const INSPIRATIONAL_SAYINGS = [
@@ -861,6 +863,44 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [specialtyFilter, setSpecialtyFilter] = useState<string>('All');
     const { showToast } = useToast();
 
+    // --- NEW FEATURE: VOICE JOURNAL & MOOD PULSE ---
+    const [showVoiceJournal, setShowVoiceJournal] = useState(false);
+    const [voiceEntries, setVoiceEntries] = useState<VoiceJournalEntry[]>([]);
+    const [moodRiskAlert, setMoodRiskAlert] = useState(false);
+
+    useEffect(() => {
+        checkMoodPulse();
+        loadVoiceJournals();
+    }, []);
+
+    const checkMoodPulse = async () => {
+        if (!user) return;
+        const risk = await UserService.predictMoodRisk(user.id);
+        if (risk) setMoodRiskAlert(true);
+    };
+
+    const loadVoiceJournals = async () => {
+        if (!user) return;
+        const entries = await UserService.getVoiceJournals(user.id);
+        setVoiceEntries(entries);
+    };
+
+    const handleVoiceCheckIn = () => {
+        setShowVoiceJournal(true);
+        setMoodRiskAlert(false);
+    };
+
+    const handleVoiceSave = async (entry: VoiceJournalEntry) => {
+        try {
+            await UserService.saveVoiceJournal(entry);
+            setVoiceEntries(prev => [entry, ...prev]);
+            showToast("Voice Journal Saved", "success");
+        } catch (e) {
+            showToast("Failed to save audio", "error");
+        }
+    };
+    // -----------------------------------------------
+
     // Garden State
     const [garden, setGarden] = useState<GardenState | null>(null);
     const refreshGarden = async () => {
@@ -1115,7 +1155,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             </div>
                                         )}
                                     </div>
-                                    {activeTab === 'hub' && (<button onClick={() => setShowGrounding(true)} className="hidden md:flex items-center gap-2 bg-gradient-to-r from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 text-red-600 dark:text-red-400 dark:bg-gray-800 dark:border-red-500/30 border border-red-200 px-5 py-2 rounded-full font-bold text-xs transition-all hover:scale-105 shadow-sm animate-pulse"><LifeBuoy className="w-4 h-4" /> Panic Anchor</button>)}
+                                    {activeTab === 'hub' && (<button onClick={() => setShowGrounding(true)} className="hidden md:flex items-center gap-2 bg-red-100 hover:bg-red-200 text-red-600 px-4 py-2 rounded-full font-bold text-xs transition-colors"><LifeBuoy className="w-4 h-4" /> Panic Anchor</button>)}
                                 </div>
                                 {activeTab === 'hub' && dailyInsight && (<p className="text-gray-600 dark:text-gray-400 mt-2 max-w-lg text-sm font-medium leading-relaxed border-l-4 border-yellow-400 pl-3 italic">"{dailyInsight}"</p>)}
                             </div>
@@ -1321,17 +1361,60 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             {showGrounding && <GroundingMode onClose={() => setShowGrounding(false)} />}
             {showTechCheck && (<TechCheck onConfirm={confirmSession} onCancel={() => setShowTechCheck(false)} />)}
 
-            {/* GLOBAL ANCHOR BUTTON - Always visible */}
-            <button
-                onClick={() => setShowBreathing(true)}
-                className="fixed bottom-6 left-6 z-[80] bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white backdrop-blur-md border border-red-500/50 p-4 rounded-full shadow-lg transition-all hover:scale-110 hover:shadow-red-500/30 group"
-                title="Emergency Anchor"
-            >
-                <LifeBuoy className="w-6 h-6 animate-pulse group-hover:animate-none" />
-                <span className="absolute left-full ml-3 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded hidden group-hover:block whitespace-nowrap animate-in slide-in-from-left-2">
-                    Panic Relief
-                </span>
-            </button>
+            {/* MOOD PULSE ALERT */}
+            {moodRiskAlert && (
+                <div className="fixed bottom-6 right-6 z-[90] bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-2xl border-l-4 border-blue-400 flex flex-col gap-3 animate-in slide-in-from-right w-80">
+                    <div className="flex justify-between items-start">
+                        <div className="flex gap-3">
+                            <div className="bg-blue-100 p-2 rounded-full text-blue-600"><Sparkles className="w-5 h-5" /></div>
+                            <div>
+                                <h4 className="font-bold text-gray-800 dark:text-white">Daily Pulse Check</h4>
+                                <p className="text-xs text-gray-500 mt-1">We noticed it's been a bit rainy lately. Want to talk it out?</p>
+                            </div>
+                        </div>
+                        <button onClick={() => setMoodRiskAlert(false)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                    </div>
+                    <div className="flex gap-2 mt-1">
+                        <button onClick={handleVoiceCheckIn} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-2">
+                            <Mic className="w-3 h-3" /> Voice Check-in
+                        </button>
+                        <button onClick={() => { setMoodRiskAlert(false); setShowProfile(true); }} className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-bold py-2 rounded-lg">
+                            Review Book
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* VOICE JOURNAL MODAL */}
+            {showVoiceJournal && (
+                <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-gray-900 w-full max-w-lg rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-black flex items-center gap-2 dark:text-white"><Mic className="w-5 h-5 text-red-500" /> Voice Journal</h2>
+                            <button onClick={() => setShowVoiceJournal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"><X className="w-5 h-5" /></button>
+                        </div>
+
+                        <VoiceRecorder userId={user.id} onSave={handleVoiceSave} />
+
+                        <div className="mt-8">
+                            <h3 className="text-xs font-bold uppercase text-gray-400 tracking-wider mb-4">Recent Voice Notes</h3>
+                            <div className="space-y-3">
+                                {voiceEntries.length === 0 && <p className="text-sm text-gray-400 italic text-center py-4">No recordings yet.</p>}
+                                {voiceEntries.map(entry => (
+                                    <VoiceEntryItem
+                                        key={entry.id}
+                                        entry={entry}
+                                        onDelete={async (id) => {
+                                            await UserService.deleteVoiceJournal(id);
+                                            setVoiceEntries(prev => prev.filter(e => e.id !== id));
+                                        }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
