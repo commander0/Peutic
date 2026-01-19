@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Heart, CheckCircle, ArrowRight, Globe, ShieldCheck, Cookie, Instagram, Twitter, Linkedin, Play, Moon, Sun, ChevronDown, Megaphone } from 'lucide-react';
-import { LanguageCode, getTranslation } from '../services/i18n';
+import React, { useState, useEffect } from 'react';
+import { Heart, CheckCircle, ArrowRight, ShieldCheck, Cookie, Instagram, Twitter, Linkedin, Play, Moon, Sun, Megaphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from './common/LanguageContext';
+import { LanguageSelector } from './common/LanguageSelector';
 import { AdminService } from '../services/adminService';
 import { STABLE_AVATAR_POOL, INITIAL_COMPANIONS } from '../services/database';
 
@@ -34,19 +35,12 @@ interface LandingPageProps {
     onLoginClick: (signupMode?: boolean) => void;
 }
 
-const LANGUAGES: { code: LanguageCode; label: string }[] = [
-    { code: 'en', label: 'English' },
-    { code: 'es', label: 'Español' },
-    { code: 'fr', label: 'Français' },
-    { code: 'zh', label: '中文' },
-    { code: 'ar', label: 'العربية' }
-];
-
 const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     const [onlineCount, setOnlineCount] = useState(124);
     const [showCookies, setShowCookies] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [featuredSpecialists, setFeaturedSpecialists] = useState<Companion[]>([]);
+    const { lang, t } = useLanguage();
 
     const [darkMode, setDarkMode] = useState(() => {
         const local = localStorage.getItem('peutic_theme');
@@ -54,13 +48,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
         return false;
     });
 
-    const [lang, setLang] = useState<LanguageCode>('en');
-    const [showLangMenu, setShowLangMenu] = useState(false);
-    const langMenuRef = useRef<HTMLDivElement>(null);
-
     const [settings, setSettings] = useState(AdminService.getSettings());
-
-    const t = (key: any) => getTranslation(lang, key);
 
     useEffect(() => {
         AdminService.syncGlobalSettings().then(setSettings);
@@ -97,16 +85,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
         };
         loadComps();
 
-        const handleClickOutside = (event: MouseEvent) => {
-            if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
-                setShowLangMenu(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-
         return () => {
             window.removeEventListener('scroll', handleScroll);
-            document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [darkMode]);
 
@@ -162,23 +142,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         <span className="text-xl md:text-2xl font-black tracking-tight dark:text-white">Peutic</span>
                     </div>
                     <div className="flex items-center gap-1.5 md:gap-6">
-                        <div className="relative" ref={langMenuRef}>
-                            <button onClick={() => setShowLangMenu(!showLangMenu)} className="flex items-center gap-1 px-2 md:gap-1.5 md:px-3 py-1.5 rounded-full bg-white/50 dark:bg-black/50 backdrop-blur-md border border-gray-200 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-500 transition-all text-[10px] md:text-xs font-black uppercase tracking-wider shadow-sm group">
-                                <Globe className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400 group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors" />
-                                <span className="text-gray-800 dark:text-gray-200 hidden md:inline">{lang}</span>
-                                <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform duration-300 ${showLangMenu ? 'rotate-180' : ''} hidden md:block`} />
-                            </button>
-                            {showLangMenu && (
-                                <div className="absolute top-full right-0 mt-2 w-32 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden z-50 animate-in fade-in zoom-in duration-200">
-                                    {LANGUAGES.map((l) => (
-                                        <button key={l.code} onClick={() => { setLang(l.code); setShowLangMenu(false); }} className={`w-full text-left px-4 py-3 text-xs font-bold hover:bg-yellow-50 dark:hover:bg-gray-800 transition-colors flex justify-between items-center ${lang === l.code ? 'text-yellow-600 dark:text-yellow-500 bg-yellow-50/50' : 'text-gray-700 dark:text-gray-300'}`}>
-                                            {l.label}
-                                            {lang === l.code && <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                        <LanguageSelector />
                         <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors shrink-0">
                             {darkMode ? <Sun className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" /> : <Moon className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />}
                         </button>

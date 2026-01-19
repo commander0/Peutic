@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Companion, Transaction, JournalEntry, ArtEntry, VoiceJournalEntry } from '../types';
+import { LanguageSelector } from './common/LanguageSelector';
+import { useLanguage } from './common/LanguageContext';
 import {
     Video, Clock, Settings, LogOut,
     LayoutDashboard, Plus, X, Mic, Lock, CheckCircle, AlertTriangle, ShieldCheck, Heart,
@@ -1132,30 +1134,33 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     </div>
                     <span className="font-black text-sm tracking-tight dark:text-white">Peutic</span>
                 </div>
-                <div className="flex items-center gap-4">
-                    {[
-                        { id: 'hub', icon: LayoutDashboard },
-                        { id: 'history', icon: Clock },
-                        { id: 'emergency', icon: Anchor, color: 'text-red-500' },
-                        { id: 'settings', icon: Settings },
-                        { id: 'profile', icon: UserIcon }
-                    ].map((item) => (
-                        <button
-                            key={item.id}
-                            onClick={() => {
-                                if (item.id === 'emergency') setShowGrounding(true);
-                                else if (item.id === 'profile') setShowProfile(true);
-                                else setActiveTab(item.id as any);
-                            }}
-                            className={`transition-all ${activeTab === item.id ? 'text-yellow-500 scale-110' : item.color || 'text-gray-400'}`}
-                        >
-                            <item.icon className="w-5 h-5" />
-                        </button>
-                    ))}
+                <div className="flex items-center gap-3">
+                    <LanguageSelector />
+                    <div className="flex items-center gap-4">
+                        {[
+                            { id: 'hub', icon: LayoutDashboard },
+                            { id: 'history', icon: Clock },
+                            { id: 'emergency', icon: Anchor, color: 'text-red-500' },
+                            { id: 'settings', icon: Settings },
+                            { id: 'profile', icon: UserIcon }
+                        ].map((item) => (
+                            <button
+                                key={item.id}
+                                onClick={() => {
+                                    if (item.id === 'emergency') setShowGrounding(true);
+                                    else if (item.id === 'profile') setShowProfile(true);
+                                    else setActiveTab(item.id as any);
+                                }}
+                                className={`transition-all ${activeTab === item.id ? 'text-yellow-500 scale-110' : item.color || 'text-gray-400'}`}
+                            >
+                                <item.icon className="w-5 h-5" />
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
-            <div className="flex h-screen overflow-hidden pt-0">
+            <div className="flex h-screen overflow-hidden">
                 <aside className="hidden md:flex w-20 lg:w-64 flex-col border-r border-yellow-200/30 dark:border-gray-800/50 bg-[#FFFBEB]/40 dark:bg-black/40 backdrop-blur-2xl transition-all duration-500 hover:w-24 lg:hover:w-72">
                     <div className="p-6 lg:p-8 flex items-center justify-center lg:justify-start gap-3">
                         <div className="w-9 h-9 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg group hover:scale-110 transition-transform">
@@ -1217,6 +1222,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 {activeTab === 'hub' && dailyInsight && (<p className="text-gray-600 dark:text-gray-400 mt-2 max-w-lg text-sm font-medium leading-relaxed border-l-4 border-yellow-400 pl-3 italic">"{dailyInsight}"</p>)}
                             </div>
                             <div className="hidden md:flex items-center gap-4">
+                                <LanguageSelector />
                                 <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">{darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-600" />}</button>
                                 <button onClick={() => setShowPayment(true)} className={`px-5 py-2.5 rounded-2xl font-black shadow-lg transition-transform hover:scale-105 flex items-center gap-2 text-sm ${balance < 10 ? 'bg-red-500 text-white animate-pulse' : 'bg-black dark:bg-white text-white dark:text-black'}`}>
                                     <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>{balance} mins<Plus className="w-3 h-3 ml-1 opacity-50" />
@@ -1232,26 +1238,31 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 {/* GARDEN SECTION */}
                                 {garden && (
                                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                                        <div className="lg:col-span-6 bg-gradient-to-r from-[#f0fdf4] to-[#dcfce7] dark:from-green-900/10 dark:to-green-900/5 rounded-3xl p-5 border border-green-100 dark:border-green-900/30 flex flex-col md:flex-row items-center gap-6 shadow-sm relative overflow-hidden min-h-[140px]">
-                                            <div className="absolute top-0 right-0 p-3 opacity-10"><Trees className="w-24 h-24 text-green-600" /></div>
-                                            <div className="relative z-10 bg-white/40 dark:bg-black/20 rounded-full p-2 border border-white/50 backdrop-blur-sm shadow-sm flex-shrink-0">
-                                                <GardenCanvas garden={garden} width={100} height={100} />
-                                            </div>
-                                            <div className="flex-1 text-center md:text-left relative z-10">
-                                                <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
-                                                    <div className="bg-green-100 dark:bg-green-900/40 p-1 rounded-lg"><Feather className="w-3.5 h-3.5 text-green-600 dark:text-green-400" /></div>
-                                                    <h2 className="text-lg font-black text-green-900 dark:text-green-300 tracking-tight text-sm md:text-lg">Inner Garden</h2>
+                                        <div className="lg:col-span-6 bg-gradient-to-r from-[#f0fdf4] to-[#dcfce7] dark:from-green-900/10 dark:to-green-900/5 rounded-3xl p-4 md:p-5 border border-green-100 dark:border-green-900/30 flex flex-row items-center gap-4 md:gap-6 shadow-sm relative overflow-hidden min-h-[120px] md:min-h-[140px]">
+                                            <div className="absolute top-0 right-0 p-3 opacity-10 hidden md:block"><Trees className="w-24 h-24 text-green-600" /></div>
+                                            <div className="relative z-10 bg-white/40 dark:bg-black/20 rounded-full p-1.5 border border-white/50 backdrop-blur-sm shadow-sm flex-shrink-0">
+                                                <div className="md:hidden">
+                                                    <GardenCanvas garden={garden} width={70} height={70} />
                                                 </div>
-                                                <p className="text-green-800/70 dark:text-green-400/70 text-[9px] font-bold mb-3 max-w-sm mx-auto md:mx-0 leading-relaxed uppercase tracking-wider">
+                                                <div className="hidden md:block">
+                                                    <GardenCanvas garden={garden} width={100} height={100} />
+                                                </div>
+                                            </div>
+                                            <div className="flex-1 text-left relative z-10">
+                                                <div className="flex items-center justify-start gap-2 mb-0.5 md:mb-1">
+                                                    <div className="bg-green-100 dark:bg-green-900/40 p-1 rounded-lg"><Feather className="w-3 h-3 md:w-3.5 md:h-3.5 text-green-600 dark:text-green-400" /></div>
+                                                    <h2 className="text-sm md:text-lg font-black text-green-900 dark:text-green-300 tracking-tight">Inner Garden</h2>
+                                                </div>
+                                                <p className="text-green-800/70 dark:text-green-400/70 text-[8px] md:text-[9px] font-bold mb-2 md:mb-3 max-w-sm leading-relaxed uppercase tracking-wider">
                                                     Consistency nurtures growth.
                                                 </p>
-                                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                                                    <div className="bg-white/60 dark:bg-black/40 px-2 py-1 rounded-lg border border-green-100 dark:border-green-900/50 flex items-center gap-1.5">
-                                                        <span className="text-[9px] font-black uppercase tracking-wider text-green-700 dark:text-green-400">Lv.{garden.level}</span>
+                                                <div className="flex flex-wrap items-center justify-start gap-1.5 md:gap-2">
+                                                    <div className="bg-white/60 dark:bg-black/40 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg border border-green-100 dark:border-green-900/50 flex items-center gap-1">
+                                                        <span className="text-[8px] md:text-[9px] font-black uppercase tracking-wider text-green-700 dark:text-green-400">Lv.{garden.level}</span>
                                                     </div>
-                                                    <div className="bg-white/60 dark:bg-black/40 px-2 py-1 rounded-lg border border-green-100 dark:border-green-900/50 flex items-center gap-1.5">
-                                                        <Flame className="w-2.5 h-2.5 text-orange-500" />
-                                                        <span className="text-[9px] font-black uppercase tracking-wider text-green-700 dark:text-green-400">{garden.streakCurrent} Day Streak</span>
+                                                    <div className="bg-white/60 dark:bg-black/40 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg border border-green-100 dark:border-green-900/50 flex items-center gap-1">
+                                                        <Flame className="w-2 md:w-2.5 h-2 md:h-2.5 text-orange-500" />
+                                                        <span className="text-[8px] md:text-[9px] font-black uppercase tracking-wider text-green-700 dark:text-green-400">{garden.streakCurrent}d Streak</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1315,9 +1326,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                                     {dashboardUser ? (
-                                        <div className="bg-white dark:bg-gray-900 p-5 rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm col-span-1 md:col-span-2 relative overflow-hidden group min-h-[140px]">
+                                        <div className="bg-white dark:bg-gray-900 p-4 md:p-5 rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm col-span-1 md:col-span-2 relative overflow-hidden group min-h-[120px] md:min-h-[140px]">
                                             {weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-4 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-20 h-20 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div><div className="absolute w-16 h-16 bg-blue-500/30 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-blue-400/10 rounded-full animate-ping"></div><div className="absolute w-10 h-10 bg-blue-400/50 rounded-full blur-lg animate-pulse"></div><Flame className="w-12 h-12 text-blue-500 fill-blue-500 drop-shadow-[0_0_20px_rgba(59,130,246,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy className="w-20 h-20 text-yellow-500" /></div>)}
-                                            <div className="relative z-10"><h3 className="font-bold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3><div className="flex items-end gap-2 mb-3"><span className="text-3xl md:text-4xl font-black dark:text-white">{weeklyGoal}</span><span className="text-gray-400 text-xs md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span></div><div className="w-full h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-3"><div className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= weeklyTarget ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-pulse' : 'bg-yellow-400'}`} style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}></div></div><p className="text-xs md:text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}</p></div>
+                                            <div className="relative z-10"><h3 className="font-bold text-gray-500 dark:text-gray-400 text-[10px] md:text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3><div className="flex items-end gap-2 mb-2 md:mb-3"><span className="text-2xl md:text-4xl font-black dark:text-white">{weeklyGoal}</span><span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span></div><div className="w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-2 md:mb-3"><div className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= weeklyTarget ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-pulse' : 'bg-yellow-400'}`} style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}></div></div><p className="text-[10px] md:text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}</p></div>
                                         </div>
                                     ) : <StatSkeleton />}
                                     <MoodTracker onMoodSelect={handleMoodSelect} />

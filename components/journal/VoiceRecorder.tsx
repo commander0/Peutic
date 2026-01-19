@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Mic, Square, Play, Trash2, RefreshCw, Pause } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import { VoiceJournalEntry } from '../../types';
@@ -188,58 +188,82 @@ export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id:
     const gainNodeRef = useRef<GainNode | null>(null);
     const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
 
+    // Sync playing state with actual audio events
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        const onPlay = () => setPlaying(true);
+        const onPause = () => setPlaying(false);
+        const onEnded = () => setPlaying(false);
+
+        audio.addEventListener('play', onPlay);
+        audio.addEventListener('pause', onPause);
+        audio.addEventListener('ended', onEnded);
+
+        return () => {
+            audio.removeEventListener('play', onPlay);
+            audio.removeEventListener('pause', onPause);
+            audio.removeEventListener('ended', onEnded);
+        };
+    }, []);
+
     const togglePlay = async () => {
         if (!audioRef.current) return;
 
-        const ctx = getSharedAudioCtx();
-        if (!ctx) return;
-
-        // Initialize Audio Context for Volume Boosting on first play
-        if (!sourceRef.current && audioRef.current) {
-            try {
-                const source = ctx.createMediaElementSource(audioRef.current);
-                const gain = ctx.createGain();
-
-                source.connect(gain);
-                gain.connect(ctx.destination);
-
-                gainNodeRef.current = gain;
-                sourceRef.current = source;
-            } catch (e) {
-                console.warn("Audio Context connection failed (likely already connected)", e);
-            }
-        }
-
-        if (ctx.state === 'suspended') {
-            await ctx.resume();
-        }
-
         try {
-            if (playing) {
-                audioRef.current.pause();
-                setPlaying(false);
-            } else {
-                // Ensure we start from the beginning if the audio has ended
-                if (audioRef.current.ended || audioRef.current.currentTime >= audioRef.current.duration) {
+            if (audioRef.current.paused) {
+                // Ensure context is resumed if we are in boosted mode
+                const ctx = sharedAudioCtx;
+                if (ctx && ctx.state === 'suspended') {
+                    await ctx.resume();
+                }
+
+                // If finished or near end, restart
+                if (audioRef.current.ended || audioRef.current.currentTime >= audioRef.current.duration - 0.1) {
                     audioRef.current.currentTime = 0;
                 }
+
                 await audioRef.current.play();
-                setPlaying(true);
+            } else {
+                audioRef.current.pause();
             }
         } catch (e) {
-            console.error("Audio playback error:", e);
+            console.error("Playback failed", e);
             setPlaying(false);
         }
     };
 
-    const toggleBoost = () => {
-        const newBoost = !isBoosted;
-        setIsBoosted(newBoost);
-        const ctx = getSharedAudioCtx();
-        if (gainNodeRef.current && ctx) {
-            // Apply 2x gain boost
-            gainNodeRef.current.gain.setTargetAtTime(newBoost ? 2.5 : 1.0, ctx.currentTime, 0.1);
+    const toggleBoost = async () => {
+        const nextBoost = !isBoosted;
+
+        if (nextBoost && !sourceRef.current && audioRef.current) {
+            // Lazy initialize AudioContext on first boost request
+            const ctx = getSharedAudioCtx();
+            if (ctx) {
+                try {
+                    const source = ctx.createMediaElementSource(audioRef.current);
+                    const gain = ctx.createGain();
+                    source.connect(gain);
+                    gain.connect(ctx.destination);
+
+                    sourceRef.current = source;
+                    gainNodeRef.current = gain;
+
+                    if (ctx.state === 'suspended') await ctx.resume();
+                } catch (e) {
+                    console.warn("Could not connect audio graph (likely already connected)", e);
+                }
+            }
         }
+
+        if (gainNodeRef.current) {
+            const ctx = getSharedAudioCtx();
+            const now = ctx?.currentTime || 0;
+            gainNodeRef.current.gain.setTargetAtTime(nextBoost ? 2.5 : 1.0, now, 0.1);
+        }
+
+        setIsBoosted(nextBoost);
     };
 
     return (
