@@ -487,7 +487,18 @@ export class UserService {
 
         // Optimistic update
         const currentScores = user.gameScores || { match: 0, cloud: 0 };
-        const newScores = { ...currentScores, [game]: Math.max(currentScores[game] || 0, score) };
+        let newScore = score;
+
+        if (game === 'match') {
+            // Fewer moves is better. Only update if current is 0 or new score is lower.
+            const current = currentScores.match || 0;
+            newScore = (current === 0) ? score : Math.min(current, score);
+        } else {
+            // Higher height/score is better.
+            newScore = Math.max(currentScores.cloud || 0, score);
+        }
+
+        const newScores = { ...currentScores, [game]: newScore };
         user.gameScores = newScores;
 
         const { error } = await supabase.from('users').update({ game_scores: newScores }).eq('id', userId);

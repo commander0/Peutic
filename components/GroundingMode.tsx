@@ -189,17 +189,18 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
     const fallbackSpeak = (text: string) => {
         if (!voiceEnabled) return;
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.9;
-        utterance.volume = 1;
+        utterance.rate = 0.8; // More soothing, slower
+        utterance.pitch = 0.95; // Slightly deeper, calmer
+        utterance.volume = 0.9;
         const voices = window.speechSynthesis.getVoices();
 
-        // IMPROVED VOICE SELECTION: Prioritize female or natural sounding voices
+        // IMPROVED VOICE SELECTION: Prioritize ultra-natural or female high-quality voices
         const preferredVoice = voices.find(v =>
+            v.name.includes("Natural") ||
             v.name.includes("Samantha") ||
-            v.name.includes("Zira") ||
-            v.name.includes("Google US English") ||
-            v.name.includes("Female") ||
-            (v.lang === "en-US" && !v.name.includes("David") && !v.name.includes("Mark"))
+            v.name.includes("Google US English female") ||
+            v.name.includes("Premium") ||
+            (v.lang.startsWith("en") && (v.name.includes("Female") || v.name.includes("Zira")))
         );
 
         if (preferredVoice) utterance.voice = preferredVoice;
