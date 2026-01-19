@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { createTavusConversation, endTavusConversation } from '../services/tavusService';
 import { UserService } from '../services/userService';
+import { GardenService } from '../services/gardenService';
 import { generateWisdomCard } from '../services/geminiService';
 import { AdminService } from '../services/adminService';
 import { useToast } from './common/Toast';
@@ -340,25 +341,34 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
             if (!companion.replicaId) throw new Error("Invalid Specialist Configuration");
 
-            // --- INTELLIGENT CONTEXT INJECTION ---
-            // 1. Fetch recent mood (Database Fallback)
+            // --- INTELLIGENT CONTEXT INJECTION (SOUL MIRROR) ---
+            // 1. Fetch recent moods (Last 3 for trend analysis)
             const moods = await UserService.getMoods(user.id);
-            const recentMood = moods.length > 0 ? moods[moods.length - 1].mood : null;
+            const recentMoods = moods.slice(-3).map(m => m.mood).join(' -> ');
+            const lastMood = moods.length > 0 ? moods[moods.length - 1].mood : null;
 
             let moodContext = "";
-            // Priority: Immediate Mood (from Waiting Room) > Recent Mood (Database)
-            const mood = initialMood || recentMood;
+            const mood = initialMood || lastMood;
 
-            if (mood === 'Sad' || mood === 'rain') moodContext = "The user is feeling sad or down right now. Approach with extra gentleness and validation.";
-            else if (mood === 'Good' || mood === 'confetti') moodContext = "The user is feeling good. Celebrate this positive energy.";
-            else if (mood === 'Anxious' || mood === '😰') moodContext = "The user reported feeling anxious immediately before this call. Focus on grounding techniques first.";
-            else if (mood === 'Angry' || mood === '😤') moodContext = "The user is feeling frustrated or angry. Allow them space to vent and validate their feelings.";
+            if (mood === 'Sad' || mood === 'rain') moodContext = "User is feeling down. Be gentle.";
+            else if (mood === 'Good' || mood === 'confetti') moodContext = "User is feeling good. Celebrate.";
+            else if (mood === 'Anxious' || mood === '😰') moodContext = "User is anxious. Focus on grounding.";
+            else if (mood === 'Angry' || mood === '😤') moodContext = "User is frustrated. Allow venting.";
 
-            // 2. Fetch language preference from User Object (was localStorage)
+            if (recentMoods) moodContext += ` Recent emotional trend: ${recentMoods}.`;
+
+            // 2. Fetch Garden State (Metaphorical Context)
+            const garden = await GardenService.getGarden(user.id);
+            let gardenContext = "";
+            if (garden) {
+                gardenContext = `User's Inner Garden is at Level ${garden.level} (${garden.currentPlantType}). Streak: ${garden.streakCurrent} days. If relevant, use garden metaphors for growth.`;
+            }
+
+            // 3. Fetch language preference from User Object (was localStorage)
             const savedLang = user.languagePreference || 'en';
             const langInstructions = savedLang !== 'en' ? `IMPORTANT: The user prefers language code '${savedLang}'. You must speak in this language.` : "";
 
-            const context = `You are ${companion.name}, a professional specialist in ${companion.specialty}. Your bio is: "${companion.bio}". You are speaking with ${userName}. Be empathetic, professional, and concise. Listen actively. ${moodContext} ${langInstructions}`;
+            const context = `You are ${companion.name}, a professional specialist in ${companion.specialty}. Your bio: "${companion.bio}". User: ${userName}. Be empathetic, professional, concise. Listen actively. ${moodContext} ${gardenContext} ${langInstructions}`;
 
             const response = await createTavusConversation(companion.replicaId, userName, context);
 

@@ -12,6 +12,7 @@ export interface User {
   role: UserRole;
   balance: number;
   avatar?: string;
+  avatarLocked?: boolean;
   subscriptionStatus: 'ACTIVE' | 'INACTIVE' | 'PREMIUM' | 'BANNED';
   joinedAt: string;
   lastActive?: string;
@@ -145,4 +146,23 @@ export interface GiftCard {
   amount: number;
   createdBy: string;
   isRedeemed: boolean;
+}
+
+export interface GardenState {
+  userId: string;
+  level: number; // 1-5
+  currentPlantType: 'Lotus' | 'Rose' | 'Sunflower' | 'Fern';
+  lastWateredAt: string;
+  streakCurrent: number;
+  streakBest: number;
+}
+
+export interface WisdomEntry {
+  id: string;
+  userId?: string;
+  content: string;
+  category: string;
+  isApproved: boolean;
+  likes: number;
+  createdAt: string;
 }

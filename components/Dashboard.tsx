@@ -14,7 +14,6 @@ import {
 import { STABLE_AVATAR_POOL } from '../services/database';
 import { UserService } from '../services/userService';
 import { AdminService } from '../services/adminService';
-import { BaseService } from '../services/baseService';
 import { useToast } from './common/Toast';
 import { CompanionSkeleton, StatSkeleton } from './common/SkeletonLoader';
 
@@ -25,6 +24,11 @@ import { generateDailyInsight } from '../services/geminiService';
 import { WisdomEngine } from '../services/wisdomEngine';
 import TechCheck from './TechCheck';
 import GroundingMode from './GroundingMode';
+import { GardenState } from '../types';
+import { GardenService } from '../services/gardenService';
+import GardenCanvas from './garden/GardenCanvas';
+import EmergencyOverlay from './safety/EmergencyOverlay';
+import WisdomCircle from './wisdom/WisdomCircle';
 
 interface DashboardProps {
     user: User;
@@ -166,6 +170,9 @@ const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }> = ({ 
                 const newEntry: ArtEntry = { id: newId, userId: userId, imageUrl: imageUrl, prompt: input, createdAt: new Date().toISOString(), title: "Wisdom Card" };
 
                 await UserService.saveArt(newEntry);
+                // Water the garden on creation
+                await GardenService.waterPlant(userId);
+
                 await refreshGallery();
                 if (onUpdate) onUpdate();
                 setInput('');
@@ -589,7 +596,7 @@ const JournalSection: React.FC<{ user: User, onUpdate?: () => void }> = ({ user,
     useEffect(() => {
         UserService.getJournals(user.id).then(setEntries);
     }, [user.id]);
-    const handleSave = () => { if (!content.trim()) return; const entry: JournalEntry = { id: crypto.randomUUID(), userId: user.id, date: new Date().toISOString(), content: content }; UserService.saveJournal(entry).then(() => { setEntries([entry, ...entries]); setContent(''); setSaved(true); if (onUpdate) onUpdate(); setTimeout(() => setSaved(false), 2000); }); };
+    const handleSave = () => { if (!content.trim()) return; const entry: JournalEntry = { id: crypto.randomUUID(), userId: user.id, date: new Date().toISOString(), content: content }; UserService.saveJournal(entry).then(async () => { await GardenService.waterPlant(user.id); setEntries([entry, ...entries]); setContent(''); setSaved(true); if (onUpdate) onUpdate(); setTimeout(() => setSaved(false), 2000); }); };
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 h-[450px]">
@@ -720,37 +727,12 @@ const PaymentModal: React.FC<{ onClose: () => void, onSuccess: (mins: number, co
     );
 };
 
-const BreathingExercise: React.FC<{ userId: string, onClose: () => void }> = ({ userId, onClose }) => {
-    const [phase, setPhase] = useState<'Inhale' | 'Hold' | 'Exhale'>('Inhale');
-    const [timeLeft, setTimeLeft] = useState(60);
-    const [isActive, setIsActive] = useState(true);
-    useEffect(() => {
-        if (!isActive) return;
-        const timer = setInterval(() => { setTimeLeft(t => { if (t <= 1) { setIsActive(false); UserService.recordBreathSession(userId, 60); return 0; } return t - 1; }); }, 1000);
 
-        const cycle = setInterval(() => { setPhase(p => { if (p === 'Inhale') return 'Hold'; if (p === 'Hold') return 'Exhale'; return 'Inhale'; }); }, 4000);
-        return () => { clearInterval(timer); clearInterval(cycle); };
-    }, [isActive, userId]);
-    return (
-        <div className="fixed inset-0 bg-black/90 z-[70] flex flex-col items-center justify-center backdrop-blur-md animate-in fade-in">
-            <button onClick={onClose} className="absolute top-6 right-6 text-white/50 hover:text-white"><X className="w-6 h-6" /></button>
-            {timeLeft > 0 ? (
-                <>
-                    <div className="relative mb-12">
-                        <div className={`w-64 h-64 rounded-full border-4 border-white/20 flex items-center justify-center transition-all duration-[4000ms] ease-in-out ${phase === 'Inhale' ? 'scale-125 bg-white/10' : phase === 'Exhale' ? 'scale-75 bg-transparent' : 'scale-100 bg-white/5'}`}><span className="text-3xl font-black text-white tracking-widest uppercase">{phase}</span></div>
-                        <div className="absolute inset-0 rounded-full border border-white/10 animate-ping opacity-20"></div>
-                    </div>
-                    <div className="text-center"><p className="text-gray-400 text-sm font-bold uppercase tracking-widest mb-2">Time Remaining</p><p className="text-4xl font-mono text-white">{timeLeft}s</p></div>
-                </>
-            ) : (
-                <div className="text-center animate-in zoom-in"><CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-6" /><h2 className="text-3xl font-black text-white mb-2">Session Complete</h2><p className="text-gray-400 mb-8">You've centered your mind.</p><button onClick={onClose} className="bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">Return</button></div>
-            )}
-        </div>
-    );
-};
 
 const ProfileModal: React.FC<{ user: User, onClose: () => void, onUpdate: () => void }> = ({ user, onClose, onUpdate }) => {
     const [name, setName] = useState(user.name);
+    const [avatarLocked, setAvatarLocked] = useState(user.avatarLocked || false);
+    const [previewAvatar, setPreviewAvatar] = useState(user.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${user.id}`);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const handleSave = () => {
@@ -761,7 +743,30 @@ const ProfileModal: React.FC<{ user: User, onClose: () => void, onUpdate: () => 
             return;
         }
         setLoading(true);
-        UserService.updateUser({ ...user, name }).then(() => { onUpdate(); onClose(); });
+        UserService.updateUser({ ...user, name, avatar: previewAvatar, avatarLocked }).then(() => { onUpdate(); onClose(); });
+    };
+
+    const randomizeAvatar = () => {
+        const seed = Math.random().toString(36).substring(7);
+        setPreviewAvatar(`https://api.dicebear.com/7.x/lorelei/svg?seed=${seed}`);
+    };
+
+    const handleExport = async () => {
+        const journals = await UserService.getJournals(user.id);
+        const moods = await UserService.getMoods(user.id);
+        const data = {
+            meta: { exportedAt: new Date().toISOString(), user: { name: user.name, email: user.email } },
+            journals, moods
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `peutic-journey-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     };
 
     return (
@@ -771,11 +776,39 @@ const ProfileModal: React.FC<{ user: User, onClose: () => void, onUpdate: () => 
                 <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-6">Edit Profile</h2>
                 {error && <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-xs font-bold border border-red-100">{error}</div>}
                 <div className="space-y-4 mb-8">
+                    {/* AVATAR CUSTOMIZER */}
+                    <div className="flex items-center gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+                        <img src={previewAvatar} alt="Avatar" className="w-16 h-16 rounded-full bg-white shadow-sm" />
+                        <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-bold uppercase text-gray-500">Avatar</span>
+                                <button onClick={randomizeAvatar} className="text-[10px] font-bold bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-1">
+                                    <RefreshCw className="w-3 h-3" /> New Look
+                                </button>
+                            </div>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <div className={`w-8 h-4 rounded-full transition-colors relative ${avatarLocked ? 'bg-green-500' : 'bg-gray-300'}`} onClick={() => setAvatarLocked(!avatarLocked)}>
+                                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform shadow-sm ${avatarLocked ? 'left-4.5 translate-x-3.5' : 'left-0.5'}`}></div>
+                                </div>
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{avatarLocked ? 'Saved as Default' : 'Auto-Rotate on Login'}</span>
+                            </label>
+                        </div>
+                    </div>
 
                     <div><label className="text-xs font-bold text-gray-500 uppercase block mb-2">Display Name</label><input className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none dark:text-white" value={name} onChange={e => setName(e.target.value)} /></div>
                     <div><label className="text-xs font-bold text-gray-500 uppercase block mb-2">Email</label><input className="w-full p-3 bg-gray-100 dark:bg-gray-800/50 border border-transparent rounded-xl text-gray-500 cursor-not-allowed" value={user.email} disabled /></div>
                 </div>
-                <button onClick={handleSave} disabled={loading} className="w-full py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:opacity-80 transition-opacity">{loading ? 'Saving...' : 'Save Changes'}</button>
+                <button onClick={handleSave} disabled={loading} className="w-full py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:opacity-80 transition-opacity mb-4">{loading ? 'Saving...' : 'Save Changes'}</button>
+
+                <div className="border-t border-gray-100 dark:border-gray-800 pt-4 grid grid-cols-2 gap-3">
+                    <button onClick={handleExport} className="py-3 flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-black dark:hover:text-white transition-colors text-[10px] font-bold uppercase tracking-wider bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <Download className="w-4 h-4 mb-1" /> Export Data
+                    </button>
+                    <Link to="/book-of-you" target="_blank" className="py-3 flex flex-col items-center justify-center gap-1 text-yellow-600 hover:text-yellow-700 dark:text-yellow-500 dark:hover:text-yellow-400 transition-colors text-[10px] font-bold uppercase tracking-wider bg-yellow-50 dark:bg-yellow-900/20 rounded-xl hover:bg-yellow-100 dark:hover:bg-yellow-900/40">
+                        <BookOpen className="w-4 h-4 mb-1" /> Print Book
+                    </Link>
+                </div>
+                <p className="text-center text-[9px] text-gray-400 mt-3">Export raw data or print your journey as a PDF.</p>
             </div>
         </div>
     );
@@ -828,6 +861,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
     const [specialtyFilter, setSpecialtyFilter] = useState<string>('All');
     const { showToast } = useToast();
+
+    // Garden State
+    const [garden, setGarden] = useState<GardenState | null>(null);
+    const refreshGarden = async () => {
+        if (!user.id) return;
+        const g = await GardenService.getGarden(user.id);
+        setGarden(g);
+    };
+    useEffect(() => { refreshGarden(); }, [user.id]);
 
 
 
@@ -920,7 +962,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
     const handleMoodSelect = (m: 'confetti' | 'rain' | null) => {
         setMood(m);
-        if (m) UserService.saveMood(user.id, m).then(() => refreshData());
+        if (m) {
+            UserService.saveMood(user.id, m).then(async () => {
+                await GardenService.waterPlant(user.id);
+                refreshData();
+                refreshGarden();
+            });
+        }
     };
 
     const handlePaymentSuccess = async (minutesAdded: number, cost: number, token?: string) => {
@@ -1084,6 +1132,38 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         </header>
                         {activeTab === 'hub' && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
+
+                                {/* GARDEN SECTION */}
+                                {garden && (
+                                    <div className="bg-gradient-to-r from-[#f0fdf4] to-[#dcfce7] dark:from-green-900/10 dark:to-green-900/5 rounded-3xl p-6 border border-green-100 dark:border-green-900/30 flex flex-col md:flex-row items-center gap-8 shadow-sm relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 p-3 opacity-10"><Trees className="w-32 h-32 text-green-600" /></div>
+                                        <div className="relative z-10 bg-white/40 dark:bg-black/20 rounded-full p-4 border border-white/50 backdrop-blur-sm shadow-sm">
+                                            <GardenCanvas garden={garden} width={200} height={200} />
+                                        </div>
+                                        <div className="flex-1 text-center md:text-left relative z-10">
+                                            <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+                                                <div className="bg-green-100 dark:bg-green-900/40 p-1.5 rounded-lg"><Feather className="w-4 h-4 text-green-600 dark:text-green-400" /></div>
+                                                <h2 className="text-xl md:text-2xl font-black text-green-900 dark:text-green-300 tracking-tight">Your Inner Garden</h2>
+                                            </div>
+                                            <p className="text-green-800/70 dark:text-green-400/70 text-sm font-medium mb-4 max-w-md mx-auto md:mx-0">
+                                                Consistency nurtures growth. Every check-in waters your soul.
+                                            </p>
+                                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                                                <div className="bg-white/60 dark:bg-black/40 px-3 py-1.5 rounded-xl border border-green-100 dark:border-green-900/50 flex items-center gap-2">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-green-700 dark:text-green-400">Level {garden.level}</span>
+                                                </div>
+                                                <div className="bg-white/60 dark:bg-black/40 px-3 py-1.5 rounded-xl border border-green-100 dark:border-green-900/50 flex items-center gap-2">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-green-700 dark:text-green-400">{garden.currentPlantType}</span>
+                                                </div>
+                                                <div className="bg-white/60 dark:bg-black/40 px-3 py-1.5 rounded-xl border border-green-100 dark:border-green-900/50 flex items-center gap-2">
+                                                    <Flame className="w-3 h-3 text-orange-500" />
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-green-700 dark:text-green-400">{garden.streakCurrent} Day Streak</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                                     {dashboardUser ? (
                                         <div className="bg-white dark:bg-gray-900 p-5 rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm col-span-1 md:col-span-2 relative overflow-hidden group">
@@ -1093,6 +1173,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     ) : <StatSkeleton />}
                                     <MoodTracker onMoodSelect={handleMoodSelect} />
                                 </div>
+                                <WisdomCircle userId={user.id} />
 
                                 <CollapsibleSection title="Mindful Arcade" icon={Gamepad2}>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
@@ -1237,10 +1318,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                 </main>
             </div>
             {showPayment && <PaymentModal onClose={() => { setShowPayment(false); setPaymentError(undefined); }} onSuccess={handlePaymentSuccess} initialError={paymentError} />}
-            {showBreathing && <BreathingExercise userId={user.id} onClose={() => setShowBreathing(false)} />}
+            {showBreathing && <EmergencyOverlay userId={user.id} onClose={() => { setShowBreathing(false); refreshGarden(); }} />}
             {showProfile && <ProfileModal user={dashboardUser} onClose={() => setShowProfile(false)} onUpdate={refreshData} />}
             {showGrounding && <GroundingMode onClose={() => setShowGrounding(false)} />}
             {showTechCheck && (<TechCheck onConfirm={confirmSession} onCancel={() => setShowTechCheck(false)} />)}
+
+            {/* GLOBAL ANCHOR BUTTON - Always visible */}
+            <button
+                onClick={() => setShowBreathing(true)}
+                className="fixed bottom-6 left-6 z-[80] bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white backdrop-blur-md border border-red-500/50 p-4 rounded-full shadow-lg transition-all hover:scale-110 hover:shadow-red-500/30 group"
+                title="Emergency Anchor"
+            >
+                <LifeBuoy className="w-6 h-6 animate-pulse group-hover:animate-none" />
+                <span className="absolute left-full ml-3 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded hidden group-hover:block whitespace-nowrap animate-in slide-in-from-left-2">
+                    Panic Relief
+                </span>
+            </button>
         </div>
     );
 };

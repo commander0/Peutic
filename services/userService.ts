@@ -95,6 +95,7 @@ export class UserService {
             streak: data.streak || 0,
             provider: data.provider || 'email',
             avatar: data.avatar_url,
+            avatarLocked: data.avatar_locked || false,
             emailPreferences: data.email_preferences || { marketing: true, updates: true },
             themePreference: data.theme_preference,
             languagePreference: data.language_preference,
@@ -217,8 +218,26 @@ export class UserService {
     static async updateUser(user: User) {
         if (!user.id) return;
         this.currentUser = user;
-        const { error } = await BaseService.invokeGateway('user-update', user);
-        if (error) logger.error("Update Profile Failed", user.id, error);
+
+        // Direct Supabase Update to ensure all fields (including new ones) are saved
+        const payload = {
+            name: user.name,
+            avatar_url: user.avatar,
+            avatar_locked: user.avatarLocked,
+            email_preferences: user.emailPreferences,
+            theme_preference: user.themePreference,
+            language_preference: user.languagePreference,
+            last_login_date: user.lastLoginDate,
+            streak: user.streak
+        };
+
+        const { error } = await supabase.from('users').update(payload).eq('id', user.id);
+        if (error) {
+            logger.error("Update Profile Failed", user.id, error);
+        } else {
+            // Keep cache in sync
+            this.saveUserToCache(user);
+        }
     }
 
     static checkAndIncrementStreak(user: User): User {

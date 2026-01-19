@@ -12,6 +12,7 @@ import { UserService } from './services/userService';
 import { AdminService } from './services/adminService';
 import { supabase } from './services/supabaseClient';
 import WaitingRoom from './components/WaitingRoom';
+import BookOfYou from './components/wisdom/BookOfYou';
 
 
 import { Wrench, AlertTriangle, Clock, RefreshCw } from 'lucide-react';
@@ -158,6 +159,11 @@ const MainApp: React.FC = () => {
           }
 
           if (syncedUser) {
+            // AVATAR ROTATION LOGIC: Change user icon if not locked
+            if (!syncedUser.avatarLocked) {
+              const seed = Math.random().toString(36).substring(7);
+              syncedUser.avatar = `https://api.dicebear.com/7.x/lorelei/svg?seed=${seed}`;
+            }
             setUser(syncedUser);
             // Check concurrency
             const settings = AdminService.getSettings();
@@ -426,6 +432,9 @@ const MainApp: React.FC = () => {
                   <Navigate to="/admin/login" />
                 )
               } />
+
+              {/* Protected Book of You Route */}
+              <Route path="/book-of-you" element={user ? <BookOfYou /> : <Navigate to="/" />} />
 
               {/* Static Pages */}
               <Route path="/about" element={<StaticPages type="about" />} />
