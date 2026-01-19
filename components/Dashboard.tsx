@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Companion, Transaction, JournalEntry, ArtEntry, VoiceJournalEntry } from '../types';
 import { LanguageSelector } from './common/LanguageSelector';
-import { useLanguage } from './common/LanguageContext';
 import {
     Video, Clock, Settings, LogOut,
     LayoutDashboard, Plus, X, Mic, Lock, CheckCircle, AlertTriangle, ShieldCheck, Heart,
@@ -1115,6 +1114,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             {mood && <WeatherEffect type={mood} />}
             <SoundscapePlayer />
 
+            {/* DAILY PULSE SPARKLE (Mobile Only) */}
+            <button
+                onClick={handleVoiceCheckIn}
+                className="md:hidden fixed bottom-6 left-6 z-[80] w-12 h-12 bg-white dark:bg-gray-900 rounded-full border border-blue-200 dark:border-blue-900/50 shadow-2xl flex items-center justify-center animate-bounce hover:scale-110 active:scale-95 transition-all group"
+                title="Daily Pulse Check"
+            >
+                <div className="absolute inset-0 bg-blue-400/20 rounded-full animate-ping group-hover:bg-blue-400/40"></div>
+                <Sparkles className="w-5 h-5 text-blue-500 fill-blue-500 group-hover:rotate-12 transition-transform" />
+            </button>
+
             {/* BROADCAST BANNER */}
             {settings.dashboardBroadcastMessage && (
                 <div className="bg-blue-600 text-white py-2 px-4 shadow-lg animate-in slide-in-from-top duration-500 relative z-50 overflow-hidden group">
@@ -1301,6 +1310,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                         </div>
                                                         <div className="text-left relative z-10">
                                                             <h3 className={`font-black tracking-tight text-base mb-0.5 ${isLocked ? 'text-gray-400' : 'text-gray-900 dark:text-white'}`}>The Book of You</h3>
+                                                            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold leading-tight mb-2 max-w-[200px]">Your story evolves as you grow. This is your weekly chronicle of personal evolution.</p>
                                                             {isLocked ? (
                                                                 <div className="flex flex-col gap-1 items-start">
                                                                     <div className="w-16 h-1 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">

@@ -294,7 +294,7 @@ export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id:
                 src={entry.audioUrl}
                 onEnded={() => setPlaying(false)}
                 className="hidden"
-                crossOrigin="anonymous"
+                preload="auto"
             />
         </div>
     );

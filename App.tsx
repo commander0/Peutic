@@ -272,10 +272,6 @@ const MainApp: React.FC = () => {
     // 3. Background Cleanup (Async)
     if (userId) UserService.endSession(userId);
     await UserService.logout();
-
-    // 4. Force hard reload to ensure absolutely no stale state remains in memory
-    window.location.assign('/');
-    setTimeout(() => window.location.reload(), 100);
   };
 
 
