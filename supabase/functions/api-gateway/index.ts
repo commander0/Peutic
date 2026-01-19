@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 import { GoogleGenAI, Modality } from 'https://esm.sh/@google/genai'
-import Stripe from 'https://esm.sh/stripe@14.14.0?target=deno'
+import Stripe from 'npm:stripe@14.14.0'
 
 declare const Deno: any;
 
@@ -18,6 +18,7 @@ serve(async (req) => {
 
     try {
         const { action, payload } = await req.json();
+        console.log("[Gateway] Received action:", action, "| Payload keys:", payload ? Object.keys(payload) : "none");
 
         // Initialize Supabase Admin Client
         const supUrl = Deno.env.get('SUPABASE_URL');
