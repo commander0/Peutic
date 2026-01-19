@@ -1,8 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
-import { GoogleGenAI, Modality } from 'https://esm.sh/@google/genai'
-import Stripe from 'npm:stripe@14.14.0'
+import { GoogleGenAI } from 'https://esm.sh/@google/genai'
 
 declare const Deno: any;
 
@@ -10,6 +9,14 @@ const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+// Lazy-load Stripe only when needed to avoid Deno compatibility issues
+const getStripe = async () => {
+    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+    if (!stripeKey) return null;
+    const { default: Stripe } = await import('https://esm.sh/stripe@12.18.0');
+    return new Stripe(stripeKey, { apiVersion: '2023-08-16' });
+};
 
 serve(async (req) => {
     if (req.method === 'OPTIONS') {
@@ -27,11 +34,6 @@ serve(async (req) => {
         if (!supUrl || !supKey) throw new Error("Missing Server Secrets");
 
         const supabaseClient = createClient(supUrl, supKey);
-        const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-        const stripe = stripeKey ? new Stripe(stripeKey, {
-            apiVersion: '2023-10-16',
-            httpClient: Stripe.createFetchHttpClient(),
-        }) : null;
 
         // --- SAFETY MONITOR HELPER ---
         const scanContent = async (userId: string, type: string, content: string) => {
@@ -336,7 +338,8 @@ serve(async (req) => {
 
         // --- PAYMENTS ---
         if (action === 'process-topup') {
-            if (!stripe) throw new Error("Stripe missing");
+            const stripe = await getStripe();
+            if (!stripe) throw new Error("Stripe not configured");
             const { userId, amount, cost, paymentToken } = payload;
             if (cost > 0) {
                 await stripe.charges.create({
@@ -352,7 +355,8 @@ serve(async (req) => {
         }
 
         if (action === 'admin-stripe-stats') {
-            if (!stripe) throw new Error("Stripe missing");
+            const stripe = await getStripe();
+            if (!stripe) throw new Error("Stripe not configured");
             const [balance, charges, payouts, balanceTransactions] = await Promise.all([
                 stripe.balance.retrieve(),
                 stripe.charges.list({ limit: 10 }),
