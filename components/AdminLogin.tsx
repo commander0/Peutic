@@ -24,6 +24,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
     const [newAdminEmail, setNewAdminEmail] = useState('');
     const [newAdminPassword, setNewAdminPassword] = useState('');
     const [newAdminConfirmPassword, setNewAdminConfirmPassword] = useState('');
+    const [claimMasterKey, setClaimMasterKey] = useState('');
 
     const [hasAdmin, setHasAdmin] = useState<boolean | null>(null);
     const [lockout, setLockout] = useState(0);
@@ -170,7 +171,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             const finalEmail = newAdminEmail.toLowerCase().trim();
 
             // Use NEW Server-Side Creation Bypass
-            const newUser = await AdminService.createRootAdmin(finalEmail, newAdminPassword);
+            const newUser = await AdminService.createRootAdmin(finalEmail, newAdminPassword, claimMasterKey);
 
 
             if (newUser && newUser.role === UserRole.ADMIN) {
@@ -271,6 +272,19 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                         <h3 className="text-white font-black text-lg flex items-center justify-center gap-2 uppercase tracking-wide"><Crown className="w-5 h-5 text-yellow-500" /> System Claim</h3>
                                         <p className="text-[10px] text-gray-400 mt-1">Initialize Root Admin Credentials.</p>
                                     </div>
+
+                                    <div className="relative mb-4">
+                                        <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-yellow-500" />
+                                        <input
+                                            type="password"
+                                            required
+                                            className="w-full bg-black border border-yellow-500/30 rounded-xl p-4 pl-12 text-white focus:border-yellow-500 outline-none transition-colors"
+                                            placeholder="MASTER SECURITY KEY"
+                                            value={claimMasterKey}
+                                            onChange={e => setClaimMasterKey(e.target.value)}
+                                        />
+                                    </div>
+
                                     <input type="email" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="New Admin Email" value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} />
                                     <div className="grid grid-cols-2 gap-4">
                                         <input type="password" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="Password" value={newAdminPassword} onChange={e => setNewAdminPassword(e.target.value)} />

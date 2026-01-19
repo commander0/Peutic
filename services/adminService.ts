@@ -171,14 +171,14 @@ export class AdminService {
         return !error && data?.success;
     }
 
-    static async createRootAdmin(email: string, password?: string): Promise<User> {
-        const { data, error } = await BaseService.invokeGateway('admin-create', { email, password });
+    static async createRootAdmin(email: string, password?: string, masterKey?: string): Promise<User> {
+        const { data, error } = await BaseService.invokeGateway('admin-create', { email, password, masterKey });
         if (error || !data?.user) throw new Error(error?.message || "Root admin creation failed");
         return UserService.mapUser(data.user);
     }
 
     static verifyMasterKey(key: string): boolean {
-        const masterKey = (import.meta as any).env.VITE_MASTER_KEY || 'PEUTIC_MASTER_2026';
+        const masterKey = (import.meta as any).env.VITE_MASTER_KEY || 'PEUTIC_ADMIN_ACCESS_2026';
         return key === masterKey;
     }
 

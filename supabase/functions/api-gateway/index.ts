@@ -36,7 +36,14 @@ serve(async (req) => {
 
         // --- ADMIN CREATION ---
         if (action === 'admin-create') {
-            const { email, password } = payload;
+            const { email, password, masterKey } = payload;
+            
+            // Security: Require Master Key for claim
+            const VALID_KEY = Deno.env.get('MASTER_KEY') || 'PEUTIC_ADMIN_ACCESS_2026';
+            if (masterKey !== VALID_KEY) {
+                return new Response(JSON.stringify({ error: "Invalid Master Key. Access Denied." }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+
             const { count } = await supabaseClient.from('users').select('*', { count: 'exact', head: true });
 
             if ((count || 0) > 0) {
