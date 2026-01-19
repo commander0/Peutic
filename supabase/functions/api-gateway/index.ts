@@ -83,9 +83,16 @@ serve(async (req) => {
         if (action === 'save-journal') {
             const { userId, entry } = payload;
             await scanContent(userId, 'JOURNAL', entry.content);
-            const { error } = await supabaseClient.from('journals').insert({
-                id: entry.id, user_id: userId, date: entry.date, content: entry.content
-            });
+            const insertData: any = {
+                user_id: userId,
+                date: entry.date || new Date().toISOString(),
+                content: entry.content
+            };
+            // Only include 'id' if it's a valid UUID (not the 'j_...' string)
+            if (entry.id && entry.id.length === 36 && entry.id.includes('-')) {
+                insertData.id = entry.id;
+            }
+            const { error } = await supabaseClient.from('journals').insert(insertData);
             if (error) throw error;
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
         }
@@ -111,14 +118,25 @@ serve(async (req) => {
 
         if (action === 'save-art') {
             const { userId, entry } = payload;
-            const { error } = await supabaseClient.from('user_art').insert({
-                id: entry.id,
+            const insertData: any = {
                 user_id: userId,
                 image_url: entry.imageUrl,
                 prompt: entry.prompt,
                 title: entry.title,
-                created_at: entry.createdAt
-            });
+                created_at: entry.createdAt || new Date().toISOString()
+            };
+            // Only include 'id' if it's a valid UUID (not the 'wisdom_...' string)
+            if (entry.id && entry.id.length === 36 && entry.id.includes('-')) {
+                insertData.id = entry.id;
+            }
+            const { error } = await supabaseClient.from('user_art').insert(insertData);
+            if (error) throw error;
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        }
+
+        if (action === 'delete-art') {
+            const { artId } = payload;
+            const { error } = await supabaseClient.from('user_art').delete().eq('id', artId);
             if (error) throw error;
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
         }
@@ -147,6 +165,18 @@ serve(async (req) => {
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
         }
 
+        if (action === 'queue-heartbeat') {
+            const { userId } = payload;
+            await supabaseClient.from('session_queue').update({ last_ping: new Date().toISOString() }).eq('user_id', userId);
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        }
+
+        if (action === 'session-keepalive') {
+            const { userId } = payload;
+            await supabaseClient.from('active_sessions').upsert({ user_id: userId, last_ping: new Date().toISOString() });
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        }
+
         if (action === 'save-transaction') {
             const { userId, tx } = payload;
             const { error } = await supabaseClient.from('transactions').insert({
@@ -172,6 +202,57 @@ serve(async (req) => {
                 date: feedback.date || new Date().toISOString()
             });
             if (error) throw error;
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        }
+
+        if (action === 'admin-save-settings') {
+            const { settings } = payload;
+            const { error } = await supabaseClient.from('global_settings').upsert({
+                id: 1,
+                price_per_minute: settings.pricePerMinute,
+                sale_mode: settings.saleMode,
+                maintenance_mode: settings.maintenanceMode,
+                allow_signups: settings.allowSignups,
+                site_name: settings.siteName,
+                broadcast_message: settings.broadcastMessage,
+                dashboard_broadcast_message: settings.dashboardBroadcastMessage,
+                max_concurrent_sessions: settings.maxConcurrentSessions,
+                multilingual_mode: settings.multilingualMode
+            });
+            if (error) throw error;
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        }
+
+        if (action === 'admin-update-companion') {
+            const { companion } = payload;
+            const { error } = await supabaseClient.from('companions').update({
+                name: companion.name,
+                gender: companion.gender,
+                specialty: companion.specialty,
+                status: companion.status,
+                rating: companion.rating,
+                image_url: companion.imageUrl,
+                bio: companion.bio,
+                replica_id: companion.replicaId,
+                license_number: companion.licenseNumber,
+                degree: companion.degree,
+                state_of_practice: companion.stateOfPractice,
+                years_experience: companion.yearsExperience
+            }).eq('id', companion.id);
+            if (error) throw error;
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        }
+
+        if (action === 'admin-reset-system') {
+            await supabaseClient.from('users').delete().neq('role', 'ADMIN');
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        }
+
+        if (action === 'log-event') {
+            const { type, event, details } = payload;
+            await supabaseClient.from('system_logs').insert({
+                type, event, details, timestamp: new Date().toISOString()
+            });
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
         }
 
@@ -334,20 +415,11 @@ serve(async (req) => {
             if (!apiKey) throw new Error("AI Key missing");
             const ai = new GoogleGenAI({ apiKey });
             const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
-            const result = await model.generateContent({
-                contents: [{ role: 'user', parts: [{ text: payload.text }] }],
-                generationConfig: { responseModalities: ["audio" as any] as any } as any
-            } as any);
-            // Flash-1.5 doesn't support easy audio modality in this SDK version yet without special handling, 
-            // but the previous code tried it. I'll keep it simple or use the previous working logic if I can find it.
-            // Actually, let's just stick to the text generation for now if it's too complex or keep the old one.
-            // Re-using old speak logic:
-            const response = await ai.models.get('gemini-1.5-flash').generateContent({
-                contents: [{ parts: [{ text: payload.text }] }],
-                config: { responseModalities: [Modality.AUDIO], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } } }
-            });
-            const audioData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-            return new Response(JSON.stringify({ audioData }), { headers: corsHeaders });
+
+            // Note: Advanced speech generation usually requires specific modality handling.
+            // This is a placeholder for the speech-to-speech or text-to-speech flow.
+            const result = await model.generateContent(payload.text);
+            return new Response(JSON.stringify({ text: result.response.text(), note: "Audio output currently in development" }), { headers: corsHeaders });
         }
 
         // --- SAFETY LIST ---

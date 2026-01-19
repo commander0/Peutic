@@ -162,7 +162,7 @@ const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }> = ({ 
 
                 const imageUrl = canvas.toDataURL('image/jpeg', 0.4);
                 // Use simple random ID generation for browser compatibility if crypto.randomUUID isn't available in all contexts
-                const newId = `wisdom_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+                const newId = crypto.randomUUID();
 
                 const newEntry: ArtEntry = { id: newId, userId: userId, imageUrl: imageUrl, prompt: input, createdAt: new Date().toISOString(), title: "Wisdom Card" };
 
@@ -590,7 +590,7 @@ const JournalSection: React.FC<{ user: User, onUpdate?: () => void }> = ({ user,
     useEffect(() => {
         UserService.getJournals(user.id).then(setEntries);
     }, [user.id]);
-    const handleSave = () => { if (!content.trim()) return; const entry: JournalEntry = { id: `j_${Date.now()}`, userId: user.id, date: new Date().toISOString(), content: content }; UserService.saveJournal(entry).then(() => { setEntries([entry, ...entries]); setContent(''); setSaved(true); if (onUpdate) onUpdate(); setTimeout(() => setSaved(false), 2000); }); };
+    const handleSave = () => { if (!content.trim()) return; const entry: JournalEntry = { id: crypto.randomUUID(), userId: user.id, date: new Date().toISOString(), content: content }; UserService.saveJournal(entry).then(() => { setEntries([entry, ...entries]); setContent(''); setSaved(true); if (onUpdate) onUpdate(); setTimeout(() => setSaved(false), 2000); }); };
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 h-[450px]">

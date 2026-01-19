@@ -56,22 +56,11 @@ export class AdminService {
 
     static async saveSettings(settings: GlobalSettings) {
         this.settingsCache = settings;
-        const { error } = await supabase.from('global_settings').upsert({
-            id: 1,
-            price_per_minute: settings.pricePerMinute,
-            sale_mode: settings.saleMode,
-            maintenance_mode: settings.maintenanceMode,
-            allow_signups: settings.allowSignups,
-            site_name: settings.siteName,
-            broadcast_message: settings.broadcastMessage,
-            dashboard_broadcast_message: settings.dashboardBroadcastMessage,
-            max_concurrent_sessions: settings.maxConcurrentSessions,
-            multilingual_mode: settings.multilingualMode
-        });
+        const { error } = await BaseService.invokeGateway('admin-save-settings', { settings });
         if (!error) {
             localStorage.setItem(this.CACHE_KEY, JSON.stringify(settings));
         }
-        if (error) logger.error("Save Settings Failed", "", error);
+        if (error) logger.error("Save Settings via Gateway Failed", "", error);
     }
 
     static async getSystemLogs(): Promise<SystemLog[]> {
@@ -158,7 +147,7 @@ export class AdminService {
     }
 
     static async resetAllUsers() {
-        await supabase.from('users').delete().neq('role', 'ADMIN');
+        await BaseService.invokeGateway('admin-reset-system');
         logger.security("System Reset", "All non-admin users purged");
     }
 
@@ -169,11 +158,10 @@ export class AdminService {
     }
 
     static async recordAdminFailure() {
-        await supabase.from('system_logs').insert({
+        await BaseService.invokeGateway('log-event', {
             type: 'SECURITY',
             event: 'Admin Login Failed',
-            details: 'Invalid credentials or key',
-            timestamp: new Date().toISOString()
+            details: 'Invalid credentials or key'
         });
     }
 
@@ -253,21 +241,8 @@ export class AdminService {
 
 
     static async updateCompanion(companion: Companion): Promise<void> {
-        const { error } = await supabase.from('companions').update({
-            name: companion.name,
-            gender: companion.gender,
-            specialty: companion.specialty,
-            status: companion.status,
-            rating: companion.rating,
-            image_url: companion.imageUrl,
-            bio: companion.bio,
-            replica_id: companion.replicaId,
-            license_number: companion.licenseNumber,
-            degree: companion.degree,
-            state_of_practice: companion.stateOfPractice,
-            years_experience: companion.yearsExperience
-        }).eq('id', companion.id);
-        if (error) logger.error("Update Companion Failed", companion.id, error);
+        const { error } = await BaseService.invokeGateway('admin-update-companion', { companion });
+        if (error) logger.error("Update Companion via Gateway Failed", companion.id, error);
     }
 
     static async getAllTransactions(): Promise<Transaction[]> {
@@ -296,11 +271,8 @@ export class AdminService {
     }
 
     static async logSystemEvent(type: string, event: string, details: string) {
-        await supabase.from('system_logs').insert({
-            type,
-            event,
-            details,
-            timestamp: new Date().toISOString()
+        await BaseService.invokeGateway('log-event', {
+            type, event, details
         });
     }
 }

@@ -239,10 +239,7 @@ export class UserService {
         }
 
         const updatedUser = { ...user, streak: newStreak, lastLoginDate: new Date().toISOString() };
-        supabase.from('users').update({
-            streak: newStreak,
-            last_login_date: new Date().toISOString()
-        }).eq('id', user.id).then(() => { }).catch(console.error);
+        BaseService.invokeGateway('user-update', updatedUser).catch(console.error);
 
         return updatedUser;
     }
@@ -274,9 +271,9 @@ export class UserService {
     }
 
     static async deleteArt(id: string) {
-        const { error } = await supabase.from('user_art').delete().eq('id', id);
+        const { error } = await BaseService.invokeGateway('delete-art', { artId: id });
         if (error) {
-            logger.error("Delete Art Failed", id, error);
+            logger.error("Delete Art via Gateway Failed", id, error);
             throw error;
         }
     }
@@ -387,7 +384,7 @@ export class UserService {
     }
 
     static async sendQueueHeartbeat(userId: string) {
-        await supabase.from('session_queue').update({ last_ping: new Date().toISOString() }).eq('user_id', userId);
+        await BaseService.invokeGateway('queue-heartbeat', { userId });
     }
 
     static async getQueuePosition(userId: string): Promise<number> {
@@ -405,7 +402,7 @@ export class UserService {
     }
 
     static async sendKeepAlive(userId: string) {
-        await supabase.from('active_sessions').upsert({ user_id: userId, last_ping: new Date().toISOString() });
+        await BaseService.invokeGateway('session-keepalive', { userId });
     }
 
     static async deductBalance(amount: number) {
