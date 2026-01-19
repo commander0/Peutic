@@ -265,6 +265,7 @@ export class UserService {
     }
 
     static async saveArt(entry: ArtEntry) {
+        console.log("UserService: Saving art directly to Supabase...", entry.id);
         const { error } = await supabase.from('user_art').insert({
             id: entry.id || crypto.randomUUID(),
             user_id: entry.userId,

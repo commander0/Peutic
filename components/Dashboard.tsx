@@ -128,8 +128,7 @@ const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }> = ({ 
             // Simulated delay for premium feel
             await new Promise(resolve => setTimeout(resolve, 800));
 
-            // Perform safety scan on the input (Skipped for offline mode)
-            // await BaseService.invokeGateway('content-scan', { userId, content: input, type: 'WISDOM_INPUT' });
+            console.log("Generating wisdom locally...");
 
             // Use internal WisdomEngine instead of external API
             const wisdom = WisdomEngine.generate(input);
