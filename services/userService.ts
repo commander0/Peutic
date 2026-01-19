@@ -263,10 +263,23 @@ export class UserService {
     }
 
     static async saveArt(entry: ArtEntry) {
-        const { error } = await BaseService.invokeGateway('save-art', { userId: entry.userId, entry });
-        if (error) {
-            console.error("Save Art via Gateway Failed:", error);
-            throw error;
+        try {
+            const result = await BaseService.invokeGateway('save-art', { userId: entry.userId, entry });
+            if (result?.error) throw new Error(result.error);
+        } catch (gatewayError) {
+            console.warn("Gateway save-art failed, using direct fallback:", gatewayError);
+            // Fallback to direct Supabase insert
+            const { error } = await supabase.from('user_art').insert({
+                user_id: entry.userId,
+                image_url: entry.imageUrl,
+                prompt: entry.prompt,
+                title: entry.title,
+                created_at: entry.createdAt || new Date().toISOString()
+            });
+            if (error) {
+                console.error("Direct save-art also failed:", error);
+                throw error;
+            }
         }
     }
 
@@ -292,10 +305,21 @@ export class UserService {
     }
 
     static async saveJournal(entry: JournalEntry) {
-        const { error } = await BaseService.invokeGateway('save-journal', { userId: entry.userId, entry });
-        if (error) {
-            console.error("Save Journal via Gateway Failed:", error);
-            throw error;
+        try {
+            const result = await BaseService.invokeGateway('save-journal', { userId: entry.userId, entry });
+            if (result?.error) throw new Error(result.error);
+        } catch (gatewayError) {
+            console.warn("Gateway save-journal failed, using direct fallback:", gatewayError);
+            // Fallback to direct Supabase insert
+            const { error } = await supabase.from('journals').insert({
+                user_id: entry.userId,
+                date: entry.date || new Date().toISOString(),
+                content: entry.content
+            });
+            if (error) {
+                console.error("Direct save-journal also failed:", error);
+                throw error;
+            }
         }
     }
 
