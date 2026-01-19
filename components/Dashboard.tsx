@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Companion, Transaction, JournalEntry, ArtEntry, VoiceJournalEntry } from '../types';
+import { User, Companion, Transaction, JournalEntry, ArtEntry, VoiceJournalEntry, GardenState, Anima } from '../types';
 import { LanguageSelector } from './common/LanguageSelector';
 import { useLanguage } from './common/LanguageContext';
 import {
@@ -9,7 +9,6 @@ import {
     BookOpen, Save, Sparkles, Flame, Trophy,
     Sun, Feather, Anchor, RefreshCw, Play, Star, Edit2, Trash2, Zap, Gamepad2,
     CloudRain, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Moon,
-
     Twitter, Instagram, Linkedin, Volume2, Music, Trees,
     Mail, StopCircle, Eye, Minimize2, Flame as Fire, EyeOff, Megaphone
 } from 'lucide-react';
@@ -25,7 +24,6 @@ import { generateDailyInsight } from '../services/geminiService';
 import { WisdomEngine } from '../services/wisdomEngine';
 import TechCheck from './TechCheck';
 import GroundingMode from './GroundingMode';
-import { GardenState } from '../types';
 import { GardenService } from '../services/gardenService';
 
 // LAZY LOAD HEAVY COMPONENTS
@@ -36,12 +34,11 @@ const PaymentModal = lazy(() => import('./PaymentModal').catch(() => ({ default:
 const ProfileModal = lazy(() => import('./ProfileModal').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Profile Experience...</div> })));
 const GardenFullView = lazy(() => import('./garden/GardenFullView'));
 const BookOfYouView = lazy(() => import('./retention/BookOfYouView'));
-const PocketPetView = lazy(() => import('./pocket/PocketPetView'));
+const AnimaView = lazy(() => import('./pocket/AnimaView'));
 
 import EmergencyOverlay from './safety/EmergencyOverlay';
 import { VoiceRecorder, VoiceEntryItem } from './journal/VoiceRecorder';
 import { PetService } from '../services/petService';
-import { PocketPet } from '../types';
 
 // Stripe publishable key
 const STRIPE_PUBLISHABLE_KEY = (import.meta as any).env?.VITE_STRIPE_PUBLISHABLE_KEY || '';
@@ -60,7 +57,6 @@ interface DashboardProps {
     onStartSession: (companion: Companion) => void;
 }
 
-
 const AvatarImage = React.memo(({ src, alt, className, isUser = false }: { src?: string, alt?: string, className?: string, isUser?: boolean }) => (
     <div className={`relative ${className || ''} overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>
         {src ? (
@@ -69,7 +65,6 @@ const AvatarImage = React.memo(({ src, alt, className, isUser = false }: { src?:
                 alt={alt || 'Avatar'}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                    // Fallback to Dicebear if image fails to load
                     (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/lorelei/svg?seed=${alt || 'anonymous'}&backgroundColor=FCD34D`;
                 }}
             />
@@ -436,8 +431,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [showBookFull, setShowBookFull] = useState(false);
     const [showGardenFull, setShowGardenFull] = useState(false);
     const [showPocketPet, setShowPocketPet] = useState(false);
-    const [userPet, setUserPet] = useState<PocketPet | null>(null);
-    const [isVaultOpen, setIsVaultOpen] = useState(true);
+    const [anima, setAnima] = useState<Anima | null>(null);
+    const [isAdmin, setIsAdmin] = useState(user.role === 'ADMIN');
+    const [isVaultOpen, setIsVaultOpen] = useState(false);
 
 
     const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
@@ -509,7 +505,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const refreshPet = async () => {
         if (!user.id) return;
         const p = await PetService.getPet(user.id);
-        setUserPet(p);
+        setAnima(p);
     };
 
     useEffect(() => {
@@ -740,26 +736,30 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         </div>
                     )}
                     <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-10 pb-24">
-                        {/* CLEAN TOP BAR (SIDEBAR-CENTRIC) */}
-                        <header className="mb-10 flex items-center justify-between">
-                            <div className="flex flex-col">
-                                <div className="md:hidden flex items-center gap-2 mb-2">
-                                    <div className="w-8 h-8 bg-yellow-400 rounded-lg flex items-center justify-center shadow-md">
-                                        <Heart className="w-4 h-4 text-black fill-black" />
+                        <header className="mb-8 md:mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                            <div className="flex items-center justify-between w-full md:w-auto">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg">
+                                        <Heart className="w-5 h-5 text-black fill-black" />
                                     </div>
-                                    <span className="text-lg font-black tracking-tight dark:text-white">Peutic</span>
+                                    <div className="flex flex-col">
+                                        <span className="text-xl font-black tracking-tight dark:text-white">Peutic</span>
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">
+                                            {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                                        </p>
+                                    </div>
                                 </div>
-                                {activeTab !== 'inner_sanctuary' && (
-                                    <h1 className="text-2xl md:text-3xl font-black tracking-tight dark:text-white flex items-center gap-3">
-                                        {activeTab === 'history' ? t('sec_history') : t('dash_settings')}
-                                    </h1>
-                                ) || <h1 className="md:hidden text-2xl font-black tracking-tight dark:text-white">{t('dash_hub')}</h1>}
-                                <p className="text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-widest mt-0.5">
-                                    {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-                                </p>
+                                {/* Desktop Title only */}
+                                <div className="hidden md:block ml-8">
+                                    {activeTab !== 'inner_sanctuary' && (
+                                        <h1 className="text-2xl lg:text-3xl font-black tracking-tight dark:text-white">
+                                            {activeTab === 'history' ? t('sec_history') : t('dash_settings')}
+                                        </h1>
+                                    )}
+                                </div>
                             </div>
 
-                            <div className="flex items-center gap-2 md:gap-3">
+                            <div className="flex items-center flex-wrap gap-2 md:gap-3">
                                 <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
 
                                 <button onClick={() => setShowGrounding(true)} className="p-2.5 rounded-2xl bg-white dark:bg-gray-800 border border-blue-100 dark:border-gray-700 shadow-sm hover:scale-105 transition-all text-blue-500" title="Grounding Mode">
@@ -803,7 +803,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             <div className="p-2 bg-yellow-100 dark:bg-gray-800 rounded-lg text-yellow-600 dark:text-yellow-500">
                                                 <Zap className="w-5 h-5" />
                                             </div>
-                                            <h2 className="text-sm font-black uppercase tracking-widest dark:text-white">The Playground</h2>
+                                            <h2 className="text-sm font-black uppercase tracking-widest dark:text-white">The Vault</h2>
                                         </div>
                                         <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-500 ${isVaultOpen ? 'rotate-180' : ''}`} />
                                     </button>
@@ -854,20 +854,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')] opacity-[0.2] pointer-events-none"></div>
                                                         <div className="flex flex-col items-center justify-center h-full p-2 md:p-6 text-center relative z-10">
                                                             <div className="relative mb-1 md:mb-4">
-                                                                <div className="absolute -inset-2 md:-inset-6 bg-white/40 blur-xl md:blur-2xl rounded-full animate-aura-glow pointer-events-none"></div>
-                                                                {isLocked && <div className="absolute -inset-2 md:-inset-4 border border-white/30 rounded-full animate-pulse"></div>}
-                                                                <div className={`w-10 h-10 md:w-20 md:h-20 rounded-lg md:rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.8)] transition-all ${isLocked ? 'bg-black text-gray-700 border border-white/5' : 'bg-gradient-to-t from-gray-300 to-white text-black'}`}>
-                                                                    {isLocked ? <Lock className="w-4 h-4 md:w-8 md:h-8" /> : <BookOpen className="w-4 h-4 md:w-8 md:h-8" />}
+                                                                <div className="absolute -inset-4 bg-white/20 blur-xl rounded-full animate-pulse"></div>
+                                                                <div className="w-10 h-10 md:w-20 md:h-20 bg-black/40 border border-white/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(255,255,255,0.2)] group-hover:scale-110 transition-transform">
+                                                                    <BookOpen className="w-5 h-5 md:w-10 md:h-10" />
                                                                 </div>
+                                                                {isLocked && <div className="absolute -top-2 -right-2 bg-yellow-400 text-black p-1 rounded-lg shadow-lg"><Lock className="w-3 h-3" /></div>}
                                                             </div>
-                                                            <h3 className="text-[7px] md:text-sm font-black text-white dark:text-gray-100 uppercase tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,1)] text-center">Book of You</h3>
-                                                            <p className="hidden md:block text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{isLocked ? `Unlocks in ${daysRemaining}d` : 'Silver Legacy'}</p>
+                                                            <h3 className="text-[7px] md:text-sm font-black text-white uppercase tracking-widest drop-shadow-[0_0_6px_rgba(0,0,0,0.5)]">Book of You</h3>
+                                                            <p className="hidden md:block text-[10px] font-bold text-white/50 uppercase tracking-widest">
+                                                                {isLocked ? `Unlocked in ${daysRemaining}d` : 'Open Chronicle'}
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 );
                                             })()}
 
-                                            {/* TILE 3: POCKET PET */}
+                                            {/* TILE 3: ANIMA */}
                                             <div
                                                 onClick={() => setShowPocketPet(true)}
                                                 className="group relative bg-[#0a1515] dark:bg-black rounded-xl md:rounded-3xl border border-cyan-500/30 dark:border-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.1)] hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
@@ -877,12 +879,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     <div className="relative mb-1 md:mb-4">
                                                         <div className="absolute -inset-4 bg-cyan-500/20 blur-xl rounded-full animate-pulse"></div>
                                                         <div className="w-10 h-10 md:w-20 md:h-20 bg-black/40 border border-cyan-500/50 rounded-2xl flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform">
-                                                            <Gamepad2 className="w-5 h-5 md:w-10 md:h-10 animate-bounce" />
+                                                            <Sparkles className="w-5 h-5 md:w-10 md:h-10 animate-bounce" />
                                                         </div>
                                                     </div>
-                                                    <h3 className="text-[7px] md:text-sm font-black text-white dark:text-cyan-50 uppercase tracking-[0.2em] mb-1">Pocket Pet</h3>
+                                                    <h3 className="text-[7px] md:text-sm font-black text-white dark:text-cyan-50 uppercase tracking-[0.2em] mb-1">Anima</h3>
                                                     <p className="hidden md:block text-[10px] font-bold text-cyan-400/50 uppercase tracking-widest">
-                                                        {userPet ? `${userPet.name} Lvl ${userPet.level}` : 'Summon Friend'}
+                                                        {anima ? `${anima.name} Lvl ${anima.level}` : 'Summon Friend'}
                                                     </p>
                                                 </div>
                                             </div>
@@ -1184,7 +1186,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             )}
             {showPocketPet && dashboardUser && (
                 <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Bridging Digital Reality...</div>}>
-                    <PocketPetView user={dashboardUser} onClose={() => { setShowPocketPet(false); refreshPet(); }} />
+                    <AnimaView user={dashboardUser} onClose={() => { setShowPocketPet(false); refreshPet(); }} />
                 </Suspense>
             )}
         </div>

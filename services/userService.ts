@@ -426,11 +426,12 @@ export class UserService {
             const iso = oneWeekAgo.toISOString();
 
             // Run queries in parallel for performance, handling potential failures individually
-            const [jRes, sRes, mRes, aRes] = await Promise.all([
+            const [jRes, sRes, mRes, aRes, pRes] = await Promise.all([
                 supabase.from('journals').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', iso),
                 supabase.from('transactions').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'COMPLETED').gte('date', iso),
                 supabase.from('moods').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', iso),
-                supabase.from('user_art').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', iso)
+                supabase.from('user_art').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', iso),
+                supabase.from('pocket_pets').select('last_interaction_at').eq('user_id', userId).maybeSingle()
             ]);
 
             const journalCount = jRes.count || 0;
@@ -438,7 +439,16 @@ export class UserService {
             const moodCount = mRes.count || 0;
             const artCount = aRes.count || 0;
 
-            const totalActions = journalCount + sessionCount + moodCount + artCount;
+            // Pet care bonus: If pet was interacted with in the last 24 hours, add bonus points
+            let petBonus = 0;
+            if (pRes.data?.last_interaction_at) {
+                const lastInteraction = new Date(pRes.data.last_interaction_at);
+                const hoursAgo = (Date.now() - lastInteraction.getTime()) / (1000 * 60 * 60);
+                if (hoursAgo < 24) petBonus = 2;
+                else if (hoursAgo < 48) petBonus = 1;
+            }
+
+            const totalActions = journalCount + sessionCount + moodCount + artCount + petBonus;
             const current = totalActions * 0.5;
 
             const messages = [

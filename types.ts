@@ -185,7 +185,7 @@ export interface VoiceJournalEntry {
   title: string;
 }
 
-export interface PocketPet {
+export interface Anima {
   id: string;
   userId: string;
   name: string;
