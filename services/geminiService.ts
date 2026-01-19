@@ -1,5 +1,5 @@
-
 import { supabase } from './supabaseClient';
+import { UserService } from './userService';
 
 // --- LOCAL FALLBACK DATA (For Offline/Error Modes) ---
 const LOCAL_AFFIRMATIONS = {
@@ -16,12 +16,16 @@ const getLocalFallback = (type: string, name: string) => {
 
 // --- SECURE API CALLS ---
 
-export const generateDailyInsight = async (userName: string): Promise<string> => {
+export const generateDailyInsight = async (userName: string, userId: string): Promise<string> => {
     try {
         const { data, error } = await supabase.functions.invoke('api-gateway', {
             body: {
                 action: 'gemini-generate',
-                payload: { prompt: `Write a warm, human-like 1-sentence mental wellness greeting for ${userName}. Do not be robotic.` }
+                payload: {
+                    prompt: `Write a warm, human-like 1-sentence mental wellness greeting for ${userName}. Do not be robotic.`,
+                    userId,
+                    type: 'AI_INSIGHT'
+                }
             }
         });
 
@@ -33,12 +37,16 @@ export const generateDailyInsight = async (userName: string): Promise<string> =>
     }
 };
 
-export const generateAffirmation = async (struggle: string = "general"): Promise<string> => {
+export const generateAffirmation = async (struggle: string = "general", userId?: string): Promise<string> => {
     try {
         const { data, error } = await supabase.functions.invoke('api-gateway', {
             body: {
                 action: 'gemini-generate',
-                payload: { prompt: `The user feels: "${struggle}". Write 1 powerful, metaphorical affirmation (max 10 words). No quotes.` }
+                payload: {
+                    prompt: `The user feels: "${struggle}". Write 1 powerful, metaphorical affirmation (max 10 words). No quotes.`,
+                    userId,
+                    type: 'AI_AFFIRMATION'
+                }
             }
         });
 
@@ -83,12 +91,16 @@ export const generateSpeech = async (text: string): Promise<Uint8Array | null> =
     }
 };
 
-export const generateWisdomCard = async (userName: string, summary: string): Promise<{ wisdom: string, title: string, color: string }> => {
+export const generateWisdomCard = async (userName: string, summary: string, userId?: string): Promise<{ wisdom: string, title: string, color: string }> => {
     try {
         const { data, error } = await supabase.functions.invoke('api-gateway', {
             body: {
                 action: 'gemini-generate',
-                payload: { prompt: `The user ${userName} just finished a therapy session. Summary: "${summary}". Generate 3 things: 1. A poetic "Wisdom Card" message (max 20 words). 2. A 2-word title. 3. A theme color (hex code for a soft pastel background). Return as JSON.` }
+                payload: {
+                    prompt: `The user ${userName} just finished a therapy session. Summary: "${summary}". Generate 3 things: 1. A poetic "Wisdom Card" message (max 20 words). 2. A 2-word title. 3. A theme color (hex code for a soft pastel background). Return as JSON.`,
+                    userId,
+                    type: 'AI_WISDOM_CARD'
+                }
             }
         });
 

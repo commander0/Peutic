@@ -14,6 +14,7 @@ import {
 import { STABLE_AVATAR_POOL } from '../services/database';
 import { UserService } from '../services/userService';
 import { AdminService } from '../services/adminService';
+import { BaseService } from '../services/baseService';
 import { useToast } from './common/Toast';
 import { CompanionSkeleton, StatSkeleton } from './common/SkeletonLoader';
 
@@ -126,6 +127,9 @@ const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }> = ({ 
         try {
             // Simulated delay for premium feel
             await new Promise(resolve => setTimeout(resolve, 800));
+
+            // Perform safety scan on the input
+            await BaseService.invokeGateway('content-scan', { userId, content: input, type: 'WISDOM_INPUT' });
 
             // Use internal WisdomEngine instead of external API
             const wisdom = WisdomEngine.generate(input);
@@ -851,7 +855,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         // Kick off all data fetching in parallel
         refreshData();
 
-        generateDailyInsight(user.name).then(insight => {
+        generateDailyInsight(user.name, user.id).then(insight => {
             if (insight) setDailyInsight(insight);
         });
 

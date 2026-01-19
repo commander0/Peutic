@@ -1,13 +1,10 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
-} from 'recharts';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Users, DollarSign, Activity, LogOut, Settings, Video,
     Ban, Zap, ShieldAlert,
     Megaphone, Menu, X, Gift,
-    Clock, Server, Shield, CheckCircle, Lock, Crown, AlertTriangle, LayoutGrid, List, Trash2
-
+    Clock, Server, Shield, CheckCircle, Lock, Crown, AlertTriangle, LayoutGrid, List, Trash2,
+    ShoppingBag, CreditCard, ShieldCheck
 } from 'lucide-react';
 import { STABLE_AVATAR_POOL } from '../services/database';
 
@@ -142,10 +139,13 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     const [inputState, setInputState] = useState<{ open: boolean; title: string; placeholder: string; userId: string }>({ open: false, title: '', placeholder: '', userId: '' });
 
     // Financial Intelligence States
-    const [stripeStats, setStripeStats] = useState<{ balance: { available: number; pending: number; currency: string }; recentSales: any[] } | null>(null);
-    const lastStripeFetch = useRef<number>(0);
+    const [stripeStats, setStripeStats] = useState<any>(null);
     const [loadingFinancials, setLoadingFinancials] = useState(false);
-    const [dashboardBroadcastMsg, setDashboardBroadcastMsg] = useState('');
+    const [safetyAlerts, setSafetyAlerts] = useState<any[]>([]);
+    const lastStripeFetch = useRef<number>(0);
+    const [dashboardBroadcastMsg, setDashboardBroadcastMsg] = useState(AdminService.getSettings().dashboardBroadcastMessage || '');
+    const [isEditingPublic, setIsEditingPublic] = useState(false);
+    const [isEditingDashboard, setIsEditingDashboard] = useState(false);
 
 
     // Computed
@@ -153,25 +153,22 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     const WAITING_ROOM_CAPACITY = 35;
     const totalRevenue = transactions.filter(t => t.cost && t.cost > 0).reduce((acc, t) => acc + (t.cost || 0), 0);
 
-    // Calculate Real Revenue Data (Last 7 Days)
-    const revenueData = useMemo(() => {
-        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        const today = new Date();
-        const last7Days = Array.from({ length: 7 }, (_, i) => {
-            const d = new Date(today);
-            d.setDate(today.getDate() - (6 - i));
-            return d;
-        });
+    const fetchStripeStats = async () => {
+        setLoadingFinancials(true);
+        const stats = await AdminService.getStripeStats();
+        if (stats) setStripeStats(stats);
+        setLoadingFinancials(false);
+        lastStripeFetch.current = Date.now();
+    };
 
-        return last7Days.map(date => {
-            const dayName = days[date.getDay()];
-            const dateStr = date.toDateString();
-            const dailyTotal = transactions
-                .filter(t => t.cost && t.cost > 0 && new Date(t.date).toDateString() === dateStr)
-                .reduce((acc, t) => acc + (t.cost || 0), 0);
-            return { name: dayName, amount: dailyTotal };
-        });
-    }, [transactions]);
+    const fetchSafetyAlerts = async () => {
+        try {
+            const alerts = await AdminService.getSafetyAlerts();
+            setSafetyAlerts(alerts || []);
+        } catch (e) {
+            console.warn("Safety alerts fetch failed", e);
+        }
+    };
 
     const fetchData = async (isInitial = false) => {
         if (isInitial) setLoading(true);
@@ -179,22 +176,18 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         try {
             const s = await AdminService.syncGlobalSettings();
             setSettings(s);
-            setBroadcastMsg(s.broadcastMessage || '');
-            setDashboardBroadcastMsg(s.dashboardBroadcastMessage || '');
+            if (!isEditingPublic) setBroadcastMsg(s.broadcastMessage || '');
+            if (!isEditingDashboard) setDashboardBroadcastMsg(s.dashboardBroadcastMessage || '');
             setLogs(await AdminService.getSystemLogs());
             setUsers(await AdminService.getAllUsers());
             setCompanions(await AdminService.getCompanions());
             setTransactions(await AdminService.getAllTransactions());
+            fetchSafetyAlerts(); // Fetch safety alerts
 
             if (activeTab === 'financials') {
                 const now = Date.now();
                 if (now - lastStripeFetch.current > 30000 || !stripeStats) {
-                    setLoadingFinancials(true);
-                    lastStripeFetch.current = now;
-                    AdminService.getStripeStats()
-                        .then(setStripeStats)
-                        .catch(console.warn)
-                        .finally(() => setLoadingFinancials(false));
+                    fetchStripeStats();
                 }
             }
 
@@ -459,6 +452,8 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                                     <input
                                                         value={broadcastMsg}
                                                         onChange={(e) => setBroadcastMsg(e.target.value)}
+                                                        onFocus={() => setIsEditingPublic(true)}
+                                                        onBlur={() => setIsEditingPublic(false)}
                                                         placeholder="Public message (Login/Landing)..."
                                                         className="flex-1 bg-black border border-gray-700 rounded-xl px-4 py-2 text-xs text-white focus:border-yellow-500 outline-none"
                                                     />
@@ -473,6 +468,8 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                                     <input
                                                         value={dashboardBroadcastMsg}
                                                         onChange={(e) => setDashboardBroadcastMsg(e.target.value)}
+                                                        onFocus={() => setIsEditingDashboard(true)}
+                                                        onBlur={() => setIsEditingDashboard(false)}
                                                         placeholder="Sanctuary message (Logged-in Users)..."
                                                         className="flex-1 bg-black border border-gray-700 rounded-xl px-4 py-2 text-xs text-white focus:border-blue-500 outline-none"
                                                     />
@@ -519,19 +516,83 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                         <h3 className="font-bold text-white text-sm">Keyword Watchlist</h3>
                                     </div>
                                     <div className="flex flex-wrap gap-2">
-                                        {["Self-harm", "Suicide", "Danger", "Hurt", "Kill", "Weapon", "Emergency"].map(word => (
+                                        {["self-harm", "suicide", "kill myself", "end my life", "hurt myself", "danger", "weapon", "abuse", "emergency", "drug", "illegal", "die"].map(word => (
                                             <span key={word} className="px-3 py-1 bg-red-900/40 border border-red-800 text-red-300 rounded-full text-[10px] font-bold uppercase tracking-wide">{word}</span>
                                         ))}
-                                        <button className="px-3 py-1 bg-gray-800 border border-gray-700 text-gray-400 rounded-full text-[10px] font-bold hover:text-white">+</button>
                                     </div>
+                                    <p className="text-gray-500 text-[9px] mt-3 italic">System triggers alerts when these keywords appear in journals or AI interactions.</p>
                                 </div>
 
                                 <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl">
-                                    <h3 className="font-bold text-white mb-4 text-sm">Incident Reports</h3>
-                                    <div className="text-center py-8 text-gray-500 text-[10px] border border-dashed border-gray-800 rounded-xl">
-                                        No active incidents reported in last 24h.
+                                    <h3 className="font-bold text-white mb-4 text-sm">Security Summary</h3>
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-center bg-black/30 p-3 rounded-lg border border-gray-800">
+                                            <span className="text-xs text-gray-400">Total Alerts</span>
+                                            <span className="text-sm font-black text-red-500">{safetyAlerts.length}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center bg-black/30 p-3 rounded-lg border border-gray-800">
+                                            <span className="text-xs text-gray-400">Banned Users</span>
+                                            <span className="text-sm font-black text-yellow-500">{users.filter(u => u.subscriptionStatus === 'BANNED').length}</span>
+                                        </div>
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* Real-time Alerts List */}
+                            <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                                <h3 className="p-5 font-bold text-white text-sm border-b border-gray-800 flex items-center gap-2">
+                                    <Activity className="w-4 h-4 text-red-500" /> Safety Alert Stream
+                                </h3>
+                                {safetyAlerts.length === 0 ? (
+                                    <div className="text-center py-20 text-gray-500 text-xs">No safety alerts triggered yet.</div>
+                                ) : (
+                                    <div className="divide-y divide-gray-800">
+                                        {safetyAlerts.map(alert => (
+                                            <div key={alert.id} className="p-5 hover:bg-red-950/5 transition-colors group">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="p-2 bg-red-500/10 rounded-lg">
+                                                            <AlertTriangle className="w-4 h-4 text-red-500" />
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-xs font-black text-white">{alert.users?.name || 'Unknown User'}</div>
+                                                            <div className="text-[10px] text-gray-500">{alert.users?.email}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-[9px] text-gray-600 font-mono">{new Date(alert.created_at).toLocaleString()}</div>
+                                                </div>
+                                                <div className="bg-black/40 p-3 rounded-xl border border-red-900/20 mb-3">
+                                                    <div className="text-[10px] uppercase font-bold text-red-400 mb-1 tracking-widest">{alert.content_type} FLAG</div>
+                                                    <p className="text-xs text-gray-300 leading-relaxed">"{alert.content}"</p>
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex gap-2">
+                                                        {alert.flagged_keywords?.map((kw: string) => (
+                                                            <span key={kw} className="px-2 py-0.5 bg-red-500/10 border border-red-500/20 text-red-500 rounded text-[9px] font-bold uppercase">{kw}</span>
+                                                        ))}
+                                                    </div>
+                                                    <button
+                                                        onClick={() => setConfirmState({
+                                                            open: true,
+                                                            title: "Ban High-Risk User?",
+                                                            message: `Restrict access for ${alert.users?.email} immediately?`,
+                                                            type: 'danger',
+                                                            action: async () => {
+                                                                await AdminService.updateUserStatus(alert.user_id, 'BANNED');
+                                                                showToast("User successfully banned", "success");
+                                                                fetchSafetyAlerts();
+                                                                setUsers(await AdminService.getAllUsers());
+                                                            }
+                                                        })}
+                                                        className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold text-red-500 border border-red-500/30 px-3 py-1 rounded-md hover:bg-red-500 hover:text-white"
+                                                    >
+                                                        Ban User
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl">
@@ -624,72 +685,108 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                     {/* --- FINANCIAL INTELLIGENCE --- */}
                     {activeTab === 'financials' && (
                         <div className="space-y-6 animate-in fade-in duration-500">
-                            <h2 className="text-2xl font-black">Financial Intelligence</h2>
-                            <div className="grid md:grid-cols-3 gap-6">
-                                <div className="md:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-5 text-white">
-                                    <h3 className="font-bold text-white mb-5 text-sm">Revenue Trend (Last 7 Days)</h3>
-                                    <div className="h-[250px]">
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={revenueData}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-                                                <XAxis dataKey="name" stroke="#666" fontSize={10} tickLine={false} axisLine={false} />
-                                                <YAxis stroke="#666" fontSize={10} tickLine={false} axisLine={false} />
-                                                <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '8px' }} itemStyle={{ color: '#fff', fontSize: '12px' }} />
-                                                <Bar dataKey="amount" fill="#22C55E" radius={[4, 4, 0, 0]} />
-                                            </BarChart>
-                                        </ResponsiveContainer>
+                            <h2 className="text-2xl font-black mb-1">Financial Intelligence</h2>
+                            <p className="text-gray-500 text-xs mb-6">Real-time insights from your Stripe account.</p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                                {loadingFinancials ? (
+                                    <>
+                                        <StatSkeleton />
+                                        <StatSkeleton />
+                                        <StatSkeleton />
+                                        <StatSkeleton />
+                                    </>
+                                ) : stripeStats ? (
+                                    <>
+                                        <StatCard title="Available Balance" value={`$${stripeStats.balance.available.toFixed(2)}`} icon={DollarSign} subValue={stripeStats.balance.currency.toUpperCase()} subLabel="Currency" color="green" />
+                                        <StatCard title="Pending Balance" value={`$${stripeStats.balance.pending.toFixed(2)}`} icon={Activity} subValue={stripeStats.balance.currency.toUpperCase()} subLabel="Currency" color="yellow" />
+                                        <StatCard title="Recent Sales" value={stripeStats.recentSales.length} icon={ShoppingBag} subValue="Last 10" subLabel="Volume" color="blue" />
+                                        <StatCard title="Payouts" value={stripeStats.recentPayouts.length} icon={CreditCard} subValue="Pending/Paid" subLabel="Transfers" color="purple" />
+                                    </>
+                                ) : (
+                                    <div className="col-span-full text-center py-10 bg-gray-900/50 border border-dashed border-gray-800 rounded-2xl">
+                                        <AlertTriangle className="w-8 h-8 text-red-500 mx-auto mb-3" />
+                                        <p className="text-red-400 font-bold">Failed to load Stripe data.</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="grid lg:grid-cols-3 gap-6">
+                                <div className="lg:col-span-2 space-y-6">
+                                    {/* Detailed Transaction History */}
+                                    <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                                        <h3 className="p-5 font-bold text-white text-sm border-b border-gray-800 flex items-center gap-2">
+                                            <List className="w-4 h-4 text-green-500" /> All Balance Transactions
+                                        </h3>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left">
+                                                <thead className="bg-black text-[10px] font-bold text-gray-500 uppercase">
+                                                    <tr>
+                                                        <th className="p-4">Date</th>
+                                                        <th className="p-4">Type</th>
+                                                        <th className="p-4">Description</th>
+                                                        <th className="p-4 text-right">Amount</th>
+                                                        <th className="p-4 text-right">Fee</th>
+                                                        <th className="p-4 text-right font-black">Net</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-800">
+                                                    {loadingFinancials ? (
+                                                        <tr><td colSpan={6} className="p-0"><TableSkeleton rows={10} cols={6} /></td></tr>
+                                                    ) : stripeStats?.transactions.map((tx: any) => (
+                                                        <tr key={tx.id} className="hover:bg-gray-800/30 transition-colors">
+                                                            <td className="p-4 text-[10px] font-mono text-gray-500">{new Date(tx.created).toLocaleDateString()}</td>
+                                                            <td className="p-4">
+                                                                <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase ${tx.type === 'charge' ? 'bg-green-500/10 text-green-400' : 'bg-blue-500/10 text-blue-400'}`}>
+                                                                    {tx.type}
+                                                                </span>
+                                                            </td>
+                                                            <td className="p-4 text-xs text-gray-400 truncate max-w-[200px]">{tx.description || tx.id}</td>
+                                                            <td className="p-4 text-right text-xs text-gray-300 font-mono">${tx.amount.toFixed(2)}</td>
+                                                            <td className="p-4 text-right text-xs text-red-400/50 font-mono">-${tx.fee.toFixed(2)}</td>
+                                                            <td className="p-4 text-right text-xs font-black text-white font-mono">${tx.net.toFixed(2)}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div className="space-y-6">
-                                    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 flex flex-col justify-center items-center text-center">
-                                        <div className="p-3 bg-green-500/10 rounded-full mb-3 border border-green-500/30">
-                                            <DollarSign className="w-6 h-6 text-green-500" />
+                                    {/* Recent Payouts */}
+                                    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                                        <h3 className="font-bold text-white mb-5 flex items-center gap-2 text-sm"><CreditCard className="w-4 h-4 text-purple-500" /> Recent Payouts</h3>
+                                        <div className="space-y-3">
+                                            {loadingFinancials ? (
+                                                <TableSkeleton rows={5} cols={1} />
+                                            ) : stripeStats?.recentPayouts.map((payout: any) => (
+                                                <div key={payout.id} className="bg-black/40 border border-gray-800 p-3 rounded-xl">
+                                                    <div className="flex justify-between items-start mb-1">
+                                                        <span className="text-xs font-black text-white">${payout.amount.toFixed(2)}</span>
+                                                        <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded ${payout.status === 'paid' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                                                            {payout.status}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex justify-between text-[10px] text-gray-500">
+                                                        <span>{payout.bankName}</span>
+                                                        <span>{new Date(payout.arrivalDate).toLocaleDateString()}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                        <h3 className="text-xl font-black text-white mb-1">${totalRevenue.toFixed(2)}</h3>
-                                        <p className="text-gray-500 text-[9px] uppercase tracking-widest">Internal System Total</p>
                                     </div>
 
-                                    {/* Stripe Real-time Data */}
-                                    <div className="bg-indigo-950/20 border border-indigo-500/30 rounded-2xl p-5">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="font-bold text-indigo-400 text-xs uppercase tracking-widest">Stripe Live</h3>
-                                            <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(99,102,241,1)]"></div>
+                                    {/* Financial Context */}
+                                    <div className="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 border border-indigo-500/20 rounded-2xl p-5">
+                                        <h3 className="text-indigo-400 font-bold text-xs uppercase tracking-widest mb-4">Financial Policy</h3>
+                                        <p className="text-[10px] text-gray-400 leading-relaxed mb-4">
+                                            Payouts are automatically initiated according to your Stripe schedule. Charges typically clear to "Available" within 2 business days.
+                                        </p>
+                                        <div className="flex items-center gap-2 p-3 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
+                                            <ShieldCheck className="w-4 h-4 text-indigo-400" />
+                                            <span className="text-[9px] text-indigo-300 font-bold uppercase">Stripe Secure Connection Active</span>
                                         </div>
-                                        {loadingFinancials ? (
-                                            <div className="py-4 space-y-3">
-                                                <div className="h-8 bg-indigo-500/10 rounded animate-pulse" />
-                                                <div className="h-8 bg-indigo-500/10 rounded animate-pulse" />
-                                            </div>
-                                        ) : stripeStats ? (
-                                            <div className="space-y-4">
-                                                <div className="flex justify-between items-end border-b border-indigo-500/20 pb-2">
-                                                    <div>
-                                                        <p className="text-[9px] text-indigo-300/60 uppercase font-black">Available</p>
-                                                        <p className="text-xl font-black text-white">${stripeStats.balance.available.toFixed(2)}</p>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <p className="text-[9px] text-indigo-300/60 uppercase font-black">Pending</p>
-                                                        <p className="text-sm font-bold text-indigo-300">${stripeStats.balance.pending.toFixed(2)}</p>
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <p className="text-[9px] text-indigo-300/60 uppercase font-black mb-2">Recent Stripe Charges</p>
-                                                    <div className="space-y-2">
-                                                        {stripeStats.recentSales.slice(0, 3).map((sale: any) => (
-                                                            <div key={sale.id} className="flex justify-between items-center text-[10px] bg-black/40 p-2 rounded-lg border border-indigo-500/10">
-                                                                <span className="text-gray-400 truncate max-w-[100px]">{sale.customer}</span>
-                                                                <span className="font-bold text-green-400">+${sale.amount}</span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="text-center py-4 text-indigo-300/40 text-[9px] uppercase font-black italic">
-                                                Stripe API Connectivity Required
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             </div>

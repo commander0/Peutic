@@ -297,11 +297,9 @@ export class UserService {
     }
 
     static async saveJournal(entry: JournalEntry) {
-        const { error } = await supabase.from('journals').insert({
-            id: entry.id, user_id: entry.userId, date: entry.date, content: entry.content
-        });
+        const { error } = await BaseService.invokeGateway('save-journal', { userId: entry.userId, entry });
         if (error) {
-            console.error("Save Journal Failed:", error);
+            console.error("Save Journal via Gateway Failed:", error);
             throw error;
         }
     }

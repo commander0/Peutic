@@ -141,6 +141,10 @@ export class AdminService {
         return data;
     }
 
+    static async getSafetyAlerts(): Promise<any[]> {
+        return await BaseService.invokeGateway('admin-safety-alerts');
+    }
+
     static async getActiveSessionCount(): Promise<number> {
         // Run cleanup first
         try { await supabase.rpc('cleanup_stale_sessions'); } catch (e) { }
