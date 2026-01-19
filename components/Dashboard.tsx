@@ -13,7 +13,7 @@ import {
     Twitter, Instagram, Linkedin, Volume2, Music, Trees,
     Mail, StopCircle, Eye, Minimize2, Flame as Fire, EyeOff, Megaphone
 } from 'lucide-react';
-import { getGreeting, getDynamicQuote } from '../utils/MoodQuotes';
+import { getDynamicQuote } from '../utils/MoodQuotes';
 import { UserService } from '../services/userService';
 import { AdminService } from '../services/adminService';
 import { useToast } from './common/Toast';
@@ -58,23 +58,6 @@ interface DashboardProps {
     onStartSession: (companion: Companion) => void;
 }
 
-const INSPIRATIONAL_SAYINGS = [
-    "The only way out is through.",
-    "You are stronger than you think.",
-    "Small steps lead to big changes.",
-    "Peace is a journey, not a destination.",
-    "Be kind to your mind.",
-    "You deserve to take up space.",
-    "Rest is not a luxury, it's a necessity.",
-    "Your feelings are valid.",
-    "You are worthy of love and respect.",
-    "Breathe. You are here.",
-    "You don't have to be perfect to be amazing.",
-    "Growth takes time. Be patient with yourself.",
-    "Your potential is limitless.",
-    "Today is a new opportunity for peace.",
-    "Kindness starts with you."
-];
 
 const AvatarImage = React.memo(({ src, alt, className, isUser = false }: { src?: string, alt: string, className?: string, isUser?: boolean }) => (
     <div className={`relative ${className} overflow-hidden`}>
@@ -265,7 +248,7 @@ const SoundscapePlayer: React.FC = () => {
                             <div className="w-8 h-8 bg-yellow-400 dark:bg-yellow-600 rounded-lg flex items-center justify-center shadow-sm">
                                 <Music className="w-4 h-4 text-black dark:text-white" />
                             </div>
-                            <span className="font-black text-sm text-gray-900 dark:text-white tracking-tight">SOUNDSCAPE</span>
+                            <span className="font-black text-sm text-gray-900 dark:text-yellow-400 tracking-tight">SOUNDSCAPE</span>
                         </div>
                         <button onClick={() => setMinimized(true)} className="text-gray-400 hover:text-black dark:hover:text-white transition-colors"><Minimize2 className="w-4 h-4" /></button>
                     </div>
@@ -413,7 +396,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [weeklyGoal, setWeeklyGoal] = useState(0);
     const weeklyTarget = 10;
     const [weeklyMessage, setWeeklyMessage] = useState("Start your journey.");
-    const [dailyInsight, setDailyInsight] = useState<string>(() => INSPIRATIONAL_SAYINGS[Math.floor(Math.random() * INSPIRATIONAL_SAYINGS.length)]);
     const [dashboardUser, setDashboardUser] = useState(user);
     const [settings, setSettings] = useState(AdminService.getSettings());
     const [showPayment, setShowPayment] = useState(false);
@@ -534,9 +516,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         // Kick off all data fetching in parallel
         refreshData();
 
-        generateDailyInsight(user.name, user.id).then(insight => {
-            if (insight) setDailyInsight(insight);
-        });
+        generateDailyInsight(user.name, user.id);
 
         // Get companions immediately without delay
         AdminService.getCompanions().then((comps) => {
@@ -676,17 +656,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     return (
         <div className={`min-h-screen transition-colors duration-500 font-sans ${darkMode ? 'dark bg-[#0A0A0A] text-white' : 'bg-[#FFFBEB] text-black'}`}>
             {mood && <WeatherEffect type={mood} />}
-            <SoundscapePlayer />
-
-            {/* DAILY PULSE SPARKLE (Mobile Only) */}
-            {/* DAILY PULSE SPARKLE (Floating Action Button) */}
-            <button
-                onClick={handleVoiceCheckIn}
-                className="fixed bottom-6 left-6 z-[80] w-12 h-12 bg-yellow-400 dark:bg-yellow-500 rounded-full border border-yellow-200 dark:border-yellow-600 shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all group animate-float"
-                title="Daily Pulse Check"
-            >
-                <Sparkles className="w-5 h-5 text-black group-hover:rotate-12 transition-transform" />
-            </button>
+            <div className="fixed bottom-6 right-6 z-[80] flex items-end gap-4 pointer-events-none">
+                <div className="pointer-events-auto">
+                    <button
+                        onClick={handleVoiceCheckIn}
+                        className="w-12 h-12 bg-yellow-400 dark:bg-yellow-500 rounded-full border border-yellow-200 dark:border-yellow-600 shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all group animate-float"
+                        title="Daily Pulse Check"
+                    >
+                        <Sparkles className="w-5 h-5 text-black group-hover:rotate-12 transition-transform" />
+                    </button>
+                </div>
+                <div className="pointer-events-auto">
+                    <SoundscapePlayer />
+                </div>
+            </div>
 
             {/* BROADCAST BANNER */}
             {settings.dashboardBroadcastMessage && (
@@ -775,9 +758,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <p className="text-gray-500 dark:text-gray-400 font-bold text-[10px] md:text-xs uppercase tracking-widest mb-1">{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
                                 <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mb-2">
                                     <div className="flex items-center gap-3">
-                                        <h1 className="text-3xl md:text-4xl font-black tracking-tight dark:text-white">
+                                        <h1 className="text-3xl md:text-4xl font-black tracking-tight dark:text-yellow-400">
                                             {activeTab === 'inner_sanctuary'
-                                                ? (isGhostMode ? `Welcome back, Member` : getGreeting(user.name))
+                                                ? (isGhostMode ? `Hello, Member` : `Hello, ${user.name.split(' ')[0]}`)
                                                 : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
                                         </h1>
                                         {activeTab === 'inner_sanctuary' && (
@@ -812,107 +795,87 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         {activeTab === 'inner_sanctuary' && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
 
-                                {/* GARDEN SECTION */}
-                                {garden && (
-                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                                        <div className="lg:col-span-6 bg-gradient-to-r from-[#f0fdf4] to-[#dcfce7] dark:from-green-900/10 dark:to-green-900/5 rounded-3xl p-4 md:p-5 border border-green-100 dark:border-green-900/30 flex flex-row items-center gap-4 md:gap-6 shadow-sm relative overflow-hidden min-h-[120px] md:min-h-[140px]">
-                                            <div className="absolute top-0 right-0 p-3 opacity-10 hidden md:block"><Trees className="w-24 h-24 text-green-600" /></div>
-                                            <div className="relative z-10 bg-white/40 dark:bg-black/20 rounded-full p-1.5 border border-white/50 backdrop-blur-sm shadow-sm flex-shrink-0">
-                                                <Suspense fallback={<div className="w-[100px] h-[100px] bg-green-200/20 rounded-full animate-pulse"></div>}>
-                                                    <div className="md:hidden">
-                                                        <GardenCanvas garden={garden} width={70} height={70} />
-                                                    </div>
-                                                    <div className="hidden md:block">
-                                                        <GardenCanvas garden={garden} width={100} height={100} />
-                                                    </div>
-                                                </Suspense>
-                                            </div>
-                                            <div className="flex-1 text-left relative z-10">
-                                                <div className="flex items-center justify-start gap-2 mb-0.5 md:mb-1">
-                                                    <div className="bg-green-100 dark:bg-green-900/40 p-1 rounded-lg"><Feather className="w-3 h-3 md:w-3.5 md:h-3.5 text-green-600 dark:text-green-400" /></div>
-                                                    <h2 className="text-sm md:text-lg font-black text-green-900 dark:text-green-300 tracking-tight">Inner Garden</h2>
-                                                </div>
-                                                <p className="text-green-800/70 dark:text-green-400/70 text-[8px] md:text-[9px] font-bold mb-2 md:mb-3 max-w-sm leading-relaxed uppercase tracking-wider">
-                                                    Consistency nurtures growth.
-                                                </p>
-                                                <div className="flex flex-wrap items-center justify-start gap-1.5 md:gap-2">
-                                                    <div className="bg-white/60 dark:bg-black/40 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg border border-green-100 dark:border-green-900/50 flex items-center gap-1">
-                                                        <span className="text-[8px] md:text-[9px] font-black uppercase tracking-wider text-green-700 dark:text-green-400">Lv.{garden.level}</span>
-                                                    </div>
-                                                    <div className="bg-white/60 dark:bg-black/40 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg border border-green-100 dark:border-green-900/50 flex items-center gap-1">
-                                                        <Flame className="w-2 md:w-2.5 h-2 md:h-2.5 text-orange-500" />
-                                                        <span className="text-[8px] md:text-[9px] font-black uppercase tracking-wider text-green-700 dark:text-green-400">{garden.streakCurrent}{t('dash_streak_days')}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                {/* GARDEN & BOOK OF YOU MERGED SECTION */}
+                                {garden && (() => {
+                                    const joinedDate = new Date(dashboardUser.joinedAt || new Date().toISOString());
+                                    const now = new Date();
+                                    const diffTime = Math.abs(now.getTime() - joinedDate.getTime());
+                                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                                    const isLocked = diffDays < 7;
+                                    const daysRemaining = 7 - diffDays;
 
-                                        {/* BOOK OF YOU CARD */}
-                                        <div className="lg:col-span-6 h-full">
-                                            {(() => {
-                                                const joinedDate = new Date(dashboardUser.joinedAt || new Date().toISOString());
-                                                const now = new Date();
-                                                const diffTime = Math.abs(now.getTime() - joinedDate.getTime());
-                                                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                                                const isLocked = diffDays < 7;
-                                                const daysRemaining = 7 - diffDays;
+                                    return (
+                                        <div className="bg-white dark:bg-black rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col lg:flex-row h-auto lg:h-[160px]">
 
-                                                return (
-                                                    <button
-                                                        onClick={() => {
-                                                            if (!isLocked) {
-                                                                setActiveTab('history');
-                                                                setShowConfetti(true);
-                                                                setTimeout(() => setShowConfetti(false), 5000);
-                                                                showToast("Chronicle Unlocked!", "success");
-                                                            } else {
-                                                                showToast(`Your book is still being written... ${daysRemaining} days left.`, "info");
-                                                            }
-                                                        }}
-                                                        className={`w-full h-full p-4 md:p-5 rounded-3xl border flex items-center gap-4 md:gap-6 transition-all duration-500 group relative overflow-hidden backdrop-blur-sm shadow-sm ${isLocked
-                                                            ? 'bg-slate-50/80 dark:bg-black border-slate-200 dark:border-slate-800 cursor-help shadow-[0_0_20px_rgba(200,200,200,0.4)] dark:shadow-[0_0_30px_rgba(255,255,255,0.1)]'
-                                                            : 'bg-white/80 dark:bg-black/50 border-slate-300 dark:border-slate-700 cursor-pointer hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(255,255,255,0.8)] dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]'
-                                                            }`}
-                                                    >
-                                                        {isLocked && <div className="absolute inset-0 bg-gradient-to-br from-slate-100/50 to-gray-100/50 dark:from-black/50 dark:to-transparent pointer-events-none"></div>}
-                                                        <div className={`w-14 h-14 rounded-full flex items-center justify-center self-center transition-all duration-700 relative z-10 ${isLocked ? 'bg-white/90 dark:bg-black shadow-[0_0_35px_rgba(255,255,255,0.7)] border border-slate-200 dark:border-slate-800' : 'bg-slate-200 dark:bg-slate-800 shadow-xl group-hover:scale-110'}`}>
-                                                            {isLocked ? <Lock className="w-6 h-6 text-slate-400 dark:text-slate-200 animate-pulse" /> : <BookOpen className="w-6 h-6 text-slate-800 dark:text-slate-200" />}
+                                            {/* LEFT HALF: GARDEN */}
+                                            <div className="flex-1 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10 p-5 relative overflow-hidden flex items-center border-b lg:border-b-0 lg:border-r border-green-100 dark:border-green-900/30">
+                                                <div className="relative z-10 mr-5">
+                                                    <Suspense fallback={<div className="w-20 h-20 bg-green-200/20 rounded-full animate-pulse"></div>}>
+                                                        <div className="w-[80px] h-[80px] lg:w-[100px] lg:h-[100px]">
+                                                            <GardenCanvas garden={garden} width={100} height={100} />
                                                         </div>
-                                                        <div className="text-left relative z-10">
-                                                            <div className="flex items-center gap-2 mb-0.5">
-                                                                <div className="bg-slate-100 dark:bg-slate-900 p-1 rounded-lg"><BookOpen className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" /></div>
-                                                                <h3 className="text-lg font-black tracking-tight text-slate-800 dark:text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">The Book of You</h3>
-                                                                {isLocked && <span className="text-[8px] font-black uppercase tracking-[0.1em] bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-800">Coming Soon</span>}
+                                                    </Suspense>
+                                                </div>
+                                                <div className="flex-1 z-10">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <div className="p-1.5 bg-green-100 dark:bg-green-900/40 rounded-lg"><Feather className="w-3.5 h-3.5 text-green-600 dark:text-green-400" /></div>
+                                                        <h3 className="font-bold text-base lg:text-lg text-green-900 dark:text-green-300">Inner Garden</h3>
+                                                    </div>
+                                                    <div className="flex gap-2 text-[10px] font-bold uppercase tracking-wider text-green-700 dark:text-green-500">
+                                                        <span className="bg-white/50 dark:bg-black/40 px-2 py-1 rounded-md">Lv.{garden.level}</span>
+                                                        <span className="bg-white/50 dark:bg-black/40 px-2 py-1 rounded-md flex items-center gap-1"><Flame className="w-2.5 h-2.5 text-orange-500" /> {garden.streakCurrent} {t('dash_streak_days')}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* RIGHT HALF: BOOK OF YOU */}
+                                            <div className="flex-1 bg-[#F8F9FA] dark:bg-black p-5 relative overflow-hidden flex items-center group cursor-pointer"
+                                                onClick={() => {
+                                                    if (!isLocked) {
+                                                        setActiveTab('history');
+                                                        setShowConfetti(true);
+                                                        setTimeout(() => setShowConfetti(false), 5000);
+                                                        showToast("Chronicle Unlocked!", "success");
+                                                    } else {
+                                                        showToast(`Your book is still being written... ${daysRemaining} days left.`, "info");
+                                                    }
+                                                }}
+                                            >
+                                                <div className={`absolute inset-0 transition-opacity duration-500 ${isLocked ? 'opacity-20' : 'opacity-0 group-hover:opacity-10'}`}>
+                                                    {/* Silver/Metallic glow effect for Book of You */}
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-gray-300/10 to-transparent dark:from-white/5"></div>
+                                                </div>
+
+                                                <div className={`relative z-10 w-16 h-16 rounded-2xl flex items-center justify-center mr-5 shadow-lg transition-all duration-500 ${isLocked ? 'bg-black border border-gray-800 shadow-[0_0_20px_rgba(255,255,255,0.1)]' : 'bg-white border border-gray-200 group-hover:scale-110 shadow-[0_0_25px_rgba(192,192,192,0.4)]'}`}>
+                                                    {isLocked ? <Lock className="w-6 h-6 text-gray-400 animate-pulse" /> : <BookOpen className="w-6 h-6 text-black" />}
+                                                </div>
+
+                                                <div className="flex-1 z-10">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <h3 className="font-bold text-base lg:text-lg text-gray-900 dark:text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.3)]">The Book of You</h3>
+                                                        {isLocked && <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 border border-gray-200 dark:border-gray-800 px-2 py-0.5 rounded-full animate-pulse shadow-[0_0_10px_rgba(255,255,255,0.1)]">Coming Soon</span>}
+                                                    </div>
+                                                    {isLocked ? (
+                                                        <div className="space-y-1.5">
+                                                            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium italic">Unlocks in {daysRemaining} days...</p>
+                                                            <div className="w-full h-1 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+                                                                <div className="h-full bg-gray-400 dark:bg-gray-600 shadow-[0_0_10px_rgba(255,255,255,0.3)]" style={{ width: `${Math.min(100, (diffDays / 7) * 100)}%` }}></div>
                                                             </div>
-                                                            <p className={`text-xs font-bold leading-relaxed mb-3 ${isLocked ? 'text-gray-600 dark:text-gray-400' : 'text-gray-500 dark:text-gray-400'}`}>Your story evolves as you grow. This is your weekly chronicle of personal evolution.</p>
-                                                            {isLocked ? (
-                                                                <div className="flex flex-col gap-1 items-start">
-                                                                    <div className="w-16 h-1 bg-slate-200 dark:bg-slate-900 rounded-full overflow-hidden">
-                                                                        <div className="h-full bg-slate-400 dark:bg-slate-200 shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{ width: `${Math.min(100, (diffDays / 7) * 100)}%` }}></div>
-                                                                    </div>
-                                                                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Unlocks: {daysRemaining} Days</span>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="flex flex-col gap-1 items-start mt-3">
-                                                                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 flex items-center gap-1">
-                                                                        <Sparkles className="w-3 h-3 animate-spin text-slate-400" /> Unlocked
-                                                                    </span>
-                                                                </div>
-                                                            )}
                                                         </div>
-                                                        {!isLocked && <div className="absolute -bottom-2 -right-2 p-4 opacity-10"><BookOpen className="w-12 h-12" /></div>}
-                                                    </button>
-                                                );
-                                            })()}
+                                                    ) : (
+                                                        <p className="text-xs text-silver dark:text-gray-400 font-medium">Your story is ready.</p>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
+                                    );
+                                })()}
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                                     {dashboardUser ? (
                                         <div className="bg-white dark:bg-gray-900 p-4 md:p-5 rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm col-span-1 md:col-span-2 relative overflow-hidden group min-h-[120px] md:min-h-[140px]">
                                             {weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-4 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-20 h-20 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div><div className="absolute w-16 h-16 bg-blue-500/30 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-blue-400/10 rounded-full animate-ping"></div><div className="absolute w-10 h-10 bg-blue-400/50 rounded-full blur-lg animate-pulse"></div><Flame className="w-12 h-12 text-blue-500 fill-blue-500 drop-shadow-[0_0_20px_rgba(59,130,246,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy className="w-20 h-20 text-yellow-500" /></div>)}
-                                            <div className="relative z-10"><h3 className="font-bold text-gray-500 dark:text-gray-400 text-[10px] md:text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3><div className="flex items-end gap-2 mb-2 md:mb-3"><span className="text-2xl md:text-4xl font-black dark:text-white">{weeklyGoal}</span><span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span></div><div className="w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-2 md:mb-3"><div className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= weeklyTarget ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-pulse' : 'bg-yellow-400'}`} style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}></div></div><p className="text-[10px] md:text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}</p></div>
+                                            <div className="relative z-10"><h3 className="font-bold text-gray-500 dark:text-gray-400 text-[10px] md:text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3><div className="flex items-end gap-2 mb-2 md:mb-3"><span className="text-2xl md:text-4xl font-black dark:text-yellow-400">{weeklyGoal}</span><span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span></div><div className="w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-2 md:mb-3"><div className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= weeklyTarget ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-pulse' : 'bg-yellow-400'}`} style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}></div></div><p className="text-[10px] md:text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}</p></div>
                                         </div>
                                     ) : <StatSkeleton />}
                                     <MoodTracker onMoodSelect={handleMoodSelect} />
@@ -940,7 +903,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 </CollapsibleSection>
                                 <CollapsibleSection title={t('dash_hub')} icon={Feather}><div className="space-y-6"><JournalSection user={user} /><div className="border-t border-dashed border-yellow-200 dark:border-gray-700" /><WisdomGenerator userId={user.id} /></div></CollapsibleSection>
                                 <div>
-                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-5"><div><h2 className="text-xl md:text-2xl font-black dark:text-white">{t('sec_specialists')}</h2><p className="text-gray-500 text-xs md:text-sm">{t('roster_heading')}</p></div><div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide"><button onClick={() => setSpecialtyFilter('All')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === 'All' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>All</button>{uniqueSpecialties.map(spec => (<button key={spec} onClick={() => setSpecialtyFilter(spec)} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === spec ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>{spec}</button>))}</div></div>
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-5"><div><h2 className="text-xl md:text-2xl font-black dark:text-yellow-400">{t('sec_specialists')}</h2><p className="text-gray-500 text-xs md:text-sm">{t('roster_heading')}</p></div><div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide"><button onClick={() => setSpecialtyFilter('All')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === 'All' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>All</button>{uniqueSpecialties.map(spec => (<button key={spec} onClick={() => setSpecialtyFilter(spec)} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === spec ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>{spec}</button>))}</div></div>
                                     {loadingCompanions ? (
                                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                                             {[1, 2, 3, 4, 5].map(i => <CompanionSkeleton key={i} />)}
@@ -969,7 +932,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-500">
                                 <div className="bg-white/70 dark:bg-gray-900/40 rounded-3xl border border-yellow-100/50 dark:border-gray-800/50 overflow-hidden backdrop-blur-md shadow-xl hover:shadow-2xl transition-shadow duration-500">
                                     <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
-                                        <h3 className="font-black text-lg dark:text-white">{t('sec_history')}</h3>
+                                        <h3 className="font-black text-lg dark:text-yellow-400">{t('sec_history')}</h3>
                                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Financials & Check-ins</span>
                                     </div>
                                     <table className="w-full text-left">
@@ -985,7 +948,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-red-100 dark:bg-red-900/40 rounded-xl text-red-600 dark:text-red-400"><Mic className="w-5 h-5" /></div>
                                             <div>
-                                                <h3 className="font-black text-lg dark:text-white leading-tight">Voice Chronicles</h3>
+                                                <h3 className="font-black text-lg dark:text-yellow-400 leading-tight">Voice Chronicles</h3>
                                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Your spoken journey</p>
                                             </div>
                                         </div>
@@ -1017,14 +980,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         {activeTab === 'settings' && (
                             <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in slide-in-from-right-5 duration-500">
                                 <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
-                                    <div className="p-5 md:p-6 border-b border-yellow-100 dark:border-gray-800"><h3 className="font-black text-lg md:text-xl dark:text-white mb-1">{t('dash_settings')}</h3><p className="text-gray-500 text-xs">Manage your personal information.</p></div>
+                                    <div className="p-5 md:p-6 border-b border-yellow-100 dark:border-gray-800"><h3 className="font-black text-lg md:text-xl dark:text-yellow-400 mb-1">{t('dash_settings')}</h3><p className="text-gray-500 text-xs">Manage your personal information.</p></div>
                                     <div className="p-5 md:p-6 space-y-5">
                                         <div className="flex items-center gap-5"><div className="relative"><div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-4 border-yellow-100 dark:border-gray-800"><AvatarImage src={dashboardUser.avatar || ''} alt="Profile" className="w-full h-full object-cover" isUser={true} /></div><button onClick={() => setShowProfile(true)} className="absolute bottom-0 right-0 p-1.5 bg-black text-white rounded-full hover:bg-gray-800 transition-colors shadow-lg"><Edit2 className="w-3 h-3" /></button></div><div className="flex-1 space-y-3"><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Display Name</label><div className="relative"><UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none transition-colors text-sm font-bold dark:text-white" /></div></div><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Email Address</label><div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none transition-colors text-sm font-bold dark:text-white" /></div></div></div></div>
                                         <div className="flex justify-end pt-2"><button onClick={saveProfileChanges} disabled={isSavingProfile} className="px-5 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-bold text-xs hover:opacity-80 transition-opacity flex items-center gap-2">{isSavingProfile ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}{t('ui_save')}</button></div>
                                     </div>
                                 </div>
                                 <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
-                                    <div className="p-5 md:p-6 border-b border-yellow-100 dark:border-gray-800"><h3 className="font-black text-lg md:text-xl dark:text-white mb-1">Preferences</h3><p className="text-gray-500 text-xs">Customize your sanctuary experience.</p></div>
+                                    <div className="p-5 md:p-6 border-b border-yellow-100 dark:border-gray-800"><h3 className="font-black text-lg md:text-xl dark:text-yellow-400 mb-1">Preferences</h3><p className="text-gray-500 text-xs">Customize your sanctuary experience.</p></div>
                                     <div className="p-5 md:p-6 space-y-5">
                                         <div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Moon className="w-4 h-4 text-gray-600 dark:text-gray-400" /></div><div><p className="font-bold text-gray-900 dark:text-white text-sm">Dark Mode</p><p className="text-[10px] text-gray-500">Reduce eye strain.</p></div></div><button onClick={toggleDarkMode} className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${darkMode ? 'bg-yellow-500' : 'bg-gray-200'}`}><span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${darkMode ? 'translate-x-5' : 'translate-x-1'}`} /></button></div>
                                         <div className="flex items-center justify-between">
@@ -1043,7 +1006,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     </div>
                                 </div>
                                 <div className="bg-white/70 dark:bg-gray-900/40 rounded-3xl border border-yellow-200/50 dark:border-gray-800/50 overflow-hidden backdrop-blur-md shadow-sm">
-                                    <div className="p-5 md:p-6 border-b border-yellow-100/30 dark:border-gray-800/50"><h3 className="font-black text-lg md:text-xl dark:text-white mb-1">Security Health</h3><p className="text-gray-500 text-xs text-green-500 flex items-center gap-1 font-bold animate-pulse"><ShieldCheck className="w-3 h-3" /> All systems secured & encrypted</p></div>
+                                    <div className="p-5 md:p-6 border-b border-yellow-100/30 dark:border-gray-800/50"><h3 className="font-black text-lg md:text-xl dark:text-yellow-400 mb-1">Security Health</h3><p className="text-gray-500 text-xs text-green-500 flex items-center gap-1 font-bold animate-pulse"><ShieldCheck className="w-3 h-3" /> All systems secured & encrypted</p></div>
                                     <div className="p-5 md:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         {[
                                             { label: 'TLS Encryption', status: 'Active (256-bit)', icon: Lock },
@@ -1070,7 +1033,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         {showDeleteConfirm ? (
                                             <div className="bg-white dark:bg-black p-5 rounded-2xl border border-red-200 dark:border-red-900 text-center animate-in zoom-in duration-200">
                                                 <AlertTriangle className="w-10 h-10 text-red-500 mx-auto mb-3" />
-                                                <h4 className="font-bold text-base mb-1 dark:text-white">Are you absolutely sure?</h4>
+                                                <h4 className="font-bold text-base mb-1 dark:text-yellow-400">Are you absolutely sure?</h4>
                                                 <p className="text-gray-500 text-xs mb-4">This action cannot be undone. This will permanently delete your account, journal entries, and remaining balance.</p>
 
                                                 {balance > 0 && (
@@ -1132,7 +1095,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         </div>
                     </footer>
                 </main>
-            </div>
+            </div >
             {showPayment && <PaymentModal onClose={() => { setShowPayment(false); setPaymentError(undefined); }} onSuccess={handlePaymentSuccess} initialError={paymentError} />}
             {showBreathing && <EmergencyOverlay userId={user.id} onClose={() => { setShowBreathing(false); refreshGarden(); }} />}
             {showProfile && <ProfileModal user={dashboardUser} onClose={() => setShowProfile(false)} onUpdate={refreshData} />}
@@ -1141,45 +1104,49 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
             {/* MOOD PULSE ALERT */}
             {/* MOOD PULSE ALERT (Removed Banner, Logic Kept for Floating Button) */}
-            {moodRiskAlert && (
-                // Hidden banner logic - now relying on user initiative or smaller cues
-                <></>
-            )}
+            {
+                moodRiskAlert && (
+                    // Hidden banner logic - now relying on user initiative or smaller cues
+                    <></>
+                )
+            }
 
             <Confetti active={showConfetti} />
 
 
             {/* VOICE JOURNAL MODAL */}
-            {showVoiceJournal && (
-                <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-gray-900 w-full max-w-lg rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-black flex items-center gap-2 dark:text-white"><Mic className="w-5 h-5 text-red-500" /> Voice Journal</h2>
-                            <button onClick={() => setShowVoiceJournal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"><X className="w-5 h-5" /></button>
-                        </div>
+            {
+                showVoiceJournal && (
+                    <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+                        <div className="bg-white dark:bg-gray-900 w-full max-w-lg rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-xl font-black flex items-center gap-2 dark:text-yellow-400"><Mic className="w-5 h-5 text-red-500" /> Voice Journal</h2>
+                                <button onClick={() => setShowVoiceJournal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"><X className="w-5 h-5" /></button>
+                            </div>
 
-                        <VoiceRecorder userId={user.id} onSave={handleVoiceSave} />
+                            <VoiceRecorder userId={user.id} onSave={handleVoiceSave} />
 
-                        <div className="mt-8">
-                            <h3 className="text-xs font-bold uppercase text-gray-400 tracking-wider mb-4">Recent Voice Notes</h3>
-                            <div className="space-y-3">
-                                {voiceEntries.length === 0 && <p className="text-sm text-gray-400 italic text-center py-4">No recordings yet.</p>}
-                                {voiceEntries.map(entry => (
-                                    <VoiceEntryItem
-                                        key={entry.id}
-                                        entry={entry}
-                                        onDelete={async (id) => {
-                                            await UserService.deleteVoiceJournal(id);
-                                            setVoiceEntries(prev => prev.filter(e => e.id !== id));
-                                        }}
-                                    />
-                                ))}
+                            <div className="mt-8">
+                                <h3 className="text-xs font-bold uppercase text-gray-400 tracking-wider mb-4">Recent Voice Notes</h3>
+                                <div className="space-y-3">
+                                    {voiceEntries.length === 0 && <p className="text-sm text-gray-400 italic text-center py-4">No recordings yet.</p>}
+                                    {voiceEntries.map(entry => (
+                                        <VoiceEntryItem
+                                            key={entry.id}
+                                            entry={entry}
+                                            onDelete={async (id) => {
+                                                await UserService.deleteVoiceJournal(id);
+                                                setVoiceEntries(prev => prev.filter(e => e.id !== id));
+                                            }}
+                                        />
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 
