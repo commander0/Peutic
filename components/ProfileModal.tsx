@@ -12,15 +12,22 @@ interface ProfileModalProps {
 }
 
 const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) => {
-    if (!user) return null;
-    const [name, setName] = useState(user.name);
+    if (!user) {
+        console.error("ProfileModal: No user provided");
+        return null;
+    }
+    const [name, setName] = useState(user.name || 'User');
     const [avatarLocked, setAvatarLocked] = useState(user.avatarLocked || false);
-    const [previewAvatar, setPreviewAvatar] = useState(user.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${user.id}&backgroundColor=FCD34D`);
+    const [previewAvatar, setPreviewAvatar] = useState(user.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${user.id || 'anonymous'}&backgroundColor=FCD34D`);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const handleSave = () => {
         setError(null);
+        if (!name) {
+            setError("Name is required.");
+            return;
+        }
         const check = NameValidator.validateFullName(name);
         if (!check.valid) {
             setError(check.error || "Invalid name.");

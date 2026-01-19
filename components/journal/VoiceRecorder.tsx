@@ -213,10 +213,10 @@ export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id:
 
         try {
             if (audioRef.current.paused) {
-                // Ensure context is resumed if we are in boosted mode
+                // Ensure context is resumed if we are dealing with AudioContext
                 const ctx = sharedAudioCtx;
                 if (ctx && ctx.state === 'suspended') {
-                    await ctx.resume();
+                    await ctx.resume().catch(e => console.warn("Could not resume AudioContext", e));
                 }
 
                 // If finished or near end, restart
@@ -237,11 +237,6 @@ export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id:
         } catch (e: any) {
             console.error("Playback operation failed", e);
             setPlaying(false);
-            if (e.name === 'NotAllowedError') {
-                console.warn("Playback blocked. Please interact with the page first.");
-            } else {
-                console.warn("Audio playback failed. This may be due to a server connection or CORS issue.");
-            }
         }
     };
 
@@ -249,21 +244,22 @@ export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id:
         const nextBoost = !isBoosted;
 
         if (nextBoost && !sourceRef.current && audioRef.current) {
-            // Lazy initialize AudioContext on first boost request
             const ctx = getSharedAudioCtx();
             if (ctx) {
                 try {
-                    const source = ctx.createMediaElementSource(audioRef.current);
-                    const gain = ctx.createGain();
-                    source.connect(gain);
-                    gain.connect(ctx.destination);
-
-                    sourceRef.current = source;
-                    gainNodeRef.current = gain;
-
+                    // Check if already connected by tracking on the audio element itself to be safe
+                    if (!(audioRef.current as any)._connectedToVault) {
+                        const source = ctx.createMediaElementSource(audioRef.current);
+                        const gain = ctx.createGain();
+                        source.connect(gain);
+                        gain.connect(ctx.destination);
+                        sourceRef.current = source;
+                        gainNodeRef.current = gain;
+                        (audioRef.current as any)._connectedToVault = true;
+                    }
                     if (ctx.state === 'suspended') await ctx.resume();
                 } catch (e) {
-                    console.warn("Could not connect audio graph (likely already connected)", e);
+                    console.warn("Audio graph connection attempted again or failed:", e);
                 }
             }
         }
@@ -271,7 +267,8 @@ export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id:
         if (gainNodeRef.current) {
             const ctx = getSharedAudioCtx();
             const now = ctx?.currentTime || 0;
-            gainNodeRef.current.gain.setTargetAtTime(nextBoost ? 2.5 : 1.0, now, 0.1);
+            // Smoothly transition gain
+            gainNodeRef.current.gain.setTargetAtTime(nextBoost ? 3.0 : 1.0, now, 0.1);
         }
 
         setIsBoosted(nextBoost);
