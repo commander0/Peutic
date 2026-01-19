@@ -9,7 +9,6 @@ import {
     BookOpen, Save, Sparkles, Flame, Trophy,
     Sun, Feather, Anchor, Gamepad2, RefreshCw, Play, Star, Edit2, Trash2,
     CloudRain, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Moon,
-    Vault,
 
     Twitter, Instagram, Linkedin, Volume2, Music, Trees,
     Mail, StopCircle, Eye, Minimize2, Flame as Fire, EyeOff, Megaphone
@@ -656,17 +655,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     return (
         <div className={`min-h-screen transition-colors duration-500 font-sans ${darkMode ? 'dark bg-[#0A0A0A] text-white' : 'bg-[#FFFBEB] text-black'}`}>
             {mood && <WeatherEffect type={mood} />}
-            {/* FLOATING CONTROLS: Bottom-Right for easier access */}
-            <div className="fixed bottom-6 right-6 z-[80] flex items-center gap-4 pointer-events-none">
+            {/* FLOATING CONTROLS: Separated for better ergonomics */}
+            <div className="fixed bottom-6 left-6 z-[80] pointer-events-none">
                 <div className="pointer-events-auto">
                     <button
                         onClick={handleVoiceCheckIn}
-                        className="w-12 h-12 bg-yellow-400 dark:bg-yellow-500 rounded-full border border-yellow-200 dark:border-yellow-600 shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all group animate-float"
+                        className="w-14 h-14 bg-yellow-400 dark:bg-yellow-500 rounded-full border-2 border-yellow-200 dark:border-yellow-600 shadow-[0_0_20px_rgba(250,204,21,0.4)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all group animate-float"
                         title="Daily Pulse Check"
                     >
-                        <Sparkles className="w-5 h-5 text-black group-hover:rotate-12 transition-transform" />
+                        <Sparkles className="w-6 h-6 text-black group-hover:rotate-12 transition-transform" />
                     </button>
                 </div>
+            </div>
+
+            <div className="fixed bottom-6 right-6 z-[80] pointer-events-none">
                 <div className="pointer-events-auto">
                     <SoundscapePlayer />
                 </div>
@@ -749,17 +751,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         {activeTab === 'inner_sanctuary' && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
 
-                                {/* THE SANCTUARY VAULT (Collapsible 3-Column Tile Menu) */}
+                                {/* THE PLAYGROUND (Collapsible 3-Column Tile Menu) */}
                                 <div className="space-y-4">
                                     <button
                                         onClick={() => setIsVaultOpen(!isVaultOpen)}
-                                        className="w-full flex items-center justify-between p-4 bg-white/40 dark:bg-gray-900/40 rounded-2xl border border-yellow-100/50 dark:border-gray-800/50 backdrop-blur-sm group hover:bg-white/60 dark:hover:bg-gray-900/60 transition-all"
+                                        className="w-full flex items-center justify-between p-4 bg-white/40 dark:bg-gray-900/40 rounded-2xl border border-yellow-100/50 dark:border-gray-800/50 backdrop-blur-sm group hover:bg-white/60 dark:hover:bg-gray-900/60 transition-all shadow-[0_0_15px_rgba(0,0,0,0.05)]"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-yellow-400 rounded-xl shadow-lg">
-                                                <Vault className="w-4 h-4 text-black" />
+                                            <div className="p-2 bg-yellow-400 rounded-xl shadow-[0_4px_10px_rgba(250,204,21,0.3)]">
+                                                <Gamepad2 className="w-4 h-4 text-black" />
                                             </div>
-                                            <h2 className="text-sm font-black uppercase tracking-widest dark:text-white">The Sanctuary Vault</h2>
+                                            <h2 className="text-sm font-black uppercase tracking-widest dark:text-white">The Playground</h2>
                                         </div>
                                         <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-500 ${isVaultOpen ? 'rotate-180' : ''}`} />
                                     </button>
@@ -768,17 +770,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
                                             {/* TILE 1: INNER GARDEN */}
                                             {garden && (
-                                                <div className="group relative bg-white dark:bg-black rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm hover:shadow-2xl transition-all overflow-hidden flex flex-col h-[220px]">
-                                                    <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 to-emerald-50/50 dark:from-green-900/10 dark:to-emerald-900/10 pointer-events-none"></div>
+                                                <div className="group relative bg-[#081508] dark:bg-black rounded-3xl border-2 border-green-500/30 dark:border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)] hover:shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-all overflow-hidden flex flex-col h-[220px]">
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 pointer-events-none"></div>
                                                     <div className="flex-1 p-6 relative flex flex-col items-center justify-center">
-                                                        <div className="absolute inset-0 bg-green-400/10 blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
+                                                        <div className="absolute inset-0 bg-green-400/20 blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
                                                         <Suspense fallback={<div className="w-20 h-20 rounded-full animate-pulse bg-green-100"></div>}>
-                                                            <div className="w-24 h-24 mb-3 transition-transform group-hover:scale-110 duration-700">
+                                                            <div className="w-24 h-24 mb-3 transition-transform group-hover:scale-110 duration-700 relative z-10 drop-shadow-[0_0_10px_rgba(34,197,94,0.8)]">
                                                                 <GardenCanvas garden={garden} width={100} height={100} />
                                                             </div>
                                                         </Suspense>
-                                                        <h3 className="text-sm font-black text-green-900 dark:text-green-400 uppercase tracking-widest">Inner Garden</h3>
-                                                        <p className="text-[10px] font-bold text-green-600/60 uppercase">Level {garden.level}</p>
+                                                        <h3 className="text-sm font-black text-green-400 uppercase tracking-widest drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]">Inner Garden</h3>
+                                                        <p className="text-[10px] font-bold text-green-500/80 uppercase tracking-tighter">Level {garden.level} &bull; Growing</p>
                                                     </div>
                                                 </div>
                                             )}
@@ -803,18 +805,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                                 showToast(`Locked for ${daysRemaining} more days.`, "info");
                                                             }
                                                         }}
-                                                        className="group relative bg-white dark:bg-black rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm hover:shadow-2xl transition-all overflow-hidden cursor-pointer h-[220px]"
+                                                        className="group relative bg-[#1a1a1a] dark:bg-black rounded-3xl border-2 border-white/20 dark:border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all overflow-hidden cursor-pointer h-[220px]"
                                                     >
-                                                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')] opacity-[0.03] pointer-events-none"></div>
-                                                        <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+                                                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')] opacity-[0.05] pointer-events-none"></div>
+                                                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
+                                                        <div className="flex flex-col items-center justify-center h-full p-6 text-center relative z-10">
                                                             <div className="relative mb-4">
-                                                                {isLocked && <div className="absolute -inset-4 border-2 border-yellow-400/20 rounded-full animate-aura-glow"></div>}
-                                                                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg transition-all ${isLocked ? 'bg-black text-gray-600' : 'bg-yellow-400 text-black shadow-yellow-400/20 shadow-xl'}`}>
+                                                                {isLocked && <div className="absolute -inset-4 border-2 border-white/20 rounded-full animate-aura-glow"></div>}
+                                                                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-2xl transition-all ${isLocked ? 'bg-black text-gray-700 border border-white/5' : 'bg-white text-black shadow-white/20'}`}>
                                                                     {isLocked ? <Lock className="w-8 h-8" /> : <BookOpen className="w-8 h-8" />}
                                                                 </div>
                                                             </div>
-                                                            <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Book of You</h3>
-                                                            <p className="text-[10px] font-bold text-gray-400 uppercase">{isLocked ? `Unlocks in ${daysRemaining}d` : 'Read Journey'}</p>
+                                                            <h3 className="text-sm font-black text-white uppercase tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]">Book of You</h3>
+                                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{isLocked ? `Unlocks in ${daysRemaining}d` : 'Digital Legacy'}</p>
                                                         </div>
                                                     </div>
                                                 );

@@ -1,0 +1,85 @@
+openapi: 3.0.0
+info:
+  title: Peustic Symmetrical SaaS API
+  version: 1.0.0
+  description: API for human connection and emotional support, designed with functional symmetry.
+
+paths:
+  /system/broadcast/public:
+    post:
+      summary: Deploy public landing page broadcast
+      operationId: broadcastPublic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message: { type: string }
+      responses:
+        '200': { description: Success }
+
+  /system/broadcast/dashboard:
+    post:
+      summary: Deploy member dashboard broadcast
+      operationId: broadcastDashboard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message: { type: string }
+      responses:
+        '200': { description: Success }
+
+  /system/settings:
+    get:
+      summary: Fetch global settings
+      responses:
+        '200': { description: Success }
+    put:
+      summary: Update global settings
+      operationId: saveSettings
+      responses:
+        '200': { description: Success }
+
+  /users/status:
+    put:
+      summary: Update user status (Ban/Activate)
+      operationId: updateUserStatus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId: { type: string }
+                status: { type: string, enum: [ACTIVE, BANNED, TRIAL] }
+      responses:
+        '200': { description: Success }
+
+  /users/profile:
+    put:
+      summary: Update personal profile
+      operationId: updateProfile
+      responses:
+        '200': { description: Success }
+    delete:
+      summary: Permanent account deletion
+      operationId: deleteAccount
+      responses:
+        '200': { description: Success }
+
+  /garden/sync:
+    get:
+      summary: Fetch garden state
+      responses:
+        '200': { description: Success }
+    post:
+      summary: Update garden state
+      responses:
+        '200': { description: Success }

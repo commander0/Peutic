@@ -59,7 +59,7 @@ export class AdminService {
 
     static async saveSettings(settings: GlobalSettings) {
         this.settingsCache = settings;
-        const { error } = await BaseService.invokeGateway('admin-save-settings', { settings });
+        const { error } = await BaseService.invokeGateway('system/settings-save', { settings });
         if (!error) {
             localStorage.setItem(this.CACHE_KEY, JSON.stringify(settings));
         }
@@ -133,7 +133,7 @@ export class AdminService {
     }
 
     static async updateUserStatus(userId: string, status: 'ACTIVE' | 'BANNED' | 'TRIAL') {
-        const { error } = await BaseService.invokeGateway('user-status', { userId, status });
+        const { error } = await BaseService.invokeGateway('users/status-update', { userId, status });
         if (error) throw error;
         logger.info("User Status Updated", `ID: ${userId}, Status: ${status}`);
     }
@@ -141,14 +141,14 @@ export class AdminService {
 
 
     static async broadcastMessage(message: string) {
-        const data = await BaseService.invokeGateway('broadcast', { message });
+        const data = await BaseService.invokeGateway('system/broadcast-public', { message });
         this.settingsCache.broadcastMessage = message;
         logger.info("Global Broadcast Sent", message);
         return data;
     }
 
     static async broadcastDashboardMessage(message: string) {
-        const data = await BaseService.invokeGateway('dashboard-broadcast', { message });
+        const data = await BaseService.invokeGateway('system/broadcast-dashboard', { message });
         this.settingsCache.dashboardBroadcastMessage = message;
         logger.info("Dashboard Broadcast Sent", message);
         return data;

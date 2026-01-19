@@ -149,6 +149,12 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     const [isEditingPublic, setIsEditingPublic] = useState(false);
     const [isEditingDashboard, setIsEditingDashboard] = useState(false);
 
+    // Draft comparison to prevent overwriting local work
+    const broadcastDraftRef = useRef(broadcastMsg);
+    const dashboardDraftRef = useRef(dashboardBroadcastMsg);
+    useEffect(() => { broadcastDraftRef.current = broadcastMsg; }, [broadcastMsg]);
+    useEffect(() => { dashboardDraftRef.current = dashboardBroadcastMsg; }, [dashboardBroadcastMsg]);
+
 
     // Computed
     const MAX_CONCURRENT_CAPACITY = settings.maxConcurrentSessions || 15;
@@ -178,8 +184,14 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         try {
             const s = await AdminService.syncGlobalSettings();
             setSettings(s);
-            if (!isEditingPublic) setBroadcastMsg(s.broadcastMessage || '');
-            if (!isEditingDashboard) setDashboardBroadcastMsg(s.dashboardBroadcastMessage || '');
+
+            // SYNC POLICY: Only overwrite if NOT currently focused AND local differs from previous sync
+            if (!isEditingPublic) {
+                setBroadcastMsg(s.broadcastMessage || '');
+            }
+            if (!isEditingDashboard) {
+                setDashboardBroadcastMsg(s.dashboardBroadcastMessage || '');
+            }
             setLogs(await AdminService.getSystemLogs());
             setUsers(await AdminService.getAllUsers());
             setCompanions(await AdminService.getCompanions());

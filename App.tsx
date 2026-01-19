@@ -14,7 +14,7 @@ import { supabase } from './services/supabaseClient';
 import BookOfYou from './components/wisdom/BookOfYou';
 
 
-import { Wrench, AlertTriangle, Clock, RefreshCw } from 'lucide-react';
+import { Wrench, AlertTriangle, Clock, RefreshCw, ShieldCheck } from 'lucide-react';
 import { ToastProvider } from './components/common/Toast';
 import { LanguageProvider } from './components/common/LanguageContext';
 
@@ -72,7 +72,7 @@ const MainApp: React.FC = () => {
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [activeSessionCompanion, setActiveSessionCompanion] = useState<Companion | null>(null);
-  const [isRestoring, setIsRestoring] = useState(!UserService.getCachedUser());
+  const [isRestoring, setIsRestoring] = useState(true);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
 
@@ -277,10 +277,22 @@ const MainApp: React.FC = () => {
   };
 
 
-  if (isRestoring) return <div className="min-h-screen flex items-center justify-center bg-[#FFFBEB]"><div className="w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div></div>;
+  if (isRestoring) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-[#0A0A0A] flex flex-col items-center justify-center p-6 text-center">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-yellow-400/20 border-t-yellow-400 rounded-full animate-spin"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <ShieldCheck className="w-6 h-6 text-yellow-500 animate-pulse" />
+          </div>
+        </div>
+        <p className="mt-4 text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 animate-pulse">Establishing Secure Connection</p>
+      </div>
+    );
+  }
 
   // Maintenance Mode Lockout
-  if (maintenanceMode && (!user || user.role !== UserRole.ADMIN) && !location.pathname.includes('/admin')) {
+  if (maintenanceMode && user?.role !== UserRole.ADMIN && !location.pathname.includes('/admin')) {
     return (
       <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-white p-6 text-center">
         <Wrench className="w-16 h-16 text-yellow-500 mb-6 animate-pulse" />
