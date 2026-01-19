@@ -7,7 +7,7 @@ import {
     Video, Clock, Settings, LogOut,
     LayoutDashboard, Plus, X, Mic, Lock, CheckCircle, AlertTriangle, ShieldCheck, Heart,
     BookOpen, Save, Sparkles, Flame, Trophy,
-    Sun, Feather, Anchor, Gamepad2, RefreshCw, Play, Star, Edit2, Trash2,
+    Sun, Feather, Anchor, RefreshCw, Play, Star, Edit2, Trash2, Zap,
     CloudRain, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Moon,
 
     Twitter, Instagram, Linkedin, Volume2, Music, Trees,
@@ -771,7 +771,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     >
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-yellow-400 rounded-xl shadow-[0_4px_10px_rgba(250,204,21,0.3)]">
-                                                <Gamepad2 className="w-4 h-4 text-black" />
+                                                <Zap className="w-4 h-4 text-black" />
                                             </div>
                                             <h2 className="text-sm font-black uppercase tracking-widest dark:text-white">The Playground</h2>
                                         </div>
@@ -779,19 +779,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     </button>
 
                                     {isVaultOpen && (
-                                        <div className="grid grid-cols-3 gap-2 md:gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
+                                        <div className="grid grid-cols-3 gap-1 md:gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
                                             {/* TILE 1: INNER GARDEN */}
                                             {garden && (
-                                                <div className="group relative bg-[#081508] dark:bg-black rounded-2xl md:rounded-3xl border-2 border-green-500/30 dark:border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)] hover:shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-all overflow-hidden flex flex-col h-[140px] md:h-[220px]">
+                                                <div className="group relative bg-[#081508] dark:bg-black rounded-xl md:rounded-3xl border border-green-500/30 dark:border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.1)] hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px]">
                                                     <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 pointer-events-none"></div>
-                                                    <div className="flex-1 p-3 md:p-6 relative flex flex-col items-center justify-center">
-                                                        <div className="absolute inset-0 bg-green-400/20 blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
-                                                        <Suspense fallback={<div className="w-12 h-12 md:w-20 md:h-20 rounded-full animate-pulse bg-green-100"></div>}>
-                                                            <div className="w-16 h-16 md:w-24 md:h-24 mb-2 md:mb-3 transition-transform group-hover:scale-110 duration-700 relative z-10 drop-shadow-[0_0_10px_rgba(34,197,94,0.8)]">
+                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
+                                                        <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
+                                                        <Suspense fallback={<div className="w-8 h-8 md:w-20 md:h-20 rounded-full animate-pulse bg-green-100"></div>}>
+                                                            <div className="w-12 h-12 md:w-24 md:h-24 mb-1 md:mb-3 transition-transform group-hover:scale-110 duration-700 relative z-10 drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]">
                                                                 <GardenCanvas garden={garden} width={100} height={100} />
                                                             </div>
                                                         </Suspense>
-                                                        <h3 className="text-[8px] md:text-sm font-black text-green-400 uppercase tracking-widest drop-shadow-[0_0_8px_rgba(34,197,94,0.8)] text-center">Inner Garden</h3>
+                                                        <h3 className="text-[7px] md:text-sm font-black text-green-400 uppercase tracking-widest drop-shadow-[0_0_6px_rgba(34,197,94,0.8)] text-center">Inner Garden</h3>
                                                         <p className="hidden md:block text-[10px] font-bold text-green-500/80 uppercase tracking-tighter">Level {garden.level} &bull; Growing</p>
                                                     </div>
                                                 </div>
@@ -817,33 +817,31 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                                 showToast(`Locked for ${daysRemaining} more days.`, "info");
                                                             }
                                                         }}
-                                                        className="group relative bg-[#1a1a1a] dark:bg-black rounded-2xl md:rounded-3xl border-2 border-white/20 dark:border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all overflow-hidden cursor-pointer h-[140px] md:h-[220px]"
+                                                        className="group relative bg-[#e5e7eb] dark:bg-[#111111] rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] transition-all overflow-hidden cursor-pointer h-[100px] md:h-[220px]"
                                                     >
-                                                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')] opacity-[0.05] pointer-events-none"></div>
-                                                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
-                                                        <div className="flex flex-col items-center justify-center h-full p-3 md:p-6 text-center relative z-10">
-                                                            <div className="relative mb-2 md:mb-4">
-                                                                {isLocked && <div className="absolute -inset-2 md:-inset-4 border-2 border-white/20 rounded-full animate-aura-glow"></div>}
-                                                                <div className={`w-12 h-12 md:w-20 md:h-20 rounded-xl md:rounded-2xl flex items-center justify-center shadow-2xl transition-all ${isLocked ? 'bg-black text-gray-700 border border-white/5' : 'bg-white text-black shadow-white/20'}`}>
-                                                                    {isLocked ? <Lock className="w-5 h-5 md:w-8 md:h-8" /> : <BookOpen className="w-5 h-5 md:w-8 md:h-8" />}
+                                                        <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-200 to-gray-400 dark:from-gray-700 dark:via-black dark:to-gray-900 opacity-20 pointer-events-none"></div>
+                                                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')] opacity-[0.2] pointer-events-none"></div>
+                                                        <div className="flex flex-col items-center justify-center h-full p-2 md:p-6 text-center relative z-10">
+                                                            <div className="relative mb-1 md:mb-4">
+                                                                <div className="absolute -inset-2 md:-inset-6 bg-white/40 blur-xl md:blur-2xl rounded-full animate-aura-glow pointer-events-none"></div>
+                                                                {isLocked && <div className="absolute -inset-2 md:-inset-4 border border-white/30 rounded-full animate-pulse"></div>}
+                                                                <div className={`w-10 h-10 md:w-20 md:h-20 rounded-lg md:rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.8)] transition-all ${isLocked ? 'bg-black text-gray-700 border border-white/5' : 'bg-gradient-to-t from-gray-300 to-white text-black'}`}>
+                                                                    {isLocked ? <Lock className="w-4 h-4 md:w-8 md:h-8" /> : <BookOpen className="w-4 h-4 md:w-8 md:h-8" />}
                                                                 </div>
                                                             </div>
-                                                            <h3 className="text-[8px] md:text-sm font-black text-white uppercase tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] text-center">Book of You</h3>
-                                                            <p className="hidden md:block text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{isLocked ? `Unlocks in ${daysRemaining}d` : 'Digital Legacy'}</p>
+                                                            <h3 className="text-[7px] md:text-sm font-black text-white dark:text-gray-100 uppercase tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,1)] text-center">Book of You</h3>
+                                                            <p className="hidden md:block text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{isLocked ? `Unlocks in ${daysRemaining}d` : 'Silver Legacy'}</p>
                                                         </div>
                                                     </div>
                                                 );
                                             })()}
 
                                             {/* TILE 3: COMING SOON */}
-                                            <div className="relative bg-white/50 dark:bg-gray-900/50 rounded-2xl md:rounded-3xl border border-dashed border-gray-200 dark:border-gray-800 h-[140px] md:h-[220px] flex flex-col items-center justify-center grayscale opacity-60">
-                                                <div className="w-10 h-10 md:w-16 md:h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-2 md:mb-4">
-                                                    <Sparkles className="w-4 h-4 md:w-6 md:h-6 text-gray-300" />
+                                            <div className="relative bg-white/50 dark:bg-gray-900/50 rounded-xl md:rounded-3xl border border-dashed border-gray-200 dark:border-gray-800 h-[100px] md:h-[220px] flex flex-col items-center justify-center grayscale opacity-60">
+                                                <div className="w-8 h-8 md:w-16 md:h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-1 md:mb-4">
+                                                    <Sparkles className="w-3 h-3 md:w-6 md:h-6 text-gray-300" />
                                                 </div>
-                                                <h3 className="text-[8px] md:text-sm font-black text-gray-400 uppercase tracking-widest text-center">Next Feature</h3>
-                                                <div className="mt-1 md:mt-2 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full">
-                                                    <span className="text-[7px] md:text-[9px] font-black uppercase text-gray-500">Soon</span>
-                                                </div>
+                                                <h3 className="text-[7px] md:text-sm font-black text-gray-400 uppercase tracking-widest text-center">SOON</h3>
                                             </div>
                                         </div>
                                     )}
@@ -859,7 +857,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     <MoodTracker onMoodSelect={handleMoodSelect} />
                                 </div>
 
-                                <CollapsibleSection title={t('sec_games')} icon={Gamepad2}>
+                                <CollapsibleSection title="Arcade" icon={Zap}>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
                                         <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col bg-sky-50 dark:bg-gray-800">
                                             <div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none">
