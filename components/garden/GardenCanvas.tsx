@@ -9,29 +9,70 @@ interface GardenCanvasProps {
 
 const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height = 300 }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const frameRef = useRef(0);
+    const animationRef = useRef<number>();
 
     useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+        const render = () => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
 
-        // Clear
-        ctx.clearRect(0, 0, width, height);
+            // Clear
+            ctx.clearRect(0, 0, width, height);
 
-        // Draw Soil
-        ctx.fillStyle = '#5d4037';
+            // Draw Soil
+            ctx.fillStyle = '#5d4037';
+            ctx.beginPath();
+            ctx.ellipse(width / 2, height - 20, width / 3, 20, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            const centerX = width / 2;
+            const groundY = height - 30;
+
+            // Procedural Drawing based on Level
+            drawPlant(ctx, centerX, groundY, garden.level, garden.currentPlantType);
+
+            // Draw Spirit Wisp (Tamagotchi-like presence)
+            drawSpirit(ctx, centerX, groundY - (garden.level * 20), frameRef.current);
+
+            frameRef.current++;
+            animationRef.current = requestAnimationFrame(render);
+        };
+
+        render();
+
+        return () => {
+            if (animationRef.current) cancelAnimationFrame(animationRef.current);
+        };
+    }, [garden, width, height]);
+
+    const drawSpirit = (ctx: CanvasRenderingContext2D, anchorX: number, anchorY: number, frame: number) => {
+        // Floating motion
+        const floatY = Math.sin(frame * 0.05) * 5;
+        const floatX = Math.cos(frame * 0.02) * 10;
+
+        const x = anchorX + floatX + 30; // Float to the right of the plant
+        const y = anchorY + floatY;
+
+        // Glow
+        const gradient = ctx.createRadialGradient(x, y, 2, x, y, 15);
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+        gradient.addColorStop(0.5, 'rgba(100, 255, 218, 0.4)'); // Teal/Cyan glow
+        gradient.addColorStop(1, 'rgba(100, 255, 218, 0)');
+
+        ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.ellipse(width / 2, height - 20, width / 3, 20, 0, 0, Math.PI * 2);
+        ctx.arc(x, y, 15, 0, Math.PI * 2);
         ctx.fill();
 
-        const centerX = width / 2;
-        const groundY = height - 30;
-
-        // Procedural Drawing based on Level
-        drawPlant(ctx, centerX, groundY, garden.level, garden.currentPlantType);
-
-    }, [garden, width, height]);
+        // Core
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+    };
 
     const drawPlant = (ctx: CanvasRenderingContext2D, x: number, y: number, level: number, type: string) => {
         if (level === 1) { // Seed

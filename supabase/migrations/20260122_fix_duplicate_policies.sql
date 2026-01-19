@@ -1,9 +1,8 @@
 -- -----------------------------------------------------------------------------
--- PEUTIC: POLICY CLEANUP & FIX (Resolves "Multiple Permissive Policies" Errors)
+-- PEUTIC: FINAL POLICY FIX (Consolidated & Performance Optimized)
 -- -----------------------------------------------------------------------------
 
--- 1. SMART CLEANUP: Drop ALL existing policies for the affected tables to ensure a clean slate.
--- This handles any conflicting naming conventions from previous runs.
+-- 1. SMART CLEANUP: Drop ALL existing policies specific to these features.
 DO $$ 
 DECLARE 
     pol RECORD;
@@ -19,36 +18,54 @@ BEGIN
     END LOOP; 
 END $$;
 
--- 2. RE-APPLY POLICIES (Consolidated & Clean)
+-- 2. APPLY CONSOLIDATED POLICIES
+-- Strategy: Use single complex policies instead of multiple simple ones.
+-- Optimization: Use (select auth.function()) to ensure single evaluation plan.
 
 -- VOICE JOURNALS
--- One policy to rule them all (Select, Insert, Delete for Owner; All for Admin)
-CREATE POLICY "Voice Journals Own Access" ON public.voice_journals 
-FOR ALL USING (user_id = (select auth.uid()) OR public.is_admin());
+CREATE POLICY "Voice Journals Consolidated" ON public.voice_journals 
+FOR ALL TO authenticated
+USING (public.is_admin() OR user_id = (select auth.uid()))
+WITH CHECK (public.is_admin() OR user_id = (select auth.uid()));
 
 -- GARDEN SYSTEM
-CREATE POLICY "Garden Own Access" ON public.user_garden 
-FOR ALL USING (user_id = (select auth.uid()) OR public.is_admin());
+CREATE POLICY "Garden Consolidated" ON public.user_garden 
+FOR ALL TO authenticated
+USING (public.is_admin() OR user_id = (select auth.uid()))
+WITH CHECK (public.is_admin() OR user_id = (select auth.uid()));
 
-CREATE POLICY "Garden Log Own Insert" ON public.garden_log 
-FOR INSERT WITH CHECK (user_id = (select auth.uid()));
+CREATE POLICY "Garden Log Insert" ON public.garden_log 
+FOR INSERT TO authenticated
+WITH CHECK (user_id = (select auth.uid()));
 
-CREATE POLICY "Garden Log Own Select" ON public.garden_log 
-FOR SELECT USING (user_id = (select auth.uid()) OR public.is_admin());
+CREATE POLICY "Garden Log Select" ON public.garden_log 
+FOR SELECT TO authenticated
+USING (public.is_admin() OR user_id = (select auth.uid()));
 
 -- WISDOM CIRCLE
--- Public can view approved items
-CREATE POLICY "Wisdom Public View Approved" ON public.public_wisdom 
-FOR SELECT USING (is_approved = true AND exclude_from_feed = false);
+-- Fix: Using (select auth.role()) to prevent row-by-row re-evaluation
+CREATE POLICY "Wisdom View Consolidated" ON public.public_wisdom 
+FOR SELECT USING (
+  (is_approved = true AND exclude_from_feed = false) 
+  OR 
+  ((select auth.role()) = 'authenticated' AND public.is_admin())
+);
 
--- Users can submit (but not approve)
-CREATE POLICY "Wisdom Own Insert" ON public.public_wisdom 
-FOR INSERT WITH CHECK (user_id = (select auth.uid()));
+CREATE POLICY "Wisdom Insert Consolidated" ON public.public_wisdom 
+FOR INSERT TO authenticated
+WITH CHECK (user_id = (select auth.uid()) OR public.is_admin());
 
--- Admins can do everything (Approve, Delete, View Unapproved)
-CREATE POLICY "Wisdom Admin Manage" ON public.public_wisdom 
-FOR ALL USING (public.is_admin());
+CREATE POLICY "Wisdom Admin Write" ON public.public_wisdom 
+FOR UPDATE TO authenticated
+USING (public.is_admin())
+WITH CHECK (public.is_admin());
+
+CREATE POLICY "Wisdom Admin Delete" ON public.public_wisdom 
+FOR DELETE TO authenticated
+USING (public.is_admin());
 
 -- TIME CAPSULES
-CREATE POLICY "Capsules Own Access" ON public.time_capsules 
-FOR ALL USING (user_id = (select auth.uid()) OR public.is_admin());
+CREATE POLICY "Capsules Consolidated" ON public.time_capsules 
+FOR ALL TO authenticated
+USING (public.is_admin() OR user_id = (select auth.uid()))
+WITH CHECK (public.is_admin() OR user_id = (select auth.uid()));

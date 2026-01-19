@@ -13,6 +13,7 @@ import {
     Twitter, Instagram, Linkedin, Volume2, Music, Trees,
     Mail, StopCircle, Eye, Minimize2, Flame as Fire, EyeOff, Megaphone
 } from 'lucide-react';
+import { getGreeting, getDynamicQuote } from '../utils/MoodQuotes';
 import { UserService } from '../services/userService';
 import { AdminService } from '../services/adminService';
 import { useToast } from './common/Toast';
@@ -600,6 +601,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         setIsGhostMode(newVal);
         localStorage.setItem('peutic_ghost_mode', String(newVal));
         showToast(newVal ? "Ghost Mode Active: Identity Hidden" : "Ghost Mode Inactive", 'success');
+        refreshData(); // Refresh to update greeting
     };
 
     const handleMoodSelect = (m: 'confetti' | 'rain' | null) => {
@@ -775,7 +777,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     <div className="flex items-center gap-3">
                                         <h1 className="text-3xl md:text-4xl font-black tracking-tight dark:text-white">
                                             {activeTab === 'inner_sanctuary'
-                                                ? (isGhostMode ? `Hello, Member` : `Hello, ${user.name.split(' ')[0]}`)
+                                                ? (isGhostMode ? `Welcome back, Member` : getGreeting(user.name))
                                                 : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
                                         </h1>
                                         {activeTab === 'inner_sanctuary' && (
@@ -794,7 +796,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         </button>
                                     )}
                                 </div>
-                                {activeTab === 'inner_sanctuary' && dailyInsight && (<p className="text-gray-600 dark:text-gray-400 mt-2 max-w-lg text-sm font-medium leading-relaxed border-l-4 border-yellow-400 pl-3 italic">"{dailyInsight}"</p>)}
+                                {activeTab === 'inner_sanctuary' && (<p className="text-gray-600 dark:text-gray-400 mt-2 max-w-lg text-sm font-medium leading-relaxed border-l-4 border-yellow-400 pl-3 italic">"{getDynamicQuote()}"</p>)}
                             </div>
                             <div className="hidden md:flex items-center gap-4">
                                 <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
@@ -868,27 +870,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                             }
                                                         }}
                                                         className={`w-full h-full p-4 md:p-5 rounded-3xl border flex items-center gap-4 md:gap-6 transition-all duration-500 group relative overflow-hidden backdrop-blur-sm shadow-sm ${isLocked
-                                                            ? 'bg-slate-50/80 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 cursor-help shadow-[0_0_20px_rgba(200,200,200,0.4)] dark:shadow-[0_0_20px_rgba(200,200,200,0.1)]'
+                                                            ? 'bg-slate-50/80 dark:bg-black border-slate-200 dark:border-slate-800 cursor-help shadow-[0_0_20px_rgba(200,200,200,0.4)] dark:shadow-[0_0_30px_rgba(255,255,255,0.1)]'
                                                             : 'bg-white/80 dark:bg-black/50 border-slate-300 dark:border-slate-700 cursor-pointer hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(255,255,255,0.8)] dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]'
                                                             }`}
                                                     >
-                                                        {isLocked && <div className="absolute inset-0 bg-gradient-to-br from-slate-100/50 to-gray-100/50 dark:from-slate-900/50 dark:to-black/50 pointer-events-none"></div>}
-                                                        <div className={`w-14 h-14 rounded-full flex items-center justify-center self-center transition-all duration-700 relative z-10 ${isLocked ? 'bg-white/90 dark:bg-black/80 shadow-[0_0_35px_rgba(255,255,255,0.9)] border border-slate-200 dark:border-slate-800' : 'bg-slate-200 dark:bg-slate-800 shadow-xl group-hover:scale-110'}`}>
-                                                            {isLocked ? <Lock className="w-6 h-6 text-slate-400 dark:text-slate-500 animate-pulse" /> : <BookOpen className="w-6 h-6 text-slate-800 dark:text-slate-200" />}
+                                                        {isLocked && <div className="absolute inset-0 bg-gradient-to-br from-slate-100/50 to-gray-100/50 dark:from-black/50 dark:to-transparent pointer-events-none"></div>}
+                                                        <div className={`w-14 h-14 rounded-full flex items-center justify-center self-center transition-all duration-700 relative z-10 ${isLocked ? 'bg-white/90 dark:bg-black shadow-[0_0_35px_rgba(255,255,255,0.7)] border border-slate-200 dark:border-slate-800' : 'bg-slate-200 dark:bg-slate-800 shadow-xl group-hover:scale-110'}`}>
+                                                            {isLocked ? <Lock className="w-6 h-6 text-slate-400 dark:text-slate-200 animate-pulse" /> : <BookOpen className="w-6 h-6 text-slate-800 dark:text-slate-200" />}
                                                         </div>
                                                         <div className="text-left relative z-10">
                                                             <div className="flex items-center gap-2 mb-0.5">
-                                                                <div className="bg-slate-100 dark:bg-slate-900/50 p-1 rounded-lg"><BookOpen className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" /></div>
-                                                                <h3 className="text-lg font-black tracking-tight text-slate-800 dark:text-slate-200">The Book of You</h3>
-                                                                {isLocked && <span className="text-[8px] font-black uppercase tracking-[0.1em] bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">Locked</span>}
+                                                                <div className="bg-slate-100 dark:bg-slate-900 p-1 rounded-lg"><BookOpen className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" /></div>
+                                                                <h3 className="text-lg font-black tracking-tight text-slate-800 dark:text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">The Book of You</h3>
+                                                                {isLocked && <span className="text-[8px] font-black uppercase tracking-[0.1em] bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-800">Coming Soon</span>}
                                                             </div>
                                                             <p className={`text-xs font-bold leading-relaxed mb-3 ${isLocked ? 'text-gray-600 dark:text-gray-400' : 'text-gray-500 dark:text-gray-400'}`}>Your story evolves as you grow. This is your weekly chronicle of personal evolution.</p>
                                                             {isLocked ? (
                                                                 <div className="flex flex-col gap-1 items-start">
-                                                                    <div className="w-16 h-1 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                                                                        <div className="h-full bg-slate-400" style={{ width: `${Math.min(100, (diffDays / 7) * 100)}%` }}></div>
+                                                                    <div className="w-16 h-1 bg-slate-200 dark:bg-slate-900 rounded-full overflow-hidden">
+                                                                        <div className="h-full bg-slate-400 dark:bg-slate-200 shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{ width: `${Math.min(100, (diffDays / 7) * 100)}%` }}></div>
                                                                     </div>
-                                                                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Locked: D-{daysRemaining}</span>
+                                                                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Unlocks: {daysRemaining} Days</span>
                                                                 </div>
                                                             ) : (
                                                                 <div className="flex flex-col gap-1 items-start mt-3">
