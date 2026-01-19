@@ -19,8 +19,28 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userId, onSave }) 
 
     const startRecording = async () => {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const mediaRecorder = new MediaRecorder(stream);
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                }
+            });
+
+            // WEB AUDIO BOOST: Process mic input before recording
+            const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
+            const audioCtx = new AudioContextClass();
+            const source = audioCtx.createMediaStreamSource(stream);
+            const boost = audioCtx.createGain();
+            const destination = audioCtx.createMediaStreamDestination();
+
+            // 1.5x recording boost
+            boost.gain.value = 1.5;
+
+            source.connect(boost);
+            boost.connect(destination);
+
+            const mediaRecorder = new MediaRecorder(destination.stream);
             mediaRecorderRef.current = mediaRecorder;
             chunksRef.current = [];
 
@@ -32,6 +52,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userId, onSave }) 
                 const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
                 setAudioBlob(blob);
                 if (timerRef.current) clearInterval(timerRef.current);
+                audioCtx.close();
             };
 
             mediaRecorder.start();
@@ -61,7 +82,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userId, onSave }) 
         setSaving(true);
         try {
             const filename = `${userId}/${Date.now()}.webm`;
-            const { data, error } = await supabase.storage
+            const { error } = await supabase.storage
                 .from('voice-journals')
                 .upload(filename, audioBlob);
 
@@ -152,19 +173,59 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userId, onSave }) 
 // Also define a mini player for list view
 export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id: string) => void }> = ({ entry, onDelete }) => {
     const [playing, setPlaying] = useState(false);
+    const [isBoosted, setIsBoosted] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);
+    const audioCtxRef = useRef<AudioContext | null>(null);
+    const gainNodeRef = useRef<GainNode | null>(null);
+    const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
 
     const togglePlay = () => {
         if (!audioRef.current) return;
-        if (playing) audioRef.current.pause();
-        else audioRef.current.play();
+
+        // Initialize Audio Context for Volume Boosting on first play
+        if (!audioCtxRef.current && audioRef.current) {
+            try {
+                const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
+                const ctx = new AudioContextClass();
+                const source = ctx.createMediaElementSource(audioRef.current);
+                const gain = ctx.createGain();
+
+                source.connect(gain);
+                gain.connect(ctx.destination);
+
+                audioCtxRef.current = ctx;
+                gainNodeRef.current = gain;
+                sourceRef.current = source;
+            } catch (e) {
+                console.error("Audio Context initialization failed", e);
+            }
+        }
+
+        if (audioCtxRef.current?.state === 'suspended') {
+            audioCtxRef.current.resume();
+        }
+
+        if (playing) {
+            audioRef.current.pause();
+        } else {
+            audioRef.current.play();
+        }
         setPlaying(!playing);
     };
 
+    const toggleBoost = () => {
+        const newBoost = !isBoosted;
+        setIsBoosted(newBoost);
+        if (gainNodeRef.current) {
+            // Apply 2x gain boost
+            gainNodeRef.current.gain.setTargetAtTime(newBoost ? 2.5 : 1.0, audioCtxRef.current?.currentTime || 0, 0.1);
+        }
+    };
+
     return (
-        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
+        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 group">
             <div className="flex items-center gap-3">
-                <button onClick={togglePlay} className="w-10 h-10 rounded-full bg-white dark:bg-black flex items-center justify-center shadow-sm text-yellow-600">
+                <button onClick={togglePlay} className="w-10 h-10 rounded-full bg-white dark:bg-black flex items-center justify-center shadow-sm text-yellow-600 hover:scale-105 active:scale-95 transition-transform">
                     {playing ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
                 </button>
                 <div>
@@ -172,8 +233,25 @@ export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id:
                     <p className="text-[10px] text-gray-400">{new Date(entry.createdAt).toLocaleDateString()} • {Math.floor(entry.durationSeconds / 60)}:{(entry.durationSeconds % 60).toString().padStart(2, '0')}</p>
                 </div>
             </div>
-            <button onClick={() => onDelete(entry.id)} className="text-gray-400 hover:text-red-500 p-2"><Trash2 className="w-4 h-4" /></button>
-            <audio ref={audioRef} src={entry.audioUrl} onEnded={() => setPlaying(false)} className="hidden" />
+
+            <div className="flex items-center gap-2">
+                <button
+                    onClick={toggleBoost}
+                    className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest transition-all ${isBoosted ? 'bg-yellow-400 text-black shadow-lg shadow-yellow-400/30' : 'bg-gray-100 dark:bg-gray-700 text-gray-400 hover:text-gray-600'}`}
+                    title="Volume Boost (2.5x)"
+                >
+                    {isBoosted ? 'Boosted' : 'Boost'}
+                </button>
+                <button onClick={() => onDelete(entry.id)} className="text-gray-400 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4" /></button>
+            </div>
+
+            <audio
+                ref={audioRef}
+                src={entry.audioUrl}
+                onEnded={() => setPlaying(false)}
+                className="hidden"
+                crossOrigin="anonymous"
+            />
         </div>
     );
 };
