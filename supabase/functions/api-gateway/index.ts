@@ -90,6 +90,91 @@ serve(async (req) => {
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
         }
 
+        if (action === 'user-update') {
+            const user = payload;
+            // Map keys back to snake_case for DB
+            const updateData: any = {
+                name: user.name,
+                email: user.email,
+                birthday: user.birthday,
+                avatar_url: user.avatar,
+                theme_preference: user.themePreference,
+                language_preference: user.languagePreference,
+                email_preferences: user.emailPreferences,
+                last_login_date: user.lastLoginDate,
+                streak: user.streak
+            };
+            const { error } = await supabaseClient.from('users').update(updateData).eq('id', user.id);
+            if (error) throw error;
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        }
+
+        if (action === 'save-art') {
+            const { userId, entry } = payload;
+            const { error } = await supabaseClient.from('user_art').insert({
+                id: entry.id,
+                user_id: userId,
+                image_url: entry.imageUrl,
+                prompt: entry.prompt,
+                title: entry.title,
+                created_at: entry.createdAt
+            });
+            if (error) throw error;
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        }
+
+        if (action === 'update-game-score') {
+            const { userId, game, score } = payload;
+            const { data: userData, error: fetchErr } = await supabaseClient.from('users').select('game_scores').eq('id', userId).single();
+            if (fetchErr) throw fetchErr;
+
+            const currentScores = userData.game_scores || { match: 0, cloud: 0 };
+            const newScores = { ...currentScores, [game]: Math.max(currentScores[game] || 0, score) };
+
+            const { error } = await supabaseClient.from('users').update({ game_scores: newScores }).eq('id', userId);
+            if (error) throw error;
+            return new Response(JSON.stringify({ success: true, scores: newScores }), { headers: corsHeaders });
+        }
+
+        if (action === 'save-mood') {
+            const { userId, mood } = payload;
+            const { error } = await supabaseClient.from('moods').insert({
+                user_id: userId,
+                date: new Date().toISOString(),
+                mood: mood
+            });
+            if (error) throw error;
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        }
+
+        if (action === 'save-transaction') {
+            const { userId, tx } = payload;
+            const { error } = await supabaseClient.from('transactions').insert({
+                id: tx.id,
+                user_id: userId,
+                date: tx.date || new Date().toISOString(),
+                amount: tx.amount,
+                cost: tx.cost,
+                description: tx.description,
+                status: tx.status
+            });
+            if (error) throw error;
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        }
+
+        if (action === 'save-feedback') {
+            const { userId, feedback } = payload;
+            const { error } = await supabaseClient.from('feedback').insert({
+                user_id: userId,
+                companion_name: feedback.companionName,
+                rating: feedback.rating,
+                tags: feedback.tags,
+                date: feedback.date || new Date().toISOString()
+            });
+            if (error) throw error;
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        }
+
         // --- ADMIN DASHBOARD ACTIONS ---
         if (action === 'admin-list-users') {
             const { data, error } = await supabaseClient.from('users').select('*').order('created_at', { ascending: false });

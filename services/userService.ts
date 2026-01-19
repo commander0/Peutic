@@ -266,11 +266,9 @@ export class UserService {
     }
 
     static async saveArt(entry: ArtEntry) {
-        const { error } = await supabase.from('user_art').insert({
-            id: entry.id, user_id: entry.userId, image_url: entry.imageUrl, prompt: entry.prompt, title: entry.title, created_at: entry.createdAt
-        });
+        const { error } = await BaseService.invokeGateway('save-art', { userId: entry.userId, entry });
         if (error) {
-            console.error("Save Art Failed:", error);
+            console.error("Save Art via Gateway Failed:", error);
             throw error;
         }
     }
@@ -310,8 +308,8 @@ export class UserService {
     }
 
     static async saveMood(userId: string, mood: 'confetti' | 'rain') {
-        const { error } = await supabase.from('moods').insert({ user_id: userId, date: new Date().toISOString(), mood });
-        if (error) console.error("Save Mood Failed:", error);
+        const { error } = await BaseService.invokeGateway('save-mood', { userId, mood });
+        if (error) console.error("Save Mood via Gateway Failed:", error);
     }
 
     static async getWeeklyProgress(userId: string): Promise<{ current: number, target: number, message: string }> {
@@ -425,39 +423,28 @@ export class UserService {
     }
 
     static async saveTransaction(tx: Transaction) {
-        await supabase.from('transactions').insert({
-            id: tx.id,
-            user_id: tx.userId,
-            date: tx.date,
-            amount: tx.amount,
-            cost: tx.cost,
-            description: tx.description,
-            status: tx.status
-        });
+        await BaseService.invokeGateway('save-transaction', { userId: tx.userId, tx });
     }
 
     static async saveFeedback(feedback: SessionFeedback) {
-        await supabase.from('feedback').insert({
-            user_id: feedback.userId,
-            companion_name: feedback.companionName,
-            rating: feedback.rating,
-            tags: feedback.tags,
-            date: feedback.date
-        });
+        await BaseService.invokeGateway('save-feedback', { userId: feedback.userId, feedback });
     }
 
     static async updateGameScore(userId: string, game: 'match' | 'cloud', score: number) {
         const user = this.getUser();
         if (!user || user.id !== userId) return;
 
+        // Optimistic update
         const currentScores = user.gameScores || { match: 0, cloud: 0 };
         const newScores = { ...currentScores, [game]: Math.max(currentScores[game] || 0, score) };
-
-        // Optimistic update
         user.gameScores = newScores;
 
-        const { error } = await supabase.from('users').update({ game_scores: newScores }).eq('id', userId);
-        if (error) logger.error("Update Game Score Failed", userId, error);
+        const { data, error } = await BaseService.invokeGateway('update-game-score', { userId, game, score });
+        if (error) {
+            logger.error("Update Game Score via Gateway Failed", userId, error);
+        } else if (data?.scores) {
+            user.gameScores = data.scores;
+        }
     }
 
     static recordBreathSession(userId: string, duration: number) {
