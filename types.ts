@@ -28,7 +28,7 @@ export interface User {
   };
   streak: number;
   lastLoginDate: string;
-  themePreference?: 'light' | 'dark';
+  themePreference?: 'light' | 'dark' | 'cyberpunk' | 'forest' | 'midnight';
   languagePreference?: string;
 }
 

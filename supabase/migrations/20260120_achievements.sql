@@ -31,17 +31,21 @@ create table if not exists user_achievements (
 alter table user_achievements enable row level security;
 
 -- Policy: Users can view their own unlocked achievements
+-- Optimized with (select auth.uid()) to prevent per-row re-evaluation
 create policy "Users can view own achievements"
 on user_achievements for select
 to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
--- Policy: Service role (or valid app logic) inserts unlocks
--- For simplicity in this app, we'll allow authenticated users to insert (triggered by client logic for now, ideally server-function)
+-- Policy: Users can unlock achievements
 create policy "Users can unlock achievements"
 on user_achievements for insert
 to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
+
+-- Performance Indexes
+create index if not exists idx_user_achievements_achievement_id on user_achievements(achievement_id);
+create index if not exists idx_user_achievements_user_id on user_achievements(user_id);
 
 -- Seed Data (Initial Achievements)
 insert into achievements (code, title, description, icon_name, xp_reward)

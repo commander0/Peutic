@@ -193,12 +193,22 @@ serve(async (req) => {
         if (action === 'queue-heartbeat') {
             const { userId } = payload;
             await supabaseClient.from('session_queue').update({ last_ping: new Date().toISOString() }).eq('user_id', userId);
+
+            // Trigger matching to ensure users don't get stuck if slots open up
+            await supabaseClient.rpc('match_session_queue');
+
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
         }
 
         if (action === 'session-keepalive') {
             const { userId } = payload;
             await supabaseClient.from('active_sessions').upsert({ user_id: userId, last_ping: new Date().toISOString() });
+
+            // --- SCALABILITY HOOK ---
+            // Trigger matching engine opportunistically to keep the queue moving
+            // In a massive scale system, this would be a separate worker, but for <10k users, this is efficient.
+            await supabaseClient.rpc('match_session_queue');
+
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
         }
 

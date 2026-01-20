@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
     Trophy, Lock, Zap, Footprints, Flame, Sprout, Heart, Mic, Star
 } from 'lucide-react';
-import { Achievement, UserAchievement } from '../../types';
+import { Achievement } from '../../types';
 import { supabase } from '../../services/supabaseClient';
 
 interface AchievementGridProps {
@@ -48,7 +48,7 @@ const AchievementGrid: React.FC<AchievementGridProps> = ({ userId }) => {
             if (userError) throw userError;
 
             setAchievements(allAchievements || []);
-            setUserAchievements(new Set(unlocked?.map(ua => ua.achievement_id) || []));
+            setUserAchievements(new Set(unlocked?.map((ua: any) => ua.achievement_id) || []));
         } catch (error) {
             console.error("Failed to load achievements", error);
         } finally {
@@ -70,8 +70,8 @@ const AchievementGrid: React.FC<AchievementGridProps> = ({ userId }) => {
                     <div
                         key={ach.id}
                         className={`relative group p-4 rounded-2xl border transition-all duration-500 overflow-hidden ${isUnlocked
-                                ? 'bg-gradient-to-br from-yellow-500/10 to-transparent border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.1)] hover:shadow-[0_0_25px_rgba(234,179,8,0.2)] hover:-translate-y-1'
-                                : 'bg-gray-900/40 border-white/5 grayscale opacity-50'
+                            ? 'bg-gradient-to-br from-yellow-500/10 to-transparent border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.1)] hover:shadow-[0_0_25px_rgba(234,179,8,0.2)] hover:-translate-y-1'
+                            : 'bg-gray-900/40 border-white/5 grayscale opacity-50'
                             }`}
                     >
                         {/* UNLOCKED SHINE EFFECT */}

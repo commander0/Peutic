@@ -388,6 +388,7 @@ const MainApp: React.FC = () => {
             )}
           </ToastProvider>
         </LanguageProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 };
