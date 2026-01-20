@@ -14,6 +14,7 @@ interface Petal {
     speedX: number;
     speedY: number;
     size: number;
+    opacity: number;
 }
 
 const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height = 300 }) => {
@@ -24,13 +25,14 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
 
     // Initialize petals once
     useEffect(() => {
-        petalsRef.current = Array.from({ length: 8 }, () => ({
+        petalsRef.current = Array.from({ length: 15 }, () => ({
             x: Math.random() * width,
-            y: Math.random() * height * 0.5,
+            y: Math.random() * height,
             rotation: Math.random() * Math.PI * 2,
-            speedX: 0.2 + Math.random() * 0.3,
-            speedY: 0.3 + Math.random() * 0.4,
-            size: 4 + Math.random() * 3
+            speedX: 0.1 + Math.random() * 0.4,
+            speedY: 0.2 + Math.random() * 0.5,
+            size: 2 + Math.random() * 4,
+            opacity: 0.2 + Math.random() * 0.5
         }));
     }, [width, height]);
 
@@ -42,46 +44,67 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
             if (!ctx) return;
             const frame = frameRef.current;
 
-            // Clear with a soft gradient sky
+            // Clear with a rich atmospheric gradient
             const skyGradient = ctx.createLinearGradient(0, 0, 0, height);
-            skyGradient.addColorStop(0, 'rgba(230, 245, 255, 0.8)');
-            skyGradient.addColorStop(0.5, 'rgba(220, 240, 250, 0.6)');
-            skyGradient.addColorStop(1, 'rgba(200, 230, 210, 0.5)');
+            skyGradient.addColorStop(0, '#0f2027');
+            skyGradient.addColorStop(0.4, '#203a43');
+            skyGradient.addColorStop(1, '#2c5364');
             ctx.fillStyle = skyGradient;
             ctx.fillRect(0, 0, width, height);
 
-            // Soft volumetric light
-            const lightGradient = ctx.createRadialGradient(width * 0.7, height * 0.2, 0, width * 0.7, height * 0.2, height * 0.6);
-            lightGradient.addColorStop(0, 'rgba(255, 253, 230, 0.5)');
-            lightGradient.addColorStop(1, 'rgba(255, 253, 230, 0)');
-            ctx.fillStyle = lightGradient;
-            ctx.fillRect(0, 0, width, height);
+            // Volumetric Rays (Sun/Moon shafts)
+            ctx.save();
+            ctx.translate(width * 0.8, -50);
+            ctx.rotate(Math.PI / 6);
+            for (let i = 0; i < 4; i++) {
+                const rayGradient = ctx.createLinearGradient(0, 0, 0, height * 1.5);
+                rayGradient.addColorStop(0, `rgba(255, 255, 255, ${0.05 + Math.sin(frame * 0.02 + i) * 0.02})`);
+                rayGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = rayGradient;
+                ctx.fillRect(i * 100 - 150, 0, 60, height * 1.5);
+            }
+            ctx.restore();
 
             // Draw background Torii Gate
             drawToriiGate(ctx, width, height, garden.level);
 
             // Draw Soil Mound
             const soilGradient = ctx.createRadialGradient(width / 2, height - 10, 10, width / 2, height, width / 2.5);
-            soilGradient.addColorStop(0, '#6d4c41');
-            soilGradient.addColorStop(1, '#3e2723');
+            soilGradient.addColorStop(0, '#4e342e');
+            soilGradient.addColorStop(1, '#25161b');
             ctx.fillStyle = soilGradient;
             ctx.beginPath();
             ctx.ellipse(width / 2, height - 15, width / 2.8, 25, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Grass tufts
-            ctx.strokeStyle = '#66bb6a';
+            // Glowing Grass tufts
             ctx.lineWidth = 2;
-            for (let i = 0; i < 6; i++) {
-                const gx = width / 2 + (i - 2.5) * 25;
+            for (let i = 0; i < 8; i++) {
+                const gx = width / 2 + (i - 3.5) * 20;
+                const sway = Math.sin(frame * 0.05 + i) * 3;
+
+                const grassGradient = ctx.createLinearGradient(gx, height - 35, gx, height - 60);
+                grassGradient.addColorStop(0, '#388e3c');
+                grassGradient.addColorStop(1, '#69f0ae');
+                ctx.strokeStyle = grassGradient;
+
                 ctx.beginPath();
                 ctx.moveTo(gx, height - 35);
-                ctx.quadraticCurveTo(gx + (i % 2 === 0 ? 5 : -5), height - 50 - Math.sin(frame * 0.05 + i) * 3, gx, height - 60);
+                ctx.quadraticCurveTo(gx + (i % 2 === 0 ? 5 : -5) + sway, height - 50, gx + sway, height - 60);
                 ctx.stroke();
             }
 
             const centerX = width / 2;
             const groundY = height - 40;
+
+            // Plant Glow (behind plant)
+            const plantGlow = ctx.createRadialGradient(centerX, groundY - 50, 10, centerX, groundY - 50, 100);
+            plantGlow.addColorStop(0, 'rgba(105, 240, 174, 0.2)');
+            plantGlow.addColorStop(1, 'rgba(105, 240, 174, 0)');
+            ctx.fillStyle = plantGlow;
+            ctx.beginPath();
+            ctx.arc(centerX, groundY - 50, 100, 0, Math.PI * 2);
+            ctx.fill();
 
             // Procedural Drawing based on Level
             drawPlant(ctx, centerX, groundY, garden.level, garden.currentPlantType, frame);
@@ -89,7 +112,7 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
             // Draw Spirit Wisp
             drawSpirit(ctx, centerX + 40, groundY - (garden.level * 18), frame, garden.level);
 
-            // Draw drifting petals
+            // Draw drifting petals / spores
             drawPetals(ctx, frame);
 
             frameRef.current++;
@@ -104,26 +127,29 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
 
     const drawToriiGate = (ctx: CanvasRenderingContext2D, w: number, h: number, level: number) => {
         if (level < 3) return; // Only show gate at higher levels
-        const opacity = Math.min(0.4, (level - 2) * 0.1);
+        const opacity = Math.min(0.6, (level - 2) * 0.15);
         ctx.globalAlpha = opacity;
 
-        const gateColor = '#d32f2f';
+        const gateColor = '#b71c1c'; // Darker red/crimson
         const gateX = w * 0.5;
         const gateY = h * 0.25;
         const gateWidth = w * 0.5;
         const gateHeight = h * 0.35;
 
         ctx.fillStyle = gateColor;
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = 10;
 
         // Pillars
-        ctx.fillRect(gateX - gateWidth / 2, gateY, 8, gateHeight);
-        ctx.fillRect(gateX + gateWidth / 2 - 8, gateY, 8, gateHeight);
+        ctx.fillRect(gateX - gateWidth / 2, gateY, 10, gateHeight);
+        ctx.fillRect(gateX + gateWidth / 2 - 10, gateY, 10, gateHeight);
 
         // Top beam
-        ctx.fillRect(gateX - gateWidth / 2 - 10, gateY, gateWidth + 20, 12);
+        ctx.fillRect(gateX - gateWidth / 2 - 15, gateY, gateWidth + 30, 15);
         // Lower beam
-        ctx.fillRect(gateX - gateWidth / 2, gateY + gateHeight * 0.3, gateWidth, 8);
+        ctx.fillRect(gateX - gateWidth / 2, gateY + gateHeight * 0.3, gateWidth, 10);
 
+        ctx.shadowBlur = 0;
         ctx.globalAlpha = 1.0;
     };
 
@@ -135,28 +161,31 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
         const spiritSize = 12 + level * 2;
 
         // Outer glow
-        const gradient = ctx.createRadialGradient(x, y, 2, x, y, spiritSize + 10);
+        const gradient = ctx.createRadialGradient(x, y, 2, x, y, spiritSize + 15);
         gradient.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-        gradient.addColorStop(0.4, 'rgba(180, 255, 230, 0.5)');
+        gradient.addColorStop(0.4, 'rgba(100, 255, 218, 0.6)');
         gradient.addColorStop(1, 'rgba(100, 255, 218, 0)');
         ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.arc(x, y, spiritSize + 10, 0, Math.PI * 2);
+        ctx.arc(x, y, spiritSize + 15, 0, Math.PI * 2);
         ctx.fill();
 
         // Core
         ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#64ffda';
+        ctx.shadowBlur = 15;
         ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
         ctx.fill();
+        ctx.shadowBlur = 0;
 
         // Sparkle trail
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 4; i++) {
             const trailX = x - floatX * (0.5 + i * 0.3);
             const trailY = y - floatY * (0.5 + i * 0.3) + i * 5;
-            ctx.fillStyle = `rgba(180, 255, 230, ${0.6 - i * 0.2})`;
+            ctx.fillStyle = `rgba(100, 255, 218, ${0.7 - i * 0.2})`;
             ctx.beginPath();
-            ctx.arc(trailX, trailY, 2 - i * 0.5, 0, Math.PI * 2);
+            ctx.arc(trailX, trailY, 3 - i * 0.6, 0, Math.PI * 2);
             ctx.fill();
         }
     };
@@ -167,26 +196,29 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
             ctx.beginPath();
             ctx.ellipse(x, y + 5, 6, 4, 0, 0, Math.PI * 2);
             ctx.fill();
-            // Little sprout line
-            ctx.strokeStyle = '#a5d6a7';
-            ctx.lineWidth = 2;
+            // Glowing Sprout
+            ctx.strokeStyle = '#b9f6ca';
+            ctx.shadowColor = '#69f0ae';
+            ctx.shadowBlur = 5;
+            ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.moveTo(x, y + 3);
-            ctx.lineTo(x, y - 5 + Math.sin(frame * 0.1) * 2);
+            ctx.lineTo(x, y - 8 + Math.sin(frame * 0.1) * 3);
             ctx.stroke();
+            ctx.shadowBlur = 0;
             return;
         }
 
-        // Stem (Sprout to Bloom)
+        // Stem
         const stemHeight = level * 25 + 20;
-        const sway = Math.sin(frame * 0.02) * 3;
+        const sway = Math.sin(frame * 0.02) * 5;
 
-        // Stem gradient
         const stemGradient = ctx.createLinearGradient(x, y, x, y - stemHeight);
-        stemGradient.addColorStop(0, '#388e3c');
-        stemGradient.addColorStop(1, '#81c784');
+        stemGradient.addColorStop(0, '#2e7d32');
+        stemGradient.addColorStop(0.5, '#66bb6a');
+        stemGradient.addColorStop(1, '#a5d6a7');
         ctx.strokeStyle = stemGradient;
-        ctx.lineWidth = 3 + level;
+        ctx.lineWidth = 4 + level;
         ctx.lineCap = 'round';
 
         ctx.beginPath();
@@ -217,63 +249,65 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
     };
 
     const drawLeaf = (ctx: CanvasRenderingContext2D, x: number, y: number, dir: number, frame: number) => {
-        const sway = Math.sin(frame * 0.03 + dir) * 2;
+        const sway = Math.sin(frame * 0.03 + dir) * 3;
         const leafGradient = ctx.createLinearGradient(x, y, x + 15 * dir, y);
-        leafGradient.addColorStop(0, '#81c784');
-        leafGradient.addColorStop(1, '#4caf50');
+        leafGradient.addColorStop(0, '#66bb6a');
+        leafGradient.addColorStop(1, '#00e676');
         ctx.fillStyle = leafGradient;
         ctx.beginPath();
-        ctx.ellipse(x + (12 * dir) + sway, y, 12, 6, dir * 0.4, 0, Math.PI * 2);
+        ctx.ellipse(x + (12 * dir) + sway, y, 14, 7, dir * 0.5, 0, Math.PI * 2);
         ctx.fill();
     };
 
     const drawBud = (ctx: CanvasRenderingContext2D, x: number, y: number, type: string) => {
         ctx.fillStyle = getFlowerColor(type);
+        ctx.shadowColor = ctx.fillStyle;
+        ctx.shadowBlur = 10;
         ctx.beginPath();
-        ctx.arc(x, y, 10, 0, Math.PI * 2);
+        ctx.arc(x, y, 8, 0, Math.PI * 2);
         ctx.fill();
-        // highlight
-        ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        ctx.beginPath();
-        ctx.arc(x - 3, y - 3, 4, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.shadowBlur = 0;
     };
 
     const drawFlower = (ctx: CanvasRenderingContext2D, x: number, y: number, type: string, frame: number) => {
         const color = getFlowerColor(type);
         const petalCount = 8;
 
-        for (let i = 0; i < petalCount; i++) {
-            const angle = (i / petalCount) * Math.PI * 2 + Math.sin(frame * 0.02) * 0.05;
-            const px = x + Math.cos(angle) * 12;
-            const py = y + Math.sin(angle) * 12;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 15;
 
-            const petalGradient = ctx.createRadialGradient(px, py, 0, px, py, 18);
+        for (let i = 0; i < petalCount; i++) {
+            const angle = (i / petalCount) * Math.PI * 2 + Math.sin(frame * 0.02) * 0.1;
+            const px = x + Math.cos(angle) * 14;
+            const py = y + Math.sin(angle) * 14;
+
+            const petalGradient = ctx.createRadialGradient(px, py, 0, px, py, 20);
             petalGradient.addColorStop(0, color);
-            petalGradient.addColorStop(1, adjustColorBrightness(color, -30));
+            petalGradient.addColorStop(1, adjustColorBrightness(color, -40));
             ctx.fillStyle = petalGradient;
             ctx.beginPath();
-            ctx.ellipse(px, py, 18, 10, angle, 0, Math.PI * 2);
+            ctx.ellipse(px, py, 20, 10, angle, 0, Math.PI * 2);
             ctx.fill();
         }
+        ctx.shadowBlur = 0;
 
         // Center
         const centerGradient = ctx.createRadialGradient(x, y, 0, x, y, 8);
-        centerGradient.addColorStop(0, '#fff59d');
-        centerGradient.addColorStop(1, '#ffeb3b');
+        centerGradient.addColorStop(0, '#ffff8d');
+        centerGradient.addColorStop(1, '#ffd600');
         ctx.fillStyle = centerGradient;
         ctx.beginPath();
-        ctx.arc(x, y, 7, 0, Math.PI * 2);
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
         ctx.fill();
     };
 
     const getFlowerColor = (type: string): string => {
         switch (type) {
-            case 'Rose': return '#e91e63';
-            case 'Sunflower': return '#ffc107';
-            case 'Lotus': return '#f48fb1';
-            case 'Fern': return '#2e7d32';
-            default: return '#ab47bc';
+            case 'Rose': return '#ff4081';
+            case 'Sunflower': return '#ffab00';
+            case 'Lotus': return '#ea80fc';
+            case 'Fern': return '#00e676';
+            default: return '#e040fb';
         }
     };
 
@@ -302,9 +336,11 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
             ctx.save();
             ctx.translate(petal.x, petal.y);
             ctx.rotate(petal.rotation);
-            ctx.fillStyle = `rgba(255, 182, 193, ${0.7 + Math.sin(frame * 0.05) * 0.2})`;
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + Math.sin(frame * 0.1) * 0.2})`;
+            ctx.shadowColor = '#fff';
+            ctx.shadowBlur = 5;
             ctx.beginPath();
-            ctx.ellipse(0, 0, petal.size, petal.size / 2, 0, 0, Math.PI * 2);
+            ctx.arc(0, 0, petal.size, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
         });

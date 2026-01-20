@@ -53,7 +53,7 @@
           },
           colors: {
             peutic: {
-              yellow: '#FACC15',
+              yellow: 'var(--color-primary)', // Dynamic Brand Color
               black: '#0A0A0A',
             }
           },
@@ -107,16 +107,46 @@
     }
   </script>
   <style>
-    body {
-      background-color: #FFFBEB;
-      color: #0A0A0A;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
+    :root {
+      --color-primary: #FACC15; /* Default Yellow */
+      --color-bg-base: #FFFBEB;
+      --color-text-base: #0A0A0A;
+    }
+    .dark {
+      --color-bg-base: #0A0A0A;
+      --color-text-base: #F3F4F6;
+    }
+    
+    /* THEME: Cyberpunk */
+    .theme-cyberpunk {
+      --color-primary: #00f0ff; /* Neon Cyan */
+      --color-bg-base: #050510; /* Deep Void */
     }
 
-    .dark body {
-      background-color: #0A0A0A;
-      color: #F3F4F6;
+    /* THEME: Forest */
+    .theme-forest {
+      --color-primary: #34D399; /* Emerald */
+      --color-bg-base: #064E3B; /* Deep Green */
+    }
+
+    /* THEME: Midnight */
+    .theme-midnight {
+      --color-primary: #818CF8; /* Indigo */
+      --color-bg-base: #1e1b4b; /* Deep Indigo */
+    }
+
+    body {
+      background-color: var(--color-bg-base);
+      color: var(--color-text-base);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      transition: background-color 0.5s ease, color 0.5s ease;
+    }
+    
+    /* Override global selection color based on theme */
+    ::selection {
+      background: var(--color-primary);
+      color: black;
     }
 
     ::-webkit-scrollbar {

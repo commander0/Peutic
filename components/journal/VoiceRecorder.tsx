@@ -88,13 +88,14 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userId, onSave }) 
                 .upload(filename, audioBlob);
 
             if (error) {
-                // If bucket doesn't exist, use object URL for demo
-                console.warn("Storage upload failed (Bucket missing?), using local URL", error);
+                console.error("Storage upload failed:", error);
+                alert("Failed to save recording. Please ensure the 'voice-journals' storage bucket exists and is public.");
+                setSaving(false);
+                return;
             }
 
-            const publicUrl = error
-                ? URL.createObjectURL(audioBlob)
-                : supabase.storage.from('voice-journals').getPublicUrl(filename).data.publicUrl;
+            const { data } = supabase.storage.from('voice-journals').getPublicUrl(filename);
+            const publicUrl = data.publicUrl;
 
             const entry: VoiceJournalEntry = {
                 id: crypto.randomUUID(),

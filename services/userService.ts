@@ -95,6 +95,8 @@ export class UserService {
             if (data) {
                 this.currentUser = this.mapUser(data);
                 this.saveUserToCache(this.currentUser);
+                // Background Achievement Check
+                this.checkAchievements(this.currentUser);
                 return this.currentUser;
             } else {
                 console.warn("CRITICAL: User Sync Data Missing - RLS/ID Mismatch", { userId });
@@ -609,6 +611,62 @@ export class UserService {
             throw e;
         }
         await this.logout();
+    }
+
+    // --- ACHIEVEMENTS ---
+    static async checkAchievements(user: User) {
+        if (!user || !user.id) return;
+
+        try {
+            // 1. Fetch Definition & Status
+            const { data: allAchievements } = await supabase.from('achievements').select('*');
+            const { data: unlocked } = await supabase.from('user_achievements').select('achievement_id').eq('user_id', user.id);
+
+            if (!allAchievements) return;
+            const unlockedIds = new Set(unlocked?.map((u: any) => u.achievement_id));
+            const newUnlocks: string[] = [];
+
+            // 2. Gather Stats (Parallel for performance)
+            const [gRes, pRes, jRes] = await Promise.all([
+                supabase.from('garden_state').select('level').eq('user_id', user.id).maybeSingle(),
+                supabase.from('pocket_pets').select('level').eq('user_id', user.id).maybeSingle(),
+                supabase.from('voice_journals').select('id', { count: 'exact', head: true }).eq('user_id', user.id)
+            ]);
+
+            const gardenLevel = gRes.data?.level || 1;
+            const animaLevel = pRes.data?.level || 1;
+            const journalCount = jRes.count || 0;
+
+            // 3. Check Triggers
+            for (const ach of allAchievements) {
+                if (unlockedIds.has(ach.id)) continue;
+
+                let shouldUnlock = false;
+                switch (ach.code) {
+                    case 'FIRST_STEP': shouldUnlock = true; break; // Triggered on check (login)
+                    case 'STREAK_3': shouldUnlock = user.streak >= 3; break;
+                    case 'STREAK_7': shouldUnlock = user.streak >= 7; break;
+                    case 'GARDEN_5': shouldUnlock = gardenLevel >= 5; break;
+                    case 'ANIMA_5': shouldUnlock = animaLevel >= 5; break;
+                    case 'JOURNAL_5': shouldUnlock = journalCount >= 5; break;
+                }
+
+                if (shouldUnlock) {
+                    await supabase.from('user_achievements').insert({ user_id: user.id, achievement_id: ach.id });
+                    newUnlocks.push(ach.title);
+                }
+            }
+
+            // 4. Notify
+            if (newUnlocks.length > 0) {
+                // In a real app, we'd trigger a specialized Toast or Modal here via a callback or event
+                console.log("New Achievements Unlocked:", newUnlocks.join(", "));
+                // For now, we rely on the component polling or re-fetching to see the badge
+            }
+
+        } catch (e) {
+            console.error("Achievement Check Failed", e);
+        }
     }
 
 

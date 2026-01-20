@@ -8,6 +8,7 @@ import { User, Anima } from '../../types';
 import { PetService } from '../../services/petService';
 import PetCanvas from './PetCanvas';
 import { useToast } from '../common/Toast';
+import { UserService } from '../../services/userService';
 
 interface AnimaViewProps {
     user: User;
@@ -16,22 +17,39 @@ interface AnimaViewProps {
 
 const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
     const [pet, setPet] = useState<Anima | null>(null);
-    const [loading, setLoading] = useState(true);
     const [emotion, setEmotion] = useState<'idle' | 'happy' | 'hungry' | 'sleeping' | 'sad' | 'eating'>('idle');
+    const [loading, setLoading] = useState(true);
     const [showSelection, setShowSelection] = useState(false);
+    const [selectedSpecies, setSelectedSpecies] = useState<'Holo-Hamu' | 'Digi-Dino' | 'Neo-Shiba' | 'Zen-Sloth'>('Holo-Hamu');
     const [petName, setPetName] = useState('');
-    const [selectedSpecies, setSelectedSpecies] = useState<Anima['species']>('Holo-Hamu');
+    const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
+
+    // Dynamic canvas sizing for responsive pet
+    const [canvasSize, setCanvasSize] = useState(500);
+
+    // Responsive Canvas Listener
+    useEffect(() => {
+        const handleResize = () => {
+            const size = window.innerWidth < 768 ? Math.min(window.innerWidth - 40, 340) : 500;
+            setCanvasSize(size);
+        };
+        handleResize(); // Init
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const { showToast } = useToast();
+    const COST = intensity; // 1m, 2m, or 3m
 
     useEffect(() => {
         loadPet();
-    }, [user.id]);
+    }, []);
 
     const loadPet = async () => {
-        setLoading(true);
-        const p = await PetService.getPet(user.id);
-        if (p) {
-            setPet(p);
+        const data = await PetService.getPet(user.id);
+        if (data) {
+            setPet(data);
+            if (data.isSleeping) setEmotion('sleeping');
         } else {
             setShowSelection(true);
         }
@@ -40,24 +58,42 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
 
     const handleCreatePet = async () => {
         if (!petName.trim()) {
-            showToast("Give your friend a name!", "error");
+            showToast("Please give your friend a name!", "error");
             return;
         }
-        try {
-            const newPet = await PetService.createPet(user.id, petName, selectedSpecies);
+
+        const newPet = await PetService.createPet(user.id, selectedSpecies, petName);
+        if (newPet) {
             setPet(newPet);
             setShowSelection(false);
-            showToast(`${petName} has arrived!`, "success");
-        } catch (e) {
-            showToast("Summoning failed. Try again.", "error");
+            showToast(`Welcome, ${newPet.name}! (+50 XP)`, "success");
         }
     };
 
     const handleAction = async (action: 'feed' | 'play' | 'clean' | 'sleep') => {
         if (!pet || (pet.isSleeping && action !== 'sleep')) return;
 
+        // Check if user has enough balance
+        if (action !== 'sleep' && user.balance < COST) {
+            showToast(`You need ${COST}m to care for ${pet.name}.`, "error");
+            return;
+        }
+
         let updatedPet = { ...pet, lastInteractionAt: new Date().toISOString() };
         let newEmotion: typeof emotion = 'happy';
+
+        let statGain = 0;
+        let xpGain = 0;
+
+        // Scale rewards based on intensity (Time Investment)
+        // 1m: +10 Stat, +2 XP
+        // 2m: +25 Stat, +5 XP
+        // 3m: +45 Stat, +10 XP
+        switch (intensity) {
+            case 1: statGain = 10; xpGain = 2; break;
+            case 2: statGain = 25; xpGain = 5; break;
+            case 3: statGain = 45; xpGain = 10; break;
+        }
 
         switch (action) {
             case 'feed':
@@ -65,24 +101,31 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
                     showToast(`${pet.name} is full!`, "info");
                     return;
                 }
-                updatedPet.hunger = Math.min(100, pet.hunger + 30);
-                updatedPet.experience += 5;
+                // Deduct balance
+                await UserService.updateUser({ ...user, balance: user.balance - COST });
+                updatedPet.hunger = Math.min(100, pet.hunger + statGain);
+                updatedPet.experience += xpGain;
                 newEmotion = 'eating';
+                showToast(`Fed ${pet.name}! (+${statGain} Saturation, -${COST}m)`, "success");
                 break;
             case 'play':
                 if (pet.energy < 20) {
                     showToast(`${pet.name} is too tired to play.`, "info");
                     return;
                 }
-                updatedPet.happiness = Math.min(100, pet.happiness + 25);
-                updatedPet.energy = Math.max(0, pet.energy - 15);
-                updatedPet.experience += 10;
+                await UserService.updateUser({ ...user, balance: user.balance - COST });
+                updatedPet.happiness = Math.min(100, pet.happiness + statGain);
+                updatedPet.energy = Math.max(0, pet.energy - (10 * intensity)); // Energy drain also scales slightly
+                updatedPet.experience += xpGain * 1.5; // Play gives more XP
                 newEmotion = 'happy';
+                showToast(`Played with ${pet.name}! (+${statGain} Joy, -${COST}m)`, "success");
                 break;
             case 'clean':
-                updatedPet.cleanliness = 100;
-                updatedPet.experience += 2;
+                await UserService.updateUser({ ...user, balance: user.balance - COST });
+                updatedPet.cleanliness = Math.min(100, pet.cleanliness + (statGain * 2));
+                updatedPet.experience += xpGain;
                 newEmotion = 'happy';
+                showToast(`Cleaned ${pet.name}! (-${COST}m)`, "success");
                 break;
             case 'sleep':
                 updatedPet.isSleeping = !pet.isSleeping;
@@ -200,26 +243,54 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
             </header>
 
             {/* MAIN PORTAL */}
-            <main className="flex-1 relative flex items-center justify-center p-4">
-                <div className="relative w-full max-w-lg aspect-square">
+            <main className="flex-1 relative flex items-center justify-center p-4 min-h-0 overflow-visible">
+                <div className="relative w-full max-w-lg aspect-square flex items-center justify-center">
                     {/* HOLOGRAPHIC RING */}
-                    <div className="absolute inset-0 border-[20px] border-cyan-500/5 rounded-full animate-[spin_10s_linear_infinite]"></div>
+                    <div className="absolute inset-0 -m-4 md:-m-12 border-[10px] md:border-[20px] border-cyan-500/5 rounded-full animate-[spin_10s_linear_infinite]"></div>
                     <div className="absolute inset-[10%] border-2 border-dashed border-cyan-500/20 rounded-full animate-[spin_15s_linear_infinite_reverse]"></div>
 
-                    {/* PET CANVAS */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <PetCanvas pet={pet} width={400} height={400} emotion={emotion} />
+                    {/* Ambient Particles */}
+                    <div className="absolute inset-0 pointer-events-none">
+                        {[...Array(6)].map((_, i) => (
+                            <div key={i} className="absolute w-1 h-1 bg-cyan-400/40 rounded-full animate-pulse"
+                                style={{
+                                    left: `${Math.random() * 100}%`,
+                                    top: `${Math.random() * 100}%`,
+                                    animationDelay: `${i * 0.5}s`
+                                }}></div>
+                        ))}
                     </div>
 
-                    {/* STATUS BARS (FLOATING) */}
-                    <div className="absolute top-0 right-0 md:-right-32 space-y-4 w-48 bg-black/40 backdrop-blur-xl border border-white/10 p-5 rounded-3xl animate-in slide-in-from-right duration-1000">
-                        <StatusIndicator icon={Pizza} label="Hunger" val={pet.hunger} color="bg-orange-500" />
-                        <StatusIndicator icon={Heart} label="Happiness" val={pet.happiness} color="bg-rose-500" />
-                        <StatusIndicator icon={Bath} label="Clean" val={pet.cleanliness} color="bg-blue-400" />
-                        <StatusIndicator icon={Zap} label="Energy" val={pet.energy} color="bg-yellow-400" />
+                    {/* PET CANVAS */}
+                    <div className="absolute inset-0 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                        <PetCanvas pet={pet} width={canvasSize} height={canvasSize} emotion={emotion} />
+                    </div>
+
+                    {/* STATUS BARS (Responsive: Bottom row on mobile, Right column on desktop) */}
+                    <div className="absolute -bottom-16 left-0 right-0 md:top-0 md:bottom-auto md:-right-32 md:left-auto md:w-48 bg-black/40 backdrop-blur-xl border border-white/10 p-3 md:p-5 rounded-3xl flex md:flex-col justify-between gap-2 md:gap-4 animate-in slide-in-from-bottom md:slide-in-from-right duration-1000 z-20">
+                        <StatusIndicator icon={Pizza} label="Hunger" val={pet.hunger} color="bg-orange-500" compact />
+                        <StatusIndicator icon={Heart} label="Happiness" val={pet.happiness} color="bg-rose-500" compact />
+                        <StatusIndicator icon={Bath} label="Clean" val={pet.cleanliness} color="bg-blue-400" compact />
+                        <StatusIndicator icon={Zap} label="Energy" val={pet.energy} color="bg-yellow-400" compact />
                     </div>
                 </div>
             </main>
+
+            {/* INTENSITY TOGGLE */}
+            <div className="relative z-20 flex justify-center pb-4 animate-in slide-in-from-bottom duration-700">
+                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-full p-1 flex items-center gap-1">
+                    <span className="text-[9px] font-black uppercase text-gray-500 px-3 tracking-widest hidden md:block">Investment</span>
+                    {[1, 2, 3].map((level) => (
+                        <button
+                            key={level}
+                            onClick={() => setIntensity(level as 1 | 2 | 3)}
+                            className={`w-10 h-8 md:w-12 md:h-10 rounded-full flex items-center justify-center text-[10px] md:text-xs font-black transition-all ${intensity === level ? 'bg-cyan-500 text-black shadow-[0_0_15px_rgba(6,182,212,0.6)]' : 'text-gray-500 hover:bg-white/10'}`}
+                        >
+                            {level}m
+                        </button>
+                    ))}
+                </div>
+            </div>
 
             {/* INTERACTION TRAY */}
             <footer className="relative z-10 p-8 pb-12 flex justify-center gap-4 md:gap-8">
@@ -261,13 +332,13 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
     );
 };
 
-const StatusIndicator: React.FC<{ icon: any, label: string, val: number, color: string }> = ({ icon: Icon, label, val, color }) => (
-    <div className="space-y-1.5">
-        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-gray-500">
-            <div className="flex items-center gap-1.5">
-                <Icon className="w-3 h-3" /> {label}
+const StatusIndicator: React.FC<{ icon: any, label: string, val: number, color: string, compact?: boolean }> = ({ icon: Icon, label, val, color, compact }) => (
+    <div className={`space-y-1.5 ${compact ? 'flex-1' : ''}`}>
+        <div className="flex justify-between items-center text-[8px] md:text-[10px] font-black uppercase tracking-widest text-gray-500">
+            <div className={`flex items-center ${compact ? 'justify-center w-full mb-1' : 'gap-1.5'}`}>
+                <Icon className="w-3 h-3 md:mr-1" /> {!compact && label}
             </div>
-            <span>{Math.floor(val)}%</span>
+            {!compact && <span>{Math.floor(val)}%</span>}
         </div>
         <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
             <div className={`h-full ${color} transition-all duration-1000 shadow-[0_0_8px_rgba(0,0,0,0.5)]`} style={{ width: `${val}%` }}></div>

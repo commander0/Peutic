@@ -46,23 +46,32 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             const baseScale = (width / 300) * evolutionScale;
 
             // Floating bounce effect
-            const bounce = Math.sin(frame * 0.1) * 5 * baseScale;
+            const bounce = Math.sin(frame * 0.05) * 8 * baseScale;
             const yOffset = bounce + (pet.isSleeping ? 10 * baseScale : 0);
 
             ctx.save();
             ctx.translate(centerX, centerY + yOffset);
 
-            // AURA for Guardian and Apex stages
-            if (evolutionStage === 'guardian' || evolutionStage === 'apex') {
-                const auraSize = evolutionStage === 'apex' ? 100 : 70;
-                const auraGradient = ctx.createRadialGradient(0, 0, 10, 0, 0, auraSize * baseScale);
-                const auraColor = evolutionStage === 'apex' ? 'rgba(255, 215, 0, ' : 'rgba(100, 255, 218, ';
-                auraGradient.addColorStop(0, auraColor + (0.3 + Math.sin(frame * 0.05) * 0.1) + ')');
-                auraGradient.addColorStop(1, auraColor + '0)');
-                ctx.fillStyle = auraGradient;
+            // AURA & GLOWS
+            if (evolutionStage !== 'spirit') {
+                const auraSize = evolutionStage === 'apex' ? 120 : 80;
+                const auraColor = evolutionStage === 'apex' ? '255, 215, 0' : '100, 255, 218';
+
+                // Outer Glow
+                const gradient = ctx.createRadialGradient(0, 0, 30 * baseScale, 0, 0, auraSize * baseScale);
+                gradient.addColorStop(0, `rgba(${auraColor}, 0.2)`);
+                gradient.addColorStop(1, `rgba(${auraColor}, 0)`);
+                ctx.fillStyle = gradient;
                 ctx.beginPath();
                 ctx.arc(0, 0, auraSize * baseScale, 0, Math.PI * 2);
                 ctx.fill();
+
+                // Inner Pulse
+                ctx.beginPath();
+                ctx.arc(0, 0, (auraSize * 0.6 + Math.sin(frame * 0.1) * 5) * baseScale, 0, Math.PI * 2);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = `rgba(${auraColor}, 0.3)`;
+                ctx.stroke();
             }
 
             // DRAW PET BASED ON SPECIES
@@ -82,27 +91,36 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             }
 
             // HOLOGRAPHIC GLOW EFFECT
-            ctx.shadowBlur = evolutionStage === 'apex' ? 30 : 15;
-            ctx.shadowColor = evolutionStage === 'apex' ? 'rgba(255, 215, 0, 0.8)' : 'rgba(255, 255, 255, 0.5)';
+            ctx.shadowBlur = evolutionStage === 'apex' ? 40 : 20;
+            ctx.shadowColor = evolutionStage === 'apex' ? 'rgba(255, 215, 0, 0.6)' : 'rgba(50, 255, 255, 0.4)';
 
             ctx.restore();
 
             // Overlay Scanlines for Retro feel
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-            for (let i = 0; i < height; i += 4) {
+            ctx.fillStyle = 'rgba(0, 255, 255, 0.03)';
+            for (let i = 0; i < height; i += 3) {
                 ctx.fillRect(0, i, width, 1);
             }
 
-            // Floating particles for Apex
-            if (evolutionStage === 'apex') {
-                for (let i = 0; i < 5; i++) {
-                    const particleX = centerX + Math.sin(frame * 0.02 + i) * 80;
-                    const particleY = centerY - 50 - Math.abs(Math.sin(frame * 0.03 + i * 0.5)) * 60;
-                    ctx.fillStyle = 'rgba(255, 215, 0, ' + (0.6 + Math.sin(frame * 0.1 + i) * 0.4) + ')';
-                    ctx.beginPath();
-                    ctx.arc(particleX, particleY, 3, 0, Math.PI * 2);
-                    ctx.fill();
-                }
+            // Glitch Effect (Random)
+            if (Math.random() > 0.98) {
+                const h = Math.random() * 20;
+                const y = Math.random() * height;
+                ctx.fillStyle = 'rgba(0, 255, 255, 0.1)';
+                ctx.fillRect(0, y, width, h);
+            }
+
+            // Floating particles
+            for (let i = 0; i < 8; i++) {
+                const angle = (frame * 0.02) + (i * (Math.PI * 2) / 8);
+                const r = 100 * baseScale + Math.sin(frame * 0.05 + i) * 20;
+                const px = centerX + Math.cos(angle) * r;
+                const py = centerY + Math.sin(angle) * r;
+
+                ctx.fillStyle = evolutionStage === 'apex' ? 'rgba(255,215,0,0.6)' : 'rgba(100,255,218,0.4)';
+                ctx.beginPath();
+                ctx.arc(px, py, 2 * baseScale, 0, Math.PI * 2);
+                ctx.fill();
             }
 
             frame++;

@@ -201,3 +201,20 @@ export interface Anima {
   lastInteractionAt: string;
   createdAt: string;
 }
+
+export interface Achievement {
+  id: string;
+  code: string;
+  title: string;
+  description: string;
+  icon_name: string;
+  xp_reward: number;
+}
+
+export interface UserAchievement {
+  id: string;
+  user_id: string;
+  achievement_id: string;
+  unlocked_at: string;
+  achievement?: Achievement;
+}

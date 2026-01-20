@@ -43,7 +43,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                 </button>
 
                 {isOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-2xl z-[100] overflow-hidden animate-in slide-in-from-top-2 fade-in duration-300 ease-out">
+                    <div className="absolute left-0 md:right-0 md:left-auto mt-2 w-48 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-2xl z-[100] overflow-hidden animate-in slide-in-from-top-2 fade-in duration-300 ease-out">
                         <div className="p-2 space-y-1">
                             {LANGUAGES.map((lang) => (
                                 <button

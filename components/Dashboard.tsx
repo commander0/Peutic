@@ -16,6 +16,7 @@ import { UserService } from '../services/userService';
 import { AdminService } from '../services/adminService';
 import { useToast } from './common/Toast';
 import { CompanionSkeleton, StatSkeleton } from './common/SkeletonLoader';
+import { InspirationQuote } from './common/InspirationQuote';
 
 import { NameValidator } from '../services/nameValidator';
 
@@ -58,7 +59,7 @@ interface DashboardProps {
 }
 
 const AvatarImage = React.memo(({ src, alt, className, isUser = false }: { src?: string, alt?: string, className?: string, isUser?: boolean }) => (
-    <div className={`relative ${className || ''} overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>
+    <div className={`relative ${className || ''} overflow - hidden bg - gray - 100 dark: bg - gray - 800 flex items - center justify - center`}>
         {src ? (
             <img
                 src={src}
@@ -78,7 +79,7 @@ const AvatarImage = React.memo(({ src, alt, className, isUser = false }: { src?:
             </div>
         )}
         {isUser && <div className="absolute inset-0 ring-1 ring-inset ring-black/10"></div>}
-    </div>
+    </div >
 ));
 AvatarImage.displayName = 'AvatarImage';
 
@@ -744,8 +745,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     </div>
                                     <div className="flex flex-col">
                                         <span className="text-xl font-black tracking-tight dark:text-white">Peutic</span>
-                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none flex items-center">
                                             {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                                            <InspirationQuote />
                                         </p>
                                     </div>
                                 </div>
@@ -762,6 +764,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             <div className="flex items-center flex-wrap gap-2 md:gap-3">
                                 <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
 
+                                {/* Desktop/Tablet Logout Button - next to globe */}
+                                <button onClick={onLogout} className="hidden md:flex p-2.5 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-100 dark:border-red-900/50 shadow-sm hover:scale-105 transition-all" title="Logout">
+                                    <LogOut className="w-5 h-5" />
+                                </button>
+
                                 <button onClick={() => setShowGrounding(true)} className="p-2.5 rounded-2xl bg-white dark:bg-gray-800 border border-blue-100 dark:border-gray-700 shadow-sm hover:scale-105 transition-all text-blue-500" title="Grounding Mode">
                                     <Anchor className="w-5 h-5" />
                                 </button>
@@ -772,7 +779,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                                 <button
                                     onClick={() => setShowPayment(true)}
-                                    className={`px-3 md:px-5 py-2.5 rounded-2xl font-black shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2 text-[10px] md:text-xs ${balance === 0
+                                    className={`h-[42px] px-4 rounded-2xl font-black shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 text-[10px] md:text-xs border border-transparent ${balance === 0
                                         ? 'bg-red-500 text-white animate-pulse'
                                         : 'bg-emerald-500 text-white dark:bg-emerald-600'
                                         }`}
@@ -785,6 +792,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     <AvatarImage src={isGhostMode ? '' : (dashboardUser?.avatar || '')} alt={isGhostMode ? 'Member' : (dashboardUser?.name || 'User')} className="w-full h-full object-cover" isUser={true} />
                                 </button>
 
+                                {/* Mobile-only Logout Button */}
                                 <button onClick={onLogout} className="md:hidden p-2.5 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-100 dark:border-red-900/50 shadow-sm hover:scale-105 transition-all">
                                     <LogOut className="w-5 h-5" />
                                 </button>
@@ -814,7 +822,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             {garden && (
                                                 <div
                                                     onClick={() => setShowGardenFull(true)}
-                                                    className="group relative bg-[#081508] dark:bg-black rounded-xl md:rounded-3xl border border-green-500/30 dark:border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.1)] hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                    className="group relative bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-black dark:to-emerald-950 rounded-xl md:rounded-3xl border border-green-400/30 dark:border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.15)] hover:shadow-[0_0_25px_rgba(34,197,94,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                                 >
                                                     <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 pointer-events-none"></div>
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
@@ -848,20 +856,24 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                                 showToast(`Locked for ${daysRemaining} more days.`, "info");
                                                             }
                                                         }}
-                                                        className="group relative bg-[#e5e7eb] dark:bg-[#111111] rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] transition-all overflow-hidden cursor-pointer h-[100px] md:h-[220px]"
+                                                        className="group relative bg-gradient-to-br from-fuchsia-50 via-purple-50 to-indigo-50 dark:from-purple-950 dark:via-black dark:to-indigo-950 rounded-xl md:rounded-3xl border border-purple-400/30 dark:border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] transition-all overflow-hidden cursor-pointer h-[100px] md:h-[220px]"
                                                     >
-                                                        <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-200 to-gray-400 dark:from-gray-700 dark:via-black dark:to-gray-900 opacity-20 pointer-events-none"></div>
-                                                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')] opacity-[0.2] pointer-events-none"></div>
+                                                        {/* Animated shimmer overlay */}
+                                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_3s_infinite] pointer-events-none"></div>
+                                                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')] opacity-[0.15] pointer-events-none"></div>
+
                                                         <div className="flex flex-col items-center justify-center h-full p-2 md:p-6 text-center relative z-10">
                                                             <div className="relative mb-1 md:mb-4">
-                                                                <div className="absolute -inset-4 bg-white/20 blur-xl rounded-full animate-pulse"></div>
-                                                                <div className="w-10 h-10 md:w-20 md:h-20 bg-black/40 border border-white/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(255,255,255,0.2)] group-hover:scale-110 transition-transform">
+                                                                {/* Pulsing glow ring */}
+                                                                <div className="absolute -inset-4 md:-inset-6 bg-purple-400/30 dark:bg-purple-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                                <div className="absolute -inset-2 border border-purple-300/50 dark:border-purple-500/30 rounded-full animate-[spin_8s_linear_infinite]"></div>
+                                                                <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-purple-600 to-indigo-700 border border-purple-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_20px_rgba(168,85,247,0.5)] group-hover:scale-110 transition-transform">
                                                                     <BookOpen className="w-5 h-5 md:w-10 md:h-10" />
                                                                 </div>
                                                                 {isLocked && <div className="absolute -top-2 -right-2 bg-yellow-400 text-black p-1 rounded-lg shadow-lg"><Lock className="w-3 h-3" /></div>}
                                                             </div>
-                                                            <h3 className="text-[7px] md:text-sm font-black text-white uppercase tracking-widest drop-shadow-[0_0_6px_rgba(0,0,0,0.5)]">Book of You</h3>
-                                                            <p className="hidden md:block text-[10px] font-bold text-white/50 uppercase tracking-widest">
+                                                            <h3 className="text-[7px] md:text-sm font-black text-purple-700 dark:text-purple-300 uppercase tracking-widest drop-shadow-[0_0_6px_rgba(168,85,247,0.6)]">Book of You</h3>
+                                                            <p className="hidden md:block text-[10px] font-bold text-purple-500/70 dark:text-purple-400/50 uppercase tracking-widest">
                                                                 {isLocked ? `Unlocked in ${daysRemaining}d` : 'Open Chronicle'}
                                                             </p>
                                                         </div>
@@ -872,7 +884,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             {/* TILE 3: ANIMA */}
                                             <div
                                                 onClick={() => setShowPocketPet(true)}
-                                                className="group relative bg-[#0a1515] dark:bg-black rounded-xl md:rounded-3xl border border-cyan-500/30 dark:border-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.1)] hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                className="group relative bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50 dark:from-cyan-950 dark:via-black dark:to-blue-950 rounded-xl md:rounded-3xl border border-cyan-400/30 dark:border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)] hover:shadow-[0_0_25px_rgba(6,182,212,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                             >
                                                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 pointer-events-none"></div>
                                                 <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
@@ -1123,11 +1135,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                 </Suspense>
             )}
             {showBreathing && <EmergencyOverlay userId={user.id} onClose={() => { setShowBreathing(false); refreshGarden(); }} />}
-            {showProfile && (
-                <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Identity Node...</div>}>
-                    <ProfileModal user={dashboardUser} onClose={() => setShowProfile(false)} onUpdate={refreshData} />
-                </Suspense>
-            )}
+            {
+                showProfile && (
+                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Identity Node...</div>}>
+                        <ProfileModal user={dashboardUser} onClose={() => setShowProfile(false)} onUpdate={refreshData} />
+                    </Suspense>
+                )
+            }
             {showGrounding && <GroundingMode onClose={() => setShowGrounding(false)} />}
             {showTechCheck && (<TechCheck onConfirm={confirmSession} onCancel={() => setShowTechCheck(false)} />)}
 
@@ -1174,22 +1188,28 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     </div>
                 )
             }
-            {showBookFull && dashboardUser && (
-                <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Opening the Book...</div>}>
-                    <BookOfYouView user={dashboardUser} garden={garden} onClose={() => setShowBookFull(false)} />
-                </Suspense>
-            )}
-            {showGardenFull && garden && (
-                <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Entering the Garden...</div>}>
-                    <GardenFullView garden={garden} onClose={() => setShowGardenFull(false)} onUpdate={refreshGarden} />
-                </Suspense>
-            )}
-            {showPocketPet && dashboardUser && (
-                <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Bridging Digital Reality...</div>}>
-                    <AnimaView user={dashboardUser} onClose={() => { setShowPocketPet(false); refreshPet(); }} />
-                </Suspense>
-            )}
-        </div>
+            {
+                showBookFull && dashboardUser && (
+                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Opening the Book...</div>}>
+                        <BookOfYouView user={dashboardUser} garden={garden} onClose={() => setShowBookFull(false)} />
+                    </Suspense>
+                )
+            }
+            {
+                showGardenFull && garden && (
+                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Entering the Garden...</div>}>
+                        <GardenFullView garden={garden} user={dashboardUser!} onClose={() => setShowGardenFull(false)} onUpdate={refreshGarden} />
+                    </Suspense>
+                )
+            }
+            {
+                showPocketPet && dashboardUser && (
+                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Bridging Digital Reality...</div>}>
+                        <AnimaView user={dashboardUser} onClose={() => { setShowPocketPet(false); refreshPet(); }} />
+                    </Suspense>
+                )
+            }
+        </div >
     );
 };
 
