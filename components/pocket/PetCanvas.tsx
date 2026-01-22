@@ -59,7 +59,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
 
                 // Outer Glow
                 const gradient = ctx.createRadialGradient(0, 0, 30 * baseScale, 0, 0, auraSize * baseScale);
-                gradient.addColorStop(0, `rgba(${auraColor}, 0.2)`);
+                gradient.addColorStop(0, `rgba(${auraColor}, 0.3)`); // Increased opacity
                 gradient.addColorStop(1, `rgba(${auraColor}, 0)`);
                 ctx.fillStyle = gradient;
                 ctx.beginPath();
@@ -91,8 +91,8 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             }
 
             // HOLOGRAPHIC GLOW EFFECT
-            ctx.shadowBlur = evolutionStage === 'apex' ? 40 : 20;
-            ctx.shadowColor = evolutionStage === 'apex' ? 'rgba(255, 215, 0, 0.6)' : 'rgba(50, 255, 255, 0.4)';
+            ctx.shadowBlur = evolutionStage === 'apex' ? 40 : 25;
+            ctx.shadowColor = evolutionStage === 'apex' ? 'rgba(255, 215, 0, 0.7)' : 'rgba(34, 211, 238, 0.6)'; // Increased opacity and shifted to cyan-400 for better visibility
 
             ctx.restore();
 

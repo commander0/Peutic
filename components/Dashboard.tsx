@@ -10,8 +10,9 @@ import {
     Sun, Feather, Anchor, RefreshCw, Play, Star, Edit2, Trash2, Zap, Gamepad2,
     CloudRain, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Moon,
     Twitter, Instagram, Linkedin, Volume2, Music, Trees,
-    Mail, StopCircle, Eye, Minimize2, Flame as Fire, EyeOff, Megaphone
+    Mail, StopCircle, Eye, Minimize2, Flame as Fire, EyeOff, Megaphone, Bell
 } from 'lucide-react';
+import { NotificationBell, Notification } from './common/NotificationBell';
 import { UserService } from '../services/userService';
 import { AdminService } from '../services/adminService';
 import { useToast } from './common/Toast';
@@ -58,29 +59,34 @@ interface DashboardProps {
     onStartSession: (companion: Companion) => void;
 }
 
-const AvatarImage = React.memo(({ src, alt, className, isUser = false }: { src?: string, alt?: string, className?: string, isUser?: boolean }) => (
-    <div className={`relative ${className || ''} overflow - hidden bg - gray - 100 dark: bg - gray - 800 flex items - center justify - center`}>
-        {src ? (
-            <img
-                src={src}
-                alt={alt || 'Avatar'}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                    (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/lorelei/svg?seed=${alt || 'anonymous'}&backgroundColor=FCD34D`;
-                }}
-            />
-        ) : (
-            <div className="w-full h-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
-                {isUser ? (
-                    <UserIcon className="w-1/2 h-1/2 text-yellow-600 dark:text-yellow-500" />
-                ) : (
-                    <Sparkles className="w-1/2 h-1/2 text-yellow-600 dark:text-yellow-500" />
-                )}
-            </div>
-        )}
-        {isUser && <div className="absolute inset-0 ring-1 ring-inset ring-black/10"></div>}
-    </div >
-));
+const AvatarImage = React.memo(({ src, alt, className, isUser = false }: { src?: string, alt?: string, className?: string, isUser?: boolean }) => {
+    const [imgError, setImgError] = useState(false);
+    return (
+        <div className={`relative ${className || ''} overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>
+            {src && !imgError ? (
+                <img
+                    src={src}
+                    alt={alt || 'Avatar'}
+                    className="w-full h-full object-cover"
+                    onError={() => setImgError(true)}
+                />
+            ) : (
+                <div className="w-full h-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+                    {isUser || (alt && alt.length > 0) ? (
+                        <img
+                            src={`https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(alt || 'user')}&backgroundColor=transparent`}
+                            alt="Fallback Avatar"
+                            className="w-full h-full object-cover bg-yellow-200 dark:bg-yellow-900"
+                        />
+                    ) : (
+                        <Sparkles className="w-1/2 h-1/2 text-yellow-600 dark:text-yellow-500" />
+                    )}
+                </div>
+            )}
+            {isUser && <div className="absolute inset-0 ring-1 ring-inset ring-black/10"></div>}
+        </div>
+    );
+});
 AvatarImage.displayName = 'AvatarImage';
 
 const CollapsibleSection = React.memo(({ title, icon: Icon, children, defaultOpen = false }: { title: string, icon: any, children: React.ReactNode, defaultOpen?: boolean }) => {
@@ -435,6 +441,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [anima, setAnima] = useState<Anima | null>(null);
     const [isAdmin, setIsAdmin] = useState(user.role === 'ADMIN');
     const [isVaultOpen, setIsVaultOpen] = useState(false);
+    const [notifications, setNotifications] = useState<Notification[]>([
+        { id: '1', title: 'Welcome Back', message: 'Your sanctuary is ready.', type: 'info', read: false, timestamp: new Date() }
+    ]);
 
 
     const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
@@ -674,7 +683,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                 <div className="pointer-events-auto">
                     <button
                         onClick={handleVoiceCheckIn}
-                        className="w-14 h-14 bg-yellow-400 dark:bg-yellow-500 rounded-full border-2 border-yellow-200 dark:border-yellow-600 shadow-[0_0_20px_rgba(250,204,21,0.4)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all group animate-float"
+                        className="w-14 h-14 bg-yellow-400 dark:bg-yellow-500 rounded-full border-2 border-yellow-200 dark:border-yellow-600 shadow-[0_0_20px_rgba(250,204,21,0.4)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all group"
                         title="Daily Pulse Check"
                     >
                         <Sparkles className="w-6 h-6 text-black group-hover:rotate-12 transition-transform" />
@@ -739,26 +748,41 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-10 pb-24">
                         <header className="mb-8 md:mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
                             <div className="flex items-center justify-between w-full md:w-auto">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg">
-                                        <Heart className="w-5 h-5 text-black fill-black" />
+                                <div className="flex items-center gap-4">
+                                    <div className="hidden md:block">
+                                        <NotificationBell
+                                            notifications={notifications}
+                                            onClear={(id) => setNotifications(prev => prev.filter(n => n.id !== id))}
+                                            onClearAll={() => setNotifications(prev => prev.filter(n => !n.read))}
+                                        />
                                     </div>
+                                    <div className="md:hidden">
+                                        {/* Mobile Notification Bell */}
+                                        <NotificationBell
+                                            notifications={notifications}
+                                            onClear={(id) => setNotifications(prev => prev.filter(n => n.id !== id))}
+                                            onClearAll={() => setNotifications(prev => prev.filter(n => !n.read))}
+                                        />
+                                    </div>
+
                                     <div className="flex flex-col">
-                                        <span className="text-xl font-black tracking-tight dark:text-white">Peutic</span>
-                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none flex items-center">
-                                            {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-                                            <InspirationQuote />
-                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <span className="md:hidden text-lg font-black tracking-tight dark:text-white">Peutic</span>
+                                            <h1 className="hidden md:block text-2xl lg:text-3xl font-black tracking-tight dark:text-white leading-tight">
+                                                {activeTab === 'inner_sanctuary' ? 'Sanctuary' : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
+                                            </h1>
+                                        </div>
+                                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none flex items-center gap-2 mt-1">
+                                            <span>{new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                                            <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                            <div className="flex-1 min-w-0">
+                                                <InspirationQuote />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 {/* Desktop Title only */}
-                                <div className="hidden md:block ml-8">
-                                    {activeTab !== 'inner_sanctuary' && (
-                                        <h1 className="text-2xl lg:text-3xl font-black tracking-tight dark:text-white">
-                                            {activeTab === 'history' ? t('sec_history') : t('dash_settings')}
-                                        </h1>
-                                    )}
-                                </div>
+                                {/* Desktop Title Removed (Moved to Left) */}
                             </div>
 
                             <div className="flex items-center flex-wrap gap-2 md:gap-3">
@@ -811,7 +835,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             <div className="p-2 bg-yellow-100 dark:bg-gray-800 rounded-lg text-yellow-600 dark:text-yellow-500">
                                                 <Zap className="w-5 h-5" />
                                             </div>
-                                            <h2 className="text-sm font-black uppercase tracking-widest dark:text-white">The Vault</h2>
+                                            <h2 className="text-sm font-black uppercase tracking-widest dark:text-white">The Hub</h2>
                                         </div>
                                         <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-500 ${isVaultOpen ? 'rotate-180' : ''}`} />
                                     </button>
@@ -907,7 +931,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                                     {dashboardUser ? (
                                         <div className="bg-white dark:bg-gray-900 p-4 md:p-5 rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm col-span-1 md:col-span-2 relative overflow-hidden group min-h-[120px] md:min-h-[140px]">
-                                            {weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-4 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-20 h-20 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div><div className="absolute w-16 h-16 bg-blue-500/30 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-blue-400/10 rounded-full animate-ping"></div><div className="absolute w-10 h-10 bg-blue-400/50 rounded-full blur-lg animate-pulse"></div><Flame className="w-12 h-12 text-blue-500 fill-blue-500 drop-shadow-[0_0_20px_rgba(59,130,246,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy className="w-20 h-20 text-yellow-500" /></div>)}
+                                            {weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-3 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-12 h-12 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div><div className="absolute w-10 h-10 bg-blue-500/30 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-blue-400/10 rounded-full animate-ping"></div><div className="absolute w-6 h-6 bg-blue-400/50 rounded-full blur-lg animate-pulse"></div><Flame className="w-8 h-8 text-blue-500 fill-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy className="w-20 h-20 text-yellow-500" /></div>)}
                                             <div className="relative z-10"><h3 className="font-bold text-gray-500 dark:text-gray-400 text-[10px] md:text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3><div className="flex items-end gap-2 mb-2 md:mb-3"><span className="text-2xl md:text-4xl font-black dark:text-yellow-400">{weeklyGoal}</span><span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span></div><div className="w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-2 md:mb-3"><div className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= weeklyTarget ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-pulse' : 'bg-yellow-400'}`} style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}></div></div><p className="text-[10px] md:text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}</p></div>
                                         </div>
                                     ) : <StatSkeleton />}
@@ -1033,6 +1057,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             </div>
                                             <button onClick={toggleGhostMode} className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${isGhostMode ? 'bg-red-500' : 'bg-gray-200'}`}>
                                                 <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${isGhostMode ? 'translate-x-5' : 'translate-x-1'}`} />
+                                            </button>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Zap className="w-4 h-4 text-purple-500" /></div>
+                                                <div>
+                                                    <p className="font-bold text-gray-900 dark:text-white text-sm">Gamification Mode</p>
+                                                    <p className="text-[10px] text-gray-500">Enable points, XP, and streaks.</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    const newVal = !dashboardUser?.gamificationEnabled;
+                                                    const updated = { ...dashboardUser, gamificationEnabled: newVal } as User;
+                                                    setDashboardUser(updated);
+                                                    UserService.updateUser(updated);
+                                                    showToast(`Gamification ${newVal ? 'Enabled' : 'Disabled'}`, 'success');
+                                                }}
+                                                className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${(dashboardUser?.gamificationEnabled !== false) ? 'bg-purple-500' : 'bg-gray-200'}`}
+                                            >
+                                                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${(dashboardUser?.gamificationEnabled !== false) ? 'translate-x-5' : 'translate-x-1'}`} />
                                             </button>
                                         </div>
 

@@ -30,6 +30,7 @@ export interface User {
   lastLoginDate: string;
   themePreference?: 'light' | 'dark' | 'cyberpunk' | 'forest' | 'midnight';
   languagePreference?: string;
+  gamificationEnabled?: boolean;
 }
 
 export interface Companion {

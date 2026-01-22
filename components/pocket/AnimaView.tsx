@@ -210,9 +210,9 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
     if (!pet) return null;
 
     return (
-        <div className="fixed inset-0 z-[120] bg-[#0a0f0d] text-white flex flex-col animate-in fade-in duration-700 overflow-hidden">
+        <div className="fixed inset-0 z-[120] bg-gray-50 dark:bg-[#0a0f0d] text-gray-900 dark:text-white flex flex-col animate-in fade-in duration-700 overflow-hidden">
             {/* GRID BACKGROUND */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.05)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
             <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 via-transparent to-transparent pointer-events-none"></div>
 
             {/* HEADER */}
@@ -244,7 +244,7 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
 
             {/* MAIN PORTAL */}
             <main className="flex-1 relative flex items-center justify-center p-4 min-h-0 overflow-visible">
-                <div className="relative w-full max-w-lg aspect-square flex items-center justify-center">
+                <div className="relative w-full md:max-w-lg aspect-square flex items-center justify-center">
                     {/* HOLOGRAPHIC RING */}
                     <div className="absolute inset-0 -m-4 md:-m-12 border-[10px] md:border-[20px] border-cyan-500/5 rounded-full animate-[spin_10s_linear_infinite]"></div>
                     <div className="absolute inset-[10%] border-2 border-dashed border-cyan-500/20 rounded-full animate-[spin_15s_linear_infinite_reverse]"></div>

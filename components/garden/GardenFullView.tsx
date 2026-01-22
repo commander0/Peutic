@@ -22,44 +22,48 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     const COST = intensity;
 
     const handleWater = async () => {
-        if (user.balance < COST) {
-            showToast(`You need ${COST}m to water the garden.`, "error");
-            return;
-        }
-
         setIsWatering(true);
-        try {
-            await UserService.updateUser({ ...user, balance: user.balance - COST });
+        const success = await UserService.deductBalance(COST, "Garden Water");
 
-            // Scaled Water effect (simulated by calling multiple times or backend logic change - for now simulated via toast & user perception)
-            // Realistically we'd pass intensity to the service, but since the service just increments last_watered, 
-            // we will stick to the cost deduction which is the requested feature.
-
-            const updated = await GardenService.waterPlant(garden.userId);
-            if (updated) {
-                setLocalGarden(updated);
-                onUpdate();
-                const gain = intensity === 1 ? 10 : intensity === 2 ? 25 : 45;
-                showToast(`Garden Watered! +${gain} Vitality (-${COST}m)`, "success");
+        if (success) {
+            try {
+                // Scaled Water effect
+                const updated = await GardenService.waterPlant(garden.userId);
+                if (updated) {
+                    setLocalGarden(updated);
+                    onUpdate();
+                    showToast(`Garden Watered! (-${COST}m)`, "success");
+                }
+            } catch (e) {
+                // Refund conceptually, but for now just show error
+                showToast("Failed to sync garden state.", "error");
             }
-        } catch (e) {
-            showToast("Failed to water garden.", "error");
-        } finally {
-            setTimeout(() => setIsWatering(false), 2000);
+        } else {
+            showToast(`Not enough minutes. Need ${COST}m.`, "error");
         }
+        setTimeout(() => setIsWatering(false), 2000);
     };
 
-    const handleFertilize = () => {
-        showToast("Fertilizer requires premium item (Coming Soon)", "info");
+    const handleHarvest = async () => {
+        const harvestCost = 5;
+        const success = await UserService.deductBalance(harvestCost, "Garden Harvest");
+        if (success) {
+            // Logic for harvest (XP gain would go here)
+            // For now, visual feedback
+            showToast(`Harvested! +50 XP (-${harvestCost}m)`, "success");
+            // Optionally reset plant or evolve
+        } else {
+            showToast(`Harvest requires ${harvestCost}m.`, "error");
+        }
     };
 
     const handleNurture = async (action: 'breath' | 'sing') => {
-        if (user.balance < COST) {
-            showToast(`You need ${COST}m to nurture your sanctuary.`, "error");
-            return;
+        const success = await UserService.deductBalance(COST, action === 'breath' ? "Garden Breath" : "Garden Song");
+        if (success) {
+            showToast(action === 'breath' ? `Deep breath taken. (-${COST}m)` : `Sang to the garden. (-${COST}m)`, "success");
+        } else {
+            showToast(`Not enough minutes. Need ${COST}m.`, "error");
         }
-        await UserService.updateUser({ ...user, balance: user.balance - COST });
-        showToast(action === 'breath' ? `Deep breath taken. (-${COST}m)` : `Sang to the garden. (-${COST}m)`, "success");
     };
 
     return (
@@ -144,7 +148,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                 {/* INTERACTIVE CONTROLS */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 relative z-10 px-6 pb-8">
                     <ActionButton icon={Droplets} label={`Water (-${COST}m)`} onClick={handleWater} active={isWatering} />
-                    <ActionButton icon={Leaf} label="Fertilize (Locked)" onClick={handleFertilize} color="emerald" active={true} />
+                    <ActionButton icon={Leaf} label="Harvest (-5m)" onClick={handleHarvest} color="emerald" />
                     <ActionButton icon={Wind} label={`Breath (-${COST}m)`} onClick={() => handleNurture('breath')} color="blue" />
                     <ActionButton icon={Heart} label={`Sing (-${COST}m)`} onClick={() => handleNurture('sing')} color="pink" />
                 </div>

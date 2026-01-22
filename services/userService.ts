@@ -527,17 +527,52 @@ export class UserService {
         await BaseService.invokeGateway('session/keepalive', { userId });
     }
 
-    static async deductBalance(amount: number) {
+    static async deductBalance(amount: number, reason: string = "Game Action"): Promise<boolean> {
         const user = this.getUser();
-        if (!user) return;
+        if (!user) return false;
+
+        // Optional Gamification Logic
+        if (user.gamificationEnabled === false) {
+            console.log(`[Balance] Skipped deduction (${amount}m) - Gamification Disabled`);
+            return true;
+        }
+
+        // Optimistic UI Update
+        const previousBalance = user.balance;
+        user.balance = Math.max(0, user.balance - amount);
+        this.saveUserToCache(user);
+
+        // Notify UI (in a real app, use an event bus)
+        console.log(`[Balance] Deducting ${amount} mins for ${reason}. New Balance: ${user.balance}`);
+
         try {
-            const { data, error } = await supabase.rpc('deduct_user_balance', { p_user_id: user.id, p_amount: amount });
-            if (!error && data !== null) {
-                user.balance = data;
+            // Use Gateway for secure transaction
+            const { error, data } = await BaseService.invokeGateway('process-topup', {
+                userId: user.id,
+                amount: -amount, // Negative amount for deduction
+                cost: 0,
+                description: reason
+            });
+
+            if (error) {
+                console.error("Balance Deduction Failed", error);
+                // Revert
+                user.balance = previousBalance;
+                this.saveUserToCache(user);
+                return false;
             }
+
+            if (data?.newBalance !== undefined) {
+                user.balance = data.newBalance;
+                this.saveUserToCache(user);
+            }
+            return true;
+
         } catch (e) {
-            console.error("Atomic Balance Deduction Failed:", e);
-            user.balance = Math.max(0, user.balance - amount);
+            console.error("Balance Deduction Exception", e);
+            user.balance = previousBalance;
+            this.saveUserToCache(user);
+            return false;
         }
     }
 
