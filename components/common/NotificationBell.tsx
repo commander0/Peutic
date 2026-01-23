@@ -32,7 +32,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ notification
     }, []);
 
     return (
-        <div className="relative z-50" ref={panelRef}>
+        <div className="relative" ref={panelRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -44,9 +44,8 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ notification
             </button>
 
             {isOpen && (
-                // Fixed alignment: right-0 ensures it anchors to the right edge of parent
-                <div className="absolute right-0 top-12 w-80 md:w-96 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 animate-in slide-in-from-top-2 duration-200 overflow-hidden origin-top-right">
-                    <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800">
+                <div className="absolute right-0 top-12 w-80 md:w-96 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 z-50 animate-in slide-in-from-top-2 duration-200 overflow-hidden">
+                    <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
                         <h3 className="font-bold text-sm text-gray-800 dark:text-white">Notifications</h3>
                         {notifications.length > 0 && (
                             <button onClick={onClearAll} className="text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-red-500 transition-colors">

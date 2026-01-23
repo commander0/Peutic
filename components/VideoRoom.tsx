@@ -259,7 +259,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
         // Polling Interval for Queue Position & Heartbeat
         const queueInterval = setInterval(async () => {
             if (connectionState === 'QUEUED') {
-                await UserService.sendQueueHeartbeat(userId, 'poll'); // Prevent Zombie Queue
+                await UserService.sendQueueHeartbeat(userId); // Prevent Zombie Queue
                 let pos = await UserService.getQueuePosition(userId);
 
 
@@ -290,7 +290,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 }
             } else if (connectionState === 'CONNECTED') {
                 // HEARTBEAT: Keep alive every 3s to prevent zombie cleanup (15s timeout)
-                UserService.sendKeepAlive(userId, 'heartbeat');
+                UserService.sendKeepAlive(userId);
 
             }
         }, 3000);

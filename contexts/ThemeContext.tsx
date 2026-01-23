@@ -38,19 +38,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
     };
 
-    // Apply to DOM robustly
+    // Apply to DOM
     useEffect(() => {
         const root = document.documentElement;
-        // 1. Clear all possible theme classes
+        // Remove old themes
         root.classList.remove('light', 'dark', 'theme-cyberpunk', 'theme-forest', 'theme-midnight');
 
-        // 2. Apply new theme classes
-        if (theme === 'light') {
-            root.classList.add('light');
-        } else if (theme === 'dark') {
-            root.classList.add('dark');
+        // Apply new
+        if (theme === 'light' || theme === 'dark') {
+            root.classList.add(theme);
         } else {
-            // Premium themes: Apply 'dark' for base styling AND the specific theme class
+            // Premium themes also add 'dark' for base Tailwind compatibility + specific class
             root.classList.add('dark');
             root.classList.add(`theme-${theme}`);
         }
