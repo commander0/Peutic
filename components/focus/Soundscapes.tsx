@@ -21,7 +21,8 @@ const Soundscapes: React.FC = () => {
         });
 
         return () => {
-            Object.values(audioRefs.current).forEach(audio => {
+            // Fix: Cast Object.values to HTMLAudioElement[] to resolve 'unknown' property access
+            (Object.values(audioRefs.current) as HTMLAudioElement[]).forEach(audio => {
                 audio.pause();
                 audio.src = '';
             });

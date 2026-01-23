@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Companion, SessionFeedback } from '../types';
 import {
@@ -419,7 +418,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
         // Deduct first minute immediately upon connection
         // This ensures the user is charged for the initial connection time
-        UserService.deductBalance(1);
+        UserService.deductBalance(1, "Session Connection");
         setRemainingMinutes(prev => prev - 1);
 
 
@@ -429,7 +428,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
                 // Deduct balance at the START of every new minute
                 if (newDuration > 0 && newDuration % 60 === 0) {
-                    UserService.deductBalance(1);
+                    UserService.deductBalance(1, "Active Session Minute");
                     setRemainingMinutes(prev => {
 
                         const nextVal = prev - 1;
@@ -688,7 +687,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                                         {serviceDelay && (
                                             <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-3xl flex items-start gap-3 animate-in fade-in">
                                                 <div className="p-2 bg-blue-500/20 rounded-full mt-0.5">
-                                                    <Clock className="w-4 h-4 text-blue-400" />
+                                                    <div className="w-4 h-4 text-blue-400"><Clock /></div>
                                                 </div>
                                                 <p className="text-xs text-blue-200/80 leading-relaxed font-medium">
                                                     High demand detected. We're tuning your private room for the best experience. Just a moment.
@@ -722,7 +721,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             {/* State: ERROR */}
             {(connectionState === 'ERROR' || connectionState === 'QUEUE_FULL') && (
                 <div className="relative z-10 text-center p-8 bg-red-900/80 backdrop-blur-md rounded-3xl border border-red-500/30 max-w-md w-full animate-in zoom-in">
-                    <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                    <div className="w-16 h-16 text-red-500 mx-auto mb-4"><AlertCircle /></div>
                     <h2 className="text-2xl font-black text-white mb-2">Connection Interrupted</h2>
                     <p className="text-gray-300 mb-6">{errorMsg || "System is currently at capacity. Please try again later."}</p>
                     <div className="flex gap-4 justify-center">
@@ -745,7 +744,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                     <div className="absolute top-0 left-0 right-0 p-4 z-20 flex justify-between items-start bg-gradient-to-b from-black/60 to-transparent">
                         <div className="flex items-center gap-3">
                             <div className={`px-3 py-1 rounded-full flex items-center gap-2 backdrop-blur-md border border-white/10 ${lowBalanceWarning ? 'bg-red-500/80 animate-pulse' : 'bg-black/40'}`}>
-                                <Clock className="w-4 h-4 text-white" />
+                                <div className="w-4 h-4 text-white"><Clock /></div>
                                 <span className="font-mono font-bold text-white text-sm">{formatTime(duration)}</span>
                             </div>
                             <div className={`px-3 py-1 rounded-full backdrop-blur-md border border-white/10 flex items-center gap-2 ${networkQuality < 2 ? 'bg-red-900/50 border-red-500/30' : 'bg-black/40'}`}>
