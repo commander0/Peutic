@@ -4,7 +4,7 @@ import {
     Sparkles, Zap, ChevronLeft, Save,
     Gamepad2, RefreshCw
 } from 'lucide-react';
-import { User, PocketPet } from '../../types';
+import { User, Anima } from '../../types';
 import { PetService } from '../../services/petService';
 import PetCanvas from './PetCanvas';
 import { useToast } from '../common/Toast';
@@ -15,12 +15,12 @@ interface PocketPetViewProps {
 }
 
 const PocketPetView: React.FC<PocketPetViewProps> = ({ user, onClose }) => {
-    const [pet, setPet] = useState<PocketPet | null>(null);
+    const [pet, setPet] = useState<Anima | null>(null);
     const [loading, setLoading] = useState(true);
     const [emotion, setEmotion] = useState<'idle' | 'happy' | 'hungry' | 'sleeping' | 'sad' | 'eating'>('idle');
     const [showSelection, setShowSelection] = useState(false);
     const [petName, setPetName] = useState('');
-    const [selectedSpecies, setSelectedSpecies] = useState<PocketPet['species']>('Holo-Hamu');
+    const [selectedSpecies, setSelectedSpecies] = useState<Anima['species']>('Holo-Hamu');
     const { showToast } = useToast();
 
     useEffect(() => {

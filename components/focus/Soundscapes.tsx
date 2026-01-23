@@ -21,7 +21,7 @@ const Soundscapes: React.FC = () => {
         });
 
         return () => {
-            Object.values(audioRefs.current).forEach(audio => {
+            Object.values(audioRefs.current).forEach((audio: any) => {
                 audio.pause();
                 audio.src = '';
             });

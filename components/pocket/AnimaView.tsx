@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     X, Heart, Pizza, Bath, Moon, Sun,
     Sparkles, Zap, ChevronLeft, Save,
-    Gamepad2, RefreshCw
+    Gamepad2, RefreshCw, AlertCircle
 } from 'lucide-react';
 import { User, Anima } from '../../types';
 import { PetService } from '../../services/petService';
@@ -23,6 +23,7 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
     const [selectedSpecies, setSelectedSpecies] = useState<'Holo-Hamu' | 'Digi-Dino' | 'Neo-Shiba' | 'Zen-Sloth'>('Holo-Hamu');
     const [petName, setPetName] = useState('');
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
+    const [localBalance, setLocalBalance] = useState(user.balance);
 
     // Dynamic canvas sizing for responsive pet
     const [canvasSize, setCanvasSize] = useState(500);
@@ -30,16 +31,17 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
     // Responsive Canvas Listener
     useEffect(() => {
         const handleResize = () => {
-            const size = window.innerWidth < 768 ? Math.min(window.innerWidth - 40, 340) : 500;
+            const availableWidth = window.innerWidth - 48;
+            const availableHeight = window.innerHeight - 300;
+            const size = Math.min(availableWidth, availableHeight, 500);
             setCanvasSize(size);
         };
-        handleResize(); // Init
+        handleResize();
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
     const { showToast } = useToast();
-    const COST = intensity; // 1m, 2m, or 3m
 
     useEffect(() => {
         loadPet();
@@ -62,7 +64,7 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
             return;
         }
 
-        const newPet = await PetService.createPet(user.id, selectedSpecies, petName);
+        const newPet = await PetService.createPet(user.id, petName, selectedSpecies);
         if (newPet) {
             setPet(newPet);
             setShowSelection(false);
@@ -73,9 +75,10 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
     const handleAction = async (action: 'feed' | 'play' | 'clean' | 'sleep') => {
         if (!pet || (pet.isSleeping && action !== 'sleep')) return;
 
-        // Check if user has enough balance
-        if (action !== 'sleep' && user.balance < COST) {
-            showToast(`You need ${COST}m to care for ${pet.name}.`, "error");
+        const COST = action === 'sleep' ? 0 : intensity;
+
+        if (localBalance < COST) {
+            showToast(`Insufficient minutes! You need ${COST}m for this action.`, "error");
             return;
         }
 
@@ -85,14 +88,19 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
         let statGain = 0;
         let xpGain = 0;
 
-        // Scale rewards based on intensity (Time Investment)
-        // 1m: +10 Stat, +2 XP
-        // 2m: +25 Stat, +5 XP
-        // 3m: +45 Stat, +10 XP
         switch (intensity) {
-            case 1: statGain = 10; xpGain = 2; break;
-            case 2: statGain = 25; xpGain = 5; break;
-            case 3: statGain = 45; xpGain = 10; break;
+            case 1: statGain = 15; xpGain = 5; break;
+            case 2: statGain = 35; xpGain = 12; break;
+            case 3: statGain = 60; xpGain = 25; break;
+        }
+
+        if (COST > 0) {
+            const success = await UserService.deductBalance(COST, `Pet Care: ${action}`);
+            if (!success) {
+                showToast("Transaction failed.", "error");
+                return;
+            }
+            setLocalBalance(prev => Math.max(0, prev - COST));
         }
 
         switch (action) {
@@ -101,31 +109,24 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
                     showToast(`${pet.name} is full!`, "info");
                     return;
                 }
-                // Deduct balance
-                await UserService.updateUser({ ...user, balance: user.balance - COST });
                 updatedPet.hunger = Math.min(100, pet.hunger + statGain);
                 updatedPet.experience += xpGain;
                 newEmotion = 'eating';
-                showToast(`Fed ${pet.name}! (+${statGain} Saturation, -${COST}m)`, "success");
                 break;
             case 'play':
                 if (pet.energy < 20) {
                     showToast(`${pet.name} is too tired to play.`, "info");
                     return;
                 }
-                await UserService.updateUser({ ...user, balance: user.balance - COST });
                 updatedPet.happiness = Math.min(100, pet.happiness + statGain);
-                updatedPet.energy = Math.max(0, pet.energy - (10 * intensity)); // Energy drain also scales slightly
-                updatedPet.experience += xpGain * 1.5; // Play gives more XP
+                updatedPet.energy = Math.max(0, pet.energy - (15 * intensity));
+                updatedPet.experience += xpGain * 1.5;
                 newEmotion = 'happy';
-                showToast(`Played with ${pet.name}! (+${statGain} Joy, -${COST}m)`, "success");
                 break;
             case 'clean':
-                await UserService.updateUser({ ...user, balance: user.balance - COST });
                 updatedPet.cleanliness = Math.min(100, pet.cleanliness + (statGain * 2));
                 updatedPet.experience += xpGain;
                 newEmotion = 'happy';
-                showToast(`Cleaned ${pet.name}! (-${COST}m)`, "success");
                 break;
             case 'sleep':
                 updatedPet.isSleeping = !pet.isSleeping;
@@ -133,7 +134,6 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
                 break;
         }
 
-        // Evolution logic
         if (updatedPet.experience >= updatedPet.level * 100) {
             updatedPet.level += 1;
             updatedPet.experience = 0;
@@ -210,107 +210,96 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
     if (!pet) return null;
 
     return (
-        <div className="fixed inset-0 z-[120] bg-gray-50 dark:bg-[#0a0f0d] text-gray-900 dark:text-white flex flex-col animate-in fade-in duration-700 overflow-hidden">
+        <div className="fixed inset-0 z-[120] bg-[#FFFBEB] dark:bg-[#0a0f0d] text-gray-900 dark:text-white flex flex-col animate-in fade-in duration-700 overflow-hidden">
             {/* GRID BACKGROUND */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.05)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(0,180,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,180,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
             <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 via-transparent to-transparent pointer-events-none"></div>
 
             {/* HEADER */}
-            <header className="relative z-10 px-6 py-4 flex justify-between items-center border-b border-white/5 backdrop-blur-md">
+            <header className="relative z-10 px-6 py-4 flex justify-between items-center border-b border-gray-200 dark:border-white/5 backdrop-blur-md">
                 <div className="flex items-center gap-4">
-                    <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl transition-colors">
-                        <ChevronLeft className="w-6 h-6 text-cyan-400" />
+                    <button onClick={onClose} className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl transition-colors">
+                        <ChevronLeft className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
                     </button>
                     <div>
                         <h2 className="text-sm font-black uppercase tracking-[0.2em]">{pet.name}</h2>
                         <div className="flex items-center gap-2">
-                            <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Level {pet.level} {pet.species}</span>
-                            <div className="w-24 h-1 bg-gray-800 rounded-full overflow-hidden">
+                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Level {pet.level} {pet.species}</span>
+                            <div className="w-24 h-1 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
                                 <div className="h-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" style={{ width: `${pet.experience % 100}%` }}></div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div className="flex items-center gap-6">
-                    <div className="hidden md:flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-yellow-400" />
-                        <span className="text-xs font-black">{user.balance}m</span>
+                    <div className="flex items-center gap-2 px-3 py-1 bg-yellow-400/20 rounded-full border border-yellow-400/30">
+                        <Zap className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                        <span className="text-xs font-black text-yellow-700 dark:text-yellow-400">{localBalance}m</span>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-red-500/20 rounded-xl transition-colors text-gray-500 hover:text-red-400">
+                    <button onClick={onClose} className="p-2 hover:bg-red-500/10 rounded-xl transition-colors text-gray-400 hover:text-red-500">
                         <X className="w-6 h-6" />
                     </button>
                 </div>
             </header>
 
             {/* MAIN PORTAL */}
-            <main className="flex-1 relative flex items-center justify-center p-4 min-h-0 overflow-visible">
-                <div className="relative w-full md:max-w-lg aspect-square flex items-center justify-center">
+            <main className="flex-1 relative flex items-center justify-center p-4">
+                <div className="relative w-full max-w-lg aspect-square flex items-center justify-center">
                     {/* HOLOGRAPHIC RING */}
-                    <div className="absolute inset-0 -m-4 md:-m-12 border-[10px] md:border-[20px] border-cyan-500/5 rounded-full animate-[spin_10s_linear_infinite]"></div>
-                    <div className="absolute inset-[10%] border-2 border-dashed border-cyan-500/20 rounded-full animate-[spin_15s_linear_infinite_reverse]"></div>
+                    <div className="absolute inset-0 border-[20px] border-cyan-500/5 rounded-full animate-[spin_10s_linear_infinite]"></div>
+                    <div className="absolute inset-[10%] border-2 border-dashed border-cyan-500/10 rounded-full animate-[spin_15s_linear_infinite_reverse]"></div>
 
-                    {/* Ambient Particles */}
-                    <div className="absolute inset-0 pointer-events-none">
-                        {[...Array(6)].map((_, i) => (
-                            <div key={i} className="absolute w-1 h-1 bg-cyan-400/40 rounded-full animate-pulse"
-                                style={{
-                                    left: `${Math.random() * 100}%`,
-                                    top: `${Math.random() * 100}%`,
-                                    animationDelay: `${i * 0.5}s`
-                                }}></div>
-                        ))}
+                    {/* PET CANVAS - FIXED ASPECT RATIO */}
+                    <div className="absolute inset-0 flex items-center justify-center p-4" style={{ width: '100%', height: '100%' }}>
+                        <div style={{ width: canvasSize, height: canvasSize }}>
+                            <PetCanvas pet={pet} width={canvasSize} height={canvasSize} emotion={emotion} />
+                        </div>
                     </div>
 
-                    {/* PET CANVAS */}
-                    <div className="absolute inset-0 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                        <PetCanvas pet={pet} width={canvasSize} height={canvasSize} emotion={emotion} />
-                    </div>
-
-                    {/* STATUS BARS (Responsive: Bottom row on mobile, Right column on desktop) */}
-                    <div className="absolute -bottom-16 left-0 right-0 md:top-0 md:bottom-auto md:-right-32 md:left-auto md:w-48 bg-black/40 backdrop-blur-xl border border-white/10 p-3 md:p-5 rounded-3xl flex md:flex-col justify-between gap-2 md:gap-4 animate-in slide-in-from-bottom md:slide-in-from-right duration-1000 z-20">
-                        <StatusIndicator icon={Pizza} label="Hunger" val={pet.hunger} color="bg-orange-500" compact />
-                        <StatusIndicator icon={Heart} label="Happiness" val={pet.happiness} color="bg-rose-500" compact />
-                        <StatusIndicator icon={Bath} label="Clean" val={pet.cleanliness} color="bg-blue-400" compact />
-                        <StatusIndicator icon={Zap} label="Energy" val={pet.energy} color="bg-yellow-400" compact />
+                    {/* STATUS BARS */}
+                    <div className="absolute top-0 right-0 md:-right-32 space-y-4 w-40 md:w-48 bg-white/80 dark:bg-black/40 backdrop-blur-xl border border-gray-200 dark:border-white/10 p-4 md:p-5 rounded-3xl animate-in slide-in-from-right duration-1000 shadow-lg">
+                        <StatusIndicator icon={Pizza} label="Hunger" val={pet.hunger} color="bg-orange-500" />
+                        <StatusIndicator icon={Heart} label="Happiness" val={pet.happiness} color="bg-rose-500" />
+                        <StatusIndicator icon={Bath} label="Clean" val={pet.cleanliness} color="bg-blue-400" />
+                        <StatusIndicator icon={Zap} label="Energy" val={pet.energy} color="bg-yellow-400" />
                     </div>
                 </div>
             </main>
 
-            {/* INTENSITY TOGGLE */}
-            <div className="relative z-20 flex justify-center pb-4 animate-in slide-in-from-bottom duration-700">
-                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-full p-1 flex items-center gap-1">
-                    <span className="text-[9px] font-black uppercase text-gray-500 px-3 tracking-widest hidden md:block">Investment</span>
-                    {[1, 2, 3].map((level) => (
+            {/* INTENSITY SELECTOR */}
+            <div className="relative z-10 flex justify-center px-4 mb-4">
+                 <div className="bg-white/80 dark:bg-black/40 backdrop-blur-xl border border-gray-200 dark:border-white/10 p-1 rounded-full flex gap-1 shadow-sm">
+                    {[1, 2, 3].map(lvl => (
                         <button
-                            key={level}
-                            onClick={() => setIntensity(level as 1 | 2 | 3)}
-                            className={`w-10 h-8 md:w-12 md:h-10 rounded-full flex items-center justify-center text-[10px] md:text-xs font-black transition-all ${intensity === level ? 'bg-cyan-500 text-black shadow-[0_0_15px_rgba(6,182,212,0.6)]' : 'text-gray-500 hover:bg-white/10'}`}
+                            key={lvl}
+                            onClick={() => setIntensity(lvl as 1|2|3)}
+                            className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${intensity === lvl ? 'bg-cyan-500 text-white shadow-lg' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}
                         >
-                            {level}m
+                            {lvl}m Effort
                         </button>
                     ))}
-                </div>
+                 </div>
             </div>
 
             {/* INTERACTION TRAY */}
             <footer className="relative z-10 p-8 pb-12 flex justify-center gap-4 md:gap-8">
                 <ActionButton
                     icon={Pizza}
-                    label="Feed"
+                    label={`Feed (-${intensity}m)`}
                     color="cyan"
                     onClick={() => handleAction('feed')}
                     disabled={pet.isSleeping}
                 />
                 <ActionButton
                     icon={Gamepad2}
-                    label="Play"
+                    label={`Play (-${intensity}m)`}
                     color="cyan"
                     onClick={() => handleAction('play')}
                     disabled={pet.isSleeping || pet.energy < 20}
                 />
                 <ActionButton
                     icon={Bath}
-                    label="Wash"
+                    label={`Wash (-${intensity}m)`}
                     color="cyan"
                     onClick={() => handleAction('clean')}
                     disabled={pet.isSleeping}
@@ -324,7 +313,7 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
             </footer>
 
             {pet.isSleeping && (
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-none flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm pointer-events-none flex items-center justify-center">
                     <div className="text-white font-black text-4xl animate-pulse tracking-[1em] opacity-30">ZZZZZ</div>
                 </div>
             )}
@@ -332,30 +321,30 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
     );
 };
 
-const StatusIndicator: React.FC<{ icon: any, label: string, val: number, color: string, compact?: boolean }> = ({ icon: Icon, label, val, color, compact }) => (
-    <div className={`space-y-1.5 ${compact ? 'flex-1' : ''}`}>
-        <div className="flex justify-between items-center text-[8px] md:text-[10px] font-black uppercase tracking-widest text-gray-500">
-            <div className={`flex items-center ${compact ? 'justify-center w-full mb-1' : 'gap-1.5'}`}>
-                <Icon className="w-3 h-3 md:mr-1" /> {!compact && label}
+const StatusIndicator: React.FC<{ icon: any, label: string, val: number, color: string }> = ({ icon: Icon, label, val, color }) => (
+    <div className="space-y-1.5">
+        <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-1.5">
+                <Icon className="w-3 h-3 text-cyan-600 dark:text-cyan-400" /> {label}
             </div>
-            {!compact && <span>{Math.floor(val)}%</span>}
+            <span>{Math.floor(val)}%</span>
         </div>
-        <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-            <div className={`h-full ${color} transition-all duration-1000 shadow-[0_0_8px_rgba(0,0,0,0.5)]`} style={{ width: `${val}%` }}></div>
+        <div className="h-1 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
+            <div className={`h-full ${color} transition-all duration-1000 shadow-[0_0_8px_rgba(0,0,0,0.3)]`} style={{ width: `${val}%` }}></div>
         </div>
     </div>
 );
 
 const ActionButton: React.FC<{ icon: any, label: string, color: 'cyan' | 'yellow' | 'red', onClick: () => void, disabled?: boolean }> = ({ icon: Icon, label, color, onClick, disabled }) => {
-    const colorClass = color === 'cyan' ? 'hover:bg-cyan-500/20 text-cyan-400 border-cyan-500/30' :
-        color === 'yellow' ? 'hover:bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
-            'hover:bg-red-500/20 text-red-400 border-red-500/30';
+    const colorClass = color === 'cyan' ? 'text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-500/30 hover:bg-cyan-50 dark:hover:bg-cyan-500/10' :
+        color === 'yellow' ? 'text-yellow-600 dark:text-yellow-400 border-yellow-200 dark:border-yellow-500/30 hover:bg-yellow-50 dark:hover:bg-yellow-500/10' :
+            'text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30 hover:bg-red-50 dark:hover:bg-red-500/10';
 
     return (
         <button
             onClick={onClick}
             disabled={disabled}
-            className={`group relative flex flex-col items-center gap-2 p-4 md:p-6 rounded-[2rem] border backdrop-blur-xl transition-all active:scale-90 ${disabled ? 'opacity-20 cursor-not-allowed border-white/5 text-gray-700' : colorClass}`}
+            className={`group relative flex flex-col items-center gap-2 p-4 md:p-6 rounded-[2rem] border bg-white/50 dark:bg-black/20 backdrop-blur-xl transition-all active:scale-90 shadow-sm hover:shadow-md ${disabled ? 'opacity-30 grayscale cursor-not-allowed' : colorClass}`}
         >
             <div className="relative">
                 <Icon className="w-6 h-6 md:w-8 md:h-8" />

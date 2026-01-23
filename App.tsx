@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, ReactNode, ErrorInfo } from 'react';
+import React, { Component, useState, useEffect, useRef, ReactNode, ErrorInfo } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole, Companion } from './types';
 import LandingPage from './components/LandingPage';
@@ -31,12 +31,8 @@ interface ErrorBoundaryState {
 }
 
 // Explicitly inheriting from React.Component with Generics to ensure proper 'props' and 'state' resolution in TypeScript
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public state: ErrorBoundaryState = { hasError: false };
-
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-  }
 
   static getDerivedStateFromError(_: Error): ErrorBoundaryState {
     return { hasError: true };
@@ -326,7 +322,7 @@ const MainApp: React.FC = () => {
                   <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
                     <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl max-sm w-full text-center shadow-2xl border border-yellow-500">
                       <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Clock className="w-8 h-8 text-yellow-600 dark:text-yellow-500" />
+                        <div className="w-8 h-8 text-yellow-600 dark:text-yellow-500"><Clock /></div>
                       </div>
                       <h3 className="text-2xl font-black mb-2 dark:text-white">Are you still there?</h3>
                       <p className="text-gray-600 dark:text-gray-400 mb-6">Your secure session will time out in 60 seconds to protect your privacy.</p>
