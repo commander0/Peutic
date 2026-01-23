@@ -4,7 +4,7 @@ import {
     Sparkles, Zap, ChevronLeft, Save,
     Gamepad2, RefreshCw
 } from 'lucide-react';
-import { User, Anima as PocketPet } from '../../types';
+import { User, PocketPet } from '../../types';
 import { PetService } from '../../services/petService';
 import PetCanvas from './PetCanvas';
 import { useToast } from '../common/Toast';

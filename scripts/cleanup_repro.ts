@@ -18,8 +18,7 @@ const SERVICE_KEY = env['VITE_SUPABASE_SERVICE_ROLE_KEY']; // Need Service Role 
 
 if (!SERVICE_KEY) {
     console.error("Missing Service Role Key. Cannot cleanup.");
-    // Fix: Explicit cast to any for process to resolve exit property error
-    (process as any).exit(1);
+    process.exit(1);
 }
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY);

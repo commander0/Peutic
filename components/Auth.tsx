@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { UserRole } from '../types';
 import { Facebook, AlertCircle, Send, Heart, Check, Loader2, Server, Megaphone } from 'lucide-react';
@@ -44,11 +45,11 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
     const [onboardingStep, setOnboardingStep] = useState(0);
     const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
 
-    const handleOAuth = async (provider: 'google' | 'facebook') => {
+    const handleGoogleClick = async () => {
         setLoading(true);
         try {
             const { error } = await supabase.auth.signInWithOAuth({
-                provider: provider,
+                provider: 'google',
                 options: {
                     redirectTo: window.location.origin,
                 }
@@ -56,7 +57,25 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             if (error) throw error;
         } catch (e: any) {
             if (isMounted.current) {
-                setError(e.message || `${provider} Sign-In failed.`);
+                setError(e.message || "Google Sign-In failed.");
+                setLoading(false);
+            }
+        }
+    };
+
+    const handleFacebookLogin = async () => {
+        setLoading(true);
+        try {
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'facebook',
+                options: {
+                    redirectTo: window.location.origin,
+                }
+            });
+            if (error) throw error;
+        } catch (e: any) {
+            if (isMounted.current) {
+                setError(e.message || "Facebook Sign-In failed.");
                 setLoading(false);
             }
         }
@@ -89,8 +108,10 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
 
         try {
             if (isLogin) {
+                // DIRECT LOGIN: No pre-check. Supabase Auth handles invalid credentials securely.
                 await onLogin(UserRole.USER, '', undefined, email, undefined, 'email', password, false);
             } else {
+                // 1. Name Validation
                 const nameCheck = NameValidator.validate(firstName, lastName);
                 if (!nameCheck.valid) {
                     setError(nameCheck.error || "Invalid name provided.");
@@ -99,6 +120,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                 }
 
                 if (!validateAge(birthday)) {
+
                     setError("You must be at least 18 years old to create an account.");
                     setLoading(false);
                     return;
@@ -114,8 +136,9 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                     setLoading(false);
                     return;
                 }
+                // Proceed to onboarding before final creation
                 setShowOnboarding(true);
-                setLoading(false);
+                setLoading(false); // CRITICAL: Reset loading so "Enter Dashboard" button is clickable
             }
         } catch (e: any) {
             if (isMounted.current) {
@@ -134,18 +157,24 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             const fullName = `${firstName.trim()} ${lastName.trim()}`;
             const formattedName = fullName.length > 1 ? (fullName.charAt(0).toUpperCase() + fullName.slice(1)) : "Buddy";
 
+            console.log("Finishing onboarding for:", formattedName);
+
+            // SAFETY: Force timeout after 15 seconds to unblock UI if network/DB hangs
             const loginPromise = onLogin(UserRole.USER, formattedName, undefined, email, birthday, 'email', password, true);
             const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Setup taking too long. Please refresh and try logging in.")), 15000));
 
             await Promise.race([loginPromise, timeoutPromise]);
 
+            // SUCCESS PATH: Force cleanup explicitly
             if (isMounted.current) {
                 setLoading(false);
-                onCancel();
+                onCancel(); // Force close the modal
             }
 
         } catch (e: any) {
+            console.error(e);
             if (isMounted.current) {
+                // If message is just a notification (like 'check email'), don't treat as fatal error for UI
                 if (e.message && (e.message.includes("check your email") || e.message.includes("not confirmed"))) {
                     setToast("Account created! Check your email to confirm.");
                     setLoading(false);
@@ -163,6 +192,18 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
     if (showOnboarding) {
         return (
             <div className="fixed inset-0 bg-[#FFFBEB] dark:bg-black z-[100] flex flex-col md:flex-row animate-in fade-in slide-in-from-bottom-5 duration-500">
+
+                {/* PUBLIC BROADCAST BANNER */}
+                {settings.broadcastMessage && (
+                    <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-black py-2 px-4 shadow-lg z-[110] overflow-hidden group">
+                        <div className="absolute inset-0 bg-white/30 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-[-20deg]"></div>
+                        <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
+                            <Megaphone className="w-3.5 h-3.5 animate-bounce" />
+                            <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-center">{settings.broadcastMessage}</span>
+                        </div>
+                    </div>
+                )}
+
                 <div className="hidden md:block w-1/2 bg-[#FACC15] dark:bg-yellow-600 relative overflow-hidden">
                     <div className="absolute inset-0 flex items-center justify-center">
                         <Heart className="w-64 h-64 text-black opacity-10 animate-pulse" />
@@ -218,6 +259,11 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                                     {error && (
                                         <div className="p-4 bg-red-50 text-red-600 rounded-xl font-bold text-sm flex flex-col gap-2 border border-red-200 text-left">
                                             <div className="flex items-center gap-2"><AlertCircle className="w-4 h-4" /> Error: {error}</div>
+                                            {error.includes("deploy") && (
+                                                <div className="text-xs font-mono bg-red-100 p-2 rounded text-red-800 break-all">
+                                                    npm run backend:deploy
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                     <button
@@ -238,6 +284,18 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
 
     return (
         <div className="fixed inset-0 bg-[#FFFBEB] dark:bg-black z-[100] flex flex-col md:flex-row transition-colors">
+
+            {/* PUBLIC BROADCAST BANNER */}
+            {settings.broadcastMessage && (
+                <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-black py-2 px-4 shadow-lg z-[110] overflow-hidden group">
+                    <div className="absolute inset-0 bg-white/30 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-[-20deg]"></div>
+                    <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
+                        <Megaphone className="w-3.5 h-3.5 animate-bounce" />
+                        <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-center">{settings.broadcastMessage}</span>
+                    </div>
+                </div>
+            )}
+
             {toast && (
                 <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-black dark:bg-white text-white dark:text-black px-6 py-3 rounded-full shadow-2xl z-[110] flex items-center gap-2 animate-in slide-in-from-top-5 fade-in">
                     <Send className="w-4 h-4" /> {toast}
@@ -267,14 +325,20 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                             <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 text-sm rounded-xl flex flex-col gap-2">
                                 <div className="flex items-center gap-2 font-bold"><AlertCircle className="w-4 h-4" /> Error</div>
                                 <p>{error}</p>
+                                {error.includes("deploy") && (
+                                    <div className="mt-2 text-xs font-mono bg-black/10 dark:bg-white/10 p-2 rounded text-black dark:text-white flex items-center justify-between">
+                                        npm run backend:deploy
+                                        <Server className="w-3 h-3 opacity-50" />
+                                    </div>
+                                )}
                             </div>
                         )}
 
                         <div className="grid grid-cols-2 gap-3 md:gap-4 mb-6 md:mb-8">
-                            <button type="button" onClick={() => handleOAuth('google')} className={`w-full h-12 md:h-14 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center hover:bg-white dark:hover:bg-gray-900 bg-white dark:bg-black shadow-sm transition-transform hover:scale-105 relative overflow-hidden`} title="Sign in with Google">
+                            <button type="button" onClick={handleGoogleClick} className={`w-full h-12 md:h-14 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center hover:bg-white dark:hover:bg-gray-900 bg-white dark:bg-black shadow-sm transition-transform hover:scale-105 relative overflow-hidden`} title="Sign in with Google">
                                 <svg width="24" height="24" viewBox="0 0 24 24" className="w-5 h-5 md:w-6 md:h-6"><path d="M23.52 12.29C23.52 11.43 23.45 10.61 23.31 9.82H12V14.46H18.46C18.18 15.92 17.32 17.16 16.03 18.02V20.99H19.91C22.18 18.9 23.52 15.83 23.52 12.29Z" fill="#4285F4" /><path d="M12 24C15.24 24 17.96 22.93 19.91 20.99L16.03 18.02C14.95 18.74 13.58 19.17 12 19.17C8.87 19.17 6.22 17.06 5.27 14.2H1.26V17.31C3.24 21.25 7.31 24 12 24Z" fill="#34A853" /><path d="M5.27 14.2C5.03 13.33 4.9 12.42 4.9 11.5C4.9 10.58 5.03 9.67 5.27 8.8V5.69H1.26C0.46 7.29 0 9.1 0 11.5C0 13.9 0.46 15.71 1.26 17.31L5.27 14.2Z" fill="#FBBC05" /><path d="M12 3.83C13.76 3.83 15.35 4.44 16.59 5.62L20 2.21C17.96 0.31 15.24 0 12 0C7.31 0 3.24 2.75 1.26 6.69L5.27 9.8C6.22 6.94 8.87 3.83 12 3.83Z" fill="#EA4335" /></svg>
                             </button>
-                            <button type="button" onClick={() => handleOAuth('facebook')} className="w-full h-12 md:h-14 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-900/20 bg-white dark:bg-black shadow-sm transition-transform hover:scale-105" title="Sign in with Facebook">
+                            <button type="button" onClick={handleFacebookLogin} className="w-full h-12 md:h-14 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-900/20 bg-white dark:bg-black shadow-sm transition-transform hover:scale-105" title="Sign in with Facebook">
                                 <Facebook className="w-5 h-5 md:w-6 md:h-6 text-[#1877F2]" />
                             </button>
                         </div>
@@ -297,6 +361,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                             {!isLogin && (
                                 <>
                                     <input type="password" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all animate-in slide-in-from-bottom-4 fade-in text-sm md:text-base dark:text-white" placeholder={t('auth_password')} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+                                    <p className="text-[10px] text-gray-500 dark:text-gray-400 px-1 leading-tight">Password must be 8+ chars with uppercase, lowercase, number, & symbol.</p>
                                 </>
                             )}
 

@@ -25,7 +25,7 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
 
     // Initialize petals once
     useEffect(() => {
-        petalsRef.current = Array.from({ length: 20 }, () => ({
+        petalsRef.current = Array.from({ length: 15 }, () => ({
             x: Math.random() * width,
             y: Math.random() * height,
             rotation: Math.random() * Math.PI * 2,
@@ -44,51 +44,73 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
             if (!ctx) return;
             const frame = frameRef.current;
 
-            // Clear with transparency to allow CSS background
-            ctx.clearRect(0, 0, width, height);
+            // Clear with a rich atmospheric gradient
+            const skyGradient = ctx.createLinearGradient(0, 0, 0, height);
+            skyGradient.addColorStop(0, '#0f2027');
+            skyGradient.addColorStop(0.4, '#203a43');
+            skyGradient.addColorStop(1, '#2c5364');
+            ctx.fillStyle = skyGradient;
+            ctx.fillRect(0, 0, width, height);
+
+            // Volumetric Rays (Sun/Moon shafts)
+            ctx.save();
+            ctx.translate(width * 0.8, -50);
+            ctx.rotate(Math.PI / 6);
+            for (let i = 0; i < 4; i++) {
+                const rayGradient = ctx.createLinearGradient(0, 0, 0, height * 1.5);
+                rayGradient.addColorStop(0, `rgba(255, 255, 255, ${0.05 + Math.sin(frame * 0.02 + i) * 0.02})`);
+                rayGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = rayGradient;
+                ctx.fillRect(i * 100 - 150, 0, 60, height * 1.5);
+            }
+            ctx.restore();
+
+            // Draw background Torii Gate
+            drawToriiGate(ctx, width, height, garden.level);
+
+            // Draw Soil Mound
+            const soilGradient = ctx.createRadialGradient(width / 2, height - 10, 10, width / 2, height, width / 2.5);
+            soilGradient.addColorStop(0, '#4e342e');
+            soilGradient.addColorStop(1, '#25161b');
+            ctx.fillStyle = soilGradient;
+            ctx.beginPath();
+            ctx.ellipse(width / 2, height - 15, width / 2.8, 25, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Glowing Grass tufts
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 8; i++) {
+                const gx = width / 2 + (i - 3.5) * 20;
+                const sway = Math.sin(frame * 0.05 + i) * 3;
+
+                const grassGradient = ctx.createLinearGradient(gx, height - 35, gx, height - 60);
+                grassGradient.addColorStop(0, '#388e3c');
+                grassGradient.addColorStop(1, '#69f0ae');
+                ctx.strokeStyle = grassGradient;
+
+                ctx.beginPath();
+                ctx.moveTo(gx, height - 35);
+                ctx.quadraticCurveTo(gx + (i % 2 === 0 ? 5 : -5) + sway, height - 50, gx + sway, height - 60);
+                ctx.stroke();
+            }
 
             const centerX = width / 2;
             const groundY = height - 40;
 
-            // DRAW GROUND MOUND
-            const moundGrad = ctx.createRadialGradient(centerX, height, 10, centerX, height, width * 0.4);
-            moundGrad.addColorStop(0, '#3d2b1f');
-            moundGrad.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = moundGrad;
+            // Plant Glow (behind plant)
+            const plantGlow = ctx.createRadialGradient(centerX, groundY - 50, 10, centerX, groundY - 50, 100);
+            plantGlow.addColorStop(0, 'rgba(105, 240, 174, 0.2)');
+            plantGlow.addColorStop(1, 'rgba(105, 240, 174, 0)');
+            ctx.fillStyle = plantGlow;
             ctx.beginPath();
-            ctx.ellipse(centerX, height - 10, width * 0.35, 20, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // GRASS BLADES
-            ctx.lineWidth = 2;
-            for (let i = 0; i < 12; i++) {
-                const gx = centerX + (i - 5.5) * 18;
-                const sway = Math.sin(frame * 0.04 + i) * 4;
-                const grassGrad = ctx.createLinearGradient(gx, height, gx, height - 30);
-                grassGrad.addColorStop(0, '#1b5e20');
-                grassGrad.addColorStop(1, '#66bb6a');
-                ctx.strokeStyle = grassGrad;
-                ctx.beginPath();
-                ctx.moveTo(gx, height - 10);
-                ctx.quadraticCurveTo(gx + (i%2===0?5:-5) + sway, height - 25, gx + sway, height - 40);
-                ctx.stroke();
-            }
-
-            // PLANT ATMOSPHERE
-            const glowSize = 60 + garden.level * 20;
-            const auraGrad = ctx.createRadialGradient(centerX, groundY - 50, 0, centerX, groundY - 50, glowSize);
-            auraGrad.addColorStop(0, 'rgba(100, 255, 218, 0.15)');
-            auraGrad.addColorStop(1, 'rgba(100, 255, 218, 0)');
-            ctx.fillStyle = auraGrad;
-            ctx.beginPath();
-            ctx.arc(centerX, groundY - 50, glowSize, 0, Math.PI * 2);
+            ctx.arc(centerX, groundY - 50, 100, 0, Math.PI * 2);
             ctx.fill();
 
             // Procedural Drawing based on Level
             drawPlant(ctx, centerX, groundY, garden.level, garden.currentPlantType, frame);
 
             // Draw Spirit Wisp
-            drawSpirit(ctx, centerX + 40, groundY - (garden.level * 25), frame, garden.level);
+            drawSpirit(ctx, centerX + 40, groundY - (garden.level * 18), frame, garden.level);
 
             // Draw drifting petals / spores
             drawPetals(ctx, frame);
@@ -103,163 +125,222 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
         };
     }, [garden, width, height]);
 
+    const drawToriiGate = (ctx: CanvasRenderingContext2D, w: number, h: number, level: number) => {
+        if (level < 3) return; // Only show gate at higher levels
+        const opacity = Math.min(0.6, (level - 2) * 0.15);
+        ctx.globalAlpha = opacity;
+
+        const gateColor = '#b71c1c'; // Darker red/crimson
+        const gateX = w * 0.5;
+        const gateY = h * 0.25;
+        const gateWidth = w * 0.5;
+        const gateHeight = h * 0.35;
+
+        ctx.fillStyle = gateColor;
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = 10;
+
+        // Pillars
+        ctx.fillRect(gateX - gateWidth / 2, gateY, 10, gateHeight);
+        ctx.fillRect(gateX + gateWidth / 2 - 10, gateY, 10, gateHeight);
+
+        // Top beam
+        ctx.fillRect(gateX - gateWidth / 2 - 15, gateY, gateWidth + 30, 15);
+        // Lower beam
+        ctx.fillRect(gateX - gateWidth / 2, gateY + gateHeight * 0.3, gateWidth, 10);
+
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1.0;
+    };
+
     const drawSpirit = (ctx: CanvasRenderingContext2D, anchorX: number, anchorY: number, frame: number, level: number) => {
-        const floatY = Math.sin(frame * 0.05) * 10;
-        const floatX = Math.cos(frame * 0.03) * 12;
+        const floatY = Math.sin(frame * 0.05) * 6;
+        const floatX = Math.cos(frame * 0.03) * 8;
         const x = anchorX + floatX;
         const y = anchorY + floatY;
-        const spiritSize = 10 + level * 2;
+        const spiritSize = 12 + level * 2;
 
-        ctx.save();
-        // Glow
-        const grad = ctx.createRadialGradient(x, y, 0, x, y, spiritSize * 2);
-        grad.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-        grad.addColorStop(0.5, 'rgba(100, 255, 218, 0.3)');
-        grad.addColorStop(1, 'rgba(100, 255, 218, 0)');
-        ctx.fillStyle = grad;
+        // Outer glow
+        const gradient = ctx.createRadialGradient(x, y, 2, x, y, spiritSize + 15);
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+        gradient.addColorStop(0.4, 'rgba(100, 255, 218, 0.6)');
+        gradient.addColorStop(1, 'rgba(100, 255, 218, 0)');
+        ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.arc(x, y, spiritSize * 2, 0, Math.PI * 2);
+        ctx.arc(x, y, spiritSize + 15, 0, Math.PI * 2);
         ctx.fill();
 
         // Core
         ctx.fillStyle = '#ffffff';
-        ctx.shadowBlur = 15;
         ctx.shadowColor = '#64ffda';
+        ctx.shadowBlur = 15;
         ctx.beginPath();
         ctx.arc(x, y, 6, 0, Math.PI * 2);
         ctx.fill();
-        ctx.restore();
+        ctx.shadowBlur = 0;
+
+        // Sparkle trail
+        for (let i = 0; i < 4; i++) {
+            const trailX = x - floatX * (0.5 + i * 0.3);
+            const trailY = y - floatY * (0.5 + i * 0.3) + i * 5;
+            ctx.fillStyle = `rgba(100, 255, 218, ${0.7 - i * 0.2})`;
+            ctx.beginPath();
+            ctx.arc(trailX, trailY, 3 - i * 0.6, 0, Math.PI * 2);
+            ctx.fill();
+        }
     };
 
     const drawPlant = (ctx: CanvasRenderingContext2D, x: number, y: number, level: number, type: string, frame: number) => {
-        if (level === 1) { // Seed/Sprout
+        if (level === 1) { // Seed
             ctx.fillStyle = '#8d6e63';
             ctx.beginPath();
-            ctx.ellipse(x, y + 5, 8, 5, 0, 0, Math.PI * 2);
+            ctx.ellipse(x, y + 5, 6, 4, 0, 0, Math.PI * 2);
             ctx.fill();
-            // Tiny sprout
-            ctx.strokeStyle = '#69f0ae';
+            // Glowing Sprout
+            ctx.strokeStyle = '#b9f6ca';
+            ctx.shadowColor = '#69f0ae';
+            ctx.shadowBlur = 5;
             ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.moveTo(x, y + 2);
-            ctx.quadraticCurveTo(x + 5, y - 5, x + Math.sin(frame*0.1)*3, y - 12);
+            ctx.moveTo(x, y + 3);
+            ctx.lineTo(x, y - 8 + Math.sin(frame * 0.1) * 3);
             ctx.stroke();
+            ctx.shadowBlur = 0;
             return;
         }
 
         // Stem
-        const stemHeight = level * 35 + 20;
-        const sway = Math.sin(frame * 0.02) * 8;
-        const endX = x + sway * 0.5;
-        const endY = y - stemHeight;
+        const stemHeight = level * 25 + 20;
+        const sway = Math.sin(frame * 0.02) * 5;
 
-        const stemGrad = ctx.createLinearGradient(x, y, endX, endY);
-        stemGrad.addColorStop(0, '#2e7d32');
-        stemGrad.addColorStop(1, '#a5d6a7');
-        ctx.strokeStyle = stemGrad;
-        ctx.lineWidth = 6 + level;
+        const stemGradient = ctx.createLinearGradient(x, y, x, y - stemHeight);
+        stemGradient.addColorStop(0, '#2e7d32');
+        stemGradient.addColorStop(0.5, '#66bb6a');
+        stemGradient.addColorStop(1, '#a5d6a7');
+        ctx.strokeStyle = stemGradient;
+        ctx.lineWidth = 4 + level;
         ctx.lineCap = 'round';
+
         ctx.beginPath();
         ctx.moveTo(x, y);
-        ctx.quadraticCurveTo(x + sway, y - stemHeight/2, endX, endY);
+        ctx.quadraticCurveTo(x + sway, y - stemHeight / 2, x + sway * 0.5, y - stemHeight);
         ctx.stroke();
 
-        // Leaves
+        const topX = x + sway * 0.5;
+        const topY = y - stemHeight;
+
         if (level >= 2) {
-            drawLeaf(ctx, x + sway*0.3, y - stemHeight*0.3, -1, frame, 16);
-            drawLeaf(ctx, x + sway*0.3, y - stemHeight*0.3, 1, frame, 16);
-        }
-        if (level >= 3) {
-            drawLeaf(ctx, x + sway*0.4, y - stemHeight*0.6, -1, frame, 20);
-            drawLeaf(ctx, x + sway*0.4, y - stemHeight*0.6, 1, frame, 20);
+            drawLeaf(ctx, x + sway * 0.3, y - stemHeight * 0.4, -1, frame);
+            drawLeaf(ctx, x + sway * 0.3, y - stemHeight * 0.4, 1, frame);
         }
 
-        // Bloom
-        if (level === 5) {
-            drawFlower(ctx, endX, endY, type, frame);
-        } else if (level === 4) {
-            drawBud(ctx, endX, endY, type);
+        if (level >= 3) {
+            drawLeaf(ctx, x + sway * 0.4, y - stemHeight * 0.7, -1, frame);
+            drawLeaf(ctx, x + sway * 0.4, y - stemHeight * 0.7, 1, frame);
+        }
+
+        if (level >= 4) {
+            if (level === 5) {
+                drawFlower(ctx, topX, topY, type, frame);
+            } else {
+                drawBud(ctx, topX, topY, type);
+            }
         }
     };
 
-    const drawLeaf = (ctx: CanvasRenderingContext2D, x: number, y: number, dir: number, frame: number, size: number) => {
+    const drawLeaf = (ctx: CanvasRenderingContext2D, x: number, y: number, dir: number, frame: number) => {
         const sway = Math.sin(frame * 0.03 + dir) * 3;
-        ctx.fillStyle = '#66bb6a';
+        const leafGradient = ctx.createLinearGradient(x, y, x + 15 * dir, y);
+        leafGradient.addColorStop(0, '#66bb6a');
+        leafGradient.addColorStop(1, '#00e676');
+        ctx.fillStyle = leafGradient;
         ctx.beginPath();
-        ctx.ellipse(x + (size * 0.8 * dir) + sway, y, size, size * 0.4, dir * 0.4, 0, Math.PI * 2);
+        ctx.ellipse(x + (12 * dir) + sway, y, 14, 7, dir * 0.5, 0, Math.PI * 2);
         ctx.fill();
-        // Vein
-        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + (size*1.2*dir) + sway, y);
-        ctx.stroke();
     };
 
     const drawBud = (ctx: CanvasRenderingContext2D, x: number, y: number, type: string) => {
         ctx.fillStyle = getFlowerColor(type);
+        ctx.shadowColor = ctx.fillStyle;
+        ctx.shadowBlur = 10;
         ctx.beginPath();
-        ctx.ellipse(x, y, 12, 18, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // Highlights
-        ctx.fillStyle = 'rgba(255,255,255,0.2)';
-        ctx.beginPath();
-        ctx.ellipse(x - 3, y - 5, 4, 8, 0, 0, Math.PI * 2);
-        ctx.fill();
-    };
-
-    const drawFlower = (ctx: CanvasRenderingContext2D, x: number, y: number, type: string, frame: number) => {
-        const color = getFlowerColor(type);
-        const petals = 10;
-        const rad = 25;
-        
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = color;
-        
-        for (let i = 0; i < petals; i++) {
-            const angle = (i / petals) * Math.PI * 2 + Math.sin(frame * 0.02) * 0.1;
-            const px = x + Math.cos(angle) * 10;
-            const py = y + Math.sin(angle) * 10;
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.ellipse(px, py, rad, 12, angle, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        
-        // Center
-        ctx.fillStyle = '#ffff8d';
-        ctx.beginPath();
-        ctx.arc(x, y, 10, 0, Math.PI * 2);
+        ctx.arc(x, y, 8, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
     };
 
+    const drawFlower = (ctx: CanvasRenderingContext2D, x: number, y: number, type: string, frame: number) => {
+        const color = getFlowerColor(type);
+        const petalCount = 8;
+
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 15;
+
+        for (let i = 0; i < petalCount; i++) {
+            const angle = (i / petalCount) * Math.PI * 2 + Math.sin(frame * 0.02) * 0.1;
+            const px = x + Math.cos(angle) * 14;
+            const py = y + Math.sin(angle) * 14;
+
+            const petalGradient = ctx.createRadialGradient(px, py, 0, px, py, 20);
+            petalGradient.addColorStop(0, color);
+            petalGradient.addColorStop(1, adjustColorBrightness(color, -40));
+            ctx.fillStyle = petalGradient;
+            ctx.beginPath();
+            ctx.ellipse(px, py, 20, 10, angle, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+
+        // Center
+        const centerGradient = ctx.createRadialGradient(x, y, 0, x, y, 8);
+        centerGradient.addColorStop(0, '#ffff8d');
+        centerGradient.addColorStop(1, '#ffd600');
+        ctx.fillStyle = centerGradient;
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.fill();
+    };
+
     const getFlowerColor = (type: string): string => {
         switch (type) {
-            case 'Rose': return '#f50057';
-            case 'Sunflower': return '#ffeb3b';
-            case 'Lotus': return '#e040fb';
+            case 'Rose': return '#ff4081';
+            case 'Sunflower': return '#ffab00';
+            case 'Lotus': return '#ea80fc';
             case 'Fern': return '#00e676';
             default: return '#e040fb';
         }
     };
 
-    const drawPetals = (ctx: CanvasRenderingContext2D, frame: number) => {
-        petalsRef.current.forEach(p => {
-            p.x += p.speedX + Math.sin(frame * 0.01) * 0.2;
-            p.y += p.speedY;
-            p.rotation += 0.02;
+    const adjustColorBrightness = (hex: string, amount: number): string => {
+        let r = parseInt(hex.slice(1, 3), 16);
+        let g = parseInt(hex.slice(3, 5), 16);
+        let b = parseInt(hex.slice(5, 7), 16);
+        r = Math.max(0, Math.min(255, r + amount));
+        g = Math.max(0, Math.min(255, g + amount));
+        b = Math.max(0, Math.min(255, b + amount));
+        return `rgb(${r},${g},${b})`;
+    };
 
-            if (p.y > height + 10) { p.y = -10; p.x = Math.random() * width; }
-            if (p.x > width + 10) p.x = -10;
+    const drawPetals = (ctx: CanvasRenderingContext2D, frame: number) => {
+        petalsRef.current.forEach(petal => {
+            petal.x += petal.speedX + Math.sin(frame * 0.01 + petal.rotation) * 0.5;
+            petal.y += petal.speedY;
+            petal.rotation += 0.02;
+
+            if (petal.y > height + 10) {
+                petal.y = -10;
+                petal.x = Math.random() * width;
+            }
+            if (petal.x > width + 10) petal.x = -10;
 
             ctx.save();
-            ctx.translate(p.x, p.y);
-            ctx.rotate(p.rotation);
-            ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
+            ctx.translate(petal.x, petal.y);
+            ctx.rotate(petal.rotation);
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + Math.sin(frame * 0.1) * 0.2})`;
+            ctx.shadowColor = '#fff';
+            ctx.shadowBlur = 5;
             ctx.beginPath();
-            ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+            ctx.arc(0, 0, petal.size, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
         });
