@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, CloudRain, Flame, Wind, Music, Minimize2 } from 'lucide-react';
 
@@ -21,9 +22,10 @@ const Soundscapes: React.FC = () => {
         });
 
         return () => {
-            Object.values(audioRefs.current).forEach(audio => {
-                audio.pause();
-                audio.src = '';
+            Object.values(audioRefs.current).forEach((audio) => {
+                const el = audio as HTMLAudioElement;
+                el.pause();
+                el.src = '';
             });
         };
     }, []);

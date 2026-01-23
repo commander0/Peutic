@@ -11,7 +11,6 @@ interface PetCanvasProps {
 const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, emotion = 'idle' }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
-    // Evolution stage based on level: Spirit (1-4), Guardian (5-9), Apex (10+)
     const getEvolutionStage = (level: number): 'spirit' | 'guardian' | 'apex' => {
         if (level >= 10) return 'apex';
         if (level >= 5) return 'guardian';
@@ -20,8 +19,8 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
 
     const getEvolutionScale = (stage: 'spirit' | 'guardian' | 'apex'): number => {
         switch (stage) {
-            case 'apex': return 1.4;
-            case 'guardian': return 1.15;
+            case 'apex': return 1.5;
+            case 'guardian': return 1.25;
             default: return 1.0;
         }
     };
@@ -45,36 +44,38 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             const centerY = height / 2;
             const baseScale = (width / 300) * evolutionScale;
 
-            // Floating bounce effect
+            // Bounce & Breath
             const bounce = Math.sin(frame * 0.05) * 8 * baseScale;
             const yOffset = bounce + (pet.isSleeping ? 10 * baseScale : 0);
 
             ctx.save();
             ctx.translate(centerX, centerY + yOffset);
 
-            // AURA & GLOWS
-            if (evolutionStage !== 'spirit') {
-                const auraSize = evolutionStage === 'apex' ? 120 : 80;
-                const auraColor = evolutionStage === 'apex' ? '255, 215, 0' : '100, 255, 218';
+            // GLOWING AURA (Holographic Effect)
+            const auraSize = evolutionStage === 'apex' ? 140 : 90;
+            const auraColor = evolutionStage === 'apex' ? '255, 215, 0' : '34, 211, 238'; // Gold vs Cyan
 
-                // Outer Glow
-                const gradient = ctx.createRadialGradient(0, 0, 30 * baseScale, 0, 0, auraSize * baseScale);
-                gradient.addColorStop(0, `rgba(${auraColor}, 0.3)`); // Increased opacity
-                gradient.addColorStop(1, `rgba(${auraColor}, 0)`);
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(0, 0, auraSize * baseScale, 0, Math.PI * 2);
-                ctx.fill();
+            const gradient = ctx.createRadialGradient(0, 0, 30 * baseScale, 0, 0, auraSize * baseScale);
+            gradient.addColorStop(0, `rgba(${auraColor}, 0.2)`);
+            gradient.addColorStop(1, `rgba(${auraColor}, 0)`);
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, auraSize * baseScale, 0, Math.PI * 2);
+            ctx.fill();
 
-                // Inner Pulse
+            // Inner Rings
+            ctx.strokeStyle = `rgba(${auraColor}, 0.4)`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 70 * baseScale, 20 * baseScale, frame * 0.02, 0, Math.PI * 2);
+            ctx.stroke();
+            if(evolutionStage !== 'spirit') {
                 ctx.beginPath();
-                ctx.arc(0, 0, (auraSize * 0.6 + Math.sin(frame * 0.1) * 5) * baseScale, 0, Math.PI * 2);
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = `rgba(${auraColor}, 0.3)`;
+                ctx.ellipse(0, 0, 90 * baseScale, 30 * baseScale, -frame * 0.02, 0, Math.PI * 2);
                 ctx.stroke();
             }
 
-            // DRAW PET BASED ON SPECIES
+            // Draw Pet Logic
             switch (pet.species) {
                 case 'Holo-Hamu':
                     drawHamu(ctx, baseScale, frame, emotion, pet.isSleeping, evolutionStage);
@@ -90,37 +91,12 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                     break;
             }
 
-            // HOLOGRAPHIC GLOW EFFECT
-            ctx.shadowBlur = evolutionStage === 'apex' ? 40 : 25;
-            ctx.shadowColor = evolutionStage === 'apex' ? 'rgba(255, 215, 0, 0.7)' : 'rgba(34, 211, 238, 0.6)'; // Increased opacity and shifted to cyan-400 for better visibility
-
             ctx.restore();
 
-            // Overlay Scanlines for Retro feel
-            ctx.fillStyle = 'rgba(0, 255, 255, 0.03)';
-            for (let i = 0; i < height; i += 3) {
+            // Scanlines
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+            for (let i = 0; i < height; i += 4) {
                 ctx.fillRect(0, i, width, 1);
-            }
-
-            // Glitch Effect (Random)
-            if (Math.random() > 0.98) {
-                const h = Math.random() * 20;
-                const y = Math.random() * height;
-                ctx.fillStyle = 'rgba(0, 255, 255, 0.1)';
-                ctx.fillRect(0, y, width, h);
-            }
-
-            // Floating particles
-            for (let i = 0; i < 8; i++) {
-                const angle = (frame * 0.02) + (i * (Math.PI * 2) / 8);
-                const r = 100 * baseScale + Math.sin(frame * 0.05 + i) * 20;
-                const px = centerX + Math.cos(angle) * r;
-                const py = centerY + Math.sin(angle) * r;
-
-                ctx.fillStyle = evolutionStage === 'apex' ? 'rgba(255,215,0,0.6)' : 'rgba(100,255,218,0.4)';
-                ctx.beginPath();
-                ctx.arc(px, py, 2 * baseScale, 0, Math.PI * 2);
-                ctx.fill();
             }
 
             frame++;
@@ -131,211 +107,180 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
         return () => cancelAnimationFrame(animationId);
     }, [pet, width, height, emotion]);
 
-    // SPECIES DRAWING FUNCTIONS
+    // DRAWING HELPERS
     const drawHamu = (ctx: CanvasRenderingContext2D, scale: number, frame: number, emotion: string, isSleeping: boolean, stage: 'spirit' | 'guardian' | 'apex') => {
         const size = 60 * scale;
-
-        // Body (Round blob)
-        ctx.fillStyle = stage === 'apex' ? '#ffe8c5' : '#ffecd2';
+        // Body
+        ctx.fillStyle = stage === 'apex' ? '#ffdfba' : '#fff5eb';
+        ctx.shadowColor = 'rgba(255,200,200,0.5)';
+        ctx.shadowBlur = 15;
         ctx.beginPath();
-        ctx.ellipse(0, 0, size, size * 0.9, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, size, size * 0.85, 0, 0, Math.PI * 2);
         ctx.fill();
-
-        // Belly
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.ellipse(0, size * 0.3, size * 0.7, size * 0.5, 0, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.shadowBlur = 0;
 
         // Ears
-        ctx.fillStyle = stage === 'apex' ? '#ff9eb3' : '#ffcad4';
+        ctx.fillStyle = '#ffb7b2';
         ctx.beginPath();
-        ctx.arc(-size * 0.6, -size * 0.7, size * 0.3, 0, Math.PI * 2);
-        ctx.arc(size * 0.6, -size * 0.7, size * 0.3, 0, Math.PI * 2);
+        ctx.arc(-size * 0.6, -size * 0.6, size * 0.25, 0, Math.PI * 2);
+        ctx.arc(size * 0.6, -size * 0.6, size * 0.25, 0, Math.PI * 2);
         ctx.fill();
-
-        // Crown for Apex
-        if (stage === 'apex') {
-            ctx.fillStyle = '#ffd700';
-            ctx.beginPath();
-            ctx.moveTo(0, -size * 1.1);
-            ctx.lineTo(-size * 0.3, -size * 0.85);
-            ctx.lineTo(size * 0.3, -size * 0.85);
-            ctx.fill();
-        }
 
         drawFace(ctx, size, frame, emotion, isSleeping);
     };
 
     const drawDino = (ctx: CanvasRenderingContext2D, scale: number, frame: number, emotion: string, isSleeping: boolean, stage: 'spirit' | 'guardian' | 'apex') => {
         const size = 65 * scale;
-
+        ctx.fillStyle = stage === 'apex' ? '#69f0ae' : '#b9f6ca';
+        ctx.shadowColor = 'rgba(100,255,150,0.5)';
+        ctx.shadowBlur = 15;
+        
         // Body
-        ctx.fillStyle = stage === 'apex' ? '#8fd4a1' : '#b7e4c7';
         ctx.beginPath();
-        ctx.roundRect(-size, -size * 0.5, size * 1.5, size * 1.2, size * 0.5);
+        ctx.roundRect(-size * 0.8, -size * 0.5, size * 1.6, size * 1.2, 20);
         ctx.fill();
-
         // Head
         ctx.beginPath();
-        ctx.arc(size * 0.3, -size * 0.6, size * 0.6, 0, Math.PI * 2);
+        ctx.arc(0, -size * 0.6, size * 0.6, 0, Math.PI * 2);
         ctx.fill();
-
-        // Spikes (more for higher stages)
-        const spikeCount = stage === 'apex' ? 5 : stage === 'guardian' ? 4 : 3;
-        ctx.fillStyle = stage === 'apex' ? '#50b86a' : '#74c69d';
-        for (let i = 0; i < spikeCount; i++) {
+        
+        ctx.shadowBlur = 0;
+        
+        // Spikes
+        ctx.fillStyle = '#00e676';
+        for(let i=0; i<3; i++) {
             ctx.beginPath();
-            ctx.moveTo(-size * 0.8 + (i * size * 0.4), -size * 0.6);
-            ctx.lineTo(-size * 0.65 + (i * size * 0.4), -size * 1.2);
-            ctx.lineTo(-size * 0.5 + (i * size * 0.4), -size * 0.6);
+            ctx.moveTo(-40*scale + i*40*scale, -size * 1.1);
+            ctx.lineTo(-25*scale + i*40*scale, -size * 1.4);
+            ctx.lineTo(-10*scale + i*40*scale, -size * 1.1);
             ctx.fill();
         }
 
         ctx.save();
-        ctx.translate(size * 0.3, -size * 0.4);
+        ctx.translate(0, -size * 0.5);
         drawFace(ctx, size * 0.8, frame, emotion, isSleeping);
         ctx.restore();
     };
 
     const drawShiba = (ctx: CanvasRenderingContext2D, scale: number, frame: number, emotion: string, isSleeping: boolean, stage: 'spirit' | 'guardian' | 'apex') => {
         const size = 60 * scale;
-
-        // Body
-        ctx.fillStyle = stage === 'apex' ? '#ffbf5e' : '#ffb347';
-        ctx.beginPath();
-        ctx.ellipse(0, 0, size * 1.1, size * 0.8, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Tail (Bushy for higher stages)
-        ctx.fillStyle = stage === 'apex' ? '#ffbf5e' : '#ffb347';
-        ctx.beginPath();
-        ctx.arc(size * 0.9, -size * 0.5, size * (stage === 'apex' ? 0.5 : 0.4), 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillStyle = stage === 'apex' ? '#ffd180' : '#ffe0b2';
+        ctx.shadowColor = 'rgba(255,160,0,0.5)';
+        ctx.shadowBlur = 15;
 
         // Head
         ctx.beginPath();
-        ctx.arc(0, -size * 0.6, size * 0.7, 0, Math.PI * 2);
+        ctx.arc(0, -size*0.2, size * 0.9, 0, Math.PI*2);
         ctx.fill();
+        ctx.shadowBlur = 0;
 
-        // White Mask
-        ctx.fillStyle = '#ffffff';
+        // Ears (Pointy)
+        ctx.fillStyle = '#ff9800';
         ctx.beginPath();
-        ctx.ellipse(0, -size * 0.4, size * 0.5, size * 0.4, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Ears
-        ctx.fillStyle = stage === 'apex' ? '#db7014' : '#e67e22';
-        ctx.beginPath();
-        ctx.moveTo(-size * 0.5, -size * 1.1);
-        ctx.lineTo(-size * 0.2, -size * (stage === 'apex' ? 1.8 : 1.6));
-        ctx.lineTo(0.1, -size * 1.1);
+        ctx.moveTo(-size*0.6, -size*0.8);
+        ctx.lineTo(-size*0.3, -size*1.6);
+        ctx.lineTo(0, -size*0.8);
         ctx.fill();
         ctx.beginPath();
-        ctx.moveTo(size * 0.5, -size * 1.1);
-        ctx.lineTo(size * 0.2, -size * (stage === 'apex' ? 1.8 : 1.6));
-        ctx.lineTo(-0.1, -size * 1.1);
+        ctx.moveTo(size*0.6, -size*0.8);
+        ctx.lineTo(size*0.3, -size*1.6);
+        ctx.lineTo(0, -size*0.8);
         ctx.fill();
 
-        ctx.save();
-        ctx.translate(0, -size * 0.6);
+        // White cheeks
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.ellipse(-size*0.4, size*0.1, size*0.3, size*0.25, 0, 0, Math.PI*2);
+        ctx.ellipse(size*0.4, size*0.1, size*0.3, size*0.25, 0, 0, Math.PI*2);
+        ctx.fill();
+
         drawFace(ctx, size, frame, emotion, isSleeping);
-        ctx.restore();
     };
 
     const drawSloth = (ctx: CanvasRenderingContext2D, scale: number, frame: number, emotion: string, isSleeping: boolean, stage: 'spirit' | 'guardian' | 'apex') => {
         const size = 60 * scale;
+        ctx.fillStyle = stage === 'apex' ? '#cfd8dc' : '#eceff1';
+        ctx.shadowColor = 'rgba(200,200,200,0.5)';
+        ctx.shadowBlur = 15;
 
-        // Body
-        ctx.fillStyle = stage === 'apex' ? '#c9b8ac' : '#d7ccc8';
+        // Head
         ctx.beginPath();
-        ctx.ellipse(0, 0, size * 1.2, size, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, size * 1.1, size * 0.9, 0, 0, Math.PI*2);
         ctx.fill();
+        ctx.shadowBlur = 0;
 
-        // Face Mask
-        ctx.fillStyle = '#f5f5f5';
+        // Eye patches
+        ctx.fillStyle = '#90a4ae';
         ctx.beginPath();
-        ctx.ellipse(0, 0, size * 0.7, size * 0.6, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Eye Patches (more defined for higher stages)
-        ctx.fillStyle = stage === 'apex' ? '#765549' : '#8d6e63';
-        ctx.beginPath();
-        ctx.ellipse(-size * 0.3, -size * 0.1, size * 0.25, size * (stage === 'apex' ? 0.4 : 0.35), Math.PI / 4, 0, Math.PI * 2);
-        ctx.ellipse(size * 0.3, -size * 0.1, size * 0.25, size * (stage === 'apex' ? 0.4 : 0.35), -Math.PI / 4, 0, Math.PI * 2);
+        ctx.ellipse(-size*0.35, 0, size*0.25, size*0.2, -0.2, 0, Math.PI*2);
+        ctx.ellipse(size*0.35, 0, size*0.25, size*0.2, 0.2, 0, Math.PI*2);
         ctx.fill();
 
         drawFace(ctx, size, frame, emotion, isSleeping);
     };
 
     const drawFace = (ctx: CanvasRenderingContext2D, size: number, frame: number, emotion: string, isSleeping: boolean) => {
+        const eyeX = size * 0.35;
         const eyeSize = size * 0.12;
-        const eyeX = size * 0.4;
-        const blink = !isSleeping && frame % 120 < 5;
 
+        ctx.fillStyle = '#37474f';
+        
         // Eyes
-        ctx.fillStyle = '#000000';
         if (isSleeping) {
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(-eyeX, 0, eyeSize, Math.PI, 0); // Left closed
-            ctx.arc(eyeX, 0, eyeSize, Math.PI, 0); // Right closed
+            ctx.moveTo(-eyeX - 10, 0); ctx.lineTo(-eyeX + 10, 0);
+            ctx.moveTo(eyeX - 10, 0); ctx.lineTo(eyeX + 10, 0);
             ctx.stroke();
-            // Zzz effect
-            if (frame % 30 < 15) {
-                ctx.font = 'bold 20px Arial';
-                ctx.fillText('Z', size * 0.8, -size * 0.5);
+            // Zzz
+            if(frame % 60 < 30) {
+                ctx.font = 'bold 24px Arial';
+                ctx.fillStyle = '#fff';
+                ctx.fillText('z', size*0.8, -size*0.8);
             }
-        } else if (blink) {
-            ctx.fillRect(-eyeX - eyeSize, 0, eyeSize * 2, 2);
-            ctx.fillRect(eyeX - eyeSize, 0, eyeSize * 2, 2);
-        } else if (emotion === 'happy') {
-            ctx.beginPath();
-            ctx.arc(-eyeX, 0, eyeSize, 0, Math.PI, true);
-            ctx.arc(eyeX, 0, eyeSize, 0, Math.PI, true);
-            ctx.stroke();
         } else {
-            ctx.beginPath();
-            ctx.arc(-eyeX, 0, eyeSize, 0, Math.PI * 2);
-            ctx.arc(eyeX, 0, eyeSize, 0, Math.PI * 2);
-            ctx.fill();
-            // Shine
-            ctx.fillStyle = '#fff';
-            ctx.beginPath();
-            ctx.arc(-eyeX - eyeSize * 0.2, -eyeSize * 0.2, eyeSize * 0.3, 0, Math.PI * 2);
-            ctx.arc(eyeX - eyeSize * 0.2, -eyeSize * 0.2, eyeSize * 0.3, 0, Math.PI * 2);
-            ctx.fill();
+            // Blinking
+            if (frame % 150 < 6) {
+                ctx.fillRect(-eyeX - eyeSize, -2, eyeSize*2, 4);
+                ctx.fillRect(eyeX - eyeSize, -2, eyeSize*2, 4);
+            } else {
+                ctx.beginPath();
+                ctx.arc(-eyeX, 0, eyeSize, 0, Math.PI * 2);
+                ctx.arc(eyeX, 0, eyeSize, 0, Math.PI * 2);
+                ctx.fill();
+                // Sparkle
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(-eyeX - 3, -3, 3, 0, Math.PI * 2);
+                ctx.arc(eyeX - 3, -3, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
         }
 
         // Mouth
-        ctx.fillStyle = '#000';
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#37474f';
         ctx.beginPath();
-        if (emotion === 'eating') {
-            const mouthOpen = Math.sin(frame * 0.3) * 5;
-            ctx.ellipse(0, size * 0.3, 5, mouthOpen, 0, 0, Math.PI * 2);
-        } else if (emotion === 'hungry' || emotion === 'sad') {
-            ctx.arc(0, size * 0.4, 5, Math.PI, 0);
+        if (emotion === 'happy' || emotion === 'eating') {
+            ctx.arc(0, size * 0.2, 8, 0, Math.PI);
+        } else if (emotion === 'sad') {
+            ctx.arc(0, size * 0.4, 8, Math.PI, 0);
         } else {
-            ctx.arc(0, size * 0.3, 3, 0, Math.PI);
+            ctx.moveTo(-5, size*0.3); ctx.lineTo(5, size*0.3);
         }
         ctx.stroke();
 
-        // Blush
-        ctx.fillStyle = 'rgba(255, 182, 193, 0.5)';
-        ctx.beginPath();
-        ctx.arc(-size * 0.6, size * 0.2, size * 0.15, 0, Math.PI * 2);
-        ctx.arc(size * 0.6, size * 0.2, size * 0.15, 0, Math.PI * 2);
-        ctx.fill();
+        // Cheeks
+        if (emotion === 'happy') {
+            ctx.fillStyle = 'rgba(255, 100, 100, 0.4)';
+            ctx.beginPath();
+            ctx.arc(-size*0.6, size*0.2, 10, 0, Math.PI*2);
+            ctx.arc(size*0.6, size*0.2, 10, 0, Math.PI*2);
+            ctx.fill();
+        }
     };
 
-    return (
-        <canvas
-            ref={canvasRef}
-            width={width}
-            height={height}
-            className="drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-transform duration-700"
-        />
-    );
+    return <canvas ref={canvasRef} width={width} height={height} className="w-full h-full drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]" />;
 };
 
 export default PetCanvas;

@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import {
     X, Heart, Pizza, Bath, Moon, Sun,
     Sparkles, Zap, ChevronLeft, Save,
-    Gamepad2, RefreshCw
+    Gamepad2, RefreshCw, AlertCircle
 } from 'lucide-react';
-import { User, PocketPet } from '../../types';
+import { User, Anima } from '../../types';
 import { PetService } from '../../services/petService';
 import PetCanvas from './PetCanvas';
 import { useToast } from '../common/Toast';
+import { UserService } from '../../services/userService';
 
 interface PocketPetViewProps {
     user: User;
@@ -15,12 +16,13 @@ interface PocketPetViewProps {
 }
 
 const PocketPetView: React.FC<PocketPetViewProps> = ({ user, onClose }) => {
-    const [pet, setPet] = useState<PocketPet | null>(null);
+    const [pet, setPet] = useState<Anima | null>(null);
     const [loading, setLoading] = useState(true);
     const [emotion, setEmotion] = useState<'idle' | 'happy' | 'hungry' | 'sleeping' | 'sad' | 'eating'>('idle');
     const [showSelection, setShowSelection] = useState(false);
     const [petName, setPetName] = useState('');
-    const [selectedSpecies, setSelectedSpecies] = useState<PocketPet['species']>('Holo-Hamu');
+    const [selectedSpecies, setSelectedSpecies] = useState<Anima['species']>('Holo-Hamu');
+    const [localBalance, setLocalBalance] = useState(user.balance);
     const { showToast } = useToast();
 
     useEffect(() => {
@@ -56,6 +58,25 @@ const PocketPetView: React.FC<PocketPetViewProps> = ({ user, onClose }) => {
     const handleAction = async (action: 'feed' | 'play' | 'clean' | 'sleep') => {
         if (!pet || (pet.isSleeping && action !== 'sleep')) return;
 
+        // --- ECONOMY LOGIC ---
+        // Basic costs: Sleep is free, others cost 1 min
+        const COST = action === 'sleep' ? 0 : 1;
+
+        if (localBalance < COST) {
+            showToast(`Not enough credits! Need ${COST}m.`, "error");
+            return;
+        }
+
+        if (COST > 0) {
+            const success = await UserService.deductBalance(COST, `Pet Care: ${action}`);
+            if (!success) {
+                showToast("Transaction failed.", "error");
+                return;
+            }
+            setLocalBalance(prev => prev - COST);
+        }
+
+        // --- GAMEPLAY LOGIC ---
         let updatedPet = { ...pet, lastInteractionAt: new Date().toISOString() };
         let newEmotion: typeof emotion = 'happy';
 
@@ -167,22 +188,22 @@ const PocketPetView: React.FC<PocketPetViewProps> = ({ user, onClose }) => {
     if (!pet) return null;
 
     return (
-        <div className="fixed inset-0 z-[120] bg-[#0a0f0d] text-white flex flex-col animate-in fade-in duration-700 overflow-hidden">
+        <div className="fixed inset-0 z-[120] bg-gray-50 dark:bg-[#0a0f0d] text-gray-900 dark:text-white flex flex-col animate-in fade-in duration-700 overflow-hidden">
             {/* GRID BACKGROUND */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.05)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
             <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 via-transparent to-transparent pointer-events-none"></div>
 
             {/* HEADER */}
-            <header className="relative z-10 px-6 py-4 flex justify-between items-center border-b border-white/5 backdrop-blur-md">
+            <header className="relative z-10 px-6 py-4 flex justify-between items-center border-b border-gray-200 dark:border-white/5 backdrop-blur-md">
                 <div className="flex items-center gap-4">
-                    <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl transition-colors">
-                        <ChevronLeft className="w-6 h-6 text-cyan-400" />
+                    <button onClick={onClose} className="p-2 hover:bg-gray-200 dark:hover:bg-white/5 rounded-xl transition-colors">
+                        <ChevronLeft className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
                     </button>
                     <div>
-                        <h2 className="text-sm font-black uppercase tracking-[0.2em]">{pet.name}</h2>
+                        <h2 className="text-sm font-black uppercase tracking-[0.2em] text-gray-900 dark:text-white">{pet.name}</h2>
                         <div className="flex items-center gap-2">
                             <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Level {pet.level} {pet.species}</span>
-                            <div className="w-24 h-1 bg-gray-800 rounded-full overflow-hidden">
+                            <div className="w-24 h-1 bg-gray-300 dark:bg-gray-800 rounded-full overflow-hidden">
                                 <div className="h-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" style={{ width: `${pet.experience % 100}%` }}></div>
                             </div>
                         </div>
@@ -190,10 +211,10 @@ const PocketPetView: React.FC<PocketPetViewProps> = ({ user, onClose }) => {
                 </div>
                 <div className="flex items-center gap-6">
                     <div className="hidden md:flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-yellow-400" />
-                        <span className="text-xs font-black">{user.balance}m</span>
+                        <Zap className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                        <span className="text-xs font-black text-gray-900 dark:text-white">{localBalance}m</span>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-red-500/20 rounded-xl transition-colors text-gray-500 hover:text-red-400">
+                    <button onClick={onClose} className="p-2 hover:bg-red-500/20 rounded-xl transition-colors text-gray-500 hover:text-red-500">
                         <X className="w-6 h-6" />
                     </button>
                 </div>
@@ -212,7 +233,7 @@ const PocketPetView: React.FC<PocketPetViewProps> = ({ user, onClose }) => {
                     </div>
 
                     {/* STATUS BARS (FLOATING) */}
-                    <div className="absolute top-0 right-0 md:-right-32 space-y-4 w-48 bg-black/40 backdrop-blur-xl border border-white/10 p-5 rounded-3xl animate-in slide-in-from-right duration-1000">
+                    <div className="absolute top-0 right-0 md:-right-32 space-y-4 w-48 bg-white/80 dark:bg-black/40 backdrop-blur-xl border border-gray-200 dark:border-white/10 p-5 rounded-3xl animate-in slide-in-from-right duration-1000 shadow-xl">
                         <StatusIndicator icon={Pizza} label="Hunger" val={pet.hunger} color="bg-orange-500" />
                         <StatusIndicator icon={Heart} label="Happiness" val={pet.happiness} color="bg-rose-500" />
                         <StatusIndicator icon={Bath} label="Clean" val={pet.cleanliness} color="bg-blue-400" />
@@ -225,21 +246,21 @@ const PocketPetView: React.FC<PocketPetViewProps> = ({ user, onClose }) => {
             <footer className="relative z-10 p-8 pb-12 flex justify-center gap-4 md:gap-8">
                 <ActionButton
                     icon={Pizza}
-                    label="Feed"
+                    label="Feed (1m)"
                     color="cyan"
                     onClick={() => handleAction('feed')}
                     disabled={pet.isSleeping}
                 />
                 <ActionButton
                     icon={Gamepad2}
-                    label="Play"
+                    label="Play (1m)"
                     color="cyan"
                     onClick={() => handleAction('play')}
                     disabled={pet.isSleeping || pet.energy < 20}
                 />
                 <ActionButton
                     icon={Bath}
-                    label="Wash"
+                    label="Wash (1m)"
                     color="cyan"
                     onClick={() => handleAction('clean')}
                     disabled={pet.isSleeping}
@@ -269,22 +290,25 @@ const StatusIndicator: React.FC<{ icon: any, label: string, val: number, color: 
             </div>
             <span>{Math.floor(val)}%</span>
         </div>
-        <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+        <div className="h-1.5 bg-gray-200 dark:bg-white/5 rounded-full overflow-hidden">
             <div className={`h-full ${color} transition-all duration-1000 shadow-[0_0_8px_rgba(0,0,0,0.5)]`} style={{ width: `${val}%` }}></div>
         </div>
     </div>
 );
 
 const ActionButton: React.FC<{ icon: any, label: string, color: 'cyan' | 'yellow' | 'red', onClick: () => void, disabled?: boolean }> = ({ icon: Icon, label, color, onClick, disabled }) => {
-    const colorClass = color === 'cyan' ? 'hover:bg-cyan-500/20 text-cyan-400 border-cyan-500/30' :
-        color === 'yellow' ? 'hover:bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
-            'hover:bg-red-500/20 text-red-400 border-red-500/30';
+    // Light mode friendly colors
+    const colorClass = color === 'cyan' 
+        ? 'bg-white dark:bg-transparent text-cyan-600 dark:text-cyan-400 border-gray-200 dark:border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-500/20' 
+        : color === 'yellow' 
+            ? 'bg-white dark:bg-transparent text-yellow-600 dark:text-yellow-400 border-gray-200 dark:border-yellow-500/30 hover:border-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-500/20' 
+            : 'bg-white dark:bg-transparent text-red-600 dark:text-red-400 border-gray-200 dark:border-red-500/30 hover:border-red-400 hover:bg-red-50 dark:hover:bg-red-500/20';
 
     return (
         <button
             onClick={onClick}
             disabled={disabled}
-            className={`group relative flex flex-col items-center gap-2 p-4 md:p-6 rounded-[2rem] border backdrop-blur-xl transition-all active:scale-90 ${disabled ? 'opacity-20 cursor-not-allowed border-white/5 text-gray-700' : colorClass}`}
+            className={`group relative flex flex-col items-center gap-2 p-4 md:p-6 rounded-[2rem] border backdrop-blur-xl transition-all active:scale-90 shadow-sm hover:shadow-md ${disabled ? 'opacity-40 cursor-not-allowed bg-gray-100 dark:bg-transparent border-gray-200 dark:border-white/5 text-gray-400' : colorClass}`}
         >
             <div className="relative">
                 <Icon className="w-6 h-6 md:w-8 md:h-8" />
