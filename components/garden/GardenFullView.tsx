@@ -13,7 +13,7 @@ interface GardenFullViewProps {
     onUpdate: () => void;
 }
 
-const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, onClose, onUpdate }) => {
+const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, onUpdate }) => {
     const [localGarden, setLocalGarden] = useState(garden);
     const [isWatering, setIsWatering] = useState(false);
     const [showInfo, setShowInfo] = useState(false);
@@ -23,6 +23,11 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, onClose, onUpda
 
     const handleWater = async () => {
         setIsWatering(true);
+        if (user.balance < COST) {
+            showToast(`Not enough minutes. Need ${COST}m.`, "error");
+            setIsWatering(false);
+            return;
+        }
         const success = await UserService.deductBalance(COST, "Garden Water");
 
         if (success) {
