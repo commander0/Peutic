@@ -23,11 +23,6 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, onClose, onUpda
 
     const handleWater = async () => {
         setIsWatering(true);
-        if (user.balance < COST) {
-            showToast(`Not enough minutes. Need ${COST}m.`, "error");
-            setIsWatering(false);
-            return;
-        }
         const success = await UserService.deductBalance(COST, "Garden Water");
 
         if (success) {

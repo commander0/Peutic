@@ -147,102 +147,27 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
                 if (requestRef.current !== undefined) cancelAnimationFrame(requestRef.current);
                 return;
             }
-
-            // --- HIGH FIDELITY RENDERING ---
-
-            // --- HYPER REALISTIC RENDER ---
-
-            // 1. NEBULA BACKGROUND
             const grad = ctx.createLinearGradient(0, 0, 0, H);
-            grad.addColorStop(0, '#0f172a'); // Slate 900
-            grad.addColorStop(1, '#312e81'); // Indigo 900
+            grad.addColorStop(0, '#0EA5E9');
+            grad.addColorStop(1, '#BAE6FD');
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, W, H);
-
-            // Procedural Nebula Clouds
-            const time = Date.now() / 3000;
-            ctx.globalCompositeOperation = 'screen';
-            for (let i = 0; i < 3; i++) {
-                const nx = (Math.sin(time + i) * W / 2) + W / 2;
-                const ny = (Math.cos(time * 0.5 + i) * H / 2) + H / 2;
-                const nGrad = ctx.createRadialGradient(nx, ny, 0, nx, ny, W * 0.8);
-                nGrad.addColorStop(0, i === 0 ? 'rgba(79, 70, 229, 0.2)' : i === 1 ? 'rgba(236, 72, 153, 0.15)' : 'rgba(34, 211, 238, 0.15)');
-                nGrad.addColorStop(1, 'transparent');
-                ctx.fillStyle = nGrad;
-                ctx.fillRect(0, 0, W, H);
-            }
-            ctx.globalCompositeOperation = 'source-over';
-
-            // Stars with Twinkle
-            ctx.fillStyle = 'white';
-            for (let i = 0; i < 40; i++) {
-                const sx = (i * 90 + Date.now() / 50) % W;
-                const sy = (i * 70) % H;
-                const twinkle = Math.abs(Math.sin(Date.now() / 500 + i));
-                ctx.globalAlpha = twinkle * 0.8 + 0.2;
-                ctx.beginPath(); ctx.arc(sx, sy, Math.random() * 1.5, 0, Math.PI * 2); ctx.fill();
-            }
-            ctx.globalAlpha = 1.0;
-
-            // 2. GLASS PLATFORMS with Bloom
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            for (let i = 0; i < 10; i++) ctx.fillRect((i * 50 + Date.now() / 50) % W, (i * 30 + Date.now() / 20) % H, 2, 2);
             platformsRef.current.forEach(pl => {
-                const isMoving = pl.type === 'moving';
-
-                // Glow
-                ctx.shadowColor = isMoving ? '#0ea5e9' : '#a78bfa';
-                ctx.shadowBlur = 20;
-
-                const platGrad = ctx.createLinearGradient(pl.x, pl.y, pl.x, pl.y + pl.h);
-                platGrad.addColorStop(0, isMoving ? 'rgba(56, 189, 248, 0.9)' : 'rgba(167, 139, 250, 0.9)');
-                platGrad.addColorStop(1, isMoving ? 'rgba(3, 105, 161, 0.4)' : 'rgba(124, 58, 237, 0.4)');
-
-                ctx.fillStyle = platGrad;
-                // Rounded
-                ctx.beginPath();
-                ctx.roundRect(pl.x, pl.y, pl.w, pl.h, 6);
-                ctx.fill();
-
-                // Shine
-                ctx.fillStyle = 'rgba(255,255,255,0.4)';
-                ctx.fillRect(pl.x + 5, pl.y + 2, pl.w - 10, 2);
-
-                ctx.shadowBlur = 0;
+                if (pl.type === 'ground') { ctx.fillStyle = '#4ade80'; ctx.fillRect(pl.x, pl.y, pl.w, pl.h); }
+                else { drawCloud(pl.x, pl.y, pl.w, pl.h, pl.type); }
             });
-
-            // 3. PLAYER ORB (Energy Core)
-            // Trail
-            ctx.beginPath();
-            ctx.ellipse(p.x + p.width / 2, p.y + p.height / 2, p.width * 0.8, p.height * 0.8, 0, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(250, 204, 21, 0.2)'; // Yellow trail
-            ctx.fill();
-
-            // Core
-            const pX = p.x + p.width / 2;
-            const pY = p.y + p.height / 2;
-            const pSize = p.width / 2;
-
-            const orbGrad = ctx.createRadialGradient(pX, pY, 0, pX, pY, pSize);
-            orbGrad.addColorStop(0, '#fef08a'); // Core White/Yellow
-            orbGrad.addColorStop(0.4, '#eab308'); // Yellow 500
-            orbGrad.addColorStop(1, '#a16207'); // Dark Gold
-
-            ctx.shadowColor = '#facc15';
-            ctx.shadowBlur = 25;
-            ctx.fillStyle = orbGrad;
-            ctx.beginPath(); ctx.arc(pX, pY, pSize, 0, Math.PI * 2); ctx.fill();
-
-            // Eyes (Kawaii)
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = '#422006';
-            const eyeOff = pSize * 0.5;
-            const eyeS = pSize * 0.25;
-            ctx.beginPath(); ctx.arc(pX - eyeOff, pY - 2, eyeS, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(pX + eyeOff, pY - 2, eyeS, 0, Math.PI * 2); ctx.fill();
-            // Shine in eyes
-            ctx.fillStyle = 'white';
-            ctx.beginPath(); ctx.arc(pX - eyeOff - 2, pY - 4, eyeS * 0.4, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(pX + eyeOff - 2, pY - 4, eyeS * 0.4, 0, Math.PI * 2); ctx.fill();
-
+            ctx.shadowBlur = 10; ctx.shadowColor = 'white';
+            ctx.fillStyle = '#FACC15';
+            ctx.beginPath(); ctx.arc(p.x + p.width / 2, p.y + p.height / 2, p.width / 2, 0, Math.PI * 2); ctx.fill();
+            ctx.shadowBlur = 0; ctx.fillStyle = 'black';
+            const eyeOff = p.width * 0.2;
+            const eyeSize = p.width * 0.1;
+            ctx.beginPath(); ctx.arc(p.x + p.width / 2 - eyeOff, p.y + p.height / 2 - eyeOff, eyeSize, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(p.x + p.width / 2 + eyeOff, p.y + p.height / 2 - eyeOff, eyeSize, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(p.x + p.width / 2, p.y + p.height / 2 + eyeOff / 2, eyeOff * 0.8, 0, Math.PI);
+            ctx.lineWidth = 2; ctx.strokeStyle = 'black'; ctx.stroke();
             requestRef.current = requestAnimationFrame(update);
         };
         update();
