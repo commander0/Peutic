@@ -352,8 +352,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             ref={canvasRef}
             width={width}
             height={height}
-            className="drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-transform duration-700 origin-center"
-            style={{ width: width, height: height }}
+            className="drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-transform duration-700"
         />
     );
 };
