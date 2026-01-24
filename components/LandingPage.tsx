@@ -122,7 +122,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     const marqueeRow2 = [...row2, ...row2];
 
     return (
-        <div className={`min-h-screen bg-[#FFFBEB] dark:bg-[#0A0A0A] font-sans text-[#0A0A0A] dark:text-[#F3F4F6] selection:bg-yellow-200 selection:text-black transition-colors duration-500 ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen font-sans text-[#0A0A0A] dark:text-[#F3F4F6] selection:bg-yellow-200 selection:text-black transition-colors duration-500 ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
 
             {/* PUBLIC BROADCAST BANNER */}
             {settings.broadcastMessage && (
@@ -145,6 +145,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 >
                     <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
                 </video>
+                <div className="absolute inset-0 bg-yellow-500/25 pointer-events-none mix-blend-overlay dark:bg-yellow-400/10 dark:mix-blend-soft-light"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-[#FFFBEB] via-[#FFFBEB]/60 to-[#FFFBEB]/30 dark:from-[#0A0A0A] dark:via-[#0A0A0A]/60 dark:to-[#0A0A0A]/30"></div>
             </div>
             <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-2 bg-[#FFFBEB]/80 dark:bg-black/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-3 md:py-6 bg-transparent border-transparent'}`}>
@@ -234,7 +235,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     </div>
                 </div>
             </section>
-            <section className="py-12 md:py-16 bg-[#FFFBEB] dark:bg-[#0A0A0A] relative overflow-hidden transition-colors">
+            <section className="py-12 md:py-16 relative overflow-hidden transition-colors">
                 <div className="max-w-7xl mx-auto text-center mb-8 md:mb-12 px-6">
                     <p className="text-yellow-600 font-black uppercase tracking-[0.4em] text-[9px] md:text-[10px] mb-2 md:mb-3">{t('roster_title')}</p>
                     <h2 className="text-3xl md:text-4xl font-black leading-[1.1] tracking-tight mb-3 md:mb-4 dark:text-white">{t('roster_heading')}</h2>
@@ -251,8 +252,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             .marquee-container:hover .animate-marquee, .marquee-container:hover .animate-marquee-reverse { animation-play-state: paused; }
           `}</style>
                 <div className="relative w-full marquee-container">
-                    <div className="absolute left-0 top-0 bottom-0 w-12 md:w-60 bg-gradient-to-r from-[#FFFBEB] dark:from-[#0A0A0A] to-transparent z-20 pointer-events-none transition-colors"></div>
-                    <div className="absolute right-0 top-0 bottom-0 w-12 md:w-60 bg-gradient-to-l from-[#FFFBEB] dark:from-[#0A0A0A] to-transparent z-20 pointer-events-none transition-colors"></div>
+                    {/* Removed opaque side gradients to show video background */}
                     <div className="flex flex-col gap-4 md:gap-6">
                         {/* Row 1 */}
                         <div className="flex gap-4 md:gap-5 animate-marquee w-fit px-4">
@@ -285,7 +285,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     </div>
                 </div>
             </section>
-            <section className="py-12 md:py-16 bg-[#FFFBEB] dark:bg-[#0A0A0A] text-black dark:text-white relative overflow-hidden transition-colors">
+            <section className="py-12 md:py-16 text-black dark:text-white relative overflow-hidden transition-colors">
                 <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
                 <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8 md:gap-12 text-center md:text-left relative z-10">
                     <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
@@ -339,7 +339,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     </div>
                 </div>
             </section>
-            <footer className="bg-[#FFFBEB] dark:bg-[#0A0A0A] text-black dark:text-white py-12 md:py-16 px-6 relative z-20 transition-colors">
+            <footer className="text-black dark:text-white py-12 md:py-16 px-6 relative z-20 transition-colors">
                 <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 mb-10 md:mb-12">
                         <div className="md:col-span-5 space-y-4 md:space-y-6">
