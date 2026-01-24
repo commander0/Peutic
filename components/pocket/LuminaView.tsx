@@ -23,6 +23,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     const [selectedSpecies, setSelectedSpecies] = useState<'Holo-Hamu' | 'Digi-Dino' | 'Neo-Shiba' | 'Zen-Sloth'>('Holo-Hamu');
     const [petName, setPetName] = useState('');
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
+    const [trick, setTrick] = useState<'magic' | 'spin' | 'flip' | null>(null);
 
     // Dynamic canvas sizing for responsive pet
     const [canvasSize, setCanvasSize] = useState(500);
@@ -64,7 +65,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
             return;
         }
 
-        const newPet = await PetService.createPet(user.id, selectedSpecies as 'Holo-Hamu' | 'Digi-Dino' | 'Neo-Shiba' | 'Zen-Sloth', petName);
+        const newPet = await PetService.createPet(user.id, petName, selectedSpecies);
         if (newPet) {
             setPet(newPet);
             setShowSelection(false);

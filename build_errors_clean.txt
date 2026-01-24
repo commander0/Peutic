@@ -1,0 +1,10 @@
+﻿components/pocket/PetCanvas.tsx(61,19): error TS6133: 'pulse' is declared but its value is never read.
+components/retention/BookOfYouView.tsx(7,1): error TS6133: 'VoiceEntryItem' is declared but its value is never read.
+components/retention/BookOfYouView.tsx(18,12): error TS6133: 'voiceEntries' is declared but its value is never read.
+components/sanctuary/DojoView.tsx(12,46): error TS6133: 'user' is declared but its value is never read.
+components/sanctuary/ObservatoryView.tsx(1,27): error TS6133: 'useEffect' is declared but its value is never read.
+components/sanctuary/ObservatoryView.tsx(2,25): error TS6133: 'CloudRain' is declared but its value is never read.
+components/sanctuary/ObservatoryView.tsx(2,36): error TS6133: 'Sun' is declared but its value is never read.
+components/sanctuary/ObservatoryView.tsx(2,52): error TS6133: 'Save' is declared but its value is never read.
+components/sanctuary/ObservatoryView.tsx(12,60): error TS6133: 'user' is declared but its value is never read.
+components/sanctuary/ObservatoryView.tsx(15,24): error TS6133: 'setSleepHours' is declared but its value is never read.

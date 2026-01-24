@@ -216,6 +216,7 @@ export class AdminService {
     }
 
     static verifyMasterKey(key: string): boolean {
+        // @ts-ignore
         const masterKey = (import.meta as any).env.VITE_MASTER_KEY || 'PEUTIC_ADMIN_ACCESS_2026';
         return key === masterKey;
     }

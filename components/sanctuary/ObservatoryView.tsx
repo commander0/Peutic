@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Moon, Star, CloudRain, Sun, BarChart2, Save } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Moon, Star, BarChart2 } from 'lucide-react';
 import { User } from '../../types';
 import { useToast } from '../common/Toast';
 import { UserService } from '../../services/userService';
@@ -9,10 +9,10 @@ interface ObservatoryViewProps {
     onClose: () => void;
 }
 
-const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
+const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user: _user, onClose }) => {
     const { showToast } = useToast();
     const [dreamLog, setDreamLog] = useState('');
-    const [sleepHours, setSleepHours] = useState(7);
+    const [sleepHours] = useState(7);
     const [sleepQuality, setSleepQuality] = useState<'Restful' | 'Average' | 'Poor'>('Restful');
     const [lucidity, setLucidity] = useState(1); // 1-5
 

@@ -9,7 +9,7 @@ interface DojoViewProps {
     onClose: () => void;
 }
 
-const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
+const DojoView: React.FC<DojoViewProps> = ({ user: _user, onClose }) => {
     const { showToast } = useToast();
     const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 mins
     const [isActive, setIsActive] = useState(false);
