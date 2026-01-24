@@ -285,44 +285,18 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
             </main>
 
             {/* INTENSITY TOGGLE */}
-            {/* INTENSITY TOGGLE - VISUAL PROGRESSION */}
             <div className="relative z-20 flex justify-center pb-4 animate-in slide-in-from-bottom duration-700">
-                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-full p-2 flex items-center gap-3">
-                    <span className="text-[9px] font-black uppercase text-gray-500 px-3 tracking-widest hidden md:block">Investment Tier</span>
-
-                    {/* Tier 1: Bronze/Common */}
-                    <button
-                        onClick={() => setIntensity(1)}
-                        className={`w-12 h-12 rounded-full flex flex-col items-center justify-center transition-all border-2 ${intensity === 1 ? 'bg-[#cd7f32] border-white text-white shadow-[0_0_15px_#cd7f32] scale-110' : 'bg-black/40 border-[#cd7f32]/50 text-[#cd7f32] hover:bg-[#cd7f32]/20'}`}
-                    >
-                        <span className="text-xs font-black">1m</span>
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#cd7f32] mt-0.5 shadow-sm"></div>
-                    </button>
-
-                    {/* Tier 2: Silver/Rare */}
-                    <button
-                        onClick={() => setIntensity(2)}
-                        className={`w-12 h-12 rounded-full flex flex-col items-center justify-center transition-all border-2 ${intensity === 2 ? 'bg-[#c0c0c0] border-white text-black shadow-[0_0_15px_#c0c0c0] scale-110' : 'bg-black/40 border-[#c0c0c0]/50 text-[#c0c0c0] hover:bg-[#c0c0c0]/20'}`}
-                    >
-                        <span className="text-xs font-black">2m</span>
-                        <div className="flex gap-0.5 mt-0.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#c0c0c0] shadow-sm"></div>
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#c0c0c0] shadow-sm"></div>
-                        </div>
-                    </button>
-
-                    {/* Tier 3: Gold/Legendary */}
-                    <button
-                        onClick={() => setIntensity(3)}
-                        className={`w-12 h-12 rounded-full flex flex-col items-center justify-center transition-all border-2 ${intensity === 3 ? 'bg-[#ffd700] border-white text-black shadow-[0_0_20px_#ffd700] scale-110' : 'bg-black/40 border-[#ffd700]/50 text-[#ffd700] hover:bg-[#ffd700]/20'}`}
-                    >
-                        <span className="text-xs font-black">3m</span>
-                        <div className="flex gap-0.5 mt-0.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#ffd700] shadow-sm"></div>
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#ffd700] shadow-sm"></div>
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#ffd700] shadow-sm"></div>
-                        </div>
-                    </button>
+                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-full p-1 flex items-center gap-1">
+                    <span className="text-[9px] font-black uppercase text-gray-500 px-3 tracking-widest hidden md:block">Investment</span>
+                    {[1, 2, 3].map((level) => (
+                        <button
+                            key={level}
+                            onClick={() => setIntensity(level as 1 | 2 | 3)}
+                            className={`w-10 h-8 md:w-12 md:h-10 rounded-full flex items-center justify-center text-[10px] md:text-xs font-black transition-all ${intensity === level ? 'bg-cyan-500 text-black shadow-[0_0_15px_rgba(6,182,212,0.6)]' : 'text-gray-500 hover:bg-white/10'}`}
+                        >
+                            {level}m
+                        </button>
+                    ))}
                 </div>
             </div>
 
