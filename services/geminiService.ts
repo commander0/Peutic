@@ -1,5 +1,4 @@
 import { supabase } from './supabaseClient';
-import { UserService } from './userService';
 
 // --- LOCAL FALLBACK DATA (For Offline/Error Modes) ---
 const LOCAL_AFFIRMATIONS = {
@@ -91,6 +90,27 @@ export const generateSpeech = async (text: string): Promise<Uint8Array | null> =
     }
 };
 
+export const generateCompanionResponse = async (companionName: string, history: any[]) => {
+    try {
+        const { data, error } = await supabase.functions.invoke('api-gateway', {
+            body: {
+                action: 'gemini-generate',
+                payload: {
+                    companionName,
+                    history,
+                    type: 'AI_COMPANION_RESPONSE'
+                }
+            }
+        });
+
+        if (error || !data?.text) throw error;
+        return data.text;
+    } catch (e) {
+        console.warn("Companion Response Fallback (Secure):", e);
+        return `Hello ${companionName}. How can I help you today?`;
+    }
+};
+
 export const generateWisdomCard = async (userName: string, summary: string, userId?: string): Promise<{ wisdom: string, title: string, color: string }> => {
     try {
         const { data, error } = await supabase.functions.invoke('api-gateway', {
@@ -116,6 +136,6 @@ export const generateWisdomCard = async (userName: string, summary: string, user
     }
 };
 
-export const generateWellnessImage = async (prompt: string): Promise<string | null> => {
+export const generateWellnessImage = async (_prompt: string): Promise<string | null> => {
     return null;
 };

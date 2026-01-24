@@ -98,16 +98,8 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
         const handleKeyUp = () => { playerRef.current.vx = 0; };
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
-        const drawCloud = (x: number, y: number, w: number, h: number, type: string) => {
-            ctx.fillStyle = type === 'moving' ? '#E0F2FE' : 'white';
-            if (type === 'moving') ctx.shadowColor = '#38BDF8';
-            ctx.fillRect(x, y, w, h);
-            const bumpSize = h * 0.8;
-            ctx.beginPath(); ctx.arc(x + 10, y, bumpSize, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(x + w - 10, y, bumpSize, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(x + w / 2, y - 5, bumpSize * 1.2, 0, Math.PI * 2); ctx.fill();
-            ctx.shadowColor = 'transparent';
-        };
+        ctx.shadowColor = 'transparent';
+
         const update = () => {
             const p = playerRef.current;
             p.x += p.vx;
@@ -199,8 +191,12 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
             ctx.beginPath();
             ctx.arc(p.x + p.width / 2, p.y + 15, 6, 0, Math.PI);
             ctx.stroke();
+
+            requestRef.current = requestAnimationFrame(update);
         };
-        update();
+
+        requestRef.current = requestAnimationFrame(update);
+
         return () => {
             if (requestRef.current !== undefined) cancelAnimationFrame(requestRef.current);
             window.removeEventListener('keydown', handleKeyDown);
