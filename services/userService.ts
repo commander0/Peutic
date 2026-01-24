@@ -531,6 +531,13 @@ export class UserService {
         const user = this.getUser();
         if (!user) return false;
 
+        // STRICT SAFETY CHECK: Prevent negative balance
+        // If current balance is less than the amount to deduct, fail immediately.
+        if (user.balance < amount) {
+            console.warn(`[Balance] Insufficient funds. Balance: ${user.balance}, Needed: ${amount}`);
+            return false;
+        }
+
         // Optional Gamification Logic
         if (user.gamificationEnabled === false) {
             console.log(`[Balance] Skipped deduction (${amount}m) - Gamification Disabled`);

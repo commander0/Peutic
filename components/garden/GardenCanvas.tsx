@@ -46,55 +46,69 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
 
             // --- HYPER REALISTIC ATMOSPHERE ---
             // Dynamic Sky based on "Time" (simulated by frame)
+            // --- CYBERPUNK ATMOSPHERE ---
+            // Dynamic Sky - Deep Space Void
             const skyGradient = ctx.createLinearGradient(0, 0, 0, height);
-            skyGradient.addColorStop(0, '#020617'); // Deep Space
-            skyGradient.addColorStop(0.5, '#1e1b4b'); // Indigo Night
-            skyGradient.addColorStop(1, '#312e81'); // Twilight
+            skyGradient.addColorStop(0, '#000000'); // Void
+            skyGradient.addColorStop(0.7, '#0a0a0a'); // Deep Grey
+            skyGradient.addColorStop(1, '#1a1a1a');
             ctx.fillStyle = skyGradient;
             ctx.fillRect(0, 0, width, height);
 
-            // Stars
-            ctx.fillStyle = 'white';
+            // Digital Grid Ground
+            const groundY = height - 40;
+
+            // Grid Lines perspective
+            ctx.beginPath();
+            ctx.strokeStyle = '#00ff80';
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.2;
+            for (let i = -10; i < 20; i++) {
+                ctx.moveTo(width / 2 + i * 40, groundY);
+                ctx.lineTo(width / 2 + i * 160, height);
+            }
+            // Horizontal lines
+            for (let i = 0; i < 10; i++) {
+                ctx.moveTo(0, groundY + i * 15);
+                ctx.lineTo(width, groundY + i * 15);
+            }
+            ctx.stroke();
+            ctx.globalAlpha = 1.0;
+
+            // Neon Horizon Line
+            ctx.shadowColor = '#00ff80';
+            ctx.shadowBlur = 10;
+            ctx.strokeStyle = '#00ff80';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, groundY);
+            ctx.lineTo(width, groundY);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Stars / Data Bits
+            ctx.fillStyle = '#d946ef'; // Neon Pink bits
             for (let i = 0; i < 30; i++) {
                 const sX = (i * 123 + frame * 0.5) % width;
                 const sY = (i * 87) % (height * 0.6);
-                const sSize = Math.random() * 2;
+                const sSize = Math.random() < 0.5 ? 2 : 1;
                 ctx.globalAlpha = Math.random() * 0.8 + 0.2;
-                ctx.beginPath(); ctx.arc(sX, sY, sSize, 0, Math.PI * 2); ctx.fill();
+                ctx.fillRect(sX, sY, sSize, sSize); // Square pixels
             }
             ctx.globalAlpha = 1.0;
 
-            // Moon/Sun Glow
-            const glow = ctx.createRadialGradient(width * 0.8, height * 0.2, 10, width * 0.8, height * 0.2, 150);
-            glow.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
-            glow.addColorStop(1, 'rgba(255, 255, 255, 0)');
-            ctx.fillStyle = glow;
-            ctx.beginPath(); ctx.arc(width * 0.8, height * 0.2, 150, 0, Math.PI * 2); ctx.fill();
+            // Cyber Moon
+            const moonX = width * 0.8;
+            const moonY = height * 0.2;
+            ctx.fillStyle = '#d946ef';
+            ctx.shadowColor = '#d946ef';
+            ctx.shadowBlur = 40;
+            ctx.beginPath(); ctx.arc(moonX, moonY, 40, 0, Math.PI * 2); ctx.fill();
+            ctx.shadowBlur = 0;
+            // Stripe
+            ctx.fillStyle = '#000';
+            ctx.fillRect(moonX - 50, moonY - 5, 100, 10);
 
-            drawToriiGate(ctx, width, height, garden.level);
-
-            // Ground - Textured
-            const groundY = height - 40;
-            const groundGrad = ctx.createLinearGradient(0, groundY - 20, 0, height);
-            groundGrad.addColorStop(0, '#064e3b'); // Emerald 900
-            groundGrad.addColorStop(1, '#022c22'); // Emerald 950
-            ctx.fillStyle = groundGrad;
-            ctx.beginPath();
-            ctx.moveTo(0, height);
-            ctx.lineTo(0, groundY);
-            ctx.bezierCurveTo(width / 3, groundY - 20, width * 2 / 3, groundY + 10, width, groundY - 10);
-            ctx.lineTo(width, height);
-            ctx.fill();
-
-            // Fireflies
-            for (let i = 0; i < 5; i++) {
-                const fx = width / 2 + Math.sin(frame * 0.02 + i) * 100;
-                const fy = height - 100 + Math.cos(frame * 0.03 + i) * 40;
-                ctx.fillStyle = '#fde047'; // Yellow
-                ctx.shadowColor = '#facc15'; ctx.shadowBlur = 10;
-                ctx.beginPath(); ctx.arc(fx, fy, 2, 0, Math.PI * 2); ctx.fill();
-                ctx.shadowBlur = 0;
-            }
 
             const centerX = width / 2;
 
@@ -102,7 +116,7 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
             // Level determines complexity
             drawFractalPlant(ctx, centerX, groundY, -Math.PI / 2, Math.min(garden.level + 2, 8), 120, frame, garden.currentPlantType);
 
-            // Spirit with Trail
+            // Spirit with Trail (Cyber Wisp)
             drawSpirit(ctx, centerX + 40, groundY - (garden.level * 25) - 50, frame, garden.level);
 
             // Foreground Petals (Depth of Field)
@@ -134,9 +148,11 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
 
         // Branch Style
         ctx.lineWidth = depth * 1.5;
+        // Branch Style (Cyber)
+        ctx.lineWidth = depth * 1.5;
         const branchGrad = ctx.createLinearGradient(x, y, x2, y2);
-        branchGrad.addColorStop(0, '#3f2c22'); // Dark Wood
-        branchGrad.addColorStop(1, '#5d4037'); // Lighter Wood
+        branchGrad.addColorStop(0, '#000');
+        branchGrad.addColorStop(1, '#00ff80');
         ctx.strokeStyle = branchGrad;
         ctx.lineCap = 'round';
 
@@ -160,33 +176,7 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
         drawFractalPlant(ctx, x2, y2, finalAngle + splitAngle, depth - 1, nextLen, frame, type);
     };
 
-    const drawToriiGate = (ctx: CanvasRenderingContext2D, w: number, h: number, level: number) => {
-        if (level < 3) return; // Only show gate at higher levels
-        const opacity = Math.min(0.6, (level - 2) * 0.15);
-        ctx.globalAlpha = opacity;
 
-        const gateColor = '#b71c1c'; // Darker red/crimson
-        const gateX = w * 0.5;
-        const gateY = h * 0.25;
-        const gateWidth = w * 0.5;
-        const gateHeight = h * 0.35;
-
-        ctx.fillStyle = gateColor;
-        ctx.shadowColor = '#000';
-        ctx.shadowBlur = 10;
-
-        // Pillars
-        ctx.fillRect(gateX - gateWidth / 2, gateY, 10, gateHeight);
-        ctx.fillRect(gateX + gateWidth / 2 - 10, gateY, 10, gateHeight);
-
-        // Top beam
-        ctx.fillRect(gateX - gateWidth / 2 - 15, gateY, gateWidth + 30, 15);
-        // Lower beam
-        ctx.fillRect(gateX - gateWidth / 2, gateY + gateHeight * 0.3, gateWidth, 10);
-
-        ctx.shadowBlur = 0;
-        ctx.globalAlpha = 1.0;
-    };
 
     const drawSpirit = (ctx: CanvasRenderingContext2D, anchorX: number, anchorY: number, frame: number, level: number) => {
         const floatY = Math.sin(frame * 0.05) * 6;
@@ -197,9 +187,9 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
 
         // Outer glow
         const gradient = ctx.createRadialGradient(x, y, 2, x, y, spiritSize + 15);
-        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-        gradient.addColorStop(0.4, 'rgba(100, 255, 218, 0.6)');
-        gradient.addColorStop(1, 'rgba(100, 255, 218, 0)');
+        gradient.addColorStop(0, 'rgba(217, 70, 239, 0.95)'); // Pink Core
+        gradient.addColorStop(0.4, 'rgba(0, 255, 128, 0.6)'); // Green Halo
+        gradient.addColorStop(1, 'rgba(0, 255, 128, 0)');
         ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.arc(x, y, spiritSize + 15, 0, Math.PI * 2);
@@ -207,7 +197,7 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
 
         // Core
         ctx.fillStyle = '#ffffff';
-        ctx.shadowColor = '#64ffda';
+        ctx.shadowColor = '#d946ef';
         ctx.shadowBlur = 15;
         ctx.beginPath();
         ctx.arc(x, y, 6, 0, Math.PI * 2);
