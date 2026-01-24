@@ -537,6 +537,12 @@ export class UserService {
             return true;
         }
 
+        // --- NEW SAFETY CHECK: Prevent Negative Balance ---
+        if (user.balance < amount) {
+            console.warn(`[Balance] Denied: Insufficient funds. Need ${amount}, have ${user.balance}`);
+            return false;
+        }
+
         // Optimistic UI Update
         const previousBalance = user.balance;
         user.balance = Math.max(0, user.balance - amount);

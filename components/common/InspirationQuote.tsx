@@ -22,7 +22,9 @@ export const InspirationQuote: React.FC = () => {
         setQuote(random);
     }, []);
 
-    <span className="inline-block text-[10px] md:text-xs font-medium text-gray-400 italic border-l border-gray-200 dark:border-gray-700 pl-2 ml-2 md:pl-3 md:ml-3 animate-in fade-in duration-1000 max-w-[200px] md:max-w-none whitespace-normal line-clamp-2 overflow-hidden leading-tight">
-        "{quote}"
-    </span>
+    return (
+        <span className="inline-block text-[10px] md:text-xs font-medium text-gray-400 italic border-l border-gray-200 dark:border-gray-700 pl-2 ml-2 md:pl-3 md:ml-3 animate-in fade-in duration-1000 max-w-[200px] md:max-w-none whitespace-normal line-clamp-2 overflow-hidden leading-tight">
+            "{quote}"
+        </span>
+    );
 };
