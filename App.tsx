@@ -395,7 +395,11 @@ const MainApp: React.FC = () => {
 
 
 const App: React.FC = () => {
-  return <MainApp />;
+  return (
+    <div className="theme-cyberpunk">
+      <MainApp />
+    </div>
+  );
 };
 
 export default App;
