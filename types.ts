@@ -186,7 +186,7 @@ export interface VoiceJournalEntry {
   title: string;
 }
 
-export interface Anima {
+export interface Lumina {
   id: string;
   userId: string;
   name: string;
