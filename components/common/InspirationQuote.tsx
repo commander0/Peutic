@@ -7,9 +7,10 @@ const QUOTES = [
     "Peace begins with a pause.",
     "Your potential is infinite.",
     "Growth is a spiral process.",
-    "Be gentle with yourself.",
-    "Every day is a fresh start.",
-    "Trust your journey."
+    "Be gentle with yourself today.",
+    "Every day is a fresh beginning.",
+    "You are capable of amazing things.",
+    "Trust the timing of your life."
 ];
 
 export const InspirationQuote: React.FC = () => {
@@ -22,7 +23,7 @@ export const InspirationQuote: React.FC = () => {
     }, []);
 
     return (
-        <span className="inline-block w-full text-[10px] md:text-xs font-medium text-gray-400 italic border-l border-gray-200 dark:border-gray-700 pl-2 ml-2 md:pl-3 md:ml-3 animate-in fade-in duration-1000 whitespace-normal line-clamp-2 text-ellipsis overflow-hidden leading-tight">
+        <span className="inline-block text-[10px] md:text-xs font-medium text-gray-400 italic border-l border-gray-200 dark:border-gray-700 pl-2 ml-2 md:pl-3 md:ml-3 animate-in fade-in duration-1000 max-w-[150px] md:max-w-none truncate md:overflow-visible">
             "{quote}"
         </span>
     );

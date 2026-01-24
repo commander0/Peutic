@@ -16,7 +16,6 @@ interface GardenFullViewProps {
 const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, onUpdate }) => {
     const [localGarden, setLocalGarden] = useState(garden);
     const [isWatering, setIsWatering] = useState(false);
-    const [tierEffect, setTierEffect] = useState<'growth' | 'ecosystem' | null>(null);
     const [showInfo, setShowInfo] = useState(false);
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
     const { showToast } = useToast();
@@ -24,15 +23,9 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
 
     const handleWater = async () => {
         setIsWatering(true);
-
-        // Tier Effect Logic
-        if (intensity === 2) setTierEffect('growth');
-        if (intensity === 3) setTierEffect('ecosystem');
-
         if (user.balance < COST) {
             showToast(`Not enough minutes. Need ${COST}m.`, "error");
             setIsWatering(false);
-            setTierEffect(null);
             return;
         }
         const success = await UserService.deductBalance(COST, "Garden Water");
@@ -53,7 +46,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
         } else {
             showToast(`Not enough minutes. Need ${COST}m.`, "error");
         }
-        setTimeout(() => { setIsWatering(false); setTierEffect(null); }, 2000);
+        setTimeout(() => setIsWatering(false), 2000);
     };
 
     const handleHarvest = async () => {
@@ -125,35 +118,15 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                     {/* RAIN EFFECT DURING WATERING */}
                     {isWatering && (
                         <div className="absolute inset-0 z-20 pointer-events-none">
-                            {[...Array(intensity * 15)].map((_, i) => (
+                            {[...Array(20)].map((_, i) => (
                                 <div
                                     key={i}
-                                    className={`absolute w-0.5 h-6 animate-fall shadow-[0_0_5px_rgba(147,197,253,0.8)] ${tierEffect === 'ecosystem' ? 'bg-cyan-300' : 'bg-blue-300'}`}
+                                    className="absolute bg-blue-300 w-0.5 h-6 animate-fall shadow-[0_0_5px_rgba(147,197,253,0.8)]"
                                     style={{
                                         left: `${Math.random() * 100}%`,
                                         top: `-50px`,
                                         animationDelay: `${Math.random() * 0.5}s`,
                                         animationDuration: '0.6s'
-                                    }}
-                                ></div>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* TIER 2: GROWTH GLOW */}
-                    {tierEffect === 'growth' && (
-                        <div className="absolute inset-0 z-10 bg-green-400/20 blur-3xl animate-pulse pointer-events-none"></div>
-                    )}
-
-                    {/* TIER 3: ECOSYSTEM (BUTTERFLIES/PARTICLES) */}
-                    {tierEffect === 'ecosystem' && (
-                        <div className="absolute inset-0 z-20 pointer-events-none">
-                            {[...Array(8)].map((_, i) => (
-                                <div key={i} className="absolute w-2 h-2 bg-yellow-300 rounded-full blur-[1px] animate-float"
-                                    style={{
-                                        left: `${20 + Math.random() * 60}%`,
-                                        top: `${40 + Math.random() * 40}%`,
-                                        animationDuration: `${2 + Math.random()}s`
                                     }}
                                 ></div>
                             ))}
