@@ -253,8 +253,9 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
             {/* MAIN PORTAL */}
             <main className="flex-1 relative flex items-center justify-center p-4 min-h-0 overflow-visible">
                 <div className="relative w-full md:max-w-lg aspect-square flex items-center justify-center">
-                    {/* HOLOGRAPHIC RING */}
-                    <div className="absolute inset-0 -m-4 md:-m-12 border-[10px] md:border-[20px] border-cyan-500/5 rounded-full animate-[spin_10s_linear_infinite]"></div>
+                    {/* HOLOGRAPHIC RING - Fixed: Removed border-width animation to prevent layout shift */}
+                    <div className="absolute inset-0 -m-4 md:-m-12 border-[4px] md:border-[8px] border-cyan-500/10 rounded-full animate-[spin_10s_linear_infinite]"></div>
+                    <div className="absolute inset-0 -m-4 md:-m-12 border-t-[4px] md:border-t-[8px] border-cyan-400 rounded-full animate-[spin_3s_linear_infinite]"></div>
                     <div className="absolute inset-[10%] border-2 border-dashed border-cyan-500/20 rounded-full animate-[spin_15s_linear_infinite_reverse]"></div>
 
                     {/* Ambient Particles */}

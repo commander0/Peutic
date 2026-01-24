@@ -288,62 +288,82 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
     };
 
     const drawFace = (ctx: CanvasRenderingContext2D, size: number, frame: number, emotion: string, isSleeping: boolean) => {
-        const eyeSize = size * 0.12;
-        const eyeX = size * 0.4;
+        const eyeSize = size * 0.15;
+        const eyeX = size * 0.35;
         const blink = !isSleeping && frame % 120 < 5;
 
         // Eyes
         ctx.fillStyle = '#000000';
         if (isSleeping) {
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(-eyeX, 0, eyeSize, Math.PI, 0); // Left closed
-            ctx.arc(eyeX, 0, eyeSize, Math.PI, 0); // Right closed
+            ctx.moveTo(-eyeX - eyeSize, 0); ctx.lineTo(-eyeX + eyeSize, 0); // Left closed
+            ctx.moveTo(eyeX - eyeSize, 0); ctx.lineTo(eyeX + eyeSize, 0); // Right closed
             ctx.stroke();
             // Zzz effect
-            if (frame % 30 < 15) {
-                ctx.font = 'bold 20px Arial';
-                ctx.fillText('Z', size * 0.8, -size * 0.5);
+            if (frame % 60 < 30) {
+                ctx.font = 'bold 30px Arial';
+                ctx.fillStyle = '#fff';
+                ctx.fillText('Zzz...', size * 0.8, -size * 0.5);
             }
         } else if (blink) {
-            ctx.fillRect(-eyeX - eyeSize, 0, eyeSize * 2, 2);
-            ctx.fillRect(eyeX - eyeSize, 0, eyeSize * 2, 2);
+            ctx.fillRect(-eyeX - eyeSize, 0, eyeSize * 2, 3);
+            ctx.fillRect(eyeX - eyeSize, 0, eyeSize * 2, 3);
         } else if (emotion === 'happy') {
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(-eyeX, 0, eyeSize, 0, Math.PI, true);
-            ctx.arc(eyeX, 0, eyeSize, 0, Math.PI, true);
+            ctx.arc(-eyeX, 0, eyeSize, Math.PI, 0); // Happy arch
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(eyeX, 0, eyeSize, Math.PI, 0);
             ctx.stroke();
         } else {
+            // Normal Eyes with Shine
             ctx.beginPath();
-            ctx.arc(-eyeX, 0, eyeSize, 0, Math.PI * 2);
-            ctx.arc(eyeX, 0, eyeSize, 0, Math.PI * 2);
+            ctx.ellipse(-eyeX, 0, eyeSize, eyeSize * 1.2, 0, 0, Math.PI * 2);
             ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(eyeX, 0, eyeSize, eyeSize * 1.2, 0, 0, Math.PI * 2);
+            ctx.fill();
+
             // Shine
             ctx.fillStyle = '#fff';
             ctx.beginPath();
-            ctx.arc(-eyeX - eyeSize * 0.2, -eyeSize * 0.2, eyeSize * 0.3, 0, Math.PI * 2);
-            ctx.arc(eyeX - eyeSize * 0.2, -eyeSize * 0.2, eyeSize * 0.3, 0, Math.PI * 2);
+            ctx.arc(-eyeX - eyeSize * 0.3, -eyeSize * 0.3, eyeSize * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(eyeX - eyeSize * 0.3, -eyeSize * 0.3, eyeSize * 0.4, 0, Math.PI * 2);
             ctx.fill();
         }
 
         // Mouth
         ctx.fillStyle = '#000';
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
         ctx.beginPath();
         if (emotion === 'eating') {
-            const mouthOpen = Math.sin(frame * 0.3) * 5;
-            ctx.ellipse(0, size * 0.3, 5, mouthOpen, 0, 0, Math.PI * 2);
+            const mouthOpen = 5 + Math.sin(frame * 0.5) * 5;
+            ctx.ellipse(0, size * 0.35, 8, mouthOpen, 0, 0, Math.PI * 2);
+            ctx.fill();
         } else if (emotion === 'hungry' || emotion === 'sad') {
-            ctx.arc(0, size * 0.4, 5, Math.PI, 0);
+            ctx.arc(0, size * 0.45, 6, Math.PI, 0); // Frown
+            ctx.stroke();
+        } else if (emotion === 'happy') {
+            ctx.arc(0, size * 0.35, 8, 0, Math.PI); // Smile
+            ctx.fill();
         } else {
-            ctx.arc(0, size * 0.3, 3, 0, Math.PI);
+            // W-mouth for cute geometric look
+            ctx.moveTo(-5, size * 0.35);
+            ctx.lineTo(0, size * 0.4);
+            ctx.lineTo(5, size * 0.35);
+            ctx.stroke();
         }
-        ctx.stroke();
 
         // Blush
-        ctx.fillStyle = 'rgba(255, 182, 193, 0.5)';
+        ctx.fillStyle = 'rgba(255, 105, 180, 0.4)';
         ctx.beginPath();
-        ctx.arc(-size * 0.6, size * 0.2, size * 0.15, 0, Math.PI * 2);
-        ctx.arc(size * 0.6, size * 0.2, size * 0.15, 0, Math.PI * 2);
+        ctx.ellipse(-size * 0.6, size * 0.25, size * 0.2, size * 0.1, 0, 0, Math.PI * 2);
+        ctx.ellipse(size * 0.6, size * 0.25, size * 0.2, size * 0.1, 0, 0, Math.PI * 2);
         ctx.fill();
     };
 

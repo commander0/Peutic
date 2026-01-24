@@ -3,7 +3,7 @@ import { Sun, StopCircle, CloudRain } from 'lucide-react';
 
 export const MoodTracker: React.FC<{ onMoodSelect: (m: 'confetti' | 'rain' | null) => void }> = ({ onMoodSelect }) => {
     return (
-        <div className="bg-white dark:bg-gray-900 p-5 rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm flex flex-col justify-between">
+        <div className="bg-transparent p-5 rounded-3xl border border-transparent shadow-none flex flex-col justify-between">
             <div>
                 <h3 className="font-bold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest mb-1">Current Vibe</h3>
                 <p className="text-gray-900 dark:text-white font-bold text-base mb-3">How does the world feel?</p>

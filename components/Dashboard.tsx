@@ -97,7 +97,7 @@ AvatarImage.displayName = 'AvatarImage';
 const CollapsibleSection = React.memo(({ title, icon: Icon, children, defaultOpen = false }: { title: string, icon: any, children: React.ReactNode, defaultOpen?: boolean }) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
     return (
-        <div className="bg-white/40 dark:bg-gray-900/40 rounded-3xl border border-[var(--color-primary-border)] overflow-hidden backdrop-blur-md shadow-sm transition-all duration-300" style={{ borderColor: 'var(--color-primary-border)' }}>
+        <div className="bg-transparent rounded-3xl border border-[var(--color-primary-border)] overflow-hidden transition-all duration-300" style={{ borderColor: 'var(--color-primary-border)' }}>
             <button onClick={() => setIsOpen(!isOpen)} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-[var(--color-primary)]/10 transition-colors bg-[var(--color-bg-base)]">
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg" style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)' }}><Icon className="w-5 h-5" /></div>
@@ -229,6 +229,53 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     useEffect(() => {
         refreshGarden();
         refreshPet();
+
+        // Smart Engagement Notifications (On Load)
+        setTimeout(async () => {
+            const newNotifs: Notification[] = [];
+
+            // Check Garden
+            const g = await GardenService.getGarden(user.id);
+            if (g && g.waterLevel < 30) {
+                newNotifs.push({
+                    id: crypto.randomUUID(),
+                    title: 'Thirsty Plants',
+                    message: 'Your inner garden needs water.',
+                    type: 'warning',
+                    read: false,
+                    timestamp: new Date()
+                });
+            }
+
+            // Check Pet
+            const p = await PetService.getPet(user.id);
+            if (p) {
+                if (p.hunger < 40) {
+                    newNotifs.push({
+                        id: crypto.randomUUID(),
+                        title: `${p.name} is Hungry`,
+                        message: 'Time to feed your companion!',
+                        type: 'info',
+                        read: false,
+                        timestamp: new Date()
+                    });
+                } else if (p.energy < 30 && !p.isSleeping) {
+                    newNotifs.push({
+                        id: crypto.randomUUID(),
+                        title: `${p.name} is Tired`,
+                        message: 'Maybe it is time for a nap?',
+                        type: 'info',
+                        read: false,
+                        timestamp: new Date()
+                    });
+                }
+            }
+
+            if (newNotifs.length > 0) {
+                setNotifications(prev => [...newNotifs, ...prev]);
+                showToast("New updates available", "info");
+            }
+        }, 2000);
     }, [user.id]);
 
     useEffect(() => {
@@ -645,7 +692,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                                     {dashboardUser ? (
-                                        <div className="bg-white dark:bg-gray-900 p-4 md:p-5 rounded-3xl border border-yellow-100 dark:border-gray-800 shadow-sm col-span-1 md:col-span-2 relative overflow-hidden group min-h-[120px] md:min-h-[140px]">
+                                        <div className="bg-transparent dark:bg-transparent p-4 md:p-5 rounded-3xl border border-transparent shadow-none col-span-1 md:col-span-2 relative overflow-hidden group min-h-[120px] md:min-h-[140px]">
                                             {weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-3 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-12 h-12 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div><div className="absolute w-10 h-10 bg-blue-500/30 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-blue-400/10 rounded-full animate-ping"></div><div className="absolute w-6 h-6 bg-blue-400/50 rounded-full blur-lg animate-pulse"></div><Flame className="w-8 h-8 text-blue-500 fill-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy className="w-20 h-20" style={{ color: 'var(--color-primary)' }} /></div>)}
                                             <div className="relative z-10"><h3 className="font-bold text-gray-500 dark:text-gray-400 text-[10px] md:text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3><div className="flex items-end gap-2 mb-2 md:mb-3"><span className="text-2xl md:text-4xl font-black" style={{ color: 'var(--color-primary)' }}>{weeklyGoal}</span><span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span></div><div className="w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-2 md:mb-3"><div className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= weeklyTarget ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-pulse' : ''}`} style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%`, backgroundColor: weeklyGoal >= weeklyTarget ? undefined : 'var(--color-primary)' }}></div></div><p className="text-[10px] md:text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}</p></div>
                                         </div>
