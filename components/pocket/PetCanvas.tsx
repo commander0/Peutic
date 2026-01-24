@@ -57,8 +57,8 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             }
 
             // --- HYPER REALISTIC LUMINA EFFECT ---
-            //const time = Date.now() / 1000;
-            //const pulse = Math.sin(time * 2) * 5; // Used for glow pulsation
+            const time = Date.now() / 1000;
+            const pulse = Math.sin(time * 2) * 5; // Used for glow pulsation
 
             // Background Halo
             const bgGrad = ctx.createRadialGradient(centerX, centerY, 50 * baseScale, centerX, centerY, 200 * baseScale);
@@ -97,54 +97,34 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                 case 'Zen-Sloth': drawSloth(ctx, baseScale, frame, emotion, pet.isSleeping, evolutionStage); break;
             }
 
-            // 3. EVOLUTION AURA
-            if (evolutionStage !== 'spirit') {
-                const auraColor = evolutionStage === 'apex' ? 'rgba(255, 215, 0, 0.4)' : 'rgba(45, 212, 191, 0.3)';
-                ctx.strokeStyle = auraColor;
-                ctx.lineWidth = 2 * baseScale;
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = auraColor;
-                ctx.beginPath();
-                ctx.arc(0, 0, 80 * baseScale + Math.sin(frame * 0.05) * 10, 0, Math.PI * 2);
-                ctx.stroke();
-
-                // Apex extra wings/flair
-                if (evolutionStage === 'apex') {
-                    ctx.fillStyle = 'rgba(255, 215, 0, 0.1)';
-                    ctx.beginPath();
-                    ctx.moveTo(-100 * baseScale, -20 * baseScale);
-                    ctx.quadraticCurveTo(-120 * baseScale, -100 * baseScale, -40 * baseScale, -40 * baseScale);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.moveTo(100 * baseScale, -20 * baseScale);
-                    ctx.quadraticCurveTo(120 * baseScale, -100 * baseScale, 40 * baseScale, -40 * baseScale);
-                    ctx.fill();
-                }
-            }
-
-            // 4. GLITCH ARTIFACTS
+            // 3. GLITCH ARTIFACTS
             if (Math.random() > 0.95) {
                 const sliceH = Math.random() * 10;
                 const sliceY = (Math.random() - 0.5) * 100 * baseScale;
                 const sliceX = (Math.random() - 0.5) * 20;
+                // Note: getImageData requires canvas coordinates, which is complex with transformations.
+                // Simplified glitch for 'in-place' rendering
                 ctx.fillStyle = 'rgba(45, 212, 191, 0.5)';
                 ctx.fillRect(sliceX - 20, sliceY, 40, sliceH);
             }
 
             ctx.restore();
 
-            // 5. PARTICLES (Magic Trick / Standard / Evolution)
-            const particleCount = trick === 'magic' ? 60 : (evolutionStage === 'apex' ? 40 : 20);
+            // 4. PARTICLES (Magic Trick / Standard)
+            const particleCount = trick === 'magic' ? 40 : 15;
             for (let i = 0; i < particleCount; i++) {
-                const angle = (frame * 0.01 + i * (Math.PI * 2 / particleCount)) % (Math.PI * 2);
-                const orbitRadius = (trick === 'magic' ? 170 : 130) * baseScale + Math.sin(frame * 0.05 + i) * 25;
-                const px = centerX + Math.cos(angle) * orbitRadius;
-                const py = centerY + Math.sin(angle) * orbitRadius * 0.4;
+                const angle = (frame * 0.01 + i * 20) % (Math.PI * 2);
+                const radius = (trick === 'magic' ? 160 : 120) * baseScale + Math.sin(frame * 0.05 + i) * 20;
+                const px = centerX + Math.cos(angle) * radius;
+                const py = centerY + Math.sin(angle) * radius * 0.3; // Elliptical orbit
 
-                ctx.fillStyle = i % i === 0 ? '#2dd4bf' : (evolutionStage === 'apex' ? '#ffd700' : '#ff00ff');
-                ctx.globalAlpha = 0.5 + Math.sin(frame * 0.1 + i) * 0.5;
+                ctx.fillStyle = i % 2 === 0 ? '#2dd4bf' : (trick === 'magic' ? '#ff00ff' : '#facc15');
+                ctx.globalAlpha = 0.6 + Math.sin(frame * 0.1 + i) * 0.4;
                 ctx.beginPath();
-                ctx.rect(px - 2, py - 2, 4, 4); // Pixel particles
+                ctx.moveTo(px, py - 3);
+                ctx.lineTo(px + 3, py);
+                ctx.lineTo(px, py + 3);
+                ctx.lineTo(px - 3, py);
                 ctx.fill();
             }
             ctx.globalAlpha = 1.0;

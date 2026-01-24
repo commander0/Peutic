@@ -64,7 +64,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
             return;
         }
 
-        const newPet = await PetService.createPet(user.id, petName, selectedSpecies as any);
+        const newPet = await PetService.createPet(user.id, selectedSpecies as 'Holo-Hamu' | 'Digi-Dino' | 'Neo-Shiba' | 'Zen-Sloth', petName);
         if (newPet) {
             setPet(newPet);
             setShowSelection(false);
@@ -218,19 +218,13 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     if (!pet) return null;
 
     return (
-        <div className="fixed inset-0 z-[120] bg-indigo-950 text-white flex flex-col animate-in fade-in duration-700 overflow-hidden">
-            {/* CELESTIAL BACKGROUND */}
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-slate-900 to-black pointer-events-none"></div>
-            <div className="absolute inset-0 opacity-30 pointer-events-none">
-                {[...Array(30)].map((_, i) => (
-                    <div key={i} className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
-                        style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`, animationDelay: `${Math.random() * 5}s` }}></div>
-                ))}
-            </div>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(45,212,191,0.1)_0%,transparent_70%)] pointer-events-none"></div>
+        <div className="fixed inset-0 z-[120] bg-gray-50 dark:bg-[#0a0f0d] text-gray-900 dark:text-white flex flex-col animate-in fade-in duration-700 overflow-hidden">
+            {/* GRID BACKGROUND */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.05)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 via-transparent to-transparent pointer-events-none"></div>
 
             {/* HEADER */}
-            <header className="relative z-10 px-6 py-4 flex justify-between items-center bg-white/5 backdrop-blur-xl border-b border-white/10">
+            <header className="relative z-10 px-6 py-4 flex justify-between items-center border-b border-white/5 backdrop-blur-md">
                 <div className="flex items-center gap-4">
                     <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl transition-colors">
                         <ChevronLeft className="w-6 h-6 text-cyan-400" />
