@@ -135,17 +135,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 </div>
             )}
 
+            {/* Reverted to CSS Blobs per user request */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-                <video
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="absolute inset-0 w-full h-full object-cover opacity-60 dark:opacity-30 mix-blend-multiply dark:mix-blend-overlay filter blur-[2px]"
-                >
-                    <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
-                </video>
-                <div className="absolute inset-0 bg-gradient-to-t from-[#FFFBEB] via-[#FFFBEB]/60 to-[#FFFBEB]/30 dark:from-[#0A0A0A] dark:via-[#0A0A0A]/60 dark:to-[#0A0A0A]/30"></div>
+                <div className="absolute -top-[10%] -right-[5%] w-[60%] h-[60%] bg-yellow-200/40 dark:bg-yellow-900/10 rounded-full blur-[120px] animate-pulse-slow"></div>
+                <div className="absolute top-[20%] -left-[10%] w-[40%] h-[40%] bg-orange-100/30 dark:bg-blue-900/10 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
             </div>
             <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-2 bg-[#FFFBEB]/80 dark:bg-black/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-3 md:py-6 bg-transparent border-transparent'}`}>
                 <div className="max-w-7xl mx-auto px-2 md:px-8 flex justify-between items-center">
@@ -395,5 +388,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
         </div>
     );
 };
+
+
 
 export default LandingPage;

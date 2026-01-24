@@ -169,7 +169,7 @@ const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }> = ({ 
                 // Water the garden on creation
                 await GardenService.waterPlant(userId);
 
-                await refreshGallery();
+                setGallery(prev => [newEntry, ...prev]); // Instant State Update
                 if (onUpdate) onUpdate();
                 setInput('');
             }
