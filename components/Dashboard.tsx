@@ -105,7 +105,7 @@ const CollapsibleSection = React.memo(({ title, icon: Icon, children, defaultOpe
                 </div>
                 {isOpen ? <ChevronUp className="w-4 h-4 md:w-5 md:h-5 text-gray-400" /> : <ChevronDown className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />}
             </button>
-            {isOpen && <div className="p-4 lg:p-6 pt-0 animate-in slide-in-from-top-2 duration-300 dark:bg-gray-900">{children}</div>}
+            {isOpen && <div className="p-4 lg:p-6 pt-0 animate-in slide-in-from-top-2 duration-300 bg-transparent">{children}</div>}
         </div>
     );
 });
@@ -666,136 +666,148 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     </button>
 
                                     {isVaultOpen && (
-                                        <div className="grid grid-cols-3 gap-1 md:gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
-                                            {/* TILE 1: INNER GARDEN */}
-                                            {garden && (
-                                                <div
-                                                    onClick={() => setShowGardenFull(true)}
-                                                    className="group relative bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-black dark:to-emerald-950 rounded-xl md:rounded-3xl border border-green-400/30 dark:border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.15)] hover:shadow-[0_0_25px_rgba(34,197,94,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
-                                                >
-                                                    <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 pointer-events-none"></div>
-                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
-                                                        <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
-                                                        <Suspense fallback={<div className="w-8 h-8 md:w-20 md:h-20 rounded-full animate-pulse bg-green-100"></div>}>
-                                                            <div className="w-10 h-10 md:w-24 md:h-24 mb-1 md:mb-3 transition-transform group-hover:scale-110 duration-700 relative z-10 drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]">
-                                                                <GardenCanvas garden={garden} width={100} height={100} />
-                                                            </div>
-                                                        </Suspense>
-                                                        <h3 className="text-[7px] md:text-sm font-black text-green-400 uppercase tracking-widest drop-shadow-[0_0_6px_rgba(34,197,94,0.8)] text-center">Inner Garden</h3>
-                                                        <p className="hidden md:block text-[10px] font-bold text-green-500/80 uppercase tracking-tighter">Level {garden.level} &bull; Growing</p>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* TILE 2: BOOK OF YOU */}
-                                            {(() => {
-                                                const joinedDate = new Date(dashboardUser?.joinedAt || new Date().toISOString());
-                                                const now = new Date();
-                                                const diffTime = Math.abs(now.getTime() - joinedDate.getTime());
-                                                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                                                const isLocked = diffDays < 7;
-                                                const daysRemaining = 7 - diffDays;
-
-                                                return (
+                                        <div className="animate-in fade-in slide-in-from-top-2 duration-500 space-y-4">
+                                            {/* ROW 1: CORE TRIO */}
+                                            <div className="grid grid-cols-3 gap-1 md:gap-4">
+                                                {/* TILE 1: INNER GARDEN */}
+                                                {garden && (
                                                     <div
-                                                        onClick={() => {
-                                                            if (!isLocked) {
-                                                                setShowBookFull(true);
-                                                            } else {
-                                                                showToast(`Locked for ${daysRemaining} more days.`, "info");
-                                                            }
-                                                        }}
-                                                        className="group relative bg-gradient-to-br from-fuchsia-50 via-purple-50 to-indigo-50 dark:from-purple-950 dark:via-black dark:to-indigo-950 rounded-xl md:rounded-3xl border border-purple-400/30 dark:border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] transition-all overflow-hidden cursor-pointer h-[100px] md:h-[220px]"
+                                                        onClick={() => setShowGardenFull(true)}
+                                                        className="group relative bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-black dark:to-emerald-950 rounded-xl md:rounded-3xl border border-green-400/30 dark:border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.15)] hover:shadow-[0_0_25px_rgba(34,197,94,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                                     >
-                                                        {/* Animated shimmer overlay */}
-                                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_3s_infinite] pointer-events-none"></div>
-                                                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')] opacity-[0.15] pointer-events-none"></div>
-
-                                                        <div className="flex flex-col items-center justify-center h-full p-2 md:p-6 text-center relative z-10">
-                                                            <div className="relative mb-1 md:mb-4">
-                                                                {/* Pulsing glow ring */}
-                                                                <div className="absolute -inset-4 md:-inset-6 bg-purple-400/30 dark:bg-purple-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                                <div className="absolute -inset-2 border border-purple-300/50 dark:border-purple-500/30 rounded-full animate-[spin_8s_linear_infinite]"></div>
-                                                                <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-purple-600 to-indigo-700 border border-purple-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_20px_rgba(168,85,247,0.5)] group-hover:scale-110 transition-transform">
-                                                                    <BookOpen className="w-5 h-5 md:w-10 md:h-10" />
+                                                        <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 pointer-events-none"></div>
+                                                        <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
+                                                            <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
+                                                            <Suspense fallback={<div className="w-8 h-8 md:w-20 md:h-20 rounded-full animate-pulse bg-green-100"></div>}>
+                                                                <div className="w-10 h-10 md:w-24 md:h-24 mb-1 md:mb-3 transition-transform group-hover:scale-110 duration-700 relative z-10 drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]">
+                                                                    <GardenCanvas garden={garden} width={100} height={100} />
                                                                 </div>
-                                                                {isLocked && <div className="absolute -top-2 -right-2 bg-yellow-400 text-black p-1 rounded-lg shadow-lg"><Lock className="w-3 h-3" /></div>}
+                                                            </Suspense>
+                                                            <h3 className="text-[7px] md:text-sm font-black text-green-400 uppercase tracking-widest drop-shadow-[0_0_6px_rgba(34,197,94,0.8)] text-center">Inner Garden</h3>
+                                                            <p className="hidden md:block text-[10px] font-bold text-green-500/80 uppercase tracking-tighter">Level {garden.level} &bull; Growing</p>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* TILE 2: BOOK OF YOU */}
+                                                {(() => {
+                                                    const joinedDate = new Date(dashboardUser?.joinedAt || new Date().toISOString());
+                                                    const now = new Date();
+                                                    const diffTime = Math.abs(now.getTime() - joinedDate.getTime());
+                                                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                                                    const isLocked = diffDays < 7;
+                                                    const daysRemaining = 7 - diffDays;
+
+                                                    return (
+                                                        <div
+                                                            onClick={() => {
+                                                                if (!isLocked) {
+                                                                    setShowBookFull(true);
+                                                                } else {
+                                                                    showToast(`Locked for ${daysRemaining} more days.`, "info");
+                                                                }
+                                                            }}
+                                                            className="group relative bg-gradient-to-br from-fuchsia-50 via-purple-50 to-indigo-50 dark:from-purple-950 dark:via-black dark:to-indigo-950 rounded-xl md:rounded-3xl border border-purple-400/30 dark:border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] transition-all overflow-hidden cursor-pointer h-[100px] md:h-[220px]"
+                                                        >
+                                                            {/* Animated shimmer overlay */}
+                                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_3s_infinite] pointer-events-none"></div>
+                                                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')] opacity-[0.15] pointer-events-none"></div>
+
+                                                            <div className="flex flex-col items-center justify-center h-full p-2 md:p-6 text-center relative z-10">
+                                                                <div className="relative mb-1 md:mb-4">
+                                                                    {/* Pulsing glow ring */}
+                                                                    <div className="absolute -inset-4 md:-inset-6 bg-purple-400/30 dark:bg-purple-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                                    <div className="absolute -inset-2 border border-purple-300/50 dark:border-purple-500/30 rounded-full animate-[spin_8s_linear_infinite]"></div>
+                                                                    <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-purple-600 to-indigo-700 border border-purple-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_20px_rgba(168,85,247,0.5)] group-hover:scale-110 transition-transform">
+                                                                        <BookOpen className="w-5 h-5 md:w-10 md:h-10" />
+                                                                    </div>
+                                                                    {isLocked && <div className="absolute -top-2 -right-2 bg-yellow-400 text-black p-1 rounded-lg shadow-lg"><Lock className="w-3 h-3" /></div>}
+                                                                </div>
+                                                                <h3 className="text-[7px] md:text-sm font-black text-purple-700 dark:text-purple-300 uppercase tracking-widest drop-shadow-[0_0_6px_rgba(168,85,247,0.6)]">Book of You</h3>
+                                                                <p className="hidden md:block text-[10px] font-bold text-purple-500/70 dark:text-purple-400/50 uppercase tracking-widest">
+                                                                    {isLocked ? `Unlocked in ${daysRemaining}d` : 'Open Chronicle'}
+                                                                </p>
                                                             </div>
-                                                            <h3 className="text-[7px] md:text-sm font-black text-purple-700 dark:text-purple-300 uppercase tracking-widest drop-shadow-[0_0_6px_rgba(168,85,247,0.6)]">Book of You</h3>
-                                                            <p className="hidden md:block text-[10px] font-bold text-purple-500/70 dark:text-purple-400/50 uppercase tracking-widest">
-                                                                {isLocked ? `Unlocked in ${daysRemaining}d` : 'Open Chronicle'}
-                                                            </p>
                                                         </div>
-                                                    </div>
-                                                );
-                                            })()}
+                                                    );
+                                                })()}
 
-                                            {/* TILE 3: ANIMA */}
-                                            <div
-                                                onClick={() => setShowPocketPet(true)}
-                                                className="group relative bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50 dark:from-cyan-950 dark:via-black dark:to-blue-950 rounded-xl md:rounded-3xl border border-cyan-400/30 dark:border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)] hover:shadow-[0_0_25px_rgba(6,182,212,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
-                                            >
-                                                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 pointer-events-none"></div>
-                                                <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
-                                                    <div className="relative mb-1 md:mb-4">
-                                                        <div className="absolute -inset-4 bg-cyan-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                        <div className="w-10 h-10 md:w-20 md:h-20 bg-black/40 border border-cyan-500/50 rounded-2xl flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform">
-                                                            <Sparkles className="w-5 h-5 md:w-10 md:h-10 animate-bounce" />
+                                                {/* TILE 3: ANIMA */}
+                                                <div
+                                                    onClick={() => setShowPocketPet(true)}
+                                                    className="group relative bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50 dark:from-cyan-950 dark:via-black dark:to-blue-950 rounded-xl md:rounded-3xl border border-cyan-400/30 dark:border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)] hover:shadow-[0_0_25px_rgba(6,182,212,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                >
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 pointer-events-none"></div>
+                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
+                                                        <div className="relative mb-1 md:mb-4">
+                                                            <div className="absolute -inset-4 bg-cyan-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                            <div className="w-10 h-10 md:w-20 md:h-20 bg-black/40 border border-cyan-500/50 rounded-2xl flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform">
+                                                                <Sparkles className="w-5 h-5 md:w-10 md:h-10 animate-bounce" />
+                                                            </div>
                                                         </div>
+                                                        <h3 className="text-[7px] md:text-sm font-black text-white dark:text-cyan-50 uppercase tracking-[0.2em] mb-1">Lumina</h3>
+                                                        <p className="hidden md:block text-[10px] font-bold text-cyan-400/50 uppercase tracking-widest">
+                                                            {lumina ? `${lumina.name} Lvl ${lumina.level}` : 'Summon Friend'}
+                                                        </p>
                                                     </div>
-                                                    <h3 className="text-[7px] md:text-sm font-black text-white dark:text-cyan-50 uppercase tracking-[0.2em] mb-1">Lumina</h3>
-                                                    <p className="hidden md:block text-[10px] font-bold text-cyan-400/50 uppercase tracking-widest">
-                                                        {lumina ? `${lumina.name} Lvl ${lumina.level}` : 'Summon Friend'}
-                                                    </p>
                                                 </div>
                                             </div>
 
-                                            {/* REAL ESTATE TILES */}
-                                            {/* OBSERVATORY */}
-                                            <div
-                                                onClick={() => handleRoomInteraction('observatory', 500)}
-                                                className={`group relative rounded-xl md:rounded-3xl border transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer ${dashboardUser?.unlockedRooms?.includes('observatory')
-                                                    ? 'bg-gradient-to-br from-slate-800 to-black border-slate-600 shadow-[0_0_20px_rgba(148,163,184,0.3)]'
-                                                    : 'bg-gray-100 dark:bg-gray-900 border-dashed border-gray-300 dark:border-gray-700 opacity-80 hover:opacity-100'}`}
-                                            >
-                                                <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
-                                                    {dashboardUser?.unlockedRooms?.includes('observatory') ? (
-                                                        <>
-                                                            <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-slate-700 flex items-center justify-center text-blue-200 shadow-lg"><Moon className="w-5 h-5 md:w-8 md:h-8" /></div>
-                                                            <h3 className="text-[7px] md:text-xs font-black text-white uppercase tracking-widest">Observatory</h3>
-                                                            <p className="hidden md:block text-[9px] text-gray-400 mt-1">Dream Tracking</p>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Lock className="w-6 h-6 md:w-10 md:h-10 text-gray-400 mb-2" />
-                                                            <h3 className="text-[7px] md:text-xs font-black text-gray-500 uppercase tracking-widest">Observatory</h3>
-                                                            <div className="mt-2 bg-yellow-500 text-black text-[8px] md:text-[10px] font-black px-2 py-1 rounded-full">500m</div>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </div>
+                                            {/* ROW 2: OLYMPIC STYLE (CENTERED) */}
+                                            <div className="flex justify-center gap-1 md:gap-4 w-full">
+                                                {/* REAL ESTATE TILES */}
+                                                {/* OBSERVATORY */}
+                                                <div
+                                                    onClick={() => handleRoomInteraction('observatory', 125)}
+                                                    className={`w-1/3 group relative rounded-xl md:rounded-3xl border transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer ${dashboardUser?.unlockedRooms?.includes('observatory')
+                                                        ? 'bg-gradient-to-br from-indigo-900 to-black border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.4)]'
+                                                        : 'bg-indigo-50/50 dark:bg-gray-900/50 border-dashed border-indigo-200 dark:border-gray-700 opacity-90 hover:opacity-100'}`}
+                                                >
+                                                    {/* Star Field Effect */}
+                                                    <div className="absolute inset-0 pointer-events-none opacity-50">
+                                                        <div className="absolute top-2 left-4 w-1 h-1 bg-white rounded-full animate-pulse"></div>
+                                                        <div className="absolute bottom-6 right-8 w-1 h-1 bg-white rounded-full animate-pulse delay-700"></div>
+                                                    </div>
 
-                                            {/* ZEN DOJO */}
-                                            <div
-                                                onClick={() => handleRoomInteraction('dojo', 300)}
-                                                className={`group relative rounded-xl md:rounded-3xl border transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer ${dashboardUser?.unlockedRooms?.includes('dojo')
-                                                    ? 'bg-gradient-to-br from-amber-50 to-orange-100 dark:from-stone-800 dark:to-stone-900 border-amber-200 dark:border-stone-600 shadow-[0_0_20px_rgba(217,119,6,0.2)]'
-                                                    : 'bg-gray-100 dark:bg-gray-900 border-dashed border-gray-300 dark:border-gray-700 opacity-80 hover:opacity-100'}`}
-                                            >
-                                                <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
-                                                    {dashboardUser?.unlockedRooms?.includes('dojo') ? (
-                                                        <>
-                                                            <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-orange-100 dark:bg-stone-700 flex items-center justify-center text-orange-500 shadow-lg"><Feather className="w-5 h-5 md:w-8 md:h-8" /></div>
-                                                            <h3 className="text-[7px] md:text-xs font-black text-gray-800 dark:text-white uppercase tracking-widest">Zen Dojo</h3>
-                                                            <p className="hidden md:block text-[9px] text-gray-500 mt-1">Mastery</p>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Lock className="w-6 h-6 md:w-10 md:h-10 text-gray-400 mb-2" />
-                                                            <h3 className="text-[7px] md:text-xs font-black text-gray-500 uppercase tracking-widest">Zen Dojo</h3>
-                                                            <div className="mt-2 bg-yellow-500 text-black text-[8px] md:text-[10px] font-black px-2 py-1 rounded-full">300m</div>
-                                                        </>
-                                                    )}
+                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                                        {dashboardUser?.unlockedRooms?.includes('observatory') ? (
+                                                            <>
+                                                                <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-indigo-950 flex items-center justify-center text-indigo-200 shadow-[0_0_15px_rgba(99,102,241,0.5)] group-hover:scale-110 transition-transform"><Star className="w-5 h-5 md:w-8 md:h-8 fill-indigo-200" /></div>
+                                                                <h3 className="text-[7px] md:text-xs font-black text-indigo-100 uppercase tracking-widest drop-shadow-lg">Observatory</h3>
+                                                                <p className="hidden md:block text-[9px] text-indigo-300 mt-1">Dream Tracking</p>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <div className="w-8 h-8 md:w-12 md:h-12 bg-black/20 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-indigo-300" /></div>
+                                                                <h3 className="text-[7px] md:text-xs font-black text-indigo-900 dark:text-indigo-200 uppercase tracking-widest">Observatory</h3>
+                                                                <div className="mt-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-[8px] md:text-[10px] font-black px-3 py-1 rounded-full shadow-lg">125m</div>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* ZEN DOJO */}
+                                                <div
+                                                    onClick={() => handleRoomInteraction('dojo', 75)}
+                                                    className={`w-1/3 group relative rounded-xl md:rounded-3xl border transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer ${dashboardUser?.unlockedRooms?.includes('dojo')
+                                                        ? 'bg-gradient-to-br from-amber-900 to-stone-900 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.4)]'
+                                                        : 'bg-amber-50/50 dark:bg-gray-900/50 border-dashed border-amber-200 dark:border-gray-700 opacity-90 hover:opacity-100'}`}
+                                                >
+                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                                        {dashboardUser?.unlockedRooms?.includes('dojo') ? (
+                                                            <>
+                                                                <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-stone-800 flex items-center justify-center text-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform"><Zap className="w-5 h-5 md:w-8 md:h-8 fill-amber-500" /></div>
+                                                                <h3 className="text-[7px] md:text-xs font-black text-amber-100 uppercase tracking-widest drop-shadow-lg">Zen Dojo</h3>
+                                                                <p className="hidden md:block text-[9px] text-amber-300 mt-1">Mastery</p>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <div className="w-8 h-8 md:w-12 md:h-12 bg-black/20 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-amber-700 dark:text-amber-500" /></div>
+                                                                <h3 className="text-[7px] md:text-xs font-black text-amber-900 dark:text-amber-200 uppercase tracking-widest">Zen Dojo</h3>
+                                                                <div className="mt-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[8px] md:text-[10px] font-black px-3 py-1 rounded-full shadow-lg">75m</div>
+                                                            </>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
