@@ -499,7 +499,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const uniqueSpecialties = Array.from(new Set(companions.map(c => c.specialty))).sort();
 
     return (
-        <div className={`min-h-screen transition-colors duration-500 font-sans bg-[var(--color-bg-base)] text-[var(--color-text-base)] bg-gradient-to-br from-yellow-50/80 via-orange-50/20 to-transparent dark:from-yellow-900/10 dark:via-gray-950 dark:to-black`}>
+        <div className={`min-h-screen transition-colors duration-500 font-sans bg-[var(--color-bg-base)] text-[var(--color-text-base)] bg-gradient-to-br from-amber-200 via-yellow-100 to-transparent dark:from-yellow-900/10 dark:via-gray-950 dark:to-black`}>
             {mood && <WeatherEffect type={mood} />}
             {/* FLOATING CONTROLS: Separated for better ergonomics */}
             <div className="fixed bottom-6 left-6 z-[80] pointer-events-none">
@@ -750,67 +750,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                             {lumina ? `${lumina.name} Lvl ${lumina.level}` : 'Summon Friend'}
                                                         </p>
                                                     </div>
-                                                </div>
-                                            </div>
-
-                                            {/* ROW 2: OLYMPIC STYLE (CENTERED) */}
-                                            <div className="flex justify-center gap-1 md:gap-4 w-full">
-                                                {/* REAL ESTATE TILES */}
-                                                {/* OBSERVATORY */}
-                                                <div
-                                                    onClick={() => handleRoomInteraction('observatory', 125)}
-                                                    className={`w-1/3 group relative rounded-xl md:rounded-3xl border transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer ${dashboardUser?.unlockedRooms?.includes('observatory')
-                                                        ? 'bg-gradient-to-br from-indigo-900 to-black border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.4)]'
-                                                        : 'bg-indigo-50/50 dark:bg-gray-900/50 border-dashed border-indigo-200 dark:border-gray-700 opacity-90 hover:opacity-100'}`}
-                                                >
-                                                    {/* Star Field Effect */}
-                                                    <div className="absolute inset-0 pointer-events-none opacity-50">
-                                                        <div className="absolute top-2 left-4 w-1 h-1 bg-white rounded-full animate-pulse"></div>
-                                                        <div className="absolute bottom-6 right-8 w-1 h-1 bg-white rounded-full animate-pulse delay-700"></div>
-                                                    </div>
-
-                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
-                                                        {dashboardUser?.unlockedRooms?.includes('observatory') ? (
-                                                            <>
-                                                                <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-indigo-950 flex items-center justify-center text-indigo-200 shadow-[0_0_15px_rgba(99,102,241,0.5)] group-hover:scale-110 transition-transform"><Star className="w-5 h-5 md:w-8 md:h-8 fill-indigo-200" /></div>
-                                                                <h3 className="text-[7px] md:text-xs font-black text-indigo-100 uppercase tracking-widest drop-shadow-lg">Observatory</h3>
-                                                                <p className="hidden md:block text-[9px] text-indigo-300 mt-1">Track Dreams & Sleep</p>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <div className="w-8 h-8 md:w-12 md:h-12 bg-black/20 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-indigo-300" /></div>
-                                                                <h3 className="text-[7px] md:text-xs font-black text-indigo-900 dark:text-indigo-200 uppercase tracking-widest">Observatory</h3>
-                                                                <p className="hidden md:block text-[8px] text-indigo-800 dark:text-indigo-300 mt-1 mb-2 font-bold px-2">Unlock Dream Tracking & Patterns</p>
-                                                                <div className="mt-auto bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-[8px] md:text-[10px] font-black px-3 py-1 rounded-full shadow-lg">125m</div>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {/* ZEN DOJO */}
-                                                <div
-                                                    onClick={() => handleRoomInteraction('dojo', 75)}
-                                                    className={`w-1/3 group relative rounded-xl md:rounded-3xl border transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer ${dashboardUser?.unlockedRooms?.includes('dojo')
-                                                        ? 'bg-gradient-to-br from-amber-900 to-stone-900 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.4)]'
-                                                        : 'bg-amber-50/50 dark:bg-gray-900/50 border-dashed border-amber-200 dark:border-gray-700 opacity-90 hover:opacity-100'}`}
-                                                >
-                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
-                                                        {dashboardUser?.unlockedRooms?.includes('dojo') ? (
-                                                            <>
-                                                                <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-stone-800 flex items-center justify-center text-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform"><Zap className="w-5 h-5 md:w-8 md:h-8 fill-amber-500" /></div>
-                                                                <h3 className="text-[7px] md:text-xs font-black text-amber-100 uppercase tracking-widest drop-shadow-lg">Zen Dojo</h3>
-                                                                <p className="hidden md:block text-[9px] text-amber-300 mt-1">Mastery & Focus Challenges</p>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <div className="w-8 h-8 md:w-12 md:h-12 bg-black/20 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-amber-700 dark:text-amber-500" /></div>
-                                                                <h3 className="text-[7px] md:text-xs font-black text-amber-900 dark:text-amber-200 uppercase tracking-widest">Zen Dojo</h3>
-                                                                <p className="hidden md:block text-[8px] text-amber-800 dark:text-amber-300 mt-1 mb-2 font-bold px-2">Unlock Focus Modes & Challenges</p>
-                                                                <div className="mt-auto bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[8px] md:text-[10px] font-black px-3 py-1 rounded-full shadow-lg">75m</div>
-                                                            </>
-                                                        )}
-                                                    </div>
-
                                                 </div>
                                             </div>
                                         </div>
