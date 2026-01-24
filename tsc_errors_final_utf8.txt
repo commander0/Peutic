@@ -1,0 +1,5 @@
+﻿components/pocket/LuminaView.tsx(67,134): error TS2345: Argument of type 'string' is not assignable to parameter of type '"Holo-Hamu" | "Digi-Dino" | "Neo-Shiba" | "Zen-Sloth"'.
+components/VideoRoom.tsx(23,7): error TS6133: 'ConcurrencyManager' is declared but its value is never read.
+scripts/repro_admin_issue.ts(42,23): error TS6133: 'settings' is declared but its value is never read.
+services/geminiService.ts(118,45): error TS6133: 'prompt' is declared but its value is never read.
+services/tavusService.ts(47,12): error TS7006: Parameter 'err' implicitly has an 'any' type.
