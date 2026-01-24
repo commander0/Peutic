@@ -17,6 +17,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     const [localGarden, setLocalGarden] = useState(garden);
     const [isWatering, setIsWatering] = useState(false);
     const [tierEffect, setTierEffect] = useState<'growth' | 'ecosystem' | null>(null);
+    const [growthBoost, setGrowthBoost] = useState(false); // New Game Mechanic
     const [showInfo, setShowInfo] = useState(false);
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
     const { showToast } = useToast();
@@ -40,10 +41,11 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
         if (success) {
             try {
                 // Scaled Water effect
-                const updated = await GardenService.waterPlant(garden.userId);
+                const updated = await GardenService.waterPlant(garden.userId, intensity);
                 if (updated) {
                     setLocalGarden(updated);
                     onUpdate();
+                    if (intensity >= 2) setGrowthBoost(true);
                     showToast(`Garden Watered! (-${COST}m)`, "success");
                 }
             } catch (e) {
@@ -54,6 +56,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
             showToast(`Not enough minutes. Need ${COST}m.`, "error");
         }
         setTimeout(() => { setIsWatering(false); setTierEffect(null); }, 2000);
+        if (intensity >= 2) setTimeout(() => setGrowthBoost(false), 10000); // 10s boost
     };
 
     const handleHarvest = async () => {
@@ -185,10 +188,14 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
             </main>
 
             {/* FOOTER STATS */}
-            <footer className="relative z-10 p-6 md:p-8 grid grid-cols-3 gap-4 border-t border-white/10 bg-black/40 backdrop-blur-md">
+            <footer className="relative z-10 p-6 md:p-8 grid grid-cols-4 gap-4 border-t border-white/10 bg-black/40 backdrop-blur-md">
                 <StatBox label="Streak" value={`${localGarden.streakCurrent} Days`} />
                 <StatBox label="Vitality" value="98%" />
                 <StatBox label="Phase" value="Bloom" />
+                <div className="flex flex-col items-center justify-center">
+                    <p className="text-[8px] md:text-[10px] font-black text-emerald-300 uppercase tracking-widest mb-1">Boost</p>
+                    <div className={`w-8 h-2 rounded-full ${growthBoost ? 'bg-yellow-400 animate-pulse shadow-[0_0_10px_#FACC15]' : 'bg-white/10'}`}></div>
+                </div>
             </footer>
 
             {/* INFO PANEL */}
