@@ -149,14 +149,6 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     const [isEditingPublic, setIsEditingPublic] = useState(false);
     const [isEditingDashboard, setIsEditingDashboard] = useState(false);
 
-    // Refs to bypass closure staleness in setInterval
-    const isEditingPublicRef = useRef(false);
-    const isEditingDashboardRef = useRef(false);
-
-    // Sync refs with state
-    useEffect(() => { isEditingPublicRef.current = isEditingPublic; }, [isEditingPublic]);
-    useEffect(() => { isEditingDashboardRef.current = isEditingDashboard; }, [isEditingDashboard]);
-
     // Draft comparison to prevent overwriting local work
     const broadcastDraftRef = useRef(broadcastMsg);
     const dashboardDraftRef = useRef(dashboardBroadcastMsg);
@@ -194,10 +186,10 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
             setSettings(s);
 
             // SYNC POLICY: Only overwrite if NOT currently focused AND local differs from previous sync
-            if (!isEditingPublicRef.current) {
+            if (!isEditingPublic) {
                 setBroadcastMsg(s.broadcastMessage || '');
             }
-            if (!isEditingDashboardRef.current) {
+            if (!isEditingDashboard) {
                 setDashboardBroadcastMsg(s.dashboardBroadcastMessage || '');
             }
             setLogs(await AdminService.getSystemLogs());

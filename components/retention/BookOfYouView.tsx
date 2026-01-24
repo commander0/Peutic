@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Clock, Calendar, TrendingUp, ChevronLeft, Download, Eye, Sparkles } from 'lucide-react';
-import { User, JournalEntry, MoodEntry, GardenState } from '../../types';
+import { User, JournalEntry, MoodEntry, GardenState, VoiceJournalEntry } from '../../types';
 import { UserService } from '../../services/userService';
 import { PetService } from '../../services/petService';
 import GardenCanvas from '../garden/GardenCanvas';
+import { VoiceEntryItem } from '../journal/VoiceRecorder';
 
 interface BookOfYouViewProps {
     user: User;
@@ -14,21 +15,24 @@ interface BookOfYouViewProps {
 const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, garden, onClose }) => {
     const [journals, setJournals] = useState<JournalEntry[]>([]);
     const [moods, setMoods] = useState<MoodEntry[]>([]);
+    const [voiceEntries, setVoiceEntries] = useState<VoiceJournalEntry[]>([]);
     const [artEntries, setArtEntries] = useState<any[]>([]); // Using any for brevity in this view
     const [lumina, setLumina] = useState<any | null>(null);
     const [sessionMinutes, setSessionMinutes] = useState(0);
 
     useEffect(() => {
         const load = async () => {
-            const [j, m, a, p, t] = await Promise.all([
+            const [j, m, v, a, p, t] = await Promise.all([
                 UserService.getJournals(user.id),
                 UserService.getMoods(user.id),
+                UserService.getVoiceJournals(user.id),
                 UserService.getUserArt(user.id),
                 PetService.getPet(user.id),
                 UserService.getUserTransactions(user.id)
             ]);
             setJournals(j);
             setMoods(m);
+            setVoiceEntries(v);
             setArtEntries(a);
             setLumina(p);
 

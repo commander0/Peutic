@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ShieldCheck, X, AlertTriangle, Lock } from 'lucide-react';
 import { AdminService } from '../services/adminService';
 
-// @ts-ignore
 const STRIPE_PUBLISHABLE_KEY = (import.meta as any).env?.VITE_STRIPE_PUBLISHABLE_KEY || '';
 
 declare global {

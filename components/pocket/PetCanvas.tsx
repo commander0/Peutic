@@ -57,6 +57,8 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             }
 
             // --- HYPER REALISTIC LUMINA EFFECT ---
+            const time = Date.now() / 1000;
+            const pulse = Math.sin(time * 2) * 5; // Used for glow pulsation
 
             // Background Halo
             const bgGrad = ctx.createRadialGradient(centerX, centerY, 50 * baseScale, centerX, centerY, 200 * baseScale);

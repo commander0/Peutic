@@ -46,6 +46,9 @@ const BookOfYouView = lazy(() => import('./retention/BookOfYouView'));
 const LuminaView = lazy(() => import('./pocket/LuminaView'));
 const ObservatoryView = lazy(() => import('./sanctuary/ObservatoryView'));
 const DojoView = lazy(() => import('./sanctuary/DojoView'));
+const ObservatoryView = lazy(() => import('./sanctuary/ObservatoryView'));
+const DojoView = lazy(() => import('./sanctuary/DojoView'));
+
 import EmergencyOverlay from './safety/EmergencyOverlay';
 import { VoiceRecorder, VoiceEntryItem } from './journal/VoiceRecorder';
 
