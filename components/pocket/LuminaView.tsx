@@ -72,9 +72,38 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
         }
     };
 
-    const [trick, setTrick] = useState<'spin' | 'flip' | 'magic' | null>(null);
+    // ORACLE STATE
+    const [oracleMessage, setOracleMessage] = useState<string | null>(null);
 
-    // ... (logic)
+    const handleOracleConsult = async () => {
+        const PRICE = 5;
+        if (user.balance < PRICE) {
+            showToast(`The Oracle requires ${PRICE}m offering.`, "error");
+            return;
+        }
+
+        if (await UserService.deductBalance(PRICE, `Oracle: ${pet?.name}`)) {
+            // Trigger Magic Animation
+            setTrick('magic');
+
+            // Generate Wisdom (Mock for now, could be AI)
+            const wisdoms = [
+                "The stars align for your success today.",
+                "Patience is not simply the ability to wait - it's how we behave while we're waiting.",
+                "Your inner garden is blooming, even if you cannot see the roots yet.",
+                "A friend will reach out to you soon.",
+                "Focus on the present moment; the future will take care of itself.",
+                "You are stronger than you think.",
+                "Breathe. Just breathe."
+            ];
+            const msg = wisdoms[Math.floor(Math.random() * wisdoms.length)];
+
+            setTimeout(() => {
+                setOracleMessage(msg);
+                showToast("The Oracle has spoken (-5m)", "success");
+            }, 1500); // Wait for spin up
+        }
+    };
 
     const handleAction = async (action: 'feed' | 'play' | 'clean' | 'sleep') => {
         // ... (existing checks)
@@ -223,6 +252,18 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
             <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.05)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
             <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 via-transparent to-transparent pointer-events-none"></div>
 
+            {/* ORACLE OVERLAY */}
+            {oracleMessage && (
+                <div onClick={() => setOracleMessage(null)} className="absolute inset-0 z-[130] flex items-center justify-center bg-black/80 backdrop-blur-md cursor-pointer animate-in fade-in">
+                    <div className="max-w-md p-8 text-center">
+                        <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-4 animate-spin-slow" />
+                        <h3 className="text-2xl font-black text-purple-400 mb-4 tracking-widest uppercase">Oracle Wisdom</h3>
+                        <p className="text-xl text-white font-serif italic leading-relaxed">"{oracleMessage}"</p>
+                        <p className="text-xs text-gray-500 mt-8 font-black uppercase tracking-widest">Click to dismiss</p>
+                    </div>
+                </div>
+            )}
+
             {/* HEADER */}
             <header className="relative z-10 px-6 py-4 flex justify-between items-center border-b border-white/5 backdrop-blur-md">
                 <div className="flex items-center gap-4">
@@ -302,7 +343,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
             </div>
 
             {/* INTERACTION TRAY */}
-            <footer className="relative z-10 p-8 pb-12 flex justify-center gap-4 md:gap-8">
+            <footer className="relative z-10 p-8 pb-12 flex justify-center gap-4 md:gap-8 flex-wrap">
                 <ActionButton
                     icon={Pizza}
                     label="Feed"
@@ -316,6 +357,13 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                     color="cyan"
                     onClick={() => handleAction('play')}
                     disabled={pet.isSleeping || pet.energy < 20}
+                />
+                <ActionButton
+                    icon={Sparkles}
+                    label="Oracle"
+                    color="purple"
+                    onClick={handleOracleConsult}
+                    disabled={pet.isSleeping}
                 />
                 <ActionButton
                     icon={Bath}
@@ -355,10 +403,11 @@ const StatusIndicator: React.FC<{ icon: any, label: string, val: number, color: 
     </div>
 );
 
-const ActionButton: React.FC<{ icon: any, label: string, color: 'cyan' | 'yellow' | 'red', onClick: () => void, disabled?: boolean }> = ({ icon: Icon, label, color, onClick, disabled }) => {
+const ActionButton: React.FC<{ icon: any, label: string, color: 'cyan' | 'yellow' | 'red' | 'purple', onClick: () => void, disabled?: boolean }> = ({ icon: Icon, label, color, onClick, disabled }) => {
     const colorClass = color === 'cyan' ? 'hover:bg-cyan-500/20 text-cyan-400 border-cyan-500/30' :
         color === 'yellow' ? 'hover:bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
-            'hover:bg-red-500/20 text-red-400 border-red-500/30';
+            color === 'purple' ? 'hover:bg-purple-500/20 text-purple-400 border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.3)]' :
+                'hover:bg-red-500/20 text-red-400 border-red-500/30';
 
     return (
         <button

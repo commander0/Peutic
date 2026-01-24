@@ -8,15 +8,17 @@ export interface Notification {
     type: 'info' | 'success' | 'warning' | 'error';
     read: boolean;
     timestamp: Date;
+    action?: string; // Action identifier
 }
 
 interface NotificationBellProps {
     notifications: Notification[];
     onClear: (id: string) => void;
     onClearAll: () => void;
+    onAction?: (action: string) => void;
 }
 
-export const NotificationBell: React.FC<NotificationBellProps> = ({ notifications, onClear, onClearAll }) => {
+export const NotificationBell: React.FC<NotificationBellProps> = ({ notifications, onClear, onClearAll, onAction }) => {
     const [isOpen, setIsOpen] = useState(false);
     const unreadCount = notifications.filter(n => !n.read).length;
     const panelRef = useRef<HTMLDivElement>(null);
@@ -30,6 +32,13 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ notification
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    const handleNotificationClick = (n: Notification) => {
+        if (n.action && onAction) {
+            onAction(n.action);
+            setIsOpen(false);
+        }
+    };
 
     return (
         <div className="relative" ref={panelRef}>
@@ -63,7 +72,11 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ notification
                         ) : (
                             <div className="divide-y divide-gray-50 dark:divide-gray-800">
                                 {notifications.map(n => (
-                                    <div key={n.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex gap-3 group relative">
+                                    <div
+                                        key={n.id}
+                                        onClick={() => handleNotificationClick(n)}
+                                        className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex gap-3 group relative ${n.action ? 'cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/10' : ''}`}
+                                    >
                                         <div className={`mt-1 p-1.5 rounded-full shrink-0 ${n.type === 'success' ? 'bg-green-100 text-green-600' :
                                             n.type === 'warning' ? 'bg-yellow-100 text-yellow-600' :
                                                 n.type === 'error' ? 'bg-red-100 text-red-600' :

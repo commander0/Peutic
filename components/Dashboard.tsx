@@ -230,73 +230,92 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         refreshGarden();
         refreshPet();
 
-        // Smart Engagement Notifications (On Load)
-        setTimeout(async () => {
-            const newNotifs: Notification[] = [];
-
-            // Check Garden
-            const g = await GardenService.getGarden(user.id);
-            if (g && g.waterLevel < 30) {
-                newNotifs.push({
-                    id: crypto.randomUUID(),
-                    title: 'Thirsty Plants',
-                    message: 'Your inner garden needs water.',
-                    type: 'warning',
-                    read: false,
-                    timestamp: new Date()
-                });
+        const handleNotificationAction = (action: string) => {
+            switch (action) {
+                case 'open_pet': setShowPocketPet(true); break;
+                case 'open_garden': setShowGardenFull(true); break;
+                case 'check_streak': setShowBookFull(true); break; // Or scroll to goal
+                case 'open_community': showToast("Redirecting to Community Hub...", "info"); break;
             }
+        };
 
-            // Check Pet
-            const p = await PetService.getPet(user.id);
-            if (p) {
-                if (p.hunger < 40) {
+        useEffect(() => {
+            refreshGarden();
+            refreshPet();
+
+            // Smart Engagement Notifications (On Load)
+            setTimeout(async () => {
+                const newNotifs: Notification[] = [];
+
+                // Check Garden
+                const g = await GardenService.getGarden(user.id);
+                if (g && g.waterLevel < 30) {
                     newNotifs.push({
                         id: crypto.randomUUID(),
-                        title: `${p.name} is Hungry`,
-                        message: 'Time to feed your companion!',
-                        type: 'info',
+                        title: 'Thirsty Plants',
+                        message: 'Your inner garden needs water.',
+                        type: 'warning',
                         read: false,
-                        timestamp: new Date()
-                    });
-                } else if (p.energy < 30 && !p.isSleeping) {
-                    newNotifs.push({
-                        id: crypto.randomUUID(),
-                        title: `${p.name} is Tired`,
-                        message: 'Maybe it is time for a nap?',
-                        type: 'info',
-                        read: false,
-                        timestamp: new Date()
+                        timestamp: new Date(),
+                        action: 'open_garden'
                     });
                 }
-            }
 
-            if (newNotifs.length > 0) {
-                setNotifications(prev => [...newNotifs, ...prev]);
-                showToast("New updates available", "info");
-            } else {
-                // If no critical alerts, show engagement hints
-                setNotifications(prev => [
-                    {
-                        id: crypto.randomUUID(),
-                        title: 'Daily Streak',
-                        message: 'Complete 1 more activity to keep your streak alive!',
-                        type: 'info',
-                        read: false,
-                        timestamp: new Date()
-                    },
-                    {
-                        id: crypto.randomUUID(),
-                        title: 'Community Event',
-                        message: 'Join the "Midweek Mindfulness" group session.',
-                        type: 'success',
-                        read: false,
-                        timestamp: new Date()
-                    },
-                    ...prev
-                ]);
-            }
-        }, 2000);
+                // Check Pet
+                const p = await PetService.getPet(user.id);
+                if (p) {
+                    if (p.hunger < 40) {
+                        newNotifs.push({
+                            id: crypto.randomUUID(),
+                            title: `${p.name} is Hungry`,
+                            message: 'Time to feed your companion!',
+                            type: 'info',
+                            read: false,
+                            timestamp: new Date(),
+                            action: 'open_pet'
+                        });
+                    } else if (p.energy < 30 && !p.isSleeping) {
+                        newNotifs.push({
+                            id: crypto.randomUUID(),
+                            title: `${p.name} is Tired`,
+                            message: 'Maybe it is time for a nap?',
+                            type: 'info',
+                            read: false,
+                            timestamp: new Date(),
+                            action: 'open_pet'
+                        });
+                    }
+                }
+
+                if (newNotifs.length > 0) {
+                    setNotifications(prev => [...newNotifs, ...prev]);
+                    // Toast Removed as requested
+                } else {
+                    // If no critical alerts, show engagement hints
+                    setNotifications(prev => [
+                        {
+                            id: crypto.randomUUID(),
+                            title: 'Daily Streak',
+                            message: 'Complete 1 more activity to keep your streak alive!',
+                            type: 'info',
+                            read: false,
+                            timestamp: new Date(),
+                            action: 'check_streak'
+                        },
+                        {
+                            id: crypto.randomUUID(),
+                            title: 'Community Event',
+                            message: 'Join the "Midweek Mindfulness" group session.',
+                            type: 'success',
+                            read: false,
+                            timestamp: new Date(),
+                            action: 'open_community'
+                        },
+                        ...prev
+                    ]);
+                }
+            }, 2000);
+        }, [user.id]);
     }, [user.id]);
 
     useEffect(() => {
@@ -455,6 +474,33 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         }
     };
 
+    const handleRoomInteraction = async (roomId: string, cost: number) => {
+        const currentRooms = dashboardUser.unlockedRooms || [];
+        if (currentRooms.includes(roomId)) {
+            showToast(`Entering ${roomId.replace(/^\w/, c => c.toUpperCase())}...`, "success");
+            // Here you would normally set activeTab or open a modal
+            return;
+        }
+
+        if (dashboardUser.balance < cost) {
+            showToast(`You need ${cost}m to unlock this space.`, "error");
+            setPaymentError(`Unlock ${roomId}: ${cost}m required`);
+            setShowPayment(true);
+            return;
+        }
+
+        if (await UserService.deductBalance(cost, `Unlock Sanctuary Room: ${roomId}`)) {
+            const updatedUser = {
+                ...dashboardUser,
+                balance: dashboardUser.balance - cost,
+                unlockedRooms: [...currentRooms, roomId]
+            };
+            setDashboardUser(updatedUser);
+            await UserService.updateUser(updatedUser); // Persist
+            showToast(`${roomId.replace(/^\w/, c => c.toUpperCase())} Unlocked!`, "success");
+        }
+    };
+
     const filteredCompanions = specialtyFilter === 'All' ? companions : companions.filter(c => c.specialty.includes(specialtyFilter) || c.specialty === specialtyFilter);
     const uniqueSpecialties = Array.from(new Set(companions.map(c => c.specialty))).sort();
 
@@ -537,6 +583,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             notifications={notifications}
                                             onClear={(id) => setNotifications(prev => prev.filter(n => n.id !== id))}
                                             onClearAll={() => setNotifications(prev => prev.filter(n => !n.read))}
+                                            onAction={handleNotificationAction}
                                         />
                                     </div>
                                     <div className="md:hidden">
@@ -545,6 +592,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             notifications={notifications}
                                             onClear={(id) => setNotifications(prev => prev.filter(n => n.id !== id))}
                                             onClearAll={() => setNotifications(prev => prev.filter(n => !n.read))}
+                                            onAction={handleNotificationAction}
                                         />
                                     </div>
 
@@ -612,7 +660,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="space-y-4">
                                     <button
                                         onClick={() => setIsVaultOpen(!isVaultOpen)}
-                                        className="w-full flex items-center justify-between p-4 bg-[#FFFBEB] dark:bg-gray-900 rounded-2xl border border-yellow-100/50 dark:border-gray-800/50 group transition-all shadow-[0_4px_15px_rgba(0,0,0,0.05)]"
+                                        className="w-full flex items-center justify-between p-4 bg-transparent rounded-2xl border border-yellow-100/50 dark:border-gray-800/50 group transition-all shadow-none hover:bg-white/5"
                                     >
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-yellow-100 dark:bg-gray-800 rounded-lg text-yellow-600 dark:text-yellow-500">
@@ -705,6 +753,55 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     <p className="hidden md:block text-[10px] font-bold text-cyan-400/50 uppercase tracking-widest">
                                                         {lumina ? `${lumina.name} Lvl ${lumina.level}` : 'Summon Friend'}
                                                     </p>
+                                                </div>
+                                            </div>
+
+                                            {/* REAL ESTATE TILES */}
+                                            {/* OBSERVATORY */}
+                                            <div
+                                                onClick={() => handleRoomInteraction('observatory', 500)}
+                                                className={`group relative rounded-xl md:rounded-3xl border transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer ${dashboardUser?.unlockedRooms?.includes('observatory')
+                                                    ? 'bg-gradient-to-br from-slate-800 to-black border-slate-600 shadow-[0_0_20px_rgba(148,163,184,0.3)]'
+                                                    : 'bg-gray-100 dark:bg-gray-900 border-dashed border-gray-300 dark:border-gray-700 opacity-80 hover:opacity-100'}`}
+                                            >
+                                                <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                                    {dashboardUser?.unlockedRooms?.includes('observatory') ? (
+                                                        <>
+                                                            <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-slate-700 flex items-center justify-center text-blue-200 shadow-lg"><Moon className="w-5 h-5 md:w-8 md:h-8" /></div>
+                                                            <h3 className="text-[7px] md:text-xs font-black text-white uppercase tracking-widest">Observatory</h3>
+                                                            <p className="hidden md:block text-[9px] text-gray-400 mt-1">Dream Tracking</p>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Lock className="w-6 h-6 md:w-10 md:h-10 text-gray-400 mb-2" />
+                                                            <h3 className="text-[7px] md:text-xs font-black text-gray-500 uppercase tracking-widest">Observatory</h3>
+                                                            <div className="mt-2 bg-yellow-500 text-black text-[8px] md:text-[10px] font-black px-2 py-1 rounded-full">500m</div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* ZEN DOJO */}
+                                            <div
+                                                onClick={() => handleRoomInteraction('dojo', 300)}
+                                                className={`group relative rounded-xl md:rounded-3xl border transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer ${dashboardUser?.unlockedRooms?.includes('dojo')
+                                                    ? 'bg-gradient-to-br from-amber-50 to-orange-100 dark:from-stone-800 dark:to-stone-900 border-amber-200 dark:border-stone-600 shadow-[0_0_20px_rgba(217,119,6,0.2)]'
+                                                    : 'bg-gray-100 dark:bg-gray-900 border-dashed border-gray-300 dark:border-gray-700 opacity-80 hover:opacity-100'}`}
+                                            >
+                                                <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                                    {dashboardUser?.unlockedRooms?.includes('dojo') ? (
+                                                        <>
+                                                            <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-orange-100 dark:bg-stone-700 flex items-center justify-center text-orange-500 shadow-lg"><Feather className="w-5 h-5 md:w-8 md:h-8" /></div>
+                                                            <h3 className="text-[7px] md:text-xs font-black text-gray-800 dark:text-white uppercase tracking-widest">Zen Dojo</h3>
+                                                            <p className="hidden md:block text-[9px] text-gray-500 mt-1">Mastery</p>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Lock className="w-6 h-6 md:w-10 md:h-10 text-gray-400 mb-2" />
+                                                            <h3 className="text-[7px] md:text-xs font-black text-gray-500 uppercase tracking-widest">Zen Dojo</h3>
+                                                            <div className="mt-2 bg-yellow-500 text-black text-[8px] md:text-[10px] font-black px-2 py-1 rounded-full">300m</div>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

@@ -31,6 +31,7 @@ export interface User {
   themePreference?: 'light' | 'dark' | 'cyberpunk' | 'forest' | 'midnight';
   languagePreference?: string;
   gamificationEnabled?: boolean;
+  unlockedRooms?: string[]; // 'observatory', 'dojo', etc.
 }
 
 export interface Companion {
