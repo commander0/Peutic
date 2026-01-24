@@ -499,7 +499,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const uniqueSpecialties = Array.from(new Set(companions.map(c => c.specialty))).sort();
 
     return (
-        <div className={`min-h-screen transition-colors duration-500 font-sans bg-[var(--color-bg-base)] text-[var(--color-text-base)]`}>
+        <div className={`min-h-screen transition-colors duration-500 font-sans bg-[var(--color-bg-base)] text-[var(--color-text-base)] bg-gradient-to-br from-yellow-50/80 via-orange-50/20 to-transparent dark:from-yellow-900/10 dark:via-gray-950 dark:to-black`}>
             {mood && <WeatherEffect type={mood} />}
             {/* FLOATING CONTROLS: Separated for better ergonomics */}
             <div className="fixed bottom-6 left-6 z-[80] pointer-events-none">
