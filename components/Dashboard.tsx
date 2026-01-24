@@ -44,9 +44,134 @@ const ProfileModal = lazy(() => import('./ProfileModal').catch(() => ({ default:
 const GardenFullView = lazy(() => import('./garden/GardenFullView'));
 const BookOfYouView = lazy(() => import('./retention/BookOfYouView'));
 const LuminaView = lazy(() => import('./pocket/LuminaView'));
+const ObservatoryView = lazy(() => import('./sanctuary/ObservatoryView'));
+const DojoView = lazy(() => import('./sanctuary/DojoView'));
+const ObservatoryView = lazy(() => import('./sanctuary/ObservatoryView'));
+const DojoView = lazy(() => import('./sanctuary/DojoView'));
 
 import EmergencyOverlay from './safety/EmergencyOverlay';
 import { VoiceRecorder, VoiceEntryItem } from './journal/VoiceRecorder';
+
+// ... (Existing code)
+
+    const [showBookFull, setShowBookFull] = useState(false);
+    const [showGardenFull, setShowGardenFull] = useState(false);
+    const [showPocketPet, setShowPocketPet] = useState(false);
+    const [showObservatory, setShowObservatory] = useState(false);
+    const [showDojo, setShowDojo] = useState(false);
+    
+// ... (Inside handleRoomInteraction)
+
+    const handleRoomInteraction = async (roomId: string, cost: number) => {
+        const currentRooms = dashboardUser.unlockedRooms || [];
+        
+        // If already unlocked, open the view
+        if (currentRooms.includes(roomId)) {
+            if (roomId === 'observatory') setShowObservatory(true);
+            if (roomId === 'dojo') setShowDojo(true);
+            return;
+        }
+
+        if (dashboardUser.balance < cost) {
+// ... (Existing purchase logic updates user)
+            if (await UserService.deductBalance(cost, `Unlock Sanctuary Room: ${roomId}`)) {
+                const updatedUser = {
+                    ...dashboardUser,
+                    balance: dashboardUser.balance - cost,
+                    unlockedRooms: [...currentRooms, roomId]
+                };
+                setDashboardUser(updatedUser);
+                await UserService.updateUser(updatedUser); 
+                showToast(`${roomId.replace(/^\w/, c => c.toUpperCase())} Unlocked!`, "success");
+                
+                // Open immediately after unlock
+                if (roomId === 'observatory') setShowObservatory(true);
+                if (roomId === 'dojo') setShowDojo(true);
+            }
+    };
+
+// ... (Inside render, restore the Row 2 tiles)
+
+                                            {/* ROW 2: OLYMPIC STYLE (CENTERED) */}
+                                            <div className="flex justify-center gap-1 md:gap-4 w-full">
+                                                {/* OBSERVATORY */}
+                                                <div
+                                                    onClick={() => handleRoomInteraction('observatory', 125)}
+                                                    className={`w-1/3 group relative rounded-xl md:rounded-3xl border transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer ${dashboardUser?.unlockedRooms?.includes('observatory')
+                                                        ? 'bg-gradient-to-br from-indigo-900 to-black border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.4)]'
+                                                        : 'bg-indigo-900/20 backdrop-blur-md border-dashed border-indigo-200/30 dark:border-gray-700/50 hover:bg-indigo-900/30'}`}
+                                                >
+                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                                        {dashboardUser?.unlockedRooms?.includes('observatory') ? (
+                                                            <>
+                                                                <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-indigo-950 flex items-center justify-center text-indigo-200 shadow-[0_0_15px_rgba(99,102,241,0.5)] group-hover:scale-110 transition-transform"><Star className="w-5 h-5 md:w-8 md:h-8 fill-indigo-200" /></div>
+                                                                <h3 className="text-[7px] md:text-xs font-black text-indigo-100 uppercase tracking-widest drop-shadow-lg">Observatory</h3>
+                                                                <p className="hidden md:block text-[9px] text-indigo-300 mt-1">Track Dreams & Sleep</p>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <div className="w-8 h-8 md:w-12 md:h-12 bg-black/20 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-indigo-300" /></div>
+                                                                <h3 className="text-[7px] md:text-xs font-black text-indigo-900 dark:text-indigo-200 uppercase tracking-widest">Observatory</h3>
+                                                                <div className="mt-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-[8px] md:text-[10px] font-black px-3 py-1 rounded-full shadow-lg">125m</div>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* ZEN DOJO */}
+                                                <div
+                                                    onClick={() => handleRoomInteraction('dojo', 75)}
+                                                    className={`w-1/3 group relative rounded-xl md:rounded-3xl border transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer ${dashboardUser?.unlockedRooms?.includes('dojo')
+                                                        ? 'bg-gradient-to-br from-amber-900 to-stone-900 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.4)]'
+                                                        : 'bg-amber-900/20 backdrop-blur-md border-dashed border-amber-200/30 dark:border-gray-700/50 hover:bg-amber-900/30'}`}
+                                                >
+                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                                        {dashboardUser?.unlockedRooms?.includes('dojo') ? (
+                                                            <>
+                                                                <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-stone-800 flex items-center justify-center text-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform"><Zap className="w-5 h-5 md:w-8 md:h-8 fill-amber-500" /></div>
+                                                                <h3 className="text-[7px] md:text-xs font-black text-amber-100 uppercase tracking-widest drop-shadow-lg">Zen Dojo</h3>
+                                                                <p className="hidden md:block text-[9px] text-amber-300 mt-1">Focus & Mastery</p>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <div className="w-8 h-8 md:w-12 md:h-12 bg-black/20 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-amber-700 dark:text-amber-500" /></div>
+                                                                <h3 className="text-[7px] md:text-xs font-black text-amber-900 dark:text-amber-200 uppercase tracking-widest">Zen Dojo</h3>
+                                                                <div className="mt-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[8px] md:text-[10px] font-black px-3 py-1 rounded-full shadow-lg">75m</div>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+// ... (Inside Arcade Section, remove bg-sky-50)
+
+                                <CollapsibleSection title="Arcade" icon={Gamepad2}>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
+                                        <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-white/20 dark:border-gray-700 shadow-sm flex flex-col bg-white/10 backdrop-blur-sm"> 
+                                            {/* Changed bg to transparent white/10 */}
+// ... 
+
+// ... (Add modals at bottom)
+            {showObservatory && (
+                <Suspense fallback={null}>
+                    <ObservatoryView user={dashboardUser} onClose={() => setShowObservatory(false)} />
+                </Suspense>
+            )}
+            {showObservatory && (
+                <Suspense fallback={null}>
+                    <ObservatoryView user={dashboardUser} onClose={() => setShowObservatory(false)} />
+                </Suspense>
+            )}
+            {showDojo && (
+                <Suspense fallback={null}>
+                    <DojoView user={dashboardUser} onClose={() => setShowDojo(false)} />
+                </Suspense>
+            )}
+            {showPocketPet && (
+                <Suspense fallback={null}>
+                    <LuminaView user={dashboardUser} onClose={() => setShowPocketPet(false)} />
+                </Suspense>
+            )}
 
 // Stripe publishable key
 
@@ -148,6 +273,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [showBookFull, setShowBookFull] = useState(false);
     const [showGardenFull, setShowGardenFull] = useState(false);
     const [showPocketPet, setShowPocketPet] = useState(false);
+    const [showObservatory, setShowObservatory] = useState(false);
+    const [showDojo, setShowDojo] = useState(false);
     const [lumina, setLumina] = useState<Lumina | null>(null);
     const [isVaultOpen, setIsVaultOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([
@@ -470,9 +597,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
     const handleRoomInteraction = async (roomId: string, cost: number) => {
         const currentRooms = dashboardUser.unlockedRooms || [];
+        
+        // If already unlocked, open the view
         if (currentRooms.includes(roomId)) {
-            showToast(`Entering ${roomId.replace(/^\w/, c => c.toUpperCase())}...`, "success");
-            // Here you would normally set activeTab or open a modal
+            if (roomId === 'observatory') setShowObservatory(true);
+            if (roomId === 'dojo') setShowDojo(true);
             return;
         }
 
@@ -492,6 +621,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             setDashboardUser(updatedUser);
             await UserService.updateUser(updatedUser); // Persist
             showToast(`${roomId.replace(/^\w/, c => c.toUpperCase())} Unlocked!`, "success");
+            
+            // Open immediately
+            if (roomId === 'observatory') setShowObservatory(true);
+            if (roomId === 'dojo') setShowDojo(true);
         }
     };
 
@@ -769,7 +902,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                                 <CollapsibleSection title="Arcade" icon={Gamepad2}>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
-                                        <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-yellow-100 dark:border-gray-700 shadow-sm flex flex-col bg-sky-50 dark:bg-gray-800">
+                                        <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-white/20 dark:border-gray-700 shadow-sm flex flex-col bg-white/10 backdrop-blur-sm">
                                             <div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none">
                                                 <span className="text-[9px] font-black uppercase tracking-widest text-gray-500 bg-white/90 dark:bg-black/90 px-3 py-1.5 rounded-full shadow-sm">Mindful Match</span>
                                             </div>
