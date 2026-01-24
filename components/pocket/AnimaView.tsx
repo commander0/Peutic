@@ -169,7 +169,7 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 pointer-events-none"></div>
                 <div className="relative z-10 w-full max-w-md bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/10 p-8 shadow-2xl">
                     <h2 className="text-2xl font-black uppercase tracking-widest text-center mb-8 flex items-center justify-center gap-3">
-                        <Sparkles className="w-6 h-6 text-cyan-400" /> Summon Your Pet
+                        <Sparkles className="w-6 h-6 text-cyan-400" /> Summon Your Lumina
                     </h2>
 
                     <div className="space-y-6">
