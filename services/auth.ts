@@ -28,11 +28,10 @@ export const AuthService = {
     const { data } = await supabase.auth.getUser();
     return data.user;
   },
-
+  
   onAuthStateChange(callback: (user: any) => void) {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: any, session: any) => {
+    return supabase.auth.onAuthStateChange((_event, session) => {
       callback(session?.user || null);
     });
-    return subscription;
   }
 };

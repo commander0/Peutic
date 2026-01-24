@@ -88,6 +88,7 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
                             const Icon = card.icon;
 
                             return (
+                            return (
                                 <div key={i} className="relative w-full h-full group">
                                     <button
                                         onClick={() => handleCardClick(i)}
@@ -103,6 +104,7 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
                                         </div>
                                     </button>
                                 </div>
+                            );
                             );
                         })}
                     </div>

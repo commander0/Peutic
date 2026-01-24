@@ -207,6 +207,16 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
     };
 
     useEffect(() => {
+        const preloadNext = async () => {
+            const nextStep = STEPS[stepIndex + 1];
+            if (nextStep && nextStep.narration && !audioCache.current.has(nextStep.narration)) {
+                await generateSpeech(nextStep.narration);
+                // Note: we just trigger fetch, caching happens in generateSpeech wrapper ideally, 
+                // but here we rely on the main playAiVoice caching logic or just browser cache if url based.
+                // In this specific implementation, we don't double-call, so we skip explicit pre-fetch for now 
+                // to avoid complexity, relying on text-to-speech speed or browser cache.
+            }
+        };
         // Trigger voice load
         if (window.speechSynthesis.getVoices().length === 0) {
             window.speechSynthesis.onvoiceschanged = () => playAiVoice(currentStep.narration);

@@ -64,7 +64,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
             return;
         }
 
-        const newPet = await PetService.createPet(user.id, petName, selectedSpecies as any);
+        const newPet = await PetService.createPet(user.id, selectedSpecies as 'Holo-Hamu' | 'Digi-Dino' | 'Neo-Shiba' | 'Zen-Sloth', petName);
         if (newPet) {
             setPet(newPet);
             setShowSelection(false);

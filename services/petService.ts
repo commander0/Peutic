@@ -1,11 +1,11 @@
-import { Lumina } from '../types';
+import { Anima } from '../types';
 import { supabase } from './supabaseClient';
 import { logger } from './logger';
 
 export class PetService {
     private static CACHE_KEY = 'peutic_anima';
 
-    static async getPet(userId: string): Promise<Lumina | null> {
+    static async getPet(userId: string): Promise<Anima | null> {
         try {
             const cached = localStorage.getItem(`${this.CACHE_KEY}_${userId}`);
 
@@ -34,8 +34,8 @@ export class PetService {
         }
     }
 
-    static async createPet(userId: string, name: string, species: Lumina['species']): Promise<Lumina> {
-        const newAnima: Partial<Lumina> = {
+    static async createPet(userId: string, name: string, species: Anima['species']): Promise<Anima> {
+        const newAnima: Partial<Anima> = {
             id: crypto.randomUUID(),
             userId,
             name,
@@ -52,16 +52,16 @@ export class PetService {
             createdAt: new Date().toISOString()
         };
 
-        const { error } = await supabase.from('pocket_pets').insert(this.mapAnimaToDB(newAnima as Lumina));
+        const { error } = await supabase.from('pocket_pets').insert(this.mapAnimaToDB(newAnima as Anima));
         if (error) {
             logger.error("Create Anima Failed", userId, error);
             throw error;
         }
 
-        return newAnima as Lumina;
+        return newAnima as Anima;
     }
 
-    static async updatePet(anima: Lumina): Promise<void> {
+    static async updatePet(anima: Anima): Promise<void> {
         const { error } = await supabase
             .from('pocket_pets')
             .update(this.mapAnimaToDB(anima))
@@ -74,7 +74,7 @@ export class PetService {
         }
     }
 
-    private static calculateDecay(anima: Lumina): Lumina {
+    private static calculateDecay(anima: Anima): Anima {
         const now = new Date();
         const last = new Date(anima.lastInteractionAt);
         const diffMs = now.getTime() - last.getTime();
@@ -102,7 +102,7 @@ export class PetService {
         return updatedAnima;
     }
 
-    private static mapAnimaBase(data: any): Lumina {
+    private static mapAnimaBase(data: any): Anima {
         return {
             id: data.id,
             userId: data.user_id,
@@ -121,7 +121,7 @@ export class PetService {
         };
     }
 
-    private static mapAnimaToDB(anima: Lumina): any {
+    private static mapAnimaToDB(anima: Anima): any {
         return {
             id: anima.id,
             user_id: anima.userId,
