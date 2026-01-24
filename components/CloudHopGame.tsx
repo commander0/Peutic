@@ -148,57 +148,93 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
                 return;
             }
 
-            // --- STANDARD FLAT RENDER (UNTAMPERED) ---
+            // --- HIGH FIDELITY RENDERING ---
 
-            // 1. SKY
-            ctx.fillStyle = '#BAE6FD'; // Sky blue
+            // --- HYPER REALISTIC RENDER ---
+
+            // 1. SKY & STARFIELD
+            const grad = ctx.createLinearGradient(0, 0, 0, H);
+            grad.addColorStop(0, '#020617'); // Dark Slate
+            grad.addColorStop(1, '#1e293b'); // Dark Slate lighter
+            ctx.fillStyle = grad;
             ctx.fillRect(0, 0, W, H);
 
-            // 2. PLATFORMS (Simple Cloud Shapes)
+            // Parallax Stars
+            const time = Date.now() / 1000;
+            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            for (let i = 0; i < 30; i++) {
+                const sx = (i * 90 + time * 10) % W;
+                const sy = (i * 70 + time * 5) % H;
+                const size = Math.random() * 2;
+                ctx.beginPath(); ctx.arc(sx, sy, size, 0, Math.PI * 2); ctx.fill();
+            }
+
+            // 2. PLATFORMS (Glass/Holographic)
             platformsRef.current.forEach(pl => {
                 if (pl.type === 'ground') {
-                    ctx.fillStyle = '#86EFAC'; // Light Green
+                    // Cyber Ground
+                    const gGrad = ctx.createLinearGradient(0, pl.y, 0, pl.y + pl.h);
+                    gGrad.addColorStop(0, '#10b981');
+                    gGrad.addColorStop(1, '#059669');
+                    ctx.fillStyle = gGrad;
+                    ctx.shadowColor = '#34d399'; ctx.shadowBlur = 10;
                     ctx.fillRect(pl.x, pl.y, pl.w, pl.h);
+                    ctx.shadowBlur = 0;
                 } else {
-                    ctx.fillStyle = pl.type === 'moving' ? '#E0F2FE' : 'white';
-                    if (pl.type === 'moving') ctx.shadowColor = '#38BDF8';
+                    // Holographic Clouds
+                    const isMoving = pl.type === 'moving';
+                    const cGrad = ctx.createLinearGradient(pl.x, pl.y, pl.x, pl.y + pl.h);
+                    cGrad.addColorStop(0, isMoving ? 'rgba(56,189,248,0.8)' : 'rgba(255,255,255,0.8)');
+                    cGrad.addColorStop(1, isMoving ? 'rgba(14,165,233,0.4)' : 'rgba(255,255,255,0.1)');
 
-                    // Simple Round Rect for cloud
-                    const r = 15;
+                    ctx.save();
+                    ctx.fillStyle = cGrad;
+                    ctx.shadowColor = isMoving ? '#0ea5e9' : 'white';
+                    ctx.shadowBlur = 15;
+                    // Rounded Rect
+                    const r = 4;
                     ctx.beginPath();
                     ctx.roundRect(pl.x, pl.y, pl.w, pl.h, r);
                     ctx.fill();
 
-                    // Fluff
-                    ctx.beginPath(); ctx.arc(pl.x + 10, pl.y, r, 0, Math.PI * 2); ctx.fill();
-                    ctx.beginPath(); ctx.arc(pl.x + pl.w - 10, pl.y, r, 0, Math.PI * 2); ctx.fill();
-                    ctx.beginPath(); ctx.arc(pl.x + pl.w / 2, pl.y - 10, r * 1.5, 0, Math.PI * 2); ctx.fill();
-                    ctx.shadowColor = 'transparent';
+                    // Top Highlight
+                    ctx.fillStyle = 'white';
+                    ctx.globalAlpha = 0.5;
+                    ctx.fillRect(pl.x, pl.y, pl.w, 2);
+                    ctx.restore();
                 }
             });
 
-            // 3. PLAYER (Standard Blob Character)
+            // 3. PLAYER (Gradient Sphere with Glow)
             // Shadow
-            ctx.fillStyle = 'rgba(0,0,0,0.1)';
             ctx.beginPath();
-            ctx.ellipse(p.x + p.width / 2, p.y + p.height + 2, p.width / 2, 4, 0, 0, Math.PI * 2);
+            ctx.ellipse(p.x + p.width / 2, p.y + p.height + 5, p.width / 2.5, 3, 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
             ctx.fill();
 
-            // Body
-            ctx.fillStyle = '#FACC15'; // Yellow
-            ctx.beginPath();
-            ctx.roundRect(p.x, p.y, p.width, p.height, 8);
-            ctx.fill();
+            // Body Gradient
+            const pGrad = ctx.createRadialGradient(p.x + p.width / 3, p.y + p.height / 3, 2, p.x + p.width / 2, p.y + p.height / 2, p.width / 2);
+            pGrad.addColorStop(0, '#facc15'); // Yellow-400
+            pGrad.addColorStop(1, '#eab308'); // Yellow-500
+
+            ctx.save();
+            ctx.shadowColor = '#facc15';
+            ctx.shadowBlur = 20;
+            ctx.fillStyle = pGrad;
+            ctx.beginPath(); ctx.arc(p.x + p.width / 2, p.y + p.height / 2, p.width / 2, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
 
             // Face
-            ctx.fillStyle = 'black';
-            // Eyes
-            ctx.beginPath(); ctx.arc(p.x + 8, p.y + 10, 3, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(p.x + p.width - 8, p.y + 10, 3, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#422006';
+            const eyeOff = p.width * 0.25;
+            const eyeSize = p.width * 0.12;
+            ctx.beginPath(); ctx.arc(p.x + p.width / 2 - eyeOff, p.y + p.height / 2 - eyeOff, eyeSize, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(p.x + p.width / 2 + eyeOff, p.y + p.height / 2 - eyeOff, eyeSize, 0, Math.PI * 2); ctx.fill();
+
             // Smile
             ctx.beginPath();
-            ctx.arc(p.x + p.width / 2, p.y + 15, 6, 0, Math.PI);
-            ctx.stroke();
+            ctx.arc(p.x + p.width / 2, p.y + p.height / 2 + eyeOff / 2, eyeOff, 0, Math.PI);
+            ctx.lineWidth = 3; ctx.strokeStyle = '#422006'; ctx.stroke();
         };
         update();
         return () => {
