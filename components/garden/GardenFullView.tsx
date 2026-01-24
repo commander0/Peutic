@@ -13,7 +13,7 @@ interface GardenFullViewProps {
     onUpdate: () => void;
 }
 
-const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, onUpdate }) => {
+const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, onClose, onUpdate }) => {
     const [localGarden, setLocalGarden] = useState(garden);
     const [isWatering, setIsWatering] = useState(false);
     const [showInfo, setShowInfo] = useState(false);
@@ -22,19 +22,11 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     const COST = intensity;
 
     const handleWater = async () => {
-        if (isWatering) return;
-
-        // Strict local check
-        if (user.balance < COST) {
-            showToast(`Not enough minutes. Need ${COST}m.`, "error");
-            return;
-        }
-
         setIsWatering(true);
-        try {
-            const success = await UserService.deductBalance(COST, "Garden Water");
+        const success = await UserService.deductBalance(COST, "Garden Water");
 
-            if (success) {
+        if (success) {
+            try {
                 // Scaled Water effect
                 const updated = await GardenService.waterPlant(garden.userId);
                 if (updated) {
@@ -42,51 +34,35 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                     onUpdate();
                     showToast(`Garden Watered! (-${COST}m)`, "success");
                 }
-            } else {
-                showToast(`Transaction failed. Check balance.`, "error");
+            } catch (e) {
+                // Refund conceptually, but for now just show error
+                showToast("Failed to sync garden state.", "error");
             }
-        } catch (e) {
-            showToast("Network error during transaction.", "error");
-        } finally {
-            // Delay re-enabling button to match animation
-            setTimeout(() => setIsWatering(false), 2000);
+        } else {
+            showToast(`Not enough minutes. Need ${COST}m.`, "error");
         }
+        setTimeout(() => setIsWatering(false), 2000);
     };
 
     const handleHarvest = async () => {
         const harvestCost = 5;
-        if (user.balance < harvestCost) {
-            showToast(`Need ${harvestCost}m to harvest.`, "error");
-            return;
-        }
-
-        try {
-            const success = await UserService.deductBalance(harvestCost, "Garden Harvest");
-            if (success) {
-                showToast(`Harvested! +50 XP (-${harvestCost}m)`, "success");
-            } else {
-                showToast(`Harvest failed. Check balance.`, "error");
-            }
-        } catch (e) {
-            showToast("Transaction error.", "error");
+        const success = await UserService.deductBalance(harvestCost, "Garden Harvest");
+        if (success) {
+            // Logic for harvest (XP gain would go here)
+            // For now, visual feedback
+            showToast(`Harvested! +50 XP (-${harvestCost}m)`, "success");
+            // Optionally reset plant or evolve
+        } else {
+            showToast(`Harvest requires ${harvestCost}m.`, "error");
         }
     };
 
     const handleNurture = async (action: 'breath' | 'sing') => {
-        if (user.balance < COST) {
+        const success = await UserService.deductBalance(COST, action === 'breath' ? "Garden Breath" : "Garden Song");
+        if (success) {
+            showToast(action === 'breath' ? `Deep breath taken. (-${COST}m)` : `Sang to the garden. (-${COST}m)`, "success");
+        } else {
             showToast(`Not enough minutes. Need ${COST}m.`, "error");
-            return;
-        }
-
-        try {
-            const success = await UserService.deductBalance(COST, action === 'breath' ? "Garden Breath" : "Garden Song");
-            if (success) {
-                showToast(action === 'breath' ? `Deep breath taken. (-${COST}m)` : `Sang to the garden. (-${COST}m)`, "success");
-            } else {
-                showToast(`Nurture failed. Check balance.`, "error");
-            }
-        } catch (e) {
-            showToast("Transaction error.", "error");
         }
     };
 

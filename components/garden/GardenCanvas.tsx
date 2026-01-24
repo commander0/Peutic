@@ -25,14 +25,14 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
 
     // Initialize petals once
     useEffect(() => {
-        petalsRef.current = Array.from({ length: 25 }, () => ({
+        petalsRef.current = Array.from({ length: 15 }, () => ({
             x: Math.random() * width,
             y: Math.random() * height,
             rotation: Math.random() * Math.PI * 2,
-            speedX: 0.2 + Math.random() * 0.6,
-            speedY: 0.3 + Math.random() * 0.7,
-            size: 3 + Math.random() * 5,
-            opacity: 0.4 + Math.random() * 0.6
+            speedX: 0.1 + Math.random() * 0.4,
+            speedY: 0.2 + Math.random() * 0.5,
+            size: 2 + Math.random() * 4,
+            opacity: 0.2 + Math.random() * 0.5
         }));
     }, [width, height]);
 
@@ -44,68 +44,75 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
             if (!ctx) return;
             const frame = frameRef.current;
 
-            // --- HYPER REALISTIC ATMOSPHERE ---
-            // Dynamic Sky based on "Time" (simulated by frame)
+            // Clear with a rich atmospheric gradient
             const skyGradient = ctx.createLinearGradient(0, 0, 0, height);
-            skyGradient.addColorStop(0, '#020617'); // Deep Space
-            skyGradient.addColorStop(0.5, '#1e1b4b'); // Indigo Night
-            skyGradient.addColorStop(1, '#312e81'); // Twilight
+            skyGradient.addColorStop(0, '#0f2027');
+            skyGradient.addColorStop(0.4, '#203a43');
+            skyGradient.addColorStop(1, '#2c5364');
             ctx.fillStyle = skyGradient;
             ctx.fillRect(0, 0, width, height);
 
-            // Stars
-            ctx.fillStyle = 'white';
-            for (let i = 0; i < 30; i++) {
-                const sX = (i * 123 + frame * 0.5) % width;
-                const sY = (i * 87) % (height * 0.6);
-                const sSize = Math.random() * 2;
-                ctx.globalAlpha = Math.random() * 0.8 + 0.2;
-                ctx.beginPath(); ctx.arc(sX, sY, sSize, 0, Math.PI * 2); ctx.fill();
+            // Volumetric Rays (Sun/Moon shafts)
+            ctx.save();
+            ctx.translate(width * 0.8, -50);
+            ctx.rotate(Math.PI / 6);
+            for (let i = 0; i < 4; i++) {
+                const rayGradient = ctx.createLinearGradient(0, 0, 0, height * 1.5);
+                rayGradient.addColorStop(0, `rgba(255, 255, 255, ${0.05 + Math.sin(frame * 0.02 + i) * 0.02})`);
+                rayGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = rayGradient;
+                ctx.fillRect(i * 100 - 150, 0, 60, height * 1.5);
             }
-            ctx.globalAlpha = 1.0;
+            ctx.restore();
 
-            // Moon/Sun Glow
-            const glow = ctx.createRadialGradient(width * 0.8, height * 0.2, 10, width * 0.8, height * 0.2, 150);
-            glow.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
-            glow.addColorStop(1, 'rgba(255, 255, 255, 0)');
-            ctx.fillStyle = glow;
-            ctx.beginPath(); ctx.arc(width * 0.8, height * 0.2, 150, 0, Math.PI * 2); ctx.fill();
-
+            // Draw background Torii Gate
             drawToriiGate(ctx, width, height, garden.level);
 
-            // Ground - Textured
-            const groundY = height - 40;
-            const groundGrad = ctx.createLinearGradient(0, groundY - 20, 0, height);
-            groundGrad.addColorStop(0, '#064e3b'); // Emerald 900
-            groundGrad.addColorStop(1, '#022c22'); // Emerald 950
-            ctx.fillStyle = groundGrad;
+            // Draw Soil Mound
+            const soilGradient = ctx.createRadialGradient(width / 2, height - 10, 10, width / 2, height, width / 2.5);
+            soilGradient.addColorStop(0, '#4e342e');
+            soilGradient.addColorStop(1, '#25161b');
+            ctx.fillStyle = soilGradient;
             ctx.beginPath();
-            ctx.moveTo(0, height);
-            ctx.lineTo(0, groundY);
-            ctx.bezierCurveTo(width / 3, groundY - 20, width * 2 / 3, groundY + 10, width, groundY - 10);
-            ctx.lineTo(width, height);
+            ctx.ellipse(width / 2, height - 15, width / 2.8, 25, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Fireflies
-            for (let i = 0; i < 5; i++) {
-                const fx = width / 2 + Math.sin(frame * 0.02 + i) * 100;
-                const fy = height - 100 + Math.cos(frame * 0.03 + i) * 40;
-                ctx.fillStyle = '#fde047'; // Yellow
-                ctx.shadowColor = '#facc15'; ctx.shadowBlur = 10;
-                ctx.beginPath(); ctx.arc(fx, fy, 2, 0, Math.PI * 2); ctx.fill();
-                ctx.shadowBlur = 0;
+            // Glowing Grass tufts
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 8; i++) {
+                const gx = width / 2 + (i - 3.5) * 20;
+                const sway = Math.sin(frame * 0.05 + i) * 3;
+
+                const grassGradient = ctx.createLinearGradient(gx, height - 35, gx, height - 60);
+                grassGradient.addColorStop(0, '#388e3c');
+                grassGradient.addColorStop(1, '#69f0ae');
+                ctx.strokeStyle = grassGradient;
+
+                ctx.beginPath();
+                ctx.moveTo(gx, height - 35);
+                ctx.quadraticCurveTo(gx + (i % 2 === 0 ? 5 : -5) + sway, height - 50, gx + sway, height - 60);
+                ctx.stroke();
             }
 
             const centerX = width / 2;
+            const groundY = height - 40;
 
-            // FRACTAL PLANT GENERATION
-            // Level determines complexity
-            drawFractalPlant(ctx, centerX, groundY, -Math.PI / 2, Math.min(garden.level + 2, 8), 120, frame, garden.currentPlantType);
+            // Plant Glow (behind plant)
+            const plantGlow = ctx.createRadialGradient(centerX, groundY - 50, 10, centerX, groundY - 50, 100);
+            plantGlow.addColorStop(0, 'rgba(105, 240, 174, 0.2)');
+            plantGlow.addColorStop(1, 'rgba(105, 240, 174, 0)');
+            ctx.fillStyle = plantGlow;
+            ctx.beginPath();
+            ctx.arc(centerX, groundY - 50, 100, 0, Math.PI * 2);
+            ctx.fill();
 
-            // Spirit with Trail
-            drawSpirit(ctx, centerX + 40, groundY - (garden.level * 25) - 50, frame, garden.level);
+            // Procedural Drawing based on Level
+            drawPlant(ctx, centerX, groundY, garden.level, garden.currentPlantType, frame);
 
-            // Foreground Petals (Depth of Field)
+            // Draw Spirit Wisp
+            drawSpirit(ctx, centerX + 40, groundY - (garden.level * 18), frame, garden.level);
+
+            // Draw drifting petals / spores
             drawPetals(ctx, frame);
 
             frameRef.current++;
@@ -117,51 +124,6 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
             if (animationRef.current) cancelAnimationFrame(animationRef.current);
         };
     }, [garden, width, height]);
-
-    // Dynamic Sway with Mouse Interaction
-    // Simple faux-wind based on cursor position relative to center
-    // (For now, just using frame for wind)
-    const windForce = Math.sin(frame * 0.01) * width * 0.0005;
-
-    // Recursive Fractal Draw
-    const drawFractalPlant = (ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, depth: number, len: number, frame: number, type: string) => {
-        const curve = (depth * 0.02) * Math.sin(frame * 0.02 + depth); // Wind sway
-        const finalAngle = angle + curve + windForce;
-
-        const x2 = x + Math.cos(finalAngle) * len;
-        const y2 = y + Math.sin(finalAngle) * len;
-
-        // Branch Gradient - Bioluminescent Veins in higher levels
-        const branchGrad = ctx.createLinearGradient(x, y, x2, y2);
-        branchGrad.addColorStop(0, '#2e1c11');
-        branchGrad.addColorStop(1, depth < 3 ? '#a7f3d0' : '#5d4037'); // Vein glow at tips
-
-        ctx.strokeStyle = branchGrad;
-        ctx.lineWidth = depth * 1.5;
-        ctx.lineCap = 'round';
-        ctx.shadowBlur = depth < 3 ? 10 : 0;
-        ctx.shadowColor = '#6ee7b7';
-
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.quadraticCurveTo(x + Math.cos(finalAngle) * len * 0.2, y + Math.sin(finalAngle) * len * 0.2, x2, y2);
-        ctx.stroke();
-        ctx.shadowBlur = 0; // Reset
-
-
-        // Leaves on branches
-        if (depth < 6 && Math.random() > 0.3) {
-            drawLeaf(ctx, x2, y2, depth % 2 === 0 ? 1 : -1, frame);
-        }
-
-        // Recursive Calls - split branches
-        // Shrink factor 0.75
-        const nextLen = len * 0.75;
-        const splitAngle = 0.4; // 25 degrees approx
-
-        drawFractalPlant(ctx, x2, y2, finalAngle - splitAngle, depth - 1, nextLen, frame, type);
-        drawFractalPlant(ctx, x2, y2, finalAngle + splitAngle, depth - 1, nextLen, frame, type);
-    };
 
     const drawToriiGate = (ctx: CanvasRenderingContext2D, w: number, h: number, level: number) => {
         if (level < 3) return; // Only show gate at higher levels
@@ -228,7 +190,63 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
         }
     };
 
+    const drawPlant = (ctx: CanvasRenderingContext2D, x: number, y: number, level: number, type: string, frame: number) => {
+        if (level === 1) { // Seed
+            ctx.fillStyle = '#8d6e63';
+            ctx.beginPath();
+            ctx.ellipse(x, y + 5, 6, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // Glowing Sprout
+            ctx.strokeStyle = '#b9f6ca';
+            ctx.shadowColor = '#69f0ae';
+            ctx.shadowBlur = 5;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(x, y + 3);
+            ctx.lineTo(x, y - 8 + Math.sin(frame * 0.1) * 3);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            return;
+        }
 
+        // Stem
+        const stemHeight = level * 25 + 20;
+        const sway = Math.sin(frame * 0.02) * 5;
+
+        const stemGradient = ctx.createLinearGradient(x, y, x, y - stemHeight);
+        stemGradient.addColorStop(0, '#2e7d32');
+        stemGradient.addColorStop(0.5, '#66bb6a');
+        stemGradient.addColorStop(1, '#a5d6a7');
+        ctx.strokeStyle = stemGradient;
+        ctx.lineWidth = 4 + level;
+        ctx.lineCap = 'round';
+
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.quadraticCurveTo(x + sway, y - stemHeight / 2, x + sway * 0.5, y - stemHeight);
+        ctx.stroke();
+
+        const topX = x + sway * 0.5;
+        const topY = y - stemHeight;
+
+        if (level >= 2) {
+            drawLeaf(ctx, x + sway * 0.3, y - stemHeight * 0.4, -1, frame);
+            drawLeaf(ctx, x + sway * 0.3, y - stemHeight * 0.4, 1, frame);
+        }
+
+        if (level >= 3) {
+            drawLeaf(ctx, x + sway * 0.4, y - stemHeight * 0.7, -1, frame);
+            drawLeaf(ctx, x + sway * 0.4, y - stemHeight * 0.7, 1, frame);
+        }
+
+        if (level >= 4) {
+            if (level === 5) {
+                drawFlower(ctx, topX, topY, type, frame);
+            } else {
+                drawBud(ctx, topX, topY, type);
+            }
+        }
+    };
 
     const drawLeaf = (ctx: CanvasRenderingContext2D, x: number, y: number, dir: number, frame: number) => {
         const sway = Math.sin(frame * 0.03 + dir) * 3;
@@ -241,7 +259,15 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width = 300, height
         ctx.fill();
     };
 
-
+    const drawBud = (ctx: CanvasRenderingContext2D, x: number, y: number, type: string) => {
+        ctx.fillStyle = getFlowerColor(type);
+        ctx.shadowColor = ctx.fillStyle;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(x, y, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    };
 
     const drawFlower = (ctx: CanvasRenderingContext2D, x: number, y: number, type: string, frame: number) => {
         const color = getFlowerColor(type);

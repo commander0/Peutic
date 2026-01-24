@@ -45,19 +45,6 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             const centerY = height / 2;
             const baseScale = (width / 300) * evolutionScale;
 
-            // --- HYPER REALISTIC LUMINA EFFECT ---
-
-            // 1. Ambient Glow (The "Soul" presence)
-            const time = Date.now() / 1000;
-            const pulse = Math.sin(time * 2) * 5;
-
-            // Background Halo
-            const bgGrad = ctx.createRadialGradient(centerX, centerY, 50 * baseScale, centerX, centerY, 200 * baseScale);
-            bgGrad.addColorStop(0, 'rgba(45, 212, 191, 0.1)'); // Teal-400 equivalent low opacity
-            bgGrad.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = bgGrad;
-            ctx.beginPath(); ctx.arc(centerX, centerY, 200 * baseScale, 0, Math.PI * 2); ctx.fill();
-
             // Floating bounce effect
             const bounce = Math.sin(frame * 0.05) * 8 * baseScale;
             const yOffset = bounce + (pet.isSleeping ? 10 * baseScale : 0);
@@ -65,20 +52,27 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             ctx.save();
             ctx.translate(centerX, centerY + yOffset);
 
-            // 2. CRYSTALLINE HOLOGRAPHIC SHADER
+            // AURA & GLOWS
+            if (evolutionStage !== 'spirit') {
+                const auraSize = evolutionStage === 'apex' ? 120 : 80;
+                const auraColor = evolutionStage === 'apex' ? '255, 215, 0' : '100, 255, 218';
 
-            // Add "Digital Rain" background noise
-            ctx.fillStyle = `rgba(45, 212, 191, ${0.03 + Math.sin(frame * 0.1) * 0.02})`;
-            for (let i = 0; i < 10; i++) {
-                const rx = Math.random() * width;
-                const ry = (frame * 5 + Math.random() * 500) % height;
-                ctx.fillRect(rx, ry, 1, 10);
+                // Outer Glow
+                const gradient = ctx.createRadialGradient(0, 0, 30 * baseScale, 0, 0, auraSize * baseScale);
+                gradient.addColorStop(0, `rgba(${auraColor}, 0.3)`); // Increased opacity
+                gradient.addColorStop(1, `rgba(${auraColor}, 0)`);
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, auraSize * baseScale, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Inner Pulse
+                ctx.beginPath();
+                ctx.arc(0, 0, (auraSize * 0.6 + Math.sin(frame * 0.1) * 5) * baseScale, 0, Math.PI * 2);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = `rgba(${auraColor}, 0.3)`;
+                ctx.stroke();
             }
-
-            // We draw the pet, but we apply a composite operation to make it look like light
-            ctx.globalCompositeOperation = 'lighten';
-            ctx.shadowColor = '#2dd4bf';
-            ctx.shadowBlur = 15;
 
             // DRAW PET BASED ON SPECIES
             switch (pet.species) {
@@ -96,35 +90,38 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                     break;
             }
 
-            // 3. GLITCH ARTIFACTS (The "Digital" nature)
-            if (Math.random() > 0.95) {
-                const sliceH = Math.random() * 10;
-                const sliceY = (Math.random() - 0.5) * 100 * baseScale;
-                const sliceX = (Math.random() - 0.5) * 20;
-                const sliceData = ctx.getImageData(0, centerY + sliceY, width, sliceH);
-                ctx.putImageData(sliceData, sliceX, centerY + sliceY);
-            }
+            // HOLOGRAPHIC GLOW EFFECT
+            ctx.shadowBlur = evolutionStage === 'apex' ? 40 : 25;
+            ctx.shadowColor = evolutionStage === 'apex' ? 'rgba(255, 215, 0, 0.7)' : 'rgba(34, 211, 238, 0.6)'; // Increased opacity and shifted to cyan-400 for better visibility
 
             ctx.restore();
 
-            // 4. PARTICLES (Data bits)
-            for (let i = 0; i < 15; i++) {
-                const angle = (frame * 0.01 + i * 20) % (Math.PI * 2);
-                const radius = 120 * baseScale + Math.sin(frame * 0.05 + i) * 20;
-                const px = centerX + Math.cos(angle) * radius;
-                const py = centerY + Math.sin(angle) * radius * 0.3; // Elliptical orbit
+            // Overlay Scanlines for Retro feel
+            ctx.fillStyle = 'rgba(0, 255, 255, 0.03)';
+            for (let i = 0; i < height; i += 3) {
+                ctx.fillRect(0, i, width, 1);
+            }
 
-                ctx.fillStyle = i % 2 === 0 ? '#2dd4bf' : '#facc15'; // Teal or Yellow
-                ctx.globalAlpha = 0.6 + Math.sin(frame * 0.1 + i) * 0.4;
+            // Glitch Effect (Random)
+            if (Math.random() > 0.98) {
+                const h = Math.random() * 20;
+                const y = Math.random() * height;
+                ctx.fillStyle = 'rgba(0, 255, 255, 0.1)';
+                ctx.fillRect(0, y, width, h);
+            }
+
+            // Floating particles
+            for (let i = 0; i < 8; i++) {
+                const angle = (frame * 0.02) + (i * (Math.PI * 2) / 8);
+                const r = 100 * baseScale + Math.sin(frame * 0.05 + i) * 20;
+                const px = centerX + Math.cos(angle) * r;
+                const py = centerY + Math.sin(angle) * r;
+
+                ctx.fillStyle = evolutionStage === 'apex' ? 'rgba(255,215,0,0.6)' : 'rgba(100,255,218,0.4)';
                 ctx.beginPath();
-                // Diamond shape particles
-                ctx.moveTo(px, py - 3);
-                ctx.lineTo(px + 3, py);
-                ctx.lineTo(px, py + 3);
-                ctx.lineTo(px - 3, py);
+                ctx.arc(px, py, 2 * baseScale, 0, Math.PI * 2);
                 ctx.fill();
             }
-            ctx.globalAlpha = 1.0;
 
             frame++;
             animationId = requestAnimationFrame(draw);
