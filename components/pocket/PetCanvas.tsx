@@ -204,8 +204,19 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
 
         // Body
         ctx.fillStyle = color;
+        // Body (Safe Round Rect)
+        ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.roundRect(-size, -size * 0.5, size * 1.5, size * 1.2, size * 0.5);
+        const bx = -size, by = -size * 0.5, bw = size * 1.5, bh = size * 1.2, br = size * 0.5;
+        ctx.moveTo(bx + br, by);
+        ctx.lineTo(bx + bw - br, by);
+        ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + br);
+        ctx.lineTo(bx + bw, by + bh - br);
+        ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - br, by + bh);
+        ctx.lineTo(bx + br, by + bh);
+        ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - br);
+        ctx.lineTo(bx, by + br);
+        ctx.quadraticCurveTo(bx, by, bx + br, by);
         ctx.fill();
 
         // Head
