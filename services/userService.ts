@@ -150,30 +150,31 @@ export class UserService {
         };
     }
 
+    // RECURRING: Subscribe to Realtime Changes
+    static subscribeToUserChanges(userId: string, callback: (payload: any) => void) {
+        return supabase
+            .channel('public:users')
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${userId}` },
+                (payload: any) => {
+                    const freshUser = this.mapUser(payload.new);
+                    this.currentUser = freshUser;
+                    this.saveUserToCache(freshUser);
+                    callback(freshUser);
+                }
+            )
+            .subscribe();
+    }
+
     // REPAIR: Attempt to fix missing public.users record
     static async repairUserRecord(sessionUser: any): Promise<User | null> {
         try {
-            console.log("Attempting to repair user profile...", sessionUser.id);
-            const fallback = this.createFallbackUser(sessionUser);
-
-            // Try explicit UPSERT to fix missing row
-            // IMPORTANT: Do NOT include 'role' here - let the DB trigger handle it for new users
-            // and preserve existing roles for existing users
-            const { error } = await supabase.from('users').upsert({
-                id: fallback.id,
-                email: fallback.email,
-                name: fallback.name,
-                // role is intentionally omitted to prevent admin demotion
-                provider: fallback.provider,
-                last_login_date: new Date().toISOString()
-            });
-
-            if (error) {
-                console.error("Repair failed (likely RLS denied):", error);
-                return null;
-            }
-
-            // Retry Sync
+            console.log("Repair Requested: Checking remote status...", sessionUser.id);
+            // HARDENING: Do NOT attempt client-side upsert. 
+            // Instead, trigger an Edge Function or simply retry sync.
+            // If the user doesn't exist, it likely means the Trigger failed.
+            await BaseService.invokeGateway('users/repair', { userId: sessionUser.id });
             return await this.syncUser(sessionUser.id);
         } catch (e) {
             console.error("Repair Exception:", e);
