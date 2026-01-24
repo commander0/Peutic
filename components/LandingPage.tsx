@@ -146,7 +146,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
                 </video>
                 <div className="absolute inset-0 bg-yellow-500/25 pointer-events-none mix-blend-overlay dark:bg-yellow-400/10 dark:mix-blend-soft-light"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-bg-base)] via-[var(--color-bg-base)]/60 to-[var(--color-bg-base)]/30"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#FFFBEB] via-[#FFFBEB]/60 to-[#FFFBEB]/30 dark:from-[#0A0A0A] dark:via-[#0A0A0A]/60 dark:to-[#0A0A0A]/30"></div>
             </div>
             <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-2 bg-[#FFFBEB]/80 dark:bg-black/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-3 md:py-6 bg-transparent border-transparent'}`}>
                 <div className="max-w-7xl mx-auto px-2 md:px-8 flex justify-between items-center">

@@ -1,18 +1,17 @@
 import React, { useEffect, useRef } from 'react';
-import { Lumina } from '../../types';
+import { Anima } from '../../types';
 
 interface PetCanvasProps {
-    pet: Lumina;
+    pet: Anima;
     width?: number;
     height?: number;
     emotion?: 'idle' | 'happy' | 'hungry' | 'sleeping' | 'sad' | 'eating';
-    trick?: 'spin' | 'flip' | 'magic' | null;
 }
 
-const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, emotion = 'idle', trick = null }) => {
+const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, emotion = 'idle' }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
-    // Evolution stage based on level
+    // Evolution stage based on level: Spirit (1-4), Guardian (5-9), Apex (10+)
     const getEvolutionStage = (level: number): 'spirit' | 'guardian' | 'apex' => {
         if (level >= 10) return 'apex';
         if (level >= 5) return 'guardian';
@@ -46,19 +45,11 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             const centerY = height / 2;
             const baseScale = (width / 300) * evolutionScale;
 
-            // --- ANIMATION STATE ---
-            let rotation = 0;
-            let scaleMod = 1;
-
-            if (trick === 'spin') {
-                rotation = (frame * 0.15) % (Math.PI * 2);
-            } else if (trick === 'flip') {
-                scaleMod = Math.sin(frame * 0.1);
-            }
-
             // --- HYPER REALISTIC LUMINA EFFECT ---
-            //const time = Date.now() / 1000;
-            //const pulse = Math.sin(time * 2) * 5; // Used for glow pulsation
+
+            // 1. Ambient Glow (The "Soul" presence)
+            const time = Date.now() / 1000;
+            const pulse = Math.sin(time * 2) * 5;
 
             // Background Halo
             const bgGrad = ctx.createRadialGradient(centerX, centerY, 50 * baseScale, centerX, centerY, 200 * baseScale);
@@ -73,78 +64,64 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
 
             ctx.save();
             ctx.translate(centerX, centerY + yOffset);
-            ctx.rotate(rotation);
-            ctx.scale(scaleMod, 1);
 
             // 2. CRYSTALLINE HOLOGRAPHIC SHADER
+
             // Add "Digital Rain" background noise
             ctx.fillStyle = `rgba(45, 212, 191, ${0.03 + Math.sin(frame * 0.1) * 0.02})`;
             for (let i = 0; i < 10; i++) {
-                const rx = Math.random() * width - (width / 2);
-                const ry = (frame * 5 + Math.random() * 500) % height - (height / 2);
+                const rx = Math.random() * width;
+                const ry = (frame * 5 + Math.random() * 500) % height;
                 ctx.fillRect(rx, ry, 1, 10);
             }
 
+            // We draw the pet, but we apply a composite operation to make it look like light
             ctx.globalCompositeOperation = 'lighten';
             ctx.shadowColor = '#2dd4bf';
             ctx.shadowBlur = 15;
 
             // DRAW PET BASED ON SPECIES
             switch (pet.species) {
-                case 'Holo-Hamu': drawHamu(ctx, baseScale, frame, emotion, pet.isSleeping, evolutionStage); break;
-                case 'Digi-Dino': drawDino(ctx, baseScale, frame, emotion, pet.isSleeping, evolutionStage); break;
-                case 'Neo-Shiba': drawShiba(ctx, baseScale, frame, emotion, pet.isSleeping, evolutionStage); break;
-                case 'Zen-Sloth': drawSloth(ctx, baseScale, frame, emotion, pet.isSleeping, evolutionStage); break;
+                case 'Holo-Hamu':
+                    drawHamu(ctx, baseScale, frame, emotion, pet.isSleeping, evolutionStage);
+                    break;
+                case 'Digi-Dino':
+                    drawDino(ctx, baseScale, frame, emotion, pet.isSleeping, evolutionStage);
+                    break;
+                case 'Neo-Shiba':
+                    drawShiba(ctx, baseScale, frame, emotion, pet.isSleeping, evolutionStage);
+                    break;
+                case 'Zen-Sloth':
+                    drawSloth(ctx, baseScale, frame, emotion, pet.isSleeping, evolutionStage);
+                    break;
             }
 
-            // 3. EVOLUTION AURA
-            if (evolutionStage !== 'spirit') {
-                const auraColor = evolutionStage === 'apex' ? 'rgba(255, 215, 0, 0.4)' : 'rgba(45, 212, 191, 0.3)';
-                ctx.strokeStyle = auraColor;
-                ctx.lineWidth = 2 * baseScale;
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = auraColor;
-                ctx.beginPath();
-                ctx.arc(0, 0, 80 * baseScale + Math.sin(frame * 0.05) * 10, 0, Math.PI * 2);
-                ctx.stroke();
-
-                // Apex extra wings/flair
-                if (evolutionStage === 'apex') {
-                    ctx.fillStyle = 'rgba(255, 215, 0, 0.1)';
-                    ctx.beginPath();
-                    ctx.moveTo(-100 * baseScale, -20 * baseScale);
-                    ctx.quadraticCurveTo(-120 * baseScale, -100 * baseScale, -40 * baseScale, -40 * baseScale);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.moveTo(100 * baseScale, -20 * baseScale);
-                    ctx.quadraticCurveTo(120 * baseScale, -100 * baseScale, 40 * baseScale, -40 * baseScale);
-                    ctx.fill();
-                }
-            }
-
-            // 4. GLITCH ARTIFACTS
+            // 3. GLITCH ARTIFACTS (The "Digital" nature)
             if (Math.random() > 0.95) {
                 const sliceH = Math.random() * 10;
                 const sliceY = (Math.random() - 0.5) * 100 * baseScale;
                 const sliceX = (Math.random() - 0.5) * 20;
-                ctx.fillStyle = 'rgba(45, 212, 191, 0.5)';
-                ctx.fillRect(sliceX - 20, sliceY, 40, sliceH);
+                const sliceData = ctx.getImageData(0, centerY + sliceY, width, sliceH);
+                ctx.putImageData(sliceData, sliceX, centerY + sliceY);
             }
 
             ctx.restore();
 
-            // 5. PARTICLES (Magic Trick / Standard / Evolution)
-            const particleCount = trick === 'magic' ? 60 : (evolutionStage === 'apex' ? 40 : 20);
-            for (let i = 0; i < particleCount; i++) {
-                const angle = (frame * 0.01 + i * (Math.PI * 2 / particleCount)) % (Math.PI * 2);
-                const orbitRadius = (trick === 'magic' ? 170 : 130) * baseScale + Math.sin(frame * 0.05 + i) * 25;
-                const px = centerX + Math.cos(angle) * orbitRadius;
-                const py = centerY + Math.sin(angle) * orbitRadius * 0.4;
+            // 4. PARTICLES (Data bits)
+            for (let i = 0; i < 15; i++) {
+                const angle = (frame * 0.01 + i * 20) % (Math.PI * 2);
+                const radius = 120 * baseScale + Math.sin(frame * 0.05 + i) * 20;
+                const px = centerX + Math.cos(angle) * radius;
+                const py = centerY + Math.sin(angle) * radius * 0.3; // Elliptical orbit
 
-                ctx.fillStyle = i % i === 0 ? '#2dd4bf' : (evolutionStage === 'apex' ? '#ffd700' : '#ff00ff');
-                ctx.globalAlpha = 0.5 + Math.sin(frame * 0.1 + i) * 0.5;
+                ctx.fillStyle = i % 2 === 0 ? '#2dd4bf' : '#facc15'; // Teal or Yellow
+                ctx.globalAlpha = 0.6 + Math.sin(frame * 0.1 + i) * 0.4;
                 ctx.beginPath();
-                ctx.rect(px - 2, py - 2, 4, 4); // Pixel particles
+                // Diamond shape particles
+                ctx.moveTo(px, py - 3);
+                ctx.lineTo(px + 3, py);
+                ctx.lineTo(px, py + 3);
+                ctx.lineTo(px - 3, py);
                 ctx.fill();
             }
             ctx.globalAlpha = 1.0;
@@ -155,33 +132,14 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
 
         animationId = requestAnimationFrame(draw);
         return () => cancelAnimationFrame(animationId);
-    }, [pet, width, height, emotion, trick]);
+    }, [pet, width, height, emotion]);
 
-    // DRAWING HELPERS WITH BODY
-    const drawLimbs = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string, isLeg: boolean, frame: number) => {
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        const swing = Math.sin(frame * 0.1) * 5;
-        // Simple rounded rect for limb
-        const w = size * 0.4;
-        const h = size * 0.6;
-        ctx.ellipse(x, y + (isLeg ? 0 : swing), w, h, 0, 0, Math.PI * 2);
-        ctx.fill();
-    };
-
+    // SPECIES DRAWING FUNCTIONS
     const drawHamu = (ctx: CanvasRenderingContext2D, scale: number, frame: number, emotion: string, isSleeping: boolean, stage: 'spirit' | 'guardian' | 'apex') => {
         const size = 60 * scale;
-        const color = stage === 'apex' ? '#ffe8c5' : '#ffecd2';
 
-        // Limbs (Feet)
-        drawLimbs(ctx, -size * 0.4, size * 0.8, size * 0.4, color, true, frame);
-        drawLimbs(ctx, size * 0.4, size * 0.8, size * 0.4, color, true, frame);
-        // Arms
-        drawLimbs(ctx, -size * 0.7, size * 0.3, size * 0.3, color, false, frame);
-        drawLimbs(ctx, size * 0.7, size * 0.3, size * 0.3, color, false, frame);
-
-        // Body
-        ctx.fillStyle = color;
+        // Body (Round blob)
+        ctx.fillStyle = stage === 'apex' ? '#ffe8c5' : '#ffecd2';
         ctx.beginPath();
         ctx.ellipse(0, 0, size, size * 0.9, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -199,40 +157,35 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
         ctx.arc(size * 0.6, -size * 0.7, size * 0.3, 0, Math.PI * 2);
         ctx.fill();
 
-        // Crown
+        // Crown for Apex
         if (stage === 'apex') {
             ctx.fillStyle = '#ffd700';
             ctx.beginPath();
-            ctx.moveTo(0, -size * 1.1); ctx.lineTo(-size * 0.3, -size * 0.85); ctx.lineTo(size * 0.3, -size * 0.85);
+            ctx.moveTo(0, -size * 1.1);
+            ctx.lineTo(-size * 0.3, -size * 0.85);
+            ctx.lineTo(size * 0.3, -size * 0.85);
             ctx.fill();
         }
+
         drawFace(ctx, size, frame, emotion, isSleeping);
     };
 
     const drawDino = (ctx: CanvasRenderingContext2D, scale: number, frame: number, emotion: string, isSleeping: boolean, stage: 'spirit' | 'guardian' | 'apex') => {
         const size = 65 * scale;
-        const color = stage === 'apex' ? '#8fd4a1' : '#b7e4c7';
-
-        // Legs
-        drawLimbs(ctx, -size * 0.4, size * 0.7, size * 0.4, color, true, frame);
-        drawLimbs(ctx, size * 0.2, size * 0.7, size * 0.4, color, true, frame);
-        // Tail
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.moveTo(size * 0.5, 0); ctx.lineTo(size * 1.2, size * 0.5); ctx.lineTo(size * 0.5, size * 0.8);
-        ctx.fill();
 
         // Body
-        ctx.fillStyle = color;
+        ctx.fillStyle = stage === 'apex' ? '#8fd4a1' : '#b7e4c7';
         ctx.beginPath();
         ctx.roundRect(-size, -size * 0.5, size * 1.5, size * 1.2, size * 0.5);
         ctx.fill();
 
         // Head
-        ctx.beginPath(); ctx.arc(size * 0.3, -size * 0.6, size * 0.6, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath();
+        ctx.arc(size * 0.3, -size * 0.6, size * 0.6, 0, Math.PI * 2);
+        ctx.fill();
 
-        // Spikes
-        const spikeCount = stage === 'apex' ? 5 : 3;
+        // Spikes (more for higher stages)
+        const spikeCount = stage === 'apex' ? 5 : stage === 'guardian' ? 4 : 3;
         ctx.fillStyle = stage === 'apex' ? '#50b86a' : '#74c69d';
         for (let i = 0; i < spikeCount; i++) {
             ctx.beginPath();
@@ -242,66 +195,77 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             ctx.fill();
         }
 
-        ctx.save(); ctx.translate(size * 0.3, -size * 0.4);
+        ctx.save();
+        ctx.translate(size * 0.3, -size * 0.4);
         drawFace(ctx, size * 0.8, frame, emotion, isSleeping);
         ctx.restore();
     };
 
     const drawShiba = (ctx: CanvasRenderingContext2D, scale: number, frame: number, emotion: string, isSleeping: boolean, stage: 'spirit' | 'guardian' | 'apex') => {
         const size = 60 * scale;
-        const color = stage === 'apex' ? '#ffbf5e' : '#ffb347';
-
-        // Paws
-        drawLimbs(ctx, -size * 0.6, size * 0.6, size * 0.3, color, true, frame);
-        drawLimbs(ctx, size * 0.6, size * 0.6, size * 0.3, color, true, frame);
 
         // Body
-        ctx.fillStyle = color;
-        ctx.beginPath(); ctx.ellipse(0, 0, size * 1.1, size * 0.8, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = stage === 'apex' ? '#ffbf5e' : '#ffb347';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, size * 1.1, size * 0.8, 0, 0, Math.PI * 2);
+        ctx.fill();
 
-        // Tail
-        ctx.beginPath(); ctx.arc(size * 0.9, -size * 0.5, size * 0.4, 0, Math.PI * 2); ctx.fill();
+        // Tail (Bushy for higher stages)
+        ctx.fillStyle = stage === 'apex' ? '#ffbf5e' : '#ffb347';
+        ctx.beginPath();
+        ctx.arc(size * 0.9, -size * 0.5, size * (stage === 'apex' ? 0.5 : 0.4), 0, Math.PI * 2);
+        ctx.fill();
 
         // Head
-        ctx.beginPath(); ctx.arc(0, -size * 0.6, size * 0.7, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath();
+        ctx.arc(0, -size * 0.6, size * 0.7, 0, Math.PI * 2);
+        ctx.fill();
 
-        // Mask
+        // White Mask
         ctx.fillStyle = '#ffffff';
-        ctx.beginPath(); ctx.ellipse(0, -size * 0.4, size * 0.5, size * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(0, -size * 0.4, size * 0.5, size * 0.4, 0, 0, Math.PI * 2);
+        ctx.fill();
 
         // Ears
         ctx.fillStyle = stage === 'apex' ? '#db7014' : '#e67e22';
-        ctx.beginPath(); ctx.moveTo(-size * 0.5, -size * 1.1); ctx.lineTo(-size * 0.2, -size * 1.6); ctx.lineTo(0.1, -size * 1.1); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(size * 0.5, -size * 1.1); ctx.lineTo(size * 0.2, -size * 1.6); ctx.lineTo(-0.1, -size * 1.1); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.5, -size * 1.1);
+        ctx.lineTo(-size * 0.2, -size * (stage === 'apex' ? 1.8 : 1.6));
+        ctx.lineTo(0.1, -size * 1.1);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(size * 0.5, -size * 1.1);
+        ctx.lineTo(size * 0.2, -size * (stage === 'apex' ? 1.8 : 1.6));
+        ctx.lineTo(-0.1, -size * 1.1);
+        ctx.fill();
 
-        ctx.save(); ctx.translate(0, -size * 0.6);
+        ctx.save();
+        ctx.translate(0, -size * 0.6);
         drawFace(ctx, size, frame, emotion, isSleeping);
         ctx.restore();
     };
 
     const drawSloth = (ctx: CanvasRenderingContext2D, scale: number, frame: number, emotion: string, isSleeping: boolean, stage: 'spirit' | 'guardian' | 'apex') => {
         const size = 60 * scale;
-        const color = stage === 'apex' ? '#c9b8ac' : '#d7ccc8';
-
-        // Limbs (Arms/Legs Hanging)
-        drawLimbs(ctx, -size * 0.8, size * 0.2, size * 0.3, color, false, frame);
-        drawLimbs(ctx, size * 0.8, size * 0.2, size * 0.3, color, false, frame);
-        drawLimbs(ctx, -size * 0.6, size * 0.8, size * 0.3, color, true, frame);
-        drawLimbs(ctx, size * 0.6, size * 0.8, size * 0.3, color, true, frame);
 
         // Body
-        ctx.fillStyle = color;
-        ctx.beginPath(); ctx.ellipse(0, 0, size * 1.2, size, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = stage === 'apex' ? '#c9b8ac' : '#d7ccc8';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, size * 1.2, size, 0, 0, Math.PI * 2);
+        ctx.fill();
 
         // Face Mask
         ctx.fillStyle = '#f5f5f5';
-        ctx.beginPath(); ctx.ellipse(0, 0, size * 0.7, size * 0.6, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(0, 0, size * 0.7, size * 0.6, 0, 0, Math.PI * 2);
+        ctx.fill();
 
-        // Eye Patches
+        // Eye Patches (more defined for higher stages)
         ctx.fillStyle = stage === 'apex' ? '#765549' : '#8d6e63';
         ctx.beginPath();
-        ctx.ellipse(-size * 0.3, -size * 0.1, size * 0.25, size * 0.35, Math.PI / 4, 0, Math.PI * 2);
-        ctx.ellipse(size * 0.3, -size * 0.1, size * 0.25, size * 0.35, -Math.PI / 4, 0, Math.PI * 2);
+        ctx.ellipse(-size * 0.3, -size * 0.1, size * 0.25, size * (stage === 'apex' ? 0.4 : 0.35), Math.PI / 4, 0, Math.PI * 2);
+        ctx.ellipse(size * 0.3, -size * 0.1, size * 0.25, size * (stage === 'apex' ? 0.4 : 0.35), -Math.PI / 4, 0, Math.PI * 2);
         ctx.fill();
 
         drawFace(ctx, size, frame, emotion, isSleeping);
@@ -372,8 +336,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             ref={canvasRef}
             width={width}
             height={height}
-            className="drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-transform duration-700 origin-center"
-            style={{ width: width, height: height }}
+            className="drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-transform duration-700"
         />
     );
 };
