@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Companion, Transaction, JournalEntry, ArtEntry, VoiceJournalEntry, GardenState, Anima } from '../types';
+import { User, Companion, Transaction, JournalEntry, ArtEntry, VoiceJournalEntry, GardenState, Lumina } from '../types';
 import { LanguageSelector } from './common/LanguageSelector';
 import { useLanguage } from './common/LanguageContext';
 import {
@@ -10,7 +10,7 @@ import {
     Sun, Feather, Anchor, RefreshCw, Play, Star, Edit2, Trash2, Zap, Gamepad2,
     CloudRain, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Moon,
     Twitter, Instagram, Linkedin, Volume2, Music, Trees,
-    Mail, StopCircle, Eye, Minimize2, Flame as Fire, EyeOff, Megaphone
+    Mail, StopCircle, Eye, Minimize2, Flame as Fire, EyeOff, Megaphone, LifeBuoy
 } from 'lucide-react';
 import { NotificationBell, Notification } from './common/NotificationBell';
 import { UserService } from '../services/userService';
@@ -36,7 +36,7 @@ const PaymentModal = lazy(() => import('./PaymentModal').catch(() => ({ default:
 const ProfileModal = lazy(() => import('./ProfileModal').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Profile Experience...</div> })));
 const GardenFullView = lazy(() => import('./garden/GardenFullView'));
 const BookOfYouView = lazy(() => import('./retention/BookOfYouView'));
-const AnimaView = lazy(() => import('./pocket/AnimaView'));
+const LuminaView = lazy(() => import('./pocket/LuminaView'));
 
 import EmergencyOverlay from './safety/EmergencyOverlay';
 import { VoiceRecorder, VoiceEntryItem } from './journal/VoiceRecorder';
@@ -93,7 +93,7 @@ const CollapsibleSection = React.memo(({ title, icon: Icon, children, defaultOpe
     const [isOpen, setIsOpen] = useState(defaultOpen);
     return (
         <div className="bg-white/40 dark:bg-gray-900/40 rounded-3xl border border-yellow-100/50 dark:border-gray-800/50 overflow-hidden backdrop-blur-md shadow-sm transition-all duration-300">
-            <button onClick={() => setIsOpen(!isOpen)} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-yellow-50/50 dark:hover:bg-gray-800/30 transition-colors bg-[#FFFBEB] dark:bg-gray-900">
+            <button onClick={() => setIsOpen(!isOpen)} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-[var(--color-primary)]/10 transition-colors bg-[var(--color-bg-base)]">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-yellow-100 dark:bg-gray-800 rounded-lg text-yellow-600 dark:text-yellow-500"><Icon className="w-5 h-5" /></div>
                     <span className="font-bold text-base dark:text-white">{title}</span>
@@ -169,7 +169,7 @@ const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }> = ({ 
                 // Water the garden on creation
                 await GardenService.waterPlant(userId);
 
-                await refreshGallery();
+                setGallery(prev => [newEntry, ...prev]); // Instant State Update
                 if (onUpdate) onUpdate();
                 setInput('');
             }
@@ -271,7 +271,7 @@ const SoundscapePlayer: React.FC = () => {
                     <div className="grid grid-cols-4 gap-2">
                         {[
                             { key: 'rain', label: 'Rain', icon: CloudRain }, { key: 'forest', label: 'Nature', icon: Trees },
-                            { key: 'ocean', label: 'Ocean', icon: Anchor }, { key: 'fire', label: 'Fire', icon: Fire }
+                            { key: 'ocean', label: 'Ocean', icon: LifeBuoy }, { key: 'fire', label: 'Fire', icon: Fire }
                         ].map((item) => (
                             <button key={item.key} onClick={() => setTrack(item.key as any)} className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${track === item.key ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg scale-105' : 'bg-white dark:bg-gray-800 text-gray-500 hover:bg-yellow-100 dark:hover:bg-gray-700 border border-yellow-100 dark:border-gray-700'}`}>
                                 <item.icon className={`w-4 h-4 mb-1 ${track === item.key ? 'text-yellow-400 dark:text-yellow-600' : ''}`} />
@@ -438,7 +438,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [showBookFull, setShowBookFull] = useState(false);
     const [showGardenFull, setShowGardenFull] = useState(false);
     const [showPocketPet, setShowPocketPet] = useState(false);
-    const [anima, setAnima] = useState<Anima | null>(null);
+    const [lumina, setLumina] = useState<Lumina | null>(null);
     const [isVaultOpen, setIsVaultOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([
         { id: '1', title: 'Welcome Back', message: 'Your sanctuary is ready.', type: 'info', read: false, timestamp: new Date() }
@@ -514,7 +514,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const refreshPet = async () => {
         if (!user.id) return;
         const p = await PetService.getPet(user.id);
-        setAnima(p);
+        setLumina(p);
     };
 
     useEffect(() => {
@@ -531,8 +531,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
         if (darkMode) {
             root.classList.add('dark');
+            root.style.colorScheme = 'dark';
         } else {
             root.classList.remove('dark');
+            root.style.colorScheme = 'light';
         }
         localStorage.setItem('peutic_theme', themeStr);
 
@@ -688,7 +690,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const uniqueSpecialties = Array.from(new Set(companions.map(c => c.specialty))).sort();
 
     return (
-        <div className={`min-h-screen transition-colors duration-500 font-sans ${darkMode ? 'dark bg-[#0A0A0A] text-white' : 'bg-[#FFFBEB] text-black'}`}>
+        <div className={`min-h-screen transition-colors duration-500 font-sans bg-[var(--color-bg-base)] text-[var(--color-text-base)] theme-cyberpunk`}>
             {mood && <WeatherEffect type={mood} />}
             {/* FLOATING CONTROLS: Separated for better ergonomics */}
             <div className="fixed bottom-6 left-6 z-[80] pointer-events-none">
@@ -722,7 +724,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
 
             <div className="flex h-screen overflow-hidden">
-                <aside className="hidden md:flex w-20 lg:w-64 flex-col border-r border-yellow-200/30 dark:border-gray-800/50 bg-[#FFFBEB]/40 dark:bg-black/40 backdrop-blur-2xl transition-all duration-500 hover:w-24 lg:hover:w-72">
+                <aside className="hidden md:flex w-20 lg:w-64 flex-col border-r border-yellow-200/30 dark:border-gray-800/50 bg-[var(--color-bg-base)]/40 backdrop-blur-2xl transition-all duration-500 hover:w-24 lg:hover:w-72">
                     <div className="p-6 lg:p-8 flex items-center justify-center lg:justify-start gap-3">
                         <div className="w-9 h-9 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg group hover:scale-110 transition-transform">
                             <Heart className="w-5 h-5 text-black fill-black" />
@@ -930,9 +932,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                             <Sparkles className="w-5 h-5 md:w-10 md:h-10 animate-bounce" />
                                                         </div>
                                                     </div>
-                                                    <h3 className="text-[7px] md:text-sm font-black text-white dark:text-cyan-50 uppercase tracking-[0.2em] mb-1">Anima</h3>
+                                                    <h3 className="text-[7px] md:text-sm font-black text-white dark:text-cyan-50 uppercase tracking-[0.2em] mb-1">Lumina</h3>
                                                     <p className="hidden md:block text-[10px] font-bold text-cyan-400/50 uppercase tracking-widest">
-                                                        {anima ? `${anima.name} Lvl ${anima.level}` : 'Summon Friend'}
+                                                        {lumina ? `${lumina.name} Lvl ${lumina.level}` : 'Summon Friend'}
                                                     </p>
                                                 </div>
                                             </div>
@@ -1262,7 +1264,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             {
                 showPocketPet && dashboardUser && (
                     <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Bridging Digital Reality...</div>}>
-                        <AnimaView user={dashboardUser} onClose={() => { setShowPocketPet(false); refreshPet(); }} />
+                        <LuminaView user={dashboardUser} onClose={() => { setShowPocketPet(false); refreshPet(); }} />
                     </Suspense>
                 )
             }

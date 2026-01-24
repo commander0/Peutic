@@ -20,22 +20,6 @@ interface VideoRoomProps {
     initialMood?: string | null;
 }
 
-const ConcurrencyManager: React.FC<{ userId: string }> = ({ userId }) => {
-    useEffect(() => {
-        const init = async () => {
-            await UserService.claimActiveSpot(userId);
-            await UserService.sendKeepAlive(userId);
-        };
-        init();
-        const interval = setInterval(() => UserService.sendKeepAlive(userId), 30000); // 30s heartbeat
-        return () => {
-            clearInterval(interval);
-            UserService.endSession(userId);
-        };
-    }, [userId]);
-    return null;
-};
-
 // --- ICEBREAKER DATA ---
 const ICEBREAKERS = [
     "What is one small win you had this week?",
@@ -236,7 +220,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                 if (pos === 1 || pos === 0) {
                     await tryStart();
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Queue Error:", error);
                 setErrorMsg("Failed to join queue. Please retry.");
                 setConnectionState('ERROR');
@@ -374,7 +358,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
             if (recentMoods) moodContext += ` Recent emotional trend: ${recentMoods}.`;
 
             // 2. Fetch Garden State (Metaphorical Context)
-            const garden = await GardenService.getGarden(user.id);
+            const garden = await GardenService.getGarden(userId);
             let gardenContext = "";
             if (garden) {
                 gardenContext = `User's Inner Garden is at Level ${garden.level} (${garden.currentPlantType}). Streak: ${garden.streakCurrent} days. If relevant, use garden metaphors for growth.`;

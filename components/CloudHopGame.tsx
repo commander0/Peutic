@@ -98,16 +98,8 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
         const handleKeyUp = () => { playerRef.current.vx = 0; };
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
-        const drawCloud = (x: number, y: number, w: number, h: number, type: string) => {
-            ctx.fillStyle = type === 'moving' ? '#E0F2FE' : 'white';
-            if (type === 'moving') ctx.shadowColor = '#38BDF8';
-            ctx.fillRect(x, y, w, h);
-            const bumpSize = h * 0.8;
-            ctx.beginPath(); ctx.arc(x + 10, y, bumpSize, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(x + w - 10, y, bumpSize, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(x + w / 2, y - 5, bumpSize * 1.2, 0, Math.PI * 2); ctx.fill();
-            ctx.shadowColor = 'transparent';
-        };
+        ctx.shadowColor = 'transparent';
+
         const update = () => {
             const p = playerRef.current;
             p.x += p.vx;
@@ -147,30 +139,62 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
                 if (requestRef.current !== undefined) cancelAnimationFrame(requestRef.current);
                 return;
             }
-            const grad = ctx.createLinearGradient(0, 0, 0, H);
-            grad.addColorStop(0, '#0EA5E9');
-            grad.addColorStop(1, '#BAE6FD');
-            ctx.fillStyle = grad;
+
+            // --- VOID RENDER (THEMED) ---
+
+            // 1. COSMOS
+            ctx.fillStyle = '#020617'; // Deep space
             ctx.fillRect(0, 0, W, H);
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            for (let i = 0; i < 10; i++) ctx.fillRect((i * 50 + Date.now() / 50) % W, (i * 30 + Date.now() / 20) % H, 2, 2);
+
+            // Stars
+            ctx.fillStyle = 'white';
+            for (let i = 0; i < 50; i++) {
+                const sx = (Math.sin(i * 123) * 0.5 + 0.5) * W;
+                const sy = (Math.cos(i * 456) * 0.5 + 0.5) * H;
+                ctx.globalAlpha = Math.random() * 0.5 + 0.2;
+                ctx.fillRect(sx, sy, 1.5, 1.5);
+            }
+            ctx.globalAlpha = 1.0;
+
+            // 2. PLATFORMS (Digital Blocks)
             platformsRef.current.forEach(pl => {
-                if (pl.type === 'ground') { ctx.fillStyle = '#4ade80'; ctx.fillRect(pl.x, pl.y, pl.w, pl.h); }
-                else { drawCloud(pl.x, pl.y, pl.w, pl.h, pl.type); }
+                if (pl.type === 'ground') {
+                    ctx.fillStyle = '#1e1b4b'; // Dark Navy
+                    ctx.fillRect(pl.x, pl.y, pl.w, pl.h);
+                    ctx.strokeStyle = '#4f46e5';
+                    ctx.strokeRect(pl.x, pl.y, pl.w, pl.h);
+                } else {
+                    ctx.fillStyle = pl.type === 'moving' ? '#1e293b' : '#0f172a';
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = pl.type === 'moving' ? '#38bdf8' : '#6366f1';
+                    ctx.fillRect(pl.x, pl.y, pl.w, pl.h);
+                    ctx.strokeStyle = pl.type === 'moving' ? '#38bdf8' : '#6366f1';
+                    ctx.strokeRect(pl.x, pl.y, pl.w, pl.h);
+                    ctx.shadowBlur = 0;
+                }
             });
-            ctx.shadowBlur = 10; ctx.shadowColor = 'white';
-            ctx.fillStyle = '#FACC15';
-            ctx.beginPath(); ctx.arc(p.x + p.width / 2, p.y + p.height / 2, p.width / 2, 0, Math.PI * 2); ctx.fill();
-            ctx.shadowBlur = 0; ctx.fillStyle = 'black';
-            const eyeOff = p.width * 0.2;
-            const eyeSize = p.width * 0.1;
-            ctx.beginPath(); ctx.arc(p.x + p.width / 2 - eyeOff, p.y + p.height / 2 - eyeOff, eyeSize, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(p.x + p.width / 2 + eyeOff, p.y + p.height / 2 - eyeOff, eyeSize, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(p.x + p.width / 2, p.y + p.height / 2 + eyeOff / 2, eyeOff * 0.8, 0, Math.PI);
-            ctx.lineWidth = 2; ctx.strokeStyle = 'black'; ctx.stroke();
+
+            // 3. PLAYER (Cyber Pulse)
+            ctx.fillStyle = '#818cf8';
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#818cf8';
+            ctx.beginPath();
+            ctx.roundRect(p.x, p.y, p.width, p.height, 4);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Face
+            ctx.fillStyle = 'black';
+            ctx.beginPath(); ctx.arc(p.x + 8, p.y + 10, 2.5, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(p.x + p.width - 8, p.y + 10, 2.5, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = 'black';
+            ctx.beginPath(); ctx.arc(p.x + p.width / 2, p.y + 16, 4, 0, Math.PI); ctx.stroke();
+
             requestRef.current = requestAnimationFrame(update);
         };
-        update();
+
+        requestRef.current = requestAnimationFrame(update);
+
         return () => {
             if (requestRef.current !== undefined) cancelAnimationFrame(requestRef.current);
             window.removeEventListener('keydown', handleKeyDown);
@@ -187,17 +211,17 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
     const handleRelease = () => { playerRef.current.vx = 0; };
 
     return (
-        <div className="relative h-full w-full bg-sky-300 overflow-hidden rounded-2xl border-4 border-white dark:border-gray-700 shadow-inner cursor-pointer"
+        <div className="relative h-full w-full bg-slate-950 overflow-hidden rounded-2xl border-4 border-white/5 shadow-[inset_0_0_40px_rgba(0,0,0,0.8)] cursor-pointer"
             onMouseDown={handleTap} onMouseUp={handleRelease} onTouchStart={handleTap} onTouchEnd={handleRelease}>
-            <div className="absolute top-2 right-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full font-black text-white text-base md:text-lg z-10">{score}m</div>
-            {highScore > 0 && <div className="absolute top-2 left-2 bg-yellow-400/20 backdrop-blur-sm px-3 py-1 rounded-full font-black text-white text-xs md:text-sm z-10 border border-yellow-400/50">Best: {highScore}</div>}
+            <div className="absolute top-2 right-2 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full font-black text-indigo-300 text-base md:text-lg z-10 border border-white/10">{score}m</div>
+            {highScore > 0 && <div className="absolute top-2 left-2 bg-yellow-400/10 backdrop-blur-md px-3 py-1 rounded-full font-black text-yellow-500 text-xs md:text-sm z-10 border border-yellow-500/30">Best: {highScore}</div>}
             <canvas ref={canvasRef} className="w-full h-full block" />
             {(!gameStarted || gameOver) && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20 animate-in fade-in">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md z-20 animate-in fade-in">
                     <div className="text-center">
-                        {gameOver && <p className="text-white font-black text-2xl mb-4 drop-shadow-md">Fall!</p>}
-                        <button onClick={initGame} className="bg-yellow-400 text-yellow-900 px-6 py-2 md:px-8 md:py-3 rounded-full font-black text-sm md:text-lg shadow-xl hover:scale-110 transition-transform flex items-center gap-2">
-                            <Play className="w-4 h-4 md:w-5 md:h-5 fill-current" /> {gameOver ? 'Try Again' : 'Play'}
+                        {gameOver && <p className="text-white font-black text-2xl mb-4 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">Signal Lost</p>}
+                        <button onClick={initGame} className="bg-indigo-600 text-white px-6 py-2 md:px-8 md:py-3 rounded-full font-black text-sm md:text-lg shadow-[0_0_20px_rgba(79,70,229,0.5)] hover:scale-110 transition-transform flex items-center gap-2">
+                            <Play className="w-4 h-4 md:w-5 md:h-5 fill-current" /> {gameOver ? 'Retry' : 'Enter Void'}
                         </button>
                     </div>
                 </div>

@@ -45,7 +45,7 @@ const BookOfYou: React.FC = () => {
                 // Calculate Mood Ratio
                 const total = m.length;
                 if (total > 0) {
-                    const sunCount = m.filter(x => ['Happy', 'Calm', 'confetti', 'sun'].includes(x.mood)).length;
+                    const sunCount = m.filter(x => x.mood && ['Happy', 'Calm', 'confetti', 'sun'].includes(x.mood)).length;
                     const sunPct = (sunCount / total) * 100;
                     setMoodRatio({ sun: sunPct, rain: 100 - sunPct });
                 } else {
@@ -157,12 +157,24 @@ const BookOfYou: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 opacity-75 hover:opacity-100 transition-opacity">
-                        {moods.slice(0, 8).map((m, i) => ( // Limit to recent 8 for clean layout
-                            <div key={i} className="p-4 bg-gray-50 rounded-xl text-center borderBorder-transparent hover:border-gray-200 transition-all">
-                                <span className="text-2xl block mb-2">{m.mood === 'Happy' ? '😊' : m.mood === 'Calm' ? '😌' : m.mood === 'Anxious' ? '😰' : '😐'}</span>
-                                <div className="text-[10px] font-bold uppercase text-gray-400">{new Date(m.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
-                            </div>
-                        ))}
+                        {moods.slice(0, 8).map((m, i) => { // Limit to recent 8 for clean layout
+                            const isPositive = (m.mood as any) === 'confetti' || (m.mood as any) === 'Happy' || (m.mood as any) === 'Calm' || (m.mood as any) === 'sun';
+                            const isNegative = (m.mood as any) === 'rain' || (m.mood as any) === 'Anxious' || (m.mood as any) === 'Sad';
+                            let emoji = '😐'; // Default neutral
+
+                            if (isPositive) {
+                                emoji = (m.mood as any) === 'confetti' ? '🎉' : (m.mood as any) === 'sun' ? '☀️' : '😊';
+                            } else if (isNegative) {
+                                emoji = (m.mood as any) === 'rain' ? '🌧️' : (m.mood as any) === 'Anxious' ? '😰' : '😔';
+                            }
+
+                            return (
+                                <div key={i} className="p-4 bg-gray-50 rounded-xl text-center borderBorder-transparent hover:border-gray-200 transition-all">
+                                    <span className="text-2xl block mb-2">{emoji}</span>
+                                    <div className="text-[10px] font-bold uppercase text-gray-400">{new Date(m.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
 
