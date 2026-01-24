@@ -87,41 +87,31 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
                         <button onClick={initGame} className="px-10 py-4 bg-white text-black font-black text-sm uppercase tracking-[0.2em] rounded-full hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-all">Reincarnate</button>
                     </div>
                 ) : (
-                    <div className="w-full h-full grid grid-cols-4 grid-rows-4 gap-3 md:gap-4 perspective-1000 p-2">
+                    <div className="w-full h-full grid grid-cols-4 grid-rows-4 gap-2 md:gap-3 perspective-1000">
                         {cards.map((card, i) => {
                             const isFlipped = flipped.includes(i) || solved.includes(i);
                             const isSolved = solved.includes(i);
                             const Icon = card.icon;
 
                             return (
-                                <div key={i} className="relative w-full h-full group preserve-3d cursor-pointer" style={{ perspective: '1200px' }}>
-                                    <div
+                                <div key={i} className="relative w-full h-full group preserve-3d" style={{ perspective: '1000px' }}>
+                                    <button
                                         onClick={() => handleCardClick(i)}
-                                        className={`w-full h-full relative transition-all duration-700 transform-style-3d ${isFlipped ? 'rotate-y-180' : 'hover:rotate-y-12'} ${isSolved ? 'opacity-0 scale-50' : ''} shadow-xl hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] rounded-2xl`}
+                                        className={`w-full h-full relative transition-all duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''} ${isSolved ? 'opacity-50 blur-[1px] scale-95' : 'hover:scale-[1.02]'}`}
                                     >
-                                        {/* Card Back - Prismatic Obsidian */}
-                                        <div className="absolute inset-0 backface-hidden bg-slate-900 rounded-2xl border border-white/10 flex items-center justify-center overflow-hidden">
-                                            {/* Prismatic Sheen */}
-                                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-pink-500/20 opacity-50 group-hover:opacity-80 transition-opacity"></div>
-                                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
-
-                                            {/* Center Emblem */}
-                                            <div className="relative z-10 w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 shadow-[0_0_15px_rgba(139,92,246,0.5)] flex items-center justify-center border border-white/20">
-                                                <div className="w-6 h-6 rounded-full border border-white/30 bg-white/10 backdrop-blur-sm"></div>
-                                            </div>
+                                        {/* Card Back */}
+                                        <div className="absolute inset-0 backface-hidden bg-gradient-to-br from-indigo-900 to-slate-900 rounded-xl border border-white/10 shadow-lg flex items-center justify-center overflow-hidden">
+                                            <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] hover:opacity-30 transition-opacity"></div>
+                                            <div className="w-8 h-8 rounded-full border-2 border-indigo-500/30 group-hover:border-indigo-400/50 group-hover:shadow-[0_0_15px_rgba(99,102,241,0.4)] transition-all"></div>
                                         </div>
 
-                                        {/* Card Front - Frosted Glass */}
-                                        <div className="absolute inset-0 backface-hidden rotate-y-180 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/30 shadow-[0_0_30px_rgba(255,255,255,0.15)] flex items-center justify-center overflow-hidden">
-                                            {/* Shine Sweep */}
-                                            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent translate-x-[-100%] animate-[shimmer_2s_infinite]"></div>
-
-                                            {/* Icon with Glow */}
-                                            <div className="relative z-10 p-3 rounded-full bg-white/5 border border-white/10 shadow-inner">
-                                                <Icon className={`w-8 h-8 md:w-10 md:h-10 text-indigo-200 drop-shadow-[0_0_12px_rgba(165,180,252,0.8)]`} />
-                                            </div>
+                                        {/* Card Front */}
+                                        <div className="absolute inset-0 backface-hidden rotate-y-180 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.1)] flex items-center justify-center overflow-hidden">
+                                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
+                                            {isSolved && <div className="absolute inset-0 bg-green-500/20 shadow-[inset_0_0_20px_rgba(34,197,94,0.4)] animate-pulse"></div>}
+                                            <Icon className={`w-8 h-8 md:w-10 md:h-10 ${isSolved ? 'text-green-400 drop-shadow-[0_0_10px_rgba(34,197,94,0.8)]' : 'text-indigo-300 drop-shadow-[0_0_15px_rgba(165,180,252,0.6)]'} transition-all`} />
                                         </div>
-                                    </div>
+                                    </button>
                                 </div>
                             );
                         })}
