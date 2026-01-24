@@ -23,7 +23,7 @@ export const InspirationQuote: React.FC = () => {
     }, []);
 
     return (
-        <span className="hidden md:inline-block text-[10px] font-medium text-gray-400 italic border-l border-gray-200 dark:border-gray-700 pl-3 ml-3 animate-in fade-in duration-1000">
+        <span className="inline-block text-[10px] md:text-xs font-medium text-gray-400 italic border-l border-gray-200 dark:border-gray-700 pl-2 ml-2 md:pl-3 md:ml-3 animate-in fade-in duration-1000 max-w-[150px] md:max-w-none truncate md:overflow-visible">
             "{quote}"
         </span>
     );

@@ -30,7 +30,9 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
     // Responsive Canvas Listener
     useEffect(() => {
         const handleResize = () => {
-            const size = window.innerWidth < 768 ? Math.min(window.innerWidth - 40, 340) : 500;
+            // Dynamic sizing based on available width/height ratio to prevent "square" skewing
+            const width = window.innerWidth;
+            const size = width < 768 ? Math.min(width - 32, 360) : 500;
             setCanvasSize(size);
         };
         handleResize(); // Init
@@ -62,7 +64,7 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
             return;
         }
 
-        const newPet = await PetService.createPet(user.id, selectedSpecies, petName);
+        const newPet = await PetService.createPet(user.id, selectedSpecies as 'Holo-Hamu' | 'Digi-Dino' | 'Neo-Shiba' | 'Zen-Sloth', petName);
         if (newPet) {
             setPet(newPet);
             setShowSelection(false);
@@ -101,31 +103,34 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
                     showToast(`${pet.name} is full!`, "info");
                     return;
                 }
-                // Deduct balance
-                await UserService.updateUser({ ...user, balance: user.balance - COST });
-                updatedPet.hunger = Math.min(100, pet.hunger + statGain);
-                updatedPet.experience += xpGain;
-                newEmotion = 'eating';
-                showToast(`Fed ${pet.name}! (+${statGain} Saturation, -${COST}m)`, "success");
+                // Deduct balance securely
+                if (await UserService.deductBalance(COST, `Fed ${pet.name}`)) {
+                    updatedPet.hunger = Math.min(100, pet.hunger + statGain);
+                    updatedPet.experience += xpGain;
+                    newEmotion = 'eating';
+                    showToast(`Fed ${pet.name}! (+${statGain} Saturation, -${COST}m)`, "success");
+                }
                 break;
             case 'play':
                 if (pet.energy < 20) {
                     showToast(`${pet.name} is too tired to play.`, "info");
                     return;
                 }
-                await UserService.updateUser({ ...user, balance: user.balance - COST });
-                updatedPet.happiness = Math.min(100, pet.happiness + statGain);
-                updatedPet.energy = Math.max(0, pet.energy - (10 * intensity)); // Energy drain also scales slightly
-                updatedPet.experience += xpGain * 1.5; // Play gives more XP
-                newEmotion = 'happy';
-                showToast(`Played with ${pet.name}! (+${statGain} Joy, -${COST}m)`, "success");
+                if (await UserService.deductBalance(COST, `Played with ${pet.name}`)) {
+                    updatedPet.happiness = Math.min(100, pet.happiness + statGain);
+                    updatedPet.energy = Math.max(0, pet.energy - (10 * intensity));
+                    updatedPet.experience += xpGain * 1.5;
+                    newEmotion = 'happy';
+                    showToast(`Played with ${pet.name}! (+${statGain} Joy, -${COST}m)`, "success");
+                }
                 break;
             case 'clean':
-                await UserService.updateUser({ ...user, balance: user.balance - COST });
-                updatedPet.cleanliness = Math.min(100, pet.cleanliness + (statGain * 2));
-                updatedPet.experience += xpGain;
-                newEmotion = 'happy';
-                showToast(`Cleaned ${pet.name}! (-${COST}m)`, "success");
+                if (await UserService.deductBalance(COST, `Cleaned ${pet.name}`)) {
+                    updatedPet.cleanliness = Math.min(100, pet.cleanliness + (statGain * 2));
+                    updatedPet.experience += xpGain;
+                    newEmotion = 'happy';
+                    showToast(`Cleaned ${pet.name}! (-${COST}m)`, "success");
+                }
                 break;
             case 'sleep':
                 updatedPet.isSleeping = !pet.isSleeping;

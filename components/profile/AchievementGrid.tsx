@@ -69,9 +69,10 @@ const AchievementGrid: React.FC<AchievementGridProps> = ({ userId }) => {
                 return (
                     <div
                         key={ach.id}
-                        className={`relative group p-4 rounded-2xl border transition-all duration-500 overflow-hidden ${isUnlocked
+                        onClick={() => alert(`Benchmark: ${ach.title}\n${ach.description}\nValue: +${ach.xp_reward} XP`)}
+                        className={`relative group p-4 rounded-2xl border transition-all duration-500 overflow-hidden cursor-pointer ${isUnlocked
                             ? 'bg-gradient-to-br from-yellow-500/10 to-transparent border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.1)] hover:shadow-[0_0_25px_rgba(234,179,8,0.2)] hover:-translate-y-1'
-                            : 'bg-gray-900/40 border-white/5 grayscale opacity-50'
+                            : 'bg-gray-900/40 border-white/5 grayscale opacity-50 hover:opacity-70'
                             }`}
                     >
                         {/* UNLOCKED SHINE EFFECT */}
@@ -87,7 +88,10 @@ const AchievementGrid: React.FC<AchievementGridProps> = ({ userId }) => {
                                 <h3 className={`text-xs font-black uppercase tracking-wider mb-1 ${isUnlocked ? 'text-white' : 'text-gray-500'}`}>
                                     {ach.title}
                                 </h3>
-                                <p className="text-[10px] text-gray-400 leading-tight mb-2 min-h-[2.5em]">
+                                <div className="h-0.5 w-8 bg-gray-700 my-2 rounded-full overflow-hidden">
+                                    <div className={`h-full ${isUnlocked ? 'bg-yellow-500' : 'bg-transparent'} w-full`}></div>
+                                </div>
+                                <p className="text-[10px] text-gray-400 leading-tight mb-2 min-h-[2.5em] line-clamp-2">
                                     {ach.description}
                                 </p>
                                 <div className="flex items-center gap-1">

@@ -10,7 +10,7 @@ import {
     Sun, Feather, Anchor, RefreshCw, Play, Star, Edit2, Trash2, Zap, Gamepad2,
     CloudRain, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Moon,
     Twitter, Instagram, Linkedin, Volume2, Music, Trees,
-    Mail, StopCircle, Eye, Minimize2, Flame as Fire, EyeOff, Megaphone, Bell
+    Mail, StopCircle, Eye, Minimize2, Flame as Fire, EyeOff, Megaphone
 } from 'lucide-react';
 import { NotificationBell, Notification } from './common/NotificationBell';
 import { UserService } from '../services/userService';
@@ -439,7 +439,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [showGardenFull, setShowGardenFull] = useState(false);
     const [showPocketPet, setShowPocketPet] = useState(false);
     const [anima, setAnima] = useState<Anima | null>(null);
-    const [isAdmin, setIsAdmin] = useState(user.role === 'ADMIN');
     const [isVaultOpen, setIsVaultOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([
         { id: '1', title: 'Welcome Back', message: 'Your sanctuary is ready.', type: 'info', read: false, timestamp: new Date() }
@@ -605,6 +604,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         refreshData(); // Refresh to update greeting
     };
 
+    // Sync state with User Preference when User loads (fixes login theme mismatch)
+    useEffect(() => {
+        if (user && user.themePreference) {
+            const pref = user.themePreference === 'dark';
+            if (pref !== darkMode) setDarkMode(pref);
+        }
+    }, [user.themePreference]);
+
     const handleMoodSelect = (m: 'confetti' | 'rain' | null) => {
         setMood(m);
         if (m) {
@@ -635,6 +642,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         setShowTechCheck(true);
     };
     const confirmSession = () => { setShowTechCheck(false); if (pendingCompanion) onStartSession(pendingCompanion); };
+
+    // Improved Profile Savings using DashboardUser state directly
     const saveProfileChanges = () => {
         const check = NameValidator.validateFullName(editName);
         if (!check.valid) {
@@ -643,22 +652,25 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         }
 
         setIsSavingProfile(true);
-        setTimeout(() => {
 
-            if (!dashboardUser) return;
-            const updatedUser: User = {
-                ...dashboardUser,
-                name: editName,
-                email: editEmail
-            };
+        // Immediate update to UserService
+        const updatedUser: User = {
+            ...dashboardUser,
+            name: editName,
+            email: editEmail
+        };
 
-            UserService.updateUser(updatedUser).then(() => {
-                showToast("Profile updated successfully", 'success');
-                setDashboardUser(updatedUser);
-                setIsSavingProfile(false);
-            });
-        }, 500);
-
+        UserService.updateUser(updatedUser).then(async () => {
+            showToast("Profile updated successfully", 'success');
+            setDashboardUser(updatedUser);
+            // Verify by fetching fresh from DB
+            await UserService.syncUser(updatedUser.id);
+            setIsSavingProfile(false);
+        }).catch(err => {
+            console.error(err);
+            showToast("Failed to save changes", "error");
+            setIsSavingProfile(false);
+        });
     };
     const handleDeleteAccount = async () => {
         try {
@@ -767,7 +779,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                                     <div className="flex flex-col">
                                         <div className="flex items-center gap-2">
-                                            <span className="md:hidden text-lg font-black tracking-tight dark:text-white">Peutic</span>
+                                            <span className="text-lg md:text-xl font-black tracking-tight dark:text-white truncate max-w-[120px]">Peutic</span>
                                             <h1 className="hidden md:block text-2xl lg:text-3xl font-black tracking-tight dark:text-white leading-tight">
                                                 {activeTab === 'inner_sanctuary' ? 'Sanctuary' : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
                                             </h1>
