@@ -799,8 +799,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                             <>
                                                                 <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-stone-800 flex items-center justify-center text-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform"><Zap className="w-5 h-5 md:w-8 md:h-8 fill-amber-500" /></div>
                                                                 <h3 className="text-[7px] md:text-xs font-black text-amber-100 uppercase tracking-widest drop-shadow-lg">Zen Dojo</h3>
-                                                                <p className="hidden md:block text-[9px] text-amber-300 mt-1">Mastery</p>
+                                                                <p className="hidden md:block text-[9px] text-amber-300 mt-1">Mastery & Focus Challenges</p>
                                                             </>
+                                                        ) : (
+                                                            <>
+                                                                <div className="w-8 h-8 md:w-12 md:h-12 bg-black/20 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-amber-700 dark:text-amber-500" /></div>
+                                                                <h3 className="text-[7px] md:text-xs font-black text-amber-900 dark:text-amber-200 uppercase tracking-widest">Zen Dojo</h3>
+                                                                <p className="hidden md:block text-[8px] text-amber-800 dark:text-amber-300 mt-1 mb-2 font-bold px-2">Unlock Focus Modes & Challenges</p>
+                                                                <div className="mt-auto bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[8px] md:text-[10px] font-black px-3 py-1 rounded-full shadow-lg">75m</div>
+                                                            </>
+                                                        )}
+                                                    </div>
                                                         ) : (
                                                             <>
                                                                 <div className="w-8 h-8 md:w-12 md:h-12 bg-black/20 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-amber-700 dark:text-amber-500" /></div>
@@ -872,275 +881,275 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 </div>
                             </div>
                         )}
-                        {activeTab === 'history' && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-500">
-                                <div className="bg-white/70 dark:bg-gray-900/40 rounded-3xl border border-yellow-100/50 dark:border-gray-800/50 overflow-hidden backdrop-blur-md shadow-xl hover:shadow-2xl transition-shadow duration-500">
-                                    <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
-                                        <h3 className="font-black text-lg dark:text-yellow-400">{t('sec_history')}</h3>
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Financials & Check-ins</span>
-                                    </div>
-                                    <table className="w-full text-left">
-                                        <thead className="bg-gray-50 dark:bg-gray-800 text-xs font-bold text-gray-500 uppercase tracking-wider"><tr><th className="p-4 md:p-5">Date</th><th className="p-4 md:p-5">Description</th><th className="p-4 md:p-5 text-right">Amount</th><th className="p-4 md:p-5 text-right">Status</th></tr></thead>
-                                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                                            {transactions.length === 0 ? (<tr><td colSpan={4} className="p-8 text-center text-gray-400 text-sm italic">No records found.</td></tr>) : (transactions.map((tx) => (<tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"><td className="p-4 md:p-5 text-sm dark:text-gray-300 font-mono">{new Date(tx.date).toLocaleDateString()}</td><td className="p-4 md:p-5 text-sm font-bold dark:text-white">{tx.description}</td><td className={`p-4 md:p-5 text-sm text-right font-mono font-bold ${tx.amount > 0 ? 'text-green-500' : 'text-gray-900 dark:text-white'}`}>{tx.amount > 0 ? '+' : ''}{tx.amount}m</td><td className="p-4 md:p-5 text-right"><span className="px-2 py-1 rounded text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 uppercase tracking-wide">{tx.status}</span></td></tr>)))}
-                                        </tbody>
-                                    </table>
+                    {activeTab === 'history' && (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-500">
+                            <div className="bg-white/70 dark:bg-gray-900/40 rounded-3xl border border-yellow-100/50 dark:border-gray-800/50 overflow-hidden backdrop-blur-md shadow-xl hover:shadow-2xl transition-shadow duration-500">
+                                <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+                                    <h3 className="font-black text-lg dark:text-yellow-400">{t('sec_history')}</h3>
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Financials & Check-ins</span>
                                 </div>
+                                <table className="w-full text-left">
+                                    <thead className="bg-gray-50 dark:bg-gray-800 text-xs font-bold text-gray-500 uppercase tracking-wider"><tr><th className="p-4 md:p-5">Date</th><th className="p-4 md:p-5">Description</th><th className="p-4 md:p-5 text-right">Amount</th><th className="p-4 md:p-5 text-right">Status</th></tr></thead>
+                                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                        {transactions.length === 0 ? (<tr><td colSpan={4} className="p-8 text-center text-gray-400 text-sm italic">No records found.</td></tr>) : (transactions.map((tx) => (<tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"><td className="p-4 md:p-5 text-sm dark:text-gray-300 font-mono">{new Date(tx.date).toLocaleDateString()}</td><td className="p-4 md:p-5 text-sm font-bold dark:text-white">{tx.description}</td><td className={`p-4 md:p-5 text-sm text-right font-mono font-bold ${tx.amount > 0 ? 'text-green-500' : 'text-gray-900 dark:text-white'}`}>{tx.amount > 0 ? '+' : ''}{tx.amount}m</td><td className="p-4 md:p-5 text-right"><span className="px-2 py-1 rounded text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 uppercase tracking-wide">{tx.status}</span></td></tr>)))}
+                                    </tbody>
+                                </table>
+                            </div>
 
-                                <div className="bg-white/70 dark:bg-gray-900/40 rounded-3xl border border-yellow-100/50 dark:border-gray-800/50 overflow-hidden backdrop-blur-md shadow-xl hover:shadow-2xl transition-shadow duration-500">
-                                    <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/20">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-red-100 dark:bg-red-900/40 rounded-xl text-red-600 dark:text-red-400"><Mic className="w-5 h-5" /></div>
-                                            <div>
-                                                <h3 className="font-black text-lg dark:text-yellow-400 leading-tight">Voice Chronicles</h3>
-                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Your spoken journey</p>
-                                            </div>
+                            <div className="bg-white/70 dark:bg-gray-900/40 rounded-3xl border border-yellow-100/50 dark:border-gray-800/50 overflow-hidden backdrop-blur-md shadow-xl hover:shadow-2xl transition-shadow duration-500">
+                                <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/20">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-red-100 dark:bg-red-900/40 rounded-xl text-red-600 dark:text-red-400"><Mic className="w-5 h-5" /></div>
+                                        <div>
+                                            <h3 className="font-black text-lg dark:text-yellow-400 leading-tight">Voice Chronicles</h3>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Your spoken journey</p>
                                         </div>
                                     </div>
-                                    <div className="p-5">
-                                        {voiceEntries.length === 0 ? (
-                                            <div className="py-12 text-center border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-2xl">
-                                                <p className="text-gray-400 text-sm italic">You haven't left any voice notes yet.</p>
-                                            </div>
-                                        ) : (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                {voiceEntries.map(entry => (
-                                                    <div key={entry.id} className="p-4 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-gray-800/50">
-                                                        <VoiceEntryItem
-                                                            entry={entry}
-                                                            onDelete={async (id) => {
-                                                                await UserService.deleteVoiceJournal(id);
-                                                                setVoiceEntries(prev => prev.filter(e => e.id !== id));
-                                                            }}
-                                                        />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
                                 </div>
-                            </div>
-                        )}
-                        {activeTab === 'settings' && (
-                            <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in slide-in-from-right-5 duration-500">
-                                <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
-                                    <div className="p-5 md:p-6 border-b border-yellow-100 dark:border-gray-800"><h3 className="font-black text-lg md:text-xl dark:text-yellow-400 mb-1">{t('dash_settings')}</h3><p className="text-gray-500 text-xs">Manage your personal information.</p></div>
-                                    <div className="p-5 md:p-6 space-y-5">
-                                        <div className="flex items-center gap-5"><div className="relative"><div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-4 border-yellow-100 dark:border-gray-800"><AvatarImage src={dashboardUser?.avatar || ''} alt="Profile" className="w-full h-full object-cover" isUser={true} /></div><button onClick={() => setShowProfile(true)} className="absolute bottom-0 right-0 p-1.5 bg-black text-white rounded-full hover:bg-gray-800 transition-colors shadow-lg"><Edit2 className="w-3 h-3" /></button></div><div className="flex-1 space-y-3"><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Display Name</label><div className="relative"><UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none transition-colors text-sm font-bold dark:text-white" /></div></div><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Email Address</label><div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none transition-colors text-sm font-bold dark:text-white" /></div></div></div></div>
-                                        <div className="flex justify-end pt-2"><button onClick={saveProfileChanges} disabled={isSavingProfile} className="px-5 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-bold text-xs hover:opacity-80 transition-opacity flex items-center gap-2">{isSavingProfile ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}{t('ui_save')}</button></div>
-                                    </div>
-                                </div>
-                                <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
-                                    <div className="p-5 md:p-6 border-b border-yellow-100 dark:border-gray-800"><h3 className="font-black text-lg md:text-xl dark:text-yellow-400 mb-1">Preferences</h3><p className="text-gray-500 text-xs">Customize your sanctuary experience.</p></div>
-                                    <div className="p-5 md:p-6 space-y-5">
-                                        <div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Moon className="w-4 h-4 text-gray-600 dark:text-gray-400" /></div><div><p className="font-bold text-gray-900 dark:text-white text-sm">Dark Mode</p><p className="text-[10px] text-gray-500">Reduce eye strain.</p></div></div><button onClick={toggleDarkMode} className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${isDark ? 'bg-yellow-500' : 'bg-gray-200'}`}><span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${isDark ? 'translate-x-5' : 'translate-x-1'}`} /></button></div>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><EyeOff className="w-4 h-4 text-red-500" /></div>
-                                                <div>
-                                                    <p className="font-bold text-gray-900 dark:text-white text-sm">Ghost Mode</p>
-                                                    <p className="text-[10px] text-gray-500">Hide name and photo for public browsing.</p>
-                                                </div>
-                                            </div>
-                                            <button onClick={toggleGhostMode} className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${isGhostMode ? 'bg-red-500' : 'bg-gray-200'}`}>
-                                                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${isGhostMode ? 'translate-x-5' : 'translate-x-1'}`} />
-                                            </button>
+                                <div className="p-5">
+                                    {voiceEntries.length === 0 ? (
+                                        <div className="py-12 text-center border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-2xl">
+                                            <p className="text-gray-400 text-sm italic">You haven't left any voice notes yet.</p>
                                         </div>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Zap className="w-4 h-4 text-purple-500" /></div>
-                                                <div>
-                                                    <p className="font-bold text-gray-900 dark:text-white text-sm">Gamification Mode</p>
-                                                    <p className="text-[10px] text-gray-500">Enable points, XP, and streaks.</p>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {voiceEntries.map(entry => (
+                                                <div key={entry.id} className="p-4 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-gray-800/50">
+                                                    <VoiceEntryItem
+                                                        entry={entry}
+                                                        onDelete={async (id) => {
+                                                            await UserService.deleteVoiceJournal(id);
+                                                            setVoiceEntries(prev => prev.filter(e => e.id !== id));
+                                                        }}
+                                                    />
                                                 </div>
-                                            </div>
-                                            <button
-                                                onClick={() => {
-                                                    const newVal = !dashboardUser?.gamificationEnabled;
-                                                    const updated = { ...dashboardUser, gamificationEnabled: newVal } as User;
-                                                    setDashboardUser(updated);
-                                                    UserService.updateUser(updated);
-                                                    showToast(`Gamification ${newVal ? 'Enabled' : 'Disabled'}`, 'success');
-                                                }}
-                                                className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${(dashboardUser?.gamificationEnabled !== false) ? 'bg-purple-500' : 'bg-gray-200'}`}
-                                            >
-                                                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${(dashboardUser?.gamificationEnabled !== false) ? 'translate-x-5' : 'translate-x-1'}`} />
-                                            </button>
+                                            ))}
                                         </div>
-
-                                    </div>
+                                    )}
                                 </div>
-                                <div className="bg-white/70 dark:bg-gray-900/40 rounded-3xl border border-yellow-200/50 dark:border-gray-800/50 overflow-hidden backdrop-blur-md shadow-sm">
-                                    <div className="p-5 md:p-6 border-b border-yellow-100/30 dark:border-gray-800/50"><h3 className="font-black text-lg md:text-xl dark:text-yellow-400 mb-1">Security Health</h3><p className="text-gray-500 text-xs text-green-500 flex items-center gap-1 font-bold animate-pulse"><ShieldCheck className="w-3 h-3" /> All systems secured & encrypted</p></div>
-                                    <div className="p-5 md:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        {[
-                                            { label: 'TLS Encryption', status: 'Active (256-bit)', icon: Lock },
-                                            { label: 'Data Isolation', status: 'Bank-Grade RLS', icon: ShieldCheck },
-                                            { label: 'Identity Protection', status: 'JWT Secure', icon: UserIcon },
-                                            { label: 'Privacy Shield', status: 'Active (5m Idle)', icon: EyeOff }
-                                        ].map((item, i) => (
-                                            <div key={i} className="p-4 bg-gray-50/50 dark:bg-gray-800/30 rounded-2xl border border-gray-100/50 dark:border-gray-700/50 flex items-center gap-3">
-                                                <div className="p-2 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg">
-                                                    <item.icon className="w-4 h-4" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 leading-none mb-1">{item.label}</p>
-                                                    <p className="text-xs font-bold dark:text-gray-200">{item.status}</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="bg-red-50 dark:bg-red-950/20 rounded-3xl border border-red-100 dark:border-red-900 overflow-hidden shadow-sm">
-                                    <div className="p-5 md:p-6 border-b border-red-100 dark:border-red-900"><h3 className="font-black text-lg md:text-xl text-red-900 dark:text-red-400 mb-1">Danger Zone</h3><p className="text-red-600/70 dark:text-red-400/60 text-xs">Permanent actions for your data.</p></div>
-                                    <div className="p-5 md:p-6">
-                                        {showDeleteConfirm ? (
-                                            <div className="bg-white dark:bg-black p-5 rounded-2xl border border-red-200 dark:border-red-900 text-center animate-in zoom-in duration-200">
-                                                <AlertTriangle className="w-10 h-10 text-red-500 mx-auto mb-3" />
-                                                <h4 className="font-bold text-base mb-1 dark:text-yellow-400">Are you absolutely sure?</h4>
-                                                <p className="text-gray-500 text-xs mb-4">This action cannot be undone. This will permanently delete your account, journal entries, and remaining balance.</p>
-
-                                                {balance > 0 && (
-                                                    <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl mb-5 text-left flex items-start gap-3">
-                                                        <div className="bg-red-500/20 p-2 rounded-lg">
-                                                            <Plus className="w-4 h-4 text-red-500 rotate-45" />
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-red-900 dark:text-red-400 text-xs font-black uppercase tracking-widest mb-1">Impact Warning</p>
-                                                            <p className="text-red-700/80 dark:text-red-400/70 text-[11px] font-bold leading-relaxed">You have <span className="text-red-600 dark:text-red-400 font-black">{balance} minutes</span> remaining. Deleting your account will forfeit these credits immediately without refund.</p>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                <div className="flex gap-3 justify-center">
-                                                    <button onClick={() => setShowDeleteConfirm(false)} disabled={isDeletingAccount} className="px-5 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg font-bold text-xs hover:bg-gray-200 disabled:opacity-50">{t('ui_cancel')}</button>
-                                                    <button onClick={handleDeleteAccount} disabled={isDeletingAccount} className="px-5 py-2 bg-red-600 text-white rounded-lg font-bold text-xs hover:bg-red-700 shadow-lg flex items-center gap-2">
-                                                        {isDeletingAccount ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : 'Yes, Delete Everything'}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <p className="font-bold text-red-900 dark:text-red-400 text-sm">Delete Account</p>
-                                                    <p className="text-[10px] text-red-700/60 dark:text-red-400/50">Remove all data and access.</p>
-                                                </div>
-                                                <button onClick={() => setShowDeleteConfirm(true)} className="px-5 py-2.5 bg-white dark:bg-transparent border border-red-200 dark:border-red-800 text-red-600 rounded-xl font-bold text-[10px] uppercase tracking-wider hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">Delete Account</button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                    <div className="mt-8 mb-4 max-w-4xl mx-auto px-4"><div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30 p-3 rounded-xl text-center"><p className="text-[9px] md:text-[10px] font-bold text-yellow-800 dark:text-yellow-500 uppercase tracking-wide leading-relaxed">Note: Specialist availability is subject to change frequently due to high demand. If your selected specialist is unavailable, a specialist of equal or greater qualifications will be automatically substituted to ensure immediate support.</p></div></div>
-                    <footer className="bg-[#FFFBEB] dark:bg-[#0A0A0A] text-black dark:text-white py-10 md:py-12 px-6 border-t border-yellow-200 dark:border-gray-800 transition-colors">
-                        <div className="max-w-7xl mx-auto">
-                            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 mb-8 md:mb-10">
-                                <div className="md:col-span-5 space-y-4"><div className="flex items-center gap-2"><div className="w-7 h-7 bg-yellow-400 rounded-xl flex items-center justify-center"><Heart className="w-4 h-4 fill-black text-black" /></div><span className="text-xl font-black tracking-tight">Peutic</span></div><p className="text-gray-800 dark:text-gray-500 text-xs leading-relaxed max-w-md">Connecting the disconnected through elite-level human specialists and cutting-edge secure technology.</p><div className="flex gap-4">{[Twitter, Instagram, Linkedin].map((Icon, i) => (<button key={i} className="text-gray-800 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors hover:scale-110 transform"><Icon className="w-4 h-4" /></button>))}</div></div>
-                                <div className="grid grid-cols-2 md:grid-cols-1 gap-6 md:col-span-2"><div><h4 className="font-black mb-3 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Global</h4><ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500"><li><Link to="/about" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">About</Link></li><li><Link to="/press" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Media</Link></li></ul></div></div>
-                                <div className="grid grid-cols-2 md:grid-cols-1 gap-6 md:col-span-2"><div><h4 className="font-black mb-3 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Support</h4><ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500"><li><Link to="/support" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Help Center</Link></li><li><Link to="/safety" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Safety Standards</Link></li><li><Link to="/crisis" className="text-red-600 hover:text-red-700 transition-colors">Crisis Hub</Link></li></ul></div></div>
-                                <div className="md:col-span-3"><h4 className="font-black mb-3 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Regulatory</h4><ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500"><li><Link to="/privacy" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Privacy Policy</Link></li><li><Link to="/terms" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Terms of Service</Link></li></ul></div>
-
-                            </div>
-                            <div className="mb-8 p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 border border-yellow-100 dark:border-yellow-900/20">
-                                <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-500 font-bold text-xs">
-                                    <AlertTriangle className="w-4 h-4" />
-                                    <span>Not a Medical Service. For entertainment & companionship only.</span>
-                                </div>
-                                <Link to="/crisis" className="bg-red-100 text-red-600 hover:bg-red-200 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-colors">
-                                    In Crisis?
-                                </Link>
-                            </div>
-                            <div className="pt-6 flex flex-col md:flex-row justify-between items-center text-[9px] font-black uppercase tracking-[0.2em] text-gray-700 dark:text-gray-600 gap-3 md:gap-0 border-t border-yellow-200/50 dark:border-gray-800">
-                                <p>&copy; {new Date().getFullYear()} Peutic Inc. | ISO 27001 Certified</p>
-                                <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div><span>Network Optimal</span></div>
                             </div>
                         </div>
-                    </footer>
-                </main>
-            </div >
-            {showPayment && (
-                <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Secure Payment node...</div>}>
-                    <PaymentModal onClose={() => { setShowPayment(false); setPaymentError(undefined); }} onSuccess={handlePaymentSuccess} initialError={paymentError} />
-                </Suspense>
-            )}
-            {showBreathing && <EmergencyOverlay userId={user.id} onClose={() => { setShowBreathing(false); refreshGarden(); }} />}
-            {
-                showProfile && (
-                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Identity Node...</div>}>
-                        <ProfileModal user={dashboardUser} onClose={() => setShowProfile(false)} onUpdate={refreshData} />
-                    </Suspense>
-                )
-            }
-            {showGrounding && <GroundingMode onClose={() => setShowGrounding(false)} />}
-            {showTechCheck && (<TechCheck onConfirm={confirmSession} onCancel={() => setShowTechCheck(false)} />)}
-
-            {/* MOOD PULSE ALERT */}
-            {/* MOOD PULSE ALERT (Removed Banner, Logic Kept for Floating Button) */}
-            {
-                moodRiskAlert && (
-                    // Hidden banner logic - now relying on user initiative or smaller cues
-                    <></>
-                )
-            }
-
-
-
-            {/* VOICE JOURNAL MODAL */}
-            {
-                showVoiceJournal && (
-                    <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="bg-white dark:bg-gray-900 w-full max-w-lg rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-black flex items-center gap-2 dark:text-yellow-400"><Mic className="w-5 h-5 text-red-500" /> Voice Journal</h2>
-                                <button onClick={() => setShowVoiceJournal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"><X className="w-5 h-5" /></button>
+                    )}
+                    {activeTab === 'settings' && (
+                        <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in slide-in-from-right-5 duration-500">
+                            <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
+                                <div className="p-5 md:p-6 border-b border-yellow-100 dark:border-gray-800"><h3 className="font-black text-lg md:text-xl dark:text-yellow-400 mb-1">{t('dash_settings')}</h3><p className="text-gray-500 text-xs">Manage your personal information.</p></div>
+                                <div className="p-5 md:p-6 space-y-5">
+                                    <div className="flex items-center gap-5"><div className="relative"><div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-4 border-yellow-100 dark:border-gray-800"><AvatarImage src={dashboardUser?.avatar || ''} alt="Profile" className="w-full h-full object-cover" isUser={true} /></div><button onClick={() => setShowProfile(true)} className="absolute bottom-0 right-0 p-1.5 bg-black text-white rounded-full hover:bg-gray-800 transition-colors shadow-lg"><Edit2 className="w-3 h-3" /></button></div><div className="flex-1 space-y-3"><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Display Name</label><div className="relative"><UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none transition-colors text-sm font-bold dark:text-white" /></div></div><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Email Address</label><div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none transition-colors text-sm font-bold dark:text-white" /></div></div></div></div>
+                                    <div className="flex justify-end pt-2"><button onClick={saveProfileChanges} disabled={isSavingProfile} className="px-5 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-bold text-xs hover:opacity-80 transition-opacity flex items-center gap-2">{isSavingProfile ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}{t('ui_save')}</button></div>
+                                </div>
                             </div>
-
-                            <VoiceRecorder userId={user.id} onSave={handleVoiceSave} />
-
-                            <div className="mt-8">
-                                <h3 className="text-xs font-bold uppercase text-gray-400 tracking-wider mb-4">Recent Voice Notes</h3>
-                                <div className="space-y-3">
-                                    {voiceEntries.length === 0 && <p className="text-sm text-gray-400 italic text-center py-4">No recordings yet.</p>}
-                                    {voiceEntries.map(entry => (
-                                        <VoiceEntryItem
-                                            key={entry.id}
-                                            entry={entry}
-                                            onDelete={async (id) => {
-                                                await UserService.deleteVoiceJournal(id);
-                                                setVoiceEntries(prev => prev.filter(e => e.id !== id));
+                            <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
+                                <div className="p-5 md:p-6 border-b border-yellow-100 dark:border-gray-800"><h3 className="font-black text-lg md:text-xl dark:text-yellow-400 mb-1">Preferences</h3><p className="text-gray-500 text-xs">Customize your sanctuary experience.</p></div>
+                                <div className="p-5 md:p-6 space-y-5">
+                                    <div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Moon className="w-4 h-4 text-gray-600 dark:text-gray-400" /></div><div><p className="font-bold text-gray-900 dark:text-white text-sm">Dark Mode</p><p className="text-[10px] text-gray-500">Reduce eye strain.</p></div></div><button onClick={toggleDarkMode} className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${isDark ? 'bg-yellow-500' : 'bg-gray-200'}`}><span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${isDark ? 'translate-x-5' : 'translate-x-1'}`} /></button></div>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><EyeOff className="w-4 h-4 text-red-500" /></div>
+                                            <div>
+                                                <p className="font-bold text-gray-900 dark:text-white text-sm">Ghost Mode</p>
+                                                <p className="text-[10px] text-gray-500">Hide name and photo for public browsing.</p>
+                                            </div>
+                                        </div>
+                                        <button onClick={toggleGhostMode} className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${isGhostMode ? 'bg-red-500' : 'bg-gray-200'}`}>
+                                            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${isGhostMode ? 'translate-x-5' : 'translate-x-1'}`} />
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Zap className="w-4 h-4 text-purple-500" /></div>
+                                            <div>
+                                                <p className="font-bold text-gray-900 dark:text-white text-sm">Gamification Mode</p>
+                                                <p className="text-[10px] text-gray-500">Enable points, XP, and streaks.</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                const newVal = !dashboardUser?.gamificationEnabled;
+                                                const updated = { ...dashboardUser, gamificationEnabled: newVal } as User;
+                                                setDashboardUser(updated);
+                                                UserService.updateUser(updated);
+                                                showToast(`Gamification ${newVal ? 'Enabled' : 'Disabled'}`, 'success');
                                             }}
-                                        />
+                                            className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${(dashboardUser?.gamificationEnabled !== false) ? 'bg-purple-500' : 'bg-gray-200'}`}
+                                        >
+                                            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${(dashboardUser?.gamificationEnabled !== false) ? 'translate-x-5' : 'translate-x-1'}`} />
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div className="bg-white/70 dark:bg-gray-900/40 rounded-3xl border border-yellow-200/50 dark:border-gray-800/50 overflow-hidden backdrop-blur-md shadow-sm">
+                                <div className="p-5 md:p-6 border-b border-yellow-100/30 dark:border-gray-800/50"><h3 className="font-black text-lg md:text-xl dark:text-yellow-400 mb-1">Security Health</h3><p className="text-gray-500 text-xs text-green-500 flex items-center gap-1 font-bold animate-pulse"><ShieldCheck className="w-3 h-3" /> All systems secured & encrypted</p></div>
+                                <div className="p-5 md:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {[
+                                        { label: 'TLS Encryption', status: 'Active (256-bit)', icon: Lock },
+                                        { label: 'Data Isolation', status: 'Bank-Grade RLS', icon: ShieldCheck },
+                                        { label: 'Identity Protection', status: 'JWT Secure', icon: UserIcon },
+                                        { label: 'Privacy Shield', status: 'Active (5m Idle)', icon: EyeOff }
+                                    ].map((item, i) => (
+                                        <div key={i} className="p-4 bg-gray-50/50 dark:bg-gray-800/30 rounded-2xl border border-gray-100/50 dark:border-gray-700/50 flex items-center gap-3">
+                                            <div className="p-2 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg">
+                                                <item.icon className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 leading-none mb-1">{item.label}</p>
+                                                <p className="text-xs font-bold dark:text-gray-200">{item.status}</p>
+                                            </div>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
+
+                            <div className="bg-red-50 dark:bg-red-950/20 rounded-3xl border border-red-100 dark:border-red-900 overflow-hidden shadow-sm">
+                                <div className="p-5 md:p-6 border-b border-red-100 dark:border-red-900"><h3 className="font-black text-lg md:text-xl text-red-900 dark:text-red-400 mb-1">Danger Zone</h3><p className="text-red-600/70 dark:text-red-400/60 text-xs">Permanent actions for your data.</p></div>
+                                <div className="p-5 md:p-6">
+                                    {showDeleteConfirm ? (
+                                        <div className="bg-white dark:bg-black p-5 rounded-2xl border border-red-200 dark:border-red-900 text-center animate-in zoom-in duration-200">
+                                            <AlertTriangle className="w-10 h-10 text-red-500 mx-auto mb-3" />
+                                            <h4 className="font-bold text-base mb-1 dark:text-yellow-400">Are you absolutely sure?</h4>
+                                            <p className="text-gray-500 text-xs mb-4">This action cannot be undone. This will permanently delete your account, journal entries, and remaining balance.</p>
+
+                                            {balance > 0 && (
+                                                <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl mb-5 text-left flex items-start gap-3">
+                                                    <div className="bg-red-500/20 p-2 rounded-lg">
+                                                        <Plus className="w-4 h-4 text-red-500 rotate-45" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-red-900 dark:text-red-400 text-xs font-black uppercase tracking-widest mb-1">Impact Warning</p>
+                                                        <p className="text-red-700/80 dark:text-red-400/70 text-[11px] font-bold leading-relaxed">You have <span className="text-red-600 dark:text-red-400 font-black">{balance} minutes</span> remaining. Deleting your account will forfeit these credits immediately without refund.</p>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <div className="flex gap-3 justify-center">
+                                                <button onClick={() => setShowDeleteConfirm(false)} disabled={isDeletingAccount} className="px-5 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg font-bold text-xs hover:bg-gray-200 disabled:opacity-50">{t('ui_cancel')}</button>
+                                                <button onClick={handleDeleteAccount} disabled={isDeletingAccount} className="px-5 py-2 bg-red-600 text-white rounded-lg font-bold text-xs hover:bg-red-700 shadow-lg flex items-center gap-2">
+                                                    {isDeletingAccount ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : 'Yes, Delete Everything'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="font-bold text-red-900 dark:text-red-400 text-sm">Delete Account</p>
+                                                <p className="text-[10px] text-red-700/60 dark:text-red-400/50">Remove all data and access.</p>
+                                            </div>
+                                            <button onClick={() => setShowDeleteConfirm(true)} className="px-5 py-2.5 bg-white dark:bg-transparent border border-red-200 dark:border-red-800 text-red-600 rounded-xl font-bold text-[10px] uppercase tracking-wider hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">Delete Account</button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
+                    )}
+            </div>
+            <div className="mt-8 mb-4 max-w-4xl mx-auto px-4"><div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30 p-3 rounded-xl text-center"><p className="text-[9px] md:text-[10px] font-bold text-yellow-800 dark:text-yellow-500 uppercase tracking-wide leading-relaxed">Note: Specialist availability is subject to change frequently due to high demand. If your selected specialist is unavailable, a specialist of equal or greater qualifications will be automatically substituted to ensure immediate support.</p></div></div>
+            <footer className="bg-[#FFFBEB] dark:bg-[#0A0A0A] text-black dark:text-white py-10 md:py-12 px-6 border-t border-yellow-200 dark:border-gray-800 transition-colors">
+                <div className="max-w-7xl mx-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 mb-8 md:mb-10">
+                        <div className="md:col-span-5 space-y-4"><div className="flex items-center gap-2"><div className="w-7 h-7 bg-yellow-400 rounded-xl flex items-center justify-center"><Heart className="w-4 h-4 fill-black text-black" /></div><span className="text-xl font-black tracking-tight">Peutic</span></div><p className="text-gray-800 dark:text-gray-500 text-xs leading-relaxed max-w-md">Connecting the disconnected through elite-level human specialists and cutting-edge secure technology.</p><div className="flex gap-4">{[Twitter, Instagram, Linkedin].map((Icon, i) => (<button key={i} className="text-gray-800 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors hover:scale-110 transform"><Icon className="w-4 h-4" /></button>))}</div></div>
+                        <div className="grid grid-cols-2 md:grid-cols-1 gap-6 md:col-span-2"><div><h4 className="font-black mb-3 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Global</h4><ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500"><li><Link to="/about" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">About</Link></li><li><Link to="/press" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Media</Link></li></ul></div></div>
+                        <div className="grid grid-cols-2 md:grid-cols-1 gap-6 md:col-span-2"><div><h4 className="font-black mb-3 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Support</h4><ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500"><li><Link to="/support" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Help Center</Link></li><li><Link to="/safety" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Safety Standards</Link></li><li><Link to="/crisis" className="text-red-600 hover:text-red-700 transition-colors">Crisis Hub</Link></li></ul></div></div>
+                        <div className="md:col-span-3"><h4 className="font-black mb-3 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Regulatory</h4><ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500"><li><Link to="/privacy" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Privacy Policy</Link></li><li><Link to="/terms" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">Terms of Service</Link></li></ul></div>
+
                     </div>
-                )
-            }
-            {
-                showBookFull && dashboardUser && (
-                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Opening the Book...</div>}>
-                        <BookOfYouView user={dashboardUser} garden={garden} onClose={() => setShowBookFull(false)} />
-                    </Suspense>
-                )
-            }
-            {
-                showGardenFull && garden && (
-                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Entering the Garden...</div>}>
-                        <GardenFullView garden={garden} user={dashboardUser!} onClose={() => setShowGardenFull(false)} onUpdate={refreshGarden} />
-                    </Suspense>
-                )
-            }
-            {
-                showPocketPet && dashboardUser && (
-                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Bridging Digital Reality...</div>}>
-                        <LuminaView user={dashboardUser} onClose={() => { setShowPocketPet(false); refreshPet(); }} />
-                    </Suspense>
-                )
-            }
+                    <div className="mb-8 p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 border border-yellow-100 dark:border-yellow-900/20">
+                        <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-500 font-bold text-xs">
+                            <AlertTriangle className="w-4 h-4" />
+                            <span>Not a Medical Service. For entertainment & companionship only.</span>
+                        </div>
+                        <Link to="/crisis" className="bg-red-100 text-red-600 hover:bg-red-200 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-colors">
+                            In Crisis?
+                        </Link>
+                    </div>
+                    <div className="pt-6 flex flex-col md:flex-row justify-between items-center text-[9px] font-black uppercase tracking-[0.2em] text-gray-700 dark:text-gray-600 gap-3 md:gap-0 border-t border-yellow-200/50 dark:border-gray-800">
+                        <p>&copy; {new Date().getFullYear()} Peutic Inc. | ISO 27001 Certified</p>
+                        <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div><span>Network Optimal</span></div>
+                    </div>
+                </div>
+            </footer>
+        </main>
+            </div >
+    { showPayment && (
+        <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Secure Payment node...</div>}>
+            <PaymentModal onClose={() => { setShowPayment(false); setPaymentError(undefined); }} onSuccess={handlePaymentSuccess} initialError={paymentError} />
+        </Suspense>
+    )}
+{ showBreathing && <EmergencyOverlay userId={user.id} onClose={() => { setShowBreathing(false); refreshGarden(); }} /> }
+{
+    showProfile && (
+        <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Identity Node...</div>}>
+            <ProfileModal user={dashboardUser} onClose={() => setShowProfile(false)} onUpdate={refreshData} />
+        </Suspense>
+    )
+}
+{ showGrounding && <GroundingMode onClose={() => setShowGrounding(false)} /> }
+{ showTechCheck && (<TechCheck onConfirm={confirmSession} onCancel={() => setShowTechCheck(false)} />) }
+
+{/* MOOD PULSE ALERT */ }
+{/* MOOD PULSE ALERT (Removed Banner, Logic Kept for Floating Button) */ }
+{
+    moodRiskAlert && (
+        // Hidden banner logic - now relying on user initiative or smaller cues
+        <></>
+    )
+}
+
+
+
+{/* VOICE JOURNAL MODAL */ }
+{
+    showVoiceJournal && (
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-900 w-full max-w-lg rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-black flex items-center gap-2 dark:text-yellow-400"><Mic className="w-5 h-5 text-red-500" /> Voice Journal</h2>
+                    <button onClick={() => setShowVoiceJournal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"><X className="w-5 h-5" /></button>
+                </div>
+
+                <VoiceRecorder userId={user.id} onSave={handleVoiceSave} />
+
+                <div className="mt-8">
+                    <h3 className="text-xs font-bold uppercase text-gray-400 tracking-wider mb-4">Recent Voice Notes</h3>
+                    <div className="space-y-3">
+                        {voiceEntries.length === 0 && <p className="text-sm text-gray-400 italic text-center py-4">No recordings yet.</p>}
+                        {voiceEntries.map(entry => (
+                            <VoiceEntryItem
+                                key={entry.id}
+                                entry={entry}
+                                onDelete={async (id) => {
+                                    await UserService.deleteVoiceJournal(id);
+                                    setVoiceEntries(prev => prev.filter(e => e.id !== id));
+                                }}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+{
+    showBookFull && dashboardUser && (
+        <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Opening the Book...</div>}>
+            <BookOfYouView user={dashboardUser} garden={garden} onClose={() => setShowBookFull(false)} />
+        </Suspense>
+    )
+}
+{
+    showGardenFull && garden && (
+        <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Entering the Garden...</div>}>
+            <GardenFullView garden={garden} user={dashboardUser!} onClose={() => setShowGardenFull(false)} onUpdate={refreshGarden} />
+        </Suspense>
+    )
+}
+{
+    showPocketPet && dashboardUser && (
+        <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Bridging Digital Reality...</div>}>
+            <LuminaView user={dashboardUser} onClose={() => { setShowPocketPet(false); refreshPet(); }} />
+        </Suspense>
+    )
+}
         </div >
     );
 };

@@ -203,21 +203,8 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
         ctx.fill();
 
         // Body
-        ctx.fillStyle = color;
-        // Body (Safe Round Rect)
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        const bx = -size, by = -size * 0.5, bw = size * 1.5, bh = size * 1.2, br = size * 0.5;
-        ctx.moveTo(bx + br, by);
-        ctx.lineTo(bx + bw - br, by);
-        ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + br);
-        ctx.lineTo(bx + bw, by + bh - br);
-        ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - br, by + bh);
-        ctx.lineTo(bx + br, by + bh);
-        ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - br);
-        ctx.lineTo(bx, by + br);
-        ctx.quadraticCurveTo(bx, by, bx + br, by);
-        ctx.fill();
+        // Body
+        drawRoundedRect(ctx, -size, -size * 0.5, size * 1.5, size * 1.2, size * 0.5, color);
 
         // Head
         ctx.beginPath(); ctx.arc(size * 0.3, -size * 0.6, size * 0.6, 0, Math.PI * 2); ctx.fill();
@@ -386,6 +373,21 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             className="drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-transform duration-700"
         />
     );
+};
+
+const drawRoundedRect = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, color: string) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.fill();
 };
 
 export default PetCanvas;
