@@ -44,7 +44,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ notification
             </button>
 
             {isOpen && (
-                <div className="fixed inset-x-4 top-16 md:absolute md:top-12 md:left-auto md:right-0 md:w-96 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 z-50 animate-in slide-in-from-top-2 duration-200 overflow-hidden">
+                <div className="fixed inset-x-4 top-16 md:absolute md:top-12 md:left-0 md:right-auto md:w-96 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 z-50 animate-in slide-in-from-top-2 duration-200 overflow-hidden origin-top-left">
                     <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-black/20">
                         <h3 className="font-bold text-sm text-gray-800 dark:text-white flex items-center gap-2"><Bell className="w-4 h-4" /> Notifications</h3>
                         {notifications.length > 0 && (

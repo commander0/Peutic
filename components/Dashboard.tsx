@@ -8,7 +8,7 @@ import {
     Clock, Settings, LogOut,
     LayoutDashboard, Plus, X, Mic, Lock, AlertTriangle, ShieldCheck, Heart,
     BookOpen, Flame, Trophy,
-    Sun, Feather, Anchor, RefreshCw, Star, Edit2, Zap, Gamepad2,
+    Sun, Feather, LifeBuoy, RefreshCw, Star, Edit2, Zap, Gamepad2,
     ChevronDown, ChevronUp, User as UserIcon, Moon,
     Twitter, Instagram, Linkedin,
     Mail, Eye, EyeOff, Megaphone, Sparkles, Save, Video
@@ -98,7 +98,7 @@ const CollapsibleSection = React.memo(({ title, icon: Icon, children, defaultOpe
     const [isOpen, setIsOpen] = useState(defaultOpen);
     return (
         <div className="bg-transparent rounded-3xl border border-[var(--color-primary-border)] overflow-hidden transition-all duration-300" style={{ borderColor: 'var(--color-primary-border)' }}>
-            <button onClick={() => setIsOpen(!isOpen)} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-[var(--color-primary)]/10 transition-colors bg-[var(--color-bg-base)]">
+            <button onClick={() => setIsOpen(!isOpen)} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-[var(--color-primary)]/10 transition-colors">
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg" style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)' }}><Icon className="w-5 h-5" /></div>
                     <span className="font-bold text-base dark:text-white">{title}</span>
@@ -274,6 +274,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             if (newNotifs.length > 0) {
                 setNotifications(prev => [...newNotifs, ...prev]);
                 showToast("New updates available", "info");
+            } else {
+                // If no critical alerts, show engagement hints
+                setNotifications(prev => [
+                    {
+                        id: crypto.randomUUID(),
+                        title: 'Daily Streak',
+                        message: 'Complete 1 more activity to keep your streak alive!',
+                        type: 'info',
+                        read: false,
+                        timestamp: new Date()
+                    },
+                    {
+                        id: crypto.randomUUID(),
+                        title: 'Community Event',
+                        message: 'Join the "Midweek Mindfulness" group session.',
+                        type: 'success',
+                        read: false,
+                        timestamp: new Date()
+                    },
+                    ...prev
+                ]);
             }
         }, 2000);
     }, [user.id]);
@@ -556,7 +577,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 </button>
 
                                 <button onClick={() => setShowGrounding(true)} className="p-2.5 rounded-2xl bg-white dark:bg-gray-800 border border-blue-100 dark:border-gray-700 shadow-sm hover:scale-105 transition-all text-blue-500" title="Grounding Mode">
-                                    <Anchor className="w-5 h-5" />
+                                    <LifeBuoy className="w-5 h-5" />
                                 </button>
 
                                 <button onClick={toggleDarkMode} className="p-2.5 rounded-2xl bg-white dark:bg-gray-800 border border-yellow-100 dark:border-gray-700 shadow-sm hover:scale-105 transition-all">
