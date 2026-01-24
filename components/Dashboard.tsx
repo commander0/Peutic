@@ -10,7 +10,7 @@ import {
     Sun, Feather, Anchor, RefreshCw, Play, Star, Edit2, Trash2, Zap, Gamepad2,
     CloudRain, Download, ChevronDown, ChevronUp, Lightbulb, User as UserIcon, Moon,
     Twitter, Instagram, Linkedin, Volume2, Music, Trees,
-    Mail, StopCircle, Eye, Minimize2, Flame as Fire, EyeOff, Megaphone
+    Mail, StopCircle, Eye, Minimize2, Flame as Fire, EyeOff, Megaphone, LifeBuoy
 } from 'lucide-react';
 import { NotificationBell, Notification } from './common/NotificationBell';
 import { UserService } from '../services/userService';
@@ -271,7 +271,7 @@ const SoundscapePlayer: React.FC = () => {
                     <div className="grid grid-cols-4 gap-2">
                         {[
                             { key: 'rain', label: 'Rain', icon: CloudRain }, { key: 'forest', label: 'Nature', icon: Trees },
-                            { key: 'ocean', label: 'Ocean', icon: Anchor }, { key: 'fire', label: 'Fire', icon: Fire }
+                            { key: 'ocean', label: 'Ocean', icon: LifeBuoy }, { key: 'fire', label: 'Fire', icon: Fire }
                         ].map((item) => (
                             <button key={item.key} onClick={() => setTrack(item.key as any)} className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${track === item.key ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg scale-105' : 'bg-white dark:bg-gray-800 text-gray-500 hover:bg-yellow-100 dark:hover:bg-gray-700 border border-yellow-100 dark:border-gray-700'}`}>
                                 <item.icon className={`w-4 h-4 mb-1 ${track === item.key ? 'text-yellow-400 dark:text-yellow-600' : ''}`} />
