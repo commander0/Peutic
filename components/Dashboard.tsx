@@ -226,96 +226,90 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         setLumina(p);
     };
 
+    const handleNotificationAction = (action: string) => {
+        switch (action) {
+            case 'open_pet': setShowPocketPet(true); break;
+            case 'open_garden': setShowGardenFull(true); break;
+            case 'check_streak': setShowBookFull(true); break;
+            case 'open_community': showToast("Redirecting to Community Hub...", "info"); break;
+        }
+    };
+
     useEffect(() => {
         refreshGarden();
         refreshPet();
 
-        const handleNotificationAction = (action: string) => {
-            switch (action) {
-                case 'open_pet': setShowPocketPet(true); break;
-                case 'open_garden': setShowGardenFull(true); break;
-                case 'check_streak': setShowBookFull(true); break; // Or scroll to goal
-                case 'open_community': showToast("Redirecting to Community Hub...", "info"); break;
+        // Smart Engagement Notifications (On Load)
+        setTimeout(async () => {
+            const newNotifs: Notification[] = [];
+
+            // Check Garden
+            const g = await GardenService.getGarden(user.id);
+            if (g && g.waterLevel < 30) {
+                newNotifs.push({
+                    id: crypto.randomUUID(),
+                    title: 'Thirsty Plants',
+                    message: 'Your inner garden needs water.',
+                    type: 'warning',
+                    read: false,
+                    timestamp: new Date(),
+                    action: 'open_garden'
+                });
             }
-        };
 
-        useEffect(() => {
-            refreshGarden();
-            refreshPet();
-
-            // Smart Engagement Notifications (On Load)
-            setTimeout(async () => {
-                const newNotifs: Notification[] = [];
-
-                // Check Garden
-                const g = await GardenService.getGarden(user.id);
-                if (g && g.waterLevel < 30) {
+            // Check Pet
+            const p = await PetService.getPet(user.id);
+            if (p) {
+                if (p.hunger < 40) {
                     newNotifs.push({
                         id: crypto.randomUUID(),
-                        title: 'Thirsty Plants',
-                        message: 'Your inner garden needs water.',
-                        type: 'warning',
+                        title: `${p.name} is Hungry`,
+                        message: 'Time to feed your companion!',
+                        type: 'info',
                         read: false,
                         timestamp: new Date(),
-                        action: 'open_garden'
+                        action: 'open_pet'
+                    });
+                } else if (p.energy < 30 && !p.isSleeping) {
+                    newNotifs.push({
+                        id: crypto.randomUUID(),
+                        title: `${p.name} is Tired`,
+                        message: 'Maybe it is time for a nap?',
+                        type: 'info',
+                        read: false,
+                        timestamp: new Date(),
+                        action: 'open_pet'
                     });
                 }
+            }
 
-                // Check Pet
-                const p = await PetService.getPet(user.id);
-                if (p) {
-                    if (p.hunger < 40) {
-                        newNotifs.push({
-                            id: crypto.randomUUID(),
-                            title: `${p.name} is Hungry`,
-                            message: 'Time to feed your companion!',
-                            type: 'info',
-                            read: false,
-                            timestamp: new Date(),
-                            action: 'open_pet'
-                        });
-                    } else if (p.energy < 30 && !p.isSleeping) {
-                        newNotifs.push({
-                            id: crypto.randomUUID(),
-                            title: `${p.name} is Tired`,
-                            message: 'Maybe it is time for a nap?',
-                            type: 'info',
-                            read: false,
-                            timestamp: new Date(),
-                            action: 'open_pet'
-                        });
-                    }
-                }
-
-                if (newNotifs.length > 0) {
-                    setNotifications(prev => [...newNotifs, ...prev]);
-                    // Toast Removed as requested
-                } else {
-                    // If no critical alerts, show engagement hints
-                    setNotifications(prev => [
-                        {
-                            id: crypto.randomUUID(),
-                            title: 'Daily Streak',
-                            message: 'Complete 1 more activity to keep your streak alive!',
-                            type: 'info',
-                            read: false,
-                            timestamp: new Date(),
-                            action: 'check_streak'
-                        },
-                        {
-                            id: crypto.randomUUID(),
-                            title: 'Community Event',
-                            message: 'Join the "Midweek Mindfulness" group session.',
-                            type: 'success',
-                            read: false,
-                            timestamp: new Date(),
-                            action: 'open_community'
-                        },
-                        ...prev
-                    ]);
-                }
-            }, 2000);
-        }, [user.id]);
+            if (newNotifs.length > 0) {
+                setNotifications(prev => [...newNotifs, ...prev]);
+            } else {
+                // If no critical alerts, show engagement hints
+                setNotifications(prev => [
+                    {
+                        id: crypto.randomUUID(),
+                        title: 'Daily Streak',
+                        message: 'Complete 1 more activity to keep your streak alive!',
+                        type: 'info',
+                        read: false,
+                        timestamp: new Date(),
+                        action: 'check_streak'
+                    },
+                    {
+                        id: crypto.randomUUID(),
+                        title: 'Community Event',
+                        message: 'Join the "Midweek Mindfulness" group session.',
+                        type: 'success',
+                        read: false,
+                        timestamp: new Date(),
+                        action: 'open_community'
+                    },
+                    ...prev
+                ]);
+            }
+        }, 2000);
     }, [user.id]);
 
     useEffect(() => {
