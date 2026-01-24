@@ -98,8 +98,16 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
         const handleKeyUp = () => { playerRef.current.vx = 0; };
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
-        ctx.shadowColor = 'transparent';
-
+        const drawCloud = (x: number, y: number, w: number, h: number, type: string) => {
+            ctx.fillStyle = type === 'moving' ? '#E0F2FE' : 'white';
+            if (type === 'moving') ctx.shadowColor = '#38BDF8';
+            ctx.fillRect(x, y, w, h);
+            const bumpSize = h * 0.8;
+            ctx.beginPath(); ctx.arc(x + 10, y, bumpSize, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x + w - 10, y, bumpSize, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x + w / 2, y - 5, bumpSize * 1.2, 0, Math.PI * 2); ctx.fill();
+            ctx.shadowColor = 'transparent';
+        };
         const update = () => {
             const p = playerRef.current;
             p.x += p.vx;
@@ -140,61 +148,95 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
                 return;
             }
 
-            // --- VOID RENDER (THEMED) ---
+            // --- HIGH FIDELITY RENDERING ---
 
-            // 1. COSMOS
-            ctx.fillStyle = '#020617'; // Deep space
+            // --- HYPER REALISTIC RENDER ---
+
+            // 1. SKY & STARFIELD
+            const grad = ctx.createLinearGradient(0, 0, 0, H);
+            grad.addColorStop(0, '#020617'); // Dark Slate
+            grad.addColorStop(1, '#1e293b'); // Dark Slate lighter
+            ctx.fillStyle = grad;
             ctx.fillRect(0, 0, W, H);
 
-            // Stars
-            ctx.fillStyle = 'white';
-            for (let i = 0; i < 50; i++) {
-                const sx = (Math.sin(i * 123) * 0.5 + 0.5) * W;
-                const sy = (Math.cos(i * 456) * 0.5 + 0.5) * H;
-                ctx.globalAlpha = Math.random() * 0.5 + 0.2;
-                ctx.fillRect(sx, sy, 1.5, 1.5);
+            // Parallax Stars
+            const time = Date.now() / 1000;
+            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            for (let i = 0; i < 30; i++) {
+                const sx = (i * 90 + time * 10) % W;
+                const sy = (i * 70 + time * 5) % H;
+                const size = Math.random() * 2;
+                ctx.beginPath(); ctx.arc(sx, sy, size, 0, Math.PI * 2); ctx.fill();
             }
-            ctx.globalAlpha = 1.0;
 
-            // 2. PLATFORMS (Digital Blocks)
+            // 2. PLATFORMS (Glass/Holographic)
             platformsRef.current.forEach(pl => {
                 if (pl.type === 'ground') {
-                    ctx.fillStyle = '#1e1b4b'; // Dark Navy
+                    // Cyber Ground
+                    const gGrad = ctx.createLinearGradient(0, pl.y, 0, pl.y + pl.h);
+                    gGrad.addColorStop(0, '#10b981');
+                    gGrad.addColorStop(1, '#059669');
+                    ctx.fillStyle = gGrad;
+                    ctx.shadowColor = '#34d399'; ctx.shadowBlur = 10;
                     ctx.fillRect(pl.x, pl.y, pl.w, pl.h);
-                    ctx.strokeStyle = '#4f46e5';
-                    ctx.strokeRect(pl.x, pl.y, pl.w, pl.h);
-                } else {
-                    ctx.fillStyle = pl.type === 'moving' ? '#1e293b' : '#0f172a';
-                    ctx.shadowBlur = 15;
-                    ctx.shadowColor = pl.type === 'moving' ? '#38bdf8' : '#6366f1';
-                    ctx.fillRect(pl.x, pl.y, pl.w, pl.h);
-                    ctx.strokeStyle = pl.type === 'moving' ? '#38bdf8' : '#6366f1';
-                    ctx.strokeRect(pl.x, pl.y, pl.w, pl.h);
                     ctx.shadowBlur = 0;
+                } else {
+                    // Holographic Clouds
+                    const isMoving = pl.type === 'moving';
+                    const cGrad = ctx.createLinearGradient(pl.x, pl.y, pl.x, pl.y + pl.h);
+                    cGrad.addColorStop(0, isMoving ? 'rgba(56,189,248,0.8)' : 'rgba(255,255,255,0.8)');
+                    cGrad.addColorStop(1, isMoving ? 'rgba(14,165,233,0.4)' : 'rgba(255,255,255,0.1)');
+
+                    ctx.save();
+                    ctx.fillStyle = cGrad;
+                    ctx.shadowColor = isMoving ? '#0ea5e9' : 'white';
+                    ctx.shadowBlur = 15;
+                    // Rounded Rect
+                    const r = 4;
+                    ctx.beginPath();
+                    ctx.roundRect(pl.x, pl.y, pl.w, pl.h, r);
+                    ctx.fill();
+
+                    // Top Highlight
+                    ctx.fillStyle = 'white';
+                    ctx.globalAlpha = 0.5;
+                    ctx.fillRect(pl.x, pl.y, pl.w, 2);
+                    ctx.restore();
                 }
             });
 
-            // 3. PLAYER (Cyber Pulse)
-            ctx.fillStyle = '#818cf8';
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = '#818cf8';
+            // 3. PLAYER (Gradient Sphere with Glow)
+            // Shadow
             ctx.beginPath();
-            ctx.roundRect(p.x, p.y, p.width, p.height, 4);
+            ctx.ellipse(p.x + p.width / 2, p.y + p.height + 5, p.width / 2.5, 3, 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
             ctx.fill();
-            ctx.shadowBlur = 0;
+
+            // Body Gradient
+            const pGrad = ctx.createRadialGradient(p.x + p.width / 3, p.y + p.height / 3, 2, p.x + p.width / 2, p.y + p.height / 2, p.width / 2);
+            pGrad.addColorStop(0, '#facc15'); // Yellow-400
+            pGrad.addColorStop(1, '#eab308'); // Yellow-500
+
+            ctx.save();
+            ctx.shadowColor = '#facc15';
+            ctx.shadowBlur = 20;
+            ctx.fillStyle = pGrad;
+            ctx.beginPath(); ctx.arc(p.x + p.width / 2, p.y + p.height / 2, p.width / 2, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
 
             // Face
-            ctx.fillStyle = 'black';
-            ctx.beginPath(); ctx.arc(p.x + 8, p.y + 10, 2.5, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(p.x + p.width - 8, p.y + 10, 2.5, 0, Math.PI * 2); ctx.fill();
-            ctx.strokeStyle = 'black';
-            ctx.beginPath(); ctx.arc(p.x + p.width / 2, p.y + 16, 4, 0, Math.PI); ctx.stroke();
+            ctx.fillStyle = '#422006';
+            const eyeOff = p.width * 0.25;
+            const eyeSize = p.width * 0.12;
+            ctx.beginPath(); ctx.arc(p.x + p.width / 2 - eyeOff, p.y + p.height / 2 - eyeOff, eyeSize, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(p.x + p.width / 2 + eyeOff, p.y + p.height / 2 - eyeOff, eyeSize, 0, Math.PI * 2); ctx.fill();
 
-            requestRef.current = requestAnimationFrame(update);
+            // Smile
+            ctx.beginPath();
+            ctx.arc(p.x + p.width / 2, p.y + p.height / 2 + eyeOff / 2, eyeOff, 0, Math.PI);
+            ctx.lineWidth = 3; ctx.strokeStyle = '#422006'; ctx.stroke();
         };
-
-        requestRef.current = requestAnimationFrame(update);
-
+        update();
         return () => {
             if (requestRef.current !== undefined) cancelAnimationFrame(requestRef.current);
             window.removeEventListener('keydown', handleKeyDown);
@@ -211,17 +253,17 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
     const handleRelease = () => { playerRef.current.vx = 0; };
 
     return (
-        <div className="relative h-full w-full bg-slate-950 overflow-hidden rounded-2xl border-4 border-white/5 shadow-[inset_0_0_40px_rgba(0,0,0,0.8)] cursor-pointer"
+        <div className="relative h-full w-full bg-sky-300 overflow-hidden rounded-2xl border-4 border-white dark:border-gray-700 shadow-inner cursor-pointer"
             onMouseDown={handleTap} onMouseUp={handleRelease} onTouchStart={handleTap} onTouchEnd={handleRelease}>
-            <div className="absolute top-2 right-2 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full font-black text-indigo-300 text-base md:text-lg z-10 border border-white/10">{score}m</div>
-            {highScore > 0 && <div className="absolute top-2 left-2 bg-yellow-400/10 backdrop-blur-md px-3 py-1 rounded-full font-black text-yellow-500 text-xs md:text-sm z-10 border border-yellow-500/30">Best: {highScore}</div>}
+            <div className="absolute top-2 right-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full font-black text-white text-base md:text-lg z-10">{score}m</div>
+            {highScore > 0 && <div className="absolute top-2 left-2 bg-yellow-400/20 backdrop-blur-sm px-3 py-1 rounded-full font-black text-white text-xs md:text-sm z-10 border border-yellow-400/50">Best: {highScore}</div>}
             <canvas ref={canvasRef} className="w-full h-full block" />
             {(!gameStarted || gameOver) && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md z-20 animate-in fade-in">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20 animate-in fade-in">
                     <div className="text-center">
-                        {gameOver && <p className="text-white font-black text-2xl mb-4 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">Signal Lost</p>}
-                        <button onClick={initGame} className="bg-indigo-600 text-white px-6 py-2 md:px-8 md:py-3 rounded-full font-black text-sm md:text-lg shadow-[0_0_20px_rgba(79,70,229,0.5)] hover:scale-110 transition-transform flex items-center gap-2">
-                            <Play className="w-4 h-4 md:w-5 md:h-5 fill-current" /> {gameOver ? 'Retry' : 'Enter Void'}
+                        {gameOver && <p className="text-white font-black text-2xl mb-4 drop-shadow-md">Fall!</p>}
+                        <button onClick={initGame} className="bg-yellow-400 text-yellow-900 px-6 py-2 md:px-8 md:py-3 rounded-full font-black text-sm md:text-lg shadow-xl hover:scale-110 transition-transform flex items-center gap-2">
+                            <Play className="w-4 h-4 md:w-5 md:h-5 fill-current" /> {gameOver ? 'Try Again' : 'Play'}
                         </button>
                     </div>
                 </div>

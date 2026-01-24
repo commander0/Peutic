@@ -4,19 +4,19 @@ import {
     Sparkles, Zap, ChevronLeft, Save,
     Gamepad2, RefreshCw
 } from 'lucide-react';
-import { User, Anima } from '../../types';
+import { User, Lumina } from '../../types';
 import { PetService } from '../../services/petService';
 import PetCanvas from './PetCanvas';
 import { useToast } from '../common/Toast';
 import { UserService } from '../../services/userService';
 
-interface AnimaViewProps {
+interface LuminaViewProps {
     user: User;
     onClose: () => void;
 }
 
-const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
-    const [pet, setPet] = useState<Anima | null>(null);
+const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
+    const [pet, setPet] = useState<Lumina | null>(null);
     const [emotion, setEmotion] = useState<'idle' | 'happy' | 'hungry' | 'sleeping' | 'sad' | 'eating'>('idle');
     const [loading, setLoading] = useState(true);
     const [showSelection, setShowSelection] = useState(false);
@@ -72,7 +72,12 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
         }
     };
 
+    const [trick, setTrick] = useState<'spin' | 'flip' | 'magic' | null>(null);
+
+    // ... (logic)
+
     const handleAction = async (action: 'feed' | 'play' | 'clean' | 'sleep') => {
+        // ... (existing checks)
         if (!pet || (pet.isSleeping && action !== 'sleep')) return;
 
         // Check if user has enough balance
@@ -88,9 +93,6 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
         let xpGain = 0;
 
         // Scale rewards based on intensity (Time Investment)
-        // 1m: +10 Stat, +2 XP
-        // 2m: +25 Stat, +5 XP
-        // 3m: +45 Stat, +10 XP
         switch (intensity) {
             case 1: statGain = 10; xpGain = 2; break;
             case 2: statGain = 25; xpGain = 5; break;
@@ -99,11 +101,7 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
 
         switch (action) {
             case 'feed':
-                if (pet.hunger >= 100) {
-                    showToast(`${pet.name} is full!`, "info");
-                    return;
-                }
-                // Deduct balance securely
+                if (pet.hunger >= 100) { showToast(`${pet.name} is full!`, "info"); return; }
                 if (await UserService.deductBalance(COST, `Fed ${pet.name}`)) {
                     updatedPet.hunger = Math.min(100, pet.hunger + statGain);
                     updatedPet.experience += xpGain;
@@ -112,15 +110,17 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
                 }
                 break;
             case 'play':
-                if (pet.energy < 20) {
-                    showToast(`${pet.name} is too tired to play.`, "info");
-                    return;
-                }
+                if (pet.energy < 20) { showToast(`${pet.name} is too tired to play.`, "info"); return; }
                 if (await UserService.deductBalance(COST, `Played with ${pet.name}`)) {
                     updatedPet.happiness = Math.min(100, pet.happiness + statGain);
                     updatedPet.energy = Math.max(0, pet.energy - (10 * intensity));
                     updatedPet.experience += xpGain * 1.5;
                     newEmotion = 'happy';
+
+                    // TRICK LOGIC
+                    if (intensity === 2) setTrick('spin');
+                    if (intensity === 3) setTrick('magic');
+
                     showToast(`Played with ${pet.name}! (+${statGain} Joy, -${COST}m)`, "success");
                 }
                 break;
@@ -150,7 +150,10 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
         await PetService.updatePet(updatedPet);
 
         if (newEmotion !== 'sleeping') {
-            setTimeout(() => setEmotion('idle'), 3000);
+            setTimeout(() => {
+                setEmotion('idle');
+                setTrick(null);
+            }, 3000);
         }
     };
 
@@ -268,7 +271,7 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
 
                     {/* PET CANVAS */}
                     <div className="absolute inset-0 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                        <PetCanvas pet={pet} width={canvasSize} height={canvasSize} emotion={emotion} />
+                        <PetCanvas pet={pet} width={canvasSize} height={canvasSize} emotion={emotion} trick={trick} />
                     </div>
 
                     {/* STATUS BARS (Responsive: Bottom row on mobile, Right column on desktop) */}
@@ -371,4 +374,4 @@ const ActionButton: React.FC<{ icon: any, label: string, color: 'cyan' | 'yellow
     );
 };
 
-export default AnimaView;
+export default LuminaView;
