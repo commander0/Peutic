@@ -23,7 +23,6 @@ export class GardenService {
             userId: data.user_id,
             level: data.level,
             currentPlantType: data.current_plant_type as any,
-            waterLevel: data.water_level || 50,
             lastWateredAt: data.last_watered_at,
             streakCurrent: data.streak_current,
             streakBest: data.streak_best
@@ -36,7 +35,6 @@ export class GardenService {
             level: 1, // Seed
             current_plant_type: 'Lotus',
             last_watered_at: new Date().toISOString(),
-            water_level: 50,
             streak_current: 0,
             streak_best: 0
         };
@@ -52,7 +50,6 @@ export class GardenService {
             userId,
             level: 1,
             currentPlantType: 'Lotus',
-            waterLevel: 50,
             lastWateredAt: initialState.last_watered_at,
             streakCurrent: 0,
             streakBest: 0
