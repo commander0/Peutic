@@ -86,7 +86,7 @@ export const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }
 
 
     return (
-        <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-100 dark:border-gray-800 p-4 md:p-5 shadow-sm">
+        <div className="bg-transparent p-4 md:p-5">
             <div className="flex items-center gap-2 mb-3">
                 <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg"><Lightbulb className="w-4 h-4 text-purple-600 dark:text-purple-400" /></div>
                 <h3 className="font-bold text-gray-900 dark:text-white text-sm">Get Clarity</h3>

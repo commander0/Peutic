@@ -23,7 +23,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         } else {
             const saved = localStorage.getItem('peutic_theme') as Theme;
             if (saved) setThemeState(saved);
-            else if (window.matchMedia('(prefers-color-scheme: dark)').matches) setThemeState('dark');
+            // Default to light for consistent branding (User Request)
+            else setThemeState('light');
         }
     }, []);
 

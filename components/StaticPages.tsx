@@ -382,8 +382,12 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFBEB] dark:bg-black font-sans transition-colors duration-500">
-      <div className="max-w-4xl mx-auto px-4 py-8 md:py-12">
+    <div className="min-h-screen font-sans transition-colors duration-500 relative">
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute inset-0 bg-[#FFFBEB] dark:bg-[#0A0A0A]"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-yellow-50/50 to-transparent dark:from-gray-900 dark:via-gray-900 dark:to-black"></div>
+      </div>
+      <div className="max-w-4xl mx-auto px-4 py-8 md:py-12 relative z-10">
         <Link to="/" className="inline-flex items-center gap-2 font-bold text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white mb-6 md:mb-8 transition-colors text-sm md:text-base">
           <ArrowLeft className="w-3 h-3 md:w-4 md:h-4" /> {t('ui_cancel')}
         </Link>

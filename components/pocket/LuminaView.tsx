@@ -23,6 +23,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     const [selectedSpecies, setSelectedSpecies] = useState<'Holo-Hamu' | 'Digi-Dino' | 'Neo-Shiba' | 'Zen-Sloth'>('Holo-Hamu');
     const [petName, setPetName] = useState('');
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
+    const [trick, setTrick] = useState<'spin' | 'magic' | null>(null);
 
     // Dynamic canvas sizing for responsive pet
     const [canvasSize, setCanvasSize] = useState(500);
