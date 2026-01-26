@@ -1,19 +1,6 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- RESET SCHEMA (Use CAUTION in Production)
-DROP TABLE IF EXISTS safety_alerts CASCADE;
-DROP TABLE IF EXISTS transactions CASCADE;
-DROP TABLE IF EXISTS pets CASCADE;
-DROP TABLE IF EXISTS garden_states CASCADE;
-DROP TABLE IF EXISTS mood_entries CASCADE;
-DROP TABLE IF EXISTS voice_journal CASCADE;
-DROP TABLE IF EXISTS journal_entries CASCADE;
-DROP TABLE IF EXISTS interactions CASCADE;
-DROP TABLE IF EXISTS companions CASCADE;
-DROP TABLE IF EXISTS global_settings CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
-
 -- 1. USERS TABLE
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -154,65 +141,23 @@ ALTER TABLE mood_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE garden_states ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE companions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE global_settings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE safety_alerts ENABLE ROW LEVEL SECURITY;
 
--- 1. USERS
-CREATE POLICY "Users view own data" ON users FOR SELECT USING ((select auth.uid()) = id);
-CREATE POLICY "Users update own data" ON users FOR UPDATE USING ((select auth.uid()) = id);
+-- Users can only see their own data
+CREATE POLICY "Users view own data" ON users FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Users update own data" ON users FOR UPDATE USING (auth.uid() = id);
 
--- 2. JOURNAL
-CREATE POLICY "Users view own journal" ON journal_entries FOR SELECT USING ((select auth.uid()) = user_id);
-CREATE POLICY "Users insert own journal" ON journal_entries FOR INSERT WITH CHECK ((select auth.uid()) = user_id);
-CREATE POLICY "Users delete own journal" ON journal_entries FOR DELETE USING ((select auth.uid()) = user_id);
+-- Journal RLS
+CREATE POLICY "Users view own journal" ON journal_entries FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users insert own journal" ON journal_entries FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users delete own journal" ON journal_entries FOR DELETE USING (auth.uid() = user_id);
 
--- 3. GARDEN
-CREATE POLICY "Users view own garden" ON garden_states FOR SELECT USING ((select auth.uid()) = user_id);
-CREATE POLICY "Users update own garden" ON garden_states FOR UPDATE USING ((select auth.uid()) = user_id);
-CREATE POLICY "Users insert own garden" ON garden_states FOR INSERT WITH CHECK ((select auth.uid()) = user_id);
+-- Garden RLS
+CREATE POLICY "Users view own garden" ON garden_states FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users update own garden" ON garden_states FOR UPDATE USING (auth.uid() = user_id);
 
--- 4. PETS
-CREATE POLICY "Users view own pet" ON pets FOR SELECT USING ((select auth.uid()) = user_id);
-CREATE POLICY "Users update own pet" ON pets FOR UPDATE USING ((select auth.uid()) = user_id);
-CREATE POLICY "Users insert own pet" ON pets FOR INSERT WITH CHECK ((select auth.uid()) = user_id);
-
--- 5. INTERACTIONS
-CREATE POLICY "Users view own interactions" ON interactions FOR SELECT USING ((select auth.uid()) = user_id);
-CREATE POLICY "Users insert own interactions" ON interactions FOR INSERT WITH CHECK ((select auth.uid()) = user_id);
-
--- 6. VOICE JOURNAL
-CREATE POLICY "Users view own voice" ON voice_journal FOR SELECT USING ((select auth.uid()) = user_id);
-CREATE POLICY "Users insert own voice" ON voice_journal FOR INSERT WITH CHECK ((select auth.uid()) = user_id);
-CREATE POLICY "Users delete own voice" ON voice_journal FOR DELETE USING ((select auth.uid()) = user_id);
-
--- 7. MOOD ENTRIES
-CREATE POLICY "Users view own mood" ON mood_entries FOR SELECT USING ((select auth.uid()) = user_id);
-CREATE POLICY "Users insert own mood" ON mood_entries FOR INSERT WITH CHECK ((select auth.uid()) = user_id);
-
--- 8. TRANSACTIONS
-CREATE POLICY "Users view own transactions" ON transactions FOR SELECT USING ((select auth.uid()) = user_id);
-CREATE POLICY "Users insert own transactions" ON transactions FOR INSERT WITH CHECK ((select auth.uid()) = user_id);
-
--- 9. COMPANIONS (Public Read)
-CREATE POLICY "Public view companions" ON companions FOR SELECT USING (true);
-
--- 10. GLOBAL SETTINGS (Public Read)
-CREATE POLICY "Public view settings" ON global_settings FOR SELECT USING (true);
-
--- 11. SAFETY ALERTS (Admin only usually, but allowing insert for now)
-CREATE POLICY "Users insert alerts" ON safety_alerts FOR INSERT WITH CHECK ((select auth.uid()) = user_id);
-
--- INDEXES FOR PERFORMANCE
-CREATE INDEX IF NOT EXISTS idx_interactions_user ON interactions(user_id);
-CREATE INDEX IF NOT EXISTS idx_interactions_companion ON interactions(companion_id);
-CREATE INDEX IF NOT EXISTS idx_journal_user ON journal_entries(user_id);
-CREATE INDEX IF NOT EXISTS idx_voice_user ON voice_journal(user_id);
-CREATE INDEX IF NOT EXISTS idx_mood_user ON mood_entries(user_id);
-CREATE INDEX IF NOT EXISTS idx_garden_user ON garden_states(user_id);
-CREATE INDEX IF NOT EXISTS idx_pets_user ON pets(user_id);
-CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id);
-CREATE INDEX IF NOT EXISTS idx_alerts_user ON safety_alerts(user_id);
+-- Pet RLS
+CREATE POLICY "Users view own pet" ON pets FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users update own pet" ON pets FOR UPDATE USING (auth.uid() = user_id);
 
 -- SEED DATA: Global Settings
 INSERT INTO global_settings (max_concurrent_sessions, broadcast_message) 

@@ -278,27 +278,16 @@ const MainApp: React.FC = () => {
   };
 
 
-  // Failsafe for hanging restore
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (isRestoring) {
-        console.warn("Restoration timed out, forcing render");
-        setIsRestoring(false);
-      }
-    }, 4000);
-    return () => clearTimeout(timer);
-  }, [isRestoring]);
-
   if (isRestoring) {
     return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center z-[9999] relative">
+      <div className="min-h-screen bg-white dark:bg-[#0A0A0A] flex flex-col items-center justify-center p-6 text-center">
         <div className="relative">
           <div className="w-16 h-16 border-4 border-yellow-400/20 border-t-yellow-400 rounded-full animate-spin"></div>
           <div className="absolute inset-0 flex items-center justify-center">
             <ShieldCheck className="w-6 h-6 text-yellow-500 animate-pulse" />
           </div>
         </div>
-        <p className="mt-4 text-[10px] font-black uppercase tracking-[0.3em] text-white animate-pulse">Establishing Secure Connection...</p>
+        <p className="mt-4 text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 animate-pulse">Establishing Secure Connection</p>
       </div>
     );
   }

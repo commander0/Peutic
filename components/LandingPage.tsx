@@ -122,7 +122,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     const marqueeRow2 = [...row2, ...row2];
 
     return (
-        <div className={`min-h-screen font-sans bg-[#FFFBEB] dark:bg-[#050505] text-[#0A0A0A] dark:text-[#F3F4F6] selection:bg-yellow-200 selection:text-black transition-colors duration-500 ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen font-sans text-[#0A0A0A] dark:text-[#F3F4F6] selection:bg-yellow-200 selection:text-black transition-colors duration-500 ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
 
             {/* PUBLIC BROADCAST BANNER */}
             {settings.broadcastMessage && (
@@ -141,8 +141,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     loop
                     muted
                     playsInline
-                    poster="https://images.pexels.com/photos/1629236/pexels-photo-1629236.jpeg"
-                    className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center opacity-40 dark:opacity-30 mix-blend-multiply dark:mix-blend-luminosity filter blur-[1px]"
+                    className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center opacity-60 dark:opacity-40 mix-blend-multiply dark:mix-blend-overlay filter blur-[1px]"
                 >
                     <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
                 </video>

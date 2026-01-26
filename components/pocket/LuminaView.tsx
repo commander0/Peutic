@@ -313,19 +313,8 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                     </div>
 
                     {/* PET CANVAS */}
-                    <div className="absolute inset-0 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(6,182,212,0.5)]">
+                    <div className="absolute inset-0 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]">
                         <PetCanvas pet={pet} width={canvasSize} height={canvasSize} emotion={emotion} trick={trick} />
-
-                        {/* FACE OVERLAY */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-20">
-                            {/* EYES */}
-                            <div className="flex gap-12 md:gap-16 mb-4 md:mb-8 transition-all duration-300">
-                                <div className={`w-3 h-3 md:w-5 md:h-5 bg-black rounded-full animate-blink ${emotion === 'sleeping' ? 'h-1 scale-x-150 translate-y-2' : ''} ${emotion === 'happy' ? 'scale-125' : ''}`}></div>
-                                <div className={`w-3 h-3 md:w-5 md:h-5 bg-black rounded-full animate-blink ${emotion === 'sleeping' ? 'h-1 scale-x-150 translate-y-2' : ''} ${emotion === 'happy' ? 'scale-125' : ''}`}></div>
-                            </div>
-                            {/* MOUTH */}
-                            <div className="w-4 h-2 md:w-6 md:h-3 border-b-2 border-black rounded-full opacity-60"></div>
-                        </div>
                     </div>
 
                     {/* STATUS BARS (Responsive: Bottom row on mobile, Right column on desktop) */}
