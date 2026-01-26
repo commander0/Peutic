@@ -152,6 +152,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     // Refs to bypass closure staleness in setInterval
     const isEditingPublicRef = useRef(false);
     const isEditingDashboardRef = useRef(false);
+    const isEditingConcurrencyRef = useRef(false);
 
     // Sync refs with state
     useEffect(() => { isEditingPublicRef.current = isEditingPublic; }, [isEditingPublic]);
@@ -231,7 +232,11 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
     useEffect(() => {
         fetchData(true);
-        const interval = setInterval(() => fetchData(false), 3000);
+        const interval = setInterval(() => {
+            if (!isEditingPublicRef.current && !isEditingDashboardRef.current && !isEditingConcurrencyRef.current) {
+                fetchData(false);
+            }
+        }, 3000);
         return () => clearInterval(interval);
     }, []);
 
@@ -1026,6 +1031,8 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                                     className={`w-full bg-transparent border-0 text-center font-bold text-xs outline-none transition-colors ${settings.maxConcurrentSessions > 15 ? 'text-green-400' : 'text-gray-500'}`}
                                                     value={settings.maxConcurrentSessions}
                                                     onChange={(e) => handleSettingChange('maxConcurrentSessions', Math.min(1000000, Math.max(1, parseInt(e.target.value) || 1)))}
+                                                    onFocus={() => { isEditingConcurrencyRef.current = true; }}
+                                                    onBlur={() => { isEditingConcurrencyRef.current = false; }}
                                                     placeholder="Custom"
                                                 />
                                                 {settings.maxConcurrentSessions > 1000 && <span className="absolute right-2 text-[8px] text-green-500 font-black uppercase">MAX</span>}
