@@ -116,6 +116,29 @@ serve(async (req) => {
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
         }
 
+        if (action === 'user-repair') {
+            const { userId } = payload;
+            const { data: authUser, error: authError } = await supabaseClient.auth.admin.getUserById(userId);
+            if (authError || !authUser.user) throw new Error("Auth user not found");
+
+            const { count } = await supabaseClient.from('users').select('*', { count: 'exact', head: true }).eq('id', userId);
+            const exists = (count || 0) > 0;
+
+            if (!exists) {
+                const { error: insertError } = await supabaseClient.from('users').insert({
+                    id: userId,
+                    email: authUser.user.email,
+                    name: authUser.user.user_metadata?.full_name || authUser.user.email?.split('@')[0] || 'User',
+                    role: 'USER',
+                    balance: 0,
+                    subscription_status: 'ACTIVE',
+                    provider: authUser.user.app_metadata?.provider || 'email'
+                });
+                if (insertError) throw insertError;
+            }
+            return new Response(JSON.stringify({ success: true, repaired: !exists }), { headers: corsHeaders });
+        }
+
         if (action === 'user-update') {
             const user = payload;
             requireAuth(user.id);
