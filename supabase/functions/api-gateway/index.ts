@@ -24,12 +24,8 @@ serve(async (req) => {
     }
 
     try {
-        const body = await req.json();
-        const action = (body.action || '').trim();
-        const payload = body.payload || {};
-        console.log(`[Gateway] RECEIVED ACTION: "${action}" | Payload:`, JSON.stringify(payload).substring(0, 100));
-
-        if (action === 'ping') return new Response(JSON.stringify({ pong: true, timestamp: new Date().toISOString() }), { headers: corsHeaders });
+        const { action, payload } = await req.json();
+        console.log("[Gateway] Received action:", action, "| Payload keys:", payload ? Object.keys(payload) : "none");
 
         // Initialize Supabase Admin Client
         const supUrl = Deno.env.get('SUPABASE_URL');
@@ -87,32 +83,18 @@ serve(async (req) => {
             await supabaseClient.from('users').insert({
                 id: user.user.id, email, name: 'System Admin', role: 'ADMIN', balance: 999, subscription_status: 'ACTIVE', provider: 'email'
             });
-
-            // Fetch the final user profile to return
-            const { data: userData } = await supabaseClient.from('users').select('*').eq('id', user.user.id).single();
-
-            return new Response(JSON.stringify({ success: true, user: userData }), { headers: corsHeaders });
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
         }
 
-        if (action === 'profile-create-bypass' || action === 'user-create') {
+        if (action === 'profile-create-bypass') {
             const { id, email, name, provider } = payload;
             const { count } = await supabaseClient.from('users').select('*', { count: 'exact', head: true });
             const isFirst = (count || 0) === 0;
-
             const { error } = await supabaseClient.from('users').upsert({
-                id, email, name, provider,
-                role: isFirst ? 'ADMIN' : 'USER',
-                balance: isFirst ? 999 : 0,
-                subscription_status: 'ACTIVE'
+                id, email, name, provider, role: isFirst ? 'ADMIN' : 'USER', balance: isFirst ? 999 : 0, subscription_status: 'ACTIVE'
             });
-
-            if (error) {
-                console.error("[Gateway] User Creation Error:", error);
-                return new Response(JSON.stringify({ error: `Database error saving new user: ${error.message}` }), { status: 500, headers: corsHeaders });
-            }
-
-            const { data: userData } = await supabaseClient.from('users').select('*').eq('id', id).single();
-            return new Response(JSON.stringify({ success: true, user: userData }), { headers: corsHeaders });
+            if (error) throw error;
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
         }
 
         // --- USER ACTIONS (SENSITIVE) ---
@@ -132,29 +114,6 @@ serve(async (req) => {
             const { error } = await supabaseClient.from('journals').insert(insertData);
             if (error) throw error;
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
-        }
-
-        if (action === 'user-repair') {
-            const { userId } = payload;
-            const { data: authUser, error: authError } = await supabaseClient.auth.admin.getUserById(userId);
-            if (authError || !authUser.user) throw new Error("Auth user not found");
-
-            const { count } = await supabaseClient.from('users').select('*', { count: 'exact', head: true }).eq('id', userId);
-            const exists = (count || 0) > 0;
-
-            if (!exists) {
-                const { error: insertError } = await supabaseClient.from('users').insert({
-                    id: userId,
-                    email: authUser.user.email,
-                    name: authUser.user.user_metadata?.full_name || authUser.user.email?.split('@')[0] || 'User',
-                    role: 'USER',
-                    balance: 0,
-                    subscription_status: 'ACTIVE',
-                    provider: authUser.user.app_metadata?.provider || 'email'
-                });
-                if (insertError) throw insertError;
-            }
-            return new Response(JSON.stringify({ success: true, repaired: !exists }), { headers: corsHeaders });
         }
 
         if (action === 'user-update') {
@@ -507,8 +466,7 @@ serve(async (req) => {
             return new Response(JSON.stringify(data), { headers: corsHeaders });
         }
 
-        console.warn(`[Gateway] Invalid Action Requested: ${action}`);
-        return new Response(JSON.stringify({ error: `Invalid Action: ${action}` }), { headers: corsHeaders });
+        return new Response(JSON.stringify({ error: "Invalid Action" }), { headers: corsHeaders });
 
     } catch (error: any) {
         console.error("Gateway Error:", error);

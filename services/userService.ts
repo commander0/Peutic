@@ -144,7 +144,7 @@ export class UserService {
             provider: sessionUser.app_metadata?.provider || 'email',
             avatar: sessionUser.user_metadata?.avatar_url,
             emailPreferences: { marketing: true, updates: true },
-            themePreference: 'amber',
+            themePreference: 'light',
             languagePreference: 'en',
             gameScores: { match: 0, cloud: 0 }
         };
@@ -174,7 +174,7 @@ export class UserService {
             // HARDENING: Do NOT attempt client-side upsert. 
             // Instead, trigger an Edge Function or simply retry sync.
             // If the user doesn't exist, it likely means the Trigger failed.
-            await BaseService.invokeGateway('user-repair', { userId: sessionUser.id });
+            await BaseService.invokeGateway('users/repair', { userId: sessionUser.id });
             return await this.syncUser(sessionUser.id);
         } catch (e) {
             console.error("Repair Exception:", e);
@@ -287,7 +287,7 @@ export class UserService {
         }
 
         const updatedUser = { ...user, streak: newStreak, lastLoginDate: new Date().toISOString() };
-        BaseService.invokeGateway('user-update', updatedUser).catch(console.error);
+        BaseService.invokeGateway('users/profile-update', updatedUser).catch(console.error);
 
         return updatedUser;
     }
@@ -507,7 +507,7 @@ export class UserService {
     }
 
     static async sendQueueHeartbeat(userId: string) {
-        await BaseService.invokeGateway('queue-heartbeat', { userId });
+        await BaseService.invokeGateway('queue/heartbeat', { userId });
     }
 
     static async getQueuePosition(userId: string): Promise<number> {
@@ -525,7 +525,7 @@ export class UserService {
     }
 
     static async sendKeepAlive(userId: string) {
-        await BaseService.invokeGateway('session-keepalive', { userId });
+        await BaseService.invokeGateway('session/keepalive', { userId });
     }
 
     static async deductBalance(amount: number, reason: string = "Game Action"): Promise<boolean> {
@@ -554,12 +554,20 @@ export class UserService {
 
         try {
             // Use Gateway for secure transaction
-            const data = await BaseService.invokeGateway('process-topup', {
+            const { error, data } = await BaseService.invokeGateway('process-topup', {
                 userId: user.id,
                 amount: -amount, // Negative amount for deduction
                 cost: 0,
                 description: reason
             });
+
+            if (error) {
+                console.error("Balance Deduction Failed", error);
+                // Revert
+                user.balance = previousBalance;
+                this.saveUserToCache(user);
+                return false;
+            }
 
             if (data?.newBalance !== undefined) {
                 user.balance = data.newBalance;
@@ -637,7 +645,7 @@ export class UserService {
             if (rpcError) throw rpcError;
 
             // Priority 2: Cleanup Auth via Gateway as backup (ensures session invalidation)
-            await BaseService.invokeGateway('delete-user', { userId: id }).catch(e => {
+            await BaseService.invokeGateway('users/account-delete', { userId: id }).catch(e => {
                 logger.warn("Gateway cleanup skipped - database wipe was successful", e.message);
             });
         } catch (e) {
@@ -709,7 +717,9 @@ export class UserService {
     static async topUpWallet(amount: number, cost: number, userId?: string, paymentToken?: string) {
         const uid = userId || this.getUser()?.id;
         if (!uid) return;
-        await BaseService.invokeGateway('process-topup', { userId: uid, amount, cost, paymentToken });
+        const { error } = await BaseService.invokeGateway('wallet/topup', { userId: uid, amount, cost, paymentToken });
+
+        if (error) throw new Error("Transaction Failed: " + error.message);
         await this.syncUser(uid);
     }
 

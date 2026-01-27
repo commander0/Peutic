@@ -59,12 +59,11 @@ export class AdminService {
 
     static async saveSettings(settings: GlobalSettings) {
         this.settingsCache = settings;
-        try {
-            await BaseService.invokeGateway('admin-save-settings', { settings });
+        const { error } = await BaseService.invokeGateway('system/settings-save', { settings });
+        if (!error) {
             localStorage.setItem(this.CACHE_KEY, JSON.stringify(settings));
-        } catch (error) {
-            logger.error("Save Settings via Gateway Failed", "", error);
         }
+        if (error) logger.error("Save Settings via Gateway Failed", "", error);
     }
 
     static async getSystemLogs(): Promise<SystemLog[]> {
@@ -121,7 +120,7 @@ export class AdminService {
 
     static async deleteUser(userId: string) {
         try {
-            const response = await BaseService.invokeGateway('delete-user', { userId });
+            const response = await BaseService.invokeGateway('admin-delete-user', { userId });
             if (response?.error) {
                 logger.error("Delete User Gateway Error", response.error);
                 throw new Error(response.error);
@@ -134,32 +133,31 @@ export class AdminService {
     }
 
     static async updateUserStatus(userId: string, status: 'ACTIVE' | 'BANNED' | 'TRIAL') {
-        try {
-            await BaseService.invokeGateway('user-status', { userId, status });
-            logger.info("User Status Updated", `ID: ${userId}, Status: ${status}`);
-        } catch (error) {
-            throw error;
-        }
+        const { error } = await BaseService.invokeGateway('users/status-update', { userId, status });
+        if (error) throw error;
+        logger.info("User Status Updated", `ID: ${userId}, Status: ${status}`);
     }
 
 
 
     static async broadcastMessage(message: string) {
-        const data = await BaseService.invokeGateway('broadcast', { message });
+        const data = await BaseService.invokeGateway('system/broadcast-public', { message });
         this.settingsCache.broadcastMessage = message;
         logger.info("Global Broadcast Sent", message);
         return data;
     }
 
     static async broadcastDashboardMessage(message: string) {
-        const data = await BaseService.invokeGateway('dashboard-broadcast', { message });
+        const data = await BaseService.invokeGateway('system/broadcast-dashboard', { message });
         this.settingsCache.dashboardBroadcastMessage = message;
         logger.info("Dashboard Broadcast Sent", message);
         return data;
     }
 
     static async getStripeStats() {
-        return await BaseService.invokeGateway('admin-stripe-stats', {});
+        const { data, error } = await BaseService.invokeGateway('admin-stripe-stats', {});
+        if (error) throw error;
+        return data;
     }
 
     static async getSafetyAlerts(): Promise<any[]> {
@@ -207,17 +205,13 @@ export class AdminService {
     }
 
     static async forceVerifyEmail(email: string): Promise<boolean> {
-        try {
-            const data = await BaseService.invokeGateway('admin-auto-verify', { email });
-            return !!data?.success;
-        } catch (e) {
-            return false;
-        }
+        const { data, error } = await BaseService.invokeGateway('admin-auto-verify', { email });
+        return !error && data?.success;
     }
 
     static async createRootAdmin(email: string, password?: string, masterKey?: string): Promise<User> {
-        const data = await BaseService.invokeGateway('admin-create', { email, password, masterKey });
-        if (!data?.user) throw new Error(data?.error || "Root admin creation failed");
+        const { data, error } = await BaseService.invokeGateway('admin-create', { email, password, masterKey });
+        if (error || !data?.user) throw new Error(error?.message || "Root admin creation failed");
         return UserService.mapUser(data.user);
     }
 
@@ -227,8 +221,8 @@ export class AdminService {
     }
 
     static async resetAdminStatus(masterKey: string): Promise<void> {
-        const data = await BaseService.invokeGateway('admin-reclaim', { masterKey });
-        if (data?.error) throw new Error(data.error);
+        const { data, error } = await BaseService.invokeGateway('admin-reclaim', { masterKey });
+        if (error || data?.error) throw new Error(error?.message || data?.error || "Reclaim failed");
 
         const currentUser = UserService.getUser();
         if (currentUser?.role === 'ADMIN') {
@@ -279,11 +273,8 @@ export class AdminService {
 
 
     static async updateCompanion(companion: Companion): Promise<void> {
-        try {
-            await BaseService.invokeGateway('admin-update-companion', { companion });
-        } catch (error) {
-            logger.error("Update Companion via Gateway Failed", companion.id, error);
-        }
+        const { error } = await BaseService.invokeGateway('admin-update-companion', { companion });
+        if (error) logger.error("Update Companion via Gateway Failed", companion.id, error);
     }
 
     static async getAllTransactions(): Promise<Transaction[]> {
@@ -316,16 +307,14 @@ export class AdminService {
     }
 
     static async addCredits(userId: string, minutes: number) {
-        try {
-            await BaseService.invokeGateway('process-topup', {
-                userId,
-                amount: minutes,
-                isInternal: true
-            });
-            logger.success("Admin Credit Top-up", `User: ${userId}, Minutes: ${minutes}`);
-        } catch (error: any) {
-            throw new Error(error.message);
-        }
+        const { error } = await BaseService.invokeGateway('process-topup', {
+            userId,
+            amount: minutes,
+            isInternal: true
+        });
+        if (error) throw new Error(error.message);
+
+        logger.success("Admin Credit Top-up", `User: ${userId}, Minutes: ${minutes}`);
     }
 
     static async logSystemEvent(type: string, event: string, details: string) {

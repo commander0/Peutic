@@ -34,21 +34,14 @@
   <script>
     // Immediate theme check to prevent flash of unstyled content (FOUC)
     try {
-      const mode = localStorage.getItem('peutic_mode') || 'light';
-      const theme = localStorage.getItem('peutic_theme') || 'amber';
+      const local = localStorage.getItem('peutic_theme');
+      const userPref = localStorage.getItem('supabase.auth.token') && JSON.parse(atob(localStorage.getItem('supabase.auth.token').split('.')[1] || '{}'))?.user_metadata?.theme_preference;
 
-      if (mode === 'dark') {
+      if (local === 'dark' || (!local && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
       } else {
         document.documentElement.classList.remove('dark');
       }
-
-      // Remove any existing theme- classes
-      const themeClasses = ['theme-amber', 'theme-cyberpunk', 'theme-forest', 'theme-midnight', 'theme-rose'];
-      document.documentElement.classList.remove(...themeClasses);
-
-      // Apply correct theme class
-      document.documentElement.classList.add(`theme-${theme}`);
     } catch (e) { }
 
     tailwind.config = {
@@ -116,90 +109,50 @@
   <style>
     :root {
       --color-primary: #FACC15;
-      /* Amber */
+      /* Default Yellow */
       --color-primary-light: #FFFBEB;
+      /* Yellow-50 equivalent */
       --color-primary-border: #FEF08A;
+      /* Yellow-200 equivalent */
       --color-bg-base: #FFFBEB;
       --color-text-base: #0A0A0A;
     }
 
-    /* 1. AMBER */
-    .theme-amber {
-      --color-primary: #FACC15;
-      --color-primary-light: #FFFBEB;
-      --color-primary-border: #FEF08A;
-      --color-bg-base: #FFFBEB;
-    }
-
-    .theme-amber.dark {
-      --color-bg-base: #0A0A05;
-      --color-primary: #F59E0B;
-      --color-primary-light: rgba(245, 158, 11, 0.15);
-      --color-primary-border: rgba(245, 158, 11, 0.3);
-    }
-
-    /* 2. CYBERPUNK */
-    .theme-cyberpunk {
-      --color-primary: #06b6d4;
-      --color-primary-light: #f0f9ff;
-      --color-primary-border: #bae6fd;
-      --color-bg-base: #f0f9ff;
-    }
-
-    .theme-cyberpunk.dark {
-      --color-bg-base: #020617;
-      --color-primary: #00f0ff;
-      --color-primary-light: rgba(0, 240, 255, 0.15);
-      --color-primary-border: rgba(0, 240, 255, 0.4);
-    }
-
-    /* 3. FOREST */
-    .theme-forest {
-      --color-primary: #10b981;
-      --color-primary-light: #f0fdf4;
-      --color-primary-border: #bbf7d0;
-      --color-bg-base: #f0fdf4;
-    }
-
-    .theme-forest.dark {
-      --color-bg-base: #022c22;
-      --color-primary: #34D399;
-      --color-primary-light: rgba(52, 211, 153, 0.15);
-      --color-primary-border: rgba(52, 211, 153, 0.4);
-    }
-
-    /* 4. MIDNIGHT */
-    .theme-midnight {
-      --color-primary: #6366f1;
-      --color-primary-light: #f5f3ff;
-      --color-primary-border: #ddd6fe;
-      --color-bg-base: #f5f3ff;
-    }
-
-    .theme-midnight.dark {
-      --color-bg-base: #0f172a;
-      --color-primary: #818CF8;
-      --color-primary-light: rgba(129, 140, 248, 0.15);
-      --color-primary-border: rgba(129, 140, 248, 0.4);
-    }
-
-    /* 5. ROSE */
-    .theme-rose {
-      --color-primary: #f43f5e;
-      --color-primary-light: #fff1f2;
-      --color-primary-border: #ffe4e6;
-      --color-bg-base: #fff1f2;
-    }
-
-    .theme-rose.dark {
-      --color-bg-base: #450a0a;
-      --color-primary: #FB7185;
-      --color-primary-light: rgba(251, 113, 133, 0.15);
-      --color-primary-border: rgba(251, 113, 133, 0.4);
-    }
-
     .dark {
+      --color-bg-base: #0A0A0A;
       --color-text-base: #F3F4F6;
+      --color-primary-light: rgba(250, 204, 21, 0.1);
+      --color-primary-border: rgba(250, 204, 21, 0.2);
+    }
+
+    /* THEME: Cyberpunk */
+    .theme-cyberpunk {
+      --color-primary: #00f0ff;
+      /* Neon Cyan */
+      --color-primary-light: rgba(0, 240, 255, 0.1);
+      --color-primary-border: rgba(0, 240, 255, 0.3);
+      --color-bg-base: #050510;
+      /* Deep Void */
+    }
+
+    /* THEME: Forest */
+    .theme-forest {
+      --color-primary: #34D399;
+      /* Emerald */
+      --color-primary-light: rgba(52, 211, 153, 0.1);
+      --color-primary-border: rgba(52, 211, 153, 0.3);
+      --color-bg-base: #064E3B;
+      /* Deep Green */
+    }
+
+    /* THEME: Midnight */
+    .theme-midnight {
+      --color-primary: #818CF8;
+      /* Indigo */
+      --color-primary-light: rgba(129, 140, 248, 0.1);
+      --color-primary-border: rgba(129, 140, 248, 0.3);
+      --color-bg-base: #1e1b4b;
+      /* Deep Indigo */
     }
 
     body {

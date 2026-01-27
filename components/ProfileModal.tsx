@@ -17,7 +17,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
     if (!user) return null;
 
     const [activeTab, setActiveTab] = useState<'identity' | 'sanctuary' | 'journey'>('identity');
-    const { theme, setTheme, mode, setMode } = useTheme();
+    const { theme, setTheme } = useTheme();
 
     const [name, setName] = useState(user.name || 'User');
     const [avatarLocked, setAvatarLocked] = useState(user.avatarLocked || false);
@@ -66,12 +66,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
         URL.revokeObjectURL(url);
     };
 
-    const ThemeButton = ({ id, color, label }: { id: any, color: string, label: string }) => (
+    const ThemeButton = ({ id, color, label }: { id: string, color: string, label: string }) => (
         <button
-            onClick={() => {
-                setTheme(id);
-                setMode('light'); // User request: force light version on selection
-            }}
+            onClick={() => setTheme(id as any)}
             className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${theme === id ? 'border-yellow-500 bg-yellow-500/10' : 'border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
         >
             <div className={`w-8 h-8 rounded-full shadow-lg ${color}`}></div>
@@ -160,23 +157,14 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
                             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                                 <Palette className="w-5 h-5 text-yellow-500" /> Theme Intelligence
                             </h3>
-                            <div className="grid grid-cols-3 gap-4 mb-4">
-                                <ThemeButton id="amber" color="bg-yellow-400" label="Sunflower" />
-                                <ThemeButton id="cyberpunk" color="bg-cyan-400 shadow-[0_0_10px_#00f0ff]" label="Neon Voyage" />
-                                <ThemeButton id="forest" color="bg-emerald-500" label="Zen Forest" />
-                                <ThemeButton id="midnight" color="bg-indigo-500" label="Deep Space" />
-                                <ThemeButton id="rose" color="bg-rose-400" label="Petal Pink" />
+                            <div className="grid grid-cols-3 gap-4 mb-8">
+                                <ThemeButton id="light" color="bg-white border text-black" label="Daylight" />
+                                <ThemeButton id="dark" color="bg-black text-white" label="Midnight" />
+                                <ThemeButton id="cyberpunk" color="bg-[#050510] border border-cyan-400 shadow-[0_0_10px_#00f0ff]" label="Cyberpunk" />
+                                <ThemeButton id="forest" color="bg-[#064E3B] border border-emerald-400" label="Zen Forest" />
+                                <ThemeButton id="midnight" color="bg-[#1e1b4b] border border-indigo-400" label="Deep Space" />
                             </div>
-                            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700">
-                                <span className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Environment Intensity</span>
-                                <button
-                                    onClick={() => setMode(mode === 'light' ? 'dark' : 'light')}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all"
-                                >
-                                    {mode === 'light' ? 'Switch to Midnight' : 'Switch to Daylight'}
-                                </button>
-                            </div>
-                            <p className="mt-6 text-center text-xs text-gray-400">Themes seamlessly adapt the environment to your mood.</p>
+                            <p className="text-center text-xs text-gray-400">Themes seamlessly adapt the environment to your mood.</p>
                         </div>
                     )}
 

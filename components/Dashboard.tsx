@@ -115,11 +115,11 @@ CollapsibleSection.displayName = 'CollapsibleSection';
 
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession }) => {
     const { lang, setLang, t } = useLanguage();
-    const { theme, setTheme, mode, toggleMode } = useTheme();
+    const { theme, setTheme } = useTheme();
     const [activeTab, setActiveTab] = useState<'inner_sanctuary' | 'history' | 'settings'>('inner_sanctuary');
 
-    // Derived boolean for simple UI toggles
-    const isDark = mode === 'dark';
+    // Derived boolean for simple UI toggles, but relies on definitive ThemeContext
+    const isDark = theme === 'dark' || theme.includes('cyberpunk') || theme.includes('forest') || theme.includes('midnight');
 
     const [balance, setBalance] = useState(user.balance);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -377,7 +377,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     };
 
     const toggleDarkMode = () => {
-        toggleMode();
+        // Cycle: Light -> Dark -> Light (Custom themes selected via Settings only)
+        setTheme(isDark ? 'light' : 'dark');
     };
 
     const toggleGhostMode = () => {
@@ -388,7 +389,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         refreshData(); // Refresh to update greeting
     };
 
-    // Theme Preference sync handled by ThemeContext
+    // Sync state with User Preference when User loads (fixes login theme mismatch)
+    useEffect(() => {
+        if (user && user.themePreference) {
+            // Only update if fundamentally different to avoid overwriting rich themes
+            if (user.themePreference === 'dark' && !isDark) setTheme('dark');
+            if (user.themePreference === 'light' && isDark) setTheme('light');
+        }
+    }, [user.themePreference]);
 
     const handleMoodSelect = (m: 'confetti' | 'rain' | null) => {
         setMood(m);
@@ -650,7 +658,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         {activeTab === 'inner_sanctuary' && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
 
-                                {/* THE HUB (Collapsible Olympic Ring Style) */}
+                                {/* THE PLAYGROUND (Collapsible 3-Column Tile Menu) */}
                                 <div className="space-y-4">
                                     <button
                                         onClick={() => setIsVaultOpen(!isVaultOpen)}
@@ -666,213 +674,157 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     </button>
 
                                     {isVaultOpen && (
-                                        <div className="animate-in fade-in slide-in-from-top-4 duration-700 space-y-6">
-                                            {/* 3x2 Grid of Square Tiles */}
-                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-                                                {/* 1. GARDEN */}
-                                                <div
-                                                    onClick={() => setShowGardenFull(!showGardenFull)}
-                                                    className={`aspect-square rounded-3xl border-2 flex flex-col items-center justify-center p-4 cursor-pointer transition-all hover:scale-105 active:scale-95 group relative overflow-hidden bg-white dark:bg-gray-900/50 ${showGardenFull ? 'border-green-400 shadow-[0_0_20px_rgba(34,197,94,0.2)]' : 'border-yellow-100 dark:border-gray-800'}`}
-                                                >
-                                                    <div className="w-16 h-16 md:w-24 md:h-24 transition-transform group-hover:scale-110 duration-700">
-                                                        <Suspense fallback={<div className="w-10 h-10 rounded-full animate-pulse bg-green-100"></div>}>
-                                                            <GardenCanvas garden={garden!} width={100} height={100} />
-                                                        </Suspense>
+                                        <div className="animate-in fade-in slide-in-from-top-2 duration-500 space-y-4">
+                                            {/* ROW 1: CORE TRIO */}
+                                            <div className="grid grid-cols-3 gap-1 md:gap-4">
+                                                {/* TILE 1: INNER GARDEN */}
+                                                {garden && (
+                                                    <div
+                                                        onClick={() => setShowGardenFull(true)}
+                                                        className="group relative bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-black dark:to-emerald-950 rounded-xl md:rounded-3xl border border-green-400/30 dark:border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.15)] hover:shadow-[0_0_25px_rgba(34,197,94,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                    >
+                                                        <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 pointer-events-none"></div>
+                                                        <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
+                                                            <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
+                                                            <Suspense fallback={<div className="w-8 h-8 md:w-20 md:h-20 rounded-full animate-pulse bg-green-100"></div>}>
+                                                                <div className="w-10 h-10 md:w-24 md:h-24 mb-1 md:mb-3 transition-transform group-hover:scale-110 duration-700 relative z-10 drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]">
+                                                                    <GardenCanvas garden={garden} width={100} height={100} />
+                                                                </div>
+                                                            </Suspense>
+                                                            <h3 className="text-[7px] md:text-sm font-black text-green-400 uppercase tracking-widest drop-shadow-[0_0_6px_rgba(34,197,94,0.8)] text-center">Inner Garden</h3>
+                                                            <p className="hidden md:block text-[10px] font-bold text-green-500/80 uppercase tracking-tighter">Level {garden.level} &bull; Growing</p>
+                                                        </div>
                                                     </div>
-                                                    <span className="font-black text-[10px] md:text-xs uppercase tracking-widest text-center mt-2 dark:text-gray-200">Inner Garden</span>
-                                                    <div className="absolute top-3 right-3">
-                                                        {showGardenFull ? <ChevronUp className="w-4 h-4 text-green-500" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-                                                    </div>
-                                                </div>
+                                                )}
 
-                                                {/* 2. BOOK OF YOU */}
+                                                {/* TILE 2: BOOK OF YOU */}
                                                 {(() => {
                                                     const joinedDate = new Date(dashboardUser?.joinedAt || new Date().toISOString());
-                                                    const diffDays = Math.floor(Math.abs(new Date().getTime() - joinedDate.getTime()) / (1000 * 60 * 60 * 24));
+                                                    const now = new Date();
+                                                    const diffTime = Math.abs(now.getTime() - joinedDate.getTime());
+                                                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
                                                     const isLocked = diffDays < 7;
+                                                    const daysRemaining = 7 - diffDays;
+
                                                     return (
                                                         <div
-                                                            onClick={() => isLocked ? showToast(`Unlocked in ${7 - diffDays} days.`, "info") : setShowBookFull(!showBookFull)}
-                                                            className={`aspect-square rounded-3xl border-2 flex flex-col items-center justify-center p-4 cursor-pointer transition-all hover:scale-105 active:scale-95 group relative overflow-hidden bg-white dark:bg-gray-900/50 ${showBookFull ? 'border-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.2)]' : 'border-yellow-100 dark:border-gray-800'}`}
+                                                            onClick={() => {
+                                                                if (!isLocked) {
+                                                                    setShowBookFull(true);
+                                                                } else {
+                                                                    showToast(`Locked for ${daysRemaining} more days.`, "info");
+                                                                }
+                                                            }}
+                                                            className="group relative bg-gradient-to-br from-fuchsia-50 via-purple-50 to-indigo-50 dark:from-purple-950 dark:via-black dark:to-indigo-950 rounded-xl md:rounded-3xl border border-purple-400/30 dark:border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] transition-all overflow-hidden cursor-pointer h-[100px] md:h-[220px]"
                                                         >
-                                                            <div className={`p-4 rounded-2xl bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 mb-2 group-hover:scale-110 transition-transform`}>
-                                                                <BookOpen className="w-8 h-8 md:w-10 md:h-10" />
-                                                            </div>
-                                                            <span className="font-black text-[10px] md:text-xs uppercase tracking-widest text-center dark:text-gray-200">Book of You</span>
-                                                            <div className="absolute top-3 right-3">
-                                                                {isLocked ? <Lock className="w-3.5 h-3.5 text-gray-400" /> : (showBookFull ? <ChevronUp className="w-4 h-4 text-purple-500" /> : <ChevronDown className="w-4 h-4 text-gray-400" />)}
+                                                            {/* Animated shimmer overlay */}
+                                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_3s_infinite] pointer-events-none"></div>
+                                                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')] opacity-[0.15] pointer-events-none"></div>
+
+                                                            <div className="flex flex-col items-center justify-center h-full p-2 md:p-6 text-center relative z-10">
+                                                                <div className="relative mb-1 md:mb-4">
+                                                                    {/* Pulsing glow ring */}
+                                                                    <div className="absolute -inset-4 md:-inset-6 bg-purple-400/30 dark:bg-purple-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                                    <div className="absolute -inset-2 border border-purple-300/50 dark:border-purple-500/30 rounded-full animate-[spin_8s_linear_infinite]"></div>
+                                                                    <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-purple-600 to-indigo-700 border border-purple-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_20px_rgba(168,85,247,0.5)] group-hover:scale-110 transition-transform">
+                                                                        <BookOpen className="w-5 h-5 md:w-10 md:h-10" />
+                                                                    </div>
+                                                                    {isLocked && <div className="absolute -top-2 -right-2 bg-yellow-400 text-black p-1 rounded-lg shadow-lg"><Lock className="w-3 h-3" /></div>}
+                                                                </div>
+                                                                <h3 className="text-[7px] md:text-sm font-black text-purple-700 dark:text-purple-300 uppercase tracking-widest drop-shadow-[0_0_6px_rgba(168,85,247,0.6)]">Book of You</h3>
+                                                                <p className="hidden md:block text-[10px] font-bold text-purple-500/70 dark:text-purple-400/50 uppercase tracking-widest">
+                                                                    {isLocked ? `Unlocked in ${daysRemaining}d` : 'Open Chronicle'}
+                                                                </p>
                                                             </div>
                                                         </div>
                                                     );
                                                 })()}
 
-                                                {/* 3. LUMINA */}
+                                                {/* TILE 3: ANIMA */}
                                                 <div
-                                                    onClick={() => setShowPocketPet(!showPocketPet)}
-                                                    className={`aspect-square rounded-3xl border-2 flex flex-col items-center justify-center p-4 cursor-pointer transition-all hover:scale-105 active:scale-95 group relative overflow-hidden bg-white dark:bg-gray-900/50 ${showPocketPet ? 'border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.2)]' : 'border-yellow-100 dark:border-gray-800'}`}
+                                                    onClick={() => setShowPocketPet(true)}
+                                                    className="group relative bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50 dark:from-cyan-950 dark:via-black dark:to-blue-950 rounded-xl md:rounded-3xl border border-cyan-400/30 dark:border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)] hover:shadow-[0_0_25px_rgba(6,182,212,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                                 >
-                                                    <div className={`p-4 rounded-2xl bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400 mb-2 group-hover:scale-110 transition-transform`}>
-                                                        <Sparkles className="w-8 h-8 md:w-10 md:h-10" />
-                                                    </div>
-                                                    <span className="font-black text-[10px] md:text-xs uppercase tracking-widest text-center dark:text-gray-200">{lumina ? lumina.name : 'Lumina'}</span>
-                                                    <div className="absolute top-3 right-3">
-                                                        {showPocketPet ? <ChevronUp className="w-4 h-4 text-cyan-500" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-                                                    </div>
-                                                </div>
-
-                                                {/* Row 2: Centered 2 Tiles */}
-                                                <div className="col-span-2 md:col-span-3 flex justify-center gap-4 md:gap-6">
-                                                    {/* 4. OBSERVATORY */}
-                                                    <div
-                                                        onClick={() => dashboardUser?.unlockedRooms?.includes('observatory') ? setShowObservatory(!showObservatory) : handleRoomInteraction('observatory', 125)}
-                                                        className={`w-[calc(50%-8px)] md:w-[calc(33.333%-16px)] aspect-square rounded-3xl border-2 flex flex-col items-center justify-center p-4 cursor-pointer transition-all hover:scale-105 active:scale-95 group relative overflow-hidden bg-white dark:bg-gray-900/50 ${showObservatory ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.2)]' : 'border-yellow-100 dark:border-gray-800'}`}
-                                                    >
-                                                        <div className={`p-4 rounded-2xl mb-2 group-hover:scale-110 transition-transform ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400' : 'text-gray-300 dark:text-gray-700'}`}>
-                                                            {dashboardUser?.unlockedRooms?.includes('observatory') ? <Star className="w-8 h-8 md:w-10 md:h-10 fill-current" /> : <Lock className="w-8 h-8 md:w-10 md:h-10" />}
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-blue-600/10 pointer-events-none mix-blend-multiply dark:mix-blend-overlay"></div>
+                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
+                                                        <div className="relative mb-1 md:mb-4">
+                                                            <div className="absolute -inset-4 bg-cyan-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                            <div className="w-10 h-10 md:w-20 md:h-20 bg-black/40 border border-cyan-500/50 rounded-2xl flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform">
+                                                                <Sparkles className="w-5 h-5 md:w-10 md:h-10 animate-bounce" />
+                                                            </div>
                                                         </div>
-                                                        <span className="font-black text-[10px] md:text-xs uppercase tracking-widest text-center dark:text-gray-200">
-                                                            {dashboardUser?.unlockedRooms?.includes('observatory') ? 'Observatory' : '125m'}
-                                                        </span>
-                                                        <div className="absolute top-3 right-3">
-                                                            {dashboardUser?.unlockedRooms?.includes('observatory') ? (showObservatory ? <ChevronUp className="w-4 h-4 text-indigo-500" /> : <ChevronDown className="w-4 h-4 text-gray-400" />) : null}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* 5. ZEN DOJO */}
-                                                    <div
-                                                        onClick={() => dashboardUser?.unlockedRooms?.includes('dojo') ? setShowDojo(!showDojo) : handleRoomInteraction('dojo', 75)}
-                                                        className={`w-[calc(50%-8px)] md:w-[calc(33.333%-16px)] aspect-square rounded-3xl border-2 flex flex-col items-center justify-center p-4 cursor-pointer transition-all hover:scale-105 active:scale-95 group relative overflow-hidden bg-white dark:bg-gray-900/50 ${showDojo ? 'border-rose-400 shadow-[0_0_20px_rgba(251,113,133,0.2)]' : 'border-yellow-100 dark:border-gray-800'}`}
-                                                    >
-                                                        <div className={`p-4 rounded-2xl mb-2 group-hover:scale-110 transition-transform ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400' : 'text-gray-300 dark:text-gray-700'}`}>
-                                                            {dashboardUser?.unlockedRooms?.includes('dojo') ? <Zap className="w-8 h-8 md:w-10 md:h-10 fill-current" /> : <Lock className="w-8 h-8 md:w-10 md:h-10" />}
-                                                        </div>
-                                                        <span className="font-black text-[10px] md:text-xs uppercase tracking-widest text-center dark:text-gray-200">
-                                                            {dashboardUser?.unlockedRooms?.includes('dojo') ? 'Zen Dojo' : '75m'}
-                                                        </span>
-                                                        <div className="absolute top-3 right-3">
-                                                            {dashboardUser?.unlockedRooms?.includes('dojo') ? (showDojo ? <ChevronUp className="w-4 h-4 text-rose-500" /> : <ChevronDown className="w-4 h-4 text-gray-400" />) : null}
-                                                        </div>
+                                                        <h3 className="text-[7px] md:text-sm font-black text-white dark:text-cyan-50 uppercase tracking-[0.2em] mb-1">Lumina</h3>
+                                                        <p className="hidden md:block text-[10px] font-bold text-cyan-400/50 uppercase tracking-widest">
+                                                            {lumina ? `${lumina.name} Lvl ${lumina.level}` : 'Summon Friend'}
+                                                        </p>
                                                     </div>
                                                 </div>
-                                            </div>
-
-                                            {/* Collapsible Content Sections */}
-                                            <div className="space-y-4 md:space-y-6">
-                                                {showGardenFull && garden && (
-                                                    <div className="animate-in slide-in-from-top-4 duration-500 border-2 border-green-400/30 rounded-[2.5rem] overflow-hidden bg-white dark:bg-gray-900 shadow-xl">
-                                                        <div className="flex justify-between items-center p-6 border-b border-green-100 dark:border-green-900/30">
-                                                            <h3 className="text-xl font-black text-green-600 dark:text-green-400 flex items-center gap-2 uppercase tracking-widest"><Feather className="w-5 h-5" /> Inner Garden</h3>
-                                                            <button onClick={() => setShowGardenFull(false)} className="p-2 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-full"><X className="w-5 h-5 text-green-600" /></button>
-                                                        </div>
-                                                        <div className="h-[500px] md:h-[650px] relative">
-                                                            <Suspense fallback={<div className="flex-1 flex items-center justify-center text-xs font-bold text-gray-400 animate-pulse">Entering the Garden...</div>}>
-                                                                <GardenFullView garden={garden} user={dashboardUser!} onClose={() => setShowGardenFull(false)} onUpdate={refreshGarden} />
-                                                            </Suspense>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {showBookFull && dashboardUser && (
-                                                    <div className="animate-in slide-in-from-top-4 duration-500 border-2 border-purple-400/30 rounded-[2.5rem] overflow-hidden bg-white dark:bg-gray-900 shadow-xl">
-                                                        <div className="flex justify-between items-center p-6 border-b border-purple-100 dark:border-purple-900/30">
-                                                            <h3 className="text-xl font-black text-purple-600 dark:text-purple-400 flex items-center gap-2 uppercase tracking-widest"><BookOpen className="w-5 h-5" /> Book of You</h3>
-                                                            <button onClick={() => setShowBookFull(false)} className="p-2 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-full"><X className="w-5 h-5 text-purple-600" /></button>
-                                                        </div>
-                                                        <div className="h-[500px] md:h-[650px] relative">
-                                                            <Suspense fallback={<div className="flex-1 flex items-center justify-center text-xs font-bold text-gray-400 animate-pulse">Opening the Book...</div>}>
-                                                                <BookOfYouView user={dashboardUser} garden={garden} onClose={() => setShowBookFull(false)} />
-                                                            </Suspense>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {showPocketPet && dashboardUser && (
-                                                    <div className="animate-in slide-in-from-top-4 duration-500 border-2 border-cyan-400/30 rounded-[2.5rem] overflow-hidden bg-white dark:bg-gray-900 shadow-xl">
-                                                        <div className="flex justify-between items-center p-6 border-b border-cyan-100 dark:border-cyan-900/30">
-                                                            <h3 className="text-xl font-black text-cyan-600 dark:text-cyan-400 flex items-center gap-2 uppercase tracking-widest"><Sparkles className="w-5 h-5" /> {lumina?.name || 'Lumina'}</h3>
-                                                            <button onClick={() => setShowPocketPet(false)} className="p-2 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 rounded-full"><X className="w-5 h-5 text-cyan-600" /></button>
-                                                        </div>
-                                                        <div className="h-[500px] md:h-[650px] relative">
-                                                            <Suspense fallback={<div className="flex-1 flex items-center justify-center text-xs font-bold text-gray-400 animate-pulse">Bridging Digital Reality...</div>}>
-                                                                <LuminaView user={dashboardUser} onClose={() => { setShowPocketPet(false); refreshPet(); }} />
-                                                            </Suspense>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {showObservatory && dashboardUser && (
-                                                    <div className="animate-in slide-in-from-top-4 duration-500 border-2 border-indigo-400/30 rounded-[2.5rem] overflow-hidden bg-white dark:bg-gray-900 shadow-xl">
-                                                        <div className="flex justify-between items-center p-6 border-b border-indigo-100 dark:border-indigo-900/30">
-                                                            <h3 className="text-xl font-black text-indigo-600 dark:text-indigo-400 flex items-center gap-2 uppercase tracking-widest"><Star className="w-5 h-5" /> Observatory</h3>
-                                                            <button onClick={() => setShowObservatory(false)} className="p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-full"><X className="w-5 h-5 text-indigo-600" /></button>
-                                                        </div>
-                                                        <div className="h-[500px] md:h-[650px] relative">
-                                                            <Suspense fallback={<div className="flex-1 flex items-center justify-center text-xs font-bold text-gray-400 animate-pulse">Calibrating Optics...</div>}>
-                                                                <ObservatoryView user={dashboardUser} onClose={() => setShowObservatory(false)} />
-                                                            </Suspense>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {showDojo && dashboardUser && (
-                                                    <div className="animate-in slide-in-from-top-4 duration-500 border-2 border-rose-400/30 rounded-[2.5rem] overflow-hidden bg-white dark:bg-gray-900 shadow-xl">
-                                                        <div className="flex justify-between items-center p-6 border-b border-rose-100 dark:border-rose-900/30">
-                                                            <h3 className="text-xl font-black text-rose-600 dark:text-rose-400 flex items-center gap-2 uppercase tracking-widest"><Zap className="w-5 h-5" /> Zen Dojo</h3>
-                                                            <button onClick={() => setShowDojo(false)} className="p-2 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-full"><X className="w-5 h-5 text-rose-600" /></button>
-                                                        </div>
-                                                        <div className="h-[500px] md:h-[650px] relative">
-                                                            <Suspense fallback={<div className="flex-1 flex items-center justify-center text-xs font-bold text-gray-400 animate-pulse">Igniting Spark...</div>}>
-                                                                <DojoView user={dashboardUser} onClose={() => setShowDojo(false)} />
-                                                            </Suspense>
-                                                        </div>
-                                                    </div>
-                                                )}
                                             </div>
                                         </div>
+
                                     )}
                                 </div>
+                                {/* ROW 2: OLYMPIC STYLE (CENTERED) */}
+                                <div className="flex justify-center gap-1 md:gap-4 w-full mt-5">
+                                    {/* OBSERVATORY */}
+                                    <div
+                                        onClick={() => handleRoomInteraction('observatory', 125)}
+                                        className={`w-1/3 group relative rounded-xl md:rounded-3xl border transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer ${dashboardUser?.unlockedRooms?.includes('observatory')
+                                            ? 'bg-gradient-to-br from-indigo-900 to-black border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.4)]'
+                                            : 'bg-indigo-900/20 backdrop-blur-md border-dashed border-indigo-200/30 dark:border-gray-700/50 hover:bg-indigo-900/30'}`}
+                                    >
+                                        <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                            {dashboardUser?.unlockedRooms?.includes('observatory') ? (
+                                                <>
+                                                    <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-indigo-950 flex items-center justify-center text-indigo-200 shadow-[0_0_15px_rgba(99,102,241,0.5)] group-hover:scale-110 transition-transform"><Star className="w-5 h-5 md:w-8 md:h-8 fill-indigo-200" /></div>
+                                                    <h3 className="text-[7px] md:text-xs font-black text-indigo-100 uppercase tracking-widest drop-shadow-lg">Observatory</h3>
+                                                    <p className="hidden md:block text-[9px] text-indigo-300 mt-1">Track Dreams & Sleep</p>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div className="w-8 h-8 md:w-12 md:h-12 bg-black/20 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-indigo-300" /></div>
+                                                    <h3 className="text-[7px] md:text-xs font-black text-indigo-900 dark:text-indigo-200 uppercase tracking-widest">Observatory</h3>
+                                                    <div className="mt-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-[8px] md:text-[10px] font-black px-3 py-1 rounded-full shadow-lg">125m</div>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
 
-                                {/* Weekly Goal & Mood Tracker */}
+                                    {/* ZEN DOJO */}
+                                    <div
+                                        onClick={() => handleRoomInteraction('dojo', 75)}
+                                        className={`w-1/3 group relative rounded-xl md:rounded-3xl border transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer ${dashboardUser?.unlockedRooms?.includes('dojo')
+                                            ? 'bg-gradient-to-br from-amber-900 to-stone-900 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.4)]'
+                                            : 'bg-amber-900/20 backdrop-blur-md border-dashed border-amber-200/30 dark:border-gray-700/50 hover:bg-amber-900/30'}`}
+                                    >
+                                        <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                            {dashboardUser?.unlockedRooms?.includes('dojo') ? (
+                                                <>
+                                                    <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-stone-800 flex items-center justify-center text-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform"><Zap className="w-5 h-5 md:w-8 md:h-8 fill-amber-500" /></div>
+                                                    <h3 className="text-[7px] md:text-xs font-black text-amber-100 uppercase tracking-widest drop-shadow-lg">Zen Dojo</h3>
+                                                    <p className="hidden md:block text-[9px] text-amber-300 mt-1">Focus & Mastery</p>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div className="w-8 h-8 md:w-12 md:h-12 bg-black/20 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-amber-700 dark:text-amber-500" /></div>
+                                                    <h3 className="text-[7px] md:text-xs font-black text-amber-900 dark:text-amber-200 uppercase tracking-widest">Zen Dojo</h3>
+                                                    <div className="mt-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[8px] md:text-[10px] font-black px-3 py-1 rounded-full shadow-lg">75m</div>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                                     {dashboardUser ? (
-                                        <div className="bg-transparent p-4 md:p-5 rounded-3xl border border-yellow-100/50 dark:border-gray-800/50 col-span-1 md:col-span-2 relative overflow-hidden group min-h-[120px] md:min-h-[140px]">
-                                            {weeklyGoal >= weeklyTarget ? (
-                                                <div className="absolute top-0 right-0 p-3 z-20">
-                                                    <div className="relative flex items-center justify-center">
-                                                        <div className="absolute w-12 h-12 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-                                                        <Flame className="w-8 h-8 text-blue-500 fill-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,1)] animate-bounce relative z-10" />
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                                                    <Trophy className="w-20 h-20" style={{ color: 'var(--color-primary)' }} />
-                                                </div>
-                                            )}
-                                            <div className="relative z-10">
-                                                <h3 className="font-bold text-gray-500 dark:text-gray-400 text-[10px] md:text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3>
-                                                <div className="flex items-end gap-2 mb-2 md:mb-3">
-                                                    <span className="text-2xl md:text-4xl font-black" style={{ color: 'var(--color-primary)' }}>{weeklyGoal}</span>
-                                                    <span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span>
-                                                </div>
-                                                <div className="w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-2 md:mb-3">
-                                                    <div
-                                                        className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= weeklyTarget ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-pulse' : ''}`}
-                                                        style={{
-                                                            width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%`,
-                                                            backgroundColor: weeklyGoal >= weeklyTarget ? undefined : 'var(--color-primary)'
-                                                        }}
-                                                    ></div>
-                                                </div>
-                                                <p className="text-[10px] md:text-sm font-bold text-gray-700 dark:text-gray-300">
-                                                    {weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}
-                                                </p>
-                                            </div>
+                                        <div className="bg-transparent dark:bg-transparent p-4 md:p-5 rounded-3xl border border-transparent shadow-none col-span-1 md:col-span-2 relative overflow-hidden group min-h-[120px] md:min-h-[140px]">
+                                            {weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-3 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-12 h-12 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div><div className="absolute w-10 h-10 bg-blue-500/30 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-blue-400/10 rounded-full animate-ping"></div><div className="absolute w-6 h-6 bg-blue-400/50 rounded-full blur-lg animate-pulse"></div><Flame className="w-8 h-8 text-blue-500 fill-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy className="w-20 h-20" style={{ color: 'var(--color-primary)' }} /></div>)}
+                                            <div className="relative z-10"><h3 className="font-bold text-gray-500 dark:text-gray-400 text-[10px] md:text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3><div className="flex items-end gap-2 mb-2 md:mb-3"><span className="text-2xl md:text-4xl font-black" style={{ color: 'var(--color-primary)' }}>{weeklyGoal}</span><span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span></div><div className="w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-2 md:mb-3"><div className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= weeklyTarget ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-pulse' : ''}`} style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%`, backgroundColor: weeklyGoal >= weeklyTarget ? undefined : 'var(--color-primary)' }}></div></div><p className="text-[10px] md:text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}</p></div>
                                         </div>
                                     ) : <StatSkeleton />}
                                     <MoodTracker onMoodSelect={handleMoodSelect} />
                                 </div>
 
-                                {/* Arcade Section */}
                                 <CollapsibleSection title="Arcade" icon={Gamepad2}>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
                                         <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-white/20 dark:border-gray-700 shadow-sm flex flex-col bg-transparent">
@@ -893,86 +845,30 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         </div>
                                     </div>
                                 </CollapsibleSection>
-
-                                {/* Journal & Wisdom */}
-                                <CollapsibleSection title={t('dash_hub')} icon={Feather}>
-                                    <div className="space-y-6">
-                                        <JournalSection user={user} />
-                                        <div className="border-t border-dashed border-yellow-200 dark:border-gray-700" />
-                                        <WisdomGenerator userId={user.id} />
-                                    </div>
-                                </CollapsibleSection>
-
-                                {/* Specialists Section */}
+                                <CollapsibleSection title={t('dash_hub')} icon={Feather}><div className="space-y-6"><JournalSection user={user} /><div className="border-t border-dashed border-yellow-200 dark:border-gray-700" /><WisdomGenerator userId={user.id} /></div></CollapsibleSection>
                                 <div>
-                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-5">
-                                        <div>
-                                            <h2 className="text-xl md:text-2xl font-black dark:text-yellow-400">{t('sec_specialists')}</h2>
-                                            <p className="text-gray-500 text-xs md:text-sm">{t('roster_heading')}</p>
-                                        </div>
-                                        <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide">
-                                            <button onClick={() => setSpecialtyFilter('All')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === 'All' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>All</button>
-                                            {uniqueSpecialties.map(spec => (
-                                                <button key={spec} onClick={() => setSpecialtyFilter(spec)} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === spec ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>{spec}</button>
-                                            ))}
-                                        </div>
-                                    </div>
-
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-5"><div><h2 className="text-xl md:text-2xl font-black dark:text-yellow-400">{t('sec_specialists')}</h2><p className="text-gray-500 text-xs md:text-sm">{t('roster_heading')}</p></div><div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide"><button onClick={() => setSpecialtyFilter('All')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === 'All' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>All</button>{uniqueSpecialties.map(spec => (<button key={spec} onClick={() => setSpecialtyFilter(spec)} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === spec ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>{spec}</button>))}</div></div>
                                     {loadingCompanions ? (
                                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                                             {[1, 2, 3, 4, 5].map(i => <CompanionSkeleton key={i} />)}
                                         </div>
                                     ) : (
-                                        <>
-                                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
-                                                {filteredCompanions.map((companion) => (
-                                                    <div key={companion.id} onClick={() => handleStartConnection(companion)} className="group relative bg-white dark:bg-gray-900 rounded-[1.8rem] overflow-hidden border border-yellow-100 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all duration-300 hover:shadow-2xl cursor-pointer flex flex-col h-full">
-                                                        <div className="aspect-[4/5] relative overflow-hidden bg-gray-100 dark:bg-gray-800">
-                                                            <AvatarImage src={companion.imageUrl} alt={companion.name} className="w-full h-full object-cover group-hover:scale-110 group-hover:animate-breathing transition-transform duration-700" />
-                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
+                                            {filteredCompanions.map((companion) => (
+                                                <div key={companion.id} onClick={() => handleStartConnection(companion)} className="group relative bg-white dark:bg-gray-900 rounded-[1.8rem] overflow-hidden border border-yellow-100 dark:border-gray-800 hover:border-yellow-400 dark:hover:border-yellow-600 transition-all duration-300 hover:shadow-2xl cursor-pointer flex flex-col h-full">
+                                                    <div className="aspect-[4/5] relative overflow-hidden bg-gray-100 dark:bg-gray-800">
+                                                        <AvatarImage src={companion.imageUrl} alt={companion.name} className="w-full h-full object-cover group-hover:scale-110 group-hover:animate-breathing transition-transform duration-700" />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
 
-                                                            <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-5 flex flex-col justify-center text-center">
-                                                                <p className="text-yellow-400 text-[10px] font-black uppercase tracking-widest mb-2">About {companion.name}</p>
-                                                                <p className="text-white text-xs leading-relaxed mb-3">"{companion.bio}"</p>
-                                                                <div className="grid grid-cols-2 gap-2 text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-3">
-                                                                    <div className="bg-white/10 p-1.5 rounded-lg">{companion.yearsExperience} Yrs Exp</div>
-                                                                    <div className="bg-white/10 p-1.5 rounded-lg">{companion.degree}</div>
-                                                                </div>
-                                                                <button className="bg-white text-black px-4 py-2 rounded-full font-bold text-[10px] flex items-center justify-center gap-2 hover:bg-yellow-400 transition-colors">
-                                                                    <Video className="w-3 h-3" /> Connect Now
-                                                                </button>
-                                                            </div>
 
-                                                            <div className="absolute top-3 left-3 flex gap-2">
-                                                                <div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md ${companion.status === 'AVAILABLE' ? 'bg-green-500/90 text-white shadow-lg shadow-green-500/20' : 'bg-gray-500/90 text-white'}`}>
-                                                                    {companion.status === 'AVAILABLE' ? 'Online' : 'Busy'}
-                                                                </div>
-                                                            </div>
-                                                            <div className="absolute bottom-3 left-3 right-3 group-hover:opacity-0 transition-opacity">
-                                                                <h3 className="text-white font-black text-lg leading-tight mb-0.5 shadow-sm drop-shadow-md">{companion.name}</h3>
-                                                                <p className="text-yellow-400 text-[9px] font-bold uppercase tracking-wider truncate">{companion.specialty}</p>
-                                                            </div>
+                                                        <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-5 flex flex-col justify-center text-center">
+                                                            <p className="text-yellow-400 text-[10px] font-black uppercase tracking-widest mb-2">About {companion.name}</p>
+                                                            <p className="text-white text-xs leading-relaxed mb-3">"{companion.bio}"</p>
+                                                            <div className="grid grid-cols-2 gap-2 text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-3"><div className="bg-white/10 p-1.5 rounded-lg">{companion.yearsExperience} Yrs Exp</div><div className="bg-white/10 p-1.5 rounded-lg">{companion.degree}</div></div>
+                                                            <button className="bg-white text-black px-4 py-2 rounded-full font-bold text-[10px] flex items-center justify-center gap-2 hover:bg-yellow-400 transition-colors"><Video className="w-3 h-3" /> Connect Now</button>
                                                         </div>
-                                                        <div className="p-3 bg-white dark:bg-gray-900 flex justify-between items-center border-t border-gray-100 dark:border-gray-800">
-                                                            <div className="flex items-center gap-1">
-                                                                <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                                                                <span className="text-gray-500 dark:text-gray-400 text-xs font-bold">{companion.rating}</span>
-                                                            </div>
-                                                            <button className="bg-gray-100 dark:bg-gray-800 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black rounded-lg p-2 transition-colors">
-                                                                <Eye className="w-3.5 h-3.5" />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            {filteredCompanions.length === 0 && (
-                                                <div className="text-center py-16 bg-gray-50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800">
-                                                    <p className="text-gray-500 font-bold text-sm">No specialists found in this category.</p>
-                                                    <button onClick={() => setSpecialtyFilter('All')} className="text-yellow-600 text-xs font-bold mt-2 hover:underline">View All</button>
-                                                </div>
-                                            )}
-                                        </>
-                                    )}
+                                                        <div className="absolute top-3 left-3 flex gap-2"><div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md ${companion.status === 'AVAILABLE' ? 'bg-green-500/90 text-white shadow-lg shadow-green-500/20' : 'bg-gray-500/90 text-white'}`}>{companion.status === 'AVAILABLE' ? 'Online' : 'Busy'}</div></div><div className="absolute bottom-3 left-3 right-3 group-hover:opacity-0 transition-opacity"><h3 className="text-white font-black text-lg leading-tight mb-0.5 shadow-sm drop-shadow-md">{companion.name}</h3><p className="text-yellow-400 text-[9px] font-bold uppercase tracking-wider truncate">{companion.specialty}</p></div></div><div className="p-3 bg-white dark:bg-gray-900 flex justify-between items-center border-t border-gray-100 dark:border-gray-800"><div className="flex items-center gap-1"><Star className="w-3 h-3 text-yellow-400 fill-yellow-400" /><span className="text-gray-500 dark:text-gray-400 text-xs font-bold">{companion.rating}</span></div><button className="bg-gray-100 dark:bg-gray-800 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black rounded-lg p-2 transition-colors"><Eye className="w-3.5 h-3.5" /></button></div></div>))}</div>)}
+                                    {filteredCompanions.length === 0 && (<div className="text-center py-16 bg-gray-50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800"><p className="text-gray-500 font-bold text-sm">No specialists found in this category.</p><button onClick={() => setSpecialtyFilter('All')} className="text-yellow-600 text-xs font-bold mt-2 hover:underline">View All</button></div>)}
                                 </div>
                             </div>
                         )}
@@ -1037,29 +933,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
                                     <div className="p-5 md:p-6 border-b border-yellow-100 dark:border-gray-800"><h3 className="font-black text-lg md:text-xl dark:text-yellow-400 mb-1">Preferences</h3><p className="text-gray-500 text-xs">Customize your sanctuary experience.</p></div>
                                     <div className="p-5 md:p-6 space-y-5">
-                                        <div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Moon className="w-4 h-4 text-gray-600 dark:text-gray-400" /></div><div><p className="font-bold text-gray-900 dark:text-white text-sm">Dark Mode</p><p className="text-[10px] text-gray-500">Reduce eye strain.</p></div></div><button onClick={toggleMode} className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${isDark ? 'bg-yellow-500' : 'bg-gray-200'}`}><span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${isDark ? 'translate-x-5' : 'translate-x-1'}`} /></button></div>
-                                        <div className="pt-2">
-                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 block">Sanctuary Theme</label>
-                                            <div className="grid grid-cols-5 gap-3">
-                                                {[
-                                                    { id: 'amber', color: 'bg-amber-400', label: 'Amber' },
-                                                    { id: 'cyberpunk', color: 'bg-cyan-400', label: 'Cyber' },
-                                                    { id: 'forest', color: 'bg-emerald-400', label: 'Forest' },
-                                                    { id: 'midnight', color: 'bg-indigo-400', label: 'Indigo' },
-                                                    { id: 'rose', color: 'bg-rose-400', label: 'Rose' }
-                                                ].map((t) => (
-                                                    <button
-                                                        key={t.id}
-                                                        onClick={() => setTheme(t.id as any)}
-                                                        className={`flex flex-col items-center gap-2 group p-2 rounded-2xl transition-all ${theme === t.id ? 'bg-gray-100 dark:bg-gray-800 ring-2 ring-yellow-400' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
-                                                        title={t.label}
-                                                    >
-                                                        <div className={`w-8 h-8 rounded-full shadow-sm ${t.id === 'amber' ? 'bg-[#FACC15]' : t.id === 'cyberpunk' ? 'bg-[#06b6d4]' : t.id === 'forest' ? 'bg-[#10b981]' : t.id === 'midnight' ? 'bg-[#6366f1]' : 'bg-[#f43f5e]'}`}></div>
-                                                        <span className={`text-[8px] font-black uppercase tracking-widest ${theme === t.id ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>{t.label}</span>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
+                                        <div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Moon className="w-4 h-4 text-gray-600 dark:text-gray-400" /></div><div><p className="font-bold text-gray-900 dark:text-white text-sm">Dark Mode</p><p className="text-[10px] text-gray-500">Reduce eye strain.</p></div></div><button onClick={toggleDarkMode} className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${isDark ? 'bg-yellow-500' : 'bg-gray-200'}`}><span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${isDark ? 'translate-x-5' : 'translate-x-1'}`} /></button></div>
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><EyeOff className="w-4 h-4 text-red-500" /></div>
@@ -1246,6 +1120,37 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     </div>
                 )
             }
+            {
+                showBookFull && dashboardUser && (
+                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Opening the Book...</div>}>
+                        <BookOfYouView user={dashboardUser} garden={garden} onClose={() => setShowBookFull(false)} />
+                    </Suspense>
+                )
+            }
+            {
+                showGardenFull && garden && (
+                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Entering the Garden...</div>}>
+                        <GardenFullView garden={garden} user={dashboardUser!} onClose={() => setShowGardenFull(false)} onUpdate={refreshGarden} />
+                    </Suspense>
+                )
+            }
+            {
+                showPocketPet && dashboardUser && (
+                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Bridging Digital Reality...</div>}>
+                        <LuminaView user={dashboardUser} onClose={() => { setShowPocketPet(false); refreshPet(); }} />
+                    </Suspense>
+                )
+            }
+            {showObservatory && (
+                <Suspense fallback={null}>
+                    <ObservatoryView user={dashboardUser} onClose={() => setShowObservatory(false)} />
+                </Suspense>
+            )}
+            {showDojo && (
+                <Suspense fallback={null}>
+                    <DojoView user={dashboardUser} onClose={() => setShowDojo(false)} />
+                </Suspense>
+            )}
         </div >
     );
 };

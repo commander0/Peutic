@@ -1,90 +1,62 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { UserService } from '../services/userService';
 
-type Theme = 'amber' | 'cyberpunk' | 'forest' | 'midnight' | 'rose';
-type Mode = 'light' | 'dark';
+type Theme = 'light' | 'dark' | 'cyberpunk' | 'forest' | 'midnight';
 
 interface ThemeContextType {
     theme: Theme;
-    mode: Mode;
     setTheme: (theme: Theme) => void;
-    setMode: (mode: Mode) => void;
-    toggleMode: () => void;
 }
 
-const ThemeContext = createContext<ThemeContextType>({
-    theme: 'amber',
-    mode: 'light',
-    setTheme: () => { },
-    setMode: () => { },
-    toggleMode: () => { }
-});
+const ThemeContext = createContext<ThemeContextType>({ theme: 'light', setTheme: () => { } });
 
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [theme, setThemeState] = useState<Theme>('amber');
-    const [mode, setModeState] = useState<Mode>('light');
+    const [theme, setThemeState] = useState<Theme>('light');
 
     // Load from User/Storage on mount
     useEffect(() => {
-        const savedTheme = localStorage.getItem('peutic_theme') as Theme;
-        const savedMode = localStorage.getItem('peutic_mode') as Mode;
-
-        if (savedTheme) setThemeState(savedTheme);
-        if (savedMode) setModeState(savedMode);
-
         const user = UserService.getUser();
         if (user?.themePreference) {
-            const pref = user.themePreference as any;
-            // Backward compatibility: if themePreference is 'light' or 'dark', set mode
-            if (pref === 'light' || pref === 'dark') {
-                setModeState(pref as Mode);
-            } else {
-                setThemeState(pref as Theme);
-            }
+            setThemeState(user.themePreference as Theme);
+        } else {
+            const saved = localStorage.getItem('peutic_theme') as Theme;
+            if (saved) setThemeState(saved);
+            // Default to light for consistent branding (User Request)
+            else setThemeState('light');
         }
     }, []);
 
     const setTheme = (newTheme: Theme) => {
         setThemeState(newTheme);
         localStorage.setItem('peutic_theme', newTheme);
-        syncWithProfile(newTheme, mode);
-    };
 
-    const setMode = (newMode: Mode) => {
-        setModeState(newMode);
-        localStorage.setItem('peutic_mode', newMode);
-        syncWithProfile(theme, newMode);
-    };
-
-    const toggleMode = () => {
-        const newMode = mode === 'light' ? 'dark' : 'light';
-        setMode(newMode);
-    };
-
-    const syncWithProfile = (t: Theme, _m: Mode) => {
+        // Sync with User Profile if logged in
         const user = UserService.getUser();
         if (user) {
-            UserService.updateUser({ ...user, themePreference: t });
+            UserService.updateUser({ ...user, themePreference: newTheme });
         }
     };
 
     // Apply to DOM
     useEffect(() => {
         const root = document.documentElement;
-        // Remove old classes
-        root.classList.remove('light', 'dark');
-        const themeClasses = ['theme-amber', 'theme-cyberpunk', 'theme-forest', 'theme-midnight', 'theme-rose'];
-        root.classList.remove(...themeClasses);
+        // Remove old themes
+        root.classList.remove('light', 'dark', 'theme-cyberpunk', 'theme-forest', 'theme-midnight');
 
         // Apply new
-        root.classList.add(mode);
-        root.classList.add(`theme-${theme}`);
-    }, [theme, mode]);
+        if (theme === 'light' || theme === 'dark') {
+            root.classList.add(theme);
+        } else {
+            // Premium themes also add 'dark' for base Tailwind compatibility + specific class
+            root.classList.add('dark');
+            root.classList.add(`theme-${theme}`);
+        }
+    }, [theme]);
 
     return (
-        <ThemeContext.Provider value={{ theme, mode, setTheme, setMode, toggleMode }}>
+        <ThemeContext.Provider value={{ theme, setTheme }}>
             {children}
         </ThemeContext.Provider>
     );
