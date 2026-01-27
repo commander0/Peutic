@@ -28,7 +28,7 @@ export interface User {
   };
   streak: number;
   lastLoginDate: string;
-  themePreference?: 'light' | 'dark' | 'cyberpunk' | 'forest' | 'midnight';
+  themePreference?: 'amber' | 'cyberpunk' | 'forest' | 'midnight' | 'rose';
   languagePreference?: string;
   gamificationEnabled?: boolean;
   unlockedRooms?: string[]; // 'observatory', 'dojo', etc.

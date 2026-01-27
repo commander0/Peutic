@@ -144,7 +144,7 @@ export class UserService {
             provider: sessionUser.app_metadata?.provider || 'email',
             avatar: sessionUser.user_metadata?.avatar_url,
             emailPreferences: { marketing: true, updates: true },
-            themePreference: 'light',
+            themePreference: 'amber',
             languagePreference: 'en',
             gameScores: { match: 0, cloud: 0 }
         };
