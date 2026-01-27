@@ -554,20 +554,12 @@ export class UserService {
 
         try {
             // Use Gateway for secure transaction
-            const { error, data } = await BaseService.invokeGateway('process-topup', {
+            const data = await BaseService.invokeGateway('process-topup', {
                 userId: user.id,
                 amount: -amount, // Negative amount for deduction
                 cost: 0,
                 description: reason
             });
-
-            if (error) {
-                console.error("Balance Deduction Failed", error);
-                // Revert
-                user.balance = previousBalance;
-                this.saveUserToCache(user);
-                return false;
-            }
 
             if (data?.newBalance !== undefined) {
                 user.balance = data.newBalance;
@@ -717,9 +709,7 @@ export class UserService {
     static async topUpWallet(amount: number, cost: number, userId?: string, paymentToken?: string) {
         const uid = userId || this.getUser()?.id;
         if (!uid) return;
-        const { error } = await BaseService.invokeGateway('process-topup', { userId: uid, amount, cost, paymentToken });
-
-        if (error) throw new Error("Transaction Failed: " + error.message);
+        await BaseService.invokeGateway('process-topup', { userId: uid, amount, cost, paymentToken });
         await this.syncUser(uid);
     }
 

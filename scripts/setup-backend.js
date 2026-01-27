@@ -103,7 +103,11 @@ serve(async (req) => {
             await supabaseClient.from('users').insert({
                 id: user.user.id, email, name: 'System Admin', role: 'ADMIN', balance: 999, subscription_status: 'ACTIVE', provider: 'email'
             });
-            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+
+            // Fetch the final user profile to return
+            const { data: userData } = await supabaseClient.from('users').select('*').eq('id', user.user.id).single();
+
+            return new Response(JSON.stringify({ success: true, user: userData }), { headers: corsHeaders });
         }
 
         if (action === 'profile-create-bypass') {
@@ -509,7 +513,8 @@ serve(async (req) => {
             return new Response(JSON.stringify(data), { headers: corsHeaders });
         }
 
-        return new Response(JSON.stringify({ error: "Invalid Action" }), { headers: corsHeaders });
+        console.warn(`[Gateway] Invalid Action Requested: \${ action }`);
+        return new Response(JSON.stringify({ error: `Invalid Action: \${ action } ` }), { headers: corsHeaders });
 
     } catch (error: any) {
         console.error("Gateway Error:", error);

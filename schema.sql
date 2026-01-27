@@ -214,14 +214,22 @@ create index if not exists idx_journals_user_id on public.journals(user_id);
 -- AUTH TRIGGER: handle_new_user
 create or replace function public.handle_new_user()
 returns trigger as $$
+declare
+  is_first_user boolean;
 begin
-  insert into public.users (id, email, name, avatar_url, provider)
+  -- Check if this is the first user in the system
+  select not exists (select 1 from public.users) into is_first_user;
+
+  insert into public.users (id, email, name, avatar_url, provider, role, balance, subscription_status)
   values (
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
     new.raw_user_meta_data->>'avatar_url',
-    new.raw_app_meta_data->>'provider'
+    new.raw_app_meta_data->>'provider',
+    case when is_first_user then 'ADMIN' else 'USER' end,
+    case when is_first_user then 999 else 0 end,
+    'ACTIVE'
   );
   
   -- Initialize Garden
