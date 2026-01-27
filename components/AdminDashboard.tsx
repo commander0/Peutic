@@ -474,8 +474,8 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                                     <input
                                                         value={broadcastMsg}
                                                         onChange={(e) => setBroadcastMsg(e.target.value)}
-                                                        onFocus={() => setIsEditingPublic(true)}
-                                                        onBlur={() => setIsEditingPublic(false)}
+                                                        onFocus={() => { setIsEditingPublic(true); isEditingPublicRef.current = true; }}
+                                                        onBlur={() => { setIsEditingPublic(false); isEditingPublicRef.current = false; }}
                                                         placeholder="Public message (Login/Landing)..."
                                                         className="flex-1 bg-black border border-gray-700 rounded-xl px-4 py-2 text-xs text-white focus:border-yellow-500 outline-none"
                                                     />
@@ -490,8 +490,8 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                                     <input
                                                         value={dashboardBroadcastMsg}
                                                         onChange={(e) => setDashboardBroadcastMsg(e.target.value)}
-                                                        onFocus={() => setIsEditingDashboard(true)}
-                                                        onBlur={() => setIsEditingDashboard(false)}
+                                                        onFocus={() => { setIsEditingDashboard(true); isEditingDashboardRef.current = true; }}
+                                                        onBlur={() => { setIsEditingDashboard(false); isEditingDashboardRef.current = false; }}
                                                         placeholder="Sanctuary message (Logged-in Users)..."
                                                         className="flex-1 bg-black border border-gray-700 rounded-xl px-4 py-2 text-xs text-white focus:border-blue-500 outline-none"
                                                     />
@@ -1006,30 +1006,33 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                             </div>
                                             <span className="font-mono font-bold text-white text-sm">{settings.maxConcurrentSessions}</span>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-2 bg-black p-1 rounded-xl border border-gray-800">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 bg-black p-1.5 rounded-xl border border-gray-800">
                                             <button
                                                 onClick={() => handleSettingChange('maxConcurrentSessions', 3)}
-                                                className={`py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1 ${settings.maxConcurrentSessions === 3 ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'text-gray-500 hover:bg-gray-800'}`}
+                                                className={`py-2 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1 ${settings.maxConcurrentSessions === 3 ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'text-gray-500 hover:bg-gray-800'}`}
                                             >
                                                 <Shield className="w-3 h-3" /> Low (3)
                                             </button>
                                             <button
                                                 onClick={() => handleSettingChange('maxConcurrentSessions', 15)}
-                                                className={`py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1 ${settings.maxConcurrentSessions === 15 ? 'bg-green-500/20 text-green-400 border border-green-500/50' : 'text-gray-500 hover:bg-gray-800'}`}
+                                                className={`py-2 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1 ${settings.maxConcurrentSessions === 15 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50' : 'text-gray-500 hover:bg-gray-800'}`}
                                             >
                                                 <Zap className="w-3 h-3" /> Std (15)
                                             </button>
+                                            <div className="relative flex items-center">
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    className={`w-full bg-transparent border-0 text-center font-bold text-xs outline-none transition-colors ${settings.maxConcurrentSessions > 15 ? 'text-green-400' : 'text-gray-500'}`}
+                                                    value={settings.maxConcurrentSessions}
+                                                    onChange={(e) => handleSettingChange('maxConcurrentSessions', Math.min(1000000, Math.max(1, parseInt(e.target.value) || 1)))}
+                                                    placeholder="Custom"
+                                                />
+                                                {settings.maxConcurrentSessions > 1000 && <span className="absolute right-2 text-[8px] text-green-500 font-black uppercase">MAX</span>}
+                                            </div>
                                         </div>
-                                        <div className="relative">
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                max="50"
-                                                className="w-full bg-black border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-purple-500 transition-colors text-center"
-                                                value={settings.maxConcurrentSessions}
-                                                onChange={(e) => handleSettingChange('maxConcurrentSessions', parseInt(e.target.value) || 1)}
-                                                placeholder="Custom Limit"
-                                            />
+                                        <div className="text-[9px] text-gray-500 text-center font-mono">
+                                            {settings.maxConcurrentSessions > 9999 ? 'Ready for High Traffic Event' : 'Standard Operations Pattern'}
                                         </div>
                                     </div>
                                 </div>
