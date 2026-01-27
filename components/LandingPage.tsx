@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from './common/LanguageContext';
 import { LanguageSelector } from './common/LanguageSelector';
 import { AdminService } from '../services/adminService';
+import { useTheme } from '../contexts/ThemeContext';
 import { STABLE_AVATAR_POOL, INITIAL_COMPANIONS } from '../services/database';
 
 import { Companion } from '../types';
@@ -42,11 +43,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     const [featuredSpecialists, setFeaturedSpecialists] = useState<Companion[]>([]);
     const { lang, setLang, t } = useLanguage();
 
-    const [darkMode, setDarkMode] = useState(() => {
-        const local = localStorage.getItem('peutic_theme');
-        if (local) return local === 'dark';
-        return false;
-    });
+    const { mode, toggleMode: toggleDarkMode } = useTheme();
+    const darkMode = mode === 'dark';
 
     const [settings, setSettings] = useState(AdminService.getSettings());
 
@@ -96,15 +94,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
         };
     }, [darkMode]);
 
-    const toggleDarkMode = () => {
-        const newMode = !darkMode;
-        setDarkMode(newMode);
-        if (newMode) {
-            localStorage.setItem('peutic_theme', 'dark');
-        } else {
-            localStorage.setItem('peutic_theme', 'light');
-        }
-    };
+    // Unified theme management via Context
 
     const acceptCookies = () => {
         localStorage.setItem('peutic_cookies_accepted', 'true');

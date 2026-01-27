@@ -33,7 +33,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         if (savedTheme) setThemeState(savedTheme);
         if (savedMode) setModeState(savedMode);
-        else if (window.matchMedia('(prefers-color-scheme: dark)').matches) setModeState('dark');
 
         const user = UserService.getUser();
         if (user?.themePreference) {
