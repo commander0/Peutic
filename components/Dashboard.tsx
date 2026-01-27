@@ -115,7 +115,7 @@ CollapsibleSection.displayName = 'CollapsibleSection';
 
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession }) => {
     const { lang, setLang, t } = useLanguage();
-    const { theme, setTheme, mode, setMode, toggleMode } = useTheme();
+    const { theme, setTheme, mode, toggleMode } = useTheme();
     const [activeTab, setActiveTab] = useState<'inner_sanctuary' | 'history' | 'settings'>('inner_sanctuary');
 
     // Derived boolean for simple UI toggles
@@ -666,92 +666,167 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     </button>
 
                                     {isVaultOpen && (
-                                        <div className="animate-in fade-in zoom-in-95 duration-700 relative h-[450px] md:h-[600px] w-full max-w-2xl mx-auto overflow-visible">
-                                            {/* OLYMPIC RING LAYER: Overlapping Circular Layout */}
-                                            <div className="absolute inset-0 flex items-center justify-center">
-
-                                                {/* RING 1: INNER GARDEN - Top Left */}
-                                                {garden && (
-                                                    <div
-                                                        onClick={() => setShowGardenFull(true)}
-                                                        className="absolute top-[5%] left-[5%] md:top-[10%] md:left-[10%] w-[140px] h-[140px] md:w-[260px] md:h-[260px] rounded-full ring-8 ring-green-400 group relative bg-white dark:bg-black/80 shadow-[0_0_50px_rgba(34,197,94,0.3)] hover:scale-105 hover:z-20 transition-all cursor-pointer flex flex-col items-center justify-center overflow-hidden"
-                                                    >
-                                                        <div className="flex flex-col items-center justify-center p-4 text-center">
-                                                            <Suspense fallback={<div className="w-10 h-10 rounded-full animate-pulse bg-green-100"></div>}>
-                                                                <div className="w-16 h-16 md:w-32 md:h-32 transition-transform group-hover:scale-110 duration-700">
-                                                                    <GardenCanvas garden={garden} width={100} height={100} />
-                                                                </div>
-                                                            </Suspense>
-                                                            <h3 className="text-[10px] md:text-xs font-black text-green-600 dark:text-green-400 uppercase tracking-widest mt-2">{garden.currentPlantType}</h3>
-                                                            <p className="hidden md:block text-[8px] font-bold text-green-500/50">Level {garden.level}</p>
-                                                        </div>
+                                        <div className="animate-in fade-in slide-in-from-top-4 duration-700 space-y-6">
+                                            {/* 3x2 Grid of Square Tiles */}
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                                                {/* 1. GARDEN */}
+                                                <div
+                                                    onClick={() => setShowGardenFull(!showGardenFull)}
+                                                    className={`aspect-square rounded-3xl border-2 flex flex-col items-center justify-center p-4 cursor-pointer transition-all hover:scale-105 active:scale-95 group relative overflow-hidden bg-white dark:bg-gray-900/50 ${showGardenFull ? 'border-green-400 shadow-[0_0_20px_rgba(34,197,94,0.2)]' : 'border-yellow-100 dark:border-gray-800'}`}
+                                                >
+                                                    <div className="w-16 h-16 md:w-24 md:h-24 transition-transform group-hover:scale-110 duration-700">
+                                                        <Suspense fallback={<div className="w-10 h-10 rounded-full animate-pulse bg-green-100"></div>}>
+                                                            <GardenCanvas garden={garden!} width={100} height={100} />
+                                                        </Suspense>
                                                     </div>
-                                                )}
+                                                    <span className="font-black text-[10px] md:text-xs uppercase tracking-widest text-center mt-2 dark:text-gray-200">Inner Garden</span>
+                                                    <div className="absolute top-3 right-3">
+                                                        {showGardenFull ? <ChevronUp className="w-4 h-4 text-green-500" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                                                    </div>
+                                                </div>
 
-                                                {/* RING 2: BOOK OF YOU - Top Center */}
+                                                {/* 2. BOOK OF YOU */}
                                                 {(() => {
                                                     const joinedDate = new Date(dashboardUser?.joinedAt || new Date().toISOString());
                                                     const diffDays = Math.floor(Math.abs(new Date().getTime() - joinedDate.getTime()) / (1000 * 60 * 60 * 24));
                                                     const isLocked = diffDays < 7;
-
                                                     return (
                                                         <div
-                                                            onClick={() => isLocked ? showToast(`Unlocked in ${7 - diffDays} days.`, "info") : setShowBookFull(true)}
-                                                            className="absolute top-0 left-1/2 -translate-x-1/2 md:top-[5%] w-[140px] h-[140px] md:w-[260px] md:h-[260px] rounded-full ring-8 ring-purple-400 group relative bg-white dark:bg-black/80 shadow-[0_0_50px_rgba(168,85,247,0.3)] hover:scale-105 hover:z-20 transition-all cursor-pointer flex flex-col items-center justify-center overflow-hidden z-20"
+                                                            onClick={() => isLocked ? showToast(`Unlocked in ${7 - diffDays} days.`, "info") : setShowBookFull(!showBookFull)}
+                                                            className={`aspect-square rounded-3xl border-2 flex flex-col items-center justify-center p-4 cursor-pointer transition-all hover:scale-105 active:scale-95 group relative overflow-hidden bg-white dark:bg-gray-900/50 ${showBookFull ? 'border-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.2)]' : 'border-yellow-100 dark:border-gray-800'}`}
                                                         >
-                                                            <div className="flex flex-col items-center justify-center p-4">
-                                                                <div className="p-3 md:p-6 bg-purple-100 dark:bg-purple-900/40 rounded-3xl text-purple-600 dark:text-purple-400 mb-2">
-                                                                    <BookOpen className="w-8 h-8 md:w-16 md:h-16" />
-                                                                </div>
-                                                                <h3 className="text-[10px] md:text-xs font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest">Book of You</h3>
-                                                                {isLocked && <Lock className="w-4 h-4 text-purple-400/50 mt-1" />}
+                                                            <div className={`p-4 rounded-2xl bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 mb-2 group-hover:scale-110 transition-transform`}>
+                                                                <BookOpen className="w-8 h-8 md:w-10 md:h-10" />
+                                                            </div>
+                                                            <span className="font-black text-[10px] md:text-xs uppercase tracking-widest text-center dark:text-gray-200">Book of You</span>
+                                                            <div className="absolute top-3 right-3">
+                                                                {isLocked ? <Lock className="w-3.5 h-3.5 text-gray-400" /> : (showBookFull ? <ChevronUp className="w-4 h-4 text-purple-500" /> : <ChevronDown className="w-4 h-4 text-gray-400" />)}
                                                             </div>
                                                         </div>
                                                     );
                                                 })()}
 
-                                                {/* RING 3: LUMINA - Top Right */}
+                                                {/* 3. LUMINA */}
                                                 <div
-                                                    onClick={() => setShowPocketPet(true)}
-                                                    className="absolute top-[5%] right-[5%] md:top-[10%] md:right-[10%] w-[140px] h-[140px] md:w-[260px] md:h-[260px] rounded-full ring-8 ring-cyan-400 group relative bg-white dark:bg-black/80 shadow-[0_0_50px_rgba(6,182,212,0.3)] hover:scale-105 hover:z-20 transition-all cursor-pointer flex flex-col items-center justify-center overflow-hidden"
+                                                    onClick={() => setShowPocketPet(!showPocketPet)}
+                                                    className={`aspect-square rounded-3xl border-2 flex flex-col items-center justify-center p-4 cursor-pointer transition-all hover:scale-105 active:scale-95 group relative overflow-hidden bg-white dark:bg-gray-900/50 ${showPocketPet ? 'border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.2)]' : 'border-yellow-100 dark:border-gray-800'}`}
                                                 >
-                                                    <div className="flex flex-col items-center justify-center p-4 text-center">
-                                                        <div className="p-3 md:p-6 bg-cyan-100 dark:bg-cyan-900/40 rounded-3xl text-cyan-600 dark:text-cyan-400 mb-2">
-                                                            <Sparkles className="w-8 h-8 md:w-16 md:h-16 animate-pulse" />
-                                                        </div>
-                                                        <h3 className="text-[10px] md:text-xs font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-widest truncate max-w-full px-2">
-                                                            {lumina ? lumina.name : 'Lumina'}
-                                                        </h3>
-                                                        {lumina && <p className="hidden md:block text-[8px] font-bold text-cyan-500/50">Level {lumina.level}</p>}
+                                                    <div className={`p-4 rounded-2xl bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400 mb-2 group-hover:scale-110 transition-transform`}>
+                                                        <Sparkles className="w-8 h-8 md:w-10 md:h-10" />
+                                                    </div>
+                                                    <span className="font-black text-[10px] md:text-xs uppercase tracking-widest text-center dark:text-gray-200">{lumina ? lumina.name : 'Lumina'}</span>
+                                                    <div className="absolute top-3 right-3">
+                                                        {showPocketPet ? <ChevronUp className="w-4 h-4 text-cyan-500" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
                                                     </div>
                                                 </div>
 
-                                                {/* RING 4: OBSERVATORY - Bottom Mid-Left */}
-                                                <div
-                                                    onClick={() => handleRoomInteraction('observatory', 125)}
-                                                    className={`absolute bottom-[10%] left-[15%] md:left-[22%] w-[140px] h-[140px] md:w-[260px] md:h-[260px] rounded-full ring-8 group relative bg-white dark:bg-black/80 shadow-[0_0_50px_rgba(99,102,241,0.3)] hover:scale-105 hover:z-20 transition-all cursor-pointer flex flex-col items-center justify-center overflow-hidden ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'ring-indigo-400' : 'ring-gray-300 dark:ring-gray-700'}`}
-                                                >
-                                                    <div className="flex flex-col items-center justify-center p-4">
-                                                        <div className={`p-3 md:p-6 rounded-full mb-2 ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400' : 'text-gray-400'}`}>
-                                                            {dashboardUser?.unlockedRooms?.includes('observatory') ? <Star className="w-8 h-8 md:w-16 md:h-16 fill-current" /> : <Lock className="w-8 h-8 md:w-12 md:h-12" />}
+                                                {/* Row 2: Centered 2 Tiles */}
+                                                <div className="col-span-2 md:col-span-3 flex justify-center gap-4 md:gap-6">
+                                                    {/* 4. OBSERVATORY */}
+                                                    <div
+                                                        onClick={() => dashboardUser?.unlockedRooms?.includes('observatory') ? setShowObservatory(!showObservatory) : handleRoomInteraction('observatory', 125)}
+                                                        className={`w-[calc(50%-8px)] md:w-[calc(33.333%-16px)] aspect-square rounded-3xl border-2 flex flex-col items-center justify-center p-4 cursor-pointer transition-all hover:scale-105 active:scale-95 group relative overflow-hidden bg-white dark:bg-gray-900/50 ${showObservatory ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.2)]' : 'border-yellow-100 dark:border-gray-800'}`}
+                                                    >
+                                                        <div className={`p-4 rounded-2xl mb-2 group-hover:scale-110 transition-transform ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400' : 'text-gray-300 dark:text-gray-700'}`}>
+                                                            {dashboardUser?.unlockedRooms?.includes('observatory') ? <Star className="w-8 h-8 md:w-10 md:h-10 fill-current" /> : <Lock className="w-8 h-8 md:w-10 md:h-10" />}
                                                         </div>
-                                                        <h3 className="text-[10px] md:text-xs font-black uppercase tracking-widest text-center truncate px-2">{dashboardUser?.unlockedRooms?.includes('observatory') ? 'Observatory' : '125m'}</h3>
+                                                        <span className="font-black text-[10px] md:text-xs uppercase tracking-widest text-center dark:text-gray-200">
+                                                            {dashboardUser?.unlockedRooms?.includes('observatory') ? 'Observatory' : '125m'}
+                                                        </span>
+                                                        <div className="absolute top-3 right-3">
+                                                            {dashboardUser?.unlockedRooms?.includes('observatory') ? (showObservatory ? <ChevronUp className="w-4 h-4 text-indigo-500" /> : <ChevronDown className="w-4 h-4 text-gray-400" />) : null}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* 5. ZEN DOJO */}
+                                                    <div
+                                                        onClick={() => dashboardUser?.unlockedRooms?.includes('dojo') ? setShowDojo(!showDojo) : handleRoomInteraction('dojo', 75)}
+                                                        className={`w-[calc(50%-8px)] md:w-[calc(33.333%-16px)] aspect-square rounded-3xl border-2 flex flex-col items-center justify-center p-4 cursor-pointer transition-all hover:scale-105 active:scale-95 group relative overflow-hidden bg-white dark:bg-gray-900/50 ${showDojo ? 'border-rose-400 shadow-[0_0_20px_rgba(251,113,133,0.2)]' : 'border-yellow-100 dark:border-gray-800'}`}
+                                                    >
+                                                        <div className={`p-4 rounded-2xl mb-2 group-hover:scale-110 transition-transform ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400' : 'text-gray-300 dark:text-gray-700'}`}>
+                                                            {dashboardUser?.unlockedRooms?.includes('dojo') ? <Zap className="w-8 h-8 md:w-10 md:h-10 fill-current" /> : <Lock className="w-8 h-8 md:w-10 md:h-10" />}
+                                                        </div>
+                                                        <span className="font-black text-[10px] md:text-xs uppercase tracking-widest text-center dark:text-gray-200">
+                                                            {dashboardUser?.unlockedRooms?.includes('dojo') ? 'Zen Dojo' : '75m'}
+                                                        </span>
+                                                        <div className="absolute top-3 right-3">
+                                                            {dashboardUser?.unlockedRooms?.includes('dojo') ? (showDojo ? <ChevronUp className="w-4 h-4 text-rose-500" /> : <ChevronDown className="w-4 h-4 text-gray-400" />) : null}
+                                                        </div>
                                                     </div>
                                                 </div>
+                                            </div>
 
-                                                {/* RING 5: ZEN DOJO - Bottom Mid-Right */}
-                                                <div
-                                                    onClick={() => handleRoomInteraction('dojo', 75)}
-                                                    className={`absolute bottom-[10%] right-[15%] md:right-[22%] w-[140px] h-[140px] md:w-[260px] md:h-[260px] rounded-full ring-8 group relative bg-white dark:bg-black/80 shadow-[0_0_50px_rgba(251,113,133,0.3)] hover:scale-105 hover:z-20 transition-all cursor-pointer flex flex-col items-center justify-center overflow-hidden ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'ring-rose-400' : 'ring-gray-300 dark:ring-gray-700'}`}
-                                                >
-                                                    <div className="flex flex-col items-center justify-center p-4">
-                                                        <div className={`p-3 md:p-6 rounded-full mb-2 ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400' : 'text-gray-400'}`}>
-                                                            {dashboardUser?.unlockedRooms?.includes('dojo') ? <Zap className="w-8 h-8 md:w-16 md:h-16 fill-current" /> : <Lock className="w-8 h-8 md:w-12 md:h-12" />}
+                                            {/* Collapsible Content Sections */}
+                                            <div className="space-y-4 md:space-y-6">
+                                                {showGardenFull && garden && (
+                                                    <div className="animate-in slide-in-from-top-4 duration-500 border-2 border-green-400/30 rounded-[2.5rem] overflow-hidden bg-white dark:bg-gray-900 shadow-xl">
+                                                        <div className="flex justify-between items-center p-6 border-b border-green-100 dark:border-green-900/30">
+                                                            <h3 className="text-xl font-black text-green-600 dark:text-green-400 flex items-center gap-2 uppercase tracking-widest"><Feather className="w-5 h-5" /> Inner Garden</h3>
+                                                            <button onClick={() => setShowGardenFull(false)} className="p-2 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-full"><X className="w-5 h-5 text-green-600" /></button>
                                                         </div>
-                                                        <h3 className="text-[10px] md:text-xs font-black uppercase tracking-widest text-center truncate px-2">{dashboardUser?.unlockedRooms?.includes('dojo') ? 'Zen Dojo' : '75m'}</h3>
+                                                        <div className="h-[500px] md:h-[650px] relative">
+                                                            <Suspense fallback={<div className="flex-1 flex items-center justify-center text-xs font-bold text-gray-400 animate-pulse">Entering the Garden...</div>}>
+                                                                <GardenFullView garden={garden} user={dashboardUser!} onClose={() => setShowGardenFull(false)} onUpdate={refreshGarden} />
+                                                            </Suspense>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                )}
 
+                                                {showBookFull && dashboardUser && (
+                                                    <div className="animate-in slide-in-from-top-4 duration-500 border-2 border-purple-400/30 rounded-[2.5rem] overflow-hidden bg-white dark:bg-gray-900 shadow-xl">
+                                                        <div className="flex justify-between items-center p-6 border-b border-purple-100 dark:border-purple-900/30">
+                                                            <h3 className="text-xl font-black text-purple-600 dark:text-purple-400 flex items-center gap-2 uppercase tracking-widest"><BookOpen className="w-5 h-5" /> Book of You</h3>
+                                                            <button onClick={() => setShowBookFull(false)} className="p-2 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-full"><X className="w-5 h-5 text-purple-600" /></button>
+                                                        </div>
+                                                        <div className="h-[500px] md:h-[650px] relative">
+                                                            <Suspense fallback={<div className="flex-1 flex items-center justify-center text-xs font-bold text-gray-400 animate-pulse">Opening the Book...</div>}>
+                                                                <BookOfYouView user={dashboardUser} garden={garden} onClose={() => setShowBookFull(false)} />
+                                                            </Suspense>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {showPocketPet && dashboardUser && (
+                                                    <div className="animate-in slide-in-from-top-4 duration-500 border-2 border-cyan-400/30 rounded-[2.5rem] overflow-hidden bg-white dark:bg-gray-900 shadow-xl">
+                                                        <div className="flex justify-between items-center p-6 border-b border-cyan-100 dark:border-cyan-900/30">
+                                                            <h3 className="text-xl font-black text-cyan-600 dark:text-cyan-400 flex items-center gap-2 uppercase tracking-widest"><Sparkles className="w-5 h-5" /> {lumina?.name || 'Lumina'}</h3>
+                                                            <button onClick={() => setShowPocketPet(false)} className="p-2 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 rounded-full"><X className="w-5 h-5 text-cyan-600" /></button>
+                                                        </div>
+                                                        <div className="h-[500px] md:h-[650px] relative">
+                                                            <Suspense fallback={<div className="flex-1 flex items-center justify-center text-xs font-bold text-gray-400 animate-pulse">Bridging Digital Reality...</div>}>
+                                                                <LuminaView user={dashboardUser} onClose={() => { setShowPocketPet(false); refreshPet(); }} />
+                                                            </Suspense>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {showObservatory && dashboardUser && (
+                                                    <div className="animate-in slide-in-from-top-4 duration-500 border-2 border-indigo-400/30 rounded-[2.5rem] overflow-hidden bg-white dark:bg-gray-900 shadow-xl">
+                                                        <div className="flex justify-between items-center p-6 border-b border-indigo-100 dark:border-indigo-900/30">
+                                                            <h3 className="text-xl font-black text-indigo-600 dark:text-indigo-400 flex items-center gap-2 uppercase tracking-widest"><Star className="w-5 h-5" /> Observatory</h3>
+                                                            <button onClick={() => setShowObservatory(false)} className="p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-full"><X className="w-5 h-5 text-indigo-600" /></button>
+                                                        </div>
+                                                        <div className="h-[500px] md:h-[650px] relative">
+                                                            <Suspense fallback={<div className="flex-1 flex items-center justify-center text-xs font-bold text-gray-400 animate-pulse">Calibrating Optics...</div>}>
+                                                                <ObservatoryView user={dashboardUser} onClose={() => setShowObservatory(false)} />
+                                                            </Suspense>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {showDojo && dashboardUser && (
+                                                    <div className="animate-in slide-in-from-top-4 duration-500 border-2 border-rose-400/30 rounded-[2.5rem] overflow-hidden bg-white dark:bg-gray-900 shadow-xl">
+                                                        <div className="flex justify-between items-center p-6 border-b border-rose-100 dark:border-rose-900/30">
+                                                            <h3 className="text-xl font-black text-rose-600 dark:text-rose-400 flex items-center gap-2 uppercase tracking-widest"><Zap className="w-5 h-5" /> Zen Dojo</h3>
+                                                            <button onClick={() => setShowDojo(false)} className="p-2 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-full"><X className="w-5 h-5 text-rose-600" /></button>
+                                                        </div>
+                                                        <div className="h-[500px] md:h-[650px] relative">
+                                                            <Suspense fallback={<div className="flex-1 flex items-center justify-center text-xs font-bold text-gray-400 animate-pulse">Igniting Spark...</div>}>
+                                                                <DojoView user={dashboardUser} onClose={() => setShowDojo(false)} />
+                                                            </Suspense>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -962,7 +1037,29 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
                                     <div className="p-5 md:p-6 border-b border-yellow-100 dark:border-gray-800"><h3 className="font-black text-lg md:text-xl dark:text-yellow-400 mb-1">Preferences</h3><p className="text-gray-500 text-xs">Customize your sanctuary experience.</p></div>
                                     <div className="p-5 md:p-6 space-y-5">
-                                        <div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Moon className="w-4 h-4 text-gray-600 dark:text-gray-400" /></div><div><p className="font-bold text-gray-900 dark:text-white text-sm">Dark Mode</p><p className="text-[10px] text-gray-500">Reduce eye strain.</p></div></div><button onClick={toggleDarkMode} className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${isDark ? 'bg-yellow-500' : 'bg-gray-200'}`}><span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${isDark ? 'translate-x-5' : 'translate-x-1'}`} /></button></div>
+                                        <div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Moon className="w-4 h-4 text-gray-600 dark:text-gray-400" /></div><div><p className="font-bold text-gray-900 dark:text-white text-sm">Dark Mode</p><p className="text-[10px] text-gray-500">Reduce eye strain.</p></div></div><button onClick={toggleMode} className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${isDark ? 'bg-yellow-500' : 'bg-gray-200'}`}><span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${isDark ? 'translate-x-5' : 'translate-x-1'}`} /></button></div>
+                                        <div className="pt-2">
+                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 block">Sanctuary Theme</label>
+                                            <div className="grid grid-cols-5 gap-3">
+                                                {[
+                                                    { id: 'amber', color: 'bg-amber-400', label: 'Amber' },
+                                                    { id: 'cyberpunk', color: 'bg-cyan-400', label: 'Cyber' },
+                                                    { id: 'forest', color: 'bg-emerald-400', label: 'Forest' },
+                                                    { id: 'midnight', color: 'bg-indigo-400', label: 'Indigo' },
+                                                    { id: 'rose', color: 'bg-rose-400', label: 'Rose' }
+                                                ].map((t) => (
+                                                    <button
+                                                        key={t.id}
+                                                        onClick={() => setTheme(t.id as any)}
+                                                        className={`flex flex-col items-center gap-2 group p-2 rounded-2xl transition-all ${theme === t.id ? 'bg-gray-100 dark:bg-gray-800 ring-2 ring-yellow-400' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
+                                                        title={t.label}
+                                                    >
+                                                        <div className={`w-8 h-8 rounded-full shadow-sm ${t.id === 'amber' ? 'bg-[#FACC15]' : t.id === 'cyberpunk' ? 'bg-[#06b6d4]' : t.id === 'forest' ? 'bg-[#10b981]' : t.id === 'midnight' ? 'bg-[#6366f1]' : 'bg-[#f43f5e]'}`}></div>
+                                                        <span className={`text-[8px] font-black uppercase tracking-widest ${theme === t.id ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>{t.label}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><EyeOff className="w-4 h-4 text-red-500" /></div>
@@ -1149,37 +1246,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     </div>
                 )
             }
-            {
-                showBookFull && dashboardUser && (
-                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Opening the Book...</div>}>
-                        <BookOfYouView user={dashboardUser} garden={garden} onClose={() => setShowBookFull(false)} />
-                    </Suspense>
-                )
-            }
-            {
-                showGardenFull && garden && (
-                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Entering the Garden...</div>}>
-                        <GardenFullView garden={garden} user={dashboardUser!} onClose={() => setShowGardenFull(false)} onUpdate={refreshGarden} />
-                    </Suspense>
-                )
-            }
-            {
-                showPocketPet && dashboardUser && (
-                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Bridging Digital Reality...</div>}>
-                        <LuminaView user={dashboardUser} onClose={() => { setShowPocketPet(false); refreshPet(); }} />
-                    </Suspense>
-                )
-            }
-            {showObservatory && (
-                <Suspense fallback={null}>
-                    <ObservatoryView user={dashboardUser} onClose={() => setShowObservatory(false)} />
-                </Suspense>
-            )}
-            {showDojo && (
-                <Suspense fallback={null}>
-                    <DojoView user={dashboardUser} onClose={() => setShowDojo(false)} />
-                </Suspense>
-            )}
         </div >
     );
 };
