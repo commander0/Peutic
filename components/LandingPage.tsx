@@ -60,12 +60,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     }, []);
 
     useEffect(() => {
-        if (darkMode) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-
         const interval = setInterval(() => {
             const fluctuation = Math.floor(Math.random() * 7) - 3; // -3 to +3
             setOnlineCount(prev => Math.max(80, Math.min(450, prev + fluctuation)));
@@ -92,7 +86,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             window.removeEventListener('scroll', handleScroll);
             clearInterval(interval);
         };
-    }, [darkMode]);
+    }, []);
 
     // Unified theme management via Context
 

@@ -1,0 +1,253 @@
+/* -----------------------------------------------------------------------------
+   PEUTIC THEME SYSTEM (10 Unique Themes)
+   ----------------------------------------------------------------------------- */
+:root {
+    --color-primary: #FACC15;
+    /* Default Yellow */
+    --color-primary-light: #FEF08A;
+    --color-primary-border: #FDE047;
+
+    --color-bg-base: #FFFBEB;
+    /* Warm White */
+    --color-text-base: #0A0A0A;
+}
+
+/* GLOBAL DARK MODE OVERRIDES (Base Layer) */
+.dark {
+    --color-bg-base: #0A0A0A;
+    --color-text-base: #F3F4F6;
+    --color-primary-light: rgba(250, 204, 21, 0.1);
+    --color-primary-border: rgba(250, 204, 21, 0.2);
+}
+
+/* -----------------------------------------------------------------------------
+   1. DEFAULT (PEUTIC GOLD)
+   ----------------------------------------------------------------------------- */
+[data-theme="default"] {
+    --color-primary: #FACC15;
+    --color-primary-light: #FFFBEB;
+    --color-primary-border: #fef08a;
+    --color-bg-base: #FFFBEB;
+}
+
+[data-theme="default"].dark {
+    --color-primary: #FACC15;
+    --color-bg-base: #000000;
+}
+
+/* -----------------------------------------------------------------------------
+   2. ROSE (Romance/Soft)
+   ----------------------------------------------------------------------------- */
+[data-theme="rose"] {
+    --color-primary: #FB7185;
+    /* Rose 400 */
+    --color-primary-light: #FFF1F2;
+    --color-primary-border: #FECDD3;
+    --color-bg-base: #FFF1F2;
+}
+
+[data-theme="rose"].dark {
+    --color-primary: #F43F5E;
+    /* Rose 500 */
+    --color-primary-light: rgba(244, 63, 94, 0.1);
+    --color-primary-border: rgba(244, 63, 94, 0.3);
+    --color-bg-base: #1c0508;
+    /* Very Dark Red */
+}
+
+/* -----------------------------------------------------------------------------
+   3. OCEAN (Calm/Blue)
+   ----------------------------------------------------------------------------- */
+[data-theme="ocean"] {
+    --color-primary: #38bdf8;
+    /* Sky 400 */
+    --color-primary-light: #ecfeff;
+    --color-primary-border: #bae6fd;
+    --color-bg-base: #f0f9ff;
+}
+
+[data-theme="ocean"].dark {
+    --color-primary: #0ea5e9;
+    /* Sky 500 */
+    --color-primary-light: rgba(14, 165, 233, 0.1);
+    --color-primary-border: rgba(14, 165, 233, 0.3);
+    --color-bg-base: #08121c;
+    /* Deep Blue Black */
+}
+
+/* -----------------------------------------------------------------------------
+   4. FOREST (Nature/Green)
+   ----------------------------------------------------------------------------- */
+[data-theme="forest"] {
+    --color-primary: #10B981;
+    /* Emerald 500 */
+    --color-primary-light: #ECFDF5;
+    --color-primary-border: #A7F3D0;
+    --color-bg-base: #F0FDF4;
+}
+
+[data-theme="forest"].dark {
+    --color-primary: #34D399;
+    /* Emerald 400 */
+    --color-primary-light: rgba(52, 211, 153, 0.1);
+    --color-primary-border: rgba(52, 211, 153, 0.3);
+    --color-bg-base: #020f0a;
+    /* Dark Forest */
+}
+
+/* -----------------------------------------------------------------------------
+   5. SUNSET (Vibrant Orange/Purple)
+   ----------------------------------------------------------------------------- */
+[data-theme="sunset"] {
+    --color-primary: #F97316;
+    /* Orange 500 */
+    --color-primary-light: #FFF7ED;
+    --color-primary-border: #FFEDD5;
+    --color-bg-base: #fff8f4;
+}
+
+[data-theme="sunset"].dark {
+    --color-primary: #FB923C;
+    /* Orange 400 */
+    --color-primary-light: rgba(251, 146, 60, 0.1);
+    --color-primary-border: rgba(251, 146, 60, 0.3);
+    --color-bg-base: #1e0901;
+    /* Dark Orange tint */
+}
+
+/* -----------------------------------------------------------------------------
+   6. LAVENDER (Soft Purple)
+   ----------------------------------------------------------------------------- */
+[data-theme="lavender"] {
+    --color-primary: #A78BFA;
+    /* Violet 400 */
+    --color-primary-light: #F5F3FF;
+    --color-primary-border: #DDD6FE;
+    --color-bg-base: #FAF5FF;
+}
+
+[data-theme="lavender"].dark {
+    --color-primary: #C4B5FD;
+    /* Violet 300 */
+    --color-primary-light: rgba(167, 139, 250, 0.1);
+    --color-primary-border: rgba(167, 139, 250, 0.3);
+    --color-bg-base: #0f0a1e;
+    /* Deep Violet */
+}
+
+/* -----------------------------------------------------------------------------
+   7. CYBERPUNK (Neon/High Tech)
+   ----------------------------------------------------------------------------- */
+[data-theme="cyberpunk"] {
+    --color-primary: #06b6d4;
+    /* Cyan 500 */
+    --color-primary-light: #ECFEFF;
+    --color-primary-border: #22d3ee;
+    --color-bg-base: #ffffff;
+    /* Stark White */
+    --color-text-base: #080808;
+}
+
+[data-theme="cyberpunk"].dark {
+    --color-primary: #00f0ff;
+    /* Neon Cyan */
+    --color-primary-light: rgba(0, 240, 255, 0.15);
+    --color-primary-border: #00f0ff;
+    --color-bg-base: #050510;
+    /* Void Black */
+    --color-text-base: #e0faff;
+}
+
+/* -----------------------------------------------------------------------------
+   8. MIDNIGHT (Deep Indigo)
+   ----------------------------------------------------------------------------- */
+[data-theme="midnight"] {
+    --color-primary: #4F46E5;
+    /* Indigo 600 */
+    --color-primary-light: #EEF2FF;
+    --color-primary-border: #C7D2FE;
+    --color-bg-base: #F5F7FF;
+}
+
+[data-theme="midnight"].dark {
+    --color-primary: #818CF8;
+    /* Indigo 400 */
+    --color-primary-light: rgba(129, 140, 248, 0.1);
+    --color-primary-border: rgba(129, 140, 248, 0.3);
+    --color-bg-base: #060614;
+    /* Midnight */
+}
+
+/* -----------------------------------------------------------------------------
+   9. COFFEE (Earthy/Warm)
+   ----------------------------------------------------------------------------- */
+[data-theme="coffee"] {
+    --color-primary: #854d0e;
+    /* Yellow 800ish/Brown */
+    --color-primary-light: #fefce8;
+    --color-primary-border: #dcb068;
+    --color-bg-base: #fffbf0;
+    /* Cream */
+}
+
+[data-theme="coffee"].dark {
+    --color-primary: #d4a373;
+    /* Latte */
+    --color-primary-light: rgba(212, 163, 115, 0.1);
+    --color-primary-border: rgba(212, 163, 115, 0.3);
+    --color-bg-base: #140d08;
+    /* Dark Espresso */
+    --color-text-base: #eaddcf;
+}
+
+/* -----------------------------------------------------------------------------
+   10. ROYAL (Gold/Purple Luxury)
+   ----------------------------------------------------------------------------- */
+[data-theme="royal"] {
+    --color-primary: #9333ea;
+    /* Purple 600 */
+    --color-primary-light: #F3E8FF;
+    --color-primary-border: #D8B4FE;
+    --color-bg-base: #FAF5FF;
+}
+
+[data-theme="royal"].dark {
+    --color-primary: #FFD700;
+    /* Gold */
+    --color-primary-light: rgba(255, 215, 0, 0.1);
+    --color-primary-border: rgba(255, 215, 0, 0.4);
+    --color-bg-base: #1a0b2e;
+    /* Royal Dark Purple */
+    --color-text-base: #fdf4ff;
+}
+
+/* Utility Animations */
+.animate-aura-glow {
+    animation: aura-glow 3s infinite ease-in-out;
+}
+
+@keyframes aura-glow {
+    0% {
+        box-shadow: 0 0 10px var(--color-primary-light);
+    }
+
+    50% {
+        box-shadow: 0 0 25px var(--color-primary);
+    }
+
+    100% {
+        box-shadow: 0 0 10px var(--color-primary-light);
+    }
+}
+
+/* Base Transition */
+body {
+    background-color: var(--color-bg-base);
+    color: var(--color-text-base);
+    transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+::selection {
+    background: var(--color-primary);
+    color: black;
+}

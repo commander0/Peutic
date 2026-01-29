@@ -115,11 +115,11 @@ CollapsibleSection.displayName = 'CollapsibleSection';
 
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession }) => {
     const { lang, setLang, t } = useLanguage();
-    const { theme, setTheme } = useTheme();
+    const { theme, mode, setTheme, toggleMode } = useTheme();
     const [activeTab, setActiveTab] = useState<'inner_sanctuary' | 'history' | 'settings'>('inner_sanctuary');
 
-    // Derived boolean for simple UI toggles, but relies on definitive ThemeContext
-    const isDark = theme === 'dark' || theme.includes('cyberpunk') || theme.includes('forest') || theme.includes('midnight');
+    // Derived boolean for simple UI toggles
+    const isDark = mode === 'dark';
 
     const [balance, setBalance] = useState(user.balance);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -376,9 +376,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         AdminService.getCompanions().then(setCompanions);
     };
 
+
+
     const toggleDarkMode = () => {
-        // Cycle: Light -> Dark -> Light (Custom themes selected via Settings only)
-        setTheme(isDark ? 'light' : 'dark');
+        toggleMode();
     };
 
     const toggleGhostMode = () => {
@@ -392,9 +393,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     // Sync state with User Preference when User loads (fixes login theme mismatch)
     useEffect(() => {
         if (user && user.themePreference) {
-            // Only update if fundamentally different to avoid overwriting rich themes
-            if (user.themePreference === 'dark' && !isDark) setTheme('dark');
-            if (user.themePreference === 'light' && isDark) setTheme('light');
+            // ThemeContext handles initialization parsing, this is just for reactive updates if needed
         }
     }, [user.themePreference]);
 
@@ -760,59 +759,56 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
 
+                                            {/* TILE 4: OBSERVATORY */}
+                                            <div
+                                                onClick={() => handleRoomInteraction('observatory', 125)}
+                                                className={`w-1/3 group relative rounded-xl md:rounded-3xl border transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer ${dashboardUser?.unlockedRooms?.includes('observatory')
+                                                    ? 'bg-gradient-to-br from-indigo-900 to-black border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.4)]'
+                                                    : 'bg-indigo-900/20 backdrop-blur-md border-dashed border-indigo-200/30 dark:border-gray-700/50 hover:bg-indigo-900/30'}`}
+                                            >
+                                                <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                                    {dashboardUser?.unlockedRooms?.includes('observatory') ? (
+                                                        <>
+                                                            <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-indigo-950 flex items-center justify-center text-indigo-200 shadow-[0_0_15px_rgba(99,102,241,0.5)] group-hover:scale-110 transition-transform"><Star className="w-5 h-5 md:w-8 md:h-8 fill-indigo-200" /></div>
+                                                            <h3 className="text-[7px] md:text-xs font-black text-indigo-100 uppercase tracking-widest drop-shadow-lg">Observatory</h3>
+                                                            <p className="hidden md:block text-[9px] text-indigo-300 mt-1">Track Dreams & Sleep</p>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <div className="w-8 h-8 md:w-12 md:h-12 bg-black/20 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-indigo-300" /></div>
+                                                            <h3 className="text-[7px] md:text-xs font-black text-indigo-900 dark:text-indigo-200 uppercase tracking-widest">Observatory</h3>
+                                                            <div className="mt-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-[8px] md:text-[10px] font-black px-3 py-1 rounded-full shadow-lg">125m</div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* ZEN DOJO */}
+                                            <div
+                                                onClick={() => handleRoomInteraction('dojo', 75)}
+                                                className={`w-1/3 group relative rounded-xl md:rounded-3xl border transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer ${dashboardUser?.unlockedRooms?.includes('dojo')
+                                                    ? 'bg-gradient-to-br from-amber-900 to-stone-900 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.4)]'
+                                                    : 'bg-amber-900/20 backdrop-blur-md border-dashed border-amber-200/30 dark:border-gray-700/50 hover:bg-amber-900/30'}`}
+                                            >
+                                                <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                                    {dashboardUser?.unlockedRooms?.includes('dojo') ? (
+                                                        <>
+                                                            <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-stone-800 flex items-center justify-center text-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform"><Zap className="w-5 h-5 md:w-8 md:h-8 fill-amber-500" /></div>
+                                                            <h3 className="text-[7px] md:text-xs font-black text-amber-100 uppercase tracking-widest drop-shadow-lg">Zen Dojo</h3>
+                                                            <p className="hidden md:block text-[9px] text-amber-300 mt-1">Focus & Mastery</p>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <div className="w-8 h-8 md:w-12 md:h-12 bg-black/20 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-amber-700 dark:text-amber-500" /></div>
+                                                            <h3 className="text-[7px] md:text-xs font-black text-amber-900 dark:text-amber-200 uppercase tracking-widest">Zen Dojo</h3>
+                                                            <div className="mt-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[8px] md:text-[10px] font-black px-3 py-1 rounded-full shadow-lg">75m</div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
                                     )}
-                                </div>
-                                {/* ROW 2: OLYMPIC STYLE (CENTERED) */}
-                                <div className="flex justify-center gap-1 md:gap-4 w-full mt-5">
-                                    {/* OBSERVATORY */}
-                                    <div
-                                        onClick={() => handleRoomInteraction('observatory', 125)}
-                                        className={`w-1/3 group relative rounded-xl md:rounded-3xl border transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer ${dashboardUser?.unlockedRooms?.includes('observatory')
-                                            ? 'bg-gradient-to-br from-indigo-900 to-black border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.4)]'
-                                            : 'bg-indigo-900/20 backdrop-blur-md border-dashed border-indigo-200/30 dark:border-gray-700/50 hover:bg-indigo-900/30'}`}
-                                    >
-                                        <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
-                                            {dashboardUser?.unlockedRooms?.includes('observatory') ? (
-                                                <>
-                                                    <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-indigo-950 flex items-center justify-center text-indigo-200 shadow-[0_0_15px_rgba(99,102,241,0.5)] group-hover:scale-110 transition-transform"><Star className="w-5 h-5 md:w-8 md:h-8 fill-indigo-200" /></div>
-                                                    <h3 className="text-[7px] md:text-xs font-black text-indigo-100 uppercase tracking-widest drop-shadow-lg">Observatory</h3>
-                                                    <p className="hidden md:block text-[9px] text-indigo-300 mt-1">Track Dreams & Sleep</p>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <div className="w-8 h-8 md:w-12 md:h-12 bg-black/20 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-indigo-300" /></div>
-                                                    <h3 className="text-[7px] md:text-xs font-black text-indigo-900 dark:text-indigo-200 uppercase tracking-widest">Observatory</h3>
-                                                    <div className="mt-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-[8px] md:text-[10px] font-black px-3 py-1 rounded-full shadow-lg">125m</div>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* ZEN DOJO */}
-                                    <div
-                                        onClick={() => handleRoomInteraction('dojo', 75)}
-                                        className={`w-1/3 group relative rounded-xl md:rounded-3xl border transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer ${dashboardUser?.unlockedRooms?.includes('dojo')
-                                            ? 'bg-gradient-to-br from-amber-900 to-stone-900 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.4)]'
-                                            : 'bg-amber-900/20 backdrop-blur-md border-dashed border-amber-200/30 dark:border-gray-700/50 hover:bg-amber-900/30'}`}
-                                    >
-                                        <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
-                                            {dashboardUser?.unlockedRooms?.includes('dojo') ? (
-                                                <>
-                                                    <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-stone-800 flex items-center justify-center text-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform"><Zap className="w-5 h-5 md:w-8 md:h-8 fill-amber-500" /></div>
-                                                    <h3 className="text-[7px] md:text-xs font-black text-amber-100 uppercase tracking-widest drop-shadow-lg">Zen Dojo</h3>
-                                                    <p className="hidden md:block text-[9px] text-amber-300 mt-1">Focus & Mastery</p>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <div className="w-8 h-8 md:w-12 md:h-12 bg-black/20 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-amber-700 dark:text-amber-500" /></div>
-                                                    <h3 className="text-[7px] md:text-xs font-black text-amber-900 dark:text-amber-200 uppercase tracking-widest">Zen Dojo</h3>
-                                                    <div className="mt-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[8px] md:text-[10px] font-black px-3 py-1 rounded-full shadow-lg">75m</div>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
@@ -968,6 +964,37 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             </button>
                                         </div>
 
+                                        {/* THEME SELECTOR */}
+                                        <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+                                            <p className="font-bold text-gray-900 dark:text-white text-sm mb-3">App Theme</p>
+                                            <div className="grid grid-cols-5 gap-3">
+                                                {[
+                                                    { id: 'default', color: '#FACC15', label: 'Gold' },
+                                                    { id: 'rose', color: '#FB7185', label: 'Rose' },
+                                                    { id: 'ocean', color: '#38bdf8', label: 'Ocean' },
+                                                    { id: 'forest', color: '#10B981', label: 'Forest' },
+                                                    { id: 'sunset', color: '#F97316', label: 'Sunset' },
+                                                    { id: 'lavender', color: '#A78BFA', label: 'Lavender' },
+                                                    { id: 'cyberpunk', color: '#06b6d4', label: 'Neon' },
+                                                    { id: 'midnight', color: '#4F46E5', label: 'Night' },
+                                                    { id: 'coffee', color: '#854d0e', label: 'Coffee' },
+                                                    { id: 'royal', color: '#9333ea', label: 'Royal' }
+                                                ].map((t) => (
+                                                    <button
+                                                        key={t.id}
+                                                        onClick={() => setTheme(t.id as any)}
+                                                        className={`flex flex-col items-center gap-1 group ${theme === t.id ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`}
+                                                    >
+                                                        <div
+                                                            className={`w-8 h-8 rounded-full border-2 transition-all ${theme === t.id ? 'scale-110 border-black dark:border-white shadow-lg' : 'border-transparent'}`}
+                                                            style={{ backgroundColor: t.color }}
+                                                        ></div>
+                                                        <span className="text-[9px] font-bold uppercase text-gray-500">{t.label}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
                                     </div>
                                 </div>
                                 <div className="bg-white/70 dark:bg-gray-900/40 rounded-3xl border border-yellow-200/50 dark:border-gray-800/50 overflow-hidden backdrop-blur-md shadow-sm">
@@ -1059,7 +1086,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             </div>
                         </div>
                     </footer>
-                </main>
+                </main >
             </div >
             {showPayment && (
                 <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Secure Payment node...</div>}>
@@ -1141,16 +1168,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     </Suspense>
                 )
             }
-            {showObservatory && (
-                <Suspense fallback={null}>
-                    <ObservatoryView user={dashboardUser} onClose={() => setShowObservatory(false)} />
-                </Suspense>
-            )}
-            {showDojo && (
-                <Suspense fallback={null}>
-                    <DojoView user={dashboardUser} onClose={() => setShowDojo(false)} />
-                </Suspense>
-            )}
+            {
+                showObservatory && (
+                    <Suspense fallback={null}>
+                        <ObservatoryView user={dashboardUser} onClose={() => setShowObservatory(false)} />
+                    </Suspense>
+                )
+            }
+            {
+                showDojo && (
+                    <Suspense fallback={null}>
+                        <DojoView user={dashboardUser} onClose={() => setShowDojo(false)} />
+                    </Suspense>
+                )
+            }
         </div >
     );
 };

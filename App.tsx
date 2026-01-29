@@ -85,46 +85,51 @@ const MainApp: React.FC = () => {
   useEffect(() => {
     // Parallelize Operations to Speed Up Load
     const initApp = async () => {
-      // 1. Run Core Initialization in Parallel
-      const [restored, settings] = await Promise.all([
-        UserService.restoreSession(),
-        AdminService.syncGlobalSettings()
-      ]);
+      try {
+        // 1. Run Core Initialization in Parallel
+        const [restored, settings] = await Promise.all([
+          UserService.restoreSession().catch(e => { console.warn("Session restore failed", e); return null; }),
+          AdminService.syncGlobalSettings().catch(e => { console.warn("Settings sync failed", e); return { maintenanceMode: false }; })
+        ]);
 
-      let activeUser = restored;
-      setMaintenanceMode(settings.maintenanceMode);
+        let activeUser = restored;
+        if (settings) setMaintenanceMode(settings.maintenanceMode);
 
-      // 2. Recovery Logic
-      if (!activeUser) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          console.warn("Using Session Fallback for faster load / recovery");
-          activeUser = UserService.createFallbackUser(session.user);
-          UserService.repairUserRecord(session.user);
+        // 2. Recovery Logic
+        if (!activeUser) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            console.warn("Using Session Fallback for faster load / recovery");
+            activeUser = UserService.createFallbackUser(session.user);
+            UserService.repairUserRecord(session.user);
+          }
         }
-      }
 
-      // 3. Update UI State
-      if (activeUser) {
-        setUser(activeUser);
+        // 3. Update UI State
+        if (activeUser) {
+          setUser(activeUser);
 
-        // PREFETCH DASHBOARD DATA (Non-blocking)
-        AdminService.getCompanions();
-        UserService.getJournals(activeUser.id);
-        UserService.getUserArt(activeUser.id);
-        UserService.getVoiceJournals(activeUser.id);
-        UserService.getWeeklyProgress(activeUser.id);
+          // PREFETCH DASHBOARD DATA (Non-blocking)
+          AdminService.getCompanions();
+          UserService.getJournals(activeUser.id);
+          UserService.getUserArt(activeUser.id);
+          UserService.getVoiceJournals(activeUser.id);
+          UserService.getWeeklyProgress(activeUser.id);
 
-        if (activeUser.role === UserRole.ADMIN && location.pathname === '/') {
-          navigate('/admin/dashboard');
+          if (activeUser.role === UserRole.ADMIN && location.pathname === '/') {
+            navigate('/admin/dashboard');
+          }
+        } else {
+          UserService.clearCache();
+          setUser(null);
         }
-      } else {
-        UserService.clearCache();
-        setUser(null);
-      }
 
-      setMaintenanceMode(AdminService.getSettings().maintenanceMode);
-      setIsRestoring(false);
+        setMaintenanceMode(AdminService.getSettings().maintenanceMode);
+      } catch (err) {
+        console.error("Critical Init Error:", err);
+      } finally {
+        setIsRestoring(false);
+      }
     };
 
     initApp();
@@ -175,8 +180,6 @@ const MainApp: React.FC = () => {
     }, 5000);
     return () => clearInterval(interval);
   }, []);
-
-  // Session Timeout Logic (In-Memory Only)
 
   // Session Timeout Logic (In-Memory Only)
   useEffect(() => {
