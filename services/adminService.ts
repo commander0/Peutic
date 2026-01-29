@@ -210,9 +210,30 @@ export class AdminService {
     }
 
     static async createRootAdmin(email: string, password?: string, masterKey?: string): Promise<User> {
-        const { data, error } = await BaseService.invokeGateway('admin-create', { email, password, masterKey });
-        if (error || !data?.user) throw new Error(error?.message || "Root admin creation failed");
-        return UserService.mapUser(data.user);
+        // 1. Sign Up
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password: password || 'PeuticDefault123!',
+            options: {
+                data: { full_name: 'Root Admin' }
+            }
+        });
+
+        if (error || !data.user) throw new Error(error?.message || "Sign up failed");
+
+        // 2. Claim Admin Rights via RPC if key provided
+        if (masterKey) {
+            const { data: claimed, error: claimError } = await supabase.rpc('claim_system_access', { p_master_key: masterKey });
+            if (claimError || !claimed) {
+                console.warn("Account created but Admin Claim failed", claimError);
+                throw new Error("Account created but Admin Claim failed. Key may be invalid.");
+            }
+        }
+
+        // 3. Return mapped user (requires sync to get role)
+        const synced = await UserService.syncUser(data.user.id);
+        if (!synced) throw new Error("User created but profile sync failed.");
+        return synced;
     }
 
     static verifyMasterKey(key: string): boolean {
@@ -221,8 +242,8 @@ export class AdminService {
     }
 
     static async resetAdminStatus(masterKey: string): Promise<void> {
-        const { data, error } = await BaseService.invokeGateway('admin-reclaim', { masterKey });
-        if (error || data?.error) throw new Error(error?.message || data?.error || "Reclaim failed");
+        const { data, error } = await supabase.rpc('claim_system_access', { p_master_key: masterKey });
+        if (error || !data) throw new Error(error?.message || "Start Reclaim failed: Invalid Key or Server Error");
 
         const currentUser = UserService.getUser();
         if (currentUser?.role === 'ADMIN') {

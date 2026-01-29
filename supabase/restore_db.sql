@@ -598,6 +598,45 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 -- 12. SEED DATA
 -- -----------------------------------------------------------------------------
 
+-- Claim System Access (RPC for Admin Login/Claim)
+CREATE OR REPLACE FUNCTION public.claim_system_access(p_master_key TEXT)
+RETURNS BOOLEAN 
+LANGUAGE plpgsql 
+SECURITY DEFINER 
+SET search_path = public
+AS $$
+DECLARE
+  v_uid UUID;
+  v_expected_key TEXT := 'PEUTIC_ADMIN_ACCESS_2026'; -- Default Key
+BEGIN
+  -- Strict Key Check
+  IF p_master_key != v_expected_key THEN
+    RETURN FALSE;
+  END IF;
+
+  v_uid := auth.uid();
+  IF v_uid IS NULL THEN
+    RETURN FALSE;
+  END IF;
+
+  -- Verify user exists in public.users
+  INSERT INTO public.users (id, email, role)
+  VALUES (
+    v_uid, 
+    (select email from auth.users where id = v_uid),
+    'ADMIN'
+  )
+  ON CONFLICT (id) DO UPDATE
+  SET role = 'ADMIN';
+
+  RETURN TRUE;
+END;
+$$;
+
+-- -----------------------------------------------------------------------------
+-- 12. SEED DATA
+-- -----------------------------------------------------------------------------
+
 -- Seed Achievements
 INSERT INTO public.achievements (code, title, description, icon_name, xp_reward) VALUES
 ('FIRST_STEPS', 'First Steps', 'Complete your first session.', 'Footprints', 50),
