@@ -335,34 +335,34 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 mb-10 md:mb-12">
                         <div className="md:col-span-5 space-y-4 md:space-y-6">
                             <div className="flex items-center gap-3"><div className="w-7 h-7 md:w-9 md:h-9 bg-yellow-400 rounded-xl flex items-center justify-center"><Heart className="w-4 h-4 md:w-5 md:h-5 fill-black text-black" /></div><span className="text-xl md:text-2xl font-black tracking-tight">Peutic</span></div>
-                            <p className="text-gray-800 dark:text-gray-500 text-xs md:text-sm leading-relaxed max-w-sm">{t('footer_desc')}</p>
+                            <p className="text-gray-800 dark:text-white text-xs md:text-sm leading-relaxed max-w-sm">{t('footer_desc')}</p>
                             <div className="flex gap-5">{[Twitter, Instagram, Linkedin].map((Icon, i) => (<button key={i} className="text-gray-800 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors hover:scale-110 transform"><Icon className="w-4 h-4 md:w-5 md:h-5" /></button>))}</div>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-1 gap-6 md:col-span-2">
                             <div>
-                                <h4 className="font-black mb-3 md:mb-4 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">{t('footer_global')}</h4>
-                                <ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500">
-                                    <li><Link to="/about" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_about')}</Link></li>
-                                    <li><Link to="/press" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_media')}</Link></li>
+                                <h4 className="font-black mb-3 md:mb-4 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-white">{t('footer_global')}</h4>
+                                <ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-white">
+                                    <li><Link to="/about" className="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('link_about')}</Link></li>
+                                    <li><Link to="/press" className="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('link_media')}</Link></li>
                                 </ul>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-1 gap-6 md:col-span-2">
                             <div>
-                                <h4 className="font-black mb-3 md:mb-4 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">{t('footer_support')}</h4>
-                                <ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500">
-                                    <li><Link to="/support" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_help')}</Link></li>
-                                    <li><Link to="/safety" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_safety')}</Link></li>
+                                <h4 className="font-black mb-3 md:mb-4 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-white">{t('footer_support')}</h4>
+                                <ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-white">
+                                    <li><Link to="/support" className="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('link_help')}</Link></li>
+                                    <li><Link to="/safety" className="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('link_safety')}</Link></li>
                                     <li><Link to="/crisis" className="text-red-600 hover:text-red-700 transition-colors">{t('link_crisis')}</Link></li>
                                 </ul>
                             </div>
                         </div>
                         <div className="md:col-span-3">
-                            <h4 className="font-black mb-3 md:mb-4 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">{t('footer_reg')}</h4>
-                            <ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500">
-                                <li><Link to="/privacy" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_privacy')}</Link></li>
-                                <li><Link to="/terms" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_terms')}</Link></li>
-                                <li><button onClick={() => setShowCookies(true)} className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_cookies')}</button></li>
+                            <h4 className="font-black mb-3 md:mb-4 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-white">{t('footer_reg')}</h4>
+                            <ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-white">
+                                <li><Link to="/privacy" className="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('link_privacy')}</Link></li>
+                                <li><Link to="/terms" className="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('link_terms')}</Link></li>
+                                <li><button onClick={() => setShowCookies(true)} className="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('link_cookies')}</button></li>
                             </ul>
                         </div>
                     </div>

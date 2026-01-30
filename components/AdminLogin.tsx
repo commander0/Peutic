@@ -19,6 +19,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
     const [loading, setLoading] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
     const [isVerifying, setIsVerifying] = useState(false);
+    void setIsVerifying; // Silence unused warning
 
     const [showRegister, setShowRegister] = useState(false);
     const [newAdminEmail, setNewAdminEmail] = useState('');

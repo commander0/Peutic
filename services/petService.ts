@@ -78,24 +78,7 @@ export class PetService {
         return updatedAnima;
     }
 
-    private static mapAnimaBase(data: any): Lumina {
-        return {
-            id: data.id,
-            userId: data.user_id,
-            name: data.name,
-            species: data.species,
-            level: data.level,
-            experience: data.experience,
-            health: data.health,
-            hunger: data.hunger,
-            happiness: data.happiness,
-            cleanliness: data.cleanliness,
-            energy: data.energy,
-            isSleeping: data.is_sleeping,
-            lastInteractionAt: data.last_interaction_at,
-            createdAt: data.created_at
-        };
-    }
+
 
     private static mapAnimaToDB(anima: Lumina): any {
         return {
