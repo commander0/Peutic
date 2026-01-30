@@ -9,7 +9,7 @@ import {
     LayoutDashboard, Plus, X, Mic, Lock, AlertTriangle, ShieldCheck, Heart,
     BookOpen, Flame, Trophy,
     Sun, Feather, LifeBuoy, RefreshCw, Star, Edit2, Zap, Gamepad2,
-    ChevronDown, ChevronUp, User as UserIcon, Moon,
+    ChevronDown, ChevronUp, User as UserIcon, Moon, Scissors,
     Twitter, Instagram, Linkedin,
     Mail, Eye, EyeOff, Megaphone, Sparkles, Save, Video
 } from 'lucide-react';
@@ -152,7 +152,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [showPocketPet, setShowPocketPet] = useState(false);
     const [showObservatory, setShowObservatory] = useState(false);
     const [showDojo, setShowDojo] = useState(false);
-    const [lumina, setLumina] = useState<Lumina | null>(null);
+    // Lumina state moved to grouped section
     const [isVaultOpen, setIsVaultOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
 
@@ -216,10 +216,40 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
     // Garden State
     const [garden, setGarden] = useState<GardenState | null>(null);
+    // Lumina State
+    const [lumina, setLumina] = useState<Lumina | null>(null);
+    const [isClipping, setIsClipping] = useState(false);
+
     const refreshGarden = async () => {
         if (!user.id) return;
         const g = await GardenService.getGarden(user.id);
         setGarden(g);
+    };
+
+    const handleClipPlant = async () => {
+        if (!user || isClipping) return;
+        setIsClipping(true);
+        const result = await GardenService.clipPlant(user.id);
+
+        if (result.success) {
+            showToast(result.message || "Clipped!", "success");
+            if (result.reward) {
+                // Show Quote Toast
+                showToast(`"${result.reward}"`, "info");
+            }
+            if (result.prize && result.prize > 0) {
+                await UserService.addBalance(result.prize, "Garden Prize");
+                setBalance(prev => prev + (result.prize || 0));
+                showToast(`Found ${result.prize}m hidden in the leaves!`, "success");
+            }
+            setTimeout(() => {
+                setIsClipping(false);
+                refreshGarden(); // Refresh stats if needed
+            }, 2000);
+        } else {
+            showToast(result.message || "Cannot clip right now", "error");
+            setIsClipping(false);
+        }
     };
 
     const refreshPet = async () => {
@@ -613,15 +643,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             </div>
                         </div>
                     )}
-                    {/* NOTIFICATIONS */}
-                    <div className={`fixed top-6 right-6 z-50 transition-all duration-500 ${isIdle ? 'opacity-0' : 'opacity-100'}`}>
-                        <NotificationBell
-                            notifications={notifications}
-                            onClear={handleClearNotification}
-                            onAction={handleNotificationAction}
-                            onClearAll={handleClearAllNotifications}
-                        />
-                    </div>
+
                     <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-10 pb-24">
                         <header className="mb-8 md:mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
                             <div className="flex items-center justify-between w-full md:w-auto">
@@ -732,13 +754,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                         <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 pointer-events-none"></div>
                                                         <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
                                                             <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
-                                                            <Suspense fallback={<div className="w-8 h-8 md:w-20 md:h-20 rounded-full animate-pulse bg-green-100"></div>}>
-                                                                <div className="w-10 h-10 md:w-24 md:h-24 mb-1 md:mb-3 transition-transform group-hover:scale-110 duration-700 relative z-10 drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]">
-                                                                    <GardenCanvas garden={garden} width={100} height={100} />
+                                                            <div className="relative z-10 w-full h-full flex flex-col items-center justify-center pointer-events-none">
+                                                                <div className="w-full h-24 md:h-32 mb-1 pointer-events-auto transition-transform group-hover:scale-105 duration-700">
+                                                                    <GardenCanvas garden={garden} width={200} height={180} interactionType={isClipping ? 'clip' : null} />
                                                                 </div>
-                                                            </Suspense>
-                                                            <h3 className="text-[7px] md:text-sm font-black text-green-400 uppercase tracking-widest drop-shadow-[0_0_6px_rgba(34,197,94,0.8)] text-center">Inner Garden</h3>
-                                                            <p className="hidden md:block text-[10px] font-bold text-green-500/80 uppercase tracking-tighter">Level {garden.level} &bull; Growing</p>
+
+                                                                {/* Overlay Controls */}
+                                                                <div className="absolute top-2 right-2 pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleClipPlant();
+                                                                        }}
+                                                                        className="p-2 bg-white/90 dark:bg-black/80 rounded-full shadow-lg hover:scale-110 active:scale-95 text-pink-500 transition-all"
+                                                                        title="Clip for Inspiration"
+                                                                    >
+                                                                        <Scissors className="w-4 h-4" />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                            <h3 className="text-[7px] md:text-sm font-black text-green-700 dark:text-green-300 uppercase tracking-widest drop-shadow-sm text-center mt-[-10px] relative z-20">Zen Bonzai</h3>
+                                                            <p className="hidden md:block text-[9px] font-bold text-green-600/70 dark:text-green-400/60 uppercase tracking-tighter">Lvl {garden.level} &bull; {garden.currentPlantType}</p>
                                                         </div>
                                                     </div>
                                                 )}

@@ -210,6 +210,73 @@ serve(async (req) => {
                 return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
             }
 
+            case 'create-pet': {
+                const { userId, name, species } = payload;
+                await requireAuth(userId);
+                const newAnima = {
+                    id: crypto.randomUUID(),
+                    user_id: userId,
+                    name,
+                    species,
+                    level: 1,
+                    experience: 0,
+                    health: 100,
+                    hunger: 100,
+                    happiness: 100,
+                    cleanliness: 100,
+                    energy: 100,
+                    is_sleeping: false,
+                    last_interaction_at: new Date().toISOString(),
+                    created_at: new Date().toISOString()
+                };
+                const { error } = await supabaseClient.from('pocket_pets').insert(newAnima);
+                if (error) throw error;
+                // Return in camelCase for frontend
+                const created = {
+                    id: newAnima.id,
+                    userId: newAnima.user_id,
+                    name: newAnima.name,
+                    species: newAnima.species,
+                    level: newAnima.level,
+                    experience: newAnima.experience,
+                    health: newAnima.health,
+                    hunger: newAnima.hunger,
+                    happiness: newAnima.happiness,
+                    cleanliness: newAnima.cleanliness,
+                    energy: newAnima.energy,
+                    isSleeping: newAnima.is_sleeping,
+                    lastInteractionAt: newAnima.last_interaction_at,
+                    createdAt: newAnima.created_at
+                };
+                return new Response(JSON.stringify(created), { headers: corsHeaders });
+            }
+
+            case 'get-pet': {
+                const { userId } = payload;
+                await requireAuth(userId);
+                const { data, error } = await supabaseClient.from('pocket_pets').select('*').eq('user_id', userId).maybeSingle();
+                if (error) throw error;
+                if (!data) return new Response(JSON.stringify(null), { headers: corsHeaders });
+
+                const pet = {
+                    id: data.id,
+                    userId: data.user_id,
+                    name: data.name,
+                    species: data.species,
+                    level: data.level,
+                    experience: data.experience,
+                    health: data.health,
+                    hunger: data.hunger,
+                    happiness: data.happiness,
+                    cleanliness: data.cleanliness,
+                    energy: data.energy,
+                    isSleeping: data.is_sleeping,
+                    lastInteractionAt: data.last_interaction_at,
+                    createdAt: data.created_at
+                };
+                return new Response(JSON.stringify(pet), { headers: corsHeaders });
+            }
+
             // ==========================================
             // STRIPE & FINANCIALS
             // ==========================================

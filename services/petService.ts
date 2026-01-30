@@ -1,6 +1,7 @@
 import { Lumina } from '../types';
 import { supabase } from './supabaseClient';
-import { logger } from './logger';
+import { logger } from './logger'; // Leaving logger logic for other methods
+import { BaseService } from './baseService';
 
 export class PetService {
     private static CACHE_KEY = 'peutic_anima';
@@ -9,20 +10,12 @@ export class PetService {
         try {
             const cached = localStorage.getItem(`${this.CACHE_KEY}_${userId}`);
 
-            const { data, error } = await supabase
-                .from('pocket_pets')
-                .select('*')
-                .eq('user_id', userId)
-                .maybeSingle();
-
-            if (error) {
-                console.error("Error fetching anima:", error);
-            }
+            // USE GATEWAY for secure access
+            const data = await BaseService.invokeGateway('get-pet', { userId });
 
             if (data) {
-                const anima = this.mapAnimaBase(data);
                 // Apply time-based decay
-                const decayedAnima = this.calculateDecay(anima);
+                const decayedAnima = this.calculateDecay(data);
                 localStorage.setItem(`${this.CACHE_KEY}_${userId}`, JSON.stringify(decayedAnima));
                 return decayedAnima;
             }
@@ -30,35 +23,18 @@ export class PetService {
             if (cached) return JSON.parse(cached);
             return null;
         } catch (e) {
+            console.error("Pet Fetch Error", e);
             return null;
         }
     }
 
     static async createPet(userId: string, name: string, species: Lumina['species']): Promise<Lumina> {
-        const newAnima: Partial<Lumina> = {
-            id: crypto.randomUUID(),
-            userId,
-            name,
-            species,
-            level: 1,
-            experience: 0,
-            health: 100,
-            hunger: 100,
-            happiness: 100,
-            cleanliness: 100,
-            energy: 100,
-            isSleeping: false,
-            lastInteractionAt: new Date().toISOString(),
-            createdAt: new Date().toISOString()
-        };
-
-        const { error } = await supabase.from('pocket_pets').insert(this.mapAnimaToDB(newAnima as Lumina));
-        if (error) {
-            logger.error("Create Anima Failed", userId, error);
-            throw error;
+        // USE GATEWAY to bypass strict RLS on insertion if necessary
+        const newPet = await BaseService.invokeGateway('create-pet', { userId, name, species });
+        if (newPet) {
+            return newPet;
         }
-
-        return newAnima as Lumina;
+        throw new Error("Failed to create pet");
     }
 
     static async updatePet(anima: Lumina): Promise<void> {

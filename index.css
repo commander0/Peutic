@@ -77,6 +77,31 @@
 }
 
 /* -----------------------------------------------------------------------------
+   6. AMBER (Sunny/Golden) - DEFAULT
+   ----------------------------------------------------------------------------- */
+[data-theme="amber"] {
+    --color-primary: #d97706;
+    /* Amber 600 */
+    --color-primary-light: #fef3c7;
+    /* Amber 100 */
+    --color-primary-border: #fcd34d;
+    /* Amber 300 */
+    --color-bg-base: #fffbeb;
+    /* Amber 50 */
+    --color-bg-gradient: linear-gradient(to bottom right, #fef3c7, #fde68a, #fffbeb);
+}
+
+[data-theme="amber"].dark {
+    --color-primary: #fbbf24;
+    /* Amber 400 */
+    --color-primary-light: rgba(251, 191, 36, 0.2);
+    --color-primary-border: rgba(251, 191, 36, 0.4);
+    --color-bg-base: #451a03;
+    /* Amber 950ish shift */
+    --color-bg-gradient: linear-gradient(to bottom right, #451a03, #290e03, #000000);
+}
+
+/* -----------------------------------------------------------------------------
    4. FOREST (Nature/Green)
    ----------------------------------------------------------------------------- */
 [data-theme="forest"] {

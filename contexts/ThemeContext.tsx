@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { UserService } from '../services/userService';
 
-export type ThemeBrand = 'default' | 'rose' | 'ocean' | 'forest' | 'sunset' | 'lavender' | 'cyberpunk' | 'midnight' | 'coffee' | 'royal';
+export type ThemeBrand = 'default' | 'rose' | 'ocean' | 'forest' | 'sunset' | 'lavender' | 'cyberpunk' | 'midnight' | 'coffee' | 'royal' | 'amber';
 export type ThemeMode = 'light' | 'dark';
 
 interface ThemeContextType {
@@ -21,13 +21,13 @@ const ThemeContext = createContext<ThemeContextType>({
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [theme, setThemeState] = useState<ThemeBrand>('default');
+    const [theme, setThemeState] = useState<ThemeBrand>('amber');
     const [mode, setModeState] = useState<ThemeMode>('light');
 
     // Load from User/Storage on mount
     useEffect(() => {
         const user = UserService.getUser();
-        let loadedTheme: ThemeBrand = 'default';
+        let loadedTheme: ThemeBrand = 'amber';
         let loadedMode: ThemeMode = 'light';
 
         if (user?.themePreference) {
@@ -39,8 +39,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 loadedTheme = parts.slice(0, -1).join('-') as ThemeBrand;
             } else {
                 // Fallback for legacy values
-                if (user.themePreference === 'dark') { loadedMode = 'dark'; loadedTheme = 'default'; }
-                else if (user.themePreference === 'light') { loadedMode = 'light'; loadedTheme = 'default'; }
+                if (user.themePreference === 'dark') { loadedMode = 'dark'; loadedTheme = 'amber'; }
+                else if (user.themePreference === 'light') { loadedMode = 'light'; loadedTheme = 'amber'; }
                 else { loadedTheme = user.themePreference as ThemeBrand; }
             }
         } else {
@@ -50,8 +50,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             if (savedMode) loadedMode = savedMode;
         }
 
-        // Default to light if not specified (User Request)
-        setThemeState(loadedTheme || 'default');
+        // Default to AMBER if not specified (User Request)
+        setThemeState(loadedTheme || 'amber');
         setModeState(loadedMode || 'light');
     }, []);
 

@@ -23,38 +23,67 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
 
         let frame = 0;
         let animationId: number;
-        const particles: { x: number, y: number, life: number, color: string }[] = [];
+        // JUICY PARTICLE SYSTEM
+        const particles: { x: number, y: number, vx: number, vy: number, life: number, color: string, size: number }[] = [];
 
-        const render = () => {
-            // Background
-            ctx.fillStyle = '#0f172a'; // Deep Space Blue
-            ctx.fillRect(0, 0, width, height);
-
-            // Grid Background Effect (Retro)
-            drawGridBackground(ctx, width, height);
-
-            // Dramatic Aura (Glowing Gradient behind pet)
-            const gradient = ctx.createRadialGradient(width / 2, height / 2, 20, width / 2, height / 2, 100);
-            gradient.addColorStop(0, 'rgba(6, 182, 212, 0.4)'); // Cyan Aura
-            gradient.addColorStop(1, 'transparent');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, width, height);
-
-            // Particles
-            if (Math.random() > 0.8) {
+        // Helper to spawn particles
+        const spawnParticles = (x: number, y: number, count: number, color: string) => {
+            for (let i = 0; i < count; i++) {
                 particles.push({
-                    x: width / 2 + (Math.random() - 0.5) * 100,
-                    y: height / 2 + (Math.random() - 0.5) * 100,
+                    x, y,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 0.5) * 4,
                     life: 1.0,
-                    color: Math.random() > 0.5 ? '#22d3ee' : '#ffffff'
+                    color,
+                    size: Math.random() * 4 + 1
                 });
             }
+        };
+
+        const render = () => {
+            // Background - Dynamic Gradient based on emotion
+            let bgGradient = ctx.createLinearGradient(0, 0, 0, height);
+            if (emotion === 'happy') { bgGradient.addColorStop(0, '#fef08a'); bgGradient.addColorStop(1, '#facc15'); }
+            else if (emotion === 'sleeping') { bgGradient.addColorStop(0, '#1e1b4b'); bgGradient.addColorStop(1, '#312e81'); }
+            else { bgGradient.addColorStop(0, '#0f172a'); bgGradient.addColorStop(1, '#1e293b'); }
+
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, width, height);
+
+            // Retro Grid
+            drawGridBackground(ctx, width, height);
+
+            // Aura Pulse
+            const pulse = 1 + Math.sin(frame * 0.05) * 0.1;
+            const auraGradient = ctx.createRadialGradient(width / 2, height / 2, 30 * pulse, width / 2, height / 2, 120 * pulse);
+            auraGradient.addColorStop(0, 'rgba(6, 182, 212, 0.4)');
+            auraGradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = auraGradient;
+            ctx.fillRect(0, 0, width, height);
+
+            // Floating Particles (Ambient)
+            if (Math.random() > 0.9) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: height + 10,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: -Math.random() * 2 - 1,
+                    life: 1.0,
+                    color: Math.random() > 0.5 ? '#22d3ee' : '#ffffff',
+                    size: Math.random() * 3
+                });
+            }
+
+            // Update & Draw Particles
             particles.forEach((p, i) => {
-                p.y -= 1; // float up
+                p.x += p.vx;
+                p.y += p.vy;
                 p.life -= 0.02;
-                ctx.fillStyle = p.color;
                 ctx.globalAlpha = p.life;
-                ctx.fillRect(p.x, p.y, 2, 2);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                // Draw as little squares for pixel beat
+                ctx.fillRect(p.x, p.y, p.size, p.size);
                 if (p.life <= 0) particles.splice(i, 1);
             });
             ctx.globalAlpha = 1.0;
@@ -62,8 +91,12 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             const centerX = Math.floor(width / (2 * PIXEL_SIZE)) * PIXEL_SIZE;
             const centerY = Math.floor(height / (2 * PIXEL_SIZE)) * PIXEL_SIZE;
 
-            // Idle Animation (Bounce)
+            // Bouncy Animation
             const bounce = Math.floor(Math.sin(frame * 0.1) * 4) * PIXEL_SIZE;
+
+            // Squash and Stretch Logic
+            // Scale Y slightly inversely to bounce for jelly effect
+            // We simulate this by manipulating coordinates since canvas scale is uniform
 
             ctx.save();
             ctx.translate(centerX, centerY + bounce);
@@ -81,12 +114,12 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                 drawMasterPet(ctx, pSpecies, frame);
             }
 
-            // Draw Face on top (common logic)
+            // Draw Face
             drawFace(ctx, frame, emotion, !!pet.isSleeping);
 
             ctx.restore();
 
-            // Scanlines Overlay
+            // Scanlines Overlay (CRTV Effect)
             drawScanlines(ctx, width, height, frame);
 
             frame++;

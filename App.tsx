@@ -137,6 +137,12 @@ const MainApp: React.FC = () => {
 
     // 4. Persistent Listener for Refresh/Changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
+      console.log(`[AuthDebug] Event: ${event}`, {
+        hasSession: !!session,
+        userId: session?.user?.id,
+        currentUserState: user?.id
+      });
+
       // Handle both explicit Sign In and Initial Session recovery
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
 
