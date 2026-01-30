@@ -59,7 +59,7 @@ export class AdminService {
 
     static async saveSettings(settings: GlobalSettings) {
         this.settingsCache = settings;
-        const { error } = await BaseService.invokeGateway('system/settings-save', { settings });
+        const { error } = await BaseService.invokeGateway('admin-save-settings', { settings });
         if (!error) {
             localStorage.setItem(this.CACHE_KEY, JSON.stringify(settings));
         }
@@ -120,7 +120,7 @@ export class AdminService {
 
     static async deleteUser(userId: string) {
         try {
-            const response = await BaseService.invokeGateway('admin-delete-user', { userId });
+            const response = await BaseService.invokeGateway('delete-user', { userId });
             if (response?.error) {
                 logger.error("Delete User Gateway Error", response.error);
                 throw new Error(response.error);
@@ -133,7 +133,7 @@ export class AdminService {
     }
 
     static async updateUserStatus(userId: string, status: 'ACTIVE' | 'BANNED' | 'TRIAL') {
-        const { error } = await BaseService.invokeGateway('users/status-update', { userId, status });
+        const { error } = await BaseService.invokeGateway('user-status', { userId, status });
         if (error) throw error;
         logger.info("User Status Updated", `ID: ${userId}, Status: ${status}`);
     }
@@ -141,14 +141,14 @@ export class AdminService {
 
 
     static async broadcastMessage(message: string) {
-        const data = await BaseService.invokeGateway('system/broadcast-public', { message });
+        const data = await BaseService.invokeGateway('broadcast', { message });
         this.settingsCache.broadcastMessage = message;
         logger.info("Global Broadcast Sent", message);
         return data;
     }
 
     static async broadcastDashboardMessage(message: string) {
-        const data = await BaseService.invokeGateway('system/broadcast-dashboard', { message });
+        const data = await BaseService.invokeGateway('dashboard-broadcast', { message });
         this.settingsCache.dashboardBroadcastMessage = message;
         logger.info("Dashboard Broadcast Sent", message);
         return data;
@@ -220,6 +220,12 @@ export class AdminService {
         });
 
         if (error || !data.user) throw new Error(error?.message || "Sign up failed");
+
+        // FIX: Ensure we have a session so RLS works for the subsequent sync
+        if (!data.session && password) {
+            const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+            if (loginError) console.warn("Auto-login after signup failed", loginError);
+        }
 
         // 2. Claim Admin Rights via RPC (using User ID directly, no session needed)
         if (masterKey) {

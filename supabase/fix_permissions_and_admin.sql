@@ -167,13 +167,29 @@ BEGIN
   END IF;
 
   -- Upsert the user as ADMIN. This fixes "Account created but no record" if trigger failed.
-  INSERT INTO public.users (id, email, role)
-  VALUES (p_user_id, (SELECT email FROM auth.users WHERE id = p_user_id), 'ADMIN')
-  ON CONFLICT (id) DO UPDATE SET role = 'ADMIN';
+  -- FIX: Provide 'name' explicitly to avoid NOT NULL constraint violation if default is missing.
+  INSERT INTO public.users (id, email, role, name)
+  VALUES (
+    p_user_id, 
+    (SELECT email FROM auth.users WHERE id = p_user_id), 
+    'ADMIN',
+    'Root Admin'
+  )
+  ON CONFLICT (id) DO UPDATE SET 
+    role = 'ADMIN',
+    name = COALESCE(public.users.name, 'Root Admin'); -- Keep existing name if present
 
   RETURN TRUE;
 END;
 $$;
+
+-- ==========================================
+-- 4.1 SCHEMA FIXES (Ensure Defaults)
+-- ==========================================
+-- Ensure 'name' has a default preventing future errors
+ALTER TABLE public.users ALTER COLUMN name SET DEFAULT 'Traveler';
+-- Optionally drop NOT NULL if it's too strict, but Default is better
+-- ALTER TABLE public.users ALTER COLUMN name DROP NOT NULL;
 
 -- ==========================================
 -- 5. OPTIMIZED RLS POLICIES (Consolidated)
@@ -289,4 +305,72 @@ ALTER TABLE public.system_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Unified System Logs" ON public.system_logs 
 FOR ALL USING (
     (select public.is_admin())
+);
+
+-- ==========================================
+-- 6. ADDITIONAL DATA PERSISTENCE POLICIES
+-- ==========================================
+
+-- JOURNALS
+create table if not exists public.journals (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.users(id) on delete cascade not null,
+  date timestamptz default now(),
+  content text
+);
+alter table public.journals enable row level security;
+
+DROP POLICY IF EXISTS "Unified Journals" ON public.journals;
+CREATE POLICY "Unified Journals" ON public.journals
+FOR ALL USING (
+    (select auth.uid()) = user_id OR (select public.is_admin())
+);
+
+-- MOODS
+create table if not exists public.moods (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.users(id) on delete cascade not null,
+  date timestamptz default now(),
+  mood text
+);
+alter table public.moods enable row level security;
+
+DROP POLICY IF EXISTS "Unified Moods" ON public.moods;
+CREATE POLICY "Unified Moods" ON public.moods
+FOR ALL USING (
+    (select auth.uid()) = user_id OR (select public.is_admin())
+);
+
+-- USER ART
+create table if not exists public.user_art (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.users(id) on delete cascade not null,
+  image_url text,
+  prompt text,
+  title text,
+  created_at timestamptz default now()
+);
+alter table public.user_art enable row level security;
+
+DROP POLICY IF EXISTS "Unified User Art" ON public.user_art;
+CREATE POLICY "Unified User Art" ON public.user_art
+FOR ALL USING (
+    (select auth.uid()) = user_id OR (select public.is_admin())
+);
+
+-- VOICE JOURNALS
+create table if not exists public.voice_journals (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.users(id) on delete cascade not null,
+  audio_url text,
+  duration_seconds integer,
+  title text,
+  created_at timestamptz default now()
+);
+alter table public.voice_journals enable row level security;
+
+DROP POLICY IF EXISTS "Unified Voice Journals" ON public.voice_journals;
+CREATE POLICY "Unified Voice Journals" ON public.voice_journals
+FOR ALL USING (
+    (select auth.uid()) = user_id OR (select public.is_admin())
 );
