@@ -11,30 +11,79 @@ DROP POLICY IF EXISTS "Admins can delete users" ON public.users;
 DROP POLICY IF EXISTS "Admins Full Access" ON public.users;
 DROP POLICY IF EXISTS "Users View Self" ON public.users;
 DROP POLICY IF EXISTS "Users Update Self" ON public.users;
+DROP POLICY IF EXISTS "Users view own" ON public.users;
+DROP POLICY IF EXISTS "Users update own" ON public.users;
 DROP POLICY IF EXISTS "Unified Users Select" ON public.users;
 DROP POLICY IF EXISTS "Unified Users Update" ON public.users;
+DROP POLICY IF EXISTS "Unified Users Insert" ON public.users;
+DROP POLICY IF EXISTS "Unified Users Delete" ON public.users;
+DROP POLICY IF EXISTS "Admins Delete Users" ON public.users;
+DROP POLICY IF EXISTS "Admins delete users" ON public.users; -- SPECIFIC FIX (lowercase)
+DROP POLICY IF EXISTS "Users can delete own users" ON public.users; -- SPECIFIC FIX
+DROP POLICY IF EXISTS "Admins view all" ON public.users; -- SPECIFIC FIX
+DROP POLICY IF EXISTS "Admins update all" ON public.users; -- SPECIFIC FIX
 
 DROP POLICY IF EXISTS "Users view own garden" ON public.garden_log;
 DROP POLICY IF EXISTS "Users update own garden" ON public.garden_log;
 DROP POLICY IF EXISTS "Users modify own garden" ON public.garden_log;
 DROP POLICY IF EXISTS "Admins manage gardens" ON public.garden_log;
 DROP POLICY IF EXISTS "User Garden" ON public.garden_log;
+DROP POLICY IF EXISTS "Users Manage Own Garden" ON public.garden_log;
+DROP POLICY IF EXISTS "Admins Manage All Gardens" ON public.garden_log;
+DROP POLICY IF EXISTS "Unified Garden Access" ON public.garden_log;
 
 DROP POLICY IF EXISTS "Users view own pet" ON public.pocket_pets;
 DROP POLICY IF EXISTS "Users create own pet" ON public.pocket_pets;
 DROP POLICY IF EXISTS "Users update own pet" ON public.pocket_pets;
 DROP POLICY IF EXISTS "Admins manage pets" ON public.pocket_pets;
 DROP POLICY IF EXISTS "User Pocket Pets" ON public.pocket_pets;
+DROP POLICY IF EXISTS "Users Manage Own Pets" ON public.pocket_pets;
 DROP POLICY IF EXISTS "Users manage own pets" ON public.pocket_pets;
+DROP POLICY IF EXISTS "Admins Manage All Pets" ON public.pocket_pets;
+DROP POLICY IF EXISTS "Unified Pet Access" ON public.pocket_pets;
 
 DROP POLICY IF EXISTS "Users view own tx" ON public.transactions;
 DROP POLICY IF EXISTS "Admins view all tx" ON public.transactions;
 DROP POLICY IF EXISTS "User/Admin Transactions" ON public.transactions;
+DROP POLICY IF EXISTS "Users View Own Transactions" ON public.transactions;
+DROP POLICY IF EXISTS "Admins View All Transactions" ON public.transactions;
+DROP POLICY IF EXISTS "Unified Transaction Access" ON public.transactions;
 
 DROP POLICY IF EXISTS "Admins view logs" ON public.system_logs;
 DROP POLICY IF EXISTS "Admins create logs" ON public.system_logs;
 DROP POLICY IF EXISTS "Admin Select Logs" ON public.system_logs;
 DROP POLICY IF EXISTS "System Insert Logs" ON public.system_logs;
+DROP POLICY IF EXISTS "Admins Manage Logs" ON public.system_logs;
+DROP POLICY IF EXISTS "Unified System Logs" ON public.system_logs;
+DROP POLICY IF EXISTS "Admin Delete Logs" ON public.system_logs; -- SPECIFIC FIX
+DROP POLICY IF EXISTS "Admin Update Logs" ON public.system_logs; -- SPECIFIC FIX
+
+-- ==========================================
+-- 1.1 CLEANUP UNUSED INDEXES
+-- ==========================================
+DROP INDEX IF EXISTS public.idx_users_email;
+DROP INDEX IF EXISTS public.idx_breath_logs_user_id;
+DROP INDEX IF EXISTS public.idx_feedback_user_id;
+DROP INDEX IF EXISTS public.idx_session_memories_user_id;
+DROP INDEX IF EXISTS public.idx_time_capsules_user_id;
+DROP INDEX IF EXISTS public.idx_gift_cards_created_by;
+DROP INDEX IF EXISTS public.idx_gift_cards_redeemed_by;
+DROP INDEX IF EXISTS public.idx_public_wisdom_user_id;
+DROP INDEX IF EXISTS public.idx_safety_alerts_user_id;
+DROP INDEX IF EXISTS public.idx_user_achievements_achievement_id;
+
+-- ==========================================
+-- 1.2 ADD MISSING INDEXES (Fixing "Unindexed foreign keys")
+-- ==========================================
+CREATE INDEX IF NOT EXISTS idx_breath_logs_user_id ON public.breath_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_feedback_user_id ON public.feedback(user_id);
+CREATE INDEX IF NOT EXISTS idx_gift_cards_created_by ON public.gift_cards(created_by);
+CREATE INDEX IF NOT EXISTS idx_gift_cards_redeemed_by ON public.gift_cards(redeemed_by);
+CREATE INDEX IF NOT EXISTS idx_public_wisdom_user_id ON public.public_wisdom(user_id);
+CREATE INDEX IF NOT EXISTS idx_safety_alerts_user_id ON public.safety_alerts(user_id);
+CREATE INDEX IF NOT EXISTS idx_session_memories_user_id ON public.session_memories(user_id);
+CREATE INDEX IF NOT EXISTS idx_time_capsules_user_id ON public.time_capsules(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_achievements_achievement_id ON public.user_achievements(achievement_id);
 
 
 -- ==========================================
@@ -48,7 +97,13 @@ SECURITY DEFINER
 SET search_path = public -- Fixes Security Warning
 AS $$
 BEGIN
-  RETURN (SELECT role FROM public.users WHERE id = auth.uid()) = 'ADMIN';
+  -- Check if the current user has the ADMIN role
+  RETURN EXISTS (
+      SELECT 1 
+      FROM public.users 
+      WHERE id = (select auth.uid()) 
+      AND role = 'ADMIN'
+  );
 END;
 $$;
 
@@ -90,6 +145,7 @@ BEGIN
 END;
 $$;
 
+-- Re-create the trigger to ensure it's active
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
@@ -110,6 +166,7 @@ BEGIN
     RETURN FALSE;
   END IF;
 
+  -- Upsert the user as ADMIN. This fixes "Account created but no record" if trigger failed.
   INSERT INTO public.users (id, email, role)
   VALUES (p_user_id, (SELECT email FROM auth.users WHERE id = p_user_id), 'ADMIN')
   ON CONFLICT (id) DO UPDATE SET role = 'ADMIN';
@@ -119,13 +176,37 @@ END;
 $$;
 
 -- ==========================================
--- 5. OPTIMIZED RLS POLICIES (Fixing "Auth RLS Initialization Plan")
+-- 5. OPTIMIZED RLS POLICIES (Consolidated)
 -- ==========================================
 
--- USERS
-CREATE POLICY "Users View Self" ON public.users FOR SELECT USING ((select auth.uid()) = id);
-CREATE POLICY "Users Update Self" ON public.users FOR UPDATE USING ((select auth.uid()) = id);
-CREATE POLICY "Admins Full Access" ON public.users FOR ALL USING (public.is_admin());
+-- USERS Table
+-- Allow users to view themselves OR admins to view everyone
+CREATE POLICY "Unified Users Select" ON public.users 
+FOR SELECT USING (
+    (select auth.uid()) = id 
+    OR 
+    (select public.is_admin())
+);
+
+-- Allow users to update themselves OR admins to update everyone
+CREATE POLICY "Unified Users Update" ON public.users 
+FOR UPDATE USING (
+    (select auth.uid()) = id 
+    OR 
+    (select public.is_admin())
+);
+
+-- Allow users to insert their own profile (Critical for UserService self-repair)
+CREATE POLICY "Unified Users Insert" ON public.users 
+FOR INSERT WITH CHECK (
+    (select auth.uid()) = id
+);
+
+-- Admins can delete users (Users cannot delete themselves via API for safety, handled by Admin)
+CREATE POLICY "Admins Delete Users" ON public.users 
+FOR DELETE USING (
+    (select public.is_admin())
+);
 
 -- GARDEN LOG
 CREATE TABLE IF NOT EXISTS public.garden_log (
@@ -138,8 +219,13 @@ CREATE TABLE IF NOT EXISTS public.garden_log (
 );
 ALTER TABLE public.garden_log ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users Manage Own Garden" ON public.garden_log FOR ALL USING ((select auth.uid()) = user_id);
-CREATE POLICY "Admins Manage All Gardens" ON public.garden_log FOR ALL USING (public.is_admin());
+-- Combined policy: Users manage own, Admins manage all
+CREATE POLICY "Unified Garden Access" ON public.garden_log 
+FOR ALL USING (
+    (select auth.uid()) = user_id 
+    OR 
+    (select public.is_admin())
+);
 
 -- POCKET PETS
 CREATE TABLE IF NOT EXISTS public.pocket_pets (
@@ -160,8 +246,13 @@ CREATE TABLE IF NOT EXISTS public.pocket_pets (
 );
 ALTER TABLE public.pocket_pets ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users Manage Own Pets" ON public.pocket_pets FOR ALL USING ((select auth.uid()) = user_id);
-CREATE POLICY "Admins Manage All Pets" ON public.pocket_pets FOR ALL USING (public.is_admin());
+-- Combined policy: Users manage own, Admins manage all
+CREATE POLICY "Unified Pet Access" ON public.pocket_pets 
+FOR ALL USING (
+    (select auth.uid()) = user_id 
+    OR 
+    (select public.is_admin())
+);
 
 -- TRANSACTIONS
 CREATE TABLE IF NOT EXISTS public.transactions (
@@ -176,8 +267,13 @@ CREATE TABLE IF NOT EXISTS public.transactions (
 );
 ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users View Own Transactions" ON public.transactions FOR SELECT USING ((select auth.uid()) = user_id);
-CREATE POLICY "Admins View All Transactions" ON public.transactions FOR SELECT USING (public.is_admin());
+-- Combined policy for viewing transactions
+CREATE POLICY "Unified Transaction Access" ON public.transactions 
+FOR SELECT USING (
+    (select auth.uid()) = user_id 
+    OR 
+    (select public.is_admin())
+);
 
 -- SYSTEM LOGS
 CREATE TABLE IF NOT EXISTS public.system_logs (
@@ -189,4 +285,8 @@ CREATE TABLE IF NOT EXISTS public.system_logs (
 );
 ALTER TABLE public.system_logs ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Admins Manage Logs" ON public.system_logs FOR ALL USING (public.is_admin());
+-- Admins only
+CREATE POLICY "Unified System Logs" ON public.system_logs 
+FOR ALL USING (
+    (select public.is_admin())
+);

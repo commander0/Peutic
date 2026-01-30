@@ -228,9 +228,13 @@ export class AdminService {
                 p_master_key: masterKey
             });
 
-            if (claimError || !claimed) {
-                console.warn("Account created but Admin Claim failed", claimError);
-                throw new Error("Account created but Admin Claim failed. Key may be invalid.");
+            if (claimError) {
+                console.error("Admin Claim RPC Error", claimError);
+                throw new Error(`Admin Claim Failed (Database Error): ${claimError.message}`);
+            }
+
+            if (!claimed) {
+                throw new Error("Admin Claim Failed: Invalid Master Key.");
             }
         }
 
