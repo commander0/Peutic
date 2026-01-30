@@ -125,12 +125,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     loop
                     muted
                     playsInline
-                    className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center opacity-70 dark:opacity-50 mix-blend-multiply dark:mix-blend-overlay filter blur-[1px]"
+                    className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center opacity-60 dark:opacity-40 mix-blend-multiply dark:mix-blend-overlay filter blur-[1px]"
                 >
                     <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
                 </video>
-                <div className="absolute inset-0 bg-yellow-400/40 pointer-events-none mix-blend-overlay dark:bg-yellow-500/20 dark:mix-blend-color-dodge"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-yellow-100/95 via-yellow-50/60 to-yellow-50/30 dark:from-black dark:via-black/70 dark:to-transparent"></div>
+                <div className="absolute inset-0 bg-yellow-400/30 pointer-events-none mix-blend-overlay dark:bg-yellow-600/10 dark:mix-blend-color-dodge"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#FEF3C7] via-[#FFFBEB]/80 to-white/60 dark:from-black dark:via-gray-900/90 dark:to-black/40"></div>
+                {/* Vintage Texture */}
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-[0.03] dark:opacity-[0.05] pointer-events-none"></div>
             </div>
             <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-2 bg-[#FFFBEB]/80 dark:bg-black/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-3 md:py-6 bg-transparent border-transparent'}`}>
                 <div className="max-w-7xl mx-auto px-2 md:px-8 flex justify-between items-center">

@@ -1,18 +1,14 @@
-components/AdminLogin.tsx(21,25): error TS6133: 'setIsVerifying' is declared but its value is never read.
+﻿components/AdminLogin.tsx(21,25): error TS6133: 'setIsVerifying' is declared but its value is never read.
 components/CheckInModal.tsx(2,41): error TS6133: 'Coffee' is declared but its value is never read.
-components/pocket/AnimaView.tsx(7,16): error TS2305: Module '"../../types"' has no exported member 'Anima'.
-components/pocket/AnimaView.tsx(67,134): error TS2345: Argument of type 'string' is not assignable to parameter of type '"Holo-Hamu" | "Digi-Dino" | "Neo-Shiba" | "Zen-Sloth"'.
-components/pocket/LuminaView.tsx(68,134): error TS2345: Argument of type 'string' is not assignable to parameter of type '"Holo-Hamu" | "Digi-Dino" | "Neo-Shiba" | "Zen-Sloth"'.
+components/pocket/AnimaView.tsx(67,84): error TS2345: Argument of type 'string' is not assignable to parameter of type '"Holo-Hamu" | "Digi-Dino" | "Neo-Shiba" | "Zen-Sloth"'.
+components/pocket/LuminaView.tsx(68,84): error TS2345: Argument of type 'string' is not assignable to parameter of type '"Holo-Hamu" | "Digi-Dino" | "Neo-Shiba" | "Zen-Sloth"'.
 components/pocket/PetCanvas.tsx(30,15): error TS6133: 'spawnParticles' is declared but its value is never read.
 components/pocket/PetCanvas.tsx(150,75): error TS6133: 'frame' is declared but its value is never read.
 components/pocket/PetCanvas.tsx(159,74): error TS6133: 'frame' is declared but its value is never read.
-components/pocket/PocketPetView.tsx(7,16): error TS2305: Module '"../../types"' has no exported member 'PocketPet'.
 components/retention/BookOfYouView.tsx(2,32): error TS6133: 'Star' is declared but its value is never read.
 components/retention/BookOfYouView.tsx(17,12): error TS6133: 'currentPage' is declared but its value is never read.
 components/retention/BookOfYouView.tsx(17,25): error TS6133: 'setCurrentPage' is declared but its value is never read.
 components/retention/BookOfYouView.tsx(33,11): error TS6133: 'totalPages' is declared but its value is never read.
 components/sanctuary/ObservatoryView.tsx(1,27): error TS6133: 'useEffect' is declared but its value is never read.
 components/sanctuary/ObservatoryView.tsx(15,24): error TS6133: 'setSleepHours' is declared but its value is never read.
-components/sanctuary/ObservatoryView.tsx(26,13): error TS1345: An expression of type 'void' cannot be tested for truthiness.
-components/sanctuary/ObservatoryView.tsx(26,52): error TS2554: Expected 1 arguments, but got 2.
 services/petService.ts(81,20): error TS6133: 'mapAnimaBase' is declared but its value is never read.

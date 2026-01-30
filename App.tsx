@@ -11,6 +11,7 @@ import StaticPages from './components/StaticPages';
 import { UserService } from './services/userService';
 import { AdminService } from './services/adminService';
 import { supabase } from './services/supabaseClient';
+import { logger } from './services/logger';
 import BookOfYou from './components/wisdom/BookOfYou';
 
 
@@ -43,7 +44,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Critical Application Error:", error, errorInfo);
+    logger.error("Critical Application Error", "ErrorBoundary Caught Exception", { error, info: errorInfo });
     AdminService.logSystemEvent('ERROR', 'App Crash', error.message);
   }
 
@@ -88,8 +89,8 @@ const MainApp: React.FC = () => {
       try {
         // 1. Run Core Initialization in Parallel
         const [restored, settings] = await Promise.all([
-          UserService.restoreSession().catch(e => { console.warn("Session restore failed", e); return null; }),
-          AdminService.syncGlobalSettings().catch(e => { console.warn("Settings sync failed", e); return { maintenanceMode: false }; })
+          UserService.restoreSession().catch(e => { logger.warn("Session restore failed", e.message); return null; }),
+          AdminService.syncGlobalSettings().catch(e => { logger.warn("Settings sync failed", e.message); return { maintenanceMode: false }; })
         ]);
 
         let activeUser = restored;
@@ -145,6 +146,15 @@ const MainApp: React.FC = () => {
 
       // Handle both explicit Sign In and Initial Session recovery
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
+
+        // CONNECT LOGGER TO DB (Now that we have a potential session/context)
+        // We use a loose coupling to avoid circular dependency issues in services
+        (window as any).PersistLog = (type: any, eventName: string, details: string) => {
+          // Only log critical/security events or if we are in a rich logging mode
+          if (type === 'ERROR' || type === 'SECURITY' || type === 'WARNING') {
+            AdminService.logSystemEvent(type, eventName, details).catch(e => console.warn("Log fail", e));
+          }
+        };
 
         // Prevent unnecessary re-sync if we already have the correct user in state
         if (user && user.id === session.user.id) return;

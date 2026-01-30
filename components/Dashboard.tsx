@@ -46,6 +46,7 @@ const BookOfYouView = lazy(() => import('./retention/BookOfYouView'));
 const LuminaView = lazy(() => import('./pocket/LuminaView'));
 const ObservatoryView = lazy(() => import('./sanctuary/ObservatoryView'));
 const DojoView = lazy(() => import('./sanctuary/DojoView'));
+import { CheckInModal } from './CheckInModal';
 
 
 import EmergencyOverlay from './safety/EmergencyOverlay';
@@ -142,6 +143,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [paymentError, setPaymentError] = useState<string | undefined>(undefined);
     const [showBreathing, setShowBreathing] = useState(false);
     const [showProfile, setShowProfile] = useState(false);
+    const [showCheckIn, setShowCheckIn] = useState(false);
 
     const [showGrounding, setShowGrounding] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -192,7 +194,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     useEffect(() => {
         checkMoodPulse();
         loadVoiceJournals();
-    }, []);
+
+        // CHECK-IN LOGIC: Once per day
+        if (user) {
+            const lastCheckIn = localStorage.getItem(`last_checkin_${user.id}`);
+            const today = new Date().toDateString();
+            if (lastCheckIn !== today) {
+                setTimeout(() => setShowCheckIn(true), 1500); // 1.5s delay for smooth entry
+            }
+        }
+    }, [user]);
 
     const checkMoodPulse = async () => {
         if (!user) return;
@@ -577,12 +588,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         setNotifications([]);
     };
 
+    const isDefaultTheme = theme === 'default' || theme === 'amber';
+
     return (
         <div
-            className="min-h-screen transition-all duration-1000 font-sans text-[var(--color-text-base)]"
+            className={`min-h-screen transition-all duration-1000 font-sans text-[var(--color-text-base)] ${(!isDark && isDefaultTheme) ? 'bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-yellow-200 via-orange-50 to-white' : ''}`}
             style={{
-                backgroundColor: 'var(--color-bg-base)',
-                backgroundImage: 'var(--color-bg-gradient)'
+                backgroundColor: (!isDark && isDefaultTheme) ? undefined : 'var(--color-bg-base)',
+                backgroundImage: (!isDark && isDefaultTheme) ? undefined : 'var(--color-bg-gradient)'
             }}
         >
             {mood && <WeatherEffect type={mood} />}
@@ -1278,6 +1291,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     </Suspense>
                 )
             }
+            {
+                showDojo && (
+                    <Suspense fallback={null}>
+                        <DojoView user={dashboardUser} onClose={() => setShowDojo(false)} />
+                    </Suspense>
+                )
+            }
+
+            <CheckInModal
+                isOpen={showCheckIn}
+                onClose={() => {
+                    setShowCheckIn(false);
+                    if (user) localStorage.setItem(`last_checkin_${user.id}`, new Date().toDateString());
+                }}
+                userName={user?.name || 'Friend'}
+            />
         </div >
     );
 };

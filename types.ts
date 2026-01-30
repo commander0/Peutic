@@ -221,3 +221,6 @@ export interface UserAchievement {
   unlocked_at: string;
   achievement?: Achievement;
 }
+
+export type Anima = Lumina;
+export type PocketPet = Lumina;
