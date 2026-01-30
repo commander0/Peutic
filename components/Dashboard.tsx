@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { User, Companion, Transaction, VoiceJournalEntry, GardenState, Lumina } from '../types';
 import { LanguageSelector } from './common/LanguageSelector';
 import { useLanguage } from './common/LanguageContext';
@@ -116,7 +116,15 @@ CollapsibleSection.displayName = 'CollapsibleSection';
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession }) => {
     const { lang, setLang, t } = useLanguage();
     const { theme, mode, setTheme, toggleMode } = useTheme();
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'inner_sanctuary' | 'history' | 'settings'>('inner_sanctuary');
+
+    // STRICT ADMIN REDIRECT
+    useEffect(() => {
+        if (user && user.role === 'ADMIN') {
+            navigate('/admin/dashboard', { replace: true });
+        }
+    }, [user, navigate]);
 
     // Derived boolean for simple UI toggles
     const isDark = mode === 'dark';

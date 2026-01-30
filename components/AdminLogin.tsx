@@ -53,21 +53,15 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         e.preventDefault();
         setError('');
 
-        // Check fresh lockout status
         const currentLockout = await AdminService.getAdminLockoutStatus();
-        if (currentLockout > 0) {
-            setLockout(currentLockout);
-            setError(`System Locked. Try again in ${currentLockout} minutes.`);
-            return;
-        }
-
+        if (currentLockout > 0) return setLockout(currentLockout);
 
         setLoading(true);
 
         try {
             const normalizedEmail = email.toLowerCase().trim();
 
-            // 1. AUTHENTICATE FIRST (Required for RLS)
+            // 1. STRICT AUTH
             const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
                 email: normalizedEmail,
                 password: password
@@ -75,78 +69,40 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
 
             if (authError) {
                 await AdminService.recordAdminFailure();
-                const newLock = await AdminService.getAdminLockoutStatus();
-                if (newLock > 0) setLockout(newLock);
-
-                if (authError.message.includes("Invalid login credentials")) {
-                    throw new Error("Account not found or wrong password. If this is your first time, please use 'Create Admin Access' below.");
-                }
-
-                // --- SELF-HEALING: EMAIL NOT CONFIRMED ---
                 if (authError.message.includes("Email not confirmed")) {
-                    setIsVerifying(true);
-                    // Attempt backend force verification
+                    // Try auto-verify if possible (Admin feature)
                     const verified = await AdminService.forceVerifyEmail(normalizedEmail);
-                    if (verified) {
-                        setIsVerifying(false);
-                        // Retry Login Immediately
-                        const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
-                            email: normalizedEmail,
-                            password: password
-                        });
-                        if (retryError || !retryData.user) {
-                            throw new Error("Auto-verification succeeded, but login still failed. Please try again.");
-                        }
-                        // Success fall-through
-                        authData.user = retryData.user;
-                    } else {
-                        setIsVerifying(false);
-                        throw new Error("Your email address has not been verified yet. Please check your inbox for the confirmation link.");
-                    }
+                    if (!verified) throw new Error("Email not confirmed.");
                 } else {
-                    throw new Error(authError.message);
+                    throw new Error("Invalid credentials.");
                 }
             }
 
-            if (!authData?.user) throw new Error("Auth failed");
+            if (!authData.user) throw new Error("Authentication failed.");
 
-            // 2. FETCH PROFILE (Now authorized)
-            const user = await UserService.syncUser(authData.user.id);
+            // 2. STRICT ROLE CHECK (Metadata is source of truth)
+            const role = authData.user.app_metadata?.role || authData.user.user_metadata?.role;
 
-            if (!user) {
-                // Fallback: If auth succeeded but DB profile is missing, try to repair
-                try {
-                    const repaired = await UserService.createUser(
-                        authData.user.user_metadata.full_name || 'Admin',
-                        normalizedEmail,
-                        password
-                    );
-                    if (repaired && repaired.role === UserRole.ADMIN) {
-                        onLogin(repaired);
-                        return;
-                    }
-                    throw new Error("Account exists but does not have Admin privileges.");
-                } catch (repairErr: any) {
-                    console.error("Repair failed", repairErr);
-                    throw repairErr;
-                }
-            }
-
-            if (user.role === UserRole.ADMIN) {
-                AdminService.resetAdminFailure();
-                onLogin(user);
-            } else {
+            if (role !== UserRole.ADMIN) {
+                await supabase.auth.signOut();
                 await AdminService.recordAdminFailure();
-                setError("Access Denied. This account is not an Administrator.");
-                await UserService.logout();
+                throw new Error("ACCESS DENIED: Not an Administrator.");
             }
+
+            // 3. SUCCESS - Reset Failures & Proceed
+            AdminService.resetAdminFailure();
+
+            // Sync user profile for good measure
+            const user = await UserService.syncUser(authData.user.id);
+            if (user) onLogin(user);
+            else throw new Error("Admin Profile Sync Failed.");
 
         } catch (e: any) {
-            console.error(e);
-            setError(e.message || "Connection Error.");
+            console.error("Admin Login Error:", e);
+            setError(e.message || "Login failed.");
+            await AdminService.recordAdminFailure();
         } finally {
             setLoading(false);
-            setIsVerifying(false);
         }
     };
 

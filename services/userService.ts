@@ -355,17 +355,10 @@ export class UserService {
     }
 
     static async saveArt(entry: ArtEntry) {
-        console.log("UserService: Saving art directly to Supabase...", entry.id);
-        const { error } = await supabase.from('user_art').insert({
-            id: entry.id || crypto.randomUUID(),
-            user_id: entry.userId,
-            image_url: entry.imageUrl,
-            prompt: entry.prompt,
-            title: entry.title,
-            created_at: entry.createdAt || new Date().toISOString()
-        });
+        console.log("UserService: Saving art via API Gateway...", entry.id);
+        const { error } = await BaseService.invokeGateway('save-wisdom-art', { artEntry: entry });
         if (error) {
-            logger.error("Save Art Failed", entry.userId, error);
+            logger.error("Save Art Failed via Gateway", entry.userId, error);
             throw error;
         }
     }
@@ -553,6 +546,32 @@ export class UserService {
 
     static async sendKeepAlive(userId: string) {
         await BaseService.invokeGateway('session-keepalive', { userId });
+    }
+
+
+    static async addBalance(amount: number, reason: string): Promise<boolean> {
+        const user = this.getUser();
+        if (!user) return false;
+
+        // Optimistic Update
+        const previousBalance = user.balance;
+        user.balance = (user.balance || 0) + amount;
+        this.saveUserToCache(user);
+
+        try {
+            await BaseService.invokeGateway('process-topup', {
+                userId: user.id,
+                amount: amount,
+                cost: 0,
+                description: reason
+            });
+            return true;
+        } catch (e) {
+            console.error("Add Balance Failed", e);
+            user.balance = previousBalance;
+            this.saveUserToCache(user);
+            return false;
+        }
     }
 
     static async deductBalance(amount: number, reason: string = "Game Action"): Promise<boolean> {

@@ -402,6 +402,27 @@ serve(async (req) => {
                 return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
             }
 
+            // ==========================================
+            // WISDOM ART (Bypass RLS)
+            // ==========================================
+            case 'save-wisdom-art': {
+                const { artEntry } = payload;
+                const caller = await getAuthUser();
+                if (!caller || caller.id !== artEntry.userId) throw new Error("Unauthorized");
+
+                const { error } = await supabaseClient.from('user_art').insert({
+                    id: artEntry.id,
+                    user_id: artEntry.userId,
+                    image_url: artEntry.imageUrl,
+                    prompt: artEntry.prompt,
+                    title: artEntry.title || "Wisdom Card",
+                    created_at: artEntry.createdAt || new Date().toISOString()
+                });
+
+                if (error) throw error;
+                return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+            }
+
             case 'admin-update-companion': {
                 const { companion } = payload;
                 const { error } = await supabaseClient.from('companions').update({ ...companion }).eq('id', companion.id);
