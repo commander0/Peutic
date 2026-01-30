@@ -19,31 +19,70 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Disable smoothing for crisp pixels
         ctx.imageSmoothingEnabled = false;
 
         let frame = 0;
         let animationId: number;
+        const particles: { x: number, y: number, life: number, color: string }[] = [];
 
         const render = () => {
-            // clear
-            ctx.fillStyle = '#1a1b26'; // Dark retro background
+            // Background
+            ctx.fillStyle = '#0f172a'; // Deep Space Blue
             ctx.fillRect(0, 0, width, height);
 
-            // Grid / CRT Effect Background
+            // Grid Background Effect (Retro)
             drawGridBackground(ctx, width, height);
+
+            // Dramatic Aura (Glowing Gradient behind pet)
+            const gradient = ctx.createRadialGradient(width / 2, height / 2, 20, width / 2, height / 2, 100);
+            gradient.addColorStop(0, 'rgba(6, 182, 212, 0.4)'); // Cyan Aura
+            gradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+
+            // Particles
+            if (Math.random() > 0.8) {
+                particles.push({
+                    x: width / 2 + (Math.random() - 0.5) * 100,
+                    y: height / 2 + (Math.random() - 0.5) * 100,
+                    life: 1.0,
+                    color: Math.random() > 0.5 ? '#22d3ee' : '#ffffff'
+                });
+            }
+            particles.forEach((p, i) => {
+                p.y -= 1; // float up
+                p.life -= 0.02;
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life;
+                ctx.fillRect(p.x, p.y, 2, 2);
+                if (p.life <= 0) particles.splice(i, 1);
+            });
+            ctx.globalAlpha = 1.0;
 
             const centerX = Math.floor(width / (2 * PIXEL_SIZE)) * PIXEL_SIZE;
             const centerY = Math.floor(height / (2 * PIXEL_SIZE)) * PIXEL_SIZE;
 
-            // Wobble / Animation
-            const bounce = Math.floor(Math.sin(frame * 0.1) * 2) * PIXEL_SIZE;
+            // Idle Animation (Bounce)
+            const bounce = Math.floor(Math.sin(frame * 0.1) * 4) * PIXEL_SIZE;
 
             ctx.save();
             ctx.translate(centerX, centerY + bounce);
 
-            // Draw Pet (Pixel Style)
-            drawPixelPet(ctx, pet.species, frame, emotion, pet.isSleeping, pet.level);
+            // EVOLUTION LOGIC
+            const pSpecies = pet.species || 'Neo-Shiba';
+
+            if (pet.level < 3) {
+                drawEgg(ctx);
+            } else if (pet.level < 6) {
+                drawBabyBlob(ctx, pSpecies, frame);
+            } else if (pet.level < 10) {
+                drawTeenPet(ctx, pSpecies, frame);
+            } else {
+                drawMasterPet(ctx, pSpecies, frame);
+            }
+
+            // Draw Face on top (common logic)
+            drawFace(ctx, frame, emotion, !!pet.isSleeping);
 
             ctx.restore();
 
@@ -58,61 +97,76 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
         return () => cancelAnimationFrame(animationId);
     }, [pet, width, height, emotion, trick]);
 
-    // --- PIXEL HELPERS ---
+    // --- SPRITE HELPERS ---
     const drawRect = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string) => {
         ctx.fillStyle = color;
         ctx.fillRect(x * PIXEL_SIZE, y * PIXEL_SIZE, w * PIXEL_SIZE, h * PIXEL_SIZE);
     };
 
-    const drawPixelPet = (ctx: CanvasRenderingContext2D, species: string, frame: number, emotion: string, isSleeping: boolean, level: number) => {
-        // Base Colors
-        const primary = getSpeciesColor(species, level);
-        const secondary = '#ffffff';
-        const outline = '#000000';
+    // --- EVOLUTION STAGE DRAWING FUNCTIONS ---
 
-        // Generic Body Shape (8-bit blob)
-        // Outline
-        drawRect(ctx, -8, -8, 16, 16, outline);
-        // Body Fill
-        drawRect(ctx, -7, -7, 14, 14, primary);
-        // Belly
-        drawRect(ctx, -4, 0, 8, 6, secondary);
+    const drawEgg = (ctx: CanvasRenderingContext2D) => {
+        // Simple Egg Shape
+        drawRect(ctx, -6, -8, 12, 16, '#f8fafc'); // White Shell
+        drawRect(ctx, -4, -6, 2, 2, '#e2e8f0');   // Shading
+        // Cracks or Spots
+        drawRect(ctx, 0, -2, 2, 2, '#38bdf8');
+        drawRect(ctx, -2, 4, 2, 2, '#38bdf8');
+    };
 
-        // Species specifics
+    const drawBabyBlob = (ctx: CanvasRenderingContext2D, species: string, frame: number) => {
+        const color = getSpeciesColor(species, 1);
+        // Round Body
+        drawRect(ctx, -8, -6, 16, 14, color);
+        // Little nub feet
+        drawRect(ctx, -6, 8, 4, 3, color);
+        drawRect(ctx, 2, 8, 4, 3, color);
+    };
+
+    const drawTeenPet = (ctx: CanvasRenderingContext2D, species: string, frame: number) => {
+        const color = getSpeciesColor(species, 6);
+        // Larger Body
+        drawRect(ctx, -10, -10, 20, 18, color);
+
         if (species === 'Neo-Shiba') {
             // Ears
-            drawRect(ctx, -7, -11, 3, 3, primary); // Left Ear
-            drawRect(ctx, 4, -11, 3, 3, primary);  // Right Ear
-            drawRect(ctx, -7, -11, 3, 1, outline); // Ear tips outline
-            drawRect(ctx, 4, -11, 3, 1, outline);
+            drawRect(ctx, -8, -14, 4, 4, color);
+            drawRect(ctx, 4, -14, 4, 4, color);
         } else if (species === 'Digi-Dino') {
             // Tail
-            drawRect(ctx, 6, 0, 6, 4, primary);
-            drawRect(ctx, 11, -2, 2, 2, outline); // Spike
-        } else if (species === 'Holo-Hamu') {
-            // Ears (Rounder)
-            drawRect(ctx, -8, -10, 4, 3, primary);
-            drawRect(ctx, 4, -10, 4, 3, primary);
+            drawRect(ctx, 10, -2, 6, 4, color);
         }
+    };
 
-        // Face
-        drawFace(ctx, frame, emotion, isSleeping);
+    const drawMasterPet = (ctx: CanvasRenderingContext2D, species: string, frame: number) => {
+        const color = getSpeciesColor(species, 10);
+        // Majestic Body
+        drawRect(ctx, -14, -14, 28, 24, color);
+
+        // Armor / Details
+        drawRect(ctx, -6, -16, 12, 4, '#fbbf24'); // Gold Crown/Headplate
+        drawRect(ctx, -10, 0, 4, 8, '#ffffff'); // Chest markings
+        drawRect(ctx, 6, 0, 4, 8, '#ffffff');
+
+        // Cape/Aura wings
+        if (Math.sin(frame * 0.2) > 0) {
+            drawRect(ctx, -18, -10, 4, 12, '#a855f7'); // Wing L
+            drawRect(ctx, 14, -10, 4, 12, '#a855f7');  // Wing R
+        }
     };
 
     const getSpeciesColor = (species: string, level: number) => {
-        // High level = more neon
         const isApex = level >= 10;
         switch (species) {
-            case 'Neo-Shiba': return isApex ? '#fbbf24' : '#d97706';
-            case 'Digi-Dino': return isApex ? '#4ade80' : '#16a34a';
-            case 'Holo-Hamu': return isApex ? '#f472b6' : '#db2777';
-            case 'Zen-Sloth': return isApex ? '#e2e8f0' : '#94a3b8';
+            case 'Neo-Shiba': return isApex ? '#d97706' : '#fbbf24'; // Gold/Orange
+            case 'Digi-Dino': return isApex ? '#15803d' : '#4ade80'; // Green
+            case 'Holo-Hamu': return isApex ? '#db2777' : '#f472b6'; // Pink
             default: return '#fbbf24';
         }
     };
 
     const drawFace = (ctx: CanvasRenderingContext2D, frame: number, emotion: string, isSleeping: boolean) => {
-        const eyeColor = '#000000';
+        const eyeColor = '#0f172a'; // Dark Navy for eyes
 
         if (isSleeping) {
             // Zzz lines
@@ -120,11 +174,8 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             drawRect(ctx, 2, -2, 3, 1, eyeColor);
             // Zzz text floating
             if (Math.floor(frame / 30) % 2 === 0) {
-                drawRect(ctx, 6, -12, 1, 1, '#ffffff'); // primitive Z dot
-                drawRect(ctx, 7, -13, 1, 1, '#ffffff');
-                drawRect(ctx, 8, -12, 1, 1, '#ffffff');
-                drawRect(ctx, 6, -10, 3, 1, '#ffffff'); // Base
-                drawRect(ctx, 6, -14, 3, 1, '#ffffff'); // Top
+                drawRect(ctx, 10, -12, 1, 1, '#ffffff');
+                drawRect(ctx, 12, -14, 1, 1, '#ffffff');
             }
             return;
         }
@@ -158,7 +209,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
     };
 
     const drawGridBackground = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
-        ctx.strokeStyle = 'rgba(45, 212, 191, 0.1)'; // Low res teal grid
+        ctx.strokeStyle = 'rgba(45, 212, 191, 0.1)';
         ctx.lineWidth = 1;
         const cellSize = 20;
 
@@ -181,7 +232,6 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
         for (let y = 0; y < h; y += 4) {
             ctx.fillRect(0, y, w, 2);
         }
-
         // Rolling bar
         const roll = (frame * 2) % h;
         ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
@@ -193,7 +243,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             ref={canvasRef}
             width={width}
             height={height}
-            className="w-full h-full object-contain drop-shadow-[0_0_10px_rgba(45,212,191,0.5)] border-4 border-black bg-black rounded-lg"
+            className="w-full h-full object-contain drop-shadow-[0_0_10px_rgba(45,212,191,0.5)] border-4 border-gray-900 bg-gray-900 rounded-lg"
         />
     );
 };

@@ -242,76 +242,93 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         refreshPet();
 
         // Smart Engagement Notifications (On Load)
-        setTimeout(async () => {
+        const checkNotifications = async () => {
+            // Delay slightly to let data load references if needed, though we await below
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            if (!user?.id) return;
+
+            const clearedIds = JSON.parse(localStorage.getItem('peutic_cleared_notifs') || '[]');
             const newNotifs: Notification[] = [];
 
-            // Check Garden
-            const g = await GardenService.getGarden(user.id);
-            if (g && g.waterLevel < 30) {
-                newNotifs.push({
-                    id: crypto.randomUUID(),
-                    title: 'Thirsty Plants',
-                    message: 'Your inner garden needs water.',
-                    type: 'warning',
+            const addIfNotCleared = (n: Notification) => {
+                if (!clearedIds.includes(n.id)) {
+                    newNotifs.push(n);
+                }
+            };
+
+            // 1. Check Garden
+            try {
+                const g = await GardenService.getGarden(user.id);
+                if (g && g.waterLevel < 30) {
+                    addIfNotCleared({
+                        id: 'garden-water-low',
+                        title: 'Garden Needs Water',
+                        message: 'Your plants are thirsty! Water them to keep your streak.',
+                        type: 'warning',
+                        read: false,
+                        timestamp: new Date(),
+                        action: 'open_garden'
+                    });
+                }
+            } catch (err) {
+                console.error("Error checking garden for notifs", err);
+            }
+
+            // 2. Check Pet
+            try {
+                const p = await PetService.getPet(user.id);
+                if (p) {
+                    if (p.hunger < 40) {
+                        addIfNotCleared({
+                            id: 'pet-hunger-low',
+                            title: `${p.name} is Hungry`,
+                            message: 'Time to feed your companion!',
+                            type: 'info',
+                            read: false,
+                            timestamp: new Date(),
+                            action: 'open_pet'
+                        });
+                    } else if (p.energy < 30 && !p.isSleeping) {
+                        addIfNotCleared({
+                            id: 'pet-energy-low',
+                            title: `${p.name} is Tired`,
+                            message: 'Maybe it is time for a nap?',
+                            type: 'info',
+                            read: false,
+                            timestamp: new Date(),
+                            action: 'open_pet'
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error("Error checking pet for notifs", err);
+            }
+
+            // 3. Daily Streak Hint (if nothing else)
+            if (newNotifs.length === 0) {
+                addIfNotCleared({
+                    id: 'daily-streak-hint',
+                    title: 'Daily Streak',
+                    message: 'Complete 1 more activity to keep your streak alive!',
+                    type: 'success',
                     read: false,
                     timestamp: new Date(),
-                    action: 'open_garden'
+                    action: 'check_streak'
                 });
             }
 
-            // Check Pet
-            const p = await PetService.getPet(user.id);
-            if (p) {
-                if (p.hunger < 40) {
-                    newNotifs.push({
-                        id: crypto.randomUUID(),
-                        title: `${p.name} is Hungry`,
-                        message: 'Time to feed your companion!',
-                        type: 'info',
-                        read: false,
-                        timestamp: new Date(),
-                        action: 'open_pet'
-                    });
-                } else if (p.energy < 30 && !p.isSleeping) {
-                    newNotifs.push({
-                        id: crypto.randomUUID(),
-                        title: `${p.name} is Tired`,
-                        message: 'Maybe it is time for a nap?',
-                        type: 'info',
-                        read: false,
-                        timestamp: new Date(),
-                        action: 'open_pet'
-                    });
-                }
-            }
-
             if (newNotifs.length > 0) {
-                setNotifications(prev => [...newNotifs, ...prev]);
-            } else {
-                // If no critical alerts, show engagement hints
-                setNotifications(prev => [
-                    {
-                        id: crypto.randomUUID(),
-                        title: 'Daily Streak',
-                        message: 'Complete 1 more activity to keep your streak alive!',
-                        type: 'info',
-                        read: false,
-                        timestamp: new Date(),
-                        action: 'check_streak'
-                    },
-                    {
-                        id: crypto.randomUUID(),
-                        title: 'Community Event',
-                        message: 'Join the "Midweek Mindfulness" group session.',
-                        type: 'success',
-                        read: false,
-                        timestamp: new Date(),
-                        action: 'open_community'
-                    },
-                    ...prev
-                ]);
+                setNotifications(prev => {
+                    // Avoid duplicates if React.StrictMode runs twice
+                    const existingIds = new Set(prev.map(n => n.id));
+                    const uniqueNew = newNotifs.filter(n => !existingIds.has(n.id));
+                    return [...prev, ...uniqueNew];
+                });
             }
-        }, 2000);
+        };
+
+        checkNotifications();
     }, [user.id]);
 
     useEffect(() => {
@@ -579,6 +596,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             </div>
                         </div>
                     )}
+                    {/* NOTIFICATIONS */}
+                    <div className={`fixed top-6 right-6 z-50 transition-all duration-500 ${isIdle ? 'opacity-0' : 'opacity-100'}`}>
+                        <NotificationBell
+                            notifications={notifications}
+                            onClear={handleClearNotification}
+                            onAction={handleNotificationAction}
+                            onClearAll={handleClearAllNotifications}
+                        />
+                    </div>
                     <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-10 pb-24">
                         <header className="mb-8 md:mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
                             <div className="flex items-center justify-between w-full md:w-auto">
@@ -586,8 +612,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     <div className="hidden md:block">
                                         <NotificationBell
                                             notifications={notifications}
-                                            onClear={(id) => setNotifications(prev => prev.filter(n => n.id !== id))}
-                                            onClearAll={() => setNotifications(prev => prev.filter(n => !n.read))}
+                                            onClear={handleClearNotification}
+                                            onClearAll={handleClearAllNotifications}
                                             onAction={handleNotificationAction}
                                         />
                                     </div>
