@@ -664,14 +664,13 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 -- -----------------------------------------------------------------------------
 
 -- Claim System Access (RPC for Admin Login/Claim)
-CREATE OR REPLACE FUNCTION public.claim_system_access(p_master_key TEXT)
+CREATE OR REPLACE FUNCTION public.claim_system_access(p_user_id UUID, p_master_key TEXT)
 RETURNS BOOLEAN 
 LANGUAGE plpgsql 
 SECURITY DEFINER 
 SET search_path = public
 AS $$
 DECLARE
-  v_uid UUID;
   v_expected_key TEXT := 'PEUTIC_ADMIN_ACCESS_2026'; -- Default Key
 BEGIN
   -- Strict Key Check
@@ -679,16 +678,15 @@ BEGIN
     RETURN FALSE;
   END IF;
 
-  v_uid := auth.uid();
-  IF v_uid IS NULL THEN
+  IF p_user_id IS NULL THEN
     RETURN FALSE;
   END IF;
 
-  -- Verify user exists in public.users
+  -- Verify user exists in public.users (or create if missing trigger failed)
   INSERT INTO public.users (id, email, role)
   VALUES (
-    v_uid, 
-    (select email from auth.users where id = v_uid),
+    p_user_id, 
+    (select email from auth.users where id = p_user_id),
     'ADMIN'
   )
   ON CONFLICT (id) DO UPDATE
