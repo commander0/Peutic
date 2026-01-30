@@ -522,6 +522,23 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const filteredCompanions = specialtyFilter === 'All' ? companions : companions.filter(c => c.specialty.includes(specialtyFilter) || c.specialty === specialtyFilter);
     const uniqueSpecialties = Array.from(new Set(companions.map(c => c.specialty))).sort();
 
+    // --- NOTIFICATION HANDLERS ---
+    const handleClearNotification = (id: string) => {
+        setNotifications(prev => prev.filter(n => n.id !== id));
+        const cleared = JSON.parse(localStorage.getItem('peutic_cleared_notifs') || '[]');
+        if (!cleared.includes(id)) {
+            localStorage.setItem('peutic_cleared_notifs', JSON.stringify([...cleared, id]));
+        }
+    };
+
+    const handleClearAllNotifications = () => {
+        const ids = notifications.map(n => n.id);
+        const cleared = JSON.parse(localStorage.getItem('peutic_cleared_notifs') || '[]');
+        const newCleared = [...new Set([...cleared, ...ids])];
+        localStorage.setItem('peutic_cleared_notifs', JSON.stringify(newCleared));
+        setNotifications([]);
+    };
+
     return (
         <div
             className="min-h-screen transition-all duration-1000 font-sans text-[var(--color-text-base)]"

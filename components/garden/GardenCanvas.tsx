@@ -49,7 +49,9 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height }) =>
 
                 // Color based on plant type (defaulting to Sakura logic for now as requested by user aesthetic)
                 // If the user hasn't selected a type, default to Green.
-                const isSakura = garden.currentPlantType === 'Sakura' || garden.currentPlantType === 'Rose';
+                // Cast to string to avoid "no overlap" lint error if generic type is too strict
+                const pType = garden.currentPlantType as string;
+                const isSakura = pType === 'Sakura' || pType === 'Rose' || pType === 'Lotus';
                 ctx.fillStyle = isSakura ? '#F48FB1' : '#4CAF50';
 
                 ctx.fill();
