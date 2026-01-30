@@ -21,32 +21,20 @@ export default defineConfig(({ mode }) => {
       'process.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL || ''),
       'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY || ''),
       'process.env.VITE_GOOGLE_CLIENT_ID': JSON.stringify(env.VITE_GOOGLE_CLIENT_ID || ''),
-
+      
       // Polyfill process.env to prevent "process is not defined" errors for other libraries
-      'process.env': {}
+      'process.env': {} 
     },
     build: {
-      chunkSizeWarningLimit: 800,
-      minify: 'terser',
-      terserOptions: {
-        compress: {
-          drop_console: true,
-          drop_debugger: true
-        }
-      },
+      chunkSizeWarningLimit: 1000,
       rollupOptions: {
-        output: {
-          manualChunks(id) {
-            if (id.includes('node_modules')) {
-              // Vendor chunking
-              if (id.includes('react')) return 'vendor-react';
-              if (id.includes('recharts')) return 'vendor-charts';
-              if (id.includes('lucide')) return 'vendor-icons';
-              if (id.includes('supabase')) return 'vendor-supabase';
-              return 'vendor';
-            }
+          output: {
+              manualChunks: {
+                  'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+                  'vendor-charts': ['recharts'],
+                  'vendor-icons': ['lucide-react']
+              }
           }
-        }
       }
     }
   }

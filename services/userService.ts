@@ -448,52 +448,28 @@ export class UserService {
             oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
             const iso = oneWeekAgo.toISOString();
 
-            // SRE OPTIMIZATION: Use Server-Side RPC to reduce 5 queries to 1
-            // Fallback to manual calculation if RPC missing
-            let stats;
-            try {
-                const { data, error } = await supabase.rpc('get_weekly_dashboard_stats', { p_user_id: userId });
-                if (!error && data) {
-                    stats = {
-                        journalCount: data.journals,
-                        sessionCount: data.sessions,
-                        moodCount: data.moods,
-                        artCount: data.art,
-                        petBonus: data.petBonus
-                    };
-                } else {
-                    throw new Error("RPC Unavailable");
-                }
-            } catch (rpcError) {
-                // Fallback: Run queries in parallel (Legacy Mode)
-                const [jRes, sRes, mRes, aRes, pRes] = await Promise.all([
-                    supabase.from('journals').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', iso),
-                    supabase.from('transactions').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'COMPLETED').gte('date', iso),
-                    supabase.from('moods').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', iso),
-                    supabase.from('user_art').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', iso),
-                    supabase.from('pocket_pets').select('last_interaction_at').eq('user_id', userId).maybeSingle()
-                ]);
+            // Run queries in parallel for performance, handling potential failures individually
+            const [jRes, sRes, mRes, aRes, pRes] = await Promise.all([
+                supabase.from('journals').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', iso),
+                supabase.from('transactions').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'COMPLETED').gte('date', iso),
+                supabase.from('moods').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', iso),
+                supabase.from('user_art').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', iso),
+                supabase.from('pocket_pets').select('last_interaction_at').eq('user_id', userId).maybeSingle()
+            ]);
 
-                let petBonus = 0;
-                if (pRes.data?.last_interaction_at) {
-                    const lastInteraction = new Date(pRes.data.last_interaction_at);
-                    const hoursAgo = (Date.now() - lastInteraction.getTime()) / (1000 * 60 * 60);
-                    if (hoursAgo < 24) petBonus = 2;
-                    else if (hoursAgo < 48) petBonus = 1;
-                }
+            const journalCount = jRes.count || 0;
+            const sessionCount = sRes.count || 0;
+            const moodCount = mRes.count || 0;
+            const artCount = aRes.count || 0;
 
-                stats = {
-                    journalCount: jRes.count || 0,
-                    sessionCount: sRes.count || 0,
-                    moodCount: mRes.count || 0,
-                    artCount: aRes.count || 0,
-                    petBonus: petBonus
-                };
+            // Pet care bonus: If pet was interacted with in the last 24 hours, add bonus points
+            let petBonus = 0;
+            if (pRes.data?.last_interaction_at) {
+                const lastInteraction = new Date(pRes.data.last_interaction_at);
+                const hoursAgo = (Date.now() - lastInteraction.getTime()) / (1000 * 60 * 60);
+                if (hoursAgo < 24) petBonus = 2;
+                else if (hoursAgo < 48) petBonus = 1;
             }
-
-            const { journalCount, sessionCount, moodCount, artCount, petBonus } = stats;
-
-
 
             const totalActions = journalCount + sessionCount + moodCount + artCount + petBonus;
             const current = totalActions * 0.5;
@@ -583,30 +559,15 @@ export class UserService {
         this.saveUserToCache(user);
 
         try {
-            const { error, data } = await BaseService.invokeGateway('process-transaction', {
+            await BaseService.invokeGateway('process-topup', {
                 userId: user.id,
                 amount: amount,
                 cost: 0,
-                description: reason,
-                type: 'TOPUP'
+                description: reason
             });
-
-            if (error) {
-                logger.error("Add Balance Failed", user.id, error);
-                // Revert
-                user.balance = previousBalance;
-                this.saveUserToCache(user);
-                return false;
-            }
-
-            if (data?.newBalance !== undefined) {
-                user.balance = data.newBalance;
-                this.saveUserToCache(user);
-            }
-            logger.info("Balance Added", `${amount}m | ${reason}`);
             return true;
         } catch (e) {
-            logger.error("Add Balance Exception", user.id, e);
+            console.error("Add Balance Failed", e);
             user.balance = previousBalance;
             this.saveUserToCache(user);
             return false;
@@ -619,13 +580,13 @@ export class UserService {
 
         // Optional Gamification Logic
         if (user.gamificationEnabled === false) {
-            logger.info("Balance Deduction Skipped", "Gamification Disabled");
+            console.log(`[Balance] Skipped deduction (${amount}m) - Gamification Disabled`);
             return true;
         }
 
         // --- NEW SAFETY CHECK: Prevent Negative Balance ---
         if (user.balance < amount) {
-            logger.warn("Balance Deduction Denied", `Insufficient funds. Need ${amount}, have ${user.balance}`);
+            console.warn(`[Balance] Denied: Insufficient funds. Need ${amount}, have ${user.balance}`);
             return false;
         }
 
@@ -634,18 +595,20 @@ export class UserService {
         user.balance = Math.max(0, user.balance - amount);
         this.saveUserToCache(user);
 
+        // Notify UI (in a real app, use an event bus)
+        console.log(`[Balance] Deducting ${amount} mins for ${reason}. New Balance: ${user.balance}`);
+
         try {
-            // CRITICAL FIX: Persist via Gateway
-            const { error, data } = await BaseService.invokeGateway('process-transaction', {
+            // Use Gateway for secure transaction
+            const { error, data } = await BaseService.invokeGateway('process-topup', {
                 userId: user.id,
-                amount: -amount, // Negative for deduction
+                amount: -amount, // Negative amount for deduction
                 cost: 0,
-                description: reason,
-                type: 'USAGE'
+                description: reason
             });
 
             if (error) {
-                logger.error("Balance Deduction Failed", user.id, error);
+                console.error("Balance Deduction Failed", error);
                 // Revert
                 user.balance = previousBalance;
                 this.saveUserToCache(user);
@@ -656,17 +619,10 @@ export class UserService {
                 user.balance = data.newBalance;
                 this.saveUserToCache(user);
             }
-
-            logger.info("Balance Deducted", `${amount}m | ${reason}`);
             return true;
 
-        } catch (e: any) {
-            // Handle "Insufficient funds" specifically if backend rejects
-            if (e.message?.includes("Insufficient")) {
-                logger.warn("Balance Mismatch", "Backend rejected deduction due to funds.");
-            } else {
-                logger.error("Balance Deduction Exception", user.id, e);
-            }
+        } catch (e) {
+            console.error("Balance Deduction Exception", e);
             user.balance = previousBalance;
             this.saveUserToCache(user);
             return false;
