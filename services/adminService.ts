@@ -221,16 +221,28 @@ export class AdminService {
 
         if (error || !data.user) throw new Error(error?.message || "Sign up failed");
 
-        // 2. Claim Admin Rights via RPC if key provided
+        // 2. Ensure Session (Force Login if needed)
+        if (!data.session) {
+            const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+                email,
+                password: password || 'PeuticDefault123!'
+            });
+            if (loginError || !loginData.session) {
+                console.warn("Auto-login failed after signup, cannot claim admin yet.", loginError);
+                // We don't throw here, we just can't claim admin automatically.
+            }
+        }
+
+        // 3. Claim Admin Rights via RPC if key provided
         if (masterKey) {
             const { data: claimed, error: claimError } = await supabase.rpc('claim_system_access', { p_master_key: masterKey });
             if (claimError || !claimed) {
                 console.warn("Account created but Admin Claim failed", claimError);
-                throw new Error("Account created but Admin Claim failed. Key may be invalid.");
+                throw new Error("Account created but Admin Claim failed. Key may be invalid or session missing.");
             }
         }
 
-        // 3. Return mapped user (requires sync to get role)
+        // 4. Return mapped user (requires sync to get role)
         const synced = await UserService.syncUser(data.user.id);
         if (!synced) throw new Error("User created but profile sync failed.");
         return synced;

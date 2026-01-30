@@ -506,7 +506,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const uniqueSpecialties = Array.from(new Set(companions.map(c => c.specialty))).sort();
 
     return (
-        <div className={`min-h-screen transition-colors duration-500 font-sans bg-[var(--color-bg-base)] text-[var(--color-text-base)] bg-gradient-to-br from-amber-200 via-yellow-100 to-transparent dark:from-yellow-900/10 dark:via-gray-950 dark:to-black`}>
+        <div
+            className="min-h-screen transition-all duration-1000 font-sans text-[var(--color-text-base)]"
+            style={{
+                backgroundColor: 'var(--color-bg-base)',
+                backgroundImage: 'var(--color-bg-gradient)'
+            }}
+        >
             {mood && <WeatherEffect type={mood} />}
             {/* FLOATING CONTROLS: Separated for better ergonomics */}
             <div className="fixed bottom-6 left-6 z-[80] pointer-events-none">
@@ -742,16 +748,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     onClick={() => setShowPocketPet(true)}
                                                     className="group relative bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50 dark:from-cyan-950 dark:via-black dark:to-blue-950 rounded-xl md:rounded-3xl border border-cyan-400/30 dark:border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)] hover:shadow-[0_0_25px_rgba(6,182,212,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                                 >
-                                                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-blue-600/10 pointer-events-none mix-blend-multiply dark:mix-blend-overlay"></div>
+                                                    {/* Changed from mix-blend-multiply to simple transparency for better light mode visibility */}
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-600/5 pointer-events-none data-[mode=dark]:mix-blend-overlay"></div>
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
                                                         <div className="relative mb-1 md:mb-4">
                                                             <div className="absolute -inset-4 bg-cyan-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                            <div className="w-10 h-10 md:w-20 md:h-20 bg-black/40 border border-cyan-500/50 rounded-2xl flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform">
+                                                            <div className="w-10 h-10 md:w-20 md:h-20 bg-white/10 dark:bg-black/40 border border-cyan-500/50 rounded-2xl flex items-center justify-center text-cyan-500 dark:text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform">
                                                                 <Sparkles className="w-5 h-5 md:w-10 md:h-10 animate-bounce" />
                                                             </div>
                                                         </div>
-                                                        <h3 className="text-[7px] md:text-sm font-black text-white dark:text-cyan-50 uppercase tracking-[0.2em] mb-1">Lumina</h3>
-                                                        <p className="hidden md:block text-[10px] font-bold text-cyan-400/50 uppercase tracking-widest">
+                                                        {/* Text colors adjusted for better contrast in light mode */}
+                                                        <h3 className="text-[7px] md:text-sm font-black text-cyan-700 dark:text-cyan-50 uppercase tracking-[0.2em] mb-1">Lumina</h3>
+                                                        <p className="hidden md:block text-[10px] font-bold text-cyan-600/60 dark:text-cyan-400/50 uppercase tracking-widest">
                                                             {lumina ? `${lumina.name} Lvl ${lumina.level}` : 'Summon Friend'}
                                                         </p>
                                                     </div>
