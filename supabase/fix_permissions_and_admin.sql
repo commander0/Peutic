@@ -166,6 +166,24 @@ BEGIN
 END;
 $$;
 
+-- Allow system reset via Master Key (SECURITY DEFINER)
+CREATE OR REPLACE FUNCTION public.reset_system_ownership(p_master_key TEXT)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF p_master_key != 'PEUTIC_ADMIN_ACCESS_2026' THEN
+    RETURN FALSE;
+  END IF;
+
+  -- Downgrade all admins to users
+  UPDATE public.users SET role = 'USER' WHERE role = 'ADMIN';
+  RETURN TRUE;
+END;
+$$;
+
 -- ==========================================
 -- 4. ADMIN CLAIM RPC
 -- ==========================================
@@ -336,6 +354,7 @@ create table if not exists public.journals (
 alter table public.journals enable row level security;
 
 DROP POLICY IF EXISTS "Unified Journals" ON public.journals;
+DROP POLICY IF EXISTS "journals_owner_optimized" ON public.journals;
 CREATE POLICY "Unified Journals" ON public.journals
 FOR ALL USING (
     (select auth.uid()) = user_id OR (select public.is_admin())
@@ -351,6 +370,7 @@ create table if not exists public.moods (
 alter table public.moods enable row level security;
 
 DROP POLICY IF EXISTS "Unified Moods" ON public.moods;
+DROP POLICY IF EXISTS "moods_owner_optimized" ON public.moods;
 CREATE POLICY "Unified Moods" ON public.moods
 FOR ALL USING (
     (select auth.uid()) = user_id OR (select public.is_admin())
@@ -368,6 +388,7 @@ create table if not exists public.user_art (
 alter table public.user_art enable row level security;
 
 DROP POLICY IF EXISTS "Unified User Art" ON public.user_art;
+DROP POLICY IF EXISTS "User Art" ON public.user_art;
 CREATE POLICY "Unified User Art" ON public.user_art
 FOR ALL USING (
     (select auth.uid()) = user_id OR (select public.is_admin())
@@ -385,6 +406,7 @@ create table if not exists public.voice_journals (
 alter table public.voice_journals enable row level security;
 
 DROP POLICY IF EXISTS "Unified Voice Journals" ON public.voice_journals;
+DROP POLICY IF EXISTS "User Voice Journals" ON public.voice_journals;
 CREATE POLICY "Unified Voice Journals" ON public.voice_journals
 FOR ALL USING (
     (select auth.uid()) = user_id OR (select public.is_admin())

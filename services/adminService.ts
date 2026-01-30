@@ -261,8 +261,17 @@ export class AdminService {
     }
 
     static async resetAdminStatus(masterKey: string): Promise<void> {
-        const { data, error } = await supabase.rpc('claim_system_access', { p_master_key: masterKey });
-        if (error || !data) throw new Error(error?.message || "Start Reclaim failed: Invalid Key or Server Error");
+        // Use specific RPC for system reset (downgrades admins to users)
+        const { data, error } = await supabase.rpc('reset_system_ownership', { p_master_key: masterKey });
+
+        if (error) {
+            console.error("Reset System RPC Error", error);
+            throw new Error(error.message || "Reset failed");
+        }
+
+        if (!data) {
+            throw new Error("Invalid Master Key or Reset Failed");
+        }
 
         const currentUser = UserService.getUser();
         if (currentUser?.role === 'ADMIN') {

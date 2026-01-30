@@ -21,14 +21,23 @@ export const BaseService = {
     },
 
     invokeGateway: async (action: string, payload: any = {}) => {
+        // DEBUG: Trace all Gateway calls
+        console.log(`[BaseService] Gateway Call: ${action}`, { payloadKeys: Object.keys(payload || {}) });
+
         const headers = await BaseService.getAuthHeaders();
         const { data, error } = await supabase.functions.invoke('api-gateway', {
             body: { action, payload },
             headers
         });
 
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
+        if (error) {
+            console.error(`[BaseService] Gateway Transport Error (${action})`, error);
+            throw error;
+        }
+        if (data?.error) {
+            console.error(`[BaseService] Gateway Logic Error (${action}):`, data.error);
+            throw new Error(data.error);
+        }
         return data;
     }
 };
