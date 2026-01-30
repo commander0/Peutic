@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS public.users (
   name TEXT,
   email TEXT,
   role TEXT DEFAULT 'USER' CHECK (role IN ('ADMIN', 'USER', 'GUEST')),
-  balance NUMERIC DEFAULT 0,
+  balance NUMERIC DEFAULT 0 CHECK (balance >= 0),
   subscription_status TEXT DEFAULT 'ACTIVE',
   provider TEXT DEFAULT 'email',
   avatar_url TEXT,
@@ -69,26 +69,63 @@ CREATE POLICY "Unified Users Insert" ON public.users FOR INSERT
   WITH CHECK ((select auth.uid()) = id);
 
 -- TRIGGER: Handle New User Creation
+-- TRIGGER: Handle New User Creation (ROBUST VERSION)
 DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
   is_first_user BOOLEAN;
+  final_role TEXT;
+  final_name TEXT;
 BEGIN
+  -- 1. Determine Role (First user is ADMIN)
   SELECT NOT EXISTS (SELECT 1 FROM public.users) INTO is_first_user;
-  
+  final_role := CASE WHEN is_first_user THEN 'ADMIN' ELSE 'USER' END;
+
+  -- 2. Determine Name (Safe Fallback)
+  final_name := COALESCE(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1), 'Buddy');
+
+  -- 3. Log for Debugging
+  RAISE LOG 'Handling new user: % (Role: %)', new.email, final_role;
+
+  -- 4. Insert or Update (Robust Upsert)
   INSERT INTO public.users (id, email, name, role, balance, provider)
   VALUES (
     new.id,
     new.email,
-    COALESCE(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
-    CASE WHEN is_first_user THEN 'ADMIN' ELSE 'USER' END,
+    final_name,
+    final_role,
     CASE WHEN is_first_user THEN 999.00 ELSE 0.00 END,
     COALESCE(new.raw_app_meta_data->>'provider', 'email')
   )
-  ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO UPDATE
+  SET 
+    email = EXCLUDED.email,
+    name = COALESCE(public.users.name, EXCLUDED.name), -- Keep existing name if set
+    role = CASE WHEN public.users.role = 'ADMIN' THEN 'ADMIN' ELSE EXCLUDED.role END; -- Don't demote admins
+
+  -- 5. Initialize Game State (Harmony)
+  -- Garden
+  INSERT INTO public.garden_log (user_id, level, current_plant_type)
+  VALUES (new.id, 1, 'Lotus')
+  ON CONFLICT (user_id) DO NOTHING;
+
+  -- Lumina (Pocket Pet)
+  INSERT INTO public.pocket_pets (id, user_id, name, species, level, experience)
+  VALUES (
+    uuid_generate_v4(),
+    new.id,
+    'Lumina',
+    'Neo-Shiba',
+    1,
+    0
+  )
+  ON CONFLICT DO NOTHING; -- Assuming user_id might be unique or relying on app logic
 
   RETURN new;
+EXCEPTION WHEN OTHERS THEN
+  RAISE LOG 'Error in handle_new_user: %', SQLERRM;
+  RETURN new; -- Allow auth to proceed even if profile creation fails (handled by UserService repair)
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
@@ -182,6 +219,34 @@ CREATE POLICY "User/Admin Transactions" ON public.transactions FOR ALL
 -- -----------------------------------------------------------------------------
 -- 5. USER CONTENT TABLES
 -- -----------------------------------------------------------------------------
+
+-- Pocket Pets (Lumina)
+CREATE TABLE IF NOT EXISTS public.pocket_pets (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id),
+  name TEXT,
+  species TEXT DEFAULT 'Neo-Shiba',
+  level INTEGER DEFAULT 1,
+  experience INTEGER DEFAULT 0,
+  health INTEGER DEFAULT 100,
+  hunger INTEGER DEFAULT 100,
+  happiness INTEGER DEFAULT 100,
+  cleanliness INTEGER DEFAULT 100,
+  energy INTEGER DEFAULT 100,
+  is_sleeping BOOLEAN DEFAULT FALSE,
+  last_interaction_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.pocket_pets ENABLE ROW LEVEL SECURITY;
+
+-- Clean up ALL potential legacy/duplicate policies to avoid "Multiple Permissive Policies" warning
+DROP POLICY IF EXISTS "User Pocket Pets" ON public.pocket_pets;
+DROP POLICY IF EXISTS "pocket_pets_owner_optimized" ON public.pocket_pets;
+DROP POLICY IF EXISTS "Users can manage own pets" ON public.pocket_pets;
+
+-- Single Consolidated Policy
+CREATE POLICY "User Pocket Pets" ON public.pocket_pets FOR ALL USING ((select auth.uid()) = user_id);
+CREATE INDEX IF NOT EXISTS idx_pocket_pets_user_id ON public.pocket_pets(user_id);
 
 -- User Art
 CREATE TABLE IF NOT EXISTS public.user_art (

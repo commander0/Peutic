@@ -52,41 +52,51 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, garden, onClose }) 
                 <div className="flex-1 bg-[#fdfbf7] p-8 md:p-12 relative flex flex-col border-r border-[#e5e5e5]">
                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/paper.png')] opacity-50 mix-blend-multiply pointer-events-none"></div>
 
-                    <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center border-4 border-double border-[#d4c5b0] p-8 m-4">
-                        <div className="w-20 h-20 mb-6">
-                            <Sparkles className="w-full h-full text-[#c5a065] opacity-80" />
-                        </div>
-                        <h1 className="font-serif text-4xl md:text-6xl text-[#2c241b] mb-4 tracking-tight">The Book<br />of You</h1>
-                        <div className="w-32 h-px bg-[#c5a065] mb-4"></div>
-                        <p className="font-serif text-lg text-[#5d5246] italic mb-8">Chronicling the journey of {user.name}</p>
-
-                        <div className="grid grid-cols-2 gap-8 w-full max-w-xs text-[#2c241b]">
-                            <div>
-                                <div className="text-3xl font-serif font-bold">{journals.length}</div>
-                                <div className="text-[10px] uppercase tracking-widest text-[#8a7f73]">Entries</div>
-                            </div>
-                            <div>
-                                <div className="text-3xl font-serif font-bold">{moods.length}</div>
-                                <div className="text-[10px] uppercase tracking-widest text-[#8a7f73]">Days Mindful</div>
+                    <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center border-4 border-double border-[#d4c5b0] p-8 m-4 shadow-[inset_0_0_20px_rgba(212,197,176,0.2)]">
+                        <div className="w-24 h-24 mb-6 relative">
+                            <Sparkles className="absolute inset-0 w-full h-full text-[#c5a065] opacity-20 animate-pulse" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <Feather className="w-12 h-12 text-[#2c241b]" />
                             </div>
                         </div>
 
-                        <div className="mt-12 opacity-60">
-                            {garden && (
-                                <div className="flex items-center gap-2 justify-center mb-2">
-                                    <Feather className="w-4 h-4 text-[#c5a065]" />
-                                    <span className="font-serif text-sm text-[#5d5246]">Garden Lvl {garden.level}</span>
-                                </div>
-                            )}
-                            {lumina && (
-                                <div className="flex items-center gap-2 justify-center">
-                                    <Star className="w-4 h-4 text-[#c5a065]" />
-                                    <span className="font-serif text-sm text-[#5d5246]">{lumina.name} (Lvl {lumina.level})</span>
-                                </div>
-                            )}
+                        <h1 className="font-serif text-5xl md:text-7xl text-[#2c241b] mb-2 tracking-tighter">Book<br /> of You</h1>
+                        <p className="font-serif text-sm uppercase tracking-[0.3em] text-[#8a7f73] mb-6">Volume I &bull; {new Date().getFullYear()}</p>
+
+                        <div className="w-16 h-1 bg-[#2c241b] mb-8"></div>
+
+                        {/* Weekly Mood Spectrum */}
+                        <div className="w-full max-w-[200px] mb-8">
+                            <p className="text-[10px] uppercase tracking-widest text-[#8a7f73] mb-2">This Week's Aura</p>
+                            <div className="h-4 w-full rounded-full flex overflow-hidden border border-[#d4c5b0]">
+                                {moods.length > 0 ? moods.slice(0, 7).map((m, i) => (
+                                    <div key={i} className="flex-1 h-full" style={{ backgroundColor: getMoodColor(m.mood || 'neutral') }}></div>
+                                )) : (
+                                    <div className="w-full h-full bg-[#f3f0e6]"></div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-12 w-full max-w-xs text-[#2c241b]">
+                            <div className="group cursor-default">
+                                <div className="text-4xl font-serif font-black group-hover:scale-110 transition-transform duration-500">{journals.length}</div>
+                                <div className="text-[9px] uppercase tracking-widest text-[#8a7f73] mt-1 group-hover:text-[#c5a065] transition-colors">Stories Written</div>
+                            </div>
+                            <div className="group cursor-default">
+                                <div className="text-4xl font-serif font-black group-hover:scale-110 transition-transform duration-500">{moods.length}</div>
+                                <div className="text-[9px] uppercase tracking-widest text-[#8a7f73] mt-1 group-hover:text-[#c5a065] transition-colors">Days Mindful</div>
+                            </div>
+                        </div>
+
+                        <div className="mt-auto opacity-60">
+                            <div className="flex items-center justify-center gap-4 text-[#5d5246] font-serif italic text-sm">
+                                {garden && <span>Garden Lvl {garden.level}</span>}
+                                {garden && lumina && <span>&bull;</span>}
+                                {lumina && <span>{lumina.name} Lvl {lumina.level}</span>}
+                            </div>
                         </div>
                     </div>
-                    <div className="text-center font-serif text-xs text-[#8a7f73] mt-4">- Volume I -</div>
+                    <div className="text-center font-serif text-[10px] text-[#8a7f73] mt-4 opacity-50">Ex Libris {user.name}</div>
                 </div>
 
                 {/* RIGHT PAGE (Content) */}
@@ -134,6 +144,17 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, garden, onClose }) 
             </div>
         </div>
     );
+};
+
+const getMoodColor = (mood: string) => {
+    switch (mood) {
+        case 'confetti': return '#fbbf24'; // Amber
+        case 'rain': return '#60a5fa'; // Blue
+        case 'storm': return '#64748b'; // Slate
+        case 'sunny': return '#facc15'; // Yellow
+        case 'fire': return '#ef4444'; // Red
+        default: return '#e5e7eb'; // Gray
+    }
 };
 
 export default BookOfYouView;

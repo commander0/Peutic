@@ -99,7 +99,12 @@ export class UserService {
                 this.checkAchievements(this.currentUser);
                 return this.currentUser;
             } else {
-                console.warn("CRITICAL: User Sync Data Missing - RLS/ID Mismatch", { userId });
+                console.warn("CRITICAL: User Sync Data Missing - Attempting Self-Healing", { userId });
+                // ATTEMPT REPAIR
+                const session = await supabase.auth.getUser();
+                if (session.data.user && session.data.user.id === userId) {
+                    return await this.repairUserRecord(session.data.user);
+                }
             }
         } catch (e) {
             logger.error("User Sync Exception", `ID: ${userId}`, e);
@@ -170,11 +175,26 @@ export class UserService {
     // REPAIR: Attempt to fix missing public.users record
     static async repairUserRecord(sessionUser: any): Promise<User | null> {
         try {
-            console.log("Repair Requested: Checking remote status...", sessionUser.id);
-            // HARDENING: Do NOT attempt client-side upsert. 
-            // Instead, trigger an Edge Function or simply retry sync.
-            // If the user doesn't exist, it likely means the Trigger failed.
-            await BaseService.invokeGateway('users/repair', { userId: sessionUser.id });
+            console.log("Repair Requested: Manual Insert...", sessionUser.id);
+            
+            // DIRECT RESTORE (Bypassing Edge Function)
+            const fallbackName = sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || "Buddy";
+            
+            const { error } = await supabase.from('users').insert({
+                id: sessionUser.id,
+                email: sessionUser.email,
+                name: fallbackName,
+                role: 'USER',
+                balance: 0,
+                provider: sessionUser.app_metadata?.provider || 'email'
+            });
+
+            if (error) {
+                console.error("Direct Repair Failed:", error);
+                return null;
+            }
+
+            // Retry Sync immediately
             return await this.syncUser(sessionUser.id);
         } catch (e) {
             console.error("Repair Exception:", e);

@@ -13,28 +13,58 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height }) =>
     const frameRef = useRef<number>(0);
     const timeRef = useRef<number>(0);
 
+    // --- UKIYO-E STYLE RENDERER ---
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
+        // Texture Pattern
+        const createPaperTexture = () => {
+            const patternCanvas = document.createElement('canvas');
+            patternCanvas.width = 100;
+            patternCanvas.height = 100;
+            const pCtx = patternCanvas.getContext('2d');
+            if (pCtx) {
+                pCtx.fillStyle = '#fdfbf7'; // Rice paper base
+                pCtx.fillRect(0, 0, 100, 100);
+                // Noise
+                for (let i = 0; i < 500; i++) {
+                    pCtx.fillStyle = `rgba(0,0,0,${Math.random() * 0.05})`;
+                    pCtx.fillRect(Math.random() * 100, Math.random() * 100, 2, 2);
+                }
+            }
+            return ctx.createPattern(patternCanvas, 'repeat');
+        };
+
+        const paperPattern = createPaperTexture();
+
         // Animation Loop
         const render = () => {
             timeRef.current += 0.02;
-            ctx.clearRect(0, 0, width, height);
+
+            // Clear & Apply Paper Background
+            ctx.fillStyle = paperPattern || '#fdfbf7';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Background Elements (Sun/Cloud)
+            drawSun(ctx, width, height);
 
             // Center of garden
             const cx = width / 2;
-            const cy = height * 0.8;
+            const cy = height * 0.85;
 
-            // Draw based on level
-            drawPlant(ctx, cx, cy, garden.level, timeRef.current);
+            // Draw Soil / Ground
+            drawGround(ctx, width, cy);
 
-            // Draw Spirit Wisp (Focus)
-            const wispX = cx + Math.sin(timeRef.current * 0.5) * 30;
-            const wispY = cy - 100 + Math.cos(timeRef.current * 0.3) * 20 - (garden.level * 20);
-            drawWisp(ctx, wispX, wispY, timeRef.current);
+            // Draw Plant with Ink Style
+            drawUkiyoPlant(ctx, cx, cy, garden.level, timeRef.current);
+
+            // Draw Spirit Wisp (Ink Blob style)
+            const wispX = cx + Math.sin(timeRef.current * 0.5) * 40;
+            const wispY = cy - 120 + Math.cos(timeRef.current * 0.3) * 20 - (garden.level * 25);
+            drawInkWisp(ctx, wispX, wispY, timeRef.current);
 
             frameRef.current = requestAnimationFrame(render);
         };
@@ -44,121 +74,158 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height }) =>
         return () => cancelAnimationFrame(frameRef.current);
     }, [garden, width, height]);
 
-    const drawPlant = (ctx: CanvasRenderingContext2D, x: number, y: number, level: number, time: number) => {
+    const drawSun = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+        // Japanese Red Sun
+        ctx.beginPath();
+        ctx.arc(w * 0.8, h * 0.2, 30, 0, Math.PI * 2);
+        ctx.fillStyle = '#ef4444'; // Red 500
+        ctx.fill();
+
+        // Texture overlay on sun (stamp look)
+        ctx.globalCompositeOperation = 'source-atop';
+        ctx.fillStyle = 'rgba(255,255,255,0.1)';
+        ctx.beginPath();
+        ctx.arc(w * 0.8, h * 0.2, 25, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
+    };
+
+    const drawGround = (ctx: CanvasRenderingContext2D, w: number, y: number) => {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.bezierCurveTo(w * 0.3, y - 10, w * 0.7, y + 15, w, y + 5);
+        ctx.lineTo(w, y + 100);
+        ctx.lineTo(0, y + 100);
+        ctx.fillStyle = '#d4c5b0'; // Earth tone
+        ctx.fill();
+
+        // Ink outline for ground
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.bezierCurveTo(w * 0.3, y - 10, w * 0.7, y + 15, w, y + 5);
+        ctx.strokeStyle = '#2c241b';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    };
+
+    const drawUkiyoPlant = (ctx: CanvasRenderingContext2D, x: number, y: number, level: number, time: number) => {
         ctx.save();
         ctx.translate(x, y);
 
-        // Sway
-        const sway = Math.sin(time) * 0.05;
+        const sway = Math.sin(time * 0.5) * 0.05;
         ctx.rotate(sway);
 
-        // Stem
+        const height = 50 + (level * 30);
+
+        // Stem (Ink Brush Style - Variable Width)
         ctx.beginPath();
         ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(Math.sin(time * 0.5) * 15, -height / 2, 5, -height);
+        ctx.lineTo(-5, -height); // Make it thick at top
+        ctx.quadraticCurveTo(Math.sin(time * 0.5) * 15, -height / 2, -8, 0); // Thick at base
+        ctx.fillStyle = '#064e3b'; // Dark Emerald Ink
+        ctx.fill();
 
-        const height = 40 + (level * 25);
-        // Quadratic curve for stem
-        ctx.quadraticCurveTo(Math.sin(time * 0.5) * 10, -height / 2, 0, -height);
+        // Leaves with outlines
+        if (level >= 2) drawInkLeaf(ctx, 0, -height * 0.4, 25, time, -0.6);
+        if (level >= 2) drawInkLeaf(ctx, 0, -height * 0.6, 30, time, 0.6);
+        if (level >= 3) drawInkLeaf(ctx, 5, -height * 0.8, 20, time, -0.4);
 
-        ctx.strokeStyle = '#22c55e'; // Green 500
-        ctx.lineWidth = 4 + (level);
-        ctx.lineCap = 'round';
-        ctx.stroke();
-
-        // Leaves
-        if (level >= 2) {
-            drawLeaf(ctx, 0, -height * 0.3, 20, time, -0.5);
-            drawLeaf(ctx, 0, -height * 0.5, 25, time, 0.5);
-        }
-        if (level >= 3) {
-            drawLeaf(ctx, 0, -height * 0.7, 15, time, -0.8);
-            drawLeaf(ctx, 0, -height * 0.8, 15, time, 0.8);
-        }
-
-        // Flower / Bud
+        // Flower
         ctx.translate(0, -height);
-        if (level >= 1) {
-            if (level === 1) {
-                // Sprout
-                ctx.fillStyle = '#86efac';
-                ctx.beginPath();
-                ctx.arc(0, 0, 5, 0, Math.PI * 2);
-                ctx.fill();
-            } else if (level < 4) {
-                // Bud
-                ctx.fillStyle = '#f472b6'; // Pink 400
-                ctx.beginPath();
-                ctx.ellipse(0, 0, 8, 12, 0, 0, Math.PI * 2);
-                ctx.fill();
-            } else {
-                // Bloom
-                drawFlower(ctx, level >= 5, time); // Level 5 is radiant
-            }
+        if (level >= 4) {
+            drawInkFlower(ctx, time);
+        } else if (level >= 1) {
+            // Bud
+            ctx.beginPath();
+            ctx.arc(0, 0, 8, 0, Math.PI * 2);
+            ctx.fillStyle = '#fda4af';
+            ctx.fill();
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
         }
 
         ctx.restore();
     };
 
-    const drawLeaf = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, time: number, angleOffset: number) => {
+    const drawInkLeaf = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, time: number, angle: number) => {
         ctx.save();
         ctx.translate(x, y);
-        ctx.rotate(angleOffset + Math.sin(time + x) * 0.1);
-        ctx.fillStyle = '#4ade80'; // Green 400
+        ctx.rotate(angle + Math.sin(time) * 0.1);
+
         ctx.beginPath();
-        ctx.ellipse(10, 0, size, size / 2, 0, 0, Math.PI * 2);
+        ctx.ellipse(15, 0, size, size * 0.4, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#10b981'; // Emerald 500
         ctx.fill();
+        ctx.strokeStyle = '#064e3b'; // Dark Ink outline
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Leaf vein
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(size * 1.5, 0);
+        ctx.stroke();
+
         ctx.restore();
     };
 
-    const drawFlower = (ctx: CanvasRenderingContext2D, radiant: boolean, time: number) => {
-        const petals = 8;
-        ctx.fillStyle = radiant ? '#f43f5e' : '#fb7185'; // Rose 500 / 400
+    const drawInkFlower = (ctx: CanvasRenderingContext2D, time: number) => {
+        // Cherry Blossom Style
+        const petals = 5;
 
         for (let i = 0; i < petals; i++) {
             ctx.save();
             const angle = (Math.PI * 2 * i) / petals;
-            ctx.rotate(angle + (radiant ? time * 0.1 : 0));
-            ctx.beginPath();
-            ctx.ellipse(0, -15, 8, 15, 0, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.rotate(angle);
 
-            // Inner detail
-            ctx.strokeStyle = '#fff1f2';
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(10, -10, 20, 0);
+            ctx.quadraticCurveTo(10, 10, 0, 0);
+            ctx.fillStyle = '#ec4899'; // Pink 500
+            ctx.fill();
+            ctx.strokeStyle = '#831843'; // Pink 900 ink
             ctx.lineWidth = 1;
-            ctx.moveTo(0, -5);
-            ctx.lineTo(0, -20);
             ctx.stroke();
 
             ctx.restore();
         }
 
         // Center
-        ctx.fillStyle = '#facc15'; // Yellow
         ctx.beginPath();
-        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+        ctx.arc(0, 0, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#facc15';
         ctx.fill();
-
-        if (radiant) {
-            // Glow
-            ctx.shadowColor = '#f43f5e';
-            ctx.shadowBlur = 20 + Math.sin(time * 3) * 10;
-        }
     };
 
-    const drawWisp = (ctx: CanvasRenderingContext2D, x: number, y: number, time: number) => {
+    const drawInkWisp = (ctx: CanvasRenderingContext2D, x: number, y: number, time: number) => {
         ctx.save();
         ctx.translate(x, y);
-        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 20);
-        gradient.addColorStop(0, 'rgba(250, 204, 21, 0.8)');
-        gradient.addColorStop(1, 'rgba(250, 204, 21, 0)');
-        ctx.fillStyle = gradient;
+
+        // Spirit Flame
         ctx.beginPath();
-        ctx.arc(0, 0, 20, 0, Math.PI * 2);
+        ctx.moveTo(0, 10);
+        ctx.quadraticCurveTo(15, 0, 0, -20);
+        ctx.quadraticCurveTo(-15, 0, 0, 10);
+        ctx.fillStyle = '#3b82f6'; // Blue spirit
         ctx.fill();
+        ctx.strokeStyle = '#1e3a8a'; // Blue ink
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
         ctx.restore();
     };
 
-    return <canvas ref={canvasRef} width={width} height={height} className="pointer-events-none" />;
+    return (
+        <canvas
+            ref={canvasRef}
+            width={width}
+            height={height}
+            className="w-full h-full object-contain drop-shadow-2xl"
+        />
+    );
 };
 
 export default GardenCanvas;
