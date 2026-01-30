@@ -200,8 +200,13 @@ export class AdminService {
     }
 
     static async hasAdmin(): Promise<boolean> {
-        const { count } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'ADMIN');
-        return (count || 0) > 0;
+        // Use RPC with SECURITY DEFINER to bypass RLS for public check
+        const { data, error } = await supabase.rpc('check_admin_exists');
+        if (error) {
+            console.warn("Admin check failed", error);
+            return false;
+        }
+        return !!data;
     }
 
     static async forceVerifyEmail(email: string): Promise<boolean> {

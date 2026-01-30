@@ -24,7 +24,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
     const [newAdminEmail, setNewAdminEmail] = useState('');
     const [newAdminPassword, setNewAdminPassword] = useState('');
     const [newAdminConfirmPassword, setNewAdminConfirmPassword] = useState('');
-    const [claimMasterKey, setClaimMasterKey] = useState('PEUTIC_ADMIN_ACCESS_2026');
+    const [claimMasterKey, setClaimMasterKey] = useState('');
 
     const [hasAdmin, setHasAdmin] = useState<boolean | null>(null);
     const [lockout, setLockout] = useState(0);
@@ -39,7 +39,11 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         AdminService.hasAdmin().then(exists => {
             setHasAdmin(exists);
             // If no admin exists, default to Registration mode
-            if (!exists) setShowRegister(true);
+            if (!exists) {
+                setShowRegister(true);
+            } else {
+                setClaimMasterKey(''); // Ensure key is cleared if admin exists
+            }
         });
         AdminService.getAdminLockoutStatus().then(setLockout);
     }, []);

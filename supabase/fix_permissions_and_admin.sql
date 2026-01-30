@@ -152,6 +152,21 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ==========================================
+-- 3.1 PUBLIC SYSTEM STATUS RPC
+-- ==========================================
+-- Allow frontend to check if admin exists (SECURITY DEFINER bypasses RLS)
+CREATE OR REPLACE FUNCTION public.check_admin_exists()
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (SELECT 1 FROM public.users WHERE role = 'ADMIN');
+END;
+$$;
+
+-- ==========================================
 -- 4. ADMIN CLAIM RPC
 -- ==========================================
 
