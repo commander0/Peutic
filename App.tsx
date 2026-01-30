@@ -120,8 +120,9 @@ const MainApp: React.FC = () => {
             navigate('/admin/dashboard');
           }
         } else {
-          UserService.clearCache();
-          setUser(null);
+          // SOFT FAIL: If sync failed but we have a token, don't kill the session immediately
+          // Just let the auth listener handle the final decision
+          console.warn("Init Check: User not synced yet, waiting for Auth Listener...");
         }
 
         setMaintenanceMode(AdminService.getSettings().maintenanceMode);
@@ -189,31 +190,52 @@ const MainApp: React.FC = () => {
     };
     const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
     events.forEach(event => window.addEventListener(event, updateActivity, { capture: true, passive: true }));
+    // Also listen for visibility change to re-blur on tab switch if needed, or update timestamp
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === 'visible') {
+        lastActivityRef.current = Date.now();
+      }
+    });
     return () => events.forEach(event => window.removeEventListener(event, updateActivity, { capture: true }));
   }, [showTimeoutWarning]);
 
 
 
+  // Privacy Blur & Timeout Logic
+  const [isBlurred, setIsBlurred] = useState(false);
+
   useEffect(() => {
-    const checkTimeout = () => {
+    const checkActivity = () => {
       if (!user || activeSessionCompanion) return;
+
       const now = Date.now();
       const elapsed = now - lastActivityRef.current;
-      const timeoutLimit = 15 * 60 * 1000; // 15 mins for everyone
 
-      // Warn 1 minute before
+      // Privacy Blur (5 Minutes)
+      if (elapsed > 5 * 60 * 1000 && !isBlurred) {
+        setIsBlurred(true);
+      }
+
+      // Session Timeout (15 Minutes)
+      const timeoutLimit = 15 * 60 * 1000;
       if (elapsed > timeoutLimit - 60000 && elapsed < timeoutLimit) {
         setShowTimeoutWarning(true);
       }
-
       if (elapsed > timeoutLimit) {
         setShowTimeoutWarning(false);
         handleLogout();
       }
     };
-    const interval = setInterval(checkTimeout, 5000); // Check more frequently
+
+    const interval = setInterval(checkActivity, 1000);
     return () => clearInterval(interval);
-  }, [user, activeSessionCompanion]);
+  }, [user, activeSessionCompanion, isBlurred]);
+
+  const handleResumeActivity = () => {
+    lastActivityRef.current = Date.now();
+    setIsBlurred(false);
+    setShowTimeoutWarning(false);
+  };
 
   const handleLogin = async (_role: UserRole, name: string, _avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email', password?: string, isSignup: boolean = false): Promise<void> => {
     const userEmail = email || `${name.toLowerCase().replace(/ /g, '.')}@example.com`;
@@ -324,8 +346,22 @@ const MainApp: React.FC = () => {
                 {showAuth && <Auth onLogin={handleLogin} onCancel={() => setShowAuth(false)} initialMode={authMode} />}
 
 
+                {/* PRIVACY BLUR OVERLAY */}
+                {isBlurred && (
+                  <div
+                    onClick={handleResumeActivity}
+                    className="fixed inset-0 z-[10000] bg-black/40 backdrop-blur-2xl flex flex-col items-center justify-center text-white cursor-pointer transition-all duration-700 animate-in fade-in"
+                  >
+                    <div className="bg-black/20 p-8 rounded-full border border-white/10 mb-6 shadow-2xl">
+                      <ShieldCheck className="w-16 h-16 opacity-80 animate-pulse" />
+                    </div>
+                    <h2 className="text-3xl font-black tracking-tight mb-2">Session Secure</h2>
+                    <p className="text-white/60 text-sm uppercase tracking-widest font-mono">Tap to Resume</p>
+                  </div>
+                )}
+
                 {/* TIMEOUT WARNING MODAL */}
-                {showTimeoutWarning && (
+                {showTimeoutWarning && !isBlurred && (
                   <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
                     <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl max-sm w-full text-center shadow-2xl border border-yellow-500">
                       <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">

@@ -61,38 +61,38 @@
    3. OCEAN (Calm/Blue)
    ----------------------------------------------------------------------------- */
 [data-theme="ocean"] {
-    --color-primary: #38bdf8;
-    --color-primary-light: #ecfeff;
-    --color-primary-border: #bae6fd;
+    --color-primary: #0ea5e9;
+    --color-primary-light: #e0f2fe;
+    --color-primary-border: #7dd3fc;
     --color-bg-base: #f0f9ff;
-    --color-bg-gradient: linear-gradient(to bottom right, #f0f9ff, #e0f2fe, transparent);
+    --color-bg-gradient: linear-gradient(to bottom right, #e0f2fe, #bae6fd, #e0f2fe);
 }
 
 [data-theme="ocean"].dark {
-    --color-primary: #0ea5e9;
-    --color-primary-light: rgba(14, 165, 233, 0.1);
-    --color-primary-border: rgba(14, 165, 233, 0.3);
-    --color-bg-base: #08121c;
-    --color-bg-gradient: linear-gradient(to bottom right, rgba(14, 165, 233, 0.1), #08121c, #000000);
+    --color-primary: #38bdf8;
+    --color-primary-light: rgba(56, 189, 248, 0.2);
+    --color-primary-border: rgba(56, 189, 248, 0.4);
+    --color-bg-base: #0c4a6e;
+    --color-bg-gradient: linear-gradient(to bottom right, #0c4a6e, #082f49, #020617);
 }
 
 /* -----------------------------------------------------------------------------
    4. FOREST (Nature/Green)
    ----------------------------------------------------------------------------- */
 [data-theme="forest"] {
-    --color-primary: #10B981;
-    --color-primary-light: #ECFDF5;
-    --color-primary-border: #A7F3D0;
-    --color-bg-base: #F0FDF4;
-    --color-bg-gradient: linear-gradient(to bottom right, #f0fdf4, #dcfce7, transparent);
+    --color-primary: #059669;
+    --color-primary-light: #d1fae5;
+    --color-primary-border: #6ee7b7;
+    --color-bg-base: #ecfdf5;
+    --color-bg-gradient: linear-gradient(to bottom right, #d1fae5, #a7f3d0, #ecfdf5);
 }
 
 [data-theme="forest"].dark {
-    --color-primary: #34D399;
-    --color-primary-light: rgba(52, 211, 153, 0.1);
-    --color-primary-border: rgba(52, 211, 153, 0.3);
-    --color-bg-base: #020f0a;
-    --color-bg-gradient: linear-gradient(to bottom right, rgba(16, 185, 129, 0.1), #020f0a, #000000);
+    --color-primary: #10b981;
+    --color-primary-light: rgba(16, 185, 129, 0.2);
+    --color-primary-border: rgba(16, 185, 129, 0.4);
+    --color-bg-base: #064e3b;
+    --color-bg-gradient: linear-gradient(to bottom right, #064e3b, #022c22, #020617);
 }
 
 /* -----------------------------------------------------------------------------
@@ -118,19 +118,21 @@
    6. LAVENDER (Soft Purple)
    ----------------------------------------------------------------------------- */
 [data-theme="lavender"] {
-    --color-primary: #A78BFA;
-    --color-primary-light: #F5F3FF;
-    --color-primary-border: #DDD6FE;
-    --color-bg-base: #FAF5FF;
-    --color-bg-gradient: linear-gradient(to bottom right, #faf5ff, #f3e8ff, transparent);
+    --color-primary: #7c3aed;
+    /* Violet 600 */
+    --color-primary-light: #ede9fe;
+    --color-primary-border: #c4b5fd;
+    --color-bg-base: #f5f3ff;
+    --color-bg-gradient: linear-gradient(to bottom right, #ede9fe, #ddd6fe, #f5f3ff);
 }
 
 [data-theme="lavender"].dark {
-    --color-primary: #C4B5FD;
-    --color-primary-light: rgba(167, 139, 250, 0.1);
-    --color-primary-border: rgba(167, 139, 250, 0.3);
-    --color-bg-base: #0f0a1e;
-    --color-bg-gradient: linear-gradient(to bottom right, rgba(139, 92, 246, 0.1), #0f0a1e, #000000);
+    --color-primary: #a78bfa;
+    /* Violet 400 */
+    --color-primary-light: rgba(167, 139, 250, 0.2);
+    --color-primary-border: rgba(167, 139, 250, 0.4);
+    --color-bg-base: #2e1065;
+    --color-bg-gradient: linear-gradient(to bottom right, #2e1065, #1e1b4b, #020617);
 }
 
 /* -----------------------------------------------------------------------------
@@ -197,20 +199,22 @@
    10. ROYAL (Gold/Purple Luxury)
    ----------------------------------------------------------------------------- */
 [data-theme="royal"] {
-    --color-primary: #9333ea;
-    --color-primary-light: #F3E8FF;
-    --color-primary-border: #D8B4FE;
-    --color-bg-base: #FAF5FF;
-    --color-bg-gradient: linear-gradient(to bottom right, #faf5ff, #f3e8ff, transparent);
+    --color-primary: #7e22ce;
+    /* Purple 700 */
+    --color-primary-light: #f3e8ff;
+    --color-primary-border: #d8b4fe;
+    --color-bg-base: #faf5ff;
+    --color-bg-gradient: linear-gradient(to bottom right, #f3e8ff, #e9d5ff, #faf5ff);
 }
 
 [data-theme="royal"].dark {
-    --color-primary: #FFD700;
-    --color-primary-light: rgba(255, 215, 0, 0.1);
-    --color-primary-border: rgba(255, 215, 0, 0.4);
-    --color-bg-base: #1a0b2e;
+    --color-primary: #ffd700;
+    --color-primary-light: rgba(255, 215, 0, 0.15);
+    --color-primary-border: rgba(255, 215, 0, 0.5);
+    --color-bg-base: #3b0764;
+    /* Purple 950 */
     --color-text-base: #fdf4ff;
-    --color-bg-gradient: linear-gradient(to bottom right, rgba(88, 28, 135, 0.3), #1a0b2e, #000000);
+    --color-bg-gradient: linear-gradient(to bottom right, #3b0764, #2e1065, #000000);
 }
 
 /* Utility Animations */

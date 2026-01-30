@@ -332,11 +332,11 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     const filteredUsers = users.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase()));
 
     return (
-        <div className="min-h-screen bg-black text-white font-sans flex overflow-hidden">
+        <div className="min-h-screen bg-[#030303] text-white font-sans flex overflow-hidden selection:bg-yellow-500 selection:text-black">
 
             {/* SIDEBAR */}
-            <aside className={`fixed md:static inset-y-0 left-0 w-64 bg-gray-950 border-r border-gray-800 z-50 transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 flex flex-col`}>
-                <div className="p-5 border-b border-gray-800 flex items-center justify-between">
+            <aside className={`fixed md:static inset-y-0 left-0 w-64 bg-[#050505] border-r border-white/5 z-50 transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 flex flex-col`}>
+                <div className="p-5 border-b border-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-yellow-500 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.4)]">
                             <Activity className="w-5 h-5 text-black" />
@@ -375,7 +375,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                     ))}
                 </nav>
 
-                <div className="p-3 border-t border-gray-800">
+                <div className="p-3 border-t border-white/5">
                     <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-900/10 text-red-500 hover:bg-red-900/30 border border-red-900/30 font-bold text-[10px] uppercase tracking-widest transition-all">
                         <LogOut className="w-3.5 h-3.5" /> {t('admin_terminate')}
                     </button>
@@ -423,7 +423,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                 <div className="lg:col-span-2 space-y-6">
 
                                     {/* 1. Active Concurrency */}
-                                    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                                    <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-5">
                                         <h3 className="font-bold text-white mb-5 flex items-center gap-2 text-sm"><Server className="w-4 h-4 text-purple-500" /> Real-time Concurrency</h3>
 
                                         {/* Dynamic Block Meter based on Capacity */}
@@ -443,7 +443,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                     </div>
 
                                     {/* 2. Waiting Room */}
-                                    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                                    <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-5">
                                         <h3 className="font-bold text-white mb-5 flex items-center gap-2 text-sm"><Clock className="w-4 h-4 text-yellow-500" /> Waiting Room</h3>
 
                                         {/* 35 Block Meter */}
@@ -463,7 +463,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                     </div>
 
                                     {/* Global Broadcaster */}
-                                    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 relative overflow-hidden">
+                                    <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-5 relative overflow-hidden">
                                         <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><Megaphone className="w-20 h-20 text-white" /></div>
                                         <h3 className="font-bold text-white mb-4 flex items-center gap-2 text-sm"><Megaphone className="w-4 h-4 text-blue-500" /> Multi-Channel Broadcast System</h3>
 
@@ -504,7 +504,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                 </div>
 
                                 {/* Live Feed */}
-                                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                                <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-5">
                                     <h3 className="font-bold text-white mb-4 flex items-center gap-2 text-sm"><Activity className="w-4 h-4 text-yellow-500" /> Activity Log</h3>
                                     <div className="space-y-2">
                                         {loading ? (
@@ -545,7 +545,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                     <p className="text-gray-500 text-[9px] mt-3 italic">System triggers alerts when these keywords appear in journals or AI interactions.</p>
                                 </div>
 
-                                <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl">
+                                <div className="bg-[#0A0A0A] border border-white/5 p-5 rounded-2xl">
                                     <h3 className="font-bold text-white mb-4 text-sm">Security Summary</h3>
                                     <div className="space-y-4">
                                         <div className="flex justify-between items-center bg-black/30 p-3 rounded-lg border border-gray-800">
@@ -561,7 +561,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                             </div>
 
                             {/* Real-time Alerts List */}
-                            <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                            <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl overflow-hidden">
                                 <h3 className="p-5 font-bold text-white text-sm border-b border-gray-800 flex items-center gap-2">
                                     <Activity className="w-4 h-4 text-red-500" /> Safety Alert Stream
                                 </h3>
@@ -617,7 +617,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                 )}
                             </div>
 
-                            <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl">
+                            <div className="bg-[#0A0A0A] border border-white/5 p-5 rounded-2xl">
                                 <h3 className="font-bold text-white mb-4 text-sm">Banned Users</h3>
                                 <div className="space-y-2">
                                     {users.filter(u => u.subscriptionStatus === 'BANNED').length === 0 ? (
@@ -667,9 +667,9 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                     onChange={e => setSearchTerm(e.target.value)}
                                 />
                             </div>
-                            <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                            <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl overflow-hidden">
                                 <table className="w-full text-left">
-                                    <thead className="bg-black text-[10px] font-bold text-gray-500 uppercase">
+                                    <thead className="bg-black/50 text-[10px] font-bold text-gray-400 uppercase">
                                         <tr>
                                             <th className="p-4">User</th>
                                             <th className="p-4">Role</th>
@@ -736,7 +736,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                             <div className="grid lg:grid-cols-3 gap-6">
                                 <div className="lg:col-span-2 space-y-6">
                                     {/* Detailed Transaction History */}
-                                    <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                                    <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl overflow-hidden">
                                         <h3 className="p-5 font-bold text-white text-sm border-b border-gray-800 flex items-center gap-2">
                                             <List className="w-4 h-4 text-green-500" /> All Balance Transactions
                                         </h3>
@@ -777,7 +777,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
                                 <div className="space-y-6">
                                     {/* Recent Payouts */}
-                                    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                                    <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-5">
                                         <h3 className="font-bold text-white mb-5 flex items-center gap-2 text-sm"><CreditCard className="w-4 h-4 text-purple-500" /> Recent Payouts</h3>
                                         <div className="space-y-3">
                                             {loadingFinancials ? (
@@ -830,7 +830,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                             </div>
 
                             {specialistView === 'list' ? (
-                                <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                                <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl overflow-hidden">
                                     <table className="w-full text-left">
                                         <thead className="bg-black text-[10px] font-bold text-gray-500 uppercase">
                                             <tr>
@@ -877,7 +877,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                             </div>
                                         ))
                                     ) : companions.map((comp) => (
-                                        <div key={comp.id} className="bg-gray-900 border border-gray-800 p-4 rounded-xl flex flex-col items-center text-center">
+                                        <div key={comp.id} className="bg-[#0A0A0A] border border-white/5 p-4 rounded-xl flex flex-col items-center text-center">
                                             <AvatarImage src={comp.imageUrl} alt={comp.name} className="w-12 h-12 rounded-full object-cover mb-2" />
                                             <h3 className="font-bold text-white text-xs">{comp.name}</h3>
                                             <p className="text-[10px] text-gray-500 mb-2">{comp.specialty}</p>
@@ -967,7 +967,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                         <div className="space-y-6 animate-in fade-in duration-500">
                             <h2 className="text-2xl font-black">{t('admin_config')}</h2>
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl space-y-4">
+                                <div className="bg-[#0A0A0A] border border-white/5 p-5 rounded-2xl space-y-4">
                                     <h3 className="font-bold text-white mb-2 text-sm">Pricing Control</h3>
                                     <div className="flex justify-between items-center">
                                         <span className="text-xs text-gray-400">Active Sale ($1.59/m)</span>
@@ -980,7 +980,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                     </div>
                                 </div>
 
-                                <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl space-y-4">
+                                <div className="bg-[#0A0A0A] border border-white/5 p-5 rounded-2xl space-y-4">
                                     <h3 className="font-bold text-white mb-2 text-sm">System Access</h3>
                                     <div className="flex justify-between items-center">
                                         <div className="flex items-center gap-2">
@@ -996,7 +996,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                     </div>
                                 </div>
 
-                                <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl space-y-4">
+                                <div className="bg-[#0A0A0A] border border-white/5 p-5 rounded-2xl space-y-4">
                                     <h3 className="font-bold text-white mb-2 text-sm">Concurrency Limit</h3>
                                     <div className="flex flex-col gap-3">
                                         <div className="flex items-center justify-between">

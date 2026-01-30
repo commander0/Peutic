@@ -140,7 +140,7 @@ export class UserService {
             id: sessionUser.id,
             name: sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || "User",
             email: sessionUser.email || "",
-            role: UserRole.USER, // Default to USER, Admin dashboard handles its own checks
+            role: (sessionUser.app_metadata?.role || sessionUser.user_metadata?.role || UserRole.USER) as UserRole,
             balance: 0,
             subscriptionStatus: 'ACTIVE',
             joinedAt: new Date().toISOString(),
