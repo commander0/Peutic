@@ -21,9 +21,6 @@ export const BaseService = {
     },
 
     invokeGateway: async (action: string, payload: any = {}) => {
-        // DEBUG: Trace all Gateway calls
-        console.log(`[BaseService] Gateway Call: ${action}`, { payloadKeys: Object.keys(payload || {}) });
-
         const headers = await BaseService.getAuthHeaders();
         const { data, error } = await supabase.functions.invoke('api-gateway', {
             body: { action, payload },

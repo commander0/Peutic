@@ -62,15 +62,22 @@ export class UserService {
     static async restoreSession(): Promise<User | null> {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-            // Check cache first for instant boot
+            // 1. Check Cache
             const cached = this.getCachedUser();
             if (cached && cached.id === session.user.id) {
                 this.currentUser = cached;
-                // Still fire sync in background
-                this.syncUser(session.user.id);
+                this.syncUser(session.user.id); // Background sync
                 return cached;
             }
-            return await this.syncUser(session.user.id);
+
+            // 2. Try DB Sync
+            const syncedUser = await this.syncUser(session.user.id);
+            if (syncedUser) return syncedUser;
+
+            // 3. FALLBACK: Database might be unreachable, but we are Authenticated.
+            // Don't logout! Return a temporary user object from the token.
+            console.warn("RestoreSession: DB Sync failed, using Fallback User");
+            return this.createFallbackUser(session.user);
         }
         return null;
     }
@@ -676,8 +683,14 @@ export class UserService {
     }
 
     // --- ACHIEVEMENTS ---
+    private static lastAchievementCheck: number = 0;
+
     static async checkAchievements(user: User) {
         if (!user || !user.id) return;
+
+        // THROTTLE: Only check every 5 minutes
+        if (Date.now() - this.lastAchievementCheck < 5 * 60 * 1000) return;
+        this.lastAchievementCheck = Date.now();
 
         try {
             // 1. Fetch Definition & Status

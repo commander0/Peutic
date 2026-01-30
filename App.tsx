@@ -138,29 +138,32 @@ const MainApp: React.FC = () => {
     // 4. Persistent Listener for Refresh/Changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
       // Handle both explicit Sign In and Initial Session recovery
-      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
-        // Prevent unnecessary re-sync if we already have the correct user
-        if (!user || user.id !== session.user.id) {
-          let syncedUser = await UserService.syncUser(session.user.id);
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
 
-          if (!syncedUser) {
-            console.warn("User Sync Failed - Using Fallback & Attempting Repair");
-            syncedUser = UserService.createFallbackUser(session.user);
+        // Prevent unnecessary re-sync if we already have the correct user in state
+        if (user && user.id === session.user.id) return;
 
-            // Attempt background repair
-            UserService.repairUserRecord(session.user).then(repaired => {
-              if (repaired) setUser(repaired);
-            });
+        let syncedUser = await UserService.syncUser(session.user.id);
+
+        if (!syncedUser) {
+          console.warn("Auth Listener: Sync failed, using Fallback User.");
+          syncedUser = UserService.createFallbackUser(session.user);
+
+          // Attempt background repair/sync again without blocking
+          UserService.repairUserRecord(session.user).then(repaired => {
+            if (repaired) setUser(repaired);
+          });
+        }
+
+        if (syncedUser) {
+          // AVATAR ROTATION LOGIC: Change user icon if not locked
+          // NOTE: We only rotate if it's a "real" synced user to avoid overwriting preferences
+          // But for now, let's keep it simple and safe.
+          if (!syncedUser.avatarLocked && !syncedUser.avatar) {
+            const seed = Math.random().toString(36).substring(7);
+            syncedUser.avatar = `https://api.dicebear.com/7.x/lorelei/svg?seed=${seed}&backgroundColor=FCD34D`;
           }
-
-          if (syncedUser) {
-            // AVATAR ROTATION LOGIC: Change user icon if not locked
-            if (!syncedUser.avatarLocked) {
-              const seed = Math.random().toString(36).substring(7);
-              syncedUser.avatar = `https://api.dicebear.com/7.x/lorelei/svg?seed=${seed}&backgroundColor=FCD34D`;
-            }
-            setUser(syncedUser);
-          }
+          setUser(syncedUser);
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
