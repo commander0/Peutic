@@ -83,8 +83,9 @@ serve(async (req) => {
             // ==========================================
             case 'admin-create': {
                 const { email, password, masterKey } = payload;
-                const VALID_KEY = Deno.env.get('MASTER_KEY') || 'PEUTIC_ADMIN_ACCESS_2026';
-                if (masterKey !== VALID_KEY) throw new Error("Invalid Master Key");
+                const VALID_KEY = Deno.env.get('MASTER_KEY');
+                // SECURITY PATCH: Remove hardcoded backdoor
+                if (!VALID_KEY || masterKey !== VALID_KEY) throw new Error("Invalid Master Key");
 
                 const { count } = await supabaseClient.from('users').select('*', { count: 'exact', head: true });
                 if ((count || 0) > 0) throw new Error("System already initialized.");
@@ -95,15 +96,30 @@ serve(async (req) => {
                 if (createError) throw createError;
 
                 await supabaseClient.from('users').insert({
-                    id: user.user.id, email, name: 'System Admin', role: 'ADMIN', balance: 999, subscription_status: 'ACTIVE', provider: 'email'
+                    id: user.user.id,
+                    email,
+                    name: 'System Admin',
+                    role: 'ADMIN',
+                    balance: 999,
+                    subscription_status: 'ACTIVE',
+                    provider: 'email',
+                    // SYNC FIELDS (Match UserService.createUser)
+                    email_preferences: { marketing: false, updates: true },
+                    theme_preference: 'dark',
+                    language_preference: 'en',
+                    streak: 0,
+                    game_scores: { match: 0, cloud: 0 },
+                    created_at: new Date().toISOString(),
+                    last_login_date: new Date().toISOString()
                 });
                 return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
             }
 
             case 'admin-reclaim': {
                 const { masterKey } = payload;
-                const VALID_KEY = Deno.env.get('MASTER_KEY') || 'PEUTIC_ADMIN_ACCESS_2026';
-                if (masterKey !== VALID_KEY) throw new Error("Invalid Master Key");
+                const VALID_KEY = Deno.env.get('MASTER_KEY');
+                // SECURITY PATCH: Remove hardcoded backdoor
+                if (!VALID_KEY || masterKey !== VALID_KEY) throw new Error("Invalid Master Key");
 
                 const user = await getAuthUser();
                 if (!user) throw new Error("Authentication required");
@@ -277,6 +293,45 @@ serve(async (req) => {
                 return new Response(JSON.stringify(pet), { headers: corsHeaders });
             }
 
+            case 'process-transaction': {
+                const { userId, amount, description, cost, type } = payload;
+                // 1. Auth Check
+                if (payload.secretKey) {
+                    // Server-side call (e.g. from Stripe Webhook)
+                    const VALID_KEY = Deno.env.get('MASTER_KEY');
+                    if (payload.secretKey !== VALID_KEY) throw new Error("Invalid Secret Key");
+                } else {
+                    const caller = await getAuthUser();
+                    if (!caller || caller.id !== userId) throw new Error("Unauthorized");
+                }
+
+                // 2. Fetch Current Balance
+                const { data: user, error: userError } = await supabaseClient.from('users').select('balance').eq('id', userId).single();
+                if (userError || !user) throw new Error("User not found");
+
+                // 3. Validate Balance for Deductions
+                if (amount < 0 && (user.balance + amount < 0)) {
+                    throw new Error("Insufficient funds");
+                }
+
+                // 4. Update Balance
+                const newBalance = user.balance + amount;
+                const { error: updateError } = await supabaseClient.from('users').update({ balance: newBalance }).eq('id', userId);
+                if (updateError) throw updateError;
+
+                // 5. Log Transaction
+                await supabaseClient.from('transactions').insert({
+                    user_id: userId,
+                    amount: amount,
+                    cost: cost || 0,
+                    description: description || (amount > 0 ? 'Top Up' : 'Service Usage'),
+                    status: 'COMPLETED',
+                    date: new Date().toISOString()
+                });
+
+                return new Response(JSON.stringify({ success: true, newBalance }), { headers: corsHeaders });
+            }
+
             // ==========================================
             // STRIPE & FINANCIALS
             // ==========================================
@@ -397,6 +452,12 @@ serve(async (req) => {
 
             case 'user-status': {
                 const { userId, status } = payload;
+                // SECURITY PATCH: Require Admin
+                const caller = await getAuthUser();
+                if (!caller) throw new Error("Unauthorized");
+                const { data: callerData } = await supabaseClient.from('users').select('role').eq('id', caller.id).maybeSingle();
+                if (callerData?.role !== 'ADMIN') throw new Error("Access Denied");
+
                 await supabaseClient.from('users').update({ subscription_status: status }).eq('id', userId);
                 if (status === 'BANNED') await supabaseClient.auth.admin.signOut(userId);
                 return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
