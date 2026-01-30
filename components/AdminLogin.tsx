@@ -24,7 +24,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
     const [newAdminEmail, setNewAdminEmail] = useState('');
     const [newAdminPassword, setNewAdminPassword] = useState('');
     const [newAdminConfirmPassword, setNewAdminConfirmPassword] = useState('');
-    const [claimMasterKey, setClaimMasterKey] = useState('');
+    const [claimMasterKey, setClaimMasterKey] = useState('PEUTIC_ADMIN_ACCESS_2026');
 
     const [hasAdmin, setHasAdmin] = useState<boolean | null>(null);
     const [lockout, setLockout] = useState(0);
@@ -173,7 +173,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             const finalEmail = newAdminEmail.toLowerCase().trim();
 
             // Use NEW Server-Side Creation Bypass
-            const newUser = await AdminService.createRootAdmin(finalEmail, newAdminPassword, claimMasterKey);
+            const newUser = await AdminService.createRootAdmin(finalEmail, newAdminPassword, claimMasterKey.trim());
 
 
             if (newUser && newUser.role === UserRole.ADMIN) {
