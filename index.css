@@ -28,13 +28,14 @@
     --color-primary-light: #FFFBEB;
     --color-primary-border: #fef08a;
     --color-bg-base: #FFFBEB;
-    --color-bg-gradient: linear-gradient(to bottom right, #fefce8, #fef9c3, transparent);
+    /* Restored Amber/Gold Gradient */
+    --color-bg-gradient: linear-gradient(to bottom right, #fef3c7, #fef9c3, #fffbeb);
 }
 
 [data-theme="default"].dark {
     --color-primary: #FACC15;
     --color-bg-base: #000000;
-    --color-bg-gradient: linear-gradient(to bottom right, rgba(250, 204, 21, 0.1), rgba(0, 0, 0, 1), #000000);
+    --color-bg-gradient: linear-gradient(to bottom right, rgba(217, 119, 6, 0.15), rgba(0, 0, 0, 1), #000000);
 }
 
 /* -----------------------------------------------------------------------------
