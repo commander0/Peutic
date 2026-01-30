@@ -129,8 +129,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 >
                     <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
                 </video>
-                <div className="absolute inset-0 bg-yellow-400/30 pointer-events-none mix-blend-overlay dark:bg-yellow-600/10 dark:mix-blend-color-dodge"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-[#FEF3C7] via-[#FFFBEB]/80 to-white/60 dark:from-black dark:via-gray-900/90 dark:to-black/40"></div>
+                <div className="absolute inset-0 bg-yellow-400/30 pointer-events-none mix-blend-overlay"></div>
+                {/* STRICT REQUIREMENT: Sunny Yellow Gradient for BOTH Light and Dark Modes */}
+                <div className="absolute inset-0 bg-yellow-400/30 pointer-events-none mix-blend-overlay"></div>
+                {/* STRICT REQUIREMENT: Sunny Yellow Gradient for BOTH Light and Dark Modes */}
+                <div className="absolute inset-0 bg-gradient-to-t from-yellow-100 via-yellow-50/80 to-transparent"></div>
+                {/* DARK MODE: Bottom Shadow Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent hidden dark:block pointer-events-none z-0"></div>
                 {/* Vintage Texture */}
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-[0.03] dark:opacity-[0.05] pointer-events-none"></div>
             </div>
@@ -160,7 +165,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             <section className="relative pt-24 pb-12 md:pt-44 md:pb-24 px-4 md:px-6 z-10">
                 <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-10 md:gap-12 items-center">
                     <div className="lg:col-span-7 space-y-5 md:space-y-8 text-center">
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-1.5 bg-white dark:bg-gray-900 border border-yellow-200/50 dark:border-gray-800 rounded-full shadow-sm transition-colors">
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-1.5 bg-white dark:bg-black/80 border border-yellow-200/50 dark:border-black rounded-full shadow-sm dark:shadow-2xl transition-colors">
                             <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-green-500 rounded-full animate-pulse"></div>
                             <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">{onlineCount} {t('hero_badge')}</span>
                         </div>
@@ -168,7 +173,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                             {t('hero_title_1')} <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-orange-400">{t('hero_title_2')}</span>
                         </h1>
-                        <p className="text-base sm:text-lg md:text-xl text-gray-500 dark:text-gray-400 font-medium max-w-xl mx-auto leading-relaxed px-2">
+                        <p className="text-base sm:text-lg md:text-xl text-gray-500 dark:text-white font-bold max-w-xl mx-auto leading-relaxed px-2">
                             {t('hero_subtitle')}
                         </p>
                         <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center pt-2 md:pt-3">
@@ -243,7 +248,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         {/* Row 1 */}
                         <div className="flex gap-4 md:gap-5 animate-marquee w-fit px-4">
                             {marqueeRow1.map((spec, i) => (
-                                <div key={`${spec.id}-1-${i}`} onClick={() => onLoginClick(true)} className="relative flex-shrink-0 w-36 h-48 md:w-52 md:h-64 bg-white dark:bg-gray-900 rounded-2xl md:rounded-[1.5rem] overflow-hidden shadow-lg border border-yellow-100 dark:border-gray-800 hover:scale-105 hover:shadow-2xl hover:border-yellow-400 transition-all duration-300 cursor-pointer group">
+                                <div key={`${spec.id}-1-${i}`} onClick={() => onLoginClick(true)} className="relative flex-shrink-0 w-36 h-48 md:w-52 md:h-64 bg-white dark:bg-black rounded-2xl md:rounded-[1.5rem] overflow-hidden shadow-lg dark:shadow-[0_10px_30px_-5px_rgba(0,0,0,0.8)] border border-yellow-100 dark:border-gray-800 hover:scale-105 hover:shadow-2xl hover:border-yellow-400 transition-all duration-300 cursor-pointer group">
                                     <div className="h-[75%] md:h-[80%] w-full relative">
                                         <AvatarImage src={spec.imageUrl} className="w-full h-full object-cover" alt={spec.name} />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
