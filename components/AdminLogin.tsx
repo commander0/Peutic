@@ -81,13 +81,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
 
             if (authError) {
                 await AdminService.recordAdminFailure(); // Now safe, won't throw
-                if (authError.message.includes("Email not confirmed")) {
-                    // Try auto-verify if possible (Admin feature)
-                    const verified = await AdminService.forceVerifyEmail(normalizedEmail);
-                    if (!verified) throw new Error("Email not confirmed.");
-                } else {
-                    throw new Error(authError.message || "Invalid credentials.");
-                }
+                throw new Error(authError.message || "Invalid credentials.");
             }
 
             if (!authData.user) throw new Error("Authentication failed.");

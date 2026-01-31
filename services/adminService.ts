@@ -209,10 +209,7 @@ export class AdminService {
         return !!data;
     }
 
-    static async forceVerifyEmail(email: string): Promise<boolean> {
-        const { data, error } = await BaseService.invokeGateway('admin-auto-verify', { email });
-        return !error && data?.success;
-    }
+
 
     static async createRootAdmin(email: string, password?: string, masterKey?: string): Promise<User> {
         // 1. Sign Up
