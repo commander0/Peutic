@@ -116,8 +116,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             // SWALLOW INVALID ACTION AND SHOW GENERIC
             const msg = e.message || "Login failed.";
             if (msg.includes("Invalid Action")) {
-                // Show the specific error to help debugging
-                setError(`Login Blocked by DB: ${msg}. (Make sure 'fix_login_triggers.sql' ran successfully)`);
+                setError(`Login Blocked. Run 'permission_safe_fix.sql' in Supabase (Works without admin rights).`);
             } else {
                 setError(msg);
             }

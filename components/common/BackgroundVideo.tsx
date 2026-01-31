@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface BackgroundVideoProps {
     src: string;
@@ -7,38 +7,52 @@ interface BackgroundVideoProps {
 }
 
 export const BackgroundVideo: React.FC<BackgroundVideoProps> = ({ src, poster, className }) => {
-    // NUCLEAR OPTION: DangerouslySetInnerHTML
-    // We treat the video tag as a raw string to ensure React does not touch its attributes.
-    // This is the only way to guarantee 'muted' and 'autoplay' work 100% of the time across all hydration states.
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const [isLoaded, setIsLoaded] = useState(false);
 
-    const videoHTML = `
-        <video
-            src="${src}"
-            poster="${poster || ''}"
-            class="absolute inset-0 w-full h-full object-cover"
-            loop
-            muted
-            playsinline
-            autoplay
-            style="object-fit: cover;"
-        ></video>
-    `;
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        // CRITICAL: Ensure muted is set via PROPERTY to allow autoplay
+        video.muted = true;
+        video.defaultMuted = true;
+
+        // Try to play immediately
+        const startPlay = async () => {
+            try {
+                await video.play();
+                setIsLoaded(true);
+            } catch (err) {
+                console.warn("Autoplay prevented:", err);
+                // Retry on interaction (handled by standard browser behavior usually, but we can force it)
+                window.addEventListener('click', () => {
+                    if (video.paused) video.play();
+                }, { once: true });
+            }
+        };
+        startPlay();
+
+    }, [src]);
 
     return (
-        <div className={`relative ${className || 'w-full h-full'} overflow-hidden bg-black`}>
-            {/* Render Raw HTML */}
-            <div
-                className="absolute inset-0 w-full h-full"
-                dangerouslySetInnerHTML={{ __html: videoHTML }}
+        <div className={`relative ${className || 'w-full h-full'} bg-black overflow-hidden`}>
+            <video
+                ref={videoRef}
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+                src={src}
+                poster={poster} // Native poster support
+                autoPlay
+                playsInline
+                muted
+                loop
+                preload="auto"
+                onLoadedData={() => setIsLoaded(true)}
             />
-
-            {/* 
-                We keep a simple poster div behind it just in case the HTML takes 1ms to parse, 
-                avoiding a black flash.
-            */}
+            {/* Fallback Poster (visible if video loads slowly) */}
             <div
-                className="absolute inset-0 bg-cover bg-center -z-10"
-                style={{ backgroundImage: poster ? `url(${poster})` : 'none' }}
+                className={`absolute inset-0 bg-cover bg-center transition-opacity duration-700 pointer-events-none -z-10 ${isLoaded ? 'opacity-0' : 'opacity-100'}`}
+                style={{ backgroundImage: poster ? `url(${poster})` : undefined }}
             />
         </div>
     );
