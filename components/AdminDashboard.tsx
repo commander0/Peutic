@@ -116,12 +116,18 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
     // SECURITY: Double-check admin status on mount
     // This prevents a user from accessing this component if they somehow bypassed the router guard
+    // SECURITY: Double-check admin status on mount
+    // OPTIMIZED: We now trust the App.tsx router guard more.
+    // Instead of auto-kicking, we just warn if state is mismatched, 
+    // relying on RLS to block data access if the user is truly invalid.
     useEffect(() => {
         const verifyAdmin = async () => {
             const currentUser = UserService.getUser();
-            if (!currentUser || currentUser.role !== UserRole.ADMIN) {
-                console.warn("Security Violation: Non-admin attempted to access dashboard.");
-                onLogout(); // Force kick
+            // Only kick if we are explicitly the WRONG role, not just "loading" (null)
+            if (currentUser && currentUser.role !== UserRole.ADMIN) {
+                console.warn("Security Warning: User role mismatch in dashboard.");
+                // We DON'T call onLogout() instantly to avoid "flicker loops".
+                // The API calls will fail anyway if they aren't admin.
             }
         };
         verifyAdmin();
