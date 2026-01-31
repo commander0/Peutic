@@ -171,26 +171,39 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         setLoading(true);
 
         try {
-            // 1. Verify Master Key Locally First (to save time)
+            // 1. Verify Master Key Locally First
             if (!AdminService.verifyMasterKey(masterKey)) {
                 throw new Error("Invalid Master Key.");
             }
 
-            // 2. Simply create/update the root admin using the existing helper
-            // This function handles: Signup/Login -> Claim Admin Rights via RPC -> Sync
-            const user = await AdminService.createRootAdmin(email, password, masterKey);
-
-            if (user && user.role === UserRole.ADMIN) {
-                setSuccessMsg("EMERGENCY ACCESS GRANTED. WELCOME BACK, COMMANDER.");
-                setTimeout(() => {
-                    onLogin(user);
-                }, 1000);
-            } else {
-                throw new Error("Rescue failed. User created but Admin rights denied.");
+            // 2. Try Automated Rescue
+            try {
+                const user = await AdminService.createRootAdmin(email, password, masterKey);
+                if (user && user.role === UserRole.ADMIN) {
+                    setSuccessMsg("EMERGENCY ACCESS GRANTED. WELCOME BACK, COMMANDER.");
+                    setTimeout(() => { onLogin(user); }, 1000);
+                    return;
+                }
+            } catch (authError: any) {
+                // If Auth fails (e.g. Rate Limit), we must fallback to Manual SQL
+                console.error("Auth/Rescue Failed:", authError);
+                if (authError.message?.includes('rate limit') || authError.message?.includes('security')) {
+                    throw new Error("RATE_LIMIT");
+                }
+                throw authError; // Rethrow other errors
             }
+
         } catch (e: any) {
-            console.error(e);
-            setError(e.message || "Rescue Failed.");
+            if (e.message === "RATE_LIMIT") {
+                setError(`
+                    SECURITY LOCKOUT DETECTED (Rate Limit).
+                    To bypass, run this SQL in your Supabase Editor:
+                    UPDATE auth.users SET raw_app_meta_data = '{"role":"ADMIN"}' WHERE email = '${email}';
+                    UPDATE public.users SET role = 'ADMIN' WHERE email = '${email}';
+                `);
+            } else {
+                setError(e.message || "Rescue Failed.");
+            }
         } finally {
             setLoading(false);
         }
@@ -255,7 +268,12 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                         </div>
                     ) : (
                         <>
-                            {error && <div className="mb-6 p-4 bg-red-900/30 border border-red-800 text-red-400 text-sm rounded-xl flex items-center gap-2 font-bold animate-pulse"><AlertCircle className="w-4 h-4 flex-shrink-0" /> <span>{error}</span></div>}
+                            {error && (
+                                <div className="mb-6 p-4 bg-red-900/30 border border-red-800 text-red-400 text-sm rounded-xl flex items-start gap-2 font-bold animate-pulse text-left">
+                                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                                    <span className="whitespace-pre-line font-mono text-xs">{error}</span>
+                                </div>
+                            )}
                             {successMsg && <div className="mb-6 p-4 bg-green-900/30 border border-green-800 text-green-400 text-sm rounded-xl flex items-center gap-2 font-bold animate-bounce"><Check className="w-4 h-4" /> {successMsg}</div>}
 
                             {showRescue ? (
