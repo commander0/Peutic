@@ -72,6 +72,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
 
         try {
             const normalizedEmail = email.toLowerCase().trim();
+            if (!normalizedEmail || !password) throw new Error("Missing email or password.");
 
             // 1. STRICT AUTH
             const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
