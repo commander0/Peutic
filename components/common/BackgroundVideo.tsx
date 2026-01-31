@@ -8,83 +8,82 @@ interface BackgroundVideoProps {
 
 export const BackgroundVideo: React.FC<BackgroundVideoProps> = ({ src, poster, className }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const [hasPlayed, setHasPlayed] = useState(false);
+    const [isReady, setIsReady] = useState(false);
 
     useEffect(() => {
         const video = videoRef.current;
         if (!video) return;
 
-        // CRITICAL FOR AUTOPLAY: Always ensure these are set properties, not just attributes
+        // 1. FORCE ATTRIBUTES directly on DOM element to bypass React timing issues
         video.muted = true;
-        video.defaultMuted = true;
         video.playsInline = true;
+        video.loop = true;
+        video.autoplay = true;
 
-        const startPlay = async () => {
-            try {
-                // Modern browsers require setSinkId for completely silent playback sometimes
-                // @ts-ignore - setSinkId is not in all TS definitions yet
-                if (typeof video.setSinkId === 'function') {
-                    // @ts-ignore
-                    await video.setSinkId('');
-                }
+        // 2. Event Listeners for Robustness
+        const handleCanPlay = () => {
+            setIsReady(true);
+            attemptPlay();
+        };
 
-                await video.play();
-                setHasPlayed(true);
-            } catch (err) {
-                console.warn("Autoplay blocked (will retry on interaction):", err);
+        const attemptPlay = () => {
+            // Promise-based play handling
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.warn("Auto-play was prevented. Waiting for user interaction.", error);
+                    // If blocked, we add a ONE-TIME listener to the document to start it on first touch/click
+                    const onInteract = () => {
+                        video.play();
+                        document.removeEventListener('click', onInteract);
+                        document.removeEventListener('touchstart', onInteract);
+                        document.removeEventListener('keydown', onInteract);
+                    };
+                    document.addEventListener('click', onInteract);
+                    document.addEventListener('touchstart', onInteract);
+                    document.addEventListener('keydown', onInteract);
+                });
             }
         };
 
-        // Attempt immediate play
-        startPlay();
+        video.addEventListener('canplay', handleCanPlay);
 
-        // Fallback: If autoplay was blocked, play on ANY first user interaction
-        const forcePlayOnInteraction = () => {
-            if (video.paused) {
-                video.muted = true; // Ensure muted again just in case
-                video.play().then(() => {
-                    setHasPlayed(true);
-                    // Remove listeners once success
-                    cleanupListeners();
-                }).catch(e => console.error("Interaction play retry failed", e));
-            }
+        // Check if already ready (cached)
+        if (video.readyState >= 3) {
+            handleCanPlay();
+        }
+
+        return () => {
+            video.removeEventListener('canplay', handleCanPlay);
         };
-
-        const cleanupListeners = () => {
-            window.removeEventListener('click', forcePlayOnInteraction);
-            window.removeEventListener('touchstart', forcePlayOnInteraction);
-            window.removeEventListener('scroll', forcePlayOnInteraction);
-            window.removeEventListener('keydown', forcePlayOnInteraction);
-        };
-
-        window.addEventListener('click', forcePlayOnInteraction);
-        window.addEventListener('touchstart', forcePlayOnInteraction);
-        window.addEventListener('scroll', forcePlayOnInteraction);
-        window.addEventListener('keydown', forcePlayOnInteraction);
-
-        return () => cleanupListeners();
     }, [src]);
 
     return (
-        <div className={`relative ${className || 'w-full h-full'} overflow-hidden`}>
+        <div className={`relative ${className || 'w-full h-full'} overflow-hidden bg-black`}>
+            {/* 
+               CRITICAL: React sometimes removes attributes during hydration. 
+               We use standard camelCase but also redundancy in useEffect. 
+            */}
             <video
                 ref={videoRef}
                 src={src}
                 poster={poster}
-                className="absolute inset-0 w-full h-full object-cover"
-                loop
-                muted
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${isReady ? 'opacity-100' : 'opacity-0'}`}
                 playsInline
-                autoPlay
-                // We do NOT toggle display:none because that prevents loading/buffering.
-                // Instead we assume the poster is behind it or we fade it.
-                style={{ objectFit: 'cover' }}
+                muted
+                loop
+                autoPlay // React standard
+                preload="auto"
             />
-            {/* 
-                We do not show a poster overlay div here because simpler is better for "just working".
-                The video tag's native 'poster' attribute handles the loading image.
-                If video plays, it covers the poster.
-            */}
+
+            {/* Poster Fallback (Cross-fades out when video is ready) */}
+            <div
+                className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 pointer-events-none ${isReady ? 'opacity-0' : 'opacity-100'}`}
+                style={{
+                    backgroundImage: poster ? `url(${poster})` : 'none',
+                    zIndex: 1
+                }}
+            />
         </div>
     );
 };
