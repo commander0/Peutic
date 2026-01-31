@@ -191,7 +191,7 @@ export class UserService {
                 id: sessionUser.id,
                 email: sessionUser.email,
                 name: fallbackName,
-                role: 'USER',
+                role: (sessionUser.app_metadata?.role || sessionUser.user_metadata?.role || 'USER'),
                 balance: 0,
                 provider: sessionUser.app_metadata?.provider || 'email'
             });

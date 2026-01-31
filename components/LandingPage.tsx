@@ -112,17 +112,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     loop
                     muted
                     playsInline
-                    className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center opacity-60 dark:opacity-40 mix-blend-multiply dark:mix-blend-overlay filter blur-[1px]"
+                    className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center opacity-80 dark:opacity-60 mix-blend-multiply dark:mix-blend-overlay filter blur-[1px]"
                 >
                     <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
                 </video>
-                <div className="absolute inset-0 bg-yellow-400/30 pointer-events-none mix-blend-overlay"></div>
-                {/* STRICT REQUIREMENT: Sunny Yellow Gradient for BOTH Light and Dark Modes */}
-                <div className="absolute inset-0 bg-yellow-400/30 pointer-events-none mix-blend-overlay"></div>
-                {/* STRICT REQUIREMENT: Sunny Yellow Gradient for BOTH Light and Dark Modes */}
-                <div className="absolute inset-0 bg-gradient-to-t from-yellow-100 via-yellow-50/80 to-transparent"></div>
-                {/* DARK MODE: Bottom Shadow Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent hidden dark:block pointer-events-none z-0"></div>
+                {/* Single Overlay for subtle yellow tint */}
+                <div className="absolute inset-0 bg-yellow-400/20 pointer-events-none mix-blend-overlay"></div>
+                {/* Gradient for text readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-yellow-100/90 via-yellow-50/50 to-transparent dark:from-black/90 dark:via-black/70 dark:to-transparent"></div>
+
                 {/* Vintage Texture */}
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-[0.03] dark:opacity-[0.05] pointer-events-none"></div>
             </div>

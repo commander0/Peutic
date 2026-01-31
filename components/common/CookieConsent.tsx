@@ -38,7 +38,7 @@ export const CookieConsent = () => {
                     <ConsentCard
                         key="cookie-card"
                         icon={Cookie}
-                        description="SECURE CONNECTIVITY ACTIVE FOR LOW-LATENCY."
+                        description="SECURE CONNECTIVITY ACTIVE. WE USE COOKIES TO ENSURE LOW-LATENCY VIDEO AND REAL-TIME CONNECTION STABILITY."
                         onAccept={acceptCookie}
                     />
                 )}
@@ -46,7 +46,7 @@ export const CookieConsent = () => {
                     <ConsentCard
                         key="privacy-card"
                         icon={ShieldCheck}
-                        description="YOUR DATA IS ENCRYPTED AND PRIVATE."
+                        description="YOUR DATA IS ENCRYPTED AND PRIVATE. WE NEVER SELL YOUR PERSONAL INFORMATION TO THIRD PARTIES."
                         onAccept={acceptPrivacy}
                     />
                 )}

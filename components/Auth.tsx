@@ -210,34 +210,26 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             </AnimatePresence>
 
             {/* ARTWORK / HERO COLUMN (Hidden on Mobile) */}
-            <div className="hidden md:block w-1/2 h-full relative bg-gray-900">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={mode}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 0.6 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 1 }}
-                        className="absolute inset-0"
-                    >
-                        <img
-                            src={mode === 'login'
-                                ? "https://images.unsplash.com/photo-1518005052387-c9a7653b8f4c?q=80&w=2600&auto=format&fit=crop"
-                                : "https://images.unsplash.com/photo-1528716321680-815a8cdb8cbe?q=80&w=2576&auto=format&fit=crop"}
-                            className="w-full h-full object-cover"
-                            alt="Background"
-                        />
-                    </motion.div>
-                </AnimatePresence>
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
+            <div className="hidden md:block w-1/2 h-full relative overflow-hidden">
+                <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover object-center opacity-80"
+                >
+                    <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
+                </video>
+                <div className="absolute inset-0 bg-yellow-400/20 mix-blend-multiply"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
 
-                <div className="absolute bottom-20 left-12 right-12 text-white">
+                <div className="absolute bottom-20 left-12 right-12 text-white z-10">
                     <AnimatePresence mode="wait">
                         <motion.div key={mode === 'login' ? 'text-login' : 'text-signup'} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -20, opacity: 0 }}>
-                            <h1 className="text-5xl font-black mb-4 tracking-tight leading-tight">
+                            <h1 className="text-5xl font-black mb-4 tracking-tight leading-tight text-white">
                                 {mode === 'login' ? "Welcome back to your sanctuary." : "Begin your journey to mindfulness."}
                             </h1>
-                            <p className="text-xl text-gray-300 max-w-lg">
+                            <p className="text-xl text-yellow-100 max-w-lg font-bold">
                                 {mode === 'login'
                                     ? "Resume your progress, connect with your companion, and find your center."
                                     : "Join thousands of others discovering peace, clarity, and growth every day."}
