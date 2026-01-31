@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, ReactNode, ErrorInfo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole, Companion } from './types';
 import LandingPage from './components/LandingPage';
@@ -15,59 +15,29 @@ import { logger } from './services/logger';
 import BookOfYou from './components/wisdom/BookOfYou';
 
 
-import { Wrench, AlertTriangle, Clock, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Wrench, Clock, ShieldCheck } from 'lucide-react';
 import { ToastProvider } from './components/common/Toast';
 import { LanguageProvider } from './components/common/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { Footer } from './components/common/Footer';
+import { CookieConsent } from './components/common/CookieConsent';
+
+// Helper to hide footer on secure dashboard routes if needed
+const FooterWrapper = () => {
+  const location = useLocation();
+  // We want footer on Landing Page (/) if NOT logged in... logic is in App main return.
+  // If we are logged in, / is Dashboard. 
+  // Actually, Dashboard probably has its own layout. 
+  // Let's rely on Dashboard having its own layout or just show Footer at bottom.
+  // BUT Dashboard is usually 100vh h-screen.
+  // Safety check:
+  if (location.pathname === '/' || location.pathname === '/book-of-you' || location.pathname.includes('/admin')) return null;
+  return <Footer />;
+};
 
 
-// --- ERROR BOUNDARY (CRASH PREVENTION) ---
 
-interface ErrorBoundaryProps {
-  children?: ReactNode;
-}
-
-interface ErrorBoundaryState {
-  hasError: boolean;
-}
-
-// Explicitly inheriting from React.Component with Generics to ensure proper 'props' and 'state' resolution in TypeScript
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  public state: ErrorBoundaryState = { hasError: false };
-
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-  }
-
-  static getDerivedStateFromError(_: Error): ErrorBoundaryState {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    logger.error("Critical Application Error", "ErrorBoundary Caught Exception", { error, info: errorInfo });
-    AdminService.logSystemEvent('ERROR', 'App Crash', error.message);
-  }
-
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center text-white">
-          <AlertTriangle className="w-16 h-16 text-yellow-500 mb-6" />
-          <h1 className="text-3xl font-black mb-4">Something went wrong.</h1>
-          <p className="text-gray-400 mb-8 max-w-md">Our systems detected an unexpected issue. We have logged this report and notified our engineering team.</p>
-          <button
-            onClick={() => { this.setState({ hasError: false }); window.location.href = '/'; }}
-            className="bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform flex items-center gap-2"
-          >
-            <RefreshCw className="w-4 h-4" /> Reload Application
-          </button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 
 const MainApp: React.FC = () => {
   const [user, setUser] = useState<User | null>(UserService.getCachedUser());
@@ -256,7 +226,7 @@ const MainApp: React.FC = () => {
     setShowTimeoutWarning(false);
   };
 
-  const handleLogin = async (_role: UserRole, name: string, _avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email', password?: string, isSignup: boolean = false): Promise<void> => {
+  const handleLogin = async (_role: UserRole, name: string, _avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email', password?: string, isSignup: boolean = false, topics?: string[]): Promise<void> => {
     const userEmail = email || `${name.toLowerCase().replace(/ /g, '.')}@example.com`;
     let currentUser: User;
 
@@ -287,7 +257,15 @@ const MainApp: React.FC = () => {
 
       currentUser = UserService.checkAndIncrementStreak(currentUser);
 
-      setUser(currentUser);
+      let finalUser = currentUser;
+
+      // SAVE ONBOARDING TOPICS (Growth Fix)
+      if (topics && topics.length > 0) {
+        finalUser = { ...currentUser, emailPreferences: { ...currentUser.emailPreferences, marketing: true, updates: currentUser.emailPreferences?.updates ?? false, topics } };
+        UserService.updatePreferences(currentUser.id, { topics }).catch(console.warn);
+      }
+
+      setUser(finalUser);
       lastActivityRef.current = Date.now();
       setShowAuth(false);
 
@@ -442,6 +420,13 @@ const MainApp: React.FC = () => {
                   <Route path="/support" element={<StaticPages type="support" />} />
                   <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
+
+                <CookieConsent />
+                {/* GLOBAL FOOTER (Only show if no active verified session to prevent distraction, or handle inside specific pages) */}
+                {/* For now, simplified: Show on Landing and Static Pages only? Or globally? */}
+                {/* Let's route-based render via Routes or just appended here if user is not in a call */}
+                {!activeSessionCompanion && <FooterWrapper />}
+
               </>
             )}
           </ToastProvider>

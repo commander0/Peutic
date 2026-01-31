@@ -269,6 +269,28 @@ export class UserService {
         throw new Error("Failed to initialize account");
     }
 
+    static async updatePreferences(userId: string, prefs: { topics?: string[], theme?: string, language?: string }) {
+        if (!userId) return;
+
+        // Fetch current to merge
+        const { data: current } = await supabase.from('users').select('email_preferences').eq('id', userId).single();
+        const currentPrefs = current?.email_preferences || {};
+
+        const newPrefs = { ...currentPrefs, ...prefs };
+
+        const { error } = await supabase.from('users').update({ email_preferences: newPrefs }).eq('id', userId);
+
+        if (error) {
+            logger.error("Update Preferences Failed", userId, error);
+        } else {
+            // Update Cache if currentUser is loaded
+            if (this.currentUser && this.currentUser.id === userId) {
+                this.currentUser.emailPreferences = newPrefs;
+                this.saveUserToCache(this.currentUser);
+            }
+        }
+    }
+
     static async updateUser(user: User) {
         if (!user.id) return;
         this.currentUser = user;

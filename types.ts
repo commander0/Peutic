@@ -21,6 +21,7 @@ export interface User {
   emailPreferences?: {
     marketing: boolean;
     updates: boolean;
+    topics?: string[];
   };
   gameScores?: {
     match: number;

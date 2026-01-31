@@ -8,7 +8,7 @@ import { NameValidator } from '../services/nameValidator';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface AuthProps {
-    onLogin: (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider?: 'email' | 'google' | 'facebook' | 'x', password?: string, isSignup?: boolean) => Promise<void>;
+    onLogin: (role: UserRole, name: string, avatar?: string, email?: string, birthday?: string, provider?: 'email' | 'google' | 'facebook' | 'x', password?: string, isSignup?: boolean, topics?: string[]) => Promise<void>;
     onCancel: () => void;
     initialMode?: 'login' | 'signup';
 }
@@ -28,6 +28,8 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
     const [birthday, setBirthday] = useState('');
 
     const [loading, setLoading] = useState(false);
+    const [rateLimited, setRateLimited] = useState(false);
+    const retryTimeout = useRef<number | null>(null);
     const [error, setError] = useState('');
     const [toast, setToast] = useState<string | null>(null);
 
@@ -45,21 +47,40 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
 
     // --- HANDLERS ---
 
-    const handleGoogleClick = async () => {
+    const handleSocialLogin = async (provider: 'google' | 'facebook' | 'twitter') => {
         setLoading(true);
         try {
             const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
+                provider: provider,
                 options: { redirectTo: window.location.origin }
             });
             if (error) throw error;
         } catch (e: any) {
             if (isMounted.current) {
-                setError(e.message || "Google Sign-In failed.");
+                setError(e.message || `${provider} Sign-In failed.`);
                 setLoading(false);
             }
         }
     };
+
+    const SocialButtons = () => (
+        <div className="grid grid-cols-1 gap-3 mb-6">
+            <button type="button" onClick={() => handleSocialLogin('google')} className="w-full h-12 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-900 bg-white dark:bg-black shadow-sm transition-transform hover:scale-[1.02] gap-3 font-medium text-sm">
+                <svg width="20" height="20" viewBox="0 0 24 24"><path d="M23.52 12.29C23.52 11.43 23.45 10.61 23.31 9.82H12V14.46H18.46C18.18 15.92 17.32 17.16 16.03 18.02V20.99H19.91C22.18 18.9 23.52 15.83 23.52 12.29Z" fill="#4285F4" /><path d="M12 24C15.24 24 17.96 22.93 19.91 20.99L16.03 18.02C14.95 18.74 13.58 19.17 12 19.17C8.87 19.17 6.22 17.06 5.27 14.2H1.26V17.31C3.24 21.25 7.31 24 12 24Z" fill="#34A853" /><path d="M5.27 14.2C5.03 13.33 4.9 12.42 4.9 11.5C4.9 10.58 5.03 9.67 5.27 8.8V5.69H1.26C0.46 7.29 0 9.1 0 11.5C0 13.9 0.46 15.71 1.26 17.31L5.27 14.2Z" fill="#FBBC05" /><path d="M12 3.83C13.76 3.83 15.35 4.44 16.59 5.62L20 2.21C17.96 0.31 15.24 0 12 0C7.31 0 3.24 2.75 1.26 6.69L5.27 9.8C6.22 6.94 8.87 3.83 12 3.83Z" fill="#EA4335" /></svg>
+                Continue with Google
+            </button>
+            <div className="grid grid-cols-2 gap-3">
+                <button type="button" onClick={() => handleSocialLogin('facebook')} className="w-full h-12 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-900 bg-white dark:bg-black shadow-sm transition-transform hover:scale-[1.02] gap-2 font-medium text-sm">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-[#1877F2]"><path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036c-2.148 0-2.791 1.657-2.791 3.914v3.218h4.62l-.588 3.667h-4.032v7.98H9.101Z" /></svg>
+                    Facebook
+                </button>
+                <button type="button" onClick={() => handleSocialLogin('twitter')} className="w-full h-12 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-900 bg-white dark:bg-black shadow-sm transition-transform hover:scale-[1.02] gap-2 font-medium text-sm">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-black dark:text-white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                    X (Twitter)
+                </button>
+            </div>
+        </div>
+    );
 
     const validatePasswordStrength = (pwd: string): string | null => {
         if (pwd.length < 8) return "Password must be at least 8 characters long.";
@@ -80,6 +101,29 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (loading || rateLimited) return;
+
+        // RATE LIMIT CHECK (Client Side)
+        const lastAttempt = parseInt(localStorage.getItem('auth_last_attempt') || '0');
+        const attempts = parseInt(localStorage.getItem('auth_attempts') || '0');
+        const now = Date.now();
+
+        if (now - lastAttempt < 1000) return; // 1s cool-down
+
+        if (attempts > 5 && now - lastAttempt < 60000) {
+            setError("Too many attempts. Please wait 1 minute.");
+            setRateLimited(true);
+            retryTimeout.current = window.setTimeout(() => {
+                setRateLimited(false);
+                setError('');
+                localStorage.setItem('auth_attempts', '0');
+            }, 60000);
+            return;
+        }
+
+        localStorage.setItem('auth_last_attempt', now.toString());
+        localStorage.setItem('auth_attempts', (attempts + 1).toString());
+
         setError('');
         setLoading(true);
 
@@ -119,7 +163,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
 
             // Onboarding Metadata could be saved here (topics)
 
-            await onLogin(UserRole.USER, formattedName, undefined, email, birthday, 'email', password, true);
+            await onLogin(UserRole.USER, formattedName, undefined, email, birthday, 'email', password, true, selectedTopics);
 
             if (isMounted.current) {
                 setLoading(false);
@@ -140,15 +184,8 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
     };
 
     // --- RENDER HELPERS ---
+    // SocialButtons is defined above in handlers block
 
-    const SocialButtons = () => (
-        <div className="grid grid-cols-1 gap-3 mb-6">
-            <button type="button" onClick={handleGoogleClick} className="w-full h-12 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-900 bg-white dark:bg-black shadow-sm transition-transform hover:scale-[1.02] gap-3 font-medium text-sm">
-                <svg width="20" height="20" viewBox="0 0 24 24"><path d="M23.52 12.29C23.52 11.43 23.45 10.61 23.31 9.82H12V14.46H18.46C18.18 15.92 17.32 17.16 16.03 18.02V20.99H19.91C22.18 18.9 23.52 15.83 23.52 12.29Z" fill="#4285F4" /><path d="M12 24C15.24 24 17.96 22.93 19.91 20.99L16.03 18.02C14.95 18.74 13.58 19.17 12 19.17C8.87 19.17 6.22 17.06 5.27 14.2H1.26V17.31C3.24 21.25 7.31 24 12 24Z" fill="#34A853" /><path d="M5.27 14.2C5.03 13.33 4.9 12.42 4.9 11.5C4.9 10.58 5.03 9.67 5.27 8.8V5.69H1.26C0.46 7.29 0 9.1 0 11.5C0 13.9 0.46 15.71 1.26 17.31L5.27 14.2Z" fill="#FBBC05" /><path d="M12 3.83C13.76 3.83 15.35 4.44 16.59 5.62L20 2.21C17.96 0.31 15.24 0 12 0C7.31 0 3.24 2.75 1.26 6.69L5.27 9.8C6.22 6.94 8.87 3.83 12 3.83Z" fill="#EA4335" /></svg>
-                Continue with Google
-            </button>
-        </div>
-    );
 
     return (
         <div className="fixed inset-0 bg-[#FFFBEB] dark:bg-black z-[100] flex flex-col md:flex-row overflow-hidden">
