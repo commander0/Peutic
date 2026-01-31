@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, CheckCircle, ArrowRight, ShieldCheck, Cookie, Instagram, Twitter, Linkedin, Play, Moon, Sun, Megaphone } from 'lucide-react';
+import { Heart, CheckCircle, ArrowRight, ShieldCheck, Instagram, Twitter, Linkedin, Play, Moon, Sun, Megaphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from './common/LanguageContext';
 import { LanguageSelector } from './common/LanguageSelector';
@@ -38,7 +38,6 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     const [onlineCount, setOnlineCount] = useState(124);
-    const [showCookies, setShowCookies] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [featuredSpecialists, setFeaturedSpecialists] = useState<Companion[]>([]);
     const { lang, setLang, t } = useLanguage();
@@ -50,13 +49,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
 
     useEffect(() => {
         AdminService.syncGlobalSettings().then(setSettings);
-        const hasAccepted = localStorage.getItem('peutic_cookies_accepted');
-        if (!hasAccepted) {
-            const timer = setTimeout(() => {
-                setShowCookies(true);
-            }, 2000);
-            return () => clearTimeout(timer);
-        }
     }, []);
 
     useEffect(() => {
@@ -89,11 +81,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     }, []);
 
     // Unified theme management via Context
-
-    const acceptCookies = () => {
-        localStorage.setItem('peutic_cookies_accepted', 'true');
-        setShowCookies(false);
-    };
 
     // Split into rows for marquee
     const displayList = featuredSpecialists.length > 0 ? featuredSpecialists : INITIAL_COMPANIONS;
@@ -362,7 +349,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                             <ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-white">
                                 <li><Link to="/privacy" className="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('link_privacy')}</Link></li>
                                 <li><Link to="/terms" className="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('link_terms')}</Link></li>
-                                <li><button onClick={() => setShowCookies(true)} className="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('link_cookies')}</button></li>
+                                <li><Link to="/privacy" className="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('link_cookies')}</Link></li>
                             </ul>
                         </div>
                     </div>
@@ -372,17 +359,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     </div>
                 </div>
             </footer>
-            {showCookies && (
-                <div className="fixed bottom-6 md:bottom-8 left-0 right-0 mx-auto w-[90%] max-w-2xl bg-[#FFFBEB] dark:bg-gray-900 text-black dark:text-white p-4 md:p-6 z-[100] rounded-2xl md:rounded-[2rem] border-2 border-yellow-400 shadow-2xl animate-slide-up-fade">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 text-center md:text-left">
-                        <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
-                            <Cookie className="w-8 h-8 md:w-10 md:h-10 text-yellow-600" />
-                            <p className="text-[10px] md:text-xs font-bold leading-relaxed uppercase tracking-wider">{t('cookie_banner_text')} <Link to="/privacy" className="underline">{t('ui_policy')}</Link></p>
-                        </div>
-                        <div className="flex gap-4"><button onClick={acceptCookies} className="px-6 py-2 md:px-8 md:py-3 bg-black dark:bg-white text-white dark:text-black rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-gray-200 transition-all">{t('ui_accept')}</button></div>
-                    </div>
-                </div>
-            )}
+
         </div>
     );
 };

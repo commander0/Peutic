@@ -23,7 +23,7 @@ export class AdminService {
             multilingualMode: true,
             broadcastMessage: '',
             dashboardBroadcastMessage: ''
-        };
+        } as GlobalSettings;
     })();
 
 

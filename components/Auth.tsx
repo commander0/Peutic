@@ -5,6 +5,7 @@ import { useLanguage } from './common/LanguageContext';
 import { AdminService } from '../services/adminService';
 import { supabase } from '../services/supabaseClient';
 import { NameValidator } from '../services/nameValidator';
+// @ts-ignore
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface AuthProps {
