@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 
 interface BackgroundVideoProps {
     src: string;
@@ -8,54 +8,32 @@ interface BackgroundVideoProps {
 
 export const BackgroundVideo: React.FC<BackgroundVideoProps> = ({ src, poster, className }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
-        const video = videoRef.current;
-        if (!video) return;
-
-        // Force correct attributes for autoplay
-        video.muted = true;
-        video.defaultMuted = true;
-        video.playsInline = true;
-
-        // Attempt play
-        const playPromise = video.play();
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                setIsLoaded(true);
-            }).catch(e => {
-                console.warn("Autoplay blocked:", e);
-                // Attempt to play again on any user interaction with the document
-                const onInteraction = () => {
-                    video.play();
-                    setIsLoaded(true);
-                    document.removeEventListener('click', onInteraction);
-                };
-                document.addEventListener('click', onInteraction);
+        if (videoRef.current) {
+            videoRef.current.playbackRate = 0.8;
+            videoRef.current.play().catch(e => {
+                console.warn("Video autoplay blocked by browser policy:", e);
+                // Fallback to muted interaction if needed, handled by browser controls mostly
             });
         }
-
     }, [src]);
 
     return (
-        <div className={`relative ${className || 'w-full h-full'} bg-black overflow-hidden`}>
+        <div className={`relative ${className || 'w-full h-full'} overflow-hidden`}>
             <video
                 ref={videoRef}
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+                className="absolute inset-0 w-full h-full object-cover"
                 src={src}
                 poster={poster}
-                playsInline
-                muted
-                loop
                 autoPlay
+                loop
+                muted
+                playsInline
                 preload="auto"
             />
-            {/* Fallback Poster */}
-            <div
-                className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 -z-10 ${isLoaded ? 'opacity-0' : 'opacity-100'}`}
-                style={{ backgroundImage: poster ? `url(${poster})` : undefined }}
-            />
+            {/* Fallback Overlay to ensure text readability if video fails */}
+            <div className="absolute inset-0 bg-black/30" />
         </div>
     );
 };

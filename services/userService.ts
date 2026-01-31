@@ -185,21 +185,26 @@ export class UserService {
             console.log("Repair Requested: Manual Insert...", sessionUser.id);
 
             // DIRECT RESTORE (Bypassing Edge Function)
+            // UPSERT to handle race conditions where user might have been created by trigger parallelly
             const fallbackName = sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || "Buddy";
 
-            const { error } = await supabase.from('users').insert({
+            const { data, error } = await supabase.from('users').upsert({
                 id: sessionUser.id,
                 email: sessionUser.email,
                 name: fallbackName,
                 role: (sessionUser.app_metadata?.role || sessionUser.user_metadata?.role || 'USER'),
                 balance: 0,
-                provider: sessionUser.app_metadata?.provider || 'email'
-            });
+                provider: sessionUser.app_metadata?.provider || 'email',
+                last_login_date: new Date().toISOString()
+            }, { onConflict: 'id' }).select().single();
 
             if (error) {
                 console.error("Direct Repair Failed:", error);
-                return null;
+                // Last ditch: check if they exist now?
+                return this.syncUser(sessionUser.id);
             }
+
+            return this.mapUser(data);
 
             // Retry Sync immediately
             return await this.syncUser(sessionUser.id);
