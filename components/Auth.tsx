@@ -5,6 +5,7 @@ import { useLanguage } from './common/LanguageContext';
 import { AdminService } from '../services/adminService';
 import { supabase } from '../services/supabaseClient';
 import { NameValidator } from '../services/nameValidator';
+import { BackgroundVideo } from './common/BackgroundVideo';
 // @ts-ignore
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -37,14 +38,6 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
     // Onboarding State
     const [onboardingStep, setOnboardingStep] = useState(0);
     const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-
-    const videoRef = useRef<HTMLVideoElement>(null);
-
-    useEffect(() => {
-        if (videoRef.current) {
-            videoRef.current.play().catch(e => console.log("Autoplay prevented:", e));
-        }
-    }, []);
 
     useEffect(() => {
         AdminService.syncGlobalSettings().then(s => {
@@ -218,18 +211,13 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             </AnimatePresence>
 
             {/* ARTWORK / HERO COLUMN (Hidden on Mobile) */}
+            {/* ARTWORK / HERO COLUMN (Hidden on Mobile) */}
             <div className="hidden md:block w-1/2 h-full relative overflow-hidden">
-                <video
-                    ref={videoRef}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
+                <BackgroundVideo
+                    src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4"
                     poster="https://images.pexels.com/videos/3249935/free-video-3249935.jpg?auto=compress&cs=tinysrgb&dpr=1&w=500"
                     className="absolute inset-0 w-full h-full object-cover object-center opacity-80"
-                >
-                    <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
-                </video>
+                />
                 <div className="absolute inset-0 bg-yellow-400/20 mix-blend-multiply"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
 

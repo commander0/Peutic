@@ -3,6 +3,7 @@ import { Heart, CheckCircle, ArrowRight, ShieldCheck, Instagram, Twitter, Linked
 import { Link } from 'react-router-dom';
 import { useLanguage } from './common/LanguageContext';
 import { LanguageSelector } from './common/LanguageSelector';
+import { BackgroundVideo } from './common/BackgroundVideo';
 import { AdminService } from '../services/adminService';
 import { useTheme } from '../contexts/ThemeContext';
 import { STABLE_AVATAR_POOL, INITIAL_COMPANIONS } from '../services/database';
@@ -92,14 +93,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     const marqueeRow1 = [...row1, ...row1];
     const marqueeRow2 = [...row2, ...row2];
 
-    const videoRef = React.useRef<HTMLVideoElement>(null);
-
-    useEffect(() => {
-        if (videoRef.current) {
-            videoRef.current.play().catch(e => console.log("Autoplay prevented:", e));
-        }
-    }, []);
-
     return (
         <div className={`min-h-screen font-sans text-[#0A0A0A] dark:text-[#F3F4F6] selection:bg-yellow-200 selection:text-black transition-colors duration-500 ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
 
@@ -113,17 +106,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             )}
 
             <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-                <video
-                    ref={videoRef}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
+                <BackgroundVideo
+                    src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4"
                     poster="https://images.pexels.com/videos/3249935/free-video-3249935.jpg?auto=compress&cs=tinysrgb&dpr=1&w=500"
                     className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center opacity-80"
-                >
-                    <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
-                </video>
+                />
                 {/* Single Overlay for subtle yellow tint */}
                 <div className="absolute inset-0 bg-yellow-500/10 pointer-events-none mix-blend-overlay"></div>
                 {/* Gradient for text readability - BOOSTED YELLOW */}
@@ -368,7 +355,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 </div>
             </footer>
 
-        </div>
+        </div >
     );
 };
 
