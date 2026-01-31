@@ -189,13 +189,11 @@ export class AdminService {
 
     static async recordAdminFailure() {
         try {
-            // Disabled remote logging to prevent "Invalid Action" error if gateway is not updated
-            // await BaseService.invokeGateway('log-event', {
-            //     type: 'SECURITY',
-            //     event: 'Admin Login Failed',
-            //     details: 'Invalid credentials or key'
-            // });
-            console.warn("Security Event: Admin Login Failed");
+            await BaseService.invokeGateway('log-event', {
+                type: 'SECURITY',
+                event: 'Admin Login Failed',
+                details: 'Invalid credentials or key'
+            });
         } catch (e) {
             console.warn("Failed to log admin failure:", e);
         }

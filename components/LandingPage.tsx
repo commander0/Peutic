@@ -157,17 +157,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         <span className="text-xl md:text-2xl font-black tracking-tight dark:text-white">Peutic</span>
                     </div>
                     <div className="flex items-center gap-1.5 md:gap-6">
-                        <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
-                        <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors shrink-0">
-                            {darkMode ? <Sun className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" /> : <Moon className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />}
-                        </button>
-                        <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-1 hidden sm:block"></div>
-                        <button onClick={() => onLoginClick(false)} className="text-xs font-black uppercase tracking-widest hover:opacity-70 transition-opacity px-2 md:px-3 dark:text-gray-300 shrink-0 whitespace-nowrap">
+                        <button onClick={() => onLoginClick(false)} className="text-xs font-black uppercase tracking-widest hover:opacity-70 transition-opacity px-2 md:px-3 dark:text-gray-300 shrink-0 whitespace-nowrap order-1 md:order-none">
                             {t('nav_signin')}
                         </button>
-                        <button onClick={() => onLoginClick(true)} className="bg-yellow-400 text-black px-4 py-2 md:px-6 md:py-2.5 rounded-full font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-yellow-300 transition-all hover:scale-105 active:scale-95 shadow-xl shrink-0 whitespace-nowrap">
+                        <button onClick={() => onLoginClick(true)} className="bg-yellow-400 text-black px-4 py-2 md:px-6 md:py-2.5 rounded-full font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-yellow-300 transition-all hover:scale-105 active:scale-95 shadow-xl shrink-0 whitespace-nowrap order-2 md:order-none">
                             {t('nav_join')}
                         </button>
+                        <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-1 hidden sm:block order-3 md:order-none"></div>
+                        <div className="flex items-center gap-2 order-4 md:order-none">
+                            <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
+                            <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors shrink-0">
+                                {darkMode ? <Sun className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" /> : <Moon className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </nav>
