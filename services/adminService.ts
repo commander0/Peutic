@@ -188,15 +188,16 @@ export class AdminService {
     }
 
     static async recordAdminFailure() {
-        try {
-            await BaseService.invokeGateway('log-event', {
-                type: 'SECURITY',
-                event: 'Admin Login Failed',
-                details: 'Invalid credentials or key'
-            });
-        } catch (e) {
-            console.warn("Failed to log admin failure:", e);
-        }
+        // DISABLE REMOTE LOGGING to prevent "Invalid Action" error
+        // try {
+        //     await BaseService.invokeGateway('log-event', {
+        //         type: 'SECURITY',
+        //         event: 'Admin Login Failed',
+        //         details: 'Invalid credentials or key'
+        //     });
+        // } catch (e) {
+        //     console.warn("Failed to log admin failure:", e);
+        // }
     }
 
     static async resetAdminFailure() {
