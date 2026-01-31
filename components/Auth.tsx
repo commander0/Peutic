@@ -218,7 +218,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                     playsInline
                     className="absolute inset-0 w-full h-full object-cover object-center opacity-80"
                 >
-                    <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
+                    <source src="/hero.mp4" type="video/mp4" />
                 </video>
                 <div className="absolute inset-0 bg-yellow-400/20 mix-blend-multiply"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>

@@ -112,9 +112,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     loop
                     muted
                     playsInline
-                    className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center opacity-80 dark:opacity-60 mix-blend-multiply dark:mix-blend-overlay filter blur-[1px]"
+                    className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center opacity-80"
                 >
-                    <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
+                    <source src="/hero.mp4" type="video/mp4" />
                 </video>
                 {/* Single Overlay for subtle yellow tint */}
                 <div className="absolute inset-0 bg-yellow-500/10 pointer-events-none mix-blend-overlay"></div>

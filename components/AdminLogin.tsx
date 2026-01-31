@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AdminService } from '../services/adminService';
 import { UserService } from '../services/userService';
 
 import { supabase } from '../services/supabaseClient';
 import { UserRole } from '../types';
-import { Lock, Shield, ArrowRight, KeyRound, AlertCircle, Check, Crown, Megaphone } from 'lucide-react';
+import { Lock, Shield, ArrowRight, KeyRound, AlertCircle, Check, Crown, Megaphone, LifeBuoy } from 'lucide-react';
 
 
 interface AdminLoginProps {
@@ -13,6 +14,7 @@ interface AdminLoginProps {
 }
 
 const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
+    const [searchParams] = useSearchParams();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -31,6 +33,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
     const [lockout, setLockout] = useState(0);
 
     const [showReclaim, setShowReclaim] = useState(false);
+    const [showRescue, setShowRescue] = useState(false);
     const [masterKey, setMasterKey] = useState('');
     const [settings, setSettings] = useState(AdminService.getSettings());
 
@@ -47,7 +50,12 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             }
         });
         AdminService.getAdminLockoutStatus().then(setLockout);
-    }, []);
+
+        // RESCUE MODE TRIGGER
+        if (searchParams.get('rescue') === 'true') {
+            setShowRescue(true);
+        }
+    }, [searchParams]);
 
 
     const handleAdminLogin = async (e: React.FormEvent) => {
@@ -157,6 +165,37 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         }
     };
 
+    const handleRescueLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        try {
+            // 1. Verify Master Key Locally First (to save time)
+            if (!AdminService.verifyMasterKey(masterKey)) {
+                throw new Error("Invalid Master Key.");
+            }
+
+            // 2. Simply create/update the root admin using the existing helper
+            // This function handles: Signup/Login -> Claim Admin Rights via RPC -> Sync
+            const user = await AdminService.createRootAdmin(email, password, masterKey);
+
+            if (user && user.role === UserRole.ADMIN) {
+                setSuccessMsg("EMERGENCY ACCESS GRANTED. WELCOME BACK, COMMANDER.");
+                setTimeout(() => {
+                    onLogin(user);
+                }, 1000);
+            } else {
+                throw new Error("Rescue failed. User created but Admin rights denied.");
+            }
+        } catch (e: any) {
+            console.error(e);
+            setError(e.message || "Rescue Failed.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleReclaimSystem = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
@@ -219,7 +258,55 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                             {error && <div className="mb-6 p-4 bg-red-900/30 border border-red-800 text-red-400 text-sm rounded-xl flex items-center gap-2 font-bold animate-pulse"><AlertCircle className="w-4 h-4 flex-shrink-0" /> <span>{error}</span></div>}
                             {successMsg && <div className="mb-6 p-4 bg-green-900/30 border border-green-800 text-green-400 text-sm rounded-xl flex items-center gap-2 font-bold animate-bounce"><Check className="w-4 h-4" /> {successMsg}</div>}
 
-                            {showReclaim ? (
+                            {showRescue ? (
+                                <form onSubmit={handleRescueLogin} className="space-y-4 animate-in fade-in">
+                                    <div className="text-center mb-6 p-4 bg-orange-500/10 rounded-xl border border-orange-500/30">
+                                        <h3 className="text-white font-black text-lg flex items-center justify-center gap-2 uppercase tracking-wide"><LifeBuoy className="w-5 h-5 text-orange-500" /> RESCUE MODE</h3>
+                                        <p className="text-[10px] text-gray-400 mt-1 text-orange-400">Force Admin Access via Master Key Override.</p>
+                                    </div>
+
+                                    <div>
+                                        <input
+                                            type="email"
+                                            required
+                                            className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-orange-500 outline-none transition-colors"
+                                            placeholder="Your Email Address"
+                                            value={email}
+                                            onChange={e => setEmail(e.target.value)}
+                                        />
+                                    </div>
+
+                                    <div className="relative">
+                                        <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-500" />
+                                        <input
+                                            type="password"
+                                            required
+                                            className="w-full bg-black border border-gray-700 rounded-xl p-4 pl-12 text-white focus:border-orange-500 outline-none transition-colors"
+                                            placeholder="MASTER SECURITY KEY"
+                                            value={masterKey}
+                                            onChange={e => setMasterKey(e.target.value)}
+                                        />
+                                    </div>
+
+                                    <div className="relative">
+                                        <input
+                                            type="password"
+                                            className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-orange-500 outline-none transition-colors"
+                                            placeholder="New Password (Optional if Login)"
+                                            value={password}
+                                            onChange={e => setPassword(e.target.value)}
+                                        />
+                                    </div>
+
+                                    <button disabled={loading} className="w-full bg-orange-600 text-white font-black py-4 rounded-xl hover:bg-orange-500 transition-colors mt-4 shadow-lg shadow-orange-900/20 uppercase tracking-widest text-sm">
+                                        {loading ? "OVERRIDING..." : "FORCE ADMIN ACCESS"}
+                                    </button>
+
+                                    <div className="pt-4 text-center">
+                                        <button type="button" onClick={() => setShowRescue(false)} className="text-gray-500 hover:text-white text-xs font-bold transition-colors">Return to Standard Login</button>
+                                    </div>
+                                </form>
+                            ) : showReclaim ? (
                                 <form onSubmit={handleReclaimSystem} className="space-y-4 animate-in fade-in">
                                     <div className="text-center mb-6 p-4 bg-red-500/10 rounded-xl border border-red-500/30">
                                         <h3 className="text-white font-black text-lg flex items-center justify-center gap-2 uppercase tracking-wide"><Shield className="w-5 h-5 text-red-500" /> Reclaim Terminal</h3>
