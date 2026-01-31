@@ -115,16 +115,21 @@ const MainApp: React.FC = () => {
       });
 
       // Handle both explicit Sign In and Initial Session recovery
-      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session?.user) {
 
         // CONNECT LOGGER TO DB (Now that we have a potential session/context)
-        // We use a loose coupling to avoid circular dependency issues in services
         (window as any).PersistLog = (type: any, eventName: string, details: string) => {
-          // Only log critical/security events or if we are in a rich logging mode
           if (type === 'ERROR' || type === 'SECURITY' || type === 'WARNING') {
             AdminService.logSystemEvent(type, eventName, details).catch(e => console.warn("Log fail", e));
           }
         };
+
+        // LOOP PREVENTION: If we are already an ADMIN in state, and the session matches, 
+        // DO NOT overwrite with a potential "USER" fallback unless we are sure.
+        if (user && user.id === session.user.id && user.role === UserRole.ADMIN) {
+          console.log("AuthDebug: Maintaining existing ADMIN state to prevent flicker");
+          return;
+        }
 
         // Prevent unnecessary re-sync if we already have the correct user in state
         if (user && user.id === session.user.id) return;
@@ -133,23 +138,25 @@ const MainApp: React.FC = () => {
 
         if (!syncedUser) {
           console.warn("Auth Listener: Sync failed, using Fallback User.");
+          // Fallback user now trusts the Token Role (V29 Fix)
           syncedUser = UserService.createFallbackUser(session.user);
 
           // Attempt background repair/sync again without blocking
           UserService.repairUserRecord(session.user).then(repaired => {
-            if (repaired) setUser(repaired);
+            if (repaired && repaired.role === UserRole.ADMIN) {
+              // Only update if it upgrades us or is robust
+              setUser(repaired);
+            }
           });
         }
 
         if (syncedUser) {
-          // AVATAR ROTATION LOGIC: Change user icon if not locked
-          // NOTE: We only rotate if it's a "real" synced user to avoid overwriting preferences
-          // But for now, let's keep it simple and safe.
-          if (!syncedUser.avatarLocked && !syncedUser.avatar) {
-            const seed = Math.random().toString(36).substring(7);
-            syncedUser.avatar = `https://api.dicebear.com/7.x/lorelei/svg?seed=${seed}&backgroundColor=FCD34D`;
-          }
           setUser(syncedUser);
+
+          // Force Navigation only if we are on a public page and should be on dashboard
+          if (syncedUser.role === UserRole.ADMIN && location.pathname === '/admin/login') {
+            navigate('/admin/dashboard');
+          }
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);

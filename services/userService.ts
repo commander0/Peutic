@@ -156,18 +156,25 @@ export class UserService {
 
     // FALLBACK: Construct a temporary user object from Auth Session to prevent logout
     static createFallbackUser(sessionUser: any): User {
+        const metadata = sessionUser.user_metadata || {};
+        const appMetadata = sessionUser.app_metadata || {};
+
+        // CRITICAL FIX: Trust the token's role if DB sync fails
+        // This prevents "Downgrade Redirects" where Admin becomes User temporarily
+        const roleFromToken = (appMetadata.role || metadata.role || 'USER') as UserRole;
+
         return {
             id: sessionUser.id,
-            name: sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || "User",
-            email: sessionUser.email || "",
-            role: (sessionUser.app_metadata?.role || sessionUser.user_metadata?.role || UserRole.USER) as UserRole,
+            email: sessionUser.email || '',
+            name: metadata.full_name || sessionUser.email?.split('@')[0] || 'Guest',
+            role: roleFromToken, // Use the token role!
             balance: 0,
-            subscriptionStatus: 'ACTIVE',
+            subscriptionStatus: 'INACTIVE',
             joinedAt: new Date().toISOString(),
             lastLoginDate: new Date().toISOString(),
             streak: 0,
-            provider: sessionUser.app_metadata?.provider || 'email',
-            avatar: sessionUser.user_metadata?.avatar_url,
+            provider: appMetadata.provider || 'email',
+            avatar: metadata.avatar_url,
             emailPreferences: { marketing: true, updates: true },
             themePreference: 'light',
             languagePreference: 'en',

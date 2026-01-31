@@ -214,9 +214,8 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             {/* ARTWORK / HERO COLUMN (Hidden on Mobile) */}
             <div className="hidden md:block w-1/2 h-full relative overflow-hidden">
                 <BackgroundVideo
-                    src="https://res.cloudinary.com/demo/video/upload/v1687448877/samples/landscapes/nature-sunset.mp4"
-                    poster="https://res.cloudinary.com/demo/video/upload/v1687448877/samples/landscapes/nature-sunset.jpg"
-                    poster="https://images.pexels.com/videos/3249935/free-video-3249935.jpg?auto=compress&cs=tinysrgb&dpr=1&w=500"
+                    src="https://res.cloudinary.com/demo/video/upload/v1687448871/samples/landscapes/beach-boat.mp4"
+                    poster="https://res.cloudinary.com/demo/video/upload/v1687448871/samples/landscapes/beach-boat.jpg"
                     className="absolute inset-0 w-full h-full object-cover object-center opacity-80"
                 />
                 <div className="absolute inset-0 bg-yellow-400/20 mix-blend-multiply"></div>
