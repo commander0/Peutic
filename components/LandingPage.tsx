@@ -117,9 +117,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
                 </video>
                 {/* Single Overlay for subtle yellow tint */}
-                <div className="absolute inset-0 bg-yellow-400/20 pointer-events-none mix-blend-overlay"></div>
-                {/* Gradient for text readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-yellow-100/90 via-yellow-50/50 to-transparent dark:from-black/90 dark:via-black/70 dark:to-transparent"></div>
+                <div className="absolute inset-0 bg-yellow-500/10 pointer-events-none mix-blend-overlay"></div>
+                {/* Gradient for text readability - BOOSTED YELLOW */}
+                <div className="absolute inset-0 bg-gradient-to-t from-amber-100/90 via-amber-50/60 to-transparent dark:from-black/90 dark:via-black/70 dark:to-transparent"></div>
+                {/* Gold Highlight Top */}
+                <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-yellow-400/20 to-transparent pointer-events-none mix-blend-overlay"></div>
 
                 {/* Vintage Texture */}
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-[0.03] dark:opacity-[0.05] pointer-events-none"></div>

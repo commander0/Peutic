@@ -81,22 +81,25 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
 
             if (!authData.user) throw new Error("Authentication failed.");
 
-            // 2. STRICT ROLE CHECK (Metadata is source of truth)
-            const role = authData.user.app_metadata?.role || authData.user.user_metadata?.role;
+            // 2. RETRIEVE PROFILE (Database is ultimate source of truth for Role)
+            const user = await UserService.syncUser(authData.user.id);
 
-            if (role !== UserRole.ADMIN) {
+            if (!user) throw new Error("Admin Profile Sync Failed.");
+
+            // 3. ROLE CHECK (Check both Metadata AND Database)
+            // Metadata is fast, but Database is authoritative if metadata drift occurs.
+            const metadataRole = authData.user.app_metadata?.role || authData.user.user_metadata?.role;
+            const dbRole = user.role;
+
+            if (metadataRole !== UserRole.ADMIN && dbRole !== UserRole.ADMIN) {
                 await supabase.auth.signOut();
                 await AdminService.recordAdminFailure();
                 throw new Error("ACCESS DENIED: Not an Administrator.");
             }
 
-            // 3. SUCCESS - Reset Failures & Proceed
+            // 4. SUCCESS
             AdminService.resetAdminFailure();
-
-            // Sync user profile for good measure
-            const user = await UserService.syncUser(authData.user.id);
-            if (user) onLogin(user);
-            else throw new Error("Admin Profile Sync Failed.");
+            onLogin(user);
 
         } catch (e: any) {
             console.error("Admin Login Error:", e);

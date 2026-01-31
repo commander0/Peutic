@@ -240,7 +240,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             </div>
 
             {/* FORM COLUMN */}
-            <div className="w-full md:w-1/2 h-full bg-[#FAFAFA] dark:bg-black text-black dark:text-white flex flex-col relative overflow-y-auto">
+            <div className="w-full md:w-1/2 h-full bg-[#FFFCF2] dark:bg-black text-black dark:text-white flex flex-col relative overflow-y-auto">
                 <button onClick={onCancel} className="absolute top-6 right-6 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors z-50">
                     <span className="sr-only">Close</span>
                     <ArrowRight className="w-6 h-6 rotate-180 text-gray-400 hover:text-black dark:hover:text-white" />
@@ -313,26 +313,26 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                                     <form onSubmit={handleSubmit} className="space-y-4">
                                         {mode === 'signup' && (
                                             <div className="grid grid-cols-2 gap-4">
-                                                <input type="text" placeholder="First Name" className="w-full p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-yellow-400 outline-none transition-all dark:text-white" value={firstName} onChange={e => setFirstName(e.target.value)} required />
-                                                <input type="text" placeholder="Last Name" className="w-full p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-yellow-400 outline-none transition-all dark:text-white" value={lastName} onChange={e => setLastName(e.target.value)} required />
+                                                <input type="text" placeholder="First Name" className="w-full p-4 bg-white/80 dark:bg-gray-900 border border-yellow-200/50 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-[#FACC15] focus:border-[#FACC15] outline-none transition-all dark:text-white" value={firstName} onChange={e => setFirstName(e.target.value)} required />
+                                                <input type="text" placeholder="Last Name" className="w-full p-4 bg-white/80 dark:bg-gray-900 border border-yellow-200/50 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-[#FACC15] focus:border-[#FACC15] outline-none transition-all dark:text-white" value={lastName} onChange={e => setLastName(e.target.value)} required />
                                             </div>
                                         )}
 
                                         {mode === 'signup' && (
                                             <div className="relative">
-                                                <input type="date" className="w-full p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-yellow-400 outline-none transition-all dark:text-white" value={birthday} onChange={e => setBirthday(e.target.value)} required />
-                                                <label className="absolute -top-2 left-3 bg-[#FAFAFA] dark:bg-black px-1 text-xs text-gray-400 font-bold">Date of Birth</label>
+                                                <input type="date" className="w-full p-4 bg-white/80 dark:bg-gray-900 border border-yellow-200/50 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-[#FACC15] focus:border-[#FACC15] outline-none transition-all dark:text-white" value={birthday} onChange={e => setBirthday(e.target.value)} required />
+                                                <label className="absolute -top-2 left-3 bg-[#FFFCF2] dark:bg-black px-1 text-xs text-gray-400 font-bold">Date of Birth</label>
                                             </div>
                                         )}
 
                                         <div className="relative">
                                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                            <input type="email" placeholder="Email Address" className="w-full p-4 pl-12 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-yellow-400 outline-none transition-all dark:text-white" value={email} onChange={e => setEmail(e.target.value)} required />
+                                            <input type="email" placeholder="Email Address" className="w-full p-4 pl-12 bg-white/80 dark:bg-gray-900 border border-yellow-200/50 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-[#FACC15] focus:border-[#FACC15] outline-none transition-all dark:text-white" value={email} onChange={e => setEmail(e.target.value)} required />
                                         </div>
 
                                         <div className="relative">
                                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                            <input type="password" placeholder="Password" className="w-full p-4 pl-12 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-yellow-400 outline-none transition-all dark:text-white" value={password} onChange={e => setPassword(e.target.value)} required />
+                                            <input type="password" placeholder="Password" className="w-full p-4 pl-12 bg-white/80 dark:bg-gray-900 border border-yellow-200/50 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-[#FACC15] focus:border-[#FACC15] outline-none transition-all dark:text-white" value={password} onChange={e => setPassword(e.target.value)} required />
                                         </div>
 
                                         {mode === 'signup' && (
