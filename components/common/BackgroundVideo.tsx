@@ -19,21 +19,26 @@ export const BackgroundVideo: React.FC<BackgroundVideoProps> = ({ src, poster, c
         }
     }, [src]);
 
+    // FORCE VIDEO AUTOPLAY (Nuclear Option)
+    // React sometimes messes up the muted attribute during hydration, causing autoplay checks to fail.
+    // By injecting raw HTML, we bypass React's lifecycle for the video element itself.
+    const videoHtml = `
+      <video
+        class="absolute inset-0 w-full h-full object-cover"
+        src="${src}"
+        poster="${poster || ''}"
+        autoplay
+        loop
+        muted
+        playsinline
+        preload="auto"
+      ></video>
+    `;
+
     return (
-        <div className={`relative ${className || 'w-full h-full'} overflow-hidden`}>
-            <video
-                ref={videoRef}
-                className="absolute inset-0 w-full h-full object-cover"
-                src={src}
-                poster={poster}
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="auto"
-            />
-            {/* Fallback Overlay to ensure text readability if video fails */}
-            <div className="absolute inset-0 bg-black/30" />
-        </div>
+        <div
+            className={`relative ${className || 'w-full h-full'} overflow-hidden`}
+            dangerouslySetInnerHTML={{ __html: videoHtml }}
+        />
     );
 };
