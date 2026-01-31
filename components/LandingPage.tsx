@@ -128,18 +128,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 </div>
             )}
 
-            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 bg-black">
+            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
                 <video
                     autoPlay
                     loop
                     muted
                     playsInline
-                    className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center opacity-80"
+                    className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center opacity-80 dark:opacity-60 mix-blend-multiply dark:mix-blend-overlay filter blur-[1px]"
                 >
                     <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
                 </video>
                 {/* Single Overlay for subtle yellow tint */}
-                <div className="absolute inset-0 bg-yellow-900/20 mix-blend-overlay"></div>
+                <div className="absolute inset-0 bg-yellow-500/10 pointer-events-none mix-blend-overlay"></div>
                 {/* Gradient for text readability - BOOSTED YELLOW */}
                 <div className="absolute inset-0 bg-gradient-to-t from-amber-100/90 via-amber-50/60 to-transparent dark:from-black/90 dark:via-black/70 dark:to-transparent"></div>
                 {/* Gold Highlight Top */}
@@ -157,19 +157,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         <span className="text-xl md:text-2xl font-black tracking-tight dark:text-white">Peutic</span>
                     </div>
                     <div className="flex items-center gap-1.5 md:gap-6">
-                        <button onClick={() => onLoginClick(false)} className="text-xs font-black uppercase tracking-widest hover:opacity-70 transition-opacity px-2 md:px-3 dark:text-gray-300 shrink-0 whitespace-nowrap order-1 md:order-none">
+                        <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
+                        <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors shrink-0">
+                            {darkMode ? <Sun className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" /> : <Moon className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />}
+                        </button>
+                        <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-1 hidden sm:block"></div>
+                        <button onClick={() => onLoginClick(false)} className="text-xs font-black uppercase tracking-widest hover:opacity-70 transition-opacity px-2 md:px-3 dark:text-gray-300 shrink-0 whitespace-nowrap">
                             {t('nav_signin')}
                         </button>
-                        <button onClick={() => onLoginClick(true)} className="bg-yellow-400 text-black px-4 py-2 md:px-6 md:py-2.5 rounded-full font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-yellow-300 transition-all hover:scale-105 active:scale-95 shadow-xl shrink-0 whitespace-nowrap order-2 md:order-none">
+                        <button onClick={() => onLoginClick(true)} className="bg-yellow-400 text-black px-4 py-2 md:px-6 md:py-2.5 rounded-full font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-yellow-300 transition-all hover:scale-105 active:scale-95 shadow-xl shrink-0 whitespace-nowrap">
                             {t('nav_join')}
                         </button>
-                        <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-1 hidden sm:block order-3 md:order-none"></div>
-                        <div className="flex items-center gap-2 order-4 md:order-none">
-                            <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
-                            <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors shrink-0">
-                                {darkMode ? <Sun className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" /> : <Moon className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />}
-                            </button>
-                        </div>
                     </div>
                 </div>
             </nav>

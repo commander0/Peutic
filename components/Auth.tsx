@@ -241,7 +241,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             </div>
 
             {/* FORM COLUMN - Enforcing Golden Theme Backgrounds */}
-            <div className="w-full md:w-1/2 h-full bg-[#FFFBEB] dark:bg-black text-black dark:text-white flex flex-col relative overflow-y-auto">
+            <div className="w-full md:w-1/2 h-full bg-[#FFFAF0] dark:bg-black text-black dark:text-white flex flex-col relative overflow-y-auto">
                 <button onClick={onCancel} className="absolute top-6 right-6 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors z-50">
                     <span className="sr-only">Close</span>
                     <ArrowRight className="w-6 h-6 rotate-180 text-gray-400 hover:text-black dark:hover:text-white" />
