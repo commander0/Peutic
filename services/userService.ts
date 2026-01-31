@@ -85,17 +85,30 @@ export class UserService {
 
     static async syncUser(userId: string): Promise<User | null> {
         if (!userId) return null;
+
+        const fetchWithRetry = async (retries = 3, delay = 500): Promise<any> => {
+            try {
+                // OPTIMIZED: Select specific fields instead of *
+                const fields = 'id, name, email, birthday, role, balance, subscription_status, created_at, last_login_date, streak, provider, avatar_url, avatar_locked, email_preferences, theme_preference, language_preference, game_scores';
+                const { data, error } = await supabase.from('users').select(fields).eq('id', userId).maybeSingle();
+
+                if (error) throw error;
+                if (!data && retries > 0) throw new Error("User not found yet"); // Force retry if missing
+                return { data, error };
+            } catch (e) {
+                if (retries > 0) {
+                    await new Promise(r => setTimeout(r, delay));
+                    return fetchWithRetry(retries - 1, delay * 1.5);
+                }
+                return { data: null, error: e };
+            }
+        };
+
         try {
-            // OPTIMIZED: Select specific fields instead of *
-            const fields = 'id, name, email, birthday, role, balance, subscription_status, created_at, last_login_date, streak, provider, avatar_url, avatar_locked, email_preferences, theme_preference, language_preference, game_scores';
-            const { data, error } = (await BaseService.withTimeout(
-                supabase.from('users').select(fields).eq('id', userId).maybeSingle(),
-                5000,
-                "User sync timeout"
-            )) as any;
+            const { data, error } = await fetchWithRetry();
 
             if (error) {
-                console.error("CRITICAL: User Sync Database Error", error);
+                console.error("CRITICAL: User Sync Database Error after retries", error);
                 return null;
             }
 

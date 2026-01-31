@@ -24,9 +24,9 @@ export const BackgroundVideo: React.FC<BackgroundVideoProps> = ({ src, poster, c
     // By injecting raw HTML, we bypass React's lifecycle for the video element itself.
     const videoHtml = `
       <video
-        class="absolute inset-0 w-full h-full object-cover"
-        src="${src}"
-        poster="${poster || ''}"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;"
+        src="https://player.vimeo.com/external/3249935.sd.mp4?s=d01072a3920c85b54655f05bb239f60c41076b1b&profile_id=164&oauth2_token_id=57447761"
+        poster="${poster || 'https://images.pexels.com/videos/3249935/free-video-3249935.jpg'}"
         autoplay
         loop
         muted
