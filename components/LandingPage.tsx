@@ -163,7 +163,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                             <button onClick={() => onLoginClick(true)} className="px-8 py-3 md:px-9 md:py-4 bg-[#FACC15] text-black rounded-full font-black text-sm md:text-base uppercase tracking-widest shadow-[0_20px_40px_-15px_rgba(250,204,21,0.4)] hover:shadow-[0_25px_50px_-12px_rgba(250,204,21,0.5)] transition-all hover:-translate-y-1 flex items-center justify-center gap-2.5">
                                 <Play className="w-4 h-4 fill-black" /> {t('cta_start')}
                             </button>
-                            <button onClick={() => onLoginClick(true)} className="px-8 py-3 md:px-9 md:py-4 bg-[#FACC15] text-black border border-yellow-400 rounded-full font-black text-sm md:text-base uppercase tracking-widest hover:bg-yellow-300 transition-all flex items-center justify-center gap-2.5">
+                            <button onClick={() => onLoginClick(true)} className="px-8 py-3 md:px-9 md:py-4 bg-white dark:bg-gray-900 border border-yellow-200 dark:border-gray-700 text-black dark:text-white rounded-full font-black text-sm md:text-base uppercase tracking-widest hover:bg-yellow-50 dark:hover:bg-gray-800 transition-all flex items-center justify-center gap-2.5">
                                 {t('cta_team')}
                             </button>
                         </div>

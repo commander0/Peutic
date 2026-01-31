@@ -78,7 +78,7 @@ const ConsentCard = ({ icon: Icon, description, onAccept }: any) => (
             <div className="shrink-0 mt-2 md:mt-0">
                 <button
                     onClick={onAccept}
-                    className="px-4 py-1.5 md:px-6 md:py-2 bg-black dark:bg-white text-white dark:text-black rounded-full font-black text-[8px] md:text-[9px] uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-gray-200 transition-all flex items-center gap-1.5"
+                    className="flex-1 bg-[#FACC15] hover:bg-yellow-300 text-black text-[10px] font-black py-2 rounded-lg uppercase tracking-widest transition-colors flex items-center justify-center gap-2 shadow-lg shadow-yellow-500/20"
                 >
                     <Check className="w-3 h-3" /> ACCEPT
                 </button>

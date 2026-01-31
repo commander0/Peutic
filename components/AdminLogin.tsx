@@ -94,10 +94,15 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             // TANDEM FIX: If sync fails, force a repair from the frontend immediately
             if (!user) {
                 console.warn("Admin Profile Sync missing - Initiating Auto-Repair sequence...");
-                user = await UserService.repairUserRecord(authData.user);
+                try {
+                    user = await UserService.repairUserRecord(authData.user);
+                } catch (repairError: any) {
+                    console.error("Auto-Repair Exception:", repairError);
+                    throw new Error(`Admin Profile Sync Failed: ${repairError.message || JSON.stringify(repairError)}`);
+                }
             }
 
-            if (!user) throw new Error("Admin Profile Sync Failed (Auto-Repair Unsuccessful).");
+            if (!user) throw new Error("Admin Profile Sync Failed (Auto-Repair Unsuccessful: Null result from repair).");
 
             // 3. ROLE CHECK (Check both Metadata AND Database)
             // Metadata is fast, but Database is authoritative if metadata drift occurs.
