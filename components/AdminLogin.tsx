@@ -66,28 +66,9 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
 
         setLoading(true);
 
-        // --- EMERGENCY BYPASS (Guaranteed Access) ---
-        if (password === 'PEUTIC_MASTER_OVERRIDE_2026') {
-            // Fake a secure admin session object
-            const fakeAdmin = {
-                id: 'emergency-admin',
-                name: 'Emergency Commander',
-                role: UserRole.ADMIN,
-                email: email || 'emergency@peutic.com',
-                balance: 99999,
-                subscriptionStatus: 'active',
-                createdAt: new Date().toISOString()
-            };
-            // ----------------------------------------
+        // --- STRICT AUTH FLOW ---
+        // user must be authenticated via Supabase to access dashboard data.
 
-            // Wait briefly to simulate verification (UX)
-            setTimeout(() => {
-                setLoading(false);
-                onLogin(fakeAdmin);
-            }, 800);
-            return;
-        }
-        // --------------------------------------------
 
         try {
             const normalizedEmail = email.toLowerCase().trim();
