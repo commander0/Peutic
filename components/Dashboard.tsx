@@ -776,11 +776,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                         <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
                                                             <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
                                                             <div className="relative z-10 w-full h-full flex flex-col items-center justify-center pointer-events-none">
-                                                                <div className="w-full h-24 md:h-32 mb-1 pointer-events-auto transition-transform group-hover:scale-105 duration-700">
-                                                                    <GardenCanvas garden={garden} width={200} height={180} interactionType={isClipping ? 'clip' : null} />
-                                                                </div>
-
-                                                                {/* Overlay Controls */}
                                                                 <div className="absolute top-2 right-2 pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity">
                                                                     <button
                                                                         onClick={(e) => {
@@ -793,6 +788,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                                         <Scissors className="w-4 h-4" />
                                                                     </button>
                                                                 </div>
+                                                            </div>
+                                                            <div className="w-full h-24 md:h-32 mb-1 pointer-events-auto transition-transform group-hover:scale-105 duration-700">
+                                                                <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-[10px] text-green-500 animate-pulse">Growing...</div>}>
+                                                                    <GardenCanvas garden={garden} width={200} height={180} interactionType={isClipping ? 'clip' : null} />
+                                                                </Suspense>
                                                             </div>
                                                             <h3 className="text-[7px] md:text-sm font-black text-green-700 dark:text-green-300 uppercase tracking-widest drop-shadow-sm text-center mt-[-10px] relative z-20">Zen Bonzai</h3>
                                                             <p className="hidden md:block text-[9px] font-bold text-green-600/70 dark:text-green-400/60 uppercase tracking-tighter">Lvl {garden.level} &bull; {garden.currentPlantType}</p>
