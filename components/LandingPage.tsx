@@ -92,22 +92,29 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     const marqueeRow1 = [...row1, ...row1];
     const marqueeRow2 = [...row2, ...row2];
 
+    const videoRef = React.useRef<HTMLVideoElement>(null);
+
+    useEffect(() => {
+        if (videoRef.current) {
+            videoRef.current.play().catch(e => console.log("Autoplay prevented:", e));
+        }
+    }, []);
+
     return (
         <div className={`min-h-screen font-sans text-[#0A0A0A] dark:text-[#F3F4F6] selection:bg-yellow-200 selection:text-black transition-colors duration-500 ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
 
             {/* PUBLIC BROADCAST BANNER */}
             {settings.broadcastMessage && (
-                <div className="bg-yellow-500 text-black py-2 px-4 shadow-lg animate-in slide-in-from-top duration-500 relative z-50 overflow-hidden group">
-                    <div className="absolute inset-0 bg-white/30 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-[-20deg]"></div>
-                    <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
-                        <Megaphone className="w-3.5 h-3.5 animate-bounce" />
-                        <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-center">{settings.broadcastMessage}</span>
-                    </div>
+                <div className="bg-yellow-400 text-black text-[10px] md:text-xs font-black py-2 md:py-3 px-4 text-center tracking-widest uppercase flex items-center justify-center gap-2 relative overflow-hidden">
+                    <Megaphone className="w-3 h-3 md:w-4 md:h-4 animate-pulse" />
+                    <span className="relative z-10">{settings.broadcastMessage}</span>
+                    <div className="absolute inset-0 bg-white/20 -translate-x-full animate-[shimmer_2s_infinite]"></div>
                 </div>
             )}
 
             <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
                 <video
+                    ref={videoRef}
                     autoPlay
                     loop
                     muted

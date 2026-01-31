@@ -187,14 +187,14 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             } catch (authError: any) {
                 // If Auth fails (e.g. Rate Limit), we must fallback to Manual SQL
                 console.error("Auth/Rescue Failed:", authError);
-                if (authError.message?.includes('rate limit') || authError.message?.includes('security')) {
+                if (authError.message?.toLowerCase().includes('rate limit') || authError.message?.toLowerCase().includes('security') || authError.message?.includes('429')) {
                     throw new Error("RATE_LIMIT");
                 }
                 throw authError; // Rethrow other errors
             }
 
         } catch (e: any) {
-            if (e.message === "RATE_LIMIT") {
+            if (e.message === "RATE_LIMIT" || e.message?.toLowerCase().includes('rate limit')) {
                 setError(`
                     SECURITY LOCKOUT DETECTED (Rate Limit).
                     To bypass, run this SQL in your Supabase Editor:
@@ -321,6 +321,15 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                     </button>
 
                                     <div className="pt-4 text-center">
+                                        <button type="button" onClick={() => setError(`
+                                            MANUAL OVERRIDE INSTRUCTIONS:
+                                            1. Go to Supabase SQL Editor
+                                            2. Run this command:
+                                            UPDATE auth.users SET raw_app_meta_data = '{"role":"ADMIN"}' WHERE email = '${email || 'your_email'}';
+                                            UPDATE public.users SET role = 'ADMIN' WHERE email = '${email || 'your_email'}';
+                                         `)} className="text-orange-500 hover:text-orange-400 text-[10px] font-bold uppercase tracking-widest mb-4 block">
+                                            Issues? View Manual Override Code
+                                        </button>
                                         <button type="button" onClick={() => setShowRescue(false)} className="text-gray-500 hover:text-white text-xs font-bold transition-colors">Return to Standard Login</button>
                                     </div>
                                 </form>

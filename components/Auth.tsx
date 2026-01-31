@@ -38,6 +38,14 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
     const [onboardingStep, setOnboardingStep] = useState(0);
     const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
 
+    const videoRef = useRef<HTMLVideoElement>(null);
+
+    useEffect(() => {
+        if (videoRef.current) {
+            videoRef.current.play().catch(e => console.log("Autoplay prevented:", e));
+        }
+    }, []);
+
     useEffect(() => {
         AdminService.syncGlobalSettings().then(s => {
             if (isMounted.current) setSettings(s);
@@ -212,6 +220,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             {/* ARTWORK / HERO COLUMN (Hidden on Mobile) */}
             <div className="hidden md:block w-1/2 h-full relative overflow-hidden">
                 <video
+                    ref={videoRef}
                     autoPlay
                     loop
                     muted
