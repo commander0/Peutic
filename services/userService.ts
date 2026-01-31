@@ -204,7 +204,8 @@ export class UserService {
 
                 if (clientError) {
                     console.error("Client Repair also failed:", clientError);
-                    return null;
+                    // THROW THE ERROR to see it in UI
+                    throw new Error(`RPC Failed: ${error.message}; Client Failed: ${clientError.message}`);
                 }
                 return this.mapUser(clientData);
             }
@@ -212,9 +213,9 @@ export class UserService {
             console.log("RPC Repair Success:", data);
             return this.mapUser(data);
 
-        } catch (e) {
+        } catch (e: any) {
             console.error("Repair Exception:", e);
-            return null;
+            throw e; // Propagate up to AdminLogin
         }
     }
 
