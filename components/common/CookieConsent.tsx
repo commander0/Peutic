@@ -62,15 +62,15 @@ const ConsentCard = ({ icon: Icon, description, onAccept }: any) => (
         animate={{ y: 0, opacity: 1, scale: 1 }}
         exit={{ y: 50, opacity: 0, scale: 0.95 }}
         transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-        className="pointer-events-auto flex-1 bg-[#FFFBEB] dark:bg-gray-900 text-black dark:text-white p-4 md:p-6 rounded-2xl md:rounded-[2rem] border-2 border-yellow-400 shadow-2xl relative overflow-hidden group min-w-0"
+        className="pointer-events-auto flex-1 bg-[#FFFBEB] dark:bg-gray-900 text-black dark:text-white p-3 md:p-4 rounded-2xl md:rounded-[1.5rem] border-2 border-yellow-400 shadow-2xl relative overflow-hidden group min-w-0"
     >
-        <div className="relative flex flex-col md:flex-row items-center gap-4 h-full text-center md:text-left">
+        <div className="relative flex flex-col md:flex-row items-center gap-3 h-full text-center md:text-left">
             <div className="shrink-0 text-yellow-600">
-                <Icon className="w-8 h-8 md:w-10 md:h-10" />
+                <Icon className="w-6 h-6 md:w-8 md:h-8" />
             </div>
 
-            <div className="flex flex-col flex-1 min-w-0">
-                <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wider leading-relaxed">
+            <div className="flex flex-col flex-1 min-w-0 justify-center">
+                <h4 className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider leading-tight">
                     {description}
                 </h4>
             </div>
@@ -78,7 +78,7 @@ const ConsentCard = ({ icon: Icon, description, onAccept }: any) => (
             <div className="shrink-0 mt-2 md:mt-0">
                 <button
                     onClick={onAccept}
-                    className="px-6 py-2 md:px-8 md:py-3 bg-black dark:bg-white text-white dark:text-black rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-gray-200 transition-all flex items-center gap-2"
+                    className="px-4 py-1.5 md:px-6 md:py-2 bg-black dark:bg-white text-white dark:text-black rounded-full font-black text-[8px] md:text-[9px] uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-gray-200 transition-all flex items-center gap-1.5"
                 >
                     <Check className="w-3 h-3" /> ACCEPT
                 </button>
