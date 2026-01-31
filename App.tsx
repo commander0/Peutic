@@ -271,7 +271,8 @@ const MainApp: React.FC = () => {
 
       // Intelligent Redirect
       if (currentUser.role === UserRole.ADMIN) {
-        navigate('/admin/dashboard');
+        // Force replace to prevent back-button loops
+        navigate('/admin/dashboard', { replace: true });
       } else {
         navigate('/');
       }

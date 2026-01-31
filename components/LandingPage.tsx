@@ -42,13 +42,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     const [featuredSpecialists, setFeaturedSpecialists] = useState<Companion[]>([]);
     const { lang, setLang, t } = useLanguage();
 
-    const { mode, toggleMode: toggleDarkMode } = useTheme();
+    const { mode, toggleMode: toggleDarkMode, setTheme } = useTheme();
     const darkMode = mode === 'dark';
 
     const [settings, setSettings] = useState(AdminService.getSettings());
 
     useEffect(() => {
         AdminService.syncGlobalSettings().then(setSettings);
+        // Force Landing Page Theme (ignore user preference while on landing)
+        setTheme('amber');
     }, []);
 
     useEffect(() => {
