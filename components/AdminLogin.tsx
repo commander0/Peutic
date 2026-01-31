@@ -102,18 +102,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             onLogin(user);
 
         } catch (e: any) {
-            console.error("Admin Login Critical Error:", e);
-            // Detailed Error for debugging
-            const debugMsg = e?.message || JSON.stringify(e);
-            setError(`Login Error: ${debugMsg}`);
-
-            // SECURITY: Ensure we sign out if we failed after auth
-            // But only if we are still authenticated
-            const { data } = await supabase.auth.getSession();
-            if (data.session) {
-                await supabase.auth.signOut();
-            }
-
+            console.error("Admin Login Error:", e);
+            setError(e.message || "Login failed.");
             await AdminService.recordAdminFailure();
         } finally {
             setLoading(false);
