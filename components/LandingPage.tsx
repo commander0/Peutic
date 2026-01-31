@@ -308,7 +308,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                                 {settings.saleMode && <div className="bg-black dark:bg-white text-white dark:text-black px-2 py-0.5 rounded-full font-black text-[8px] uppercase tracking-widest animate-pulse mt-1">{t('pricing_rate_locked')}</div>}
                             </div>
                             <p className="text-black/70 dark:text-white/70 text-[10px] md:text-xs max-w-sm mx-auto font-medium leading-relaxed">{t('pricing_sub')}</p>
-                            <button onClick={() => onLoginClick(true)} className="bg-black dark:bg-white text-white dark:text-black px-6 py-2.5 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-gray-200 transition-all hover:scale-105 shadow-md mt-2">{t('pricing_btn')}</button>
+                            <button onClick={() => onLoginClick(true)} className="bg-[#FACC15] text-black px-6 py-2.5 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-yellow-300 transition-all hover:scale-105 shadow-md mt-2 shadow-yellow-500/20">{t('pricing_btn')}</button>
                         </div>
                     </div>
                 </div>

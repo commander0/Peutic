@@ -182,32 +182,36 @@ export class UserService {
     // REPAIR: Attempt to fix missing public.users record
     static async repairUserRecord(sessionUser: any): Promise<User | null> {
         try {
-            console.log("Repair Requested: Manual Insert...", sessionUser.id);
+            console.log("Repair Requested: Invoking God Mode RPC...", sessionUser.id);
 
-            // DIRECT RESTORE (Bypassing Edge Function)
-            // UPSERT to handle race conditions where user might have been created by trigger parallelly
-            const fallbackName = sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || "Buddy";
-
-            const { data, error } = await supabase.from('users').upsert({
-                id: sessionUser.id,
-                email: sessionUser.email,
-                name: fallbackName,
-                role: (sessionUser.app_metadata?.role || sessionUser.user_metadata?.role || 'USER'),
-                balance: 0,
-                provider: sessionUser.app_metadata?.provider || 'email',
-                last_login_date: new Date().toISOString()
-            }, { onConflict: 'id' }).select().single();
+            // 1. Try RPC (Privileged Repair)
+            const { data, error } = await supabase.rpc('repair_own_profile');
 
             if (error) {
-                console.error("Direct Repair Failed:", error);
-                // Last ditch: check if they exist now?
-                return this.syncUser(sessionUser.id);
+                console.error("RPC Repair Failed:", error);
+
+                // 2. Fallback to Client Side (if RPC not yet applied)
+                const fallbackName = sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || "Buddy";
+                const { data: clientData, error: clientError } = await supabase.from('users').upsert({
+                    id: sessionUser.id,
+                    email: sessionUser.email,
+                    name: fallbackName,
+                    role: (sessionUser.app_metadata?.role || sessionUser.user_metadata?.role || 'USER'),
+                    balance: 0,
+                    provider: sessionUser.app_metadata?.provider || 'email',
+                    last_login_date: new Date().toISOString()
+                }, { onConflict: 'id' }).select().single();
+
+                if (clientError) {
+                    console.error("Client Repair also failed:", clientError);
+                    return null;
+                }
+                return this.mapUser(clientData);
             }
 
+            console.log("RPC Repair Success:", data);
             return this.mapUser(data);
 
-            // Retry Sync immediately
-            return await this.syncUser(sessionUser.id);
         } catch (e) {
             console.error("Repair Exception:", e);
             return null;
