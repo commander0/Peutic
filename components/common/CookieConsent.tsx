@@ -1,64 +1,91 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Cookie, Check } from 'lucide-react';
+import { Cookie, ShieldCheck, Check } from 'lucide-react';
 
 export const CookieConsent = () => {
-    const [show, setShow] = useState(false);
+    const [cookieConsent, setCookieConsent] = useState(true);
+    const [privacyConsent, setPrivacyConsent] = useState(true);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        const consent = localStorage.getItem('peutic_cookie_consent');
-        if (!consent) {
-            // Delay for UX
-            setTimeout(() => setShow(true), 1500);
-        }
+        const cConsent = localStorage.getItem('peutic_cookie_consent');
+        const pConsent = localStorage.getItem('peutic_privacy_consent');
+
+        // Only show if not accepted
+        if (!cConsent) setCookieConsent(false);
+        if (!pConsent) setPrivacyConsent(false);
+
+        setMounted(true);
     }, []);
 
-    const handleAccept = () => {
+    const acceptCookie = () => {
         localStorage.setItem('peutic_cookie_consent', 'true');
-        setShow(false);
+        setCookieConsent(true);
     };
 
-    return (
-        <AnimatePresence>
-            {show && (
-                <motion.div
-                    initial={{ y: 100, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: 100, opacity: 0 }}
-                    transition={{ duration: 0.5, ease: "circOut" }}
-                    className="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-[9999] max-w-sm w-full"
-                >
-                    <div className="bg-white/90 dark:bg-black/90 backdrop-blur-xl border border-yellow-400/30 p-6 rounded-2xl shadow-2xl relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/5 to-transparent pointer-events-none" />
+    const acceptPrivacy = () => {
+        localStorage.setItem('peutic_privacy_consent', 'true');
+        setPrivacyConsent(true);
+    };
 
-                        <div className="relative flex items-start gap-4">
-                            <div className="p-3 bg-yellow-400/20 rounded-xl text-yellow-600 dark:text-yellow-400">
-                                <Cookie className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-gray-900 dark:text-white mb-1">Privacy First</h4>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-4">
-                                    We use local storage to save your progress and preferences. No third-party tracking ads.
-                                </p>
-                                <div className="flex items-center gap-3">
-                                    <button
-                                        onClick={handleAccept}
-                                        className="bg-yellow-400 hover:bg-yellow-500 text-black px-5 py-2 rounded-lg text-xs font-bold transition-transform active:scale-95 flex items-center gap-2"
-                                    >
-                                        <Check className="w-3 h-3" /> Accept
-                                    </button>
-                                    <button
-                                        onClick={() => setShow(false)}
-                                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs font-semibold px-2"
-                                    >
-                                        Decline
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
-            )}
-        </AnimatePresence>
+    if (!mounted || (cookieConsent && privacyConsent)) return null;
+
+    return (
+        <div className="fixed bottom-4 left-4 right-4 z-[9999] flex flex-row gap-4 items-stretch justify-center pointer-events-none">
+            <AnimatePresence mode='popLayout'>
+                {!cookieConsent && (
+                    <ConsentCard
+                        key="cookie-card"
+                        icon={Cookie}
+                        title="Cookies"
+                        description="We use cookies to ensure experienced."
+                        onAccept={acceptCookie}
+                    />
+                )}
+                {!privacyConsent && (
+                    <ConsentCard
+                        key="privacy-card"
+                        icon={ShieldCheck}
+                        title="Privacy"
+                        description="Your data is yours. We prioritize it."
+                        onAccept={acceptPrivacy}
+                    />
+                )}
+            </AnimatePresence>
+        </div>
     );
 };
+
+const ConsentCard = ({ icon: Icon, title, description, onAccept }: any) => (
+    <motion.div
+        layout
+        initial={{ y: 50, opacity: 0, scale: 0.95 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 50, opacity: 0, scale: 0.95 }}
+        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+        className="pointer-events-auto flex-1 bg-white/95 dark:bg-black/95 backdrop-blur-xl border border-yellow-400/30 shadow-2xl rounded-2xl p-5 relative overflow-hidden group min-w-0"
+    >
+        {/* Unified Yellow Glow */}
+        <div className="absolute inset-0 opacity-5 bg-yellow-400 pointer-events-none" />
+
+        <div className="relative flex flex-col md:flex-row items-start md:items-center gap-4 h-full">
+            <div className="p-3 rounded-xl bg-yellow-400/20 text-yellow-600 dark:text-yellow-400 shrink-0">
+                <Icon className="w-5 h-5" />
+            </div>
+
+            <div className="flex flex-col flex-1 min-w-0">
+                <h4 className="font-bold text-gray-900 dark:text-white text-sm mb-0.5 truncate">{title}</h4>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-snug line-clamp-2 md:line-clamp-1">
+                    {description}
+                </p>
+            </div>
+
+            <button
+                onClick={onAccept}
+                className="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded-lg text-xs font-bold transition-transform active:scale-95 flex items-center gap-1.5 shrink-0 whitespace-nowrap mt-2 md:mt-0"
+            >
+                <Check className="w-3 h-3" /> Accept
+            </button>
+        </div>
+    </motion.div>
+);
