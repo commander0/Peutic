@@ -113,13 +113,9 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
 
         } catch (e: any) {
             console.error("Admin Login Error:", e);
-            // SWALLOW INVALID ACTION AND SHOW GENERIC
-            const msg = e.message || "Login failed.";
-            if (msg.includes("Invalid Action")) {
-                setError(`Login Blocked. Run 'permission_safe_fix.sql' in Supabase (Works without admin rights).`);
-            } else {
-                setError(msg);
-            }
+            // 4. EXPOSE REAL ERROR (Rescue Mode)
+            // We strip the heuristic masking so the user can see if it's "Policy Violation" vs "Trigger Error"
+            setError(e.message || "Login failed.");
             await AdminService.recordAdminFailure();
         } finally {
             setLoading(false);
