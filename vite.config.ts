@@ -27,19 +27,10 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       chunkSizeWarningLimit: 800,
-      minify: true,
+      minify: false,
       rollupOptions: {
         output: {
-          manualChunks(id) {
-            if (id.includes('node_modules')) {
-              // Vendor chunking
-              if (id.includes('react')) return 'vendor-react';
-              if (id.includes('recharts')) return 'vendor-charts';
-              if (id.includes('lucide')) return 'vendor-icons';
-              if (id.includes('supabase')) return 'vendor-supabase';
-              return 'vendor';
-            }
-          }
+          manualChunks: undefined
         }
       }
     }
