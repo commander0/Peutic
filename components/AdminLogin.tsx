@@ -116,7 +116,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             // SWALLOW INVALID ACTION AND SHOW GENERIC
             const msg = e.message || "Login failed.";
             if (msg.includes("Invalid Action")) {
-                setError("Server Configuration Error. Use Emergency Password.");
+                setError("Login Failed: Database Hook Error. Please run 'fix_login_triggers.sql' in Supabase.");
             } else {
                 setError(msg);
             }
