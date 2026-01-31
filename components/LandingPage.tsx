@@ -1,10 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { Heart, CheckCircle, ArrowRight, ShieldCheck, Instagram, Twitter, Linkedin, Play, Moon, Sun, Megaphone } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from './common/LanguageContext';
 import { LanguageSelector } from './common/LanguageSelector';
-import { AdminService } from '../services/adminService';
 import { useTheme } from '../contexts/ThemeContext';
+import { AdminService } from '../services/adminService';
+import { UserService } from '../services/userService';
 import { STABLE_AVATAR_POOL, INITIAL_COMPANIONS } from '../services/database';
 
 import { Companion } from '../types';
@@ -49,8 +51,26 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
 
     useEffect(() => {
         AdminService.syncGlobalSettings().then(setSettings);
-        // Force Landing Page Theme (ignore user preference while on landing)
+        // Force Brand Theme (Amber) on Landing Page
         setTheme('amber');
+
+        // Cleanup: Revert to user preference if they navigate away (e.g. to dashboard)
+        return () => {
+            const user = UserService.getUser();
+            if (user && user.themePreference) {
+                // Check if it's a simple string or compound
+                const parts = user.themePreference.split('-');
+                let userTheme = user.themePreference;
+
+                // If format is "brand-mode" (e.g. "rose-dark")
+                if (parts.length > 1 && (parts[parts.length - 1] === 'light' || parts[parts.length - 1] === 'dark')) {
+                    userTheme = parts.slice(0, -1).join('-');
+                }
+
+                // Type assertion for safety
+                if (userTheme && userTheme !== 'amber') setTheme(userTheme as any);
+            }
+        };
     }, []);
 
     useEffect(() => {
@@ -95,7 +115,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     const marqueeRow2 = [...row2, ...row2];
 
     return (
-        <div className={`min-h-screen font-sans text-[#0A0A0A] dark:text-[#F3F4F6] selection:bg-yellow-200 selection:text-black transition-colors duration-500 ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+        <div className={`min - h - screen font - sans text - [#0A0A0A] dark: text - [#F3F4F6] selection: bg - yellow - 200 selection: text - black transition - colors duration - 500 ${lang === 'ar' ? 'rtl' : 'ltr'} `} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
 
             {/* PUBLIC BROADCAST BANNER */}
             {settings.broadcastMessage && (
@@ -128,7 +148,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 {/* Vintage Texture */}
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-[0.03] dark:opacity-[0.05] pointer-events-none"></div>
             </div>
-            <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-2 bg-[#FFFBEB]/80 dark:bg-black/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-3 md:py-6 bg-transparent border-transparent'}`}>
+            <nav className={`fixed top - 0 left - 0 right - 0 z - 40 transition - all duration - 500 ${scrolled ? 'py-2 bg-[#FFFBEB]/80 dark:bg-black/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-3 md:py-6 bg-transparent border-transparent'} `}>
                 <div className="max-w-7xl mx-auto px-2 md:px-8 flex justify-between items-center">
                     <div className="flex items-center gap-2 md:gap-3 group cursor-pointer shrink-0">
                         <div className="w-8 h-8 md:w-9 md:h-9 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
@@ -225,19 +245,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 </div>
                 {/* MARQUEE SECTION - Seamless Loop Fixed */}
                 <style>{`
-            @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-            @keyframes marquee-reverse { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
-            .animate-marquee { animation: marquee 60s linear infinite; }
-            .animate-marquee-reverse { animation: marquee-reverse 60s linear infinite; }
-            .marquee-container:hover .animate-marquee, .marquee-container:hover .animate-marquee-reverse { animation-play-state: paused; }
-          `}</style>
+@keyframes marquee { 0 % { transform: translateX(0); } 100 % { transform: translateX(-50 %); } }
+@keyframes marquee - reverse { 0 % { transform: translateX(-50 %); } 100 % { transform: translateX(0); } }
+            .animate - marquee { animation: marquee 60s linear infinite; }
+            .animate - marquee - reverse { animation: marquee - reverse 60s linear infinite; }
+            .marquee - container: hover.animate - marquee, .marquee - container: hover.animate - marquee - reverse { animation - play - state: paused; }
+`}</style>
                 <div className="relative w-full marquee-container">
                     {/* Removed opaque side gradients to show video background */}
                     <div className="flex flex-col gap-4 md:gap-6">
                         {/* Row 1 */}
                         <div className="flex gap-4 md:gap-5 animate-marquee w-fit px-4">
                             {marqueeRow1.map((spec, i) => (
-                                <div key={`${spec.id}-1-${i}`} onClick={() => onLoginClick(true)} className="relative flex-shrink-0 w-36 h-48 md:w-52 md:h-64 bg-white dark:bg-black rounded-2xl md:rounded-[1.5rem] overflow-hidden shadow-lg dark:shadow-[0_10px_30px_-5px_rgba(0,0,0,0.8)] border border-yellow-100 dark:border-gray-800 hover:scale-105 hover:shadow-2xl hover:border-yellow-400 transition-all duration-300 cursor-pointer group">
+                                <div key={`${spec.id} -1 - ${i} `} onClick={() => onLoginClick(true)} className="relative flex-shrink-0 w-36 h-48 md:w-52 md:h-64 bg-white dark:bg-black rounded-2xl md:rounded-[1.5rem] overflow-hidden shadow-lg dark:shadow-[0_10px_30px_-5px_rgba(0,0,0,0.8)] border border-yellow-100 dark:border-gray-800 hover:scale-105 hover:shadow-2xl hover:border-yellow-400 transition-all duration-300 cursor-pointer group">
                                     <div className="h-[75%] md:h-[80%] w-full relative">
                                         <AvatarImage src={spec.imageUrl} className="w-full h-full object-cover" alt={spec.name} />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
@@ -251,7 +271,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         {/* Row 2 */}
                         <div className="flex gap-4 md:gap-5 animate-marquee-reverse w-fit px-4">
                             {marqueeRow2.map((spec, i) => (
-                                <div key={`${spec.id}-2-${i}`} onClick={() => onLoginClick(true)} className="relative flex-shrink-0 w-36 h-48 md:w-52 md:h-64 bg-white dark:bg-gray-900 rounded-2xl md:rounded-[1.5rem] overflow-hidden shadow-lg border border-yellow-100 dark:border-gray-800 hover:scale-105 hover:shadow-2xl hover:border-yellow-400 transition-all duration-300 cursor-pointer group">
+                                <div key={`${spec.id} -2 - ${i} `} onClick={() => onLoginClick(true)} className="relative flex-shrink-0 w-36 h-48 md:w-52 md:h-64 bg-white dark:bg-gray-900 rounded-2xl md:rounded-[1.5rem] overflow-hidden shadow-lg border border-yellow-100 dark:border-gray-800 hover:scale-105 hover:shadow-2xl hover:border-yellow-400 transition-all duration-300 cursor-pointer group">
                                     <div className="h-[75%] md:h-[80%] w-full relative">
                                         <AvatarImage src={spec.imageUrl} className="w-full h-full object-cover" alt={spec.name} />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>

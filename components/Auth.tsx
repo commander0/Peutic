@@ -220,7 +220,8 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                 >
                     <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
                 </video>
-                <div className="absolute inset-0 bg-yellow-400/20 mix-blend-multiply"></div>
+                {/* Reduced overlay opacity for better visibility */}
+                <div className="absolute inset-0 bg-black/40 mix-blend-overlay"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
 
                 <div className="absolute bottom-20 left-12 right-12 text-white z-10">
@@ -239,8 +240,8 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                 </div>
             </div>
 
-            {/* FORM COLUMN */}
-            <div className="w-full md:w-1/2 h-full bg-[#FFFCF2] dark:bg-black text-black dark:text-white flex flex-col relative overflow-y-auto">
+            {/* FORM COLUMN - Enforcing Golden Theme Backgrounds */}
+            <div className="w-full md:w-1/2 h-full bg-[#FFFAF0] dark:bg-black text-black dark:text-white flex flex-col relative overflow-y-auto">
                 <button onClick={onCancel} className="absolute top-6 right-6 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors z-50">
                     <span className="sr-only">Close</span>
                     <ArrowRight className="w-6 h-6 rotate-180 text-gray-400 hover:text-black dark:hover:text-white" />
