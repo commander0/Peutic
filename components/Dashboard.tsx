@@ -592,8 +592,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
     return (
         <div
-            className="min-h-screen text-gray-900 dark:text-gray-100 transition-colors duration-500 overflow-x-hidden print:bg-white print:text-black"
-            style={{ background: 'var(--color-bg-gradient)' }}
+            className={`min-h-screen text-gray-900 dark:text-gray-100 transition-colors duration-500 overflow-x-hidden print:bg-white print:text-black ${(!isDark && isDefaultTheme) ? 'bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-yellow-300/40 via-orange-50 to-white' : ''}`}
+            style={{
+                background: (!isDark && isDefaultTheme) ? undefined : 'var(--color-bg-gradient)'
+            }}
         >
             {mood && <WeatherEffect type={mood} />}
             {/* FLOATING CONTROLS: Separated for better ergonomics */}

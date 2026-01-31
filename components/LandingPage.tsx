@@ -107,7 +107,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
 
             <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
                 <BackgroundVideo
-                    src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4"
+                    src="https://res.cloudinary.com/demo/video/upload/v1687448877/samples/landscapes/nature-sunset.mp4"
+                    poster="https://res.cloudinary.com/demo/video/upload/v1687448877/samples/landscapes/nature-sunset.jpg"
                     poster="https://images.pexels.com/videos/3249935/free-video-3249935.jpg?auto=compress&cs=tinysrgb&dpr=1&w=500"
                     className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center opacity-80"
                 />

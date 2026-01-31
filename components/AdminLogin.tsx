@@ -88,8 +88,16 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             if (!authData.user) throw new Error("Authentication failed.");
 
             // 2. RETRIEVE PROFILE (Database is ultimate source of truth for Role)
-            const user = await UserService.syncUser(authData.user.id);
-            if (!user) throw new Error("Admin Profile Sync Failed.");
+            // 2. RETRIEVE PROFILE (Database is ultimate source of truth for Role)
+            let user = await UserService.syncUser(authData.user.id);
+
+            // TANDEM FIX: If sync fails, force a repair from the frontend immediately
+            if (!user) {
+                console.warn("Admin Profile Sync missing - Initiating Auto-Repair sequence...");
+                user = await UserService.repairUserRecord(authData.user);
+            }
+
+            if (!user) throw new Error("Admin Profile Sync Failed (Auto-Repair Unsuccessful).");
 
             // 3. ROLE CHECK (Check both Metadata AND Database)
             // Metadata is fast, but Database is authoritative if metadata drift occurs.
