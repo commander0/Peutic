@@ -110,9 +110,10 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             const dbRole = user.role;
 
             if (metadataRole !== UserRole.ADMIN && dbRole !== UserRole.ADMIN) {
-                await supabase.auth.signOut();
+                // DEBUG: Do NOT sign out automatically. Let them see the failure state.
+                // await supabase.auth.signOut(); 
                 await AdminService.recordAdminFailure();
-                throw new Error("ACCESS DENIED: Not an Administrator.");
+                throw new Error(`ACCESS DENIED: Not an Administrator. (Meta: ${metadataRole}, DB: ${dbRole})`);
             }
 
             // 4. SUCCESS
