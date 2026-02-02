@@ -8,11 +8,14 @@ import { UserRole } from '../types';
 import { Lock, Shield, ArrowRight, KeyRound, AlertCircle, Check, Crown, Megaphone, LifeBuoy } from 'lucide-react';
 
 
+import { useAuth } from './auth/AuthProvider';
+
 interface AdminLoginProps {
     onLogin: (user: any) => void;
 }
 
 const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
+    const { isAdmin } = useAuth();
     const [searchParams] = useSearchParams();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -81,44 +84,38 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             });
 
             if (authError) {
-                await AdminService.recordAdminFailure(); // Now safe, won't throw
+                await AdminService.recordAdminFailure();
                 throw new Error(authError.message || "Invalid credentials.");
             }
 
             if (!authData.user) throw new Error("Authentication failed.");
 
-            // 2. RETRIEVE PROFILE (Database is ultimate source of truth for Role)
-            // 2. RETRIEVE PROFILE (Database is ultimate source of truth for Role)
-            let user = await UserService.syncUser(authData.user.id);
+            // 2. CHECK ROLE (Quick Fail)
+            // We do a quick check to give immediate UI feedback.
+            // The AuthProvider will pick this up automatically in background.
+            // But we want to BLOCK the UI if they are just a 'USER'.
 
-            // TANDEM FIX: If sync fails, force a repair from the frontend immediately
-            if (!user) {
-                console.warn("Admin Profile Sync missing - Initiating Auto-Repair sequence...");
-                try {
-                    user = await UserService.repairUserRecord(authData.user);
-                } catch (repairError: any) {
-                    console.error("Auto-Repair Exception:", repairError);
-                    throw new Error(`Admin Profile Sync Failed: ${repairError.message || JSON.stringify(repairError)}`);
-                }
-            }
-
-            if (!user) throw new Error("Admin Profile Sync Failed (Auto-Repair Unsuccessful: Null result from repair).");
-
-            // 3. ROLE CHECK (Check both Metadata AND Database)
-            // Metadata is fast, but Database is authoritative if metadata drift occurs.
+            // Wait a brief moment for trigger to theoretically fire? No, check metadata.
             const metadataRole = authData.user.app_metadata?.role || authData.user.user_metadata?.role;
-            const dbRole = user.role;
 
-            if (metadataRole !== UserRole.ADMIN && dbRole !== UserRole.ADMIN) {
-                // DEBUG: Do NOT sign out automatically. Let them see the failure state.
-                // await supabase.auth.signOut(); 
-                await AdminService.recordAdminFailure();
-                throw new Error(`ACCESS DENIED: Not an Administrator. (Meta: ${metadataRole}, DB: ${dbRole})`);
+            // If strictly USER in metadata, warn them (though DB is truth, metadata is fast cache)
+            if (metadataRole === 'USER') {
+                // We let them through, but the App.tsx might redirect them back if DB confirms 'USER'.
+                // We throw here to prevent the "Success" UI from flashing.
+                // But wait, what if metadata is stale? 
+                // We will attempt a fast sync.
+                const user = await UserService.syncUser(authData.user.id);
+                if (user?.role !== UserRole.ADMIN) {
+                    await supabase.auth.signOut(); // Kick them out
+                    throw new Error("Access Denied: Administrator privileges required.");
+                }
             }
 
             // 4. SUCCESS
             AdminService.resetAdminFailure();
-            onLogin(user);
+            // We do NOT need to call onLogin(user) with a full user object anymore, 
+            // the parent just navigates.
+            onLogin(null);
 
         } catch (e: any) {
             console.error("Admin Login Error:", e);
@@ -419,6 +416,20 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                     <button type="submit" disabled={loading || isVerifying} className="w-full bg-white hover:bg-gray-200 text-black font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02]">
                                         {loading ? <span className="animate-pulse">{isVerifying ? "Verifying Access..." : "Authenticating..."}</span> : <><KeyRound className="w-4 h-4" /> ACCESS TERMINAL</>}
                                     </button>
+
+                                    <div className="mt-4 text-center">
+                                        <button
+                                            type="button"
+                                            onClick={async () => {
+                                                const { error } = await supabase.rpc('force_fix_admin_role');
+                                                if (error) alert("Repair Failed: " + error.message);
+                                                else alert("Account Repaired! Please Refresh and Login.");
+                                            }}
+                                            className="text-yellow-600 hover:text-yellow-500 text-[10px] font-bold uppercase tracking-widest border-b border-yellow-600/30 pb-0.5"
+                                        >
+                                            Stuck? Click Here to Repair Permissions
+                                        </button>
+                                    </div>
 
                                     {hasAdmin && (
                                         <div className="pt-6 border-t border-gray-800/50 text-center">

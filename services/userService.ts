@@ -118,14 +118,13 @@ export class UserService {
                 // Background Achievement Check
                 this.checkAchievements(this.currentUser);
                 return this.currentUser;
-            } else {
-                console.warn("CRITICAL: User Sync Data Missing - Attempting Self-Healing", { userId });
-                // ATTEMPT REPAIR
-                const session = await supabase.auth.getUser();
-                if (session.data.user && session.data.user.id === userId) {
-                    return await this.repairUserRecord(session.data.user);
-                }
             }
+
+            // Note: We no longer attempt "repair" here. 
+            // The Golden Master triggers handle user creation atomically on Signup/Login.
+            // If data is missing here, it means the trigger failed or RLS is blocking.
+            // Returning null allows the UI to handle the error state cleanly.
+            console.warn("User Sync: Profile not found (Triggers should have handled this).");
         } catch (e) {
             logger.error("User Sync Exception", `ID: ${userId}`, e);
         }
@@ -199,45 +198,7 @@ export class UserService {
             .subscribe();
     }
 
-    // REPAIR: Attempt to fix missing public.users record
-    static async repairUserRecord(sessionUser: any): Promise<User | null> {
-        try {
-            console.log("Repair Requested: Invoking God Mode RPC...", sessionUser.id);
 
-            // 1. Try RPC (Privileged Repair)
-            const { data, error } = await supabase.rpc('repair_own_profile');
-
-            if (error) {
-                console.error("RPC Repair Failed:", error);
-
-                // 2. Fallback to Client Side (if RPC not yet applied)
-                const fallbackName = sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || "Buddy";
-                const { data: clientData, error: clientError } = await supabase.from('users').upsert({
-                    id: sessionUser.id,
-                    email: sessionUser.email,
-                    name: fallbackName,
-                    role: (sessionUser.app_metadata?.role || sessionUser.user_metadata?.role || 'USER'),
-                    balance: 0,
-                    provider: sessionUser.app_metadata?.provider || 'email',
-                    last_login_date: new Date().toISOString()
-                }, { onConflict: 'id' }).select().single();
-
-                if (clientError) {
-                    console.error("Client Repair also failed:", clientError);
-                    // THROW THE ERROR to see it in UI
-                    throw new Error(`RPC Failed: ${error.message}; Client Failed: ${clientError.message}`);
-                }
-                return this.mapUser(clientData);
-            }
-
-            console.log("RPC Repair Success:", data);
-            return this.mapUser(data);
-
-        } catch (e: any) {
-            console.error("Repair Exception:", e);
-            throw e; // Propagate up to AdminLogin
-        }
-    }
 
     static async login(email: string, password?: string): Promise<User> {
         if (!password) throw new Error("Password required");

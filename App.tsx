@@ -12,6 +12,7 @@ import { UserService } from './services/userService';
 import { AdminService } from './services/adminService';
 import { supabase } from './services/supabaseClient';
 import { logger } from './services/logger';
+import { AuthProvider, useAuth } from './components/auth/AuthProvider';
 import BookOfYou from './components/wisdom/BookOfYou';
 
 
@@ -40,11 +41,10 @@ const FooterWrapper = () => {
 
 
 const MainApp: React.FC = () => {
-  const [user, setUser] = useState<User | null>(UserService.getCachedUser());
+  const { user, loading, isAdmin } = useAuth(); // NEW: Use Central Auth
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [activeSessionCompanion, setActiveSessionCompanion] = useState<Companion | null>(null);
-  const [isRestoring, setIsRestoring] = useState(true);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
 
@@ -52,125 +52,13 @@ const MainApp: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Restore session & Handle Auth Changes
+  // 1. App Initialization (Settings Only)
   useEffect(() => {
-    // Parallelize Operations to Speed Up Load
-    const initApp = async () => {
-      try {
-        // 1. Run Core Initialization in Parallel
-        const [restored, settings] = await Promise.all([
-          UserService.restoreSession().catch(e => { logger.warn("Session restore failed", e.message); return null; }),
-          AdminService.syncGlobalSettings().catch(e => { logger.warn("Settings sync failed", e.message); return { maintenanceMode: false }; })
-        ]);
-
-        let activeUser = restored;
-        if (settings) setMaintenanceMode(settings.maintenanceMode);
-
-        // 2. Recovery Logic
-        if (!activeUser) {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session?.user) {
-            console.warn("Using Session Fallback for faster load / recovery");
-            activeUser = UserService.createFallbackUser(session.user);
-            UserService.repairUserRecord(session.user);
-          }
-        }
-
-        // 3. Update UI State
-        if (activeUser) {
-          setUser(activeUser);
-
-          // PREFETCH DASHBOARD DATA (Non-blocking)
-          AdminService.getCompanions();
-          UserService.getJournals(activeUser.id);
-          UserService.getUserArt(activeUser.id);
-          UserService.getVoiceJournals(activeUser.id);
-          UserService.getWeeklyProgress(activeUser.id);
-
-          if (activeUser.role === UserRole.ADMIN && location.pathname === '/') {
-            navigate('/admin/dashboard');
-          }
-        } else {
-          // SOFT FAIL: If sync failed but we have a token, don't kill the session immediately
-          // Just let the auth listener handle the final decision
-          console.warn("Init Check: User not synced yet, waiting for Auth Listener...");
-        }
-
-        setMaintenanceMode(AdminService.getSettings().maintenanceMode);
-      } catch (err) {
-        console.error("Critical Init Error:", err);
-      } finally {
-        setIsRestoring(false);
-      }
-    };
-
-    initApp();
-
-    // 4. Persistent Listener for Refresh/Changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
-      console.log(`[AuthDebug] Event: ${event}`, {
-        hasSession: !!session,
-        userId: session?.user?.id,
-        currentUserState: user?.id
-      });
-
-      // Handle both explicit Sign In and Initial Session recovery
-      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session?.user) {
-
-        // CONNECT LOGGER TO DB (Now that we have a potential session/context)
-        (window as any).PersistLog = (type: any, eventName: string, details: string) => {
-          if (type === 'ERROR' || type === 'SECURITY' || type === 'WARNING') {
-            AdminService.logSystemEvent(type, eventName, details).catch(e => console.warn("Log fail", e));
-          }
-        };
-
-        // LOOP PREVENTION: If we are already an ADMIN in state, and the session matches, 
-        // DO NOT overwrite with a potential "USER" fallback unless we are sure.
-        if (user && user.id === session.user.id && user.role === UserRole.ADMIN) {
-          console.log("AuthDebug: Maintaining existing ADMIN state to prevent flicker");
-          return;
-        }
-
-        // Prevent unnecessary re-sync if we already have the correct user in state
-        if (user && user.id === session.user.id) return;
-
-        let syncedUser = await UserService.syncUser(session.user.id);
-
-        if (!syncedUser) {
-          console.warn("Auth Listener: Sync failed, using Fallback User.");
-          // Fallback user now trusts the Token Role (V29 Fix)
-          syncedUser = UserService.createFallbackUser(session.user);
-
-          // Attempt background repair/sync again without blocking
-          UserService.repairUserRecord(session.user).then(repaired => {
-            if (repaired && repaired.role === UserRole.ADMIN) {
-              // Only update if it upgrades us or is robust
-              setUser(repaired);
-            }
-          });
-        }
-
-        if (syncedUser) {
-          setUser(syncedUser);
-
-          // Force Navigation only if we are on a public page and should be on dashboard
-          if (syncedUser.role === UserRole.ADMIN && location.pathname === '/admin/login') {
-            navigate('/admin/dashboard');
-          }
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        // navigate('/'); // DEBUG: DISABLE AUTO REDIRECT TO SEE ERRORS
-      }
+    // Sync Global Settings independently of Auth
+    AdminService.syncGlobalSettings().then(settings => {
+      setMaintenanceMode(settings.maintenanceMode);
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  // Poll Settings separate from Auth logic
-  useEffect(() => {
     const interval = setInterval(async () => {
       await AdminService.syncGlobalSettings();
       setMaintenanceMode(AdminService.getSettings().maintenanceMode);
@@ -178,7 +66,7 @@ const MainApp: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Session Timeout Logic (In-Memory Only)
+  // 2. Session Timeout Logic (Preserved)
   useEffect(() => {
     const updateActivity = () => {
       lastActivityRef.current = Date.now();
@@ -186,43 +74,32 @@ const MainApp: React.FC = () => {
     };
     const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
     events.forEach(event => window.addEventListener(event, updateActivity, { capture: true, passive: true }));
-    // Also listen for visibility change to re-blur on tab switch if needed, or update timestamp
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === 'visible') {
-        lastActivityRef.current = Date.now();
-      }
+      if (document.visibilityState === 'visible') lastActivityRef.current = Date.now();
     });
     return () => events.forEach(event => window.removeEventListener(event, updateActivity, { capture: true }));
   }, [showTimeoutWarning]);
 
-
-
-  // Privacy Blur & Timeout Logic
+  // 3. Privacy Blur & Timeout Logic (Preserved)
   const [isBlurred, setIsBlurred] = useState(false);
 
   useEffect(() => {
     const checkActivity = () => {
       if (!user || activeSessionCompanion) return;
-
       const now = Date.now();
       const elapsed = now - lastActivityRef.current;
 
       // Privacy Blur (5 Minutes)
-      if (elapsed > 5 * 60 * 1000 && !isBlurred) {
-        setIsBlurred(true);
-      }
+      if (elapsed > 5 * 60 * 1000 && !isBlurred) setIsBlurred(true);
 
       // Session Timeout (15 Minutes)
       const timeoutLimit = 15 * 60 * 1000;
-      if (elapsed > timeoutLimit - 60000 && elapsed < timeoutLimit) {
-        setShowTimeoutWarning(true);
-      }
+      if (elapsed > timeoutLimit - 60000 && elapsed < timeoutLimit) setShowTimeoutWarning(true);
       if (elapsed > timeoutLimit) {
         setShowTimeoutWarning(false);
         handleLogout();
       }
     };
-
     const interval = setInterval(checkActivity, 1000);
     return () => clearInterval(interval);
   }, [user, activeSessionCompanion, isBlurred]);
@@ -233,81 +110,51 @@ const MainApp: React.FC = () => {
     setShowTimeoutWarning(false);
   };
 
+  // 4. Unified Login Handler
+  // Note: This function allows the LandingPage/Auth UI to trigger a login flow.
+  // The actual state update happens via the AuthProvider's listener automatically.
   const handleLogin = async (_role: UserRole, name: string, _avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email', password?: string, isSignup: boolean = false, topics?: string[]): Promise<void> => {
     const userEmail = email || `${name.toLowerCase().replace(/ /g, '.')}@example.com`;
-    let currentUser: User;
 
     try {
-      // --- REAL SUPABASE AUTHENTICATION ---
-      // This ensures the session persists on refresh
       if (provider === 'email' && password) {
-        // Attempt Login
         try {
           if (isSignup) throw new Error("Explicit Signup Requested");
-          currentUser = await UserService.login(userEmail, password);
+          await UserService.login(userEmail, password);
         } catch (loginError: any) {
-
-          // If login fails, try signup (if this was a signup attempt)
-          if (isSignup || loginError.message.includes('Explicit Signup Requested') || loginError.message.includes('Invalid login credentials') === false) {
-            // Try creating user with birthday
-            currentUser = await UserService.createUser(name, userEmail, password, provider, birthday);
+          if (isSignup || loginError.message.includes('Explicit Signup Requested') || !loginError.message.includes('Invalid login credentials')) {
+            const newUser = await UserService.createUser(name, userEmail, password, provider, birthday);
+            // Handle Onboarding topics
+            if (topics && topics.length > 0) {
+              await UserService.updatePreferences(newUser.id, { topics });
+            }
           } else {
             throw loginError;
           }
         }
       } else if (provider !== 'email') {
-        // Social Login handling
-        currentUser = await UserService.createUser(name, userEmail, 'social-login-placeholder', provider, birthday);
-      } else {
-        throw new Error("Password required for email login");
+        await UserService.createUser(name, userEmail, 'social-login-placeholder', provider, birthday);
       }
 
-      currentUser = UserService.checkAndIncrementStreak(currentUser);
-
-      let finalUser = currentUser;
-
-      // SAVE ONBOARDING TOPICS (Growth Fix)
-      if (topics && topics.length > 0) {
-        finalUser = { ...currentUser, emailPreferences: { ...currentUser.emailPreferences, marketing: true, updates: currentUser.emailPreferences?.updates ?? false, topics } };
-        UserService.updatePreferences(currentUser.id, { topics }).catch(console.warn);
-      }
-
-      setUser(finalUser);
-      lastActivityRef.current = Date.now();
       setShowAuth(false);
-
-      // Intelligent Redirect
-      if (currentUser.role === UserRole.ADMIN) {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/');
-      }
+      // Navigation is handled by the AuthProvider state change or the component rendering 
+      // We can optionally force it if needed, but let's trust the state first.
 
     } catch (e: any) {
       console.error("Login Failed", e);
-      // Let the Auth component handle error display
       throw e;
     }
   };
 
   const handleLogout = async () => {
-    const userId = user?.id;
-
-    // 1. Instant UI cleanup (Synchronous)
-    setUser(null);
     setActiveSessionCompanion(null);
     UserService.clearCache();
-
-    // 2. Navigation (Synchronous)
-    navigate('/', { replace: true });
-
-    // 3. Background Cleanup (Async)
-    if (userId) UserService.endSession(userId);
     await UserService.logout();
+    navigate('/', { replace: true });
   };
 
-
-  if (isRestoring) {
+  // 5. Loading State
+  if (loading) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#0A0A0A] flex flex-col items-center justify-center p-6 text-center">
         <div className="relative">
@@ -321,8 +168,8 @@ const MainApp: React.FC = () => {
     );
   }
 
-  // Maintenance Mode Lockout
-  if (maintenanceMode && user?.role !== UserRole.ADMIN && !location.pathname.includes('/admin')) {
+  // 6. Maintenance Mode
+  if (maintenanceMode && !isAdmin && !location.pathname.includes('/admin')) {
     return (
       <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-white p-6 text-center">
         <Wrench className="w-16 h-16 text-yellow-500 mb-6 animate-pulse" />
@@ -343,7 +190,7 @@ const MainApp: React.FC = () => {
               {JSON.stringify({
                 id: user?.id?.substring(0, 8),
                 role: user?.role,
-                email: user?.email,
+                isAdmin,
                 path: location.pathname
               }, null, 2)}
             </div>
@@ -399,7 +246,7 @@ const MainApp: React.FC = () => {
                     <div className="relative">
                       {/* Force Dashboard for testing if user exists, else Landing */}
                       {user ? (
-                        <Dashboard user={user} onLogout={handleLogout} onStartSession={(c) => setActiveSessionCompanion(c)} />
+                        isAdmin ? <Navigate to="/admin/dashboard" /> : <Dashboard user={user} onLogout={handleLogout} onStartSession={(c) => setActiveSessionCompanion(c)} />
                       ) : (
                         <LandingPage onLoginClick={(signup) => {
                           const requestedMode = signup ? 'signup' : 'login';
@@ -414,14 +261,19 @@ const MainApp: React.FC = () => {
                     </div>
                   } />
 
-                  {/* Admin Sub-Site Routes */}
+                  {/* Admin Routes - PROTECTED BY AUTH PROVIDER CHECK + ROUTE GUARD */}
                   <Route path="/admin" element={<Navigate to="/admin/login" />} />
-                  <Route path="/admin/login" element={<AdminLogin onLogin={(u) => { setUser(u); UserService.saveUserSession(u); navigate('/admin/dashboard'); }} />} />
+                  <Route path="/admin/login" element={
+                    // If already admin, go to dashboard
+                    isAdmin ? <Navigate to="/admin/dashboard" /> : <AdminLogin onLogin={() => navigate('/admin/dashboard')} />
+                  } />
 
-                  {/* SECURITY BYPASS: Allow ANY logged in user to see Dashboard structure for debugging */}
-                  {/* We removed the explicit "UserRole.ADMIN" ternary check here */}
                   <Route path="/admin/dashboard" element={
-                    <AdminDashboard onLogout={handleLogout} />
+                    user && isAdmin ? (
+                      <AdminDashboard onLogout={handleLogout} />
+                    ) : (
+                      <Navigate to="/admin/login" />
+                    )
                   } />
 
                   {/* Protected Book of You Route */}
@@ -453,7 +305,12 @@ const MainApp: React.FC = () => {
 
 
 const App: React.FC = () => {
-  return <MainApp />;
+  // Wrap MainApp with AuthProvider
+  return (
+    <AuthProvider>
+      <MainApp />
+    </AuthProvider>
+  )
 };
 
 export default App;
