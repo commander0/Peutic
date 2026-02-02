@@ -420,17 +420,23 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                         <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Secure Key</label>
                                         <input type="password" className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} />
                                     </div>
-                                    <button type="submit" disabled={loading || isVerifying} className="w-full bg-white hover:bg-gray-200 text-black font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02]">
-                                        {loading ? (
-                                            <span className="animate-pulse flex items-center gap-2">
-                                                {isVerifying ? "Verifying Access..." : "Authenticating..."}
-                                                {/* Emergency Unlock if stuck */}
-                                                <button type="button" onClick={(e) => { e.stopPropagation(); setLoading(false); }} className="p-1 hover:bg-white/20 rounded-full" title="Force Reset">
-                                                    <Shield className="w-3 h-3 text-red-500" />
-                                                </button>
-                                            </span>
-                                        ) : <><KeyRound className="w-4 h-4" /> ACCESS TERMINAL</>}
-                                    </button>
+                                    <div className="relative">
+                                        <button type="submit" disabled={loading} className="w-full bg-white hover:bg-gray-200 text-black font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed">
+                                            {loading ? <span className="animate-pulse flex items-center gap-2">Authenticating...</span> : <><KeyRound className="w-4 h-4" /> ACCESS TERMINAL</>}
+                                        </button>
+
+                                        {/* Emergency Unlock - ABSOLUTE POSITIONED OUTSIDE BUTTON */}
+                                        {loading && (
+                                            <button
+                                                type="button"
+                                                onClick={(e) => { e.preventDefault(); setLoading(false); }}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-red-500/10 hover:bg-red-500/20 rounded-full text-red-500 transition-colors z-20 hover:scale-110 cursor-pointer"
+                                                title="Force Reset Button State"
+                                            >
+                                                <Shield className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
 
                                     <div className="mt-4 text-center">
                                         <button

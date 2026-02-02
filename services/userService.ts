@@ -120,11 +120,33 @@ export class UserService {
                 return this.currentUser;
             }
 
-            // Note: We no longer attempt "repair" here. 
-            // The Golden Master triggers handle user creation atomically on Signup/Login.
-            // If data is missing here, it means the trigger failed or RLS is blocking.
-            // Returning null allows the UI to handle the error state cleanly.
-            console.warn("User Sync: Profile not found (Triggers should have handled this).");
+            // SELF-HEALING: Triggers failed? RLS blocking? Create a fallback row.
+            console.warn("User Sync: Profile missing. Initiating Self-Repair...");
+
+            // 1. Try to fetch Authorization metadata to construct a valid fallback
+            const { data: authUser } = await supabase.auth.getUser();
+            if (authUser?.user) {
+                const fallback = this.createFallbackUser(authUser.user);
+
+                // 2. Attempt to INSERT this fallback into the DB (Heal the breach)
+                // This ensures next time, the row exists.
+                supabase.from('users').insert({
+                    id: fallback.id,
+                    email: fallback.email,
+                    name: fallback.name,
+                    role: 'USER',
+                    subscription_status: 'ACTIVE'
+                }).then(({ error }) => {
+                    if (error) console.error("Self-Repair Insert Failed", error);
+                    else console.log("Self-Repair Success: Created missing profile row.");
+                });
+
+                this.currentUser = fallback;
+                this.saveUserToCache(fallback);
+                return fallback;
+            }
+
+            return null;
         } catch (e) {
             logger.error("User Sync Exception", `ID: ${userId}`, e);
         }
