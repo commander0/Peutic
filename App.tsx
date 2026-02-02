@@ -185,15 +185,7 @@ const MainApp: React.FC = () => {
       <ThemeProvider>
         <LanguageProvider>
           <ToastProvider>
-            {/* --- EMERGENCY DEBUG PANEL --- */}
-            <div className="fixed top-0 left-0 bg-black/90 text-[10px] font-mono text-green-400 p-2 z-[99999] pointer-events-none opacity-50 hover:opacity-100 max-w-sm overflow-hidden whitespace-pre-wrap border-r border-b border-green-500/30">
-              {JSON.stringify({
-                id: user?.id?.substring(0, 8),
-                role: user?.role,
-                isAdmin,
-                path: location.pathname
-              }, null, 2)}
-            </div>
+
 
             {activeSessionCompanion && user ? (
               <VideoRoom

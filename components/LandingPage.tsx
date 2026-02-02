@@ -107,8 +107,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
 
             <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
                 <BackgroundVideo
-                    src="https://res.cloudinary.com/demo/video/upload/v1687448871/samples/landscapes/beach-boat.mp4"
-                    poster="https://res.cloudinary.com/demo/video/upload/v1687448871/samples/landscapes/beach-boat.jpg"
+                    src="https://assets.mixkit.co/videos/preview/mixkit-waves-coming-to-the-beach-5016-large.mp4"
+                    poster="https://assets.mixkit.co/videos/preview/mixkit-waves-coming-to-the-beach-5016-large.png"
                     className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center opacity-80"
                 />
                 {/* Single Overlay for subtle yellow tint */}

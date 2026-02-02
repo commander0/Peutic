@@ -11,11 +11,16 @@ export const BackgroundVideo: React.FC<BackgroundVideoProps> = ({ src, poster, c
 
     useEffect(() => {
         if (videoRef.current) {
-            // Ensure muted is set before play() to allow autoplay
+            // CRITICAL: defaultMuted is required for some browsers (React's muted prop isn't always enough)
+            videoRef.current.defaultMuted = true;
             videoRef.current.muted = true;
-            videoRef.current.play().catch(e => {
-                console.warn("Video autoplay blocked:", e);
-            });
+
+            const playPromise = videoRef.current.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(e => {
+                    console.warn("Video autoplay failed (likely low power mode or blocking):", e);
+                });
+            }
         }
     }, [src]);
 

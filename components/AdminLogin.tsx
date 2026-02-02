@@ -414,7 +414,15 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                         <input type="password" className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} />
                                     </div>
                                     <button type="submit" disabled={loading || isVerifying} className="w-full bg-white hover:bg-gray-200 text-black font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02]">
-                                        {loading ? <span className="animate-pulse">{isVerifying ? "Verifying Access..." : "Authenticating..."}</span> : <><KeyRound className="w-4 h-4" /> ACCESS TERMINAL</>}
+                                        {loading ? (
+                                            <span className="animate-pulse flex items-center gap-2">
+                                                {isVerifying ? "Verifying Access..." : "Authenticating..."}
+                                                {/* Emergency Unlock if stuck */}
+                                                <button type="button" onClick={(e) => { e.stopPropagation(); setLoading(false); }} className="p-1 hover:bg-white/20 rounded-full" title="Force Reset">
+                                                    <Shield className="w-3 h-3 text-red-500" />
+                                                </button>
+                                            </span>
+                                        ) : <><KeyRound className="w-4 h-4" /> ACCESS TERMINAL</>}
                                     </button>
 
                                     <div className="mt-4 text-center">
