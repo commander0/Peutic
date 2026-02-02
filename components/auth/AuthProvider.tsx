@@ -40,14 +40,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setSession(currentSession);
 
         try {
-            // Fetch strict profile from DB
-            const profile = await UserService.syncUser(currentSession.user.id);
+            // FORCE REFRESH: Clear cache to ensure we get the latest Role/Status from DB
+            // This prevents "Login Loop" where local storage thinks we are still a USER
+            UserService.clearCache();
+
+            let profile = await UserService.syncUser(currentSession.user.id);
+
+            // RETRY MECHANISM: If profile is missing (race condition with Trigger), wait and try again.
+            if (!profile) {
+                console.warn("Auth: Profile missing, retrying in 500ms...");
+                await new Promise(r => setTimeout(r, 500));
+                profile = await UserService.syncUser(currentSession.user.id);
+            }
+
             if (profile) {
                 setUser(profile);
             } else {
-                console.warn("Auth: Session valid but Profile missing. Waiting for Trigger...");
-                // In a perfect world (Golden Master), this shouldn't happen often.
-                // We could implement a retry here if needed, but for now we let it settle.
+                console.error("Auth: Profile sync failed after retry.");
+                // We keep user as null, which blocks access but technically keeps session. 
+                // App.tsx will redirect to login, which is correct behavior for broken profiles.
             }
         } catch (error) {
             console.error("Auth: Sync failed", error);
@@ -58,9 +69,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // 2. Lifecycle Listener
     useEffect(() => {
+        // SAFETY TIMEOUT: If Supabase hangs (e.g. missing Envs in Production), force stop loading after 5s
+        const safetyTimer = setTimeout(() => {
+            if (loading) {
+                console.warn("Auth: Loading timeout reached. Force releasing lock.");
+                setLoading(false);
+            }
+        }, 5000);
+
         // Initial Load
         supabase.auth.getSession().then(({ data: { session } }) => {
             syncSession(session);
+        }).catch(e => {
+            console.error("Auth: Session Fetch Error", e);
+            setLoading(false);
         });
 
         // Realtime Subscription
@@ -76,7 +98,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             }
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            clearTimeout(safetyTimer);
+            subscription.unsubscribe();
+        };
     }, []);
 
     // 3. Actions
