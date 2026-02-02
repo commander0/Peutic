@@ -57,6 +57,13 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         if (searchParams.get('rescue') === 'true') {
             setShowRescue(true);
         }
+
+        // SAFETY: Force clear loading state on mount after small delay
+        const safetyTimer = setTimeout(() => {
+            setLoading(false);
+            setIsVerifying(false);
+        }, 500);
+        return () => clearTimeout(safetyTimer);
     }, [searchParams]);
 
 
