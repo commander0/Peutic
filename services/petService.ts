@@ -8,14 +8,19 @@ export class PetService {
 
     static async getPet(userId: string): Promise<Lumina | null> {
         try {
-            // DATABASE FIRST: No local caching for global pet state.
+            const cached = localStorage.getItem(`${this.CACHE_KEY}_${userId}`);
+
+            // USE GATEWAY for secure access
             const data = await BaseService.invokeGateway('get-pet', { userId });
 
             if (data) {
-                // Apply time-based decay logic here if needed, or prefer server-side decay.
-                // For now, retaining client-side decay calculation on the fresh data.
-                return this.calculateDecay(data);
+                // Apply time-based decay
+                const decayedAnima = this.calculateDecay(data);
+                localStorage.setItem(`${this.CACHE_KEY}_${userId}`, JSON.stringify(decayedAnima));
+                return decayedAnima;
             }
+
+            if (cached) return JSON.parse(cached);
             return null;
         } catch (e) {
             console.error("Pet Fetch Error", e);
@@ -41,7 +46,7 @@ export class PetService {
         if (error) {
             logger.error("Update Anima Failed", anima.id, error);
         } else {
-            // Success
+            localStorage.setItem(`${this.CACHE_KEY}_${anima.userId}`, JSON.stringify(anima));
         }
     }
 

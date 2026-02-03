@@ -123,9 +123,13 @@ export class GardenService {
 
     static async clipPlant(userId: string): Promise<{ success: boolean; reward?: string; prize?: number; message?: string }> {
         try {
-            // TODO: Implement Server-Side Cooldown via Gateway/DB
-            // For now, we allow the action but removed the local storage limit which was not global.
-            // Ideally, we would check a 'last_clipped_at' column in the DB.
+            // 1. Check Cooldown (Local)
+            const lastClip = localStorage.getItem(`peutic_last_clip_${userId}`);
+            const now = Date.now();
+
+            if (lastClip && now - parseInt(lastClip) < 60000) {
+                return { success: false, message: "The plant needs time to regrow." };
+            }
 
             // 2. Generate Reward
             const quotes = [
@@ -141,7 +145,12 @@ export class GardenService {
             const quote = quotes[Math.floor(Math.random() * quotes.length)];
             const prize = Math.floor(Math.random() * 5) + 5; // 5-10 coins
 
-            // 3. Update Balance handled by UI/UserService
+            // 3. Update Balance (Mocking Backend Call)
+            // Ideally we call UserService.addBalance here, but to avoid circular deps we return values
+            // and let the UI handler call the service.
+
+            // Update local cooldown
+            localStorage.setItem(`peutic_last_clip_${userId}`, now.toString());
 
             return { success: true, reward: quote, prize, message: "Clipped!" };
         } catch (e) {

@@ -27,75 +27,95 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [user, setUser] = useState<User | null>(null);
     const [session, setSession] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
+    const syncingRef = React.useRef(false);
 
-    const refreshProfile = async (currentUserId?: string) => {
-        const targetId = currentUserId || session?.user?.id;
-        if (!targetId) return;
+    // 1. Core Sync Logic
+    // 1. Core Sync Logic
+    const syncSession = async (currentSession: any) => {
+        if (syncingRef.current) return;
+        syncingRef.current = true;
 
         try {
-            const profile = await UserService.syncUser(targetId);
+            if (!currentSession?.user) {
+                setUser(null);
+                setSession(null);
+                setLoading(false);
+                return;
+            }
+
+            setSession(currentSession);
+
+            // Fetch latest profile state directly
+            // Removed: UserService.clearCache() call here as it can cause flickering if unnecessary
+            // We rely on syncUser to fetch fresh data if needed or return cached if valid
+            const profile = await UserService.syncUser(currentSession.user.id);
+
             if (profile) {
-                console.log("Auth: Profile Synced", profile.role);
                 setUser(profile);
             } else {
-                console.warn("Auth: Profile not found in public.users");
+                console.warn("Auth: Profile sync returned null for valid session.");
+                // We do NOT set user to null here to avoid blowing up the session immediately
+                // but usually this means the user is not in the public.users table yet
             }
-        } catch (err) {
-            console.error("Auth: Profile Sync Failed", err);
+        } catch (error) {
+            console.error("Auth: Sync failed", error);
+        } finally {
+            setLoading(false);
+            syncingRef.current = false;
         }
     };
 
+    // 2. Lifecycle Listener
     useEffect(() => {
-        let mounted = true;
-
-        const initAuth = async () => {
-            // 1. Get Initial Session
-            const { data: { session: initialSession } } = await supabase.auth.getSession();
-
-            if (mounted) {
-                setSession(initialSession);
-                if (initialSession?.user) {
-                    await refreshProfile(initialSession.user.id);
-                }
+        // SAFETY TIMEOUT: If Supabase hangs (e.g. missing Envs in Production), force stop loading after 5s
+        const safetyTimer = setTimeout(() => {
+            if (loading) {
+                console.warn("Auth: Loading timeout reached. Force releasing lock.");
                 setLoading(false);
+                syncingRef.current = false;
             }
-        };
+        }, 5000);
 
-        initAuth();
+        // Initial Load
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            syncSession(session);
+        }).catch(e => {
+            console.error("Auth: Session Fetch Error", e);
+            setLoading(false);
+        });
 
-        // 2. Listen for Changes
+        // Realtime Subscription
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
             console.log(`Auth Event: ${event}`);
-            if (!mounted) return;
 
             if (event === 'SIGNED_OUT') {
-                setSession(null);
                 setUser(null);
+                setSession(null);
                 setLoading(false);
-            } else if (newSession?.user) {
-                setSession(newSession);
-                // Only sync profile if we don't have it or the user changed
-                if (!user || user.id !== newSession.user.id || event === 'SIGNED_IN') {
-                    await refreshProfile(newSession.user.id);
-                }
-            } else {
-                // Edge case: Session exists but empty?
-                setLoading(false);
+            } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+                await syncSession(newSession);
             }
         });
 
         return () => {
-            mounted = false;
+            clearTimeout(safetyTimer);
             subscription.unsubscribe();
         };
     }, []);
 
-    const signOut = async () => {
-        await supabase.auth.signOut();
-        // State updates handled by onAuthStateChange
+    // 3. Actions
+    const refreshProfile = async () => {
+        if (session?.user?.id) {
+            const profile = await UserService.syncUser(session.user.id);
+            if (profile) setUser(profile);
+        }
     };
 
-    // Derived State
+    const signOut = async () => {
+        await supabase.auth.signOut();
+    };
+
+    // 4. Derived State
     const isAdmin = user?.role === UserRole.ADMIN;
 
     return (
@@ -104,9 +124,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             session,
             loading,
             isAdmin,
-            refreshProfile: () => refreshProfile(),
+            refreshProfile,
             signOut,
-            setUser
+            setUser // Exposed for manual updates if absolutely necessary (legacy compat)
         }}>
             {children}
         </AuthContext.Provider>

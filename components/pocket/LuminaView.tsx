@@ -27,7 +27,6 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
 
     // Dynamic canvas sizing for responsive pet
     const [canvasSize, setCanvasSize] = useState(500);
-    const [isProcessing, setIsProcessing] = useState(false);
 
     // Responsive Canvas Listener
     useEffect(() => {
@@ -87,45 +86,37 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     const [oracleMessage, setOracleMessage] = useState<string | null>(null);
 
     const handleOracleConsult = async () => {
-        if (isProcessing) return;
         const PRICE = 5;
-
         if (user.balance < PRICE) {
             showToast(`The Oracle requires ${PRICE}m offering.`, "error");
             return;
         }
 
-        setIsProcessing(true);
-        try {
-            if (await UserService.deductBalance(PRICE, `Oracle: ${pet?.name}`)) {
-                // Trigger Magic Animation
-                setTrick('magic');
-                triggerImpact();
+        if (await UserService.deductBalance(PRICE, `Oracle: ${pet?.name}`)) {
+            // Trigger Magic Animation
+            setTrick('magic');
+            triggerImpact();
 
-                // Generate Wisdom (Mock for now, could be AI)
-                const wisdoms = [
-                    "The stars align for your success today.",
-                    "Patience is not simply the ability to wait - it's how we behave while we're waiting.",
-                    "Your inner garden is blooming, even if you cannot see the roots yet.",
-                    "A friend will reach out to you soon.",
-                    "Focus on the present moment; the future will take care of itself.",
-                    "You are stronger than you think.",
-                    "Breathe. Just breathe."
-                ];
-                const msg = wisdoms[Math.floor(Math.random() * wisdoms.length)];
+            // Generate Wisdom (Mock for now, could be AI)
+            const wisdoms = [
+                "The stars align for your success today.",
+                "Patience is not simply the ability to wait - it's how we behave while we're waiting.",
+                "Your inner garden is blooming, even if you cannot see the roots yet.",
+                "A friend will reach out to you soon.",
+                "Focus on the present moment; the future will take care of itself.",
+                "You are stronger than you think.",
+                "Breathe. Just breathe."
+            ];
+            const msg = wisdoms[Math.floor(Math.random() * wisdoms.length)];
 
-                setTimeout(() => {
-                    setOracleMessage(msg);
-                    showToast("The Oracle has spoken (-5m)", "success");
-                }, 1500); // Wait for spin up
-            }
-        } finally {
-            setTimeout(() => setIsProcessing(false), 1500);
+            setTimeout(() => {
+                setOracleMessage(msg);
+                showToast("The Oracle has spoken (-5m)", "success");
+            }, 1500); // Wait for spin up
         }
     };
 
     const handleAction = async (action: 'feed' | 'play' | 'clean' | 'sleep') => {
-        if (isProcessing) return;
         // ... (existing checks)
         if (!pet || (pet.isSleeping && action !== 'sleep')) return;
 
@@ -135,90 +126,77 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
             return;
         }
 
-        setIsProcessing(true);
-        try {
-            let updatedPet = { ...pet, lastInteractionAt: new Date().toISOString() };
-            let newEmotion: typeof emotion = 'happy';
+        let updatedPet = { ...pet, lastInteractionAt: new Date().toISOString() };
+        let newEmotion: typeof emotion = 'happy';
 
-            let statGain = 0;
-            let xpGain = 0;
+        let statGain = 0;
+        let xpGain = 0;
 
-            // Scale rewards based on intensity (Time Investment)
-            switch (intensity) {
-                case 1: statGain = 10; xpGain = 2; break;
-                case 2: statGain = 25; xpGain = 5; break;
-                case 3: statGain = 45; xpGain = 10; break;
-            }
+        // Scale rewards based on intensity (Time Investment)
+        switch (intensity) {
+            case 1: statGain = 10; xpGain = 2; break;
+            case 2: statGain = 25; xpGain = 5; break;
+            case 3: statGain = 45; xpGain = 10; break;
+        }
 
-            let success = false;
+        switch (action) {
+            case 'feed':
+                if (pet.hunger >= 100) { showToast(`${pet.name} is full!`, "info"); return; }
+                if (await UserService.deductBalance(COST, `Fed ${pet.name}`)) {
+                    updatedPet.hunger = Math.min(100, pet.hunger + statGain);
+                    updatedPet.experience += xpGain;
+                    newEmotion = 'eating';
+                    triggerImpact();
+                    showToast(`Fed ${pet.name}! (+${statGain} Saturation, -${COST}m)`, "success");
+                }
+                break;
+            case 'play':
+                if (pet.energy < 20) { showToast(`${pet.name} is too tired to play.`, "info"); return; }
+                if (await UserService.deductBalance(COST, `Played with ${pet.name}`)) {
+                    updatedPet.happiness = Math.min(100, pet.happiness + statGain);
+                    updatedPet.energy = Math.max(0, pet.energy - (10 * intensity));
+                    updatedPet.experience += xpGain * 1.5;
+                    newEmotion = 'happy';
 
-            switch (action) {
-                case 'feed':
-                    if (pet.hunger >= 100) { showToast(`${pet.name} is full!`, "info"); setIsProcessing(false); return; }
-                    if (await UserService.deductBalance(COST, `Fed ${pet.name}`)) {
-                        updatedPet.hunger = Math.min(100, pet.hunger + statGain);
-                        updatedPet.experience += xpGain;
-                        newEmotion = 'eating';
-                        triggerImpact();
-                        showToast(`Fed ${pet.name}! (+${statGain} Saturation, -${COST}m)`, "success");
-                        success = true;
-                    }
-                    break;
-                case 'play':
-                    if (pet.energy < 20) { showToast(`${pet.name} is too tired to play.`, "info"); setIsProcessing(false); return; }
-                    if (await UserService.deductBalance(COST, `Played with ${pet.name}`)) {
-                        updatedPet.happiness = Math.min(100, pet.happiness + statGain);
-                        updatedPet.energy = Math.max(0, pet.energy - (10 * intensity));
-                        updatedPet.experience += xpGain * 1.5;
-                        newEmotion = 'happy';
+                    // TRICK LOGIC
+                    if (intensity === 2) setTrick('spin');
+                    if (intensity === 3) setTrick('magic');
 
-                        // TRICK LOGIC
-                        if (intensity === 2) setTrick('spin');
-                        if (intensity === 3) setTrick('magic');
+                    triggerImpact();
+                    showToast(`Played with ${pet.name}! (+${statGain} Joy, -${COST}m)`, "success");
+                }
+                break;
+            case 'clean':
+                if (await UserService.deductBalance(COST, `Cleaned ${pet.name}`)) {
+                    updatedPet.cleanliness = Math.min(100, pet.cleanliness + (statGain * 2));
+                    updatedPet.experience += xpGain;
+                    newEmotion = 'happy';
+                    showToast(`Cleaned ${pet.name}! (-${COST}m)`, "success");
+                }
+                break;
+            case 'sleep':
+                updatedPet.isSleeping = !pet.isSleeping;
+                newEmotion = updatedPet.isSleeping ? 'sleeping' : 'idle';
+                break;
+        }
 
-                        triggerImpact();
-                        showToast(`Played with ${pet.name}! (+${statGain} Joy, -${COST}m)`, "success");
-                        success = true;
-                    }
-                    break;
-                case 'clean':
-                    if (await UserService.deductBalance(COST, `Cleaned ${pet.name}`)) {
-                        updatedPet.cleanliness = Math.min(100, pet.cleanliness + (statGain * 2));
-                        updatedPet.experience += xpGain;
-                        newEmotion = 'happy';
-                        showToast(`Cleaned ${pet.name}! (-${COST}m)`, "success");
-                        success = true;
-                    }
-                    break;
-                case 'sleep':
-                    updatedPet.isSleeping = !pet.isSleeping;
-                    newEmotion = updatedPet.isSleeping ? 'sleeping' : 'idle';
-                    success = true;
-                    break;
-            }
+        // Evolution logic
+        if (updatedPet.experience >= updatedPet.level * 100) {
+            updatedPet.level += 1;
+            updatedPet.experience = 0;
+            triggerImpact();
+            showToast(`${pet.name} leveled up to Lvl ${updatedPet.level}!`, "success");
+        }
 
-            if (!success) return;
+        setPet(updatedPet);
+        setEmotion(newEmotion);
+        await PetService.updatePet(updatedPet);
 
-            // Evolution logic
-            if (updatedPet.experience >= updatedPet.level * 100) {
-                updatedPet.level += 1;
-                updatedPet.experience = 0;
-                triggerImpact();
-                showToast(`${pet.name} leveled up to Lvl ${updatedPet.level}!`, "success");
-            }
-
-            setPet(updatedPet);
-            setEmotion(newEmotion);
-            await PetService.updatePet(updatedPet);
-
-            if (newEmotion !== 'sleeping') {
-                setTimeout(() => {
-                    setEmotion('idle');
-                    setTrick(null);
-                }, 3000);
-            }
-        } finally {
-            setIsProcessing(false);
+        if (newEmotion !== 'sleeping') {
+            setTimeout(() => {
+                setEmotion('idle');
+                setTrick(null);
+            }, 3000);
         }
     };
 
@@ -392,35 +370,34 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                     label="Feed"
                     color="cyan"
                     onClick={() => handleAction('feed')}
-                    disabled={pet.isSleeping || isProcessing}
+                    disabled={pet.isSleeping}
                 />
                 <ActionButton
                     icon={Gamepad2}
                     label="Play"
                     color="cyan"
                     onClick={() => handleAction('play')}
-                    disabled={pet.isSleeping || pet.energy < 20 || isProcessing}
+                    disabled={pet.isSleeping || pet.energy < 20}
                 />
                 <ActionButton
                     icon={Sparkles}
                     label="Oracle"
                     color="purple"
                     onClick={handleOracleConsult}
-                    disabled={pet.isSleeping || isProcessing}
+                    disabled={pet.isSleeping}
                 />
                 <ActionButton
                     icon={Bath}
                     label="Wash"
                     color="cyan"
                     onClick={() => handleAction('clean')}
-                    disabled={pet.isSleeping || isProcessing}
+                    disabled={pet.isSleeping}
                 />
                 <ActionButton
                     icon={pet.isSleeping ? Sun : Moon}
                     label={pet.isSleeping ? "Wake" : "Sleep"}
                     color={pet.isSleeping ? "yellow" : "cyan"}
                     onClick={() => handleAction('sleep')}
-                    disabled={isProcessing}
                 />
             </footer>
 

@@ -16,7 +16,6 @@ interface GardenFullViewProps {
 const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, onUpdate }) => {
     const [localGarden, setLocalGarden] = useState(garden);
     const [isWatering, setIsWatering] = useState(false);
-    const [isProcessing, setIsProcessing] = useState(false); // Spam Prevention
     const [tierEffect, setTierEffect] = useState<'growth' | 'ecosystem' | null>(null);
     const [showInfo, setShowInfo] = useState(false);
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
@@ -41,8 +40,6 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     };
 
     const handleWater = async () => {
-        if (isProcessing) return;
-        setIsProcessing(true);
         setIsWatering(true);
 
         // Tier Effect Logic
@@ -53,14 +50,12 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
             showToast(`Not enough minutes. Need ${COST}m.`, "error");
             setIsWatering(false);
             setTierEffect(null);
-            setIsProcessing(false);
             return;
         }
+        const success = await UserService.deductBalance(COST, "Garden Water");
 
-        try {
-            const success = await UserService.deductBalance(COST, "Garden Water");
-
-            if (success) {
+        if (success) {
+            try {
                 // Scaled Water effect
                 const updated = await GardenService.waterPlant(garden.userId);
                 if (updated) {
@@ -68,61 +63,35 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                     onUpdate();
                     showToast(`Garden Watered! (-${COST}m)`, "success");
                 }
-            } else {
-                showToast(`Not enough minutes. Need ${COST}m.`, "error");
+            } catch (e) {
+                // Refund conceptually, but for now just show error
+                showToast("Failed to sync garden state.", "error");
             }
-        } catch (e) {
-            showToast("Failed to sync garden state.", "error");
-        } finally {
-            setTimeout(() => {
-                setIsWatering(false);
-                setTierEffect(null);
-                setIsProcessing(false);
-            }, 2000);
+        } else {
+            showToast(`Not enough minutes. Need ${COST}m.`, "error");
         }
+        setTimeout(() => { setIsWatering(false); setTierEffect(null); }, 2000);
     };
 
     const handleHarvest = async () => {
-        if (isProcessing) return;
         const harvestCost = 5;
-
-        if (user.balance < harvestCost) {
+        const success = await UserService.deductBalance(harvestCost, "Garden Harvest");
+        if (success) {
+            // Logic for harvest (XP gain would go here)
+            // For now, visual feedback
+            showToast(`Harvested! +50 XP (-${harvestCost}m)`, "success");
+            // Optionally reset plant or evolve
+        } else {
             showToast(`Harvest requires ${harvestCost}m.`, "error");
-            return;
-        }
-
-        setIsProcessing(true);
-        try {
-            const success = await UserService.deductBalance(harvestCost, "Garden Harvest");
-            if (success) {
-                showToast(`Harvested! +50 XP (-${harvestCost}m)`, "success");
-                // Logic for harvest (XP gain would go here)
-            } else {
-                showToast(`Harvest requires ${harvestCost}m.`, "error");
-            }
-        } finally {
-            setIsProcessing(false);
         }
     };
 
     const handleNurture = async (action: 'breath' | 'sing') => {
-        if (isProcessing) return;
-
-        if (user.balance < COST) {
+        const success = await UserService.deductBalance(COST, action === 'breath' ? "Garden Breath" : "Garden Song");
+        if (success) {
+            showToast(action === 'breath' ? `Deep breath taken. (-${COST}m)` : `Sang to the garden. (-${COST}m)`, "success");
+        } else {
             showToast(`Not enough minutes. Need ${COST}m.`, "error");
-            return;
-        }
-
-        setIsProcessing(true);
-        try {
-            const success = await UserService.deductBalance(COST, action === 'breath' ? "Garden Breath" : "Garden Song");
-            if (success) {
-                showToast(action === 'breath' ? `Deep breath taken. (-${COST}m)` : `Sang to the garden. (-${COST}m)`, "success");
-            } else {
-                showToast(`Not enough minutes. Need ${COST}m.`, "error");
-            }
-        } finally {
-            setIsProcessing(false);
         }
     };
 
@@ -247,10 +216,10 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
 
                 {/* ACTION ARRAY */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 relative z-50 px-6 pb-8 w-full max-w-4xl">
-                    <ActionButton icon={Droplets} label={`Hydrate (-${COST}m)`} onClick={handleWater} active={isWatering || isProcessing} />
-                    <ActionButton icon={Wind} label={`Breath (-${COST}m)`} onClick={() => handleNurture('breath')} color="blue" active={isProcessing} />
-                    <ActionButton icon={Heart} label={`Sing (-${COST}m)`} onClick={() => handleNurture('sing')} color="pink" active={isProcessing} />
-                    <ActionButton icon={Leaf} label="Harvest (-5m)" onClick={handleHarvest} color="emerald" active={isProcessing} />
+                    <ActionButton icon={Droplets} label={`Hydrate (-${COST}m)`} onClick={handleWater} active={isWatering} />
+                    <ActionButton icon={Wind} label={`Breath (-${COST}m)`} onClick={() => handleNurture('breath')} color="blue" />
+                    <ActionButton icon={Heart} label={`Sing (-${COST}m)`} onClick={() => handleNurture('sing')} color="pink" />
+                    <ActionButton icon={Leaf} label="Harvest (-5m)" onClick={handleHarvest} color="emerald" />
                 </div>
             </main>
 
