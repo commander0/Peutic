@@ -27,13 +27,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [user, setUser] = useState<User | null>(null);
     const [session, setSession] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
+    const syncingRef = React.useRef(false);
 
     // 1. Core Sync Logic
     const syncSession = async (currentSession: any) => {
+        if (syncingRef.current) return;
+        syncingRef.current = true;
+
         if (!currentSession?.user) {
             setUser(null);
             setSession(null);
             setLoading(false);
+            syncingRef.current = false;
             return;
         }
 
@@ -64,6 +69,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             console.error("Auth: Sync failed", error);
         } finally {
             setLoading(false);
+            syncingRef.current = false;
         }
     };
 
@@ -74,6 +80,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (loading) {
                 console.warn("Auth: Loading timeout reached. Force releasing lock.");
                 setLoading(false);
+                syncingRef.current = false;
             }
         }, 5000);
 

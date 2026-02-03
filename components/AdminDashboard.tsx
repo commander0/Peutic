@@ -220,9 +220,25 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
 
     useEffect(() => {
-        fetchData(true);
-        const interval = setInterval(() => fetchData(false), 3000);
-        return () => clearInterval(interval);
+        let isMounted = true;
+        let timeoutId: NodeJS.Timeout;
+
+        const poll = async () => {
+            if (!isMounted) return;
+            await fetchData(false);
+            if (isMounted) {
+                timeoutId = setTimeout(poll, 3000);
+            }
+        };
+
+        fetchData(true).then(() => {
+            if (isMounted) timeoutId = setTimeout(poll, 3000);
+        });
+
+        return () => {
+            isMounted = false;
+            clearTimeout(timeoutId);
+        };
     }, []);
 
 
