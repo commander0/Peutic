@@ -101,11 +101,11 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             // 2. VERIFY PRIVILEGES
             setLoginStatus('Synchronizing Access Permissions...');
 
-            // Force pure sync to get latest role
-            const user = await UserService.syncUser(authData.user.id);
+            // Explicitly sync the user to ensure public.users is up to date
+            const userProfile = await UserService.syncUser(authData.user.id);
 
             // Allow if DB role is ADMIN OR if metadata says ADMIN (fallback for rescue scenarios)
-            const isDbAdmin = user?.role === UserRole.ADMIN;
+            const isDbAdmin = userProfile?.role === UserRole.ADMIN;
             const isMetaAdmin = authData.user.app_metadata?.role === 'ADMIN' || authData.user.user_metadata?.role === 'ADMIN';
 
             if (!isDbAdmin && !isMetaAdmin) {
@@ -114,14 +114,17 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             }
 
             // 3. SUCCESS
-            setLoginStatus('Access Granted. Updating System State...');
+            setLoginStatus('Access Granted. Redirecting...');
             AdminService.resetAdminFailure();
 
-            // CRITICAL: Force global state update so App.tsx sees the new role
+            // Force Context Update
             await refreshProfile();
 
-            // Give React context a moment to propagate
-            onLogin(null);
+            // Short delay to allow Context to propagate to App.tsx
+            // App.tsx uses 'isAdmin' to conditionally render the Route
+            setTimeout(() => {
+                onLogin(null);
+            }, 500);
 
         } catch (e: any) {
             console.error("Admin Login Error:", e);

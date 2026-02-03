@@ -62,20 +62,12 @@ export class UserService {
     static async restoreSession(): Promise<User | null> {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-            // 1. Check Cache
-            const cached = this.getCachedUser();
-            if (cached && cached.id === session.user.id) {
-                this.currentUser = cached;
-                this.syncUser(session.user.id); // Background sync
-                return cached;
-            }
-
-            // 2. Try DB Sync
+            // DATABASE FIRST: Always sync with the server to ensure global consistency.
+            // We do NOT trust local storage for critical state (Balance, Role, etc.)
             const syncedUser = await this.syncUser(session.user.id);
             if (syncedUser) return syncedUser;
 
-            // 3. FALLBACK: Database might be unreachable, but we are Authenticated.
-            // Don't logout! Return a temporary user object from the token.
+            // Fallback only if DB is unreachable but Auth is valid
             console.warn("RestoreSession: DB Sync failed, using Fallback User");
             return this.createFallbackUser(session.user);
         }
@@ -667,6 +659,11 @@ export class UserService {
         // Optimistic UI Update
         const previousBalance = user.balance;
         user.balance = Math.max(0, user.balance - amount);
+        // We update the in-memory user, but avoid polluting a "source of truth" cache that might be read on reload.
+        // However, for UI persistence across refreshes *on the same device*, caching is okay as long as restoreSession ignores it.
+        // Since we modified restoreSession to ignore cache, we can keep the cache write here for fail-safe, 
+        // OR remove it to enforce strictness. 
+        // User asked for "Global Website", implying no "local" data. 
         this.saveUserToCache(user);
 
         try {
