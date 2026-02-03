@@ -13,7 +13,6 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const frameRef = useRef<number>(0);
 
-    // --- ZEN BONSAI RENDERER ---
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -23,31 +22,39 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
         let sway = 0;
         let particles: { x: number, y: number, vy: number, vx: number, life: number, color: string, size: number }[] = [];
 
-        // Draw Branch Function (Fractal with organic twists)
+        // Draw Branch Function (Organic Tapered Brush)
         const drawBranch = (startX: number, startY: number, len: number, angle: number, branchWidth: number, depth: number) => {
             ctx.save();
             ctx.translate(startX, startY);
 
-            // Organic sway
-            const swayOffset = Math.sin(sway * 0.5 + depth) * 0.05 * (depth * 0.2);
+            // Natural Sway: More intense at tips
+            const swayOffset = Math.sin(sway * 0.8 + depth) * 0.02 * (depth * 0.5);
             ctx.rotate(angle + swayOffset);
 
+            // Draw Limb (Bezier for curve)
             ctx.beginPath();
             ctx.moveTo(0, 0);
-            // Quadratic curve for organic look
-            ctx.quadraticCurveTo(0, -len / 2, 0, -len);
 
-            ctx.lineWidth = branchWidth;
-            ctx.lineCap = 'round';
-            // Simple gradient for bark
-            ctx.strokeStyle = depth < 2 ? '#4e342e' : '#795548';
-            ctx.stroke();
+            // Texture Gradient
+            const grad = ctx.createLinearGradient(0, 0, branchWidth, -len);
+            grad.addColorStop(0, '#3e2723'); // Dark Wood
+            grad.addColorStop(1, '#5d4037'); // Lighter Wood
+
+            ctx.fillStyle = grad;
+
+            // Draw a tapered shape rather than a line
+            ctx.moveTo(-branchWidth / 2, 0);
+            ctx.quadraticCurveTo(branchWidth / 4, -len / 2, -branchWidth / 3, -len); // Left edge
+            ctx.lineTo(branchWidth / 3, -len); // Top
+            ctx.quadraticCurveTo(branchWidth / 2, -len / 2, branchWidth / 2, 0); // Right edge
+            ctx.closePath();
+            ctx.fill();
 
             // Transform to end of branch for next iteration
             ctx.translate(0, -len);
 
-            // Leaves / Blossoms at tips (Recursion Halt or Branch Nodes)
-            if (len < 15 || depth > (garden.level + 2)) {
+            // FLOWERS / LEAVES
+            if (len < 12 || depth > (garden.level + 3)) {
                 // Determine Plant Type Colors
                 const pType = (garden.currentPlantType as string) || 'Lotus';
                 let leafColor = '#4CAF50';
@@ -56,75 +63,111 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
                 if (pType === 'Pine') { leafColor = '#2e7d32'; bloomColor = '#a5d6a7'; }
                 if (garden.waterLevel < 30) bloomColor = '#ef5350'; // Wilted
 
+                // Bloom/Leaf Logic
+                const isBloom = Math.random() > 0.6 || depth > 9;
+                const size = isBloom ? 6 : 4;
+
                 ctx.beginPath();
-                const bloomSize = 4 + Math.sin(frameRef.current * 0.05 + depth) * 1.5;
-                ctx.arc(0, 0, bloomSize, 0, Math.PI * 2);
+                ctx.arc(0, 0, size * (1 + Math.sin(frameRef.current * 0.05 + depth) * 0.2), 0, Math.PI * 2);
+                ctx.fillStyle = isBloom ? bloomColor : leafColor;
 
-                // 30% chance of bloom vs leaf
-                ctx.fillStyle = (Math.random() > 0.7 || depth > 8) ? bloomColor : leafColor;
-
+                // Glow
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = ctx.fillStyle;
                 ctx.fill();
 
-                // Glow effect
-                ctx.shadowBlur = 5;
-                ctx.shadowColor = ctx.fillStyle;
+                // Bright center for blooms
+                if (isBloom) {
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, size * 0.3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
 
                 ctx.restore();
                 return;
             }
 
-            // Recursive branching
-            // Use slightly random angles for "Zen" asymmetry
-            drawBranch(0, 0, len * 0.75, 0.45, branchWidth * 0.7, depth + 1);
-            drawBranch(0, 0, len * 0.75, -0.45, branchWidth * 0.7, depth + 1);
+            // Recursive branching (Fractal)
+            // Asymmetric splitting for natural look
+            drawBranch(0, 0, len * 0.8, 0.4, branchWidth * 0.7, depth + 1);
+            drawBranch(0, 0, len * 0.7, -0.5, branchWidth * 0.7, depth + 1);
 
             ctx.restore();
         };
 
         const render = () => {
             frameRef.current++;
-            sway += 0.02;
+            sway += 0.015;
 
-            // 1. Background (Zen Gradient)
-            const gradient = ctx.createLinearGradient(0, 0, 0, height);
-            gradient.addColorStop(0, '#e0f7fa'); // Sky
-            gradient.addColorStop(1, '#f1f8e9'); // Mist
+            // 1. Clear with Transparency for Trail (optional, sticking to clean clear for now)
+            ctx.clearRect(0, 0, width, height);
+
+            // 2. Rising Sun / Moon Glow (Background Light)
+            const gradient = ctx.createRadialGradient(width / 2, height / 2, 50, width / 2, height / 2, 300);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, width, height);
 
-            // 2. Rising Sun (Red/Orange)
+            // 3. Pot (Minimalist Ceramic with Reflection)
+            const potY = height - 60;
+            const potW = 120;
+
+            // Shadow under pot
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
             ctx.beginPath();
-            ctx.arc(width * 0.5, height * 0.8, 100, 0, Math.PI, true);
-            ctx.fillStyle = 'rgba(255, 87, 34, 0.15)'; // Zen sun
+            ctx.ellipse(width / 2, potY + 40, potW * 0.6, 10, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // 3. Pot (Minimalist Ceramic)
-            const potY = height - 40;
-            const potW = 100;
-            ctx.fillStyle = '#5d4037';
+            // Main Pot
+            const potGrad = ctx.createLinearGradient(width / 2 - potW / 2, potY, width / 2 + potW / 2, potY);
+            potGrad.addColorStop(0, '#3e2723');
+            potGrad.addColorStop(0.5, '#5d4037');
+            potGrad.addColorStop(1, '#3e2723');
+            ctx.fillStyle = potGrad;
+
             ctx.beginPath();
-            // @ts-ignore
-            if (ctx.roundRect) ctx.roundRect(width / 2 - potW / 2, potY, potW, 30, 5);
-            else ctx.fillRect(width / 2 - potW / 2, potY, potW, 30);
+            // Trapezoid shape
+            ctx.moveTo(width / 2 - potW / 2, potY); // Top Left
+            ctx.lineTo(width / 2 + potW / 2, potY); // Top Right
+            ctx.lineTo(width / 2 + potW / 3, potY + 40); // Bot Right
+            ctx.lineTo(width / 2 - potW / 3, potY + 40); // Bot Left
+            ctx.closePath();
             ctx.fill();
+
             // Rim
-            ctx.fillStyle = '#8d6e63';
-            ctx.fillRect(width / 2 - potW / 2 - 5, potY, potW + 10, 6);
+            ctx.fillStyle = '#795548';
+            ctx.fillRect(width / 2 - potW / 2 - 5, potY, potW + 10, 8);
 
 
-            // 4. Tree Root
-            drawBranch(width / 2, potY, 50, 0, 10, 0);
+            // 4. Tree Root System
+            drawBranch(width / 2, potY, 70, 0, 16, 0);
 
-            // 5. Interaction Particles (Clip Effect)
+            // 5. Interaction Particles (Water Splash)
+            if (interactionType === 'water' && Math.random() > 0.6) {
+                // Splash from top
+                particles.push({
+                    x: width / 2 + (Math.random() - 0.5) * 100,
+                    y: 0,
+                    vx: 0,
+                    vy: Math.random() * 5 + 5,
+                    life: 1.0,
+                    color: '#4fc3f7',
+                    size: Math.random() * 2 + 1
+                });
+            }
+
+            // Growth Sparkles
             if (interactionType === 'clip' && Math.random() > 0.8) {
                 particles.push({
-                    x: width / 2 + (Math.random() - 0.5) * 150,
-                    y: height / 2 + (Math.random() - 0.5) * 150,
+                    x: width / 2 + (Math.random() - 0.5) * 200,
+                    y: height / 2 + (Math.random() - 0.5) * 200,
                     vx: (Math.random() - 0.5) * 1,
-                    vy: Math.random() * 2,
+                    vy: -Math.random() * 1, // Float up
                     life: 1.0,
-                    color: '#f48fb1',
-                    size: Math.random() * 3 + 2
+                    color: '#fff176', // Gold
+                    size: Math.random() * 3
                 });
             }
 
@@ -132,13 +175,21 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
             particles.forEach((p, i) => {
                 p.x += p.vx;
                 p.y += p.vy;
-                p.life -= 0.02;
+                p.life -= 0.015;
+
+                // If splashing, bounce off pot? Simplified: fade out
+                if (p.y > potY && p.color === '#4fc3f7') {
+                    p.vy = -p.vy * 0.3; // Splash bounce
+                    p.life -= 0.1;
+                }
+
                 ctx.globalAlpha = p.life;
                 ctx.fillStyle = p.color;
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.globalAlpha = 1.0;
+
                 if (p.life <= 0) particles.splice(i, 1);
             });
 
@@ -154,7 +205,7 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
             ref={canvasRef}
             width={width}
             height={height}
-            className="w-full h-full object-contain drop-shadow-xl rounded-xl"
+            className="w-full h-full object-contain pointer-events-none" // Pointer events passed to parent for tilt
         />
     );
 };

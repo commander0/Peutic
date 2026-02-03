@@ -40,6 +40,24 @@ const FooterWrapper = () => {
 
 
 
+const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading, isAdmin } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!user || !isAdmin) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 const MainApp: React.FC = () => {
   const { user, loading, isAdmin } = useAuth(); // NEW: Use Central Auth
   const [showAuth, setShowAuth] = useState(false);
@@ -261,11 +279,9 @@ const MainApp: React.FC = () => {
                   } />
 
                   <Route path="/admin/dashboard" element={
-                    user && isAdmin ? (
+                    <AdminRoute>
                       <AdminDashboard onLogout={handleLogout} />
-                    ) : (
-                      <Navigate to="/admin/login" />
-                    )
+                    </AdminRoute>
                   } />
 
                   {/* Protected Book of You Route */}

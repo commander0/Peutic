@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Sun, Cloud, CloudRain, Zap, Coffee, Battery } from 'lucide-react';
+import { X, Sun, Cloud, CloudRain, Zap, Battery } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface CheckInModalProps {

@@ -98,41 +98,22 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
 
             if (!authData.user) throw new Error("Authentication failed.");
 
-            // 2. VERIFY & HEAL
+            // 2. VERIFY PRIVILEGES
             setLoginStatus('Synchronizing Access Permissions...');
 
-            // Explicitly sync the user profile from the database
-            let user = await UserService.syncUser(authData.user.id);
+            // Force pure sync to get latest role
+            const user = await UserService.syncUser(authData.user.id);
 
-            // If the user row is missing or not ADMIN, try to self-heal
-            if (!user || user.role !== UserRole.ADMIN) {
-                setLoginStatus('Detected Permissions Mismatch. Attempting Auto-Repair...');
+            // Allow if DB role is ADMIN OR if metadata says ADMIN (fallback for rescue scenarios)
+            const isDbAdmin = user?.role === UserRole.ADMIN;
+            const isMetaAdmin = authData.user.app_metadata?.role === 'ADMIN' || authData.user.user_metadata?.role === 'ADMIN';
 
-                // Try RPC Repair
-                // @ts-ignore
-                const { error: rpcError } = await supabase.rpc('force_fix_admin_role');
-                if (rpcError) console.warn("Auto-Repair RPC warning:", rpcError);
-
-                // Also try manual metadata update if possible (though RLS might block)
-                await supabase.auth.updateUser({ data: { role: 'ADMIN' } });
-
-                // Sync again
-                user = await UserService.syncUser(authData.user.id);
+            if (!isDbAdmin && !isMetaAdmin) {
+                await supabase.auth.signOut();
+                throw new Error("Access Denied: Administrator privileges required.");
             }
 
-            // 3. FINAL VALIDATION
-            if (user?.role !== UserRole.ADMIN) {
-                // Last ditch: Trust metadata if DB failed but Auth succeeded
-                const metadataRole = authData.user.app_metadata?.role || authData.user.user_metadata?.role;
-                if (metadataRole === 'ADMIN') {
-                    console.warn("Allowed Access via Metadata Override despite DB mismatch");
-                } else {
-                    await supabase.auth.signOut();
-                    throw new Error("Access Denied: You do not have Administrator privileges.");
-                }
-            }
-
-            // 4. SUCCESS
+            // 3. SUCCESS
             setLoginStatus('Access Granted. Updating System State...');
             AdminService.resetAdminFailure();
 
@@ -140,21 +121,13 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             await refreshProfile();
 
             // Give React context a moment to propagate
-            setLoginStatus('Redirecting to Command Center...');
-
-            // Small delay to ensure state settles
-            setTimeout(() => {
-                onLogin(null);
-            }, 800);
+            onLogin(null);
 
         } catch (e: any) {
             console.error("Admin Login Error:", e);
             setError(e.message || "Login failed.");
             await AdminService.recordAdminFailure();
-            // Don't stop loading if we redirect? well actually if error we must stop
             setLoading(false);
-        } finally {
-            // If error, loading is false. If success, keep loading true until redirect unmounts component
         }
     };
 

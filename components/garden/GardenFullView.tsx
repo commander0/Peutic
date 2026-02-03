@@ -22,6 +22,23 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     const { showToast } = useToast();
     const COST = intensity;
 
+    // 3D TILT STATE
+    const containerRef = React.useRef<HTMLDivElement>(null);
+    const [tilt, setTilt] = useState({ x: 0, y: 0 });
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        // Dampen the tilt
+        setTilt({ x: x * 20, y: y * 20 });
+    };
+
+    const handleMouseLeave = () => {
+        setTilt({ x: 0, y: 0 });
+    };
+
     const handleWater = async () => {
         setIsWatering(true);
 
@@ -79,101 +96,117 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     };
 
     return (
-        <div className="fixed inset-0 z-[100] bg-[#081508] text-white flex flex-col animate-in fade-in duration-500 overflow-hidden">
-            {/* AMBIENT BACKGROUND */}
-            <div className="absolute inset-0 bg-gradient-to-b from-green-900 via-emerald-950 to-black pointer-events-none"></div>
-            <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] pointer-events-none mix-blend-overlay"></div>
+        <div
+            className="fixed inset-0 z-[100] bg-[#051105] text-white flex flex-col animate-in fade-in duration-700 overflow-hidden perspective-1000"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+        >
+            {/* AMBIENT BACKGROUND LAYERS (PARALLAX 1) */}
+            <div
+                className="absolute inset-0 bg-gradient-to-b from-[#0a1f0f] via-[#051006] to-black pointer-events-none transition-transform duration-200 ease-out"
+                style={{ transform: `translateX(${tilt.x * -1}px) translateY(${tilt.y * -1}px) scale(1.05)` }}
+            >
+            </div>
 
-            {/* OVERLAY GLOWS */}
-            <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-green-500/20 blur-[150px] rounded-full animate-pulse pointer-events-none"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-emerald-400/10 blur-[150px] rounded-full animate-pulse delay-1000 pointer-events-none"></div>
+            {/* NOISE OVERLAY */}
+            <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] pointer-events-none mix-blend-overlay"></div>
+
+            {/* ATMOSPHERIC GLOWS (PARALLAX 2) */}
+            <div
+                className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-green-500/10 blur-[150px] rounded-full animate-pulse-slow pointer-events-none transition-transform duration-300 ease-out"
+                style={{ transform: `translateX(${tilt.x * -2}px) translateY(${tilt.y * -2}px)` }}
+            ></div>
 
             {/* HEADER */}
-            <header className="relative z-10 p-6 flex items-center justify-between">
-                <button onClick={onClose} className="flex items-center gap-2 text-green-400 font-bold hover:text-green-300 transition-colors bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-green-500/20">
-                    <ChevronLeft className="w-5 h-5" /> Back to Sanctuary
+            <header className="relative z-50 p-6 flex items-center justify-between pointer-events-auto">
+                <button onClick={onClose} className="flex items-center gap-2 text-green-400 font-bold hover:text-green-300 transition-colors bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-green-500/20 hover:border-green-400/50">
+                    <ChevronLeft className="w-5 h-5" /> Sanctuary
                 </button>
                 <div className="text-center">
-                    <h1 className="text-xl md:text-3xl font-black uppercase tracking-[0.3em] text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-200 drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]">
+                    <h1 className="text-2xl md:text-4xl font-black uppercase tracking-[0.3em] text-transparent bg-clip-text bg-gradient-to-r from-green-300 via-emerald-200 to-teal-400 drop-shadow-[0_0_20px_rgba(34,197,94,0.6)]">
                         Inner Garden
                     </h1>
-                    <p className="text-[10px] md:text-xs font-bold text-green-500 uppercase tracking-widest mt-1">Level {localGarden.level} &bull; {localGarden.currentPlantType} Ecosystem</p>
+                    <p className="text-[10px] md:text-xs font-bold text-green-500/80 uppercase tracking-widest mt-1">Level {localGarden.level} &bull; {localGarden.currentPlantType} Life</p>
                 </div>
                 <button onClick={() => setShowInfo(!showInfo)} className="p-2 border border-green-500/30 bg-black/40 rounded-full hover:bg-green-500/10 transition-colors backdrop-blur-md">
                     <Info className="w-5 h-5 text-green-500" />
                 </button>
             </header>
 
-            {/* MAIN GARDEN AREA */}
-            <main className="flex-1 relative flex flex-col items-center justify-center p-4">
-                <div className="relative group">
-                    {/* Ring Aura - Enhanced - Four Fledged Representation */}
-                    <div className="absolute inset-0 -m-12 border-4 border-green-500/10 rounded-full animate-[spin_20s_linear_infinite]"></div>
-                    <div className="absolute inset-0 -m-16 border-2 border-emerald-400/20 rounded-full animate-[spin_25s_linear_infinite_reverse] border-dashed"></div>
-                    <div className="absolute inset-0 -m-24 border border-teal-300/10 rounded-full animate-[spin_40s_linear_infinite]"></div>
+            {/* MAIN GARDEN AREA 3D CONTAINER */}
+            <main className="flex-1 relative flex flex-col items-center justify-center p-4 perspective-container" ref={containerRef}>
+                <div
+                    className="relative group transition-transform duration-100 ease-out"
+                    style={{
+                        transform: `rotateX(${-tilt.y}deg) rotateY(${tilt.x}deg)`,
+                        transformStyle: 'preserve-3d'
+                    }}
+                >
+                    {/* Ring Aura - Back Layer */}
+                    <div className="absolute inset-0 -m-12 border-4 border-green-500/5 rounded-full animate-[spin_30s_linear_infinite]" style={{ transform: 'translateZ(-50px)' }}></div>
+                    <div className="absolute inset-0 -m-24 border border-teal-300/5 rounded-full animate-[spin_50s_linear_infinite]" style={{ transform: 'translateZ(-100px)' }}></div>
 
-                    {/* Seasonal/Atmospheric Overlay */}
-                    <div className="absolute inset-0 z-0 bg-gradient-radial from-green-500/5 to-transparent blur-3xl rounded-full"></div>
-
-                    {/* Particles */}
-                    <div className="absolute inset-0 pointer-events-none">
-                        {[...Array(12)].map((_, i) => (
-                            <div key={i} className="absolute w-1.5 h-1.5 bg-white/40 rounded-full animate-pulse" style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`, animationDelay: `${i * 0.5}s` }}></div>
-                        ))}
-                    </div>
-
-                    {/* RAIN EFFECT DURING WATERING */}
+                    {/* Rain Effect */}
                     {isWatering && (
-                        <div className="absolute inset-0 z-20 pointer-events-none">
-                            {[...Array(intensity * 15)].map((_, i) => (
+                        <div className="absolute inset-0 z-40 pointer-events-none" style={{ transform: 'translateZ(100px)' }}>
+                            {[...Array(intensity * 20)].map((_, i) => (
                                 <div
                                     key={i}
-                                    className={`absolute w-0.5 h-6 animate-fall shadow-[0_0_5px_rgba(147,197,253,0.8)] ${tierEffect === 'ecosystem' ? 'bg-cyan-300' : 'bg-blue-300'}`}
+                                    className={`absolute w-0.5 h-8 animate-fall shadow-[0_0_8px_rgba(147,197,253,0.9)] ${tierEffect === 'ecosystem' ? 'bg-cyan-300' : 'bg-blue-300'}`}
                                     style={{
                                         left: `${Math.random() * 100}%`,
-                                        top: `-50px`,
-                                        animationDelay: `${Math.random() * 0.5}s`,
-                                        animationDuration: '0.6s'
+                                        top: `-100px`,
+                                        animationDelay: `${Math.random() * 0.4}s`,
+                                        animationDuration: '0.8s'
                                     }}
                                 ></div>
                             ))}
                         </div>
                     )}
 
-                    {/* TIER 2: GROWTH GLOW */}
-                    {tierEffect === 'growth' && (
-                        <div className="absolute inset-0 z-10 bg-green-400/20 blur-3xl animate-pulse pointer-events-none"></div>
-                    )}
-
-                    {/* TIER 3: ECOSYSTEM (BUTTERFLIES/PARTICLES) */}
+                    {/* Ecosystem Particles */}
                     {tierEffect === 'ecosystem' && (
-                        <div className="absolute inset-0 z-20 pointer-events-none">
-                            {[...Array(8)].map((_, i) => (
-                                <div key={i} className="absolute w-2 h-2 bg-yellow-300 rounded-full blur-[1px] animate-float"
+                        <div className="absolute inset-0 z-30 pointer-events-none" style={{ transform: 'translateZ(50px)' }}>
+                            {[...Array(10)].map((_, i) => (
+                                <div key={i} className="absolute w-2 h-2 bg-yellow-300/80 rounded-full blur-[2px] animate-float shadow-[0_0_10px_rgba(253,224,71,0.6)]"
                                     style={{
-                                        left: `${20 + Math.random() * 60}%`,
-                                        top: `${40 + Math.random() * 40}%`,
-                                        animationDuration: `${2 + Math.random()}s`
+                                        left: `${10 + Math.random() * 80}%`,
+                                        top: `${20 + Math.random() * 60}%`,
+                                        animationDuration: `${3 + Math.random() * 2}s`
                                     }}
                                 ></div>
                             ))}
                         </div>
                     )}
 
-                    <div className="relative z-10 transition-transform duration-1000 transform hover:scale-105 filter drop-shadow-[0_0_20px_rgba(34,197,94,0.3)]">
-                        <GardenCanvas garden={localGarden} width={500} height={500} />
+                    {/* THE GARDEN CANVAS - Centerpiece */}
+                    <div className="relative z-20 filter drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform-gpu">
+                        <GardenCanvas garden={localGarden} width={550} height={550} interactionType={isWatering ? 'water' : null} />
+                    </div>
+
+                    {/* Foreground Elements (Floating Runes/Dust) */}
+                    <div className="absolute inset-0 pointer-events-none" style={{ transform: 'translateZ(80px)' }}>
+                        {[...Array(8)].map((_, i) => (
+                            <div key={i} className="absolute w-1 h-1 bg-white/20 rounded-full animate-pulse"
+                                style={{
+                                    left: `${Math.random() * 100}%`,
+                                    top: `${Math.random() * 100}%`,
+                                    animationDelay: `${i * 0.5}s`
+                                }}>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
-                {/* INTENSITY TOGGLE */}
-                <div className="relative z-20 flex justify-center pb-8 mt-8">
-                    <div className="bg-black/80 backdrop-blur-xl border border-green-500/30 rounded-full p-1.5 flex items-center gap-1 shadow-2xl">
-                        <span className="text-[9px] font-black uppercase text-green-500 px-3 tracking-widest hidden md:block">Nurture Level</span>
+                {/* INTENSITY SLIDER */}
+                <div className="relative z-50 flex justify-center pb-8 mt-12">
+                    <div className="bg-black/60 backdrop-blur-2xl border border-green-500/20 rounded-full p-2 flex items-center gap-2 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+                        <span className="text-[10px] font-black uppercase text-green-500/70 px-3 tracking-widest hidden md:block">Investment</span>
                         {[1, 2, 3].map((level) => (
                             <button
                                 key={level}
                                 onClick={() => setIntensity(level as 1 | 2 | 3)}
-                                className={`w-10 h-8 md:w-12 md:h-10 rounded-full flex items-center justify-center text-[10px] md:text-xs font-black transition-all ${intensity === level ? 'bg-green-500 text-black shadow-[0_0_15px_rgba(34,197,94,0.6)]' : 'text-green-500/50 hover:bg-green-500/10'}`}
+                                className={`w-12 h-10 rounded-full flex items-center justify-center text-xs font-black transition-all duration-300 ${intensity === level ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.5)] scale-110' : 'text-green-500/40 hover:bg-green-500/10 hover:text-green-400'}`}
                             >
                                 {level}m
                             </button>
@@ -181,8 +214,8 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                     </div>
                 </div>
 
-                {/* INTERACTIVE CONTROLS - "Four Fledged" (4 distinct actions) */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 relative z-10 px-6 pb-8">
+                {/* ACTION ARRAY */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 relative z-50 px-6 pb-8 w-full max-w-4xl">
                     <ActionButton icon={Droplets} label={`Hydrate (-${COST}m)`} onClick={handleWater} active={isWatering} />
                     <ActionButton icon={Wind} label={`Breath (-${COST}m)`} onClick={() => handleNurture('breath')} color="blue" />
                     <ActionButton icon={Heart} label={`Sing (-${COST}m)`} onClick={() => handleNurture('sing')} color="pink" />
@@ -191,10 +224,10 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
             </main>
 
             {/* FOOTER STATS */}
-            <footer className="relative z-10 p-6 md:p-8 grid grid-cols-3 gap-4 border-t border-green-500/20 bg-black/80 backdrop-blur-xl">
+            <footer className="relative z-50 p-6 md:p-8 grid grid-cols-3 gap-4 border-t border-green-500/10 bg-black/60 backdrop-blur-xl">
                 <StatBox label="Streak" value={`${localGarden.streakCurrent} Days`} />
                 <StatBox label="Vitality" value="98%" />
-                <StatBox label="Phase" value="Bloom" />
+                <StatBox label="Bio-Phase" value="Bloom" />
             </footer>
 
             {/* INFO PANEL */}
@@ -203,20 +236,10 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                     <button onClick={() => setShowInfo(false)} className="absolute top-10 right-10 text-white/50 hover:text-white"><X className="w-8 h-8" /></button>
                     <div className="max-w-xl text-center space-y-6">
                         <Sprout className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                        <h2 className="text-3xl font-black uppercase text-green-400">Garden Wisdom</h2>
+                        <h2 className="text-3xl font-black uppercase text-green-400">Zen Logic</h2>
                         <p className="text-gray-400 leading-relaxed">
-                            Your inner garden reflects your daily presence. By checking in, watering, and caring for this space, you harmonize your mental state. As the plant evolves, so does your capacity for resilience and mindfulness.
+                            This space is a visual anchor for your mind. The 3D depth reacts to your presence, reminding you that your attention shapes your reality.
                         </p>
-                        <div className="grid grid-cols-2 gap-4 text-left">
-                            <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                                <h4 className="font-bold text-green-400 text-sm mb-1">Watering</h4>
-                                <p className="text-xs text-gray-500">Maintain your streak to help the plant evolve through its 5 growth stages.</p>
-                            </div>
-                            <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                                <h4 className="font-bold text-green-400 text-sm mb-1">Spirit Wisp</h4>
-                                <p className="text-xs text-gray-500">The floating wisp represents your focus. It becomes more stable as you spend time here.</p>
-                            </div>
-                        </div>
                     </div>
                 </div>
             )}

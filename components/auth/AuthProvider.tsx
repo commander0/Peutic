@@ -30,40 +30,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const syncingRef = React.useRef(false);
 
     // 1. Core Sync Logic
+    // 1. Core Sync Logic
     const syncSession = async (currentSession: any) => {
         if (syncingRef.current) return;
         syncingRef.current = true;
 
-        if (!currentSession?.user) {
-            setUser(null);
-            setSession(null);
-            setLoading(false);
-            syncingRef.current = false;
-            return;
-        }
-
-        setSession(currentSession);
-
         try {
-            // FORCE REFRESH: Clear cache to ensure we get the latest Role/Status from DB
-            // This prevents "Login Loop" where local storage thinks we are still a USER
-            UserService.clearCache();
-
-            let profile = await UserService.syncUser(currentSession.user.id);
-
-            // RETRY MECHANISM: If profile is missing (race condition with Trigger), wait and try again.
-            if (!profile) {
-                console.warn("Auth: Profile missing, retrying in 500ms...");
-                await new Promise(r => setTimeout(r, 500));
-                profile = await UserService.syncUser(currentSession.user.id);
+            if (!currentSession?.user) {
+                setUser(null);
+                setSession(null);
+                setLoading(false);
+                return;
             }
+
+            setSession(currentSession);
+
+            // Fetch latest profile state directly
+            // Removed: UserService.clearCache() call here as it can cause flickering if unnecessary
+            // We rely on syncUser to fetch fresh data if needed or return cached if valid
+            const profile = await UserService.syncUser(currentSession.user.id);
 
             if (profile) {
                 setUser(profile);
             } else {
-                console.error("Auth: Profile sync failed after retry.");
-                // We keep user as null, which blocks access but technically keeps session. 
-                // App.tsx will redirect to login, which is correct behavior for broken profiles.
+                console.warn("Auth: Profile sync returned null for valid session.");
+                // We do NOT set user to null here to avoid blowing up the session immediately
+                // but usually this means the user is not in the public.users table yet
             }
         } catch (error) {
             console.error("Auth: Sync failed", error);
