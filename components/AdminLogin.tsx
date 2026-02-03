@@ -15,7 +15,7 @@ interface AdminLoginProps {
 }
 
 const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
-    const { isAdmin } = useAuth();
+    const { isAdmin, refreshProfile } = useAuth();
     const [searchParams] = useSearchParams();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -133,21 +133,28 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             }
 
             // 4. SUCCESS
-            setLoginStatus('Access Granted. Redirecting...');
+            setLoginStatus('Access Granted. Updating System State...');
             AdminService.resetAdminFailure();
 
-            // Small delay to let the user see the success message
+            // CRITICAL: Force global state update so App.tsx sees the new role
+            await refreshProfile();
+
+            // Give React context a moment to propagate
+            setLoginStatus('Redirecting to Command Center...');
+
+            // Small delay to ensure state settles
             setTimeout(() => {
                 onLogin(null);
-            }, 500);
+            }, 800);
 
         } catch (e: any) {
             console.error("Admin Login Error:", e);
             setError(e.message || "Login failed.");
             await AdminService.recordAdminFailure();
+            // Don't stop loading if we redirect? well actually if error we must stop
+            setLoading(false);
         } finally {
-            // Only stop loading if we failed; otherwise let the success state persist until unmount
-            if (error) setLoading(false);
+            // If error, loading is false. If success, keep loading true until redirect unmounts component
         }
     };
 
