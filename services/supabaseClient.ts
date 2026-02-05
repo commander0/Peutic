@@ -19,7 +19,6 @@ const strictDummyClient = {
         select: () => ({
             eq: () => ({
                 single: () => Promise.reject(new Error("Supabase Client Not Configured: Missing API Keys")),
-                maybeSingle: () => Promise.reject(new Error("Supabase Client Not Configured: Missing API Keys")),
                 order: () => ({
                     limit: () => Promise.reject(new Error("Supabase Client Not Configured: Missing API Keys"))
                 })

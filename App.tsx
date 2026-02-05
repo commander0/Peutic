@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, ReactNode, ErrorInfo } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole, Companion } from './types';
 import LandingPage from './components/LandingPage';
@@ -11,58 +11,69 @@ import StaticPages from './components/StaticPages';
 import { UserService } from './services/userService';
 import { AdminService } from './services/adminService';
 import { supabase } from './services/supabaseClient';
-import { logger } from './services/logger';
-import { AuthProvider, useAuth } from './components/auth/AuthProvider';
 import BookOfYou from './components/wisdom/BookOfYou';
 
 
-import { Wrench, Clock, ShieldCheck } from 'lucide-react';
+import { Wrench, AlertTriangle, Clock, RefreshCw, ShieldCheck } from 'lucide-react';
 import { ToastProvider } from './components/common/Toast';
 import { LanguageProvider } from './components/common/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import { Footer } from './components/common/Footer';
-import { CookieConsent } from './components/common/CookieConsent';
-
-// Helper to hide footer on secure dashboard routes if needed
-const FooterWrapper = () => {
-  const location = useLocation();
-  // We want footer on Landing Page (/) if NOT logged in... logic is in App main return.
-  // If we are logged in, / is Dashboard. 
-  // Actually, Dashboard probably has its own layout. 
-  // Let's rely on Dashboard having its own layout or just show Footer at bottom.
-  // BUT Dashboard is usually 100vh h-screen.
-  // Safety check:
-  if (location.pathname === '/' || location.pathname === '/book-of-you' || location.pathname.includes('/admin')) return null;
-  return <Footer />;
-};
 
 
+// --- ERROR BOUNDARY (CRASH PREVENTION) ---
 
+interface ErrorBoundaryProps {
+  children?: ReactNode;
+}
 
-const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading, isAdmin } = useAuth();
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+// Explicitly inheriting from React.Component with Generics to ensure proper 'props' and 'state' resolution in TypeScript
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState = { hasError: false };
+
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
   }
 
-  if (!user || !isAdmin) {
-    return <Navigate to="/admin/login" replace />;
+  static getDerivedStateFromError(_: Error): ErrorBoundaryState {
+    return { hasError: true };
   }
 
-  return <>{children}</>;
-};
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Critical Application Error:", error, errorInfo);
+    AdminService.logSystemEvent('ERROR', 'App Crash', error.message);
+  }
+
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center text-white">
+          <AlertTriangle className="w-16 h-16 text-yellow-500 mb-6" />
+          <h1 className="text-3xl font-black mb-4">Something went wrong.</h1>
+          <p className="text-gray-400 mb-8 max-w-md">Our systems detected an unexpected issue. We have logged this report and notified our engineering team.</p>
+          <button
+            onClick={() => { this.setState({ hasError: false }); window.location.href = '/'; }}
+            className="bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform flex items-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4" /> Reload Application
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const MainApp: React.FC = () => {
-  const { user, loading, isAdmin } = useAuth(); // NEW: Use Central Auth
+  const [user, setUser] = useState<User | null>(UserService.getCachedUser());
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [activeSessionCompanion, setActiveSessionCompanion] = useState<Companion | null>(null);
+  const [isRestoring, setIsRestoring] = useState(true);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
 
@@ -70,13 +81,109 @@ const MainApp: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 1. App Initialization (Settings Only)
+  // Restore session & Handle Auth Changes
   useEffect(() => {
-    // Sync Global Settings independently of Auth
-    AdminService.syncGlobalSettings().then(settings => {
-      setMaintenanceMode(settings.maintenanceMode);
+    // Parallelize Operations to Speed Up Load
+    const initApp = async () => {
+      try {
+        // 1. Run Core Initialization in Parallel
+        const [restored, settings] = await Promise.all([
+          UserService.restoreSession().catch(e => { console.warn("Session restore failed", e); return null; }),
+          AdminService.syncGlobalSettings().catch(e => { console.warn("Settings sync failed", e); return { maintenanceMode: false }; })
+        ]);
+
+        let activeUser = restored;
+        if (settings) setMaintenanceMode(settings.maintenanceMode);
+
+        // 2. Recovery Logic
+        if (!activeUser) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            console.warn("Using Session Fallback for faster load / recovery");
+            activeUser = UserService.createFallbackUser(session.user);
+            UserService.repairUserRecord(session.user);
+          }
+        }
+
+        // 3. Update UI State
+        if (activeUser) {
+          setUser(activeUser);
+
+          // PREFETCH DASHBOARD DATA (Non-blocking)
+          AdminService.getCompanions();
+          UserService.getJournals(activeUser.id);
+          UserService.getUserArt(activeUser.id);
+          UserService.getVoiceJournals(activeUser.id);
+          UserService.getWeeklyProgress(activeUser.id);
+
+          if (activeUser.role === UserRole.ADMIN && location.pathname === '/') {
+            navigate('/admin/dashboard');
+          }
+        } else {
+          // SOFT FAIL: If sync failed but we have a token, don't kill the session immediately
+          // Just let the auth listener handle the final decision
+          console.warn("Init Check: User not synced yet, waiting for Auth Listener...");
+        }
+
+        setMaintenanceMode(AdminService.getSettings().maintenanceMode);
+      } catch (err) {
+        console.error("Critical Init Error:", err);
+      } finally {
+        setIsRestoring(false);
+      }
+    };
+
+    initApp();
+
+    // 4. Persistent Listener for Refresh/Changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
+      console.log(`[AuthDebug] Event: ${event}`, {
+        hasSession: !!session,
+        userId: session?.user?.id,
+        currentUserState: user?.id
+      });
+
+      // Handle both explicit Sign In and Initial Session recovery
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
+
+        // Prevent unnecessary re-sync if we already have the correct user in state
+        if (user && user.id === session.user.id) return;
+
+        let syncedUser = await UserService.syncUser(session.user.id);
+
+        if (!syncedUser) {
+          console.warn("Auth Listener: Sync failed, using Fallback User.");
+          syncedUser = UserService.createFallbackUser(session.user);
+
+          // Attempt background repair/sync again without blocking
+          UserService.repairUserRecord(session.user).then(repaired => {
+            if (repaired) setUser(repaired);
+          });
+        }
+
+        if (syncedUser) {
+          // AVATAR ROTATION LOGIC: Change user icon if not locked
+          // NOTE: We only rotate if it's a "real" synced user to avoid overwriting preferences
+          // But for now, let's keep it simple and safe.
+          if (!syncedUser.avatarLocked && !syncedUser.avatar) {
+            const seed = Math.random().toString(36).substring(7);
+            syncedUser.avatar = `https://api.dicebear.com/7.x/lorelei/svg?seed=${seed}&backgroundColor=FCD34D`;
+          }
+          setUser(syncedUser);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        navigate('/');
+      }
     });
 
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Poll Settings separate from Auth logic
+  useEffect(() => {
     const interval = setInterval(async () => {
       await AdminService.syncGlobalSettings();
       setMaintenanceMode(AdminService.getSettings().maintenanceMode);
@@ -84,7 +191,7 @@ const MainApp: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // 2. Session Timeout Logic (Preserved)
+  // Session Timeout Logic (In-Memory Only)
   useEffect(() => {
     const updateActivity = () => {
       lastActivityRef.current = Date.now();
@@ -92,32 +199,43 @@ const MainApp: React.FC = () => {
     };
     const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
     events.forEach(event => window.addEventListener(event, updateActivity, { capture: true, passive: true }));
+    // Also listen for visibility change to re-blur on tab switch if needed, or update timestamp
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === 'visible') lastActivityRef.current = Date.now();
+      if (document.visibilityState === 'visible') {
+        lastActivityRef.current = Date.now();
+      }
     });
     return () => events.forEach(event => window.removeEventListener(event, updateActivity, { capture: true }));
   }, [showTimeoutWarning]);
 
-  // 3. Privacy Blur & Timeout Logic (Preserved)
+
+
+  // Privacy Blur & Timeout Logic
   const [isBlurred, setIsBlurred] = useState(false);
 
   useEffect(() => {
     const checkActivity = () => {
       if (!user || activeSessionCompanion) return;
+
       const now = Date.now();
       const elapsed = now - lastActivityRef.current;
 
       // Privacy Blur (5 Minutes)
-      if (elapsed > 5 * 60 * 1000 && !isBlurred) setIsBlurred(true);
+      if (elapsed > 5 * 60 * 1000 && !isBlurred) {
+        setIsBlurred(true);
+      }
 
       // Session Timeout (15 Minutes)
       const timeoutLimit = 15 * 60 * 1000;
-      if (elapsed > timeoutLimit - 60000 && elapsed < timeoutLimit) setShowTimeoutWarning(true);
+      if (elapsed > timeoutLimit - 60000 && elapsed < timeoutLimit) {
+        setShowTimeoutWarning(true);
+      }
       if (elapsed > timeoutLimit) {
         setShowTimeoutWarning(false);
         handleLogout();
       }
     };
+
     const interval = setInterval(checkActivity, 1000);
     return () => clearInterval(interval);
   }, [user, activeSessionCompanion, isBlurred]);
@@ -128,51 +246,73 @@ const MainApp: React.FC = () => {
     setShowTimeoutWarning(false);
   };
 
-  // 4. Unified Login Handler
-  // Note: This function allows the LandingPage/Auth UI to trigger a login flow.
-  // The actual state update happens via the AuthProvider's listener automatically.
-  const handleLogin = async (_role: UserRole, name: string, _avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email', password?: string, isSignup: boolean = false, topics?: string[]): Promise<void> => {
+  const handleLogin = async (_role: UserRole, name: string, _avatar?: string, email?: string, birthday?: string, provider: 'email' | 'google' | 'facebook' | 'x' = 'email', password?: string, isSignup: boolean = false): Promise<void> => {
     const userEmail = email || `${name.toLowerCase().replace(/ /g, '.')}@example.com`;
+    let currentUser: User;
 
     try {
+      // --- REAL SUPABASE AUTHENTICATION ---
+      // This ensures the session persists on refresh
       if (provider === 'email' && password) {
+        // Attempt Login
         try {
           if (isSignup) throw new Error("Explicit Signup Requested");
-          await UserService.login(userEmail, password);
+          currentUser = await UserService.login(userEmail, password);
         } catch (loginError: any) {
-          if (isSignup || loginError.message.includes('Explicit Signup Requested') || !loginError.message.includes('Invalid login credentials')) {
-            const newUser = await UserService.createUser(name, userEmail, password, provider, birthday);
-            // Handle Onboarding topics
-            if (topics && topics.length > 0) {
-              await UserService.updatePreferences(newUser.id, { topics });
-            }
+
+          // If login fails, try signup (if this was a signup attempt)
+          if (isSignup || loginError.message.includes('Explicit Signup Requested') || loginError.message.includes('Invalid login credentials') === false) {
+            // Try creating user with birthday
+            currentUser = await UserService.createUser(name, userEmail, password, provider, birthday);
           } else {
             throw loginError;
           }
         }
       } else if (provider !== 'email') {
-        await UserService.createUser(name, userEmail, 'social-login-placeholder', provider, birthday);
+        // Social Login handling
+        currentUser = await UserService.createUser(name, userEmail, 'social-login-placeholder', provider, birthday);
+      } else {
+        throw new Error("Password required for email login");
       }
 
+      currentUser = UserService.checkAndIncrementStreak(currentUser);
+
+      setUser(currentUser);
+      lastActivityRef.current = Date.now();
       setShowAuth(false);
-      // Navigation is handled by the AuthProvider state change or the component rendering 
-      // We can optionally force it if needed, but let's trust the state first.
+
+      // Intelligent Redirect
+      if (currentUser.role === UserRole.ADMIN) {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/');
+      }
 
     } catch (e: any) {
       console.error("Login Failed", e);
+      // Let the Auth component handle error display
       throw e;
     }
   };
 
   const handleLogout = async () => {
+    const userId = user?.id;
+
+    // 1. Instant UI cleanup (Synchronous)
+    setUser(null);
     setActiveSessionCompanion(null);
     UserService.clearCache();
-    await UserService.logout();
+
+    // 2. Navigation (Synchronous)
     navigate('/', { replace: true });
+
+    // 3. Background Cleanup (Async)
+    if (userId) UserService.endSession(userId);
+    await UserService.logout();
   };
 
-  // 5. Loading State
-  if (loading) {
+
+  if (isRestoring) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#0A0A0A] flex flex-col items-center justify-center p-6 text-center">
         <div className="relative">
@@ -186,8 +326,8 @@ const MainApp: React.FC = () => {
     );
   }
 
-  // 6. Maintenance Mode
-  if (maintenanceMode && !isAdmin && !location.pathname.includes('/admin')) {
+  // Maintenance Mode Lockout
+  if (maintenanceMode && user?.role !== UserRole.ADMIN && !location.pathname.includes('/admin')) {
     return (
       <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-white p-6 text-center">
         <Wrench className="w-16 h-16 text-yellow-500 mb-6 animate-pulse" />
@@ -203,8 +343,6 @@ const MainApp: React.FC = () => {
       <ThemeProvider>
         <LanguageProvider>
           <ToastProvider>
-
-
             {activeSessionCompanion && user ? (
               <VideoRoom
                 companion={activeSessionCompanion}
@@ -253,35 +391,31 @@ const MainApp: React.FC = () => {
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/" element={
-                    <div className="relative">
-                      {/* Force Dashboard for testing if user exists, else Landing */}
-                      {user ? (
-                        isAdmin ? <Navigate to="/admin/dashboard" /> : <Dashboard user={user} onLogout={handleLogout} onStartSession={(c) => setActiveSessionCompanion(c)} />
-                      ) : (
-                        <LandingPage onLoginClick={(signup) => {
-                          const requestedMode = signup ? 'signup' : 'login';
-                          if (showAuth && authMode === requestedMode) {
-                            setShowAuth(false);
-                          } else {
-                            setAuthMode(requestedMode);
-                            setShowAuth(true);
-                          }
-                        }} />
-                      )}
-                    </div>
+                    user ? (
+                      user.role === UserRole.ADMIN ? <Navigate to="/admin/dashboard" /> : <Dashboard user={user} onLogout={handleLogout} onStartSession={(c) => setActiveSessionCompanion(c)} />
+                    ) : (
+                      <LandingPage onLoginClick={(signup) => {
+                        const requestedMode = signup ? 'signup' : 'login';
+                        if (showAuth && authMode === requestedMode) {
+                          setShowAuth(false);
+                        } else {
+                          setAuthMode(requestedMode);
+                          setShowAuth(true);
+                        }
+                      }} />
+                    )
                   } />
 
-                  {/* Admin Routes - PROTECTED BY AUTH PROVIDER CHECK + ROUTE GUARD */}
+                  {/* Admin Sub-Site Routes */}
                   <Route path="/admin" element={<Navigate to="/admin/login" />} />
-                  <Route path="/admin/login" element={
-                    // If already admin, go to dashboard
-                    isAdmin ? <Navigate to="/admin/dashboard" /> : <AdminLogin onLogin={() => navigate('/admin/dashboard')} />
-                  } />
+                  <Route path="/admin/login" element={<AdminLogin onLogin={(u) => { setUser(u); UserService.saveUserSession(u); navigate('/admin/dashboard'); }} />} />
 
                   <Route path="/admin/dashboard" element={
-                    <AdminRoute>
+                    user && user.role === UserRole.ADMIN ? (
                       <AdminDashboard onLogout={handleLogout} />
-                    </AdminRoute>
+                    ) : (
+                      <Navigate to="/admin/login" />
+                    )
                   } />
 
                   {/* Protected Book of You Route */}
@@ -298,10 +432,6 @@ const MainApp: React.FC = () => {
                   <Route path="/support" element={<StaticPages type="support" />} />
                   <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
-
-                <CookieConsent />
-                {!activeSessionCompanion && <FooterWrapper />}
-
               </>
             )}
           </ToastProvider>
@@ -313,12 +443,7 @@ const MainApp: React.FC = () => {
 
 
 const App: React.FC = () => {
-  // Wrap MainApp with AuthProvider
-  return (
-    <AuthProvider>
-      <MainApp />
-    </AuthProvider>
-  )
+  return <MainApp />;
 };
 
 export default App;

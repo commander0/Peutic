@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Moon, Star, BarChart2 } from 'lucide-react';
 import { User } from '../../types';
 import { useToast } from '../common/Toast';
@@ -12,7 +12,7 @@ interface ObservatoryViewProps {
 const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
     const { showToast } = useToast();
     const [dreamLog, setDreamLog] = useState('');
-    const [sleepHours] = useState(7);
+    const [sleepHours, setSleepHours] = useState(7);
     const [sleepQuality, setSleepQuality] = useState<'Restful' | 'Average' | 'Poor'>('Restful');
     const [lucidity, setLucidity] = useState(1); // 1-5
 
@@ -23,13 +23,10 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
         }
         // Mock save - in production this would hit a 'dreams' table
         // For now we simulate an XP reward
-        try {
-            await UserService.saveJournal({ userId: user.id, content: `[DREAM] ${dreamLog}` } as any);
+        if (await UserService.saveJournal(user.id, `[DREAM] ${dreamLog}`)) {
             await UserService.deductBalance(0, 'Dream Log Reward');
             showToast("Dream cataloged in the Starlight Archives. (+20 XP)", "success");
             setDreamLog('');
-        } catch (e) {
-            showToast("Failed to save dream.", "error");
         }
     };
 

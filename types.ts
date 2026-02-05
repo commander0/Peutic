@@ -21,7 +21,6 @@ export interface User {
   emailPreferences?: {
     marketing: boolean;
     updates: boolean;
-    topics?: string[];
   };
   gameScores?: {
     match: number;
@@ -222,6 +221,3 @@ export interface UserAchievement {
   unlocked_at: string;
   achievement?: Achievement;
 }
-
-export type Anima = Lumina;
-export type PocketPet = Lumina;

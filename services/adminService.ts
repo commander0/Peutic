@@ -23,7 +23,7 @@ export class AdminService {
             multilingualMode: true,
             broadcastMessage: '',
             dashboardBroadcastMessage: ''
-        } as GlobalSettings;
+        };
     })();
 
 
@@ -188,9 +188,15 @@ export class AdminService {
     }
 
     static async recordAdminFailure() {
-        // DISABLE REMOTE LOGGING to prevent "Invalid Action" error completely
-        // The previous implementation was causing issues on some environments.
-        console.warn("Admin login failure recorded locally.");
+        try {
+            await BaseService.invokeGateway('log-event', {
+                type: 'SECURITY',
+                event: 'Admin Login Failed',
+                details: 'Invalid credentials or key'
+            });
+        } catch (e) {
+            console.warn("Failed to log admin failure:", e);
+        }
     }
 
     static async resetAdminFailure() {
@@ -201,15 +207,16 @@ export class AdminService {
         // Use RPC with SECURITY DEFINER to bypass RLS for public check
         const { data, error } = await supabase.rpc('check_admin_exists');
         if (error) {
-            console.warn("Admin check failed - utilizing fallback check", error);
-            // Fallback: Check if ANY users exist, if not, no admin.
-            // If users exist, we can't be sure, so we assume NO to be safe and allow reclaim if key provided.
+            console.warn("Admin check failed", error);
             return false;
         }
         return !!data;
     }
 
-
+    static async forceVerifyEmail(email: string): Promise<boolean> {
+        const { data, error } = await BaseService.invokeGateway('admin-auto-verify', { email });
+        return !error && data?.success;
+    }
 
     static async createRootAdmin(email: string, password?: string, masterKey?: string): Promise<User> {
         // 1. Sign Up
@@ -221,26 +228,10 @@ export class AdminService {
             }
         });
 
-        if (error) {
-            // Handle User Already Exists specifically
-            if (error.message.includes('already registered')) {
-                // Try to sign in instead
-                const { data: signinData, error: signinError } = await supabase.auth.signInWithPassword({
-                    email,
-                    password: password!
-                });
-                if (signinError) throw new Error("User exists but login failed: " + signinError.message);
-                // Proceed to claim
-                if (signinData.user) data.user = signinData.user;
-            } else {
-                throw new Error(error.message || "Sign up failed");
-            }
-        }
-
-        if (!data.user) throw new Error("Failed to obtain user reference");
+        if (error || !data.user) throw new Error(error?.message || "Sign up failed");
 
         // FIX: Ensure we have a session so RLS works for the subsequent sync
-        if (!data.session && password && !supabase.auth.getSession()) {
+        if (!data.session && password) {
             const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
             if (loginError) console.warn("Auto-login after signup failed", loginError);
         }
@@ -385,3 +376,6 @@ export class AdminService {
         });
     }
 }
+
+
+

@@ -64,8 +64,7 @@ const AnimaView: React.FC<AnimaViewProps> = ({ user, onClose }) => {
             return;
         }
 
-        // @ts-ignore
-        const newPet = await PetService.createPet(user.id, selectedSpecies as any, petName);
+        const newPet = await PetService.createPet(user.id, selectedSpecies as 'Holo-Hamu' | 'Digi-Dino' | 'Neo-Shiba' | 'Zen-Sloth', petName);
         if (newPet) {
             setPet(newPet);
             setShowSelection(false);

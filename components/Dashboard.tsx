@@ -46,7 +46,6 @@ const BookOfYouView = lazy(() => import('./retention/BookOfYouView'));
 const LuminaView = lazy(() => import('./pocket/LuminaView'));
 const ObservatoryView = lazy(() => import('./sanctuary/ObservatoryView'));
 const DojoView = lazy(() => import('./sanctuary/DojoView'));
-import { CheckInModal } from './CheckInModal';
 
 
 import EmergencyOverlay from './safety/EmergencyOverlay';
@@ -143,7 +142,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [paymentError, setPaymentError] = useState<string | undefined>(undefined);
     const [showBreathing, setShowBreathing] = useState(false);
     const [showProfile, setShowProfile] = useState(false);
-    const [showCheckIn, setShowCheckIn] = useState(false);
 
     const [showGrounding, setShowGrounding] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -194,16 +192,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     useEffect(() => {
         checkMoodPulse();
         loadVoiceJournals();
-
-        // CHECK-IN LOGIC: Once per day
-        if (user) {
-            const lastCheckIn = localStorage.getItem(`last_checkin_${user.id}`);
-            const today = new Date().toDateString();
-            if (lastCheckIn !== today) {
-                setTimeout(() => setShowCheckIn(true), 1500); // 1.5s delay for smooth entry
-            }
-        }
-    }, [user]);
+    }, []);
 
     const checkMoodPulse = async () => {
         if (!user) return;
@@ -588,13 +577,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         setNotifications([]);
     };
 
-    const isDefaultTheme = theme === 'default' || theme === 'amber';
-
     return (
         <div
-            className={`min-h-screen text-gray-900 dark:text-gray-100 transition-colors duration-500 overflow-x-hidden print:bg-white print:text-black ${(!isDark && isDefaultTheme) ? 'bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-yellow-300/40 via-orange-50 to-white' : ''}`}
+            className="min-h-screen transition-all duration-1000 font-sans text-[var(--color-text-base)]"
             style={{
-                background: (!isDark && isDefaultTheme) ? undefined : 'var(--color-bg-gradient)'
+                backgroundColor: 'var(--color-bg-base)',
+                backgroundImage: 'var(--color-bg-gradient)'
             }}
         >
             {mood && <WeatherEffect type={mood} />}
@@ -775,6 +763,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                         <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
                                                             <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
                                                             <div className="relative z-10 w-full h-full flex flex-col items-center justify-center pointer-events-none">
+                                                                <div className="w-full h-24 md:h-32 mb-1 pointer-events-auto transition-transform group-hover:scale-105 duration-700">
+                                                                    <GardenCanvas garden={garden} width={200} height={180} interactionType={isClipping ? 'clip' : null} />
+                                                                </div>
+
+                                                                {/* Overlay Controls */}
                                                                 <div className="absolute top-2 right-2 pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity">
                                                                     <button
                                                                         onClick={(e) => {
@@ -787,11 +780,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                                         <Scissors className="w-4 h-4" />
                                                                     </button>
                                                                 </div>
-                                                            </div>
-                                                            <div className="w-full h-24 md:h-32 mb-1 pointer-events-auto transition-transform group-hover:scale-105 duration-700">
-                                                                <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-[10px] text-green-500 animate-pulse">Growing...</div>}>
-                                                                    <GardenCanvas garden={garden} width={200} height={180} interactionType={isClipping ? 'clip' : null} />
-                                                                </Suspense>
                                                             </div>
                                                             <h3 className="text-[7px] md:text-sm font-black text-green-700 dark:text-green-300 uppercase tracking-widest drop-shadow-sm text-center mt-[-10px] relative z-20">Zen Bonzai</h3>
                                                             <p className="hidden md:block text-[9px] font-bold text-green-600/70 dark:text-green-400/60 uppercase tracking-tighter">Lvl {garden.level} &bull; {garden.currentPlantType}</p>
@@ -1290,22 +1278,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     </Suspense>
                 )
             }
-            {
-                showDojo && (
-                    <Suspense fallback={null}>
-                        <DojoView user={dashboardUser} onClose={() => setShowDojo(false)} />
-                    </Suspense>
-                )
-            }
-
-            <CheckInModal
-                isOpen={showCheckIn}
-                onClose={() => {
-                    setShowCheckIn(false);
-                    if (user) localStorage.setItem(`last_checkin_${user.id}`, new Date().toDateString());
-                }}
-                userName={user?.name || 'Friend'}
-            />
         </div >
     );
 };

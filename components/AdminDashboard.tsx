@@ -114,8 +114,18 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     const [loading, setLoading] = useState(true);
 
 
-    // SECURITY: Handled by App.tsx Route Guard.
-    // We do not need internal verification here anymore.
+    // SECURITY: Double-check admin status on mount
+    // This prevents a user from accessing this component if they somehow bypassed the router guard
+    useEffect(() => {
+        const verifyAdmin = async () => {
+            const currentUser = UserService.getUser();
+            if (!currentUser || currentUser.role !== UserRole.ADMIN) {
+                console.warn("Security Violation: Non-admin attempted to access dashboard.");
+                onLogout(); // Force kick
+            }
+        };
+        verifyAdmin();
+    }, []);
 
     const [logs, setLogs] = useState<SystemLog[]>([]);
     const [activeCount, setActiveCount] = useState(0);
@@ -220,25 +230,9 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
 
     useEffect(() => {
-        let isMounted = true;
-        let timeoutId: NodeJS.Timeout;
-
-        const poll = async () => {
-            if (!isMounted) return;
-            await fetchData(false);
-            if (isMounted) {
-                timeoutId = setTimeout(poll, 3000);
-            }
-        };
-
-        fetchData(true).then(() => {
-            if (isMounted) timeoutId = setTimeout(poll, 3000);
-        });
-
-        return () => {
-            isMounted = false;
-            clearTimeout(timeoutId);
-        };
+        fetchData(true);
+        const interval = setInterval(() => fetchData(false), 3000);
+        return () => clearInterval(interval);
     }, []);
 
 

@@ -85,30 +85,17 @@ export class UserService {
 
     static async syncUser(userId: string): Promise<User | null> {
         if (!userId) return null;
-
-        const fetchWithRetry = async (retries = 3, delay = 500): Promise<any> => {
-            try {
-                // OPTIMIZED: Select specific fields instead of *
-                const fields = 'id, name, email, birthday, role, balance, subscription_status, created_at, last_login_date, streak, provider, avatar_url, avatar_locked, email_preferences, theme_preference, language_preference, game_scores';
-                const { data, error } = await supabase.from('users').select(fields).eq('id', userId).maybeSingle();
-
-                if (error) throw error;
-                if (!data && retries > 0) throw new Error("User not found yet"); // Force retry if missing
-                return { data, error };
-            } catch (e) {
-                if (retries > 0) {
-                    await new Promise(r => setTimeout(r, delay));
-                    return fetchWithRetry(retries - 1, delay * 1.5);
-                }
-                return { data: null, error: e };
-            }
-        };
-
         try {
-            const { data, error } = await fetchWithRetry();
+            // OPTIMIZED: Select specific fields instead of *
+            const fields = 'id, name, email, birthday, role, balance, subscription_status, created_at, last_login_date, streak, provider, avatar_url, avatar_locked, email_preferences, theme_preference, language_preference, game_scores';
+            const { data, error } = (await BaseService.withTimeout(
+                supabase.from('users').select(fields).eq('id', userId).maybeSingle(),
+                5000,
+                "User sync timeout"
+            )) as any;
 
             if (error) {
-                console.error("CRITICAL: User Sync Database Error after retries", error);
+                console.error("CRITICAL: User Sync Database Error", error);
                 return null;
             }
 
@@ -118,35 +105,14 @@ export class UserService {
                 // Background Achievement Check
                 this.checkAchievements(this.currentUser);
                 return this.currentUser;
+            } else {
+                console.warn("CRITICAL: User Sync Data Missing - Attempting Self-Healing", { userId });
+                // ATTEMPT REPAIR
+                const session = await supabase.auth.getUser();
+                if (session.data.user && session.data.user.id === userId) {
+                    return await this.repairUserRecord(session.data.user);
+                }
             }
-
-            // SELF-HEALING: Triggers failed? RLS blocking? Create a fallback row.
-            console.warn("User Sync: Profile missing. Initiating Self-Repair...");
-
-            // 1. Try to fetch Authorization metadata to construct a valid fallback
-            const { data: authUser } = await supabase.auth.getUser();
-            if (authUser?.user) {
-                const fallback = this.createFallbackUser(authUser.user);
-
-                // 2. Attempt to INSERT this fallback into the DB (Heal the breach)
-                // This ensures next time, the row exists.
-                supabase.from('users').insert({
-                    id: fallback.id,
-                    email: fallback.email,
-                    name: fallback.name,
-                    role: 'USER',
-                    subscription_status: 'ACTIVE'
-                }).then(({ error }) => {
-                    if (error) console.error("Self-Repair Insert Failed", error);
-                    else console.log("Self-Repair Success: Created missing profile row.");
-                });
-
-                this.currentUser = fallback;
-                this.saveUserToCache(fallback);
-                return fallback;
-            }
-
-            return null;
         } catch (e) {
             logger.error("User Sync Exception", `ID: ${userId}`, e);
         }
@@ -177,25 +143,18 @@ export class UserService {
 
     // FALLBACK: Construct a temporary user object from Auth Session to prevent logout
     static createFallbackUser(sessionUser: any): User {
-        const metadata = sessionUser.user_metadata || {};
-        const appMetadata = sessionUser.app_metadata || {};
-
-        // CRITICAL FIX: Trust the token's role if DB sync fails
-        // This prevents "Downgrade Redirects" where Admin becomes User temporarily
-        const roleFromToken = (appMetadata.role || metadata.role || 'USER') as UserRole;
-
         return {
             id: sessionUser.id,
-            email: sessionUser.email || '',
-            name: metadata.full_name || sessionUser.email?.split('@')[0] || 'Guest',
-            role: roleFromToken, // Use the token role!
+            name: sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || "User",
+            email: sessionUser.email || "",
+            role: (sessionUser.app_metadata?.role || sessionUser.user_metadata?.role || UserRole.USER) as UserRole,
             balance: 0,
-            subscriptionStatus: 'INACTIVE',
+            subscriptionStatus: 'ACTIVE',
             joinedAt: new Date().toISOString(),
             lastLoginDate: new Date().toISOString(),
             streak: 0,
-            provider: appMetadata.provider || 'email',
-            avatar: metadata.avatar_url,
+            provider: sessionUser.app_metadata?.provider || 'email',
+            avatar: sessionUser.user_metadata?.avatar_url,
             emailPreferences: { marketing: true, updates: true },
             themePreference: 'light',
             languagePreference: 'en',
@@ -220,7 +179,35 @@ export class UserService {
             .subscribe();
     }
 
+    // REPAIR: Attempt to fix missing public.users record
+    static async repairUserRecord(sessionUser: any): Promise<User | null> {
+        try {
+            console.log("Repair Requested: Manual Insert...", sessionUser.id);
 
+            // DIRECT RESTORE (Bypassing Edge Function)
+            const fallbackName = sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || "Buddy";
+
+            const { error } = await supabase.from('users').insert({
+                id: sessionUser.id,
+                email: sessionUser.email,
+                name: fallbackName,
+                role: 'USER',
+                balance: 0,
+                provider: sessionUser.app_metadata?.provider || 'email'
+            });
+
+            if (error) {
+                console.error("Direct Repair Failed:", error);
+                return null;
+            }
+
+            // Retry Sync immediately
+            return await this.syncUser(sessionUser.id);
+        } catch (e) {
+            console.error("Repair Exception:", e);
+            return null;
+        }
+    }
 
     static async login(email: string, password?: string): Promise<User> {
         if (!password) throw new Error("Password required");
@@ -280,28 +267,6 @@ export class UserService {
             }
         }
         throw new Error("Failed to initialize account");
-    }
-
-    static async updatePreferences(userId: string, prefs: { topics?: string[], theme?: string, language?: string }) {
-        if (!userId) return;
-
-        // Fetch current to merge
-        const { data: current } = await supabase.from('users').select('email_preferences').eq('id', userId).single();
-        const currentPrefs = current?.email_preferences || {};
-
-        const newPrefs = { ...currentPrefs, ...prefs };
-
-        const { error } = await supabase.from('users').update({ email_preferences: newPrefs }).eq('id', userId);
-
-        if (error) {
-            logger.error("Update Preferences Failed", userId, error);
-        } else {
-            // Update Cache if currentUser is loaded
-            if (this.currentUser && this.currentUser.id === userId) {
-                this.currentUser.emailPreferences = newPrefs;
-                this.saveUserToCache(this.currentUser);
-            }
-        }
     }
 
     static async updateUser(user: User) {
@@ -483,52 +448,28 @@ export class UserService {
             oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
             const iso = oneWeekAgo.toISOString();
 
-            // SRE OPTIMIZATION: Use Server-Side RPC to reduce 5 queries to 1
-            // Fallback to manual calculation if RPC missing
-            let stats;
-            try {
-                const { data, error } = await supabase.rpc('get_weekly_dashboard_stats', { p_user_id: userId });
-                if (!error && data) {
-                    stats = {
-                        journalCount: data.journals,
-                        sessionCount: data.sessions,
-                        moodCount: data.moods,
-                        artCount: data.art,
-                        petBonus: data.petBonus
-                    };
-                } else {
-                    throw new Error("RPC Unavailable");
-                }
-            } catch (rpcError) {
-                // Fallback: Run queries in parallel (Legacy Mode)
-                const [jRes, sRes, mRes, aRes, pRes] = await Promise.all([
-                    supabase.from('journals').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', iso),
-                    supabase.from('transactions').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'COMPLETED').gte('date', iso),
-                    supabase.from('moods').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', iso),
-                    supabase.from('user_art').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', iso),
-                    supabase.from('pocket_pets').select('last_interaction_at').eq('user_id', userId).maybeSingle()
-                ]);
+            // Run queries in parallel for performance, handling potential failures individually
+            const [jRes, sRes, mRes, aRes, pRes] = await Promise.all([
+                supabase.from('journals').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', iso),
+                supabase.from('transactions').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'COMPLETED').gte('date', iso),
+                supabase.from('moods').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', iso),
+                supabase.from('user_art').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', iso),
+                supabase.from('pocket_pets').select('last_interaction_at').eq('user_id', userId).maybeSingle()
+            ]);
 
-                let petBonus = 0;
-                if (pRes.data?.last_interaction_at) {
-                    const lastInteraction = new Date(pRes.data.last_interaction_at);
-                    const hoursAgo = (Date.now() - lastInteraction.getTime()) / (1000 * 60 * 60);
-                    if (hoursAgo < 24) petBonus = 2;
-                    else if (hoursAgo < 48) petBonus = 1;
-                }
+            const journalCount = jRes.count || 0;
+            const sessionCount = sRes.count || 0;
+            const moodCount = mRes.count || 0;
+            const artCount = aRes.count || 0;
 
-                stats = {
-                    journalCount: jRes.count || 0,
-                    sessionCount: sRes.count || 0,
-                    moodCount: mRes.count || 0,
-                    artCount: aRes.count || 0,
-                    petBonus: petBonus
-                };
+            // Pet care bonus: If pet was interacted with in the last 24 hours, add bonus points
+            let petBonus = 0;
+            if (pRes.data?.last_interaction_at) {
+                const lastInteraction = new Date(pRes.data.last_interaction_at);
+                const hoursAgo = (Date.now() - lastInteraction.getTime()) / (1000 * 60 * 60);
+                if (hoursAgo < 24) petBonus = 2;
+                else if (hoursAgo < 48) petBonus = 1;
             }
-
-            const { journalCount, sessionCount, moodCount, artCount, petBonus } = stats;
-
-
 
             const totalActions = journalCount + sessionCount + moodCount + artCount + petBonus;
             const current = totalActions * 0.5;
@@ -618,30 +559,15 @@ export class UserService {
         this.saveUserToCache(user);
 
         try {
-            const { error, data } = await BaseService.invokeGateway('process-transaction', {
+            await BaseService.invokeGateway('process-topup', {
                 userId: user.id,
                 amount: amount,
                 cost: 0,
-                description: reason,
-                type: 'TOPUP'
+                description: reason
             });
-
-            if (error) {
-                logger.error("Add Balance Failed", user.id, error);
-                // Revert
-                user.balance = previousBalance;
-                this.saveUserToCache(user);
-                return false;
-            }
-
-            if (data?.newBalance !== undefined) {
-                user.balance = data.newBalance;
-                this.saveUserToCache(user);
-            }
-            logger.info("Balance Added", `${amount}m | ${reason}`);
             return true;
         } catch (e) {
-            logger.error("Add Balance Exception", user.id, e);
+            console.error("Add Balance Failed", e);
             user.balance = previousBalance;
             this.saveUserToCache(user);
             return false;
@@ -654,13 +580,13 @@ export class UserService {
 
         // Optional Gamification Logic
         if (user.gamificationEnabled === false) {
-            logger.info("Balance Deduction Skipped", "Gamification Disabled");
+            console.log(`[Balance] Skipped deduction (${amount}m) - Gamification Disabled`);
             return true;
         }
 
         // --- NEW SAFETY CHECK: Prevent Negative Balance ---
         if (user.balance < amount) {
-            logger.warn("Balance Deduction Denied", `Insufficient funds. Need ${amount}, have ${user.balance}`);
+            console.warn(`[Balance] Denied: Insufficient funds. Need ${amount}, have ${user.balance}`);
             return false;
         }
 
@@ -669,18 +595,20 @@ export class UserService {
         user.balance = Math.max(0, user.balance - amount);
         this.saveUserToCache(user);
 
+        // Notify UI (in a real app, use an event bus)
+        console.log(`[Balance] Deducting ${amount} mins for ${reason}. New Balance: ${user.balance}`);
+
         try {
-            // CRITICAL FIX: Persist via Gateway
-            const { error, data } = await BaseService.invokeGateway('process-transaction', {
+            // Use Gateway for secure transaction
+            const { error, data } = await BaseService.invokeGateway('process-topup', {
                 userId: user.id,
-                amount: -amount, // Negative for deduction
+                amount: -amount, // Negative amount for deduction
                 cost: 0,
-                description: reason,
-                type: 'USAGE'
+                description: reason
             });
 
             if (error) {
-                logger.error("Balance Deduction Failed", user.id, error);
+                console.error("Balance Deduction Failed", error);
                 // Revert
                 user.balance = previousBalance;
                 this.saveUserToCache(user);
@@ -691,17 +619,10 @@ export class UserService {
                 user.balance = data.newBalance;
                 this.saveUserToCache(user);
             }
-
-            logger.info("Balance Deducted", `${amount}m | ${reason}`);
             return true;
 
-        } catch (e: any) {
-            // Handle "Insufficient funds" specifically if backend rejects
-            if (e.message?.includes("Insufficient")) {
-                logger.warn("Balance Mismatch", "Backend rejected deduction due to funds.");
-            } else {
-                logger.error("Balance Deduction Exception", user.id, e);
-            }
+        } catch (e) {
+            console.error("Balance Deduction Exception", e);
             user.balance = previousBalance;
             this.saveUserToCache(user);
             return false;

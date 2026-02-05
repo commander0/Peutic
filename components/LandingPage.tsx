@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, CheckCircle, ArrowRight, ShieldCheck, Instagram, Twitter, Linkedin, Play, Moon, Sun, Megaphone } from 'lucide-react';
+import { Heart, CheckCircle, ArrowRight, ShieldCheck, Cookie, Instagram, Twitter, Linkedin, Play, Moon, Sun, Megaphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from './common/LanguageContext';
 import { LanguageSelector } from './common/LanguageSelector';
-import { BackgroundVideo } from './common/BackgroundVideo';
 import { AdminService } from '../services/adminService';
 import { useTheme } from '../contexts/ThemeContext';
 import { STABLE_AVATAR_POOL, INITIAL_COMPANIONS } from '../services/database';
@@ -39,6 +38,7 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     const [onlineCount, setOnlineCount] = useState(124);
+    const [showCookies, setShowCookies] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [featuredSpecialists, setFeaturedSpecialists] = useState<Companion[]>([]);
     const { lang, setLang, t } = useLanguage();
@@ -50,6 +50,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
 
     useEffect(() => {
         AdminService.syncGlobalSettings().then(setSettings);
+        const hasAccepted = localStorage.getItem('peutic_cookies_accepted');
+        if (!hasAccepted) {
+            const timer = setTimeout(() => {
+                setShowCookies(true);
+            }, 2000);
+            return () => clearTimeout(timer);
+        }
     }, []);
 
     useEffect(() => {
@@ -83,6 +90,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
 
     // Unified theme management via Context
 
+    const acceptCookies = () => {
+        localStorage.setItem('peutic_cookies_accepted', 'true');
+        setShowCookies(false);
+    };
+
     // Split into rows for marquee
     const displayList = featuredSpecialists.length > 0 ? featuredSpecialists : INITIAL_COMPANIONS;
     const half = Math.ceil(displayList.length / 2);
@@ -98,28 +110,27 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
 
             {/* PUBLIC BROADCAST BANNER */}
             {settings.broadcastMessage && (
-                <div className="bg-yellow-400 text-black text-[10px] md:text-xs font-black py-2 md:py-3 px-4 text-center tracking-widest uppercase flex items-center justify-center gap-2 relative overflow-hidden">
-                    <Megaphone className="w-3 h-3 md:w-4 md:h-4 animate-pulse" />
-                    <span className="relative z-10">{settings.broadcastMessage}</span>
-                    <div className="absolute inset-0 bg-white/20 -translate-x-full animate-[shimmer_2s_infinite]"></div>
+                <div className="bg-yellow-500 text-black py-2 px-4 shadow-lg animate-in slide-in-from-top duration-500 relative z-50 overflow-hidden group">
+                    <div className="absolute inset-0 bg-white/30 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-[-20deg]"></div>
+                    <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
+                        <Megaphone className="w-3.5 h-3.5 animate-bounce" />
+                        <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-center">{settings.broadcastMessage}</span>
+                    </div>
                 </div>
             )}
 
             <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-                <BackgroundVideo
-                    src="https://assets.mixkit.co/videos/preview/mixkit-waves-coming-to-the-beach-5016-large.mp4"
-                    poster="https://assets.mixkit.co/videos/preview/mixkit-waves-coming-to-the-beach-5016-large.png"
-                    className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center opacity-80"
-                />
-                {/* Single Overlay for subtle yellow tint */}
-                <div className="absolute inset-0 bg-yellow-500/10 pointer-events-none mix-blend-overlay"></div>
-                {/* Gradient for text readability - BOOSTED YELLOW */}
-                <div className="absolute inset-0 bg-gradient-to-t from-amber-100/90 via-amber-50/60 to-transparent dark:from-black/90 dark:via-black/70 dark:to-transparent"></div>
-                {/* Gold Highlight Top */}
-                <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-yellow-400/20 to-transparent pointer-events-none mix-blend-overlay"></div>
-
-                {/* Vintage Texture */}
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-[0.03] dark:opacity-[0.05] pointer-events-none"></div>
+                <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center opacity-70 dark:opacity-50 mix-blend-multiply dark:mix-blend-overlay filter blur-[1px]"
+                >
+                    <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
+                </video>
+                <div className="absolute inset-0 bg-yellow-400/40 pointer-events-none mix-blend-overlay dark:bg-yellow-500/20 dark:mix-blend-color-dodge"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-yellow-100/95 via-yellow-50/60 to-yellow-50/30 dark:from-black dark:via-black/70 dark:to-transparent"></div>
             </div>
             <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-2 bg-[#FFFBEB]/80 dark:bg-black/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-3 md:py-6 bg-transparent border-transparent'}`}>
                 <div className="max-w-7xl mx-auto px-2 md:px-8 flex justify-between items-center">
@@ -147,7 +158,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             <section className="relative pt-24 pb-12 md:pt-44 md:pb-24 px-4 md:px-6 z-10">
                 <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-10 md:gap-12 items-center">
                     <div className="lg:col-span-7 space-y-5 md:space-y-8 text-center">
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-1.5 bg-white dark:bg-black/80 border border-yellow-200/50 dark:border-black rounded-full shadow-sm dark:shadow-2xl transition-colors">
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-1.5 bg-white dark:bg-gray-900 border border-yellow-200/50 dark:border-gray-800 rounded-full shadow-sm transition-colors">
                             <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-green-500 rounded-full animate-pulse"></div>
                             <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">{onlineCount} {t('hero_badge')}</span>
                         </div>
@@ -155,7 +166,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                             {t('hero_title_1')} <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-orange-400">{t('hero_title_2')}</span>
                         </h1>
-                        <p className="text-base sm:text-lg md:text-xl text-gray-500 dark:text-white font-bold max-w-xl mx-auto leading-relaxed px-2">
+                        <p className="text-base sm:text-lg md:text-xl text-gray-500 dark:text-gray-400 font-medium max-w-xl mx-auto leading-relaxed px-2">
                             {t('hero_subtitle')}
                         </p>
                         <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center pt-2 md:pt-3">
@@ -230,7 +241,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         {/* Row 1 */}
                         <div className="flex gap-4 md:gap-5 animate-marquee w-fit px-4">
                             {marqueeRow1.map((spec, i) => (
-                                <div key={`${spec.id}-1-${i}`} onClick={() => onLoginClick(true)} className="relative flex-shrink-0 w-36 h-48 md:w-52 md:h-64 bg-white dark:bg-black rounded-2xl md:rounded-[1.5rem] overflow-hidden shadow-lg dark:shadow-[0_10px_30px_-5px_rgba(0,0,0,0.8)] border border-yellow-100 dark:border-gray-800 hover:scale-105 hover:shadow-2xl hover:border-yellow-400 transition-all duration-300 cursor-pointer group">
+                                <div key={`${spec.id}-1-${i}`} onClick={() => onLoginClick(true)} className="relative flex-shrink-0 w-36 h-48 md:w-52 md:h-64 bg-white dark:bg-gray-900 rounded-2xl md:rounded-[1.5rem] overflow-hidden shadow-lg border border-yellow-100 dark:border-gray-800 hover:scale-105 hover:shadow-2xl hover:border-yellow-400 transition-all duration-300 cursor-pointer group">
                                     <div className="h-[75%] md:h-[80%] w-full relative">
                                         <AvatarImage src={spec.imageUrl} className="w-full h-full object-cover" alt={spec.name} />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
@@ -307,7 +318,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                                 {settings.saleMode && <div className="bg-black dark:bg-white text-white dark:text-black px-2 py-0.5 rounded-full font-black text-[8px] uppercase tracking-widest animate-pulse mt-1">{t('pricing_rate_locked')}</div>}
                             </div>
                             <p className="text-black/70 dark:text-white/70 text-[10px] md:text-xs max-w-sm mx-auto font-medium leading-relaxed">{t('pricing_sub')}</p>
-                            <button onClick={() => onLoginClick(true)} className="bg-[#FACC15] text-black px-6 py-2.5 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-yellow-300 transition-all hover:scale-105 shadow-md mt-2 shadow-yellow-500/20">{t('pricing_btn')}</button>
+                            <button onClick={() => onLoginClick(true)} className="bg-black dark:bg-white text-white dark:text-black px-6 py-2.5 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-gray-200 transition-all hover:scale-105 shadow-md mt-2">{t('pricing_btn')}</button>
                         </div>
                     </div>
                 </div>
@@ -317,34 +328,34 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 mb-10 md:mb-12">
                         <div className="md:col-span-5 space-y-4 md:space-y-6">
                             <div className="flex items-center gap-3"><div className="w-7 h-7 md:w-9 md:h-9 bg-yellow-400 rounded-xl flex items-center justify-center"><Heart className="w-4 h-4 md:w-5 md:h-5 fill-black text-black" /></div><span className="text-xl md:text-2xl font-black tracking-tight">Peutic</span></div>
-                            <p className="text-gray-800 dark:text-white text-xs md:text-sm leading-relaxed max-w-sm">{t('footer_desc')}</p>
+                            <p className="text-gray-800 dark:text-gray-500 text-xs md:text-sm leading-relaxed max-w-sm">{t('footer_desc')}</p>
                             <div className="flex gap-5">{[Twitter, Instagram, Linkedin].map((Icon, i) => (<button key={i} className="text-gray-800 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors hover:scale-110 transform"><Icon className="w-4 h-4 md:w-5 md:h-5" /></button>))}</div>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-1 gap-6 md:col-span-2">
                             <div>
-                                <h4 className="font-black mb-3 md:mb-4 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-white">{t('footer_global')}</h4>
-                                <ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-white">
-                                    <li><Link to="/about" className="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('link_about')}</Link></li>
-                                    <li><Link to="/press" className="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('link_media')}</Link></li>
+                                <h4 className="font-black mb-3 md:mb-4 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">{t('footer_global')}</h4>
+                                <ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500">
+                                    <li><Link to="/about" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_about')}</Link></li>
+                                    <li><Link to="/press" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_media')}</Link></li>
                                 </ul>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-1 gap-6 md:col-span-2">
                             <div>
-                                <h4 className="font-black mb-3 md:mb-4 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-white">{t('footer_support')}</h4>
-                                <ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-white">
-                                    <li><Link to="/support" className="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('link_help')}</Link></li>
-                                    <li><Link to="/safety" className="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('link_safety')}</Link></li>
+                                <h4 className="font-black mb-3 md:mb-4 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">{t('footer_support')}</h4>
+                                <ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500">
+                                    <li><Link to="/support" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_help')}</Link></li>
+                                    <li><Link to="/safety" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_safety')}</Link></li>
                                     <li><Link to="/crisis" className="text-red-600 hover:text-red-700 transition-colors">{t('link_crisis')}</Link></li>
                                 </ul>
                             </div>
                         </div>
                         <div className="md:col-span-3">
-                            <h4 className="font-black mb-3 md:mb-4 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-white">{t('footer_reg')}</h4>
-                            <ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-white">
-                                <li><Link to="/privacy" className="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('link_privacy')}</Link></li>
-                                <li><Link to="/terms" className="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('link_terms')}</Link></li>
-                                <li><Link to="/privacy" className="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">{t('link_cookies')}</Link></li>
+                            <h4 className="font-black mb-3 md:mb-4 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">{t('footer_reg')}</h4>
+                            <ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500">
+                                <li><Link to="/privacy" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_privacy')}</Link></li>
+                                <li><Link to="/terms" className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_terms')}</Link></li>
+                                <li><button onClick={() => setShowCookies(true)} className="hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">{t('link_cookies')}</button></li>
                             </ul>
                         </div>
                     </div>
@@ -354,8 +365,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     </div>
                 </div>
             </footer>
-
-        </div >
+            {showCookies && (
+                <div className="fixed bottom-6 md:bottom-8 left-0 right-0 mx-auto w-[90%] max-w-2xl bg-[#FFFBEB] dark:bg-gray-900 text-black dark:text-white p-4 md:p-6 z-[100] rounded-2xl md:rounded-[2rem] border-2 border-yellow-400 shadow-2xl animate-slide-up-fade">
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 text-center md:text-left">
+                        <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
+                            <Cookie className="w-8 h-8 md:w-10 md:h-10 text-yellow-600" />
+                            <p className="text-[10px] md:text-xs font-bold leading-relaxed uppercase tracking-wider">{t('cookie_banner_text')} <Link to="/privacy" className="underline">{t('ui_policy')}</Link></p>
+                        </div>
+                        <div className="flex gap-4"><button onClick={acceptCookies} className="px-6 py-2 md:px-8 md:py-3 bg-black dark:bg-white text-white dark:text-black rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-gray-200 transition-all">{t('ui_accept')}</button></div>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 

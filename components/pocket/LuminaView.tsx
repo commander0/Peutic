@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { X, ChevronLeft, Zap, Heart, Pizza, Gamepad2, Sparkles, Bath, Moon, Sun, Save, RefreshCw } from 'lucide-react';
+import {
+    X, Heart, Pizza, Bath, Moon, Sun,
+    Sparkles, Zap, ChevronLeft, Save,
+    Gamepad2, RefreshCw
+} from 'lucide-react';
+import { User, Lumina } from '../../types';
 import { PetService } from '../../services/petService';
-import { Lumina } from '../../types';
-import { UserService } from '../../services/userService';
-import { PetCanvas } from './PetCanvas';
+import PetCanvas from './PetCanvas';
 import { useToast } from '../common/Toast';
+import { UserService } from '../../services/userService';
 
 interface LuminaViewProps {
-    user: any;
+    user: User;
     onClose: () => void;
 }
 
@@ -20,10 +24,6 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     const [petName, setPetName] = useState('');
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
     const [trick, setTrick] = useState<'spin' | 'magic' | null>(null);
-
-    // VISUAL FX STATE
-    const [shake, setShake] = useState(false);
-    const [flash, setFlash] = useState(false);
 
     // Dynamic canvas sizing for responsive pet
     const [canvasSize, setCanvasSize] = useState(500);
@@ -59,25 +59,16 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
         setLoading(false);
     };
 
-    const triggerImpact = () => {
-        setShake(true);
-        setFlash(true);
-        setTimeout(() => setShake(false), 500);
-        setTimeout(() => setFlash(false), 150);
-    };
-
     const handleCreatePet = async () => {
         if (!petName.trim()) {
             showToast("Please give your friend a name!", "error");
             return;
         }
 
-        // @ts-ignore
-        const newPet = await PetService.createPet(user.id, selectedSpecies as any, petName);
+        const newPet = await PetService.createPet(user.id, selectedSpecies as 'Holo-Hamu' | 'Digi-Dino' | 'Neo-Shiba' | 'Zen-Sloth', petName);
         if (newPet) {
             setPet(newPet);
             setShowSelection(false);
-            triggerImpact();
             showToast(`Welcome, ${newPet.name}! (+50 XP)`, "success");
         }
     };
@@ -95,7 +86,6 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
         if (await UserService.deductBalance(PRICE, `Oracle: ${pet?.name}`)) {
             // Trigger Magic Animation
             setTrick('magic');
-            triggerImpact();
 
             // Generate Wisdom (Mock for now, could be AI)
             const wisdoms = [
@@ -146,7 +136,6 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                     updatedPet.hunger = Math.min(100, pet.hunger + statGain);
                     updatedPet.experience += xpGain;
                     newEmotion = 'eating';
-                    triggerImpact();
                     showToast(`Fed ${pet.name}! (+${statGain} Saturation, -${COST}m)`, "success");
                 }
                 break;
@@ -162,7 +151,6 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                     if (intensity === 2) setTrick('spin');
                     if (intensity === 3) setTrick('magic');
 
-                    triggerImpact();
                     showToast(`Played with ${pet.name}! (+${statGain} Joy, -${COST}m)`, "success");
                 }
                 break;
@@ -184,7 +172,6 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
         if (updatedPet.experience >= updatedPet.level * 100) {
             updatedPet.level += 1;
             updatedPet.experience = 0;
-            triggerImpact();
             showToast(`${pet.name} leveled up to Lvl ${updatedPet.level}!`, "success");
         }
 
@@ -261,22 +248,15 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     if (!pet) return null;
 
     return (
-        <div className={`fixed inset-0 z-[120] bg-gray-50 dark:bg-[#0a0f0d] text-gray-900 dark:text-white flex flex-col animate-in fade-in duration-700 overflow-hidden ${shake ? 'animate-shake' : ''}`}>
-
-            {/* FLASH EFFECT */}
-            {flash && <div className="absolute inset-0 z-[150] bg-white pointer-events-none animate-flash-fade"></div>}
-
+        <div className="fixed inset-0 z-[120] bg-gray-50 dark:bg-[#0a0f0d] text-gray-900 dark:text-white flex flex-col animate-in fade-in duration-700 overflow-hidden">
             {/* GRID BACKGROUND */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.05)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
             <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 via-transparent to-transparent pointer-events-none"></div>
 
-            {/* CHROMATIC ABERRATION OVERLAY */}
-            <div className="absolute inset-0 opacity-30 pointer-events-none bg-repeat animate-noise mix-blend-overlay"></div>
-
             {/* ORACLE OVERLAY */}
             {oracleMessage && (
                 <div onClick={() => setOracleMessage(null)} className="absolute inset-0 z-[130] flex items-center justify-center bg-black/80 backdrop-blur-md cursor-pointer animate-in fade-in">
-                    <div className="max-w-md p-8 text-center border border-purple-500/30 rounded-3xl bg-black/50 shadow-[0_0_50px_rgba(168,85,247,0.2)]">
+                    <div className="max-w-md p-8 text-center">
                         <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-4 animate-spin-slow" />
                         <h3 className="text-2xl font-black text-purple-400 mb-4 tracking-widest uppercase">Oracle Wisdom</h3>
                         <p className="text-xl text-white font-serif italic leading-relaxed">"{oracleMessage}"</p>
@@ -292,7 +272,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                         <ChevronLeft className="w-6 h-6 text-cyan-400" />
                     </button>
                     <div>
-                        <h2 className="text-sm font-black uppercase tracking-[0.2em] drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]">{pet.name}</h2>
+                        <h2 className="text-sm font-black uppercase tracking-[0.2em]">{pet.name}</h2>
                         <div className="flex items-center gap-2">
                             <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Level {pet.level} {pet.species}</span>
                             <div className="w-24 h-1 bg-gray-800 rounded-full overflow-hidden">
@@ -315,9 +295,9 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
             {/* MAIN PORTAL */}
             <main className="flex-1 relative flex items-center justify-center p-4 min-h-0 overflow-visible">
                 <div className="relative w-full md:max-w-lg aspect-square flex items-center justify-center">
-                    {/* HOLOGRAPHIC RING - Fixed */}
+                    {/* HOLOGRAPHIC RING - Fixed: Removed border-width animation to prevent layout shift */}
                     <div className="absolute inset-0 -m-4 md:-m-12 border-[4px] md:border-[8px] border-cyan-500/10 rounded-full animate-[spin_10s_linear_infinite]"></div>
-                    <div className="absolute inset-0 -m-4 md:-m-12 border-t-[4px] md:border-t-[8px] border-cyan-400 rounded-full animate-[spin_3s_linear_infinite] shadow-[0_0_20px_rgba(34,211,238,0.4)]"></div>
+                    <div className="absolute inset-0 -m-4 md:-m-12 border-t-[4px] md:border-t-[8px] border-cyan-400 rounded-full animate-[spin_3s_linear_infinite]"></div>
                     <div className="absolute inset-[10%] border-2 border-dashed border-cyan-500/20 rounded-full animate-[spin_15s_linear_infinite_reverse]"></div>
 
                     {/* Ambient Particles */}
@@ -410,41 +390,37 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     );
 };
 
-// Helper Components
 const StatusIndicator: React.FC<{ icon: any, label: string, val: number, color: string, compact?: boolean }> = ({ icon: Icon, label, val, color, compact }) => (
-    <div className={`flex items-center gap-3 ${compact ? 'flex-col md:flex-row' : ''}`}>
-        <div className={`p-2 rounded-full ${color} text-white shadow-[0_0_10px_rgba(0,0,0,0.3)]`}>
-            <Icon className="w-4 h-4" />
-        </div>
-        <div className="flex-1 w-full">
-            {!compact && <div className="flex justify-between text-[10px] uppercase font-bold text-gray-400 mb-1"><span>{label}</span><span>{val}%</span></div>}
-            <div className={`h-1.5 md:h-2 bg-gray-800 rounded-full overflow-hidden border border-white/5`}>
-                <div className={`h-full ${color} transition-all duration-500`} style={{ width: `${val}%` }}></div>
+    <div className={`space-y-1.5 ${compact ? 'flex-1' : ''}`}>
+        <div className="flex justify-between items-center text-[8px] md:text-[10px] font-black uppercase tracking-widest text-gray-500">
+            <div className={`flex items-center ${compact ? 'justify-center w-full mb-1' : 'gap-1.5'}`}>
+                <Icon className="w-3 h-3 md:mr-1" /> {!compact && label}
             </div>
-            {compact && <span className="hidden md:block text-[8px] text-gray-500 uppercase mt-1">{label}</span>}
+            {!compact && <span>{Math.floor(val)}%</span>}
+        </div>
+        <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+            <div className={`h-full ${color} transition-all duration-1000 shadow-[0_0_8px_rgba(0,0,0,0.5)]`} style={{ width: `${val}%` }}></div>
         </div>
     </div>
 );
 
-const ActionButton: React.FC<{ icon: any, label: string, color: 'cyan' | 'purple' | 'yellow', onClick: () => void, disabled?: boolean }> = ({ icon: Icon, label, color, onClick, disabled }) => {
-    const colors = {
-        cyan: 'hover:bg-cyan-500 hover:text-black border-cyan-500/30 text-cyan-400',
-        purple: 'hover:bg-purple-500 hover:text-white border-purple-500/30 text-purple-400',
-        yellow: 'hover:bg-yellow-400 hover:text-black border-yellow-400/30 text-yellow-400',
-    };
+const ActionButton: React.FC<{ icon: any, label: string, color: 'cyan' | 'yellow' | 'red' | 'purple', onClick: () => void, disabled?: boolean }> = ({ icon: Icon, label, color, onClick, disabled }) => {
+    const colorClass = color === 'cyan' ? 'hover:bg-cyan-500/20 text-cyan-400 border-cyan-500/30' :
+        color === 'yellow' ? 'hover:bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
+            color === 'purple' ? 'hover:bg-purple-500/20 text-purple-400 border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.3)]' :
+                'hover:bg-red-500/20 text-red-400 border-red-500/30';
 
     return (
         <button
             onClick={onClick}
             disabled={disabled}
-            className={`flex flex-col items-center gap-3 group ${disabled ? 'opacity-30 pointer-events-none grayscale' : ''}`}
+            className={`group relative flex flex-col items-center gap-2 p-4 md:p-6 rounded-[2rem] border backdrop-blur-xl transition-all active:scale-90 ${disabled ? 'opacity-20 cursor-not-allowed border-white/5 text-gray-700' : colorClass}`}
         >
-            <div className={`w-14 h-14 md:w-16 md:h-16 rounded-2xl md:rounded-3xl border border-white/10 bg-white/5 flex items-center justify-center transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] ${colors[color]}`}>
+            <div className="relative">
                 <Icon className="w-6 h-6 md:w-8 md:h-8" />
+                <div className="absolute -inset-4 bg-current opacity-0 group-hover:opacity-10 blur-xl transition-opacity"></div>
             </div>
-            <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-500 group-hover:text-white transition-colors">
-                {label}
-            </span>
+            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em]">{label}</span>
         </button>
     );
 };
