@@ -1,22 +1,50 @@
--- Enable UUID extension
+-- PROPER SCHEMA SYNCHRONIZATION
+-- This schema matches exactly what UserService.ts and AdminService.ts expect.
+
 create extension if not exists "uuid-ossp";
 
--- 1. USERS TABLE
+-- 0. CLEANUP (Allow script to run on existing DB)
+drop table if exists public.user_achievements cascade;
+drop table if exists public.transactions cascade;
+drop table if exists public.journals cascade;
+drop table if exists public.voice_journals cascade;
+drop table if exists public.moods cascade;
+drop table if exists public.user_art cascade;
+drop table if exists public.feedback cascade;
+drop table if exists public.garden_state cascade;
+drop table if exists public.pocket_pets cascade;
+drop table if exists public.active_sessions cascade;
+drop table if exists public.session_queue cascade;
+drop table if exists public.users cascade;
+drop table if exists public.companions cascade;
+drop table if exists public.achievements cascade;
+drop table if exists public.system_logs cascade;
+drop table if exists public.global_settings cascade;
+
+-- 1. USERS
 create table public.users (
   id uuid references auth.users not null primary key,
   email text not null,
   name text not null,
-  role text default 'USER'::text,
+  role text default 'USER',
   balance integer default 0,
+  subscription_status text default 'ACTIVE',
   joined_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  avatar text,
+  last_login_date timestamp with time zone default timezone('utc'::text, now()),
+  streak integer default 0,
+  provider text default 'email',
+  avatar_url text,
+  avatar_locked boolean default false,
+  email_preferences jsonb default '{"marketing": true, "updates": true}'::jsonb,
   theme_preference text default 'light',
   language_preference text default 'en',
+  game_scores jsonb default '{"match": 0, "cloud": 0}'::jsonb,
   unlocked_rooms text[] default array[]::text[],
+  birthday text,
   metadata jsonb default '{}'::jsonb
 );
 
--- 2. COMPANIONS TABLE
+-- 2. COMPANIONS (The Authentic Roster)
 create table public.companions (
   id text primary key,
   name text not null,
@@ -30,51 +58,68 @@ create table public.companions (
   license_number text,
   degree text,
   state_of_practice text,
-  years_experience integer,
-  
-  -- Constraint to ensure status is valid
-  constraint valid_status check (status in ('AVAILABLE', 'BUSY', 'OFFLINE'))
+  years_experience integer
 );
 
--- 3. SESSIONS TABLE
-create table public.sessions (
+-- 3. TRANSACTIONS
+create table public.transactions (
   id text primary key,
   user_id uuid references public.users(id) on delete cascade not null,
-  companion_id text references public.companions(id),
-  start_time timestamp with time zone default timezone('utc'::text, now()) not null,
-  end_time timestamp with time zone,
-  duration integer,
-  cost integer,
-  status text default 'COMPLETED',
-  notes text,
-  
-  -- Constraint for valid status
-  constraint valid_session_status check (status in ('COMPLETED', 'CANCELLED', 'FAILED'))
-);
-
--- 4. JOURNAL ENTRIES TABLE (Voice & Text)
-create table public.journal_entries (
-  id text primary key,
-  user_id uuid references public.users(id) on delete cascade not null,
-  type text default 'text', -- 'text' or 'voice'
-  content text, -- text content or voice transcript
-  audio_url text, -- for voice entries
-  mood text, -- associated mood
+  user_name text,
   date timestamp with time zone default timezone('utc'::text, now()) not null,
-  
-  constraint valid_entry_type check (type in ('text', 'voice'))
+  amount integer not null, -- Positive for top-up, negative for spend
+  cost numeric(10, 2) default 0, -- Real money cost if applicable
+  description text,
+  status text default 'COMPLETED'
 );
 
--- 5. MOOD LOGS TABLE
-create table public.mood_logs (
+-- 4. JOURNALS (Text)
+create table public.journals (
+  id text primary key,
+  user_id uuid references public.users(id) on delete cascade not null,
+  content text not null,
+  date timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 5. VOICE JOURNALS
+create table public.voice_journals (
+  id text primary key default uuid_generate_v4()::text,
+  user_id uuid references public.users(id) on delete cascade not null,
+  audio_url text not null,
+  duration_seconds integer,
+  title text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 6. MOODS
+create table public.moods (
   id uuid default uuid_generate_v4() primary key,
   user_id uuid references public.users(id) on delete cascade not null,
   mood text not null,
-  note text,
-  timestamp timestamp with time zone default timezone('utc'::text, now()) not null
+  date timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 6. GARDEN STATE TABLE
+-- 7. USER ART
+create table public.user_art (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references public.users(id) on delete cascade not null,
+  image_url text not null,
+  title text,
+  prompt text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 8. FEEDBACK
+create table public.feedback (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references public.users(id) on delete cascade not null,
+  companion_name text,
+  rating integer,
+  tags text[],
+  date timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 9. GARDEN STATE
 create table public.garden_state (
   user_id uuid references public.users(id) on delete cascade primary key,
   level integer default 1,
@@ -86,144 +131,237 @@ create table public.garden_state (
   last_watered timestamp with time zone
 );
 
--- 7. PETS TABLE (Lumina)
-create table public.pets (
+-- 10. POCKET PETS (Lumina) - Matches "pocket_pets" query in UserService
+create table public.pocket_pets (
   user_id uuid references public.users(id) on delete cascade primary key,
   name text default 'Lumina',
+  level integer default 1,
   hunger integer default 50,
   happiness integer default 50,
   energy integer default 50,
-  level integer default 1,
+  last_interaction_at timestamp with time zone,
   last_fed timestamp with time zone,
   last_played timestamp with time zone
 );
 
--- 8. ACHIEVEMENTS TABLE
+-- 11. ACHIEVEMENTS
 create table public.achievements (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references public.users(id) on delete cascade not null,
-  achievement_id text not null,
-  unlocked_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  
-  constraint unique_user_achievement unique (user_id, achievement_id)
+  id text primary key,
+  code text unique not null,
+  title text not null,
+  description text,
+  icon text
 );
 
--- 9. SYSTEM LOGS TABLE (For debugging/auditing)
+create table public.user_achievements (
+  user_id uuid references public.users(id) on delete cascade not null,
+  achievement_id text references public.achievements(id) on delete cascade not null,
+  unlocked_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  primary key (user_id, achievement_id)
+);
+
+-- 12. QUEUE & SESSIONS (Active)
+create table public.active_sessions (
+  user_id uuid references public.users(id) on delete cascade primary key,
+  started_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+create table public.session_queue (
+  user_id uuid references public.users(id) on delete cascade primary key,
+  joined_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 13. SYSTEM LOGS
 create table public.system_logs (
   id uuid default uuid_generate_v4() primary key,
-  level text not null, -- 'INFO', 'WARN', 'ERROR'
-  message text not null,
-  details jsonb,
-  timestamp timestamp with time zone default timezone('utc'::text, now()) not null
+  timestamp timestamp with time zone default timezone('utc'::text, now()) not null,
+  type text not null,
+  event text not null,
+  details text
 );
 
--- 10. GLOBAL SETTINGS TABLE
+-- 14. GLOBAL SETTINGS
 create table public.global_settings (
-  key text primary key,
-  value jsonb not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now())
+  id integer primary key default 1,
+  price_per_minute numeric default 1.99,
+  sale_mode boolean default false,
+  allow_signups boolean default true,
+  site_name text default 'Peutic',
+  broadcast_message text,
+  dashboard_broadcast_message text,
+  max_concurrent_sessions integer default 15,
+  multilingual_mode boolean default true,
+  maintenance_mode jsonb default '{"enabled": false}'::jsonb
 );
 
--- ENABLE ROW LEVEL SECURITY
+-- RLS POLICIES ----------------------------
 alter table public.users enable row level security;
 alter table public.companions enable row level security;
-alter table public.sessions enable row level security;
-alter table public.journal_entries enable row level security;
-alter table public.mood_logs enable row level security;
+alter table public.transactions enable row level security;
+alter table public.journals enable row level security;
+alter table public.voice_journals enable row level security;
+alter table public.moods enable row level security;
+alter table public.user_art enable row level security;
+alter table public.feedback enable row level security;
 alter table public.garden_state enable row level security;
-alter table public.pets enable row level security;
-alter table public.achievements enable row level security;
+alter table public.pocket_pets enable row level security;
+alter table public.active_sessions enable row level security;
+alter table public.session_queue enable row level security;
+alter table public.system_logs enable row level security;
 alter table public.global_settings enable row level security;
+alter table public.achievements enable row level security;
+alter table public.user_achievements enable row level security;
 
--- POLICIES
+-- Universal Read Policy for public data
+create policy "Public companions" on public.companions for select using (true);
+create policy "Public settings" on public.global_settings for select using (true);
 
--- Users
-create policy "Users can view own profile" on public.users for select using (auth.uid() = id);
-create policy "Users can update own profile" on public.users for update using (auth.uid() = id);
--- Admin override (Admins can view all users)
-create policy "Admins can view all users" on public.users for select using (
-  exists (select 1 from public.users where id = auth.uid() and role = 'ADMIN')
+-- Admin Powers
+create policy "Admin All Access Users" on public.users for all using (
+  (select role from public.users where id = auth.uid()) = 'ADMIN'
+);
+create policy "Admin All Access Companions" on public.companions for all using (
+  (select role from public.users where id = auth.uid()) = 'ADMIN'
+);
+create policy "Admin All Access Settings" on public.global_settings for all using (
+  (select role from public.users where id = auth.uid()) = 'ADMIN'
+);
+create policy "Admin All Access Achievements" on public.achievements for all using (
+  (select role from public.users where id = auth.uid()) = 'ADMIN'
 );
 
--- Companions (Public read, Admin write)
-create policy "Everyone can view companions" on public.companions for select using (true);
-create policy "Admins can update companions" on public.companions for all using (
-  exists (select 1 from public.users where id = auth.uid() and role = 'ADMIN')
-);
+-- User Self-Access Policies
+create policy "User own profile" on public.users for all using (auth.uid() = id);
+create policy "User own transactions" on public.transactions for select using (auth.uid() = user_id);
+create policy "User own journals" on public.journals for all using (auth.uid() = user_id);
+create policy "User own voice" on public.voice_journals for all using (auth.uid() = user_id);
+create policy "User own moods" on public.moods for all using (auth.uid() = user_id);
+create policy "User own art" on public.user_art for all using (auth.uid() = user_id);
+create policy "User own garden" on public.garden_state for all using (auth.uid() = user_id);
+create policy "User own pet" on public.pocket_pets for all using (auth.uid() = user_id);
+create policy "User own feedback" on public.feedback for insert with check (auth.uid() = user_id);
 
--- Sessions
-create policy "Users can view own sessions" on public.sessions for select using (auth.uid() = user_id);
-create policy "Users can insert own sessions" on public.sessions for insert with check (auth.uid() = user_id);
+-- Queue/Session: Users can see own status, insert self
+create policy "User queue self" on public.session_queue for all using (auth.uid() = user_id);
+create policy "User session self" on public.active_sessions for all using (auth.uid() = user_id);
 
--- Journal Entries
-create policy "Users can manage own journal" on public.journal_entries for all using (auth.uid() = user_id);
+-- Achievements: Public Read definitions, User Private Unlocks
+create policy "Public achievements" on public.achievements for select using (true);
+create policy "User own achievements" on public.user_achievements for select using (auth.uid() = user_id);
+create policy "User unlock achievements" on public.user_achievements for insert with check (auth.uid() = user_id);
 
--- Mood Logs
-create policy "Users can manage own mood" on public.mood_logs for all using (auth.uid() = user_id);
+-- RPC FUNCTIONS (CRITICAL FOR BACKEND LOGIC) ----------------
 
--- Garden State
-create policy "Users can manage own garden" on public.garden_state for all using (auth.uid() = user_id);
-
--- Pets
-create policy "Users can manage own pet" on public.pets for all using (auth.uid() = user_id);
-
--- Achievements
-create policy "Users can view own achievements" on public.achievements for select using (auth.uid() = user_id);
-
--- Global Settings (Public read, Admin insert/update)
-create policy "Everyone can view settings" on public.global_settings for select using (true);
-create policy "Admins can manage settings" on public.global_settings for all using (
-  exists (select 1 from public.users where id = auth.uid() and role = 'ADMIN')
-);
-
--- TRIGGER: Handle New User
-create or replace function public.handle_new_user()
-returns trigger as $$
+-- 1. QUEUE LOGIC
+create or replace function join_queue(p_user_id uuid)
+returns integer as $$
 declare
-  is_first_user boolean;
+    pos integer;
 begin
-  -- Check if this is the very first user
-  select count(*) = 0 into is_first_user from public.users;
+    -- Check if already active
+    if exists (select 1 from public.active_sessions where user_id = p_user_id) then
+        return 0; -- 0 means active
+    end if;
 
-  insert into public.users (id, email, name, role, balance, avatar)
-  values (
-    new.id,
-    new.email,
-    coalesce(new.raw_user_meta_data->>'name', 'New Member'),
-    case when is_first_user then 'ADMIN' else 'USER' end, -- First user becomes ADMIN
-    0, -- Initial balance
-    new.raw_user_meta_data->>'avatar_url'
-  );
-
-  -- Initialize Garden
-  insert into public.garden_state (user_id) values (new.id);
-  
-  -- Initialize Pet
-  insert into public.pets (user_id) values (new.id);
-
-  return new;
+    insert into public.session_queue (user_id) values (p_user_id) on conflict (user_id) do nothing;
+    
+    -- Calculate position (Rank by joined_at)
+    select count(*) + 1 into pos from public.session_queue 
+    where joined_at < (select joined_at from public.session_queue where user_id = p_user_id);
+    
+    return pos;
 end;
 $$ language plpgsql security definer;
 
--- Trigger definition
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();
+create or replace function get_client_queue_position(p_user_id uuid)
+returns integer as $$
+declare
+    pos integer;
+begin
+    if exists (select 1 from public.active_sessions where user_id = p_user_id) then
+        return 0;
+    end if;
+     
+    select count(*) + 1 into pos from public.session_queue 
+    where joined_at < (select joined_at from public.session_queue where user_id = p_user_id);
+    
+    return coalesce(pos, -1); -- -1 if not in queue
+end;
+$$ language plpgsql security definer;
 
--- FUNCTION: Cleanup Stale Sessions (Maintenance)
+create or replace function claim_active_spot(p_user_id uuid)
+returns boolean as $$
+declare
+    active_count integer;
+    max_sessions integer;
+begin
+    select max_concurrent_sessions into max_sessions from public.global_settings where id = 1;
+    select count(*) into active_count from public.active_sessions;
+
+    if active_count < max_sessions then
+        delete from public.session_queue where user_id = p_user_id;
+        insert into public.active_sessions (user_id) values (p_user_id) on conflict do nothing;
+        return true;
+    else
+        return false;
+    end if;
+end;
+$$ language plpgsql security definer;
+
+-- 2. ADMIN & SYSTEM LOGIC
 create or replace function cleanup_stale_sessions()
 returns void as $$
 begin
-  -- Example: Remove failed sessions older than 24 hours
-  delete from public.sessions 
-  where status = 'FAILED' and start_time < now() - interval '24 hours';
+    -- Remove sessions older than 4 hours (safety net)
+    delete from public.active_sessions where started_at < now() - interval '4 hours';
+    -- Remove queue items older than 2 hours
+    delete from public.session_queue where joined_at < now() - interval '2 hours';
 end;
 $$ language plpgsql;
 
--- SEED DATA: Companions (The Correct 35 Roster including Ruby)
-truncate table public.companions;
+create or replace function check_admin_exists()
+returns boolean as $$
+begin
+    return exists (select 1 from public.users where role = 'ADMIN');
+end;
+$$ language plpgsql security definer;
 
+create or replace function claim_system_access(p_user_id uuid, p_master_key text)
+returns boolean as $$
+begin
+    -- Hardcoded safety for demo (In prod, use env var comparison via edge function)
+    if p_master_key = 'PEUTIC_ADMIN_ACCESS_2026' then
+        update public.users set role = 'ADMIN' where id = p_user_id;
+        return true;
+    end if;
+    return false;
+end;
+$$ language plpgsql security definer;
+
+create or replace function reset_system_ownership(p_master_key text)
+returns boolean as $$
+begin
+    if p_master_key = 'PEUTIC_ADMIN_ACCESS_2026' then
+        update public.users set role = 'USER' where role = 'ADMIN';
+        return true;
+    end if;
+    return false;
+end;
+$$ language plpgsql security definer;
+
+create or replace function request_account_deletion()
+returns void as $$
+begin
+    -- Delete from auth.users triggers cascade to public.users
+    delete from auth.users where id = auth.uid();
+end;
+$$ language plpgsql security definer;
+
+
+-- SEED DATA -----------------------------------------------
+
+-- Companions
+truncate table public.companions;
 insert into public.companions (id, name, gender, specialty, status, rating, image_url, bio, replica_id, license_number, degree, state_of_practice, years_experience) 
 values 
     ('c1', 'Ruby', 'Female', 'Anxiety & Panic', 'AVAILABLE', 4.9, 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800', 'Specializing in grounding techniques and immediate panic reduction.', 're3a705cf66a', 'LCSW-NY-44021', 'MSW, Columbia University', 'NY', 8),
@@ -262,9 +400,14 @@ values
     ('c34', 'Sophie', 'Female', 'Social Anxiety', 'AVAILABLE', 4.9, 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=800', 'Building confidence in connection.', 'r6ae5b6efc9d', 'LCSW-NY-3399', 'MSW, Social Work', 'NY', 8),
     ('c35', 'Ethan', 'Male', 'Financial Anxiety', 'AVAILABLE', 4.9, 'https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&q=80&w=800', 'Healing your relationship with money.', 'r92debe21318', 'LMFT-CA-2210', 'MA, Financial Therapy', 'CA', 10);
 
--- SEED DATA: Global Settings
-insert into public.global_settings (key, value)
-values 
-  ('maintenance_mode', '{"enabled": false, "message": "System under maintenance"}'::jsonb),
-  ('dashboard_broadcast', '{"message": "Welcome to the new streamlined platform!", "active": true}'::jsonb)
-on conflict (key) do nothing;
+-- Achievements
+insert into public.achievements (id, code, title, icon) values 
+  ('ach1', 'FIRST_STEP', 'First Step', 'footprints'),
+  ('ach2', 'STREAK_3', '3 Day Streak', 'flame'),
+  ('ach3', 'STREAK_7', 'Week Warrior', 'trophy'),
+  ('ach4', 'GARDEN_5', 'Green Thumb', 'leaf'),
+  ('ach5', 'ANIMA_5', 'Soul Bond', 'heart'),
+  ('ach6', 'JOURNAL_5', 'Reflective Mind', 'book');
+
+-- Settings
+insert into public.global_settings (id, sale_mode, broadcast_message) values (1, false, null) on conflict (id) do nothing;
