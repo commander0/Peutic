@@ -272,16 +272,22 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.users (id, email, name, role, balance, subscription_status)
-  values (
-    new.id,
-    new.email,
-    coalesce(new.raw_user_meta_data->>'full_name', new.email),
-    -- FIRST USER IS ADMIN logic
-    case when (select count(*) from public.users) = 0 then 'ADMIN' else 'USER' end,
-    0,
-    'ACTIVE'
-  );
+  begin
+      insert into public.users (id, email, name, role, balance, subscription_status)
+      values (
+        new.id,
+        new.email,
+        coalesce(new.raw_user_meta_data->>'full_name', new.email),
+        -- FIRST USER IS ADMIN logic
+        case when (select count(*) from public.users) = 0 then 'ADMIN' else 'USER' end,
+        0,
+        'ACTIVE'
+      );
+  exception when others then
+      -- Safety: If trigger fails, Log it but ALLOW auth.users to be created.
+      -- This ensures 'claim_system_access' can self-heal the missing profile.
+      raise warning 'handle_new_user trigger failed: %', SQLERRM;
+  end;
   return new;
 end;
 $$;
