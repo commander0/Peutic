@@ -114,18 +114,10 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     const [loading, setLoading] = useState(true);
 
 
-    // SECURITY: Double-check admin status on mount
-    // This prevents a user from accessing this component if they somehow bypassed the router guard
-    useEffect(() => {
-        const verifyAdmin = async () => {
-            const currentUser = UserService.getUser();
-            if (!currentUser || currentUser.role !== UserRole.ADMIN) {
-                console.warn("Security Violation: Non-admin attempted to access dashboard.");
-                onLogout(); // Force kick
-            }
-        };
-        verifyAdmin();
-    }, []);
+    // SECURITY NOTE:
+    // Route guarding is now handled centrally in App.tsx.
+    // Redundant internal checks here were causing race-condition logouts.
+    // We trust that if this component renders, the user is authorized.
 
     const [logs, setLogs] = useState<SystemLog[]>([]);
     const [activeCount, setActiveCount] = useState(0);
