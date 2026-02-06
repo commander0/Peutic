@@ -281,8 +281,12 @@ export class UserService {
             email_preferences: user.emailPreferences,
             theme_preference: user.themePreference,
             language_preference: user.languagePreference,
+            email_preferences: user.emailPreferences,
+            theme_preference: user.themePreference,
+            language_preference: user.languagePreference,
             last_login_date: user.lastLoginDate,
-            streak: user.streak
+            streak: user.streak,
+            game_scores: user.gameScores // CRITICAL FIX: Persist Game Scores
         };
 
         const { error } = await supabase.from('users').update(payload).eq('id', user.id);
@@ -355,10 +359,18 @@ export class UserService {
     }
 
     static async saveArt(entry: ArtEntry) {
-        console.log("UserService: Saving art via API Gateway...", entry.id);
-        const { error } = await BaseService.invokeGateway('save-wisdom-art', { artEntry: entry });
+        console.log("UserService: Saving art directly to DB...", entry.id);
+        const { error } = await supabase.from('user_art').insert({
+            id: entry.id,
+            user_id: entry.userId,
+            image_url: entry.imageUrl,
+            prompt: entry.prompt,
+            title: entry.title || "Untitled Masterpiece",
+            created_at: entry.createdAt
+        });
+
         if (error) {
-            logger.error("Save Art Failed via Gateway", entry.userId, error);
+            logger.error("Save Art Failed", entry.userId, error);
             throw error;
         }
     }
