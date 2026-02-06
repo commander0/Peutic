@@ -203,7 +203,8 @@ create table public.global_settings (
 );
 
 
--- RLS POLICIES ----------------------------
+-- RLS POLICIES (GOLDEN STANDARD) ----------------------------
+-- Ensure RLS is enabled
 alter table public.users enable row level security;
 alter table public.companions enable row level security;
 alter table public.transactions enable row level security;
@@ -222,7 +223,7 @@ alter table public.achievements enable row level security;
 alter table public.user_achievements enable row level security;
 alter table public.promo_codes enable row level security;
 
--- Admin Checks (Legacy robust style)
+-- Admin Check Logic
 create or replace function public.is_admin()
 returns boolean as $$
 begin
@@ -233,39 +234,54 @@ begin
 end;
 $$ language plpgsql security definer;
 
--- Admin Policies
-create policy "Admin All" on public.users for all using (public.is_admin());
-create policy "Admin Companions" on public.companions for all using (public.is_admin());
-create policy "Admin Settings" on public.global_settings for all using (public.is_admin());
-create policy "Admin Logs" on public.system_logs for all using (public.is_admin());
-create policy "Admin Promo" on public.promo_codes for all using (public.is_admin());
-create policy "Admin Achievements" on public.achievements for all using (public.is_admin());
+-- 1. ADMIN POLICIES (God Mode)
+create policy "Admin Users All" on public.users for all using (public.is_admin());
+create policy "Admin Compos All" on public.companions for all using (public.is_admin());
+create policy "Admin Settings All" on public.global_settings for all using (public.is_admin());
+create policy "Admin Logs All" on public.system_logs for all using (public.is_admin());
+create policy "Admin Promo All" on public.promo_codes for all using (public.is_admin());
+create policy "Admin Achievements All" on public.achievements for all using (public.is_admin());
 
--- Public/User Policies
-create policy "Public companions" on public.companions for select using (true);
-create policy "Public settings" on public.global_settings for select using (true);
-create policy "Public achievements" on public.achievements for select using (true);
+-- 2. PUBLIC READ POLICIES
+create policy "Public Read Companions" on public.companions for select using (true);
+create policy "Public Read Settings" on public.global_settings for select using (true);
+create policy "Public Read Achievements" on public.achievements for select using (true);
 
-create policy "User own profile" on public.users for all using (auth.uid() = id);
-create policy "User own transactions" on public.transactions for select using (auth.uid() = user_id);
+-- 3. USER DATA POLICIES (Owner Full Access)
+-- Users
+create policy "User Read Self" on public.users for select using (auth.uid() = id);
+create policy "User Update Self" on public.users for update using (auth.uid() = id);
 
--- USER ART POLICIES (Missing Fix)
-create policy "User select own art" on public.user_art for select using (auth.uid() = user_id);
-create policy "User insert own art" on public.user_art for insert with check (auth.uid() = user_id);
-create policy "User delete own art" on public.user_art for delete using (auth.uid() = user_id);
-create policy "User own journals" on public.journals for all using (auth.uid() = user_id);
-create policy "User own voice" on public.voice_journals for all using (auth.uid() = user_id);
-create policy "User own moods" on public.moods for all using (auth.uid() = user_id);
-create policy "User own art" on public.user_art for all using (auth.uid() = user_id);
-create policy "User own garden" on public.garden_state for all using (auth.uid() = user_id);
-create policy "User own pet" on public.pocket_pets for all using (auth.uid() = user_id);
-create policy "User own feedback" on public.feedback for insert with check (auth.uid() = user_id);
+-- Transactions
+create policy "User Read Trans" on public.transactions for select using (auth.uid() = user_id);
+create policy "User Create Trans" on public.transactions for insert with check (auth.uid() = user_id);
 
-create policy "User queue self" on public.session_queue for all using (auth.uid() = user_id);
-create policy "User session self" on public.active_sessions for all using (auth.uid() = user_id);
+-- Journals (Text)
+create policy "User All Journals" on public.journals for all using (auth.uid() = user_id);
 
-create policy "User own achievements" on public.user_achievements for select using (auth.uid() = user_id);
-create policy "User unlock achievements" on public.user_achievements for insert with check (auth.uid() = user_id);
+-- Voice Journals
+create policy "User All Voice" on public.voice_journals for all using (auth.uid() = user_id);
+
+-- Moods
+create policy "User All Moods" on public.moods for all using (auth.uid() = user_id);
+
+-- User Art
+create policy "User All Art" on public.user_art for all using (auth.uid() = user_id);
+
+-- Garden & Pets
+create policy "User All Garden" on public.garden_state for all using (auth.uid() = user_id);
+create policy "User All Pets" on public.pocket_pets for all using (auth.uid() = user_id);
+
+-- Feedback
+create policy "User Insert Feedback" on public.feedback for insert with check (auth.uid() = user_id);
+
+-- Sessions
+create policy "User All Sessions" on public.active_sessions for all using (auth.uid() = user_id);
+create policy "User All Queue" on public.session_queue for all using (auth.uid() = user_id);
+
+-- User Achievements
+create policy "User Read Achievements" on public.user_achievements for select using (auth.uid() = user_id);
+create policy "User Unlock Achievements" on public.user_achievements for insert with check (auth.uid() = user_id);
 
 
 -- ADVANCED RPC FUNCTIONS (Merged from Legacy) ----------------

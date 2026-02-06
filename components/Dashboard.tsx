@@ -130,6 +130,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const isDark = mode === 'dark';
 
     const [balance, setBalance] = useState(user.balance);
+    // CRITICAL FIX: Initialize with empty array to prevent map crashes
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [companions, setCompanions] = useState<Companion[]>([]);
     const [loadingCompanions, setLoadingCompanions] = useState(true);
