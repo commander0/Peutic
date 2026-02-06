@@ -392,7 +392,7 @@ const MainApp: React.FC = () => {
                   {/* Public Routes */}
                   <Route path="/" element={
                     user ? (
-                      user.role === UserRole.ADMIN ? <Navigate to="/admin/dashboard" /> : <Dashboard user={user} onLogout={handleLogout} onStartSession={(c) => setActiveSessionCompanion(c)} />
+                      user.role === UserRole.ADMIN ? <Navigate to="/admin/dashboard" replace /> : <Dashboard user={user} onLogout={handleLogout} onStartSession={(c) => setActiveSessionCompanion(c)} />
                     ) : (
                       <LandingPage onLoginClick={(signup) => {
                         const requestedMode = signup ? 'signup' : 'login';

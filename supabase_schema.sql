@@ -248,6 +248,11 @@ create policy "Public achievements" on public.achievements for select using (tru
 
 create policy "User own profile" on public.users for all using (auth.uid() = id);
 create policy "User own transactions" on public.transactions for select using (auth.uid() = user_id);
+
+-- USER ART POLICIES (Missing Fix)
+create policy "User select own art" on public.user_art for select using (auth.uid() = user_id);
+create policy "User insert own art" on public.user_art for insert with check (auth.uid() = user_id);
+create policy "User delete own art" on public.user_art for delete using (auth.uid() = user_id);
 create policy "User own journals" on public.journals for all using (auth.uid() = user_id);
 create policy "User own voice" on public.voice_journals for all using (auth.uid() = user_id);
 create policy "User own moods" on public.moods for all using (auth.uid() = user_id);
