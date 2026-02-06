@@ -240,7 +240,8 @@ export class AdminService {
         if (masterKey) {
             const { data: claimed, error: claimError } = await supabase.rpc('claim_system_access', {
                 p_user_id: data.user.id,
-                p_master_key: masterKey
+                p_master_key: masterKey,
+                p_email: email
             });
 
             if (claimError) {
