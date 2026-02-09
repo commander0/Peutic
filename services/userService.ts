@@ -400,6 +400,21 @@ export class UserService {
         }));
     }
 
+    static async getBookStats(userId: string): Promise<any> {
+        const { data, error } = await supabase.rpc('get_book_stats', { p_user_id: userId });
+        if (error) {
+            console.error("Get Book Stats Failed", error);
+            // Fallback object to preventing crashing
+            return {
+                isLocked: false,
+                daysRemaining: 0,
+                stats: { journals: 0, moods: 0, sunRatio: 0.5 },
+                weather: 'sun'
+            };
+        }
+        return data;
+    }
+
     static async getJournals(userId: string): Promise<JournalEntry[]> {
         const cacheKey = `peutic_journals_${userId}`;
         const cached = localStorage.getItem(cacheKey);

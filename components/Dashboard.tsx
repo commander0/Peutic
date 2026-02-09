@@ -958,11 +958,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             <p className="text-xs text-red-300 mt-1">We are restoring the connection. Please try again shortly.</p>
                                         </div>
                                     }>
-                                        <div className="space-y-6">
-                                            <JournalSection user={user} />
-                                            <div className="border-t border-dashed border-yellow-200 dark:border-gray-700" />
-                                            <WisdomGenerator userId={user.id} />
-                                        </div>
+                                        <Suspense fallback={<div className="p-6 space-y-4"><StatSkeleton /><StatSkeleton /></div>}>
+                                            <div className="space-y-6">
+                                                <JournalSection user={user} />
+                                                <div className="border-t border-dashed border-yellow-200 dark:border-gray-700" />
+                                                <WisdomGenerator userId={user.id} />
+                                            </div>
+                                        </Suspense>
                                     </GlobalErrorBoundary>
                                 </CollapsibleSection>
                                 <div>

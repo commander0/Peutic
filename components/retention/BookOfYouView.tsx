@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Feather, Star, Calendar, Download, Sparkles } from 'lucide-react';
+import { ChevronLeft, Feather, Calendar, Download, Sparkles } from 'lucide-react';
 import { User, JournalEntry, MoodEntry, GardenState } from '../../types';
 import { UserService } from '../../services/userService';
 import { PetService } from '../../services/petService';
@@ -14,23 +14,23 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, garden, onClose }) 
     const [journals, setJournals] = useState<JournalEntry[]>([]);
     const [moods, setMoods] = useState<MoodEntry[]>([]);
     const [lumina, setLumina] = useState<any | null>(null);
-    const [currentPage, setCurrentPage] = useState(0);
+    const [stats, setStats] = useState<any>(null);
 
     useEffect(() => {
         const load = async () => {
-            const [j, m, p] = await Promise.all([
+            const [j, m, p, s] = await Promise.all([
                 UserService.getJournals(user.id),
                 UserService.getMoods(user.id),
-                PetService.getPet(user.id)
+                PetService.getPet(user.id),
+                UserService.getBookStats(user.id)
             ]);
             setJournals(j);
             setMoods(m);
             setLumina(p);
+            setStats(s);
         };
         load();
     }, [user.id]);
-
-    const totalPages = Math.ceil(journals.length / 2) + 1; // +1 for cover/summary page
 
     return (
         <div className="fixed inset-0 z-[120] bg-[#1a1a1a] flex items-center justify-center p-4 animate-in fade-in duration-700 overflow-hidden">
@@ -79,11 +79,11 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, garden, onClose }) 
 
                         <div className="grid grid-cols-2 gap-12 w-full max-w-xs text-[#2c241b]">
                             <div className="group cursor-default">
-                                <div className="text-4xl font-serif font-black group-hover:scale-110 transition-transform duration-500">{journals.length}</div>
+                                <div className="text-4xl font-serif font-black group-hover:scale-110 transition-transform duration-500">{stats ? stats.stats.journals : journals.length}</div>
                                 <div className="text-[9px] uppercase tracking-widest text-[#8a7f73] mt-1 group-hover:text-[#c5a065] transition-colors">Stories Written</div>
                             </div>
                             <div className="group cursor-default">
-                                <div className="text-4xl font-serif font-black group-hover:scale-110 transition-transform duration-500">{moods.length}</div>
+                                <div className="text-4xl font-serif font-black group-hover:scale-110 transition-transform duration-500">{stats ? stats.stats.moods : moods.length}</div>
                                 <div className="text-[9px] uppercase tracking-widest text-[#8a7f73] mt-1 group-hover:text-[#c5a065] transition-colors">Days Mindful</div>
                             </div>
                         </div>

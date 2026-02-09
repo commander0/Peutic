@@ -58,66 +58,27 @@ export class GardenService {
     }
 
     static async waterPlant(userId: string, intensity: number = 1): Promise<GardenState | null> {
-        const current = await this.getGarden(userId);
-        if (!current) return null;
-
-        const now = new Date();
-        const lastWatered = new Date(current.lastWateredAt);
-
-        // precise diff in hours
-        const hoursSnap = Math.abs(now.getTime() - lastWatered.getTime()) / 36e5;
-
-        // If watered less than 1 hour ago, ignore (unless high intensity)
-        if (hoursSnap < 1 && intensity === 1) {
-            return current;
-        }
-
-        let newStreak = current.streakCurrent;
-        let newLevel = current.level;
-
-        // Intensity Scale Rewards: 1m=+1, 2m=+2, 3m=+3
-        newStreak += (intensity);
-
-        // Evolution Logic
-        const effectiveStreak = newStreak + (current.streakBest * 0.1);
-
-        if (effectiveStreak >= 3 && newLevel < 2) newLevel = 2; // Sprout
-        if (effectiveStreak >= 10 && newLevel < 3) newLevel = 3; // Sapling
-        if (effectiveStreak >= 25 && newLevel < 4) newLevel = 4; // Budding
-        if (effectiveStreak >= 50 && newLevel < 5) newLevel = 5; // Bloom
-
-        const updates = {
-            last_watered_at: now.toISOString(),
-            streak_current: newStreak,
-            level: newLevel,
-            water_level: Math.min(100, (current.waterLevel || 50) + 10 * intensity),
-            streak_best: Math.max(current.streakBest, newStreak)
-        };
-
-        const { error } = await supabase
-            .from('garden_log')
-            .update(updates)
-            .eq('user_id', userId);
+        const { data, error } = await supabase.rpc('water_garden', {
+            p_user_id: userId,
+            p_intensity: intensity
+        });
 
         if (error) {
             console.error("Watering failed", error);
             throw error;
         }
 
-        // Log it (fire and forget)
-        supabase.from('audit_logs').insert({
-            user_id: userId,
-            action: 'garden_water',
-            details: { intensity, newStreak }
-        }).then();
+        if (!data || !data.garden) return null;
 
+        const g = data.garden;
         return {
-            ...current,
-            lastWateredAt: updates.last_watered_at,
-            streakCurrent: updates.streak_current,
-            streakBest: updates.streak_best,
-            level: updates.level,
-            waterLevel: updates.water_level
+            userId: g.user_id,
+            level: g.level,
+            currentPlantType: g.current_plant_type as any,
+            waterLevel: g.water_level || 50,
+            lastWateredAt: g.last_watered_at,
+            streakCurrent: g.streak_current,
+            streakBest: g.streak_best
         };
     }
 
