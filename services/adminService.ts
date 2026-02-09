@@ -8,6 +8,7 @@ import { UserService } from './userService';
 
 export class AdminService {
     private static CACHE_KEY = 'peutic_global_settings';
+    private static lastSaveTime: number = 0;
     private static settingsCache: GlobalSettings = (() => {
         try {
             const cached = localStorage.getItem('peutic_global_settings');
@@ -59,6 +60,7 @@ export class AdminService {
 
     static async saveSettings(settings: GlobalSettings) {
         this.settingsCache = settings;
+        this.lastSaveTime = Date.now();
         console.log("AdminService: Saving Global Settings Directly...", settings);
 
         const payload = {

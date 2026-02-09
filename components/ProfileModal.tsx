@@ -17,7 +17,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
     if (!user) return null;
 
     const [activeTab, setActiveTab] = useState<'identity' | 'sanctuary' | 'journey'>('identity');
-    const { theme, setTheme } = useTheme();
+    const { theme, setTheme, mode, setMode: setThemeMode } = useTheme();
 
     const [name, setName] = useState(user.name || 'User');
     const [avatarLocked, setAvatarLocked] = useState(user.avatarLocked || false);
@@ -154,15 +154,29 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
 
                     {activeTab === 'sanctuary' && (
                         <div className="animate-in slide-in-from-right-4 fade-in duration-300">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                                 <Palette className="w-5 h-5 text-yellow-500" /> Theme Intelligence
                             </h3>
-                            <div className="grid grid-cols-3 gap-4 mb-8">
-                                <ThemeButton id="light" color="bg-white border text-black" label="Daylight" />
-                                <ThemeButton id="dark" color="bg-black text-white" label="Midnight" />
-                                <ThemeButton id="cyberpunk" color="bg-[#050510] border border-cyan-400 shadow-[0_0_10px_#00f0ff]" label="Cyberpunk" />
-                                <ThemeButton id="forest" color="bg-[#064E3B] border border-emerald-400" label="Zen Forest" />
-                                <ThemeButton id="midnight" color="bg-[#1e1b4b] border border-indigo-400" label="Deep Space" />
+
+                            <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-6">
+                                <button onClick={() => setThemeMode('light')} className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase flex items-center justify-center gap-2 transition-all shadow-sm ${mode === 'light' ? 'bg-white text-black' : 'text-gray-400 hover:bg-white/50'}`}>
+                                    ☀️ Light Mode
+                                </button>
+                                <button onClick={() => setThemeMode('dark')} className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase flex items-center justify-center gap-2 transition-all shadow-sm ${mode === 'dark' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-700/50'}`}>
+                                    🌙 Dark Mode
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
+                                <ThemeButton id="gold" color="bg-yellow-400 border border-yellow-200" label="Gold" />
+                                <ThemeButton id="rose" color="bg-rose-400 border border-rose-200" label="Rose" />
+                                <ThemeButton id="ocean" color="bg-sky-400 border border-sky-200" label="Ocean" />
+                                <ThemeButton id="forest" color="bg-emerald-500 border border-emerald-300" label="Forest" />
+                                <ThemeButton id="sunset" color="bg-orange-400 border border-orange-200" label="Sunset" />
+                                <ThemeButton id="lavender" color="bg-violet-400 border border-violet-200" label="Lavender" />
+                                <ThemeButton id="neon" color="bg-cyan-400 border border-cyan-200 shadow-[0_0_10px_rgba(34,211,238,0.5)]" label="Neon" />
+                                <ThemeButton id="night" color="bg-indigo-900 border border-indigo-700" label="Night" />
+                                <ThemeButton id="coffee" color="bg-amber-800 border border-amber-900" label="Coffee" />
+                                <ThemeButton id="royal" color="bg-purple-700 border border-purple-500" label="Royal" />
                             </div>
                             <p className="text-center text-xs text-gray-400">Themes seamlessly adapt the environment to your mood.</p>
                         </div>

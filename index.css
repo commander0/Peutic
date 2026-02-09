@@ -21,18 +21,17 @@
 }
 
 /* -----------------------------------------------------------------------------
-   1. DEFAULT (PEUTIC GOLD)
+   1. GOLD (Peutic Default)
    ----------------------------------------------------------------------------- */
-[data-theme="default"] {
+[data-theme="gold"] {
     --color-primary: #FACC15;
     --color-primary-light: #FFFBEB;
     --color-primary-border: #fef08a;
     --color-bg-base: #FFFBEB;
-    /* Restored Amber/Gold Gradient */
     --color-bg-gradient: linear-gradient(to bottom right, #fef3c7, #fef9c3, #fffbeb);
 }
 
-[data-theme="default"].dark {
+[data-theme="gold"].dark {
     --color-primary: #FACC15;
     --color-bg-base: #000000;
     --color-bg-gradient: linear-gradient(to bottom right, rgba(217, 119, 6, 0.15), rgba(0, 0, 0, 1), #000000);
@@ -161,9 +160,9 @@
 }
 
 /* -----------------------------------------------------------------------------
-   7. CYBERPUNK (Neon/High Tech)
+   7. NEON (High Tech)
    ----------------------------------------------------------------------------- */
-[data-theme="cyberpunk"] {
+[data-theme="neon"] {
     --color-primary: #06b6d4;
     --color-primary-light: #ECFEFF;
     --color-primary-border: #22d3ee;
@@ -172,7 +171,7 @@
     --color-bg-gradient: linear-gradient(to bottom right, #ecfeff, #cffafe, transparent);
 }
 
-[data-theme="cyberpunk"].dark {
+[data-theme="neon"].dark {
     --color-primary: #00f0ff;
     --color-primary-light: rgba(0, 240, 255, 0.15);
     --color-primary-border: #00f0ff;
@@ -182,9 +181,9 @@
 }
 
 /* -----------------------------------------------------------------------------
-   8. MIDNIGHT (Deep Indigo)
+   8. NIGHT (Deep Indigo)
    ----------------------------------------------------------------------------- */
-[data-theme="midnight"] {
+[data-theme="night"] {
     --color-primary: #4F46E5;
     --color-primary-light: #EEF2FF;
     --color-primary-border: #C7D2FE;
@@ -192,7 +191,7 @@
     --color-bg-gradient: linear-gradient(to bottom right, #eef2ff, #e0e7ff, transparent);
 }
 
-[data-theme="midnight"].dark {
+[data-theme="night"].dark {
     --color-primary: #818CF8;
     --color-primary-light: rgba(129, 140, 248, 0.1);
     --color-primary-border: rgba(129, 140, 248, 0.3);

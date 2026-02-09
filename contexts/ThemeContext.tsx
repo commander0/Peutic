@@ -8,6 +8,7 @@ interface ThemeContextType {
     theme: ThemeBrand;
     mode: ThemeMode;
     setTheme: (theme: ThemeBrand) => void;
+    setMode: (mode: ThemeMode) => void;
     toggleMode: () => void;
 }
 
@@ -15,6 +16,7 @@ const ThemeContext = createContext<ThemeContextType>({
     theme: 'default',
     mode: 'light',
     setTheme: () => { },
+    setMode: () => { },
     toggleMode: () => { }
 });
 
