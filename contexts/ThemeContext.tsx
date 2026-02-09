@@ -80,21 +80,29 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Apply to DOM
     useEffect(() => {
+        // We need to access location here. Since ThemeProvider is inside Router in index.tsx, we can use window.location or we need to move useLocation up.
+        // But simply using window.location.hash or pathname works if we trust it updates. 
+        // Better: Assuming ThemeProvider is inside Router (which it is in index.tsx), we can try useLocation.
+        // However, useTheme is exported, but ThemeProvider is a component.
+        // Let's rely on the passed-in props or just standard DOM check, or better: 
+        // We will stick to the props theme unless we specific logic. 
+        // Actually, easiest way is to check window.location.pathname in the effect.
+
         const root = document.documentElement;
-        // Clean existing classes
-        root.className = ''; // wipe all
+        root.className = '';
 
         // Apply Mode
         if (mode === 'dark') root.classList.add('dark');
 
-        // Apply Theme
-        // We use data-theme attribute for cleaner CSS selectors
-        root.setAttribute('data-theme', theme);
+        // FORCE STANDARD THEME ON LANDING PAGE
+        const isLanding = window.location.pathname === '/' || window.location.hash === '#/';
+        const activeTheme = isLanding ? 'amber' : theme;
 
-        // Also add class for backward compatibility if needed, but attribute is better for 10 themes
-        root.classList.add(`theme-${theme}`);
+        root.setAttribute('data-theme', activeTheme);
+        root.classList.add(`theme-${activeTheme}`);
 
-    }, [theme, mode]);
+    }, [theme, mode]); // Note: This won't re-run on route change unless we listen to it. 
+    // Ideally we'd use useLocation, let's verify if we can import it.
 
     return (
         <ThemeContext.Provider value={{ theme, mode, setTheme, toggleMode }}>

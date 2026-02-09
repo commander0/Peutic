@@ -59,11 +59,30 @@ export class AdminService {
 
     static async saveSettings(settings: GlobalSettings) {
         this.settingsCache = settings;
-        const { error } = await BaseService.invokeGateway('admin-save-settings', { settings });
+        console.log("AdminService: Saving Global Settings Directly...", settings);
+
+        const payload = {
+            price_per_minute: settings.pricePerMinute,
+            sale_mode: settings.saleMode,
+            allow_signups: settings.allowSignups,
+            site_name: settings.siteName,
+            broadcast_message: settings.broadcastMessage || null,
+            dashboard_broadcast_message: settings.dashboardBroadcastMessage || null,
+            max_concurrent_sessions: settings.maxConcurrentSessions,
+            multilingual_mode: settings.multilingualMode,
+            maintenance_mode: settings.maintenanceMode
+        };
+
+        const { error } = await supabase.from('global_settings')
+            .update(payload)
+            .eq('id', 1);
+
         if (!error) {
             localStorage.setItem(this.CACHE_KEY, JSON.stringify(settings));
+        } else {
+            logger.error("Save Settings Failed", "Direct DB Update", error);
+            // Optional: Revert cache if critical
         }
-        if (error) logger.error("Save Settings via Gateway Failed", "", error);
     }
 
     static async getSystemLogs(): Promise<SystemLog[]> {

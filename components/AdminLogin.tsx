@@ -37,16 +37,16 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
 
     useEffect(() => {
         AdminService.syncGlobalSettings().then(setSettings);
-        // Check if admin exists to determine if we show "Initialize System"
+
         AdminService.hasAdmin().then(exists => {
             setHasAdmin(exists);
-            // If no admin exists, default to Registration mode
             if (!exists) {
-                setShowRegister(true);
+                // Determine if we should show register or just enable the button
             } else {
-                setClaimMasterKey(''); // Ensure key is cleared if admin exists
+                setClaimMasterKey('');
             }
         });
+
         AdminService.getAdminLockoutStatus().then(setLockout);
     }, []);
 
