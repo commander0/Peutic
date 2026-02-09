@@ -98,9 +98,22 @@ export class UserService {
                 console.warn("CRITICAL: User Sync Data Missing - Attempting Self-Healing", { userId });
                 const session = await supabase.auth.getUser();
                 if (session.data.user && session.data.user.id === userId) {
-                    return await this.repairUserRecord(session.data.user);
+                    // Force Create if not exists (Trigger failed?)
+                    // We can't insert easily without admin, but we can rely on handle_new_user trigger re-firing on next login?
+                    // Actually, let's just return a fallback and hope the trigger catches up or allow client-side insert if policy allows (which we set to owner-create!)
+
+                    // RETRY: Maybe the trigger was slow. Wait 1s and retry once.
+                    await new Promise(r => setTimeout(r, 1000));
+                    const retry = await supabase.from('users').select('*').eq('id', userId).single();
+                    if (retry.data) {
+                        this.currentUser = this.mapUser(retry.data as UserRow);
+                        return this.currentUser;
+                    }
+
+                    return this.createFallbackUser(session.data.user);
                 }
             }
+
         } catch (e) {
             logger.error("User Sync Exception", `ID: ${userId}`, e);
         }

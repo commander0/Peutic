@@ -307,6 +307,21 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                 </div>
                 <div className="mt-8 text-center">
                     <a href="/" className="text-gray-600 hover:text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors">Return to Public Site <ArrowRight className="w-3 h-3" /></a>
+                    <div className="mt-4">
+                        <button
+                            onClick={async () => {
+                                const secret = prompt("Enter Genesis Key to claim system ownership:");
+                                if (secret) {
+                                    const { data, error } = await supabase.rpc('claim_system_ownership', { admin_secret: secret });
+                                    if (data) alert("System Claimed! You are now the Admin.");
+                                    else alert("Claim Failed: " + (error?.message || "Invalid Key or Admin already exists."));
+                                }
+                            }}
+                            className="text-[10px] text-gray-800 hover:text-red-500 transition-colors uppercase tracking-widest opacity-50 hover:opacity-100"
+                        >
+                            System Claim
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
