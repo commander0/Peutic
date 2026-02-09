@@ -54,20 +54,34 @@ export class UserService {
 
     static async restoreSession(): Promise<User | null> {
         const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-            const cached = this.getCachedUser();
-            if (cached && cached.id === session.user.id) {
-                this.currentUser = cached;
-                this.syncUser(session.user.id);
-                return cached;
-            }
-            const syncedUser = await this.syncUser(session.user.id);
-            if (syncedUser) return syncedUser;
 
-            console.warn("RestoreSession: DB Sync failed, using Fallback User");
-            return this.createFallbackUser(session.user);
+        // 1. No Session? Purge everything.
+        if (!session?.user) {
+            this.clearCache();
+            return null;
         }
-        return null;
+
+        // 2. Session exists. Check Cache.
+        const cached = this.getCachedUser();
+
+        // 3. Cache Mismatch? (Zombie Detection)
+        if (cached && cached.id !== session.user.id) {
+            console.warn("UserService: Zombie Cache Detected. Purging.");
+            this.clearCache();
+        }
+
+        // 4. Always Sync with DB to be sure (Single Source of Truth)
+        const syncedUser = await this.syncUser(session.user.id);
+
+        if (syncedUser) {
+            this.currentUser = syncedUser;
+            return syncedUser;
+        }
+
+        // 5. DB Record Missing? (Orphaned Auth User)
+        // If we have a valid Auth session but no User Row, we must create/repair it.
+        console.warn("UserService: Auth Session valid but DB Record missing. Repairing...");
+        return this.createFallbackUser(session.user);
     }
 
     static async syncUser(userId: string): Promise<User | null> {
@@ -365,10 +379,14 @@ export class UserService {
     }
 
     static async saveArt(entry: ArtEntry) {
-        console.log("UserService: Saving art directly to DB...", entry.id);
+        // SECURITY: Always use the live session ID, never trust the client payload
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("No active session for Art Save");
+
+        console.log("UserService: Saving art...", entry.id);
         const { error } = await supabase.from('user_art').insert({
             id: entry.id,
-            user_id: entry.userId,
+            user_id: user.id, // STRICT OVERRIDE
             image_url: entry.imageUrl,
             prompt: entry.prompt,
             title: entry.title || "Untitled Masterpiece",
@@ -376,7 +394,7 @@ export class UserService {
         });
 
         if (error) {
-            logger.error("Save Art Failed", entry.userId, error);
+            logger.error("Save Art Failed", user.id, error);
             throw error;
         }
     }

@@ -18,45 +18,43 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [user, setUser] = useState<User | null>(UserService.getCachedUser());
     const [isLoading, setIsLoading] = useState(true);
 
-    // 1. SESSION RESTORATION & LISTENER
+    // 1. UNIFIED AUTHENTICATION FLOW
     useEffect(() => {
         let mounted = true;
 
-        const initAuth = async () => {
-            try {
-                // Restore via UserService (Cache or DB)
-                const restored = await UserService.restoreSession();
-                if (mounted && restored) setUser(restored);
-            } catch (e) {
-                console.error("Auth Restoration Failed", e);
-            } finally {
-                if (mounted) setIsLoading(false);
-            }
-        };
-        initAuth();
-
-        // Supabase Auth Listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
+        const handleSession = async (session: any) => {
             if (!mounted) return;
 
-            if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
-                // Determine if we need to sync (IDs mismatch or missing local user)
-                if (!UserService.getUser() || UserService.getUser()?.id !== session.user.id) {
-                    setIsLoading(true);
-                    try {
-                        const synced = await UserService.syncUser(session.user.id);
-                        if (mounted && synced) {
-                            setUser(synced);
-                            UserService.saveUserSession(synced);
-                        }
-                    } finally {
-                        if (mounted) setIsLoading(false);
+            if (session?.user) {
+                // A. Valid Session: Sync with DB
+                try {
+                    const dbUser = await UserService.restoreSession();
+                    if (mounted && dbUser) {
+                        setUser(dbUser);
+                        // UserService.restoreSession already handles local storage sync
+                    } else if (mounted) {
+                        // Fallback: If DB sync fails (e.g. network), try cache but warn
+                        console.warn("AuthContext: Using cached user due to sync failure");
+                        const cached = UserService.getCachedUser();
+                        if (cached && cached.id === session.user.id) setUser(cached);
                     }
+                } catch (error) {
+                    console.error("AuthContext: Session Sync Error", error);
                 }
-            } else if (event === 'SIGNED_OUT') {
+            } else {
+                // B. No Session: Clear State
                 if (mounted) setUser(null);
                 UserService.clearCache();
             }
+            if (mounted) setIsLoading(false);
+        };
+
+        // Initialize
+        supabase.auth.getSession().then(({ data: { session } }) => handleSession(session as any));
+
+        // Listen for changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: string, session: any) => {
+            handleSession(session);
         });
 
         return () => {
