@@ -1011,16 +1011,25 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                             >
                                                 <Zap className="w-3 h-3" /> Std (15)
                                             </button>
-                                            <div className="relative flex items-center">
+                                            <div className="flex items-center gap-1">
                                                 <input
                                                     type="number"
                                                     min="1"
-                                                    className={`w-full bg-transparent border-0 text-center font-bold text-xs outline-none transition-colors ${settings.maxConcurrentSessions > 15 ? 'text-green-400' : 'text-gray-500'}`}
-                                                    value={settings.maxConcurrentSessions}
-                                                    onChange={(e) => handleSettingChange('maxConcurrentSessions', Math.min(1000000, Math.max(1, parseInt(e.target.value) || 1)))}
-                                                    placeholder="Custom"
+                                                    className="w-16 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-center font-bold text-xs text-white outline-none focus:border-yellow-500"
+                                                    defaultValue={settings.maxConcurrentSessions}
+                                                    id="concurrency-input"
                                                 />
-                                                {settings.maxConcurrentSessions > 1000 && <span className="absolute right-2 text-[8px] text-green-500 font-black uppercase">MAX</span>}
+                                                <button
+                                                    onClick={() => {
+                                                        const el = document.getElementById('concurrency-input') as HTMLInputElement;
+                                                        if (el) handleSettingChange('maxConcurrentSessions', Math.max(1, parseInt(el.value) || 1));
+                                                    }}
+                                                    className="bg-gray-800 hover:bg-green-600 text-white p-1.5 rounded transition-colors"
+                                                    title="Save Capacity"
+                                                >
+                                                    <CheckCircle className="w-3 h-3" />
+                                                </button>
+                                                {settings.maxConcurrentSessions > 1000 && <span className="text-[8px] text-green-500 font-black uppercase ml-1">MAX</span>}
                                             </div>
                                         </div>
                                         <div className="text-[9px] text-gray-500 text-center font-mono">

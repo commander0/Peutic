@@ -19,6 +19,7 @@ import { AdminService } from '../services/adminService';
 import { useToast } from './common/Toast';
 import { CompanionSkeleton, StatSkeleton } from './common/SkeletonLoader';
 import { InspirationQuote } from './common/InspirationQuote';
+import { GlobalErrorBoundary } from './common/GlobalErrorBoundary';
 
 import { NameValidator } from '../services/nameValidator';
 import { generateDailyInsight } from '../services/geminiService';
@@ -139,6 +140,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [weeklyMessage, setWeeklyMessage] = useState("Start your journey.");
     const [dashboardUser, setDashboardUser] = useState(user);
     const [settings, setSettings] = useState(AdminService.getSettings());
+
+    // BROADCAST FIX: Poll for global settings updates
+    useEffect(() => {
+        const pollSettings = async () => {
+            const s = await AdminService.syncGlobalSettings();
+            setSettings(s);
+        };
+        pollSettings(); // Initial sync
+        const interval = setInterval(pollSettings, 10000); // 10s poll
+        return () => clearInterval(interval);
+    }, []);
     const [showPayment, setShowPayment] = useState(false);
     const [paymentError, setPaymentError] = useState<string | undefined>(undefined);
     const [showBreathing, setShowBreathing] = useState(false);
@@ -938,7 +950,21 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         </div>
                                     </div>
                                 </CollapsibleSection>
-                                <CollapsibleSection title={t('dash_hub')} icon={Feather}><div className="space-y-6"><JournalSection user={user} /><div className="border-t border-dashed border-yellow-200 dark:border-gray-700" /><WisdomGenerator userId={user.id} /></div></CollapsibleSection>
+                                <CollapsibleSection title={t('dash_hub')} icon={Feather}>
+                                    <GlobalErrorBoundary fallback={
+                                        <div className="p-6 text-center border border-red-500/20 bg-red-500/5 rounded-xl">
+                                            <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
+                                            <h3 className="font-bold text-red-400 text-sm">Hub Temporarily Unavailable</h3>
+                                            <p className="text-xs text-red-300 mt-1">We are restoring the connection. Please try again shortly.</p>
+                                        </div>
+                                    }>
+                                        <div className="space-y-6">
+                                            <JournalSection user={user} />
+                                            <div className="border-t border-dashed border-yellow-200 dark:border-gray-700" />
+                                            <WisdomGenerator userId={user.id} />
+                                        </div>
+                                    </GlobalErrorBoundary>
+                                </CollapsibleSection>
                                 <div>
                                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-5"><div><h2 className="text-xl md:text-2xl font-black dark:text-yellow-400">{t('sec_specialists')}</h2><p className="text-gray-500 text-xs md:text-sm">{t('roster_heading')}</p></div><div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide"><button onClick={() => setSpecialtyFilter('All')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === 'All' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>All</button>{uniqueSpecialties.map(spec => (<button key={spec} onClick={() => setSpecialtyFilter(spec)} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === spec ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>{spec}</button>))}</div></div>
                                     {loadingCompanions ? (
