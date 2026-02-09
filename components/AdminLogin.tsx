@@ -6,6 +6,7 @@ import { UserService } from '../services/userService';
 import { supabase } from '../services/supabaseClient';
 import { UserRole } from '../types';
 import { Lock, Shield, ArrowRight, KeyRound, AlertCircle, Check, Crown, Megaphone } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 
 interface AdminLoginProps {
@@ -13,6 +14,7 @@ interface AdminLoginProps {
 }
 
 const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
+    const { setSession } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -92,6 +94,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
 
             // 3. SUCCESS - Reset Failures & Proceed
             AdminService.resetAdminFailure();
+            setSession(user); // CRITICAL: Update global context immediately to prevent race conditions
             onLogin(user);
 
         } catch (e: any) {

@@ -1,15 +1,18 @@
-
 import { User, UserRole, Transaction, MoodEntry, JournalEntry, ArtEntry, SessionFeedback, VoiceJournalEntry } from '../types';
 
 import { supabase } from './supabaseClient';
 import { BaseService } from './baseService';
 import { NameValidator } from './nameValidator';
 import { logger } from './logger';
+import { Database } from '../types/supabase';
+
+type UserRow = Database['public']['Tables']['users']['Row'];
 
 export class UserService {
     private static currentUser: User | null = null;
     private static CACHE_KEY = 'peutic_user_profile';
 
+    // ... (Cache methods remain unchanged)
     static saveUserToCache(user: User) {
         try {
             localStorage.setItem(this.CACHE_KEY, JSON.stringify(user));
@@ -30,69 +33,55 @@ export class UserService {
         return null;
     }
 
-    /**
-     * SWR (Stale-While-Revalidate) Helper
-     * Returns cached data immediately, then fetches and updates cache in background.
-     */
+    // ... (SWR remains unchanged)
     static async getWithSWR<T>(key: string, fetcher: () => Promise<T>, onUpdate?: (data: T) => void): Promise<T | null> {
         try {
             const cached = localStorage.getItem(key);
             const staleData = cached ? JSON.parse(cached) : null;
-
-            // Background Revalidate
             fetcher().then(newData => {
                 if (newData) {
                     localStorage.setItem(key, JSON.stringify(newData));
                     if (onUpdate) onUpdate(newData);
                 }
             }).catch(e => console.error(`SWR revalidation failed for ${key}`, e));
-
             return staleData;
         } catch (e) {
             return null;
         }
     }
 
-
-
-
-
     static getUser(): User | null { return this.currentUser; }
 
     static async restoreSession(): Promise<User | null> {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-            // 1. Check Cache
             const cached = this.getCachedUser();
             if (cached && cached.id === session.user.id) {
                 this.currentUser = cached;
-                this.syncUser(session.user.id); // Background sync
+                this.syncUser(session.user.id);
                 return cached;
             }
-
-            // 2. Try DB Sync
             const syncedUser = await this.syncUser(session.user.id);
             if (syncedUser) return syncedUser;
 
-            // 3. FALLBACK: Database might be unreachable, but we are Authenticated.
-            // Don't logout! Return a temporary user object from the token.
             console.warn("RestoreSession: DB Sync failed, using Fallback User");
             return this.createFallbackUser(session.user);
         }
         return null;
     }
 
-
     static async syncUser(userId: string): Promise<User | null> {
         if (!userId) return null;
         try {
-            // OPTIMIZED: Select specific fields instead of *
-            const fields = 'id, name, email, birthday, role, balance, subscription_status, created_at, last_login_date, streak, provider, avatar_url, avatar_locked, email_preferences, theme_preference, language_preference, game_scores';
-            const { data, error } = (await BaseService.withTimeout(
-                supabase.from('users').select(fields).eq('id', userId).maybeSingle(),
+            // STRICT TYPING: Select matching the Row definition
+            const response = await BaseService.withTimeout(
+                supabase.from('users').select('*').eq('id', userId).maybeSingle(),
                 5000,
                 "User sync timeout"
-            )) as any;
+            );
+
+            // Supabase types are complex, safe cast to allow destructuring while keeping data typed below
+            const { data, error } = response as any;
 
             if (error) {
                 console.error("CRITICAL: User Sync Database Error", error);
@@ -100,14 +89,13 @@ export class UserService {
             }
 
             if (data) {
-                this.currentUser = this.mapUser(data);
+                // 'data' is now strictly typed as UserRow (partial)
+                this.currentUser = this.mapUser(data as UserRow);
                 this.saveUserToCache(this.currentUser);
-                // Background Achievement Check
                 this.checkAchievements(this.currentUser);
                 return this.currentUser;
             } else {
                 console.warn("CRITICAL: User Sync Data Missing - Attempting Self-Healing", { userId });
-                // ATTEMPT REPAIR
                 const session = await supabase.auth.getUser();
                 if (session.data.user && session.data.user.id === userId) {
                     return await this.repairUserRecord(session.data.user);
@@ -119,25 +107,31 @@ export class UserService {
         return null;
     }
 
-    static mapUser(data: any): User {
+    // ADAPTER: Snake_Case (DB) -> CamelCase (Domain)
+    static mapUser(data: UserRow): User {
+        // Safe Cast for JSON fields
+        const scores = data.game_scores as { match: number; cloud: number } | null;
+        const emailPrefs = data.email_preferences as { marketing: boolean; updates: boolean } | null;
+
         return {
             id: data.id,
-            name: data.name,
+            name: data.name || "User",
             email: data.email,
-            birthday: data.birthday,
-            role: data.role as UserRole,
+            birthday: data.birthday || undefined,
+            role: (data.role as UserRole) || UserRole.USER,
             balance: data.balance || 0,
-            subscriptionStatus: (data.subscription_status || 'ACTIVE') as any,
-            joinedAt: data.created_at || new Date().toISOString(),
+            subscriptionStatus: (data.subscription_status as any) || 'ACTIVE',
+            joinedAt: data.created_at, // BRIDGE: Correct mapping
             lastLoginDate: data.last_login_date || new Date().toISOString(),
             streak: data.streak || 0,
-            provider: data.provider || 'email',
-            avatar: data.avatar_url,
+            provider: 'email', // Default, as this isn't always in public.users
+            avatar: data.avatar_url || undefined,
             avatarLocked: data.avatar_locked || false,
-            emailPreferences: data.email_preferences || { marketing: true, updates: true },
-            themePreference: data.theme_preference,
-            languagePreference: data.language_preference,
-            gameScores: data.game_scores || { match: 0, cloud: 0 }
+            emailPreferences: emailPrefs || { marketing: true, updates: true },
+            themePreference: data.theme_preference || 'light',
+            languagePreference: data.language_preference || 'en',
+            gameScores: scores || { match: 0, cloud: 0 },
+            unlockedRooms: data.unlocked_rooms || []
         };
     }
 
@@ -273,20 +267,19 @@ export class UserService {
         if (!user.id) return;
         this.currentUser = user;
 
-        // Direct Supabase Update to ensure all fields (including new ones) are saved
-        const payload = {
+        // STRICT TYPING: Ensure payload matches Database Update definition
+        type UserUpdate = Database['public']['Tables']['users']['Update'];
+
+        const payload: UserUpdate = {
             name: user.name,
             avatar_url: user.avatar,
             avatar_locked: user.avatarLocked,
             email_preferences: user.emailPreferences,
             theme_preference: user.themePreference,
             language_preference: user.languagePreference,
-            email_preferences: user.emailPreferences,
-            theme_preference: user.themePreference,
-            language_preference: user.languagePreference,
             last_login_date: user.lastLoginDate,
             streak: user.streak,
-            game_scores: user.gameScores // CRITICAL FIX: Persist Game Scores
+            game_scores: user.gameScores
         };
 
         const { error } = await supabase.from('users').update(payload).eq('id', user.id);
@@ -402,7 +395,8 @@ export class UserService {
             const { data } = await supabase.from('journals')
                 .select('id, user_id, date, content')
                 .eq('user_id', userId)
-                .order('date', { ascending: false });
+                .order('date', { ascending: false })
+                .limit(50);
             return (data || []).map((j: any) => ({ id: j.id, userId: j.user_id, date: j.date, content: j.content }));
         };
 
@@ -441,7 +435,8 @@ export class UserService {
         const { data } = await supabase.from('moods')
             .select('id, user_id, date, mood')
             .eq('user_id', userId)
-            .order('date', { ascending: false });
+            .order('date', { ascending: false })
+            .limit(50);
         return (data || []).map((m: any) => ({ id: m.id, userId: m.user_id, date: m.date, mood: m.mood as any }));
     }
 
