@@ -79,9 +79,9 @@ export class UserService {
         }
 
         // 5. DB Record Missing? (Orphaned Auth User)
-        // If we have a valid Auth session but no User Row, we must create/repair it.
-        console.warn("UserService: Auth Session valid but DB Record missing. Repairing...");
-        return this.createFallbackUser(session.user);
+        console.error("UserService: Auth Session valid but DB Record missing. Logout required.");
+        await this.logout(); // Force logout to clear bad state
+        return null;
     }
 
     static async syncUser(userId: string): Promise<User | null> {
@@ -124,7 +124,8 @@ export class UserService {
                         return this.currentUser;
                     }
 
-                    return this.createFallbackUser(session.data.user);
+                    console.error("CRITICAL: User Sync Failed even after retry. DB Row Missing.");
+                    return null; // Fail Hard. Do NOT return fallback.
                 }
             }
 
@@ -162,26 +163,8 @@ export class UserService {
         };
     }
 
-    // FALLBACK: Construct a temporary user object from Auth Session to prevent logout
-    static createFallbackUser(sessionUser: any): User {
-        return {
-            id: sessionUser.id,
-            name: sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || "User",
-            email: sessionUser.email || "",
-            role: (sessionUser.app_metadata?.role || sessionUser.user_metadata?.role || UserRole.USER) as UserRole,
-            balance: 0,
-            subscriptionStatus: 'ACTIVE',
-            joinedAt: new Date().toISOString(),
-            lastLoginDate: new Date().toISOString(),
-            streak: 0,
-            provider: sessionUser.app_metadata?.provider || 'email',
-            avatar: sessionUser.user_metadata?.avatar_url,
-            emailPreferences: { marketing: true, updates: true },
-            themePreference: 'light',
-            languagePreference: 'en',
-            gameScores: { match: 0, cloud: 0 }
-        };
-    }
+    // FALLBACK REMOVED: Strict Consistency Enforced
+    // static createFallbackUser(sessionUser: any): User { ... }
 
     // RECURRING: Subscribe to Realtime Changes
     static subscribeToUserChanges(userId: string, callback: (payload: any) => void) {
@@ -283,6 +266,25 @@ export class UserService {
                     emailPreferences: { marketing: true, updates: true },
                     birthday: birthday
                 };
+
+                // FORCE PERSISTENCE: Create DB Row Immediately
+                // We use repairUserRecord logic but inline/optimized for creation
+                const { error: dbError } = await supabase.from('users').insert({
+                    id: data.user.id,
+                    email: email,
+                    name: cleanName,
+                    role: 'USER',
+                    balance: 0,
+                    provider: 'email',
+                    // Default JSONB fields will be handled by DB defaults or we can be explicit
+                    metadata: { birthday }
+                });
+
+                if (dbError) {
+                    console.error("Critical: User DB Creation Failed", dbError);
+                    // We don't throw yet, we let syncUser try to heal it, but we warn heavily
+                }
+
                 logger.success("User Created", `Email: ${email}`);
                 return optimisticUser;
             }
@@ -495,53 +497,7 @@ export class UserService {
         if (error) console.error("Save Mood Failed:", error);
     }
 
-    static async getWeeklyProgress(userId: string): Promise<{ current: number, target: number, message: string }> {
-        try {
-            const oneWeekAgo = new Date();
-            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-            const iso = oneWeekAgo.toISOString();
 
-            // Run queries in parallel for performance, handling potential failures individually
-            const [jRes, sRes, mRes, aRes, pRes] = await Promise.all([
-                supabase.from('journals').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', iso),
-                supabase.from('transactions').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'COMPLETED').gte('date', iso),
-                supabase.from('moods').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('date', iso),
-                supabase.from('user_art').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', iso),
-                supabase.from('pocket_pets').select('last_interaction_at').eq('user_id', userId).maybeSingle()
-            ]);
-
-            const journalCount = jRes.count || 0;
-            const sessionCount = sRes.count || 0;
-            const moodCount = mRes.count || 0;
-            const artCount = aRes.count || 0;
-
-            // Pet care bonus: If pet was interacted with in the last 24 hours, add bonus points
-            let petBonus = 0;
-            if (pRes.data?.last_interaction_at) {
-                const lastInteraction = new Date(pRes.data.last_interaction_at);
-                const hoursAgo = (Date.now() - lastInteraction.getTime()) / (1000 * 60 * 60);
-                if (hoursAgo < 24) petBonus = 2;
-                else if (hoursAgo < 48) petBonus = 1;
-            }
-
-            const totalActions = journalCount + sessionCount + moodCount + artCount + petBonus;
-            const current = totalActions * 0.5;
-
-            const messages = [
-                "Keep going, you're doing great!",
-                "Every small step counts.",
-                "Consistency is key.",
-                "You're prioritizing your peace.",
-                "Goal crushed! Amazing work."
-            ];
-            const msg = current >= 10 ? messages[4] : messages[Math.min(3, Math.floor(current / 2.5))];
-
-            return { current, target: 10, message: msg };
-        } catch (e) {
-            console.warn("Weekly Progress Calculation Failed", e);
-            return { current: 0, target: 10, message: "Start your journey." };
-        }
-    }
 
     static async endSession(userId: string) {
         await supabase.from('active_sessions').delete().eq('user_id', userId);
@@ -829,6 +785,15 @@ export class UserService {
     }
 
     static saveUserSession(user: User) { this.currentUser = user; }
+
+    static async getWeeklyProgress(userId: string): Promise<number> {
+        const { data, error } = await supabase.rpc('get_weekly_activity_count', { p_user_id: userId });
+        if (error) {
+            console.warn("Failed to fetch weekly progress", error);
+            return 0;
+        }
+        return data || 0;
+    }
 
     // --- VOICE JOURNALS ---
     static async getVoiceJournals(userId: string): Promise<VoiceJournalEntry[]> {

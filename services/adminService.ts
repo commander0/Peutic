@@ -8,7 +8,6 @@ import { UserService } from './userService';
 
 export class AdminService {
     private static CACHE_KEY = 'peutic_global_settings';
-    private static lastSaveTime: number = 0;
     private static settingsCache: GlobalSettings = (() => {
         try {
             const cached = localStorage.getItem('peutic_global_settings');
@@ -60,7 +59,6 @@ export class AdminService {
 
     static async saveSettings(settings: GlobalSettings) {
         this.settingsCache = settings;
-        this.lastSaveTime = Date.now();
         console.log("AdminService: Saving Global Settings Directly...", settings);
 
         const payload = {
@@ -348,8 +346,24 @@ export class AdminService {
 
 
     static async updateCompanion(companion: Companion): Promise<void> {
-        const { error } = await BaseService.invokeGateway('admin-update-companion', { companion });
-        if (error) logger.error("Update Companion via Gateway Failed", companion.id, error);
+        const payload = {
+            status: companion.status,
+            name: companion.name,
+            specialty: companion.specialty,
+            image_url: companion.imageUrl,
+            rating: companion.rating
+        };
+
+        console.log("AdminService: Updating Companion...", companion.id, payload);
+
+        const { error } = await supabase.from('companions')
+            .update(payload)
+            .eq('id', companion.id);
+
+        if (error) {
+            logger.error("Update Companion Failed", companion.id, error);
+            throw new Error(error.message);
+        }
     }
 
     static async getAllTransactions(): Promise<Transaction[]> {

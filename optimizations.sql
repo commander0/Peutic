@@ -140,3 +140,61 @@ begin
     );
 end;
 $$;
+
+-- 3. GARDEN CLIP (Atomic Reward)
+create or replace function public.clip_garden(p_user_id uuid)
+returns json
+language plpgsql
+security definer
+as $$
+declare
+    v_last_clipped timestamptz;
+    v_now timestamptz := now();
+    v_prize int;
+    v_quote text;
+    v_quotes text[] := array[
+        'Growth takes time.',
+        'Patience is bitter, but its fruit is sweet.',
+        'Bloom where you are planted.',
+        'Peace is a practice.',
+        'The garden does not hurry, yet everything is accomplished.'
+    ];
+begin
+    -- Check Cooldown (12 Hours) using garden_log metadata or a new column
+    -- For simplicity, we'll store last_clipped_at in garden_log
+    -- If column missing, add it: alter table public.garden_log add column if not exists last_clipped_at timestamptz;
+    
+    -- Ensure column exists (idempotent-ish check not possible easily in function, assumes migration run)
+    
+    select last_clipped_at into v_last_clipped from public.garden_log where user_id = p_user_id;
+
+    if v_last_clipped is not null and v_now - v_last_clipped < interval '12 hours' then
+        return json_build_object('error', 'Plant needs rest');
+    end if;
+
+    -- Randomize Prize (5-10)
+    v_prize := floor(random() * 6 + 5)::int;
+    v_quote := v_quotes[floor(random() * array_length(v_quotes, 1) + 1)];
+
+    -- Update Balance
+    update public.users 
+    set balance = balance + v_prize 
+    where id = p_user_id;
+
+    -- Update Garden Log
+    update public.garden_log 
+    set last_clipped_at = v_now 
+    where user_id = p_user_id;
+
+    -- Log Transaction
+    insert into public.transactions (user_id, amount, description, type, status)
+    values (p_user_id, v_prize, 'Garden Clip Reward', 'EARN', 'COMPLETED');
+
+    return json_build_object(
+        'success', true,
+        'prize', v_prize,
+        'quote', v_quote,
+        'new_balance', (select balance from public.users where id = p_user_id)
+    );
+end;
+$$;

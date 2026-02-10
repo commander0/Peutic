@@ -20,7 +20,6 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
-    const [isVerifying, setIsVerifying] = useState(false);
 
     const [showRegister, setShowRegister] = useState(false);
     const [newAdminEmail, setNewAdminEmail] = useState('');
@@ -285,8 +284,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                         <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Secure Key</label>
                                         <input type="password" className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} />
                                     </div>
-                                    <button type="submit" disabled={loading || isVerifying} className="w-full bg-white hover:bg-gray-200 text-black font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02]">
-                                        {loading ? <span className="animate-pulse">{isVerifying ? "Verifying Access..." : "Authenticating..."}</span> : <><KeyRound className="w-4 h-4" /> ACCESS TERMINAL</>}
+                                    <button type="submit" disabled={loading} className="w-full bg-white hover:bg-gray-200 text-black font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02]">
+                                        {loading ? <span className="animate-pulse">Authenticating...</span> : <><KeyRound className="w-4 h-4" /> ACCESS TERMINAL</>}
                                     </button>
 
                                     {hasAdmin && (
@@ -305,9 +304,10 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                         </>
                     )}
                 </div>
-                <div className="mt-8 text-center">
+                <div className="mt-8 text-center space-y-4">
                     <a href="/" className="text-gray-600 hover:text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors">Return to Public Site <ArrowRight className="w-3 h-3" /></a>
-                    <div className="mt-4">
+
+                    <div className="pt-4 border-t border-gray-900">
                         <button
                             onClick={async () => {
                                 const secret = prompt("Enter Genesis Key to claim system ownership:");
@@ -317,9 +317,9 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                     else alert("Claim Failed: " + (error?.message || "Invalid Key or Admin already exists."));
                                 }
                             }}
-                            className="text-[10px] text-gray-800 hover:text-red-500 transition-colors uppercase tracking-widest opacity-50 hover:opacity-100"
+                            className="text-xs text-red-900 hover:text-red-500 font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2 mx-auto"
                         >
-                            System Claim
+                            <Shield className="w-3 h-3" /> Claim System Ownership
                         </button>
                     </div>
                 </div>

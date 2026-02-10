@@ -84,38 +84,23 @@ export class GardenService {
 
     static async clipPlant(userId: string): Promise<{ success: boolean; reward?: string; prize?: number; message?: string }> {
         try {
-            // 1. Check Cooldown (Local)
-            const lastClip = localStorage.getItem(`peutic_last_clip_${userId}`);
-            const now = Date.now();
+            // OPTIMIZATION: Use RPC for atomic reward + updates
+            const { data, error } = await supabase.rpc('clip_garden', { p_user_id: userId });
 
-            if (lastClip && now - parseInt(lastClip) < 60000) {
-                return { success: false, message: "The plant needs time to regrow." };
+            if (error) {
+                console.error("Clip RPC failed", error);
+                return { success: false, message: "Garden is resting." };
             }
 
-            // 2. Generate Reward
-            const quotes = [
-                "Growth takes time.",
-                "Pruning the unnecessary encourages the essential.",
-                "Your roots are stronger than you know.",
-                "Bloom where you are planted.",
-                "Peace is a practice.",
-                "The garden does not hurry, yet everything is accomplished.",
-                "Nature does not hurry, yet everything is accomplished.",
-                "Simplicity is the ultimate sophistication."
-            ];
-            const quote = quotes[Math.floor(Math.random() * quotes.length)];
-            const prize = Math.floor(Math.random() * 5) + 5; // 5-10 coins
-
-            // 3. Update Balance (Mocking Backend Call)
-            // Ideally we call UserService.addBalance here, but to avoid circular deps we return values
-            // and let the UI handler call the service.
-
-            // Update local cooldown
-            localStorage.setItem(`peutic_last_clip_${userId}`, now.toString());
-
-            return { success: true, reward: quote, prize, message: "Clipped!" };
+            // Data contains: { prize: number, quote: string, new_balance: number }
+            return {
+                success: true,
+                reward: data.quote,
+                prize: data.prize,
+                message: "Clipped!"
+            };
         } catch (e) {
-            console.error("Clip failed", e);
+            console.error("Clip exception", e);
             return { success: false, message: "Failed to clip." };
         }
     }

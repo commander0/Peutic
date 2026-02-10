@@ -147,10 +147,24 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             const s = await AdminService.syncGlobalSettings();
             setSettings(s);
         };
+
+        const loadWeeklyGoal = async () => {
+            if (user.id) {
+                const progress = await UserService.getWeeklyProgress(user.id);
+                setWeeklyGoal(progress);
+            }
+        };
+
         pollSettings(); // Initial sync
-        const interval = setInterval(pollSettings, 10000); // 10s poll
+        loadWeeklyGoal();
+
+        const interval = setInterval(() => {
+            pollSettings();
+            loadWeeklyGoal();
+        }, 10000); // 10s poll
+
         return () => clearInterval(interval);
-    }, []);
+    }, [user.id]);
     const [showPayment, setShowPayment] = useState(false);
     const [paymentError, setPaymentError] = useState<string | undefined>(undefined);
     const [showBreathing, setShowBreathing] = useState(false);
