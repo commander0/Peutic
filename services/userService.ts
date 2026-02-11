@@ -112,20 +112,37 @@ export class UserService {
                 console.warn("CRITICAL: User Sync Data Missing - Attempting Self-Healing", { userId });
                 const session = await supabase.auth.getUser();
                 if (session.data.user && session.data.user.id === userId) {
-                    // Force Create if not exists (Trigger failed?)
-                    // We can't insert easily without admin, but we can rely on handle_new_user trigger re-firing on next login?
-                    // Actually, let's just return a fallback and hope the trigger catches up or allow client-side insert if policy allows (which we set to owner-create!)
+                    console.warn("Attempting Self-Healing: Force Creating User Profile over REST", { userId });
 
-                    // RETRY: Maybe the trigger was slow. Wait 1s and retry once.
-                    await new Promise(r => setTimeout(r, 1000));
+                    // FAIL-SAFE: If Trigger failed, we must insert from Client.
+                    // RLS "User Insert Own" Policy allows this.
+                    const metadata = session.data.user.user_metadata || {};
+                    const name = metadata.full_name || metadata.name || session.data.user.email?.split('@')[0] || 'User';
+
+                    const { error: insertError } = await supabase.from('users').insert({
+                        id: userId,
+                        email: session.data.user.email,
+                        name: name,
+                        role: 'USER', // Safe default. Use "Claim System" for Admin if needed.
+                        created_at: new Date().toISOString()
+                    });
+
+                    if (insertError) {
+                        console.error("Self-Healing Insert Failed", insertError);
+                    } else {
+                        console.info("Self-Healing Insert Success");
+                    }
+
+                    // RETRY: Fetch again (now it should exist)
+                    await new Promise(r => setTimeout(r, 500));
                     const retry = await supabase.from('users').select('*').eq('id', userId).single();
                     if (retry.data) {
                         this.currentUser = this.mapUser(retry.data as UserRow);
                         return this.currentUser;
                     }
 
-                    console.error("CRITICAL: User Sync Failed even after retry. DB Row Missing.");
-                    return null; // Fail Hard. Do NOT return fallback.
+                    console.error("CRITICAL: User Sync Failed even after self-healing. DB integrity issue.");
+                    return null;
                 }
             }
 

@@ -273,6 +273,7 @@ $$ language plpgsql security definer;
 -- USERS
 create policy "User Read Own" on public.users for select using (auth.uid() = id);
 create policy "User Update Own" on public.users for update using (auth.uid() = id);
+create policy "User Insert Own" on public.users for insert with check (auth.uid() = id);
 create policy "Admin Read All Users" on public.users for select using (public.is_admin());
 create policy "Admin Update All Users" on public.users for update using (public.is_admin());
 
@@ -497,6 +498,51 @@ $$;
 -- 8. TRIGGERS
 
 -- Auto Create User
+-- 2. SYSTEM CLAIM (Manual Admin Creation)
+-- Matches AdminService.ts: createRootAdmin -> rpc('claim_system_access')
+create or replace function public.claim_system_access(p_user_id uuid, p_master_key text, p_email text default null)
+returns boolean
+language plpgsql
+security definer
+as $$
+declare
+  target_user_id uuid;
+begin
+  -- 1. Check if ANY Admin exists
+  if exists (select 1 from public.users where role = 'ADMIN') then
+    return false;
+  end if;
+
+  -- 2. Verify Master Key (Hardcoded or Env-like check)
+  -- Matches AdminLogin.tsx / AdminService.ts expectation
+  if p_master_key != 'peutic-genesis-key' and p_master_key != 'PEUTIC_ADMIN_ACCESS_2026' then
+      return false;
+  end if;
+
+  -- 3. Promote User
+  update public.users set role = 'ADMIN' where id = p_user_id;
+  
+  -- Double check
+  if exists (select 1 from public.users where id = p_user_id and role = 'ADMIN') then
+      return true;
+  end if;
+
+  return false;
+end;
+$$;
+
+-- 3. CHECK ADMIN EXISTS (Missing RPC)
+create or replace function public.check_admin_exists()
+returns boolean
+language plpgsql
+security definer
+as $$
+begin
+  return exists (select 1 from public.users where role = 'ADMIN');
+end;
+$$;
+
+-- Auto Create User Trigger (Restored)
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public
 as $$

@@ -40,7 +40,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         AdminService.hasAdmin().then(exists => {
             setHasAdmin(exists);
             if (!exists) {
-                // Determine if we should show register or just enable the button
+                setShowRegister(true);
             } else {
                 setClaimMasterKey('');
             }
