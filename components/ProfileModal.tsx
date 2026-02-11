@@ -223,7 +223,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
                                 </button>
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
-                                <ThemeButton id="amber" color="bg-yellow-400 border border-yellow-200" label="Gold" />
+                                <ThemeButton id="sunshine" color="bg-yellow-400 border border-yellow-200" label="Sunshine" />
                                 <ThemeButton id="rose" color="bg-rose-400 border border-rose-200" label="Rose" />
                                 <ThemeButton id="ocean" color="bg-sky-400 border border-sky-200" label="Ocean" />
                                 <ThemeButton id="forest" color="bg-emerald-500 border border-emerald-300" label="Forest" />
@@ -233,16 +233,6 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
                                 <ThemeButton id="midnight" color="bg-indigo-900 border border-indigo-700" label="Midnight" />
                                 <ThemeButton id="coffee" color="bg-amber-800 border border-amber-900" label="Coffee" />
                                 <ThemeButton id="royal" color="bg-purple-700 border border-purple-500" label="Royal" />
-                                <ThemeButton id="mint" color="bg-teal-300 border border-teal-200" label="Mint" />
-                                <ThemeButton id="berry" color="bg-pink-600 border border-pink-400" label="Berry" />
-                                <ThemeButton id="steel" color="bg-slate-500 border border-slate-400" label="Steel" />
-                                <ThemeButton id="blush" color="bg-pink-200 border border-pink-100" label="Blush" />
-                                <ThemeButton id="cloud" color="bg-blue-100 border border-blue-50" label="Cloud" />
-                                <ThemeButton id="fire" color="bg-red-500 border border-red-300" label="Fire" />
-                                <ThemeButton id="earth" color="bg-stone-600 border border-stone-400" label="Earth" />
-                                <ThemeButton id="obsidian" color="bg-gray-950 border border-gray-800" label="Obsidian" />
-                                <ThemeButton id="peach" color="bg-orange-200 border border-orange-100" label="Peach" />
-                                <ThemeButton id="ivory" color="bg-yellow-50 border border-yellow-100" label="Ivory" />
                             </div>
                             <p className="text-center text-xs text-gray-400">Themes seamlessly adapt the environment to your mood.</p>
                         </div>
