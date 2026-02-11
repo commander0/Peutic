@@ -33,27 +33,10 @@
 }
 
 [data-theme="sunshine"].dark {
-    --color-primary: #FACC15;
-    --color-bg-base: #000000;
-    --color-bg-gradient: linear-gradient(to bottom right, rgba(217, 119, 6, 0.15), rgba(0, 0, 0, 1), #000000);
-}
-
-/* -----------------------------------------------------------------------------
-   2. AMBER (Darker/Richer)
-   ----------------------------------------------------------------------------- */
-[data-theme="amber"] {
-    --color-primary: #D97706;
-    /* Amber-600 */
-    --color-primary-light: #FFFBEB;
-    --color-primary-border: #FCD34D;
-    --color-bg-base: #FFF7ED;
-    /* Orange-50ish */
-    --color-bg-gradient: linear-gradient(to bottom right, #ffedd5, #fff7ed, #ffedd5);
-}
-
-[data-theme="amber"].dark {
     --color-primary: #fbbf24;
+    /* Amber 400 */
     --color-bg-base: #1c1917;
+    /* Warm Dark */
     --color-bg-gradient: linear-gradient(to bottom right, #451a03, #1c1917, #000000);
 }
 
@@ -95,30 +78,7 @@
     --color-bg-gradient: linear-gradient(to bottom right, #0c4a6e, #082f49, #020617);
 }
 
-/* -----------------------------------------------------------------------------
-   6. AMBER (Sunny/Golden) - DEFAULT
-   ----------------------------------------------------------------------------- */
-[data-theme="amber"] {
-    --color-primary: #d97706;
-    /* Amber 600 */
-    --color-primary-light: #fef3c7;
-    /* Amber 100 */
-    --color-primary-border: #fcd34d;
-    /* Amber 300 */
-    --color-bg-base: #fffbeb;
-    /* Amber 50 */
-    --color-bg-gradient: linear-gradient(to bottom right, #fef3c7, #fde68a, #fffbeb);
-}
 
-[data-theme="amber"].dark {
-    --color-primary: #fbbf24;
-    /* Amber 400 */
-    --color-primary-light: rgba(251, 191, 36, 0.2);
-    --color-primary-border: rgba(251, 191, 36, 0.4);
-    --color-bg-base: #451a03;
-    /* Amber 950ish shift */
-    --color-bg-gradient: linear-gradient(to bottom right, #451a03, #290e03, #000000);
-}
 
 /* -----------------------------------------------------------------------------
    4. FOREST (Nature/Green)

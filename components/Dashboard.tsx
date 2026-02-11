@@ -1116,7 +1116,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             <div className="grid grid-cols-5 gap-3">
                                                 {[
                                                     { id: 'sunshine', color: '#FACC15', label: 'Sunshine' },
-                                                    { id: 'amber', color: '#D97706', label: 'Amber' },
                                                     { id: 'rose', color: '#FB7185', label: 'Rose' },
                                                     { id: 'ocean', color: '#38bdf8', label: 'Ocean' },
                                                     { id: 'forest', color: '#10B981', label: 'Forest' },

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { UserService } from '../services/userService';
 
-export type ThemeBrand = 'default' | 'sunshine' | 'amber' | 'rose' | 'ocean' | 'forest' | 'sunset' | 'lavender' | 'cyberpunk' | 'midnight' | 'coffee' | 'royal' | 'mint' | 'berry' | 'steel' | 'blush' | 'cloud' | 'fire' | 'earth' | 'obsidian' | 'peach' | 'ivory';
+export type ThemeBrand = 'default' | 'sunshine' | 'rose' | 'ocean' | 'forest' | 'sunset' | 'lavender' | 'cyberpunk' | 'midnight' | 'coffee' | 'royal';
 export type ThemeMode = 'light' | 'dark';
 
 interface ThemeContextType {
@@ -41,11 +41,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 loadedTheme = parts.slice(0, -1).join('-') as ThemeBrand;
             } else {
                 // Fallback for legacy values
-                if (user.themePreference === 'dark') { loadedMode = 'dark'; loadedTheme = 'amber'; }
+                if (user.themePreference === 'dark') { loadedMode = 'dark'; loadedTheme = 'sunshine'; }
                 else if (user.themePreference === 'light') { loadedMode = 'light'; loadedTheme = 'sunshine'; }
                 else {
                     const pref = user.themePreference as string;
-                    loadedTheme = (pref === 'default' || pref === 'gold') ? 'sunshine' : (pref as ThemeBrand);
+                    loadedTheme = (pref === 'default' || pref === 'gold' || pref === 'amber') ? 'sunshine' : (pref as ThemeBrand);
                 }
             }
         } else {
