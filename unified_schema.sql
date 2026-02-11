@@ -271,18 +271,33 @@ end;
 $$ language plpgsql security definer;
 
 -- USERS
+drop policy if exists "User Read Own" on public.users;
 create policy "User Read Own" on public.users for select using (auth.uid() = id);
+
+drop policy if exists "User Update Own" on public.users;
 create policy "User Update Own" on public.users for update using (auth.uid() = id);
+
+drop policy if exists "User Insert Own" on public.users;
 create policy "User Insert Own" on public.users for insert with check (auth.uid() = id);
+
+drop policy if exists "Admin Read All Users" on public.users;
 create policy "Admin Read All Users" on public.users for select using (public.is_admin());
+
+drop policy if exists "Admin Update All Users" on public.users;
 create policy "Admin Update All Users" on public.users for update using (public.is_admin());
 
 -- SETTINGS
+drop policy if exists "Public Read Settings" on public.global_settings;
 create policy "Public Read Settings" on public.global_settings for select using (true);
+drop policy if exists "Admin Manage Settings" on public.global_settings;
 create policy "Admin Manage Settings" on public.global_settings for all using (public.is_admin());
+drop policy if exists "Global Settings are viewable by everyone" on public.global_settings;
+drop policy if exists "Global Settings are updatable by admins only" on public.global_settings;
 
 -- COMPANIONS
+drop policy if exists "Public Read Companions" on public.companions;
 create policy "Public Read Companions" on public.companions for select using (true);
+drop policy if exists "Admin Manage Companions" on public.companions;
 create policy "Admin Manage Companions" on public.companions for all using (public.is_admin());
 
 -- USER CONTENT
@@ -689,6 +704,8 @@ create policy "Global Settings are updatable by admins only"
 -- RPC: Delete User Account (Security Definer to bypass standard RLS)
 -- Note: This deletes from public.users. Auth user deletion requires Service Role or Edge Function.
 -- The existing 'on delete cascade' FKs will handle related data.
+-- RPC: Delete User Account (Security Definer to bypass standard RLS)
+drop function if exists public.delete_user_account(uuid);
 create or replace function public.delete_user_account(p_user_id uuid)
 returns void
 language plpgsql
@@ -716,6 +733,42 @@ begin
   -- Note: The Auth User (in auth.users) will remain "orphaned" but powerless 
   -- without a public profile, effectively banning them from this app.
   -- Proper cleanup of auth.users requires Supabase Admin API.
+end;
+$$;
+
+
+-- RPC: Claim System Access (Master Key Promotion)
+drop function if exists public.claim_system_access(uuid, text, text);
+create or replace function public.claim_system_access(p_user_id uuid, p_master_key text, p_email text)
+returns json
+language plpgsql
+security definer
+as $$
+declare
+  v_details text;
+begin
+  -- 1. Validate Master Key (Hardcoded for "Rescue" Mode)
+  -- In production, this should check a hashed value in a secure configuration table.
+  if p_master_key not in ('PEUTIC_ADMIN_ACCESS_2026', 'peutic-genesis-key') then
+    return json_build_object('success', false, 'error', 'Invalid Master Key');
+  end if;
+
+  -- 2. Verify User Exists
+  if not exists (select 1 from public.users where id = p_user_id) then
+     return json_build_object('success', false, 'error', 'User not found in public records');
+  end if;
+
+  -- 3. Promote to Admin
+  update public.users 
+  set role = 'ADMIN' 
+  where id = p_user_id;
+
+  -- 4. Log Security Event
+  v_details := 'User ' || p_email || ' promoted to ADMIN via Master Key';
+  insert into public.system_logs (type, event, details) 
+  values ('SECURITY', 'Admin Promoted', v_details);
+
+  return json_build_object('success', true);
 end;
 $$;
 

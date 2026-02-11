@@ -77,12 +77,12 @@ export class AdminService {
             .update(payload)
             .eq('id', 1);
 
-        if (!error) {
-            localStorage.setItem(this.CACHE_KEY, JSON.stringify(settings));
-        } else {
+        if (error) {
             logger.error("Save Settings Failed", "Direct DB Update", error);
-            // Optional: Revert cache if critical
+            throw new Error(error.message);
         }
+
+        localStorage.setItem(this.CACHE_KEY, JSON.stringify(settings));
     }
 
     static async getSystemLogs(): Promise<SystemLog[]> {
@@ -162,17 +162,35 @@ export class AdminService {
 
 
     static async broadcastMessage(message: string) {
-        const data = await BaseService.invokeGateway('broadcast', { message });
+        // Direct DB Update (RLS Protected)
+        const { error } = await supabase.from('global_settings')
+            .update({ broadcast_message: message })
+            .eq('id', 1);
+
+        if (error) {
+            logger.error("Broadcast Failed", message, error);
+            throw new Error(error.message);
+        }
+
         this.settingsCache.broadcastMessage = message;
         logger.info("Global Broadcast Sent", message);
-        return data;
+        return { success: true };
     }
 
     static async broadcastDashboardMessage(message: string) {
-        const data = await BaseService.invokeGateway('dashboard-broadcast', { message });
+        // Direct DB Update (RLS Protected)
+        const { error } = await supabase.from('global_settings')
+            .update({ dashboard_broadcast_message: message })
+            .eq('id', 1);
+
+        if (error) {
+            logger.error("Dashboard Broadcast Failed", message, error);
+            throw new Error(error.message);
+        }
+
         this.settingsCache.dashboardBroadcastMessage = message;
         logger.info("Dashboard Broadcast Sent", message);
-        return data;
+        return { success: true };
     }
 
     static async getStripeStats() {

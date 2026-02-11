@@ -333,10 +333,20 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     };
 
     const handleSettingChange = async (key: keyof GlobalSettings, value: any) => {
+        const previous = { ...settings };
         const updated = { ...settings, [key]: value };
+
+        // Optimistic Update
         setSettings(updated);
-        await AdminService.saveSettings(updated);
-        showToast("Configuration updated", "info");
+
+        try {
+            await AdminService.saveSettings(updated);
+            showToast("Configuration updated", "info");
+        } catch (e: any) {
+            // Revert on failure
+            setSettings(previous);
+            showToast(`Update Failed: ${e.message}`, "error");
+        }
     };
 
 
@@ -1001,6 +1011,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                         <button
                                             onClick={() => handleSettingChange('maintenanceMode', !settings.maintenanceMode)}
                                             className={`w-10 h-5 rounded-full p-0.5 transition-colors ${settings.maintenanceMode ? 'bg-red-500' : 'bg-gray-700'}`}
+                                            title={settings.maintenanceMode ? "Disable Maintenance Mode" : "Enable Maintenance Mode"}
                                         >
                                             <div className={`w-4 h-4 bg-white rounded-full transform transition-transform ${settings.maintenanceMode ? 'translate-x-5' : ''}`}></div>
                                         </button>
@@ -1034,20 +1045,26 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                                 <input
                                                     type="number"
                                                     min="1"
-                                                    className="w-16 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-center font-bold text-xs text-white outline-none focus:border-yellow-500"
+                                                    className="w-16 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-center font-bold text-xs text-white outline-none focus:border-yellow-500 hover:border-gray-600 transition-colors"
+                                                    key={settings.maxConcurrentSessions} // Force re-render on external update
                                                     defaultValue={settings.maxConcurrentSessions}
-                                                    id="concurrency-input"
-                                                />
-                                                <button
-                                                    onClick={() => {
-                                                        const el = document.getElementById('concurrency-input') as HTMLInputElement;
-                                                        if (el) handleSettingChange('maxConcurrentSessions', Math.max(1, parseInt(el.value) || 1));
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            const val = parseInt(e.currentTarget.value) || 1;
+                                                            handleSettingChange('maxConcurrentSessions', Math.max(1, val));
+                                                            e.currentTarget.blur();
+                                                        }
                                                     }}
-                                                    className="bg-gray-800 hover:bg-green-600 text-white p-1.5 rounded transition-colors"
-                                                    title="Save Capacity"
-                                                >
-                                                    <CheckCircle className="w-3 h-3" />
-                                                </button>
+                                                    onBlur={(e) => {
+                                                        const val = parseInt(e.target.value) || settings.maxConcurrentSessions;
+                                                        if (val !== settings.maxConcurrentSessions) {
+                                                            handleSettingChange('maxConcurrentSessions', Math.max(1, val));
+                                                        }
+                                                    }}
+                                                />
+                                                <div className="flex items-center justify-center w-8 h-8 rounded bg-gray-900 text-gray-600">
+                                                    <CheckCircle className="w-3.5 h-3.5" />
+                                                </div>
                                                 {settings.maxConcurrentSessions > 1000 && <span className="text-[8px] text-green-500 font-black uppercase ml-1">MAX</span>}
                                             </div>
                                         </div>
