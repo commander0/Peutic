@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, RefreshCw, Download, BookOpen, User as UserIcon, Palette, Trophy } from 'lucide-react';
+import { X, RefreshCw, Download, BookOpen, User as UserIcon, Palette, Trophy, AlertCircle, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { User } from '../types';
 import { UserService } from '../services/userService';
@@ -24,6 +24,20 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
     const [previewAvatar, setPreviewAvatar] = useState(user.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${user.id || 'anonymous'}&backgroundColor=FCD34D`);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
+    const handleDeleteAccount = async () => {
+        try {
+            setLoading(true);
+            await UserService.deleteUser(user.id);
+            window.location.reload(); // Force reload to clear session
+        } catch (e) {
+            console.error(e);
+            setError("Failed to delete account. Please contact support.");
+            setLoading(false);
+            setIsDeletingAccount(false);
+        }
+    };
 
     const handleSave = () => {
         setError(null);
@@ -139,7 +153,49 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
                             <div><label className="text-xs font-bold text-gray-500 uppercase block mb-2">Display Name</label><input className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none dark:text-white" value={name} onChange={e => setName(e.target.value)} /></div>
                             <div><label className="text-xs font-bold text-gray-500 uppercase block mb-2">Email</label><input className="w-full p-3 bg-gray-100 dark:bg-gray-800/50 border border-transparent rounded-xl text-gray-500 cursor-not-allowed" value={user.email} disabled /></div>
 
-                            <button onClick={handleSave} disabled={loading} className="w-full py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:opacity-80 transition-opacity">{loading ? 'Saving...' : 'Save Changes'}</button>
+                            <button onClick={handleSave} disabled={loading} className="w-full py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:opacity-80 transition-opacity flex items-center justify-center gap-2">
+                                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                                {loading ? 'Saving...' : 'Save Changes'}
+                            </button>
+
+                            <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+                                <h3 className="text-[10px] font-black uppercase tracking-widest text-red-500 flex items-center gap-2 mb-3">
+                                    <AlertCircle className="w-3 h-3" /> Zone of Danger
+                                </h3>
+                                <div className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-xl p-4">
+                                    <h4 className="font-bold text-red-700 dark:text-red-400 text-xs mb-1">Delete Account</h4>
+                                    <p className="text-[10px] text-red-600/70 dark:text-red-400/70 mb-4 leading-relaxed">
+                                        Permanently remove your identity.
+                                        <br />
+                                        <span className="font-black">Warning: User balance ({user.balance}m) will be forfeited.</span>
+                                    </p>
+                                    {isDeletingAccount ? (
+                                        <div className="flex items-center gap-2 animate-in fade-in">
+                                            <button
+                                                onClick={handleDeleteAccount}
+                                                disabled={loading}
+                                                className="bg-red-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-red-700 transition-colors shadow-lg flex-1"
+                                            >
+                                                {loading ? 'Deleting...' : 'Confirm'}
+                                            </button>
+                                            <button
+                                                onClick={() => setIsDeletingAccount(false)}
+                                                disabled={loading}
+                                                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-[10px] font-bold uppercase tracking-wider px-2"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => setIsDeletingAccount(true)}
+                                            className="w-full text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 border border-red-200 dark:border-red-800/50 px-4 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                                        >
+                                            Delete Account
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
 
                             <div className="border-t border-gray-100 dark:border-gray-800 pt-4 grid grid-cols-2 gap-3">
                                 <button onClick={handleExport} className="py-3 flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-black dark:hover:text-white transition-colors text-[10px] font-bold uppercase tracking-wider bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700">
@@ -167,16 +223,26 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
                                 </button>
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
-                                <ThemeButton id="gold" color="bg-yellow-400 border border-yellow-200" label="Gold" />
+                                <ThemeButton id="amber" color="bg-yellow-400 border border-yellow-200" label="Gold" />
                                 <ThemeButton id="rose" color="bg-rose-400 border border-rose-200" label="Rose" />
                                 <ThemeButton id="ocean" color="bg-sky-400 border border-sky-200" label="Ocean" />
                                 <ThemeButton id="forest" color="bg-emerald-500 border border-emerald-300" label="Forest" />
                                 <ThemeButton id="sunset" color="bg-orange-400 border border-orange-200" label="Sunset" />
                                 <ThemeButton id="lavender" color="bg-violet-400 border border-violet-200" label="Lavender" />
-                                <ThemeButton id="neon" color="bg-cyan-400 border border-cyan-200 shadow-[0_0_10px_rgba(34,211,238,0.5)]" label="Neon" />
-                                <ThemeButton id="night" color="bg-indigo-900 border border-indigo-700" label="Night" />
+                                <ThemeButton id="cyberpunk" color="bg-cyan-400 border border-cyan-200 shadow-[0_0_10px_rgba(34,211,238,0.5)]" label="Cyberpunk" />
+                                <ThemeButton id="midnight" color="bg-indigo-900 border border-indigo-700" label="Midnight" />
                                 <ThemeButton id="coffee" color="bg-amber-800 border border-amber-900" label="Coffee" />
                                 <ThemeButton id="royal" color="bg-purple-700 border border-purple-500" label="Royal" />
+                                <ThemeButton id="mint" color="bg-teal-300 border border-teal-200" label="Mint" />
+                                <ThemeButton id="berry" color="bg-pink-600 border border-pink-400" label="Berry" />
+                                <ThemeButton id="steel" color="bg-slate-500 border border-slate-400" label="Steel" />
+                                <ThemeButton id="blush" color="bg-pink-200 border border-pink-100" label="Blush" />
+                                <ThemeButton id="cloud" color="bg-blue-100 border border-blue-50" label="Cloud" />
+                                <ThemeButton id="fire" color="bg-red-500 border border-red-300" label="Fire" />
+                                <ThemeButton id="earth" color="bg-stone-600 border border-stone-400" label="Earth" />
+                                <ThemeButton id="obsidian" color="bg-gray-950 border border-gray-800" label="Obsidian" />
+                                <ThemeButton id="peach" color="bg-orange-200 border border-orange-100" label="Peach" />
+                                <ThemeButton id="ivory" color="bg-yellow-50 border border-yellow-100" label="Ivory" />
                             </div>
                             <p className="text-center text-xs text-gray-400">Themes seamlessly adapt the environment to your mood.</p>
                         </div>

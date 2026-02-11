@@ -3,6 +3,7 @@ import { X, Moon, Star, BarChart2 } from 'lucide-react';
 import { User } from '../../types';
 import { useToast } from '../common/Toast';
 import { UserService } from '../../services/userService';
+import { SanctuaryService, DreamLog } from '../../services/SanctuaryService';
 
 interface ObservatoryViewProps {
     user: User;
@@ -15,18 +16,31 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
     const [sleepHours, setSleepHours] = useState(7);
     const [sleepQuality, setSleepQuality] = useState<'Restful' | 'Average' | 'Poor'>('Restful');
     const [lucidity, setLucidity] = useState(1); // 1-5
+    const [history, setHistory] = useState<DreamLog[]>([]);
+
+    useEffect(() => {
+        loadHistory();
+    }, [user.id]);
+
+    const loadHistory = async () => {
+        const logs = await SanctuaryService.getDreamHistory(user.id);
+        setHistory(logs);
+    };
 
     const handleLogDream = async () => {
         if (!dreamLog.trim()) {
             showToast("Please describe your dream first.", "info");
             return;
         }
-        // Mock save - in production this would hit a 'dreams' table
-        // For now we simulate an XP reward
-        if (await UserService.saveJournal(user.id, `[DREAM] ${dreamLog}`)) {
+
+        const success = await SanctuaryService.saveDream(user.id, dreamLog, lucidity, sleepQuality);
+        if (success) {
             await UserService.deductBalance(0, 'Dream Log Reward');
             showToast("Dream cataloged in the Starlight Archives. (+20 XP)", "success");
             setDreamLog('');
+            loadHistory(); // Refresh
+        } else {
+            showToast("Failed to archive dream.", "error");
         }
     };
 
@@ -101,17 +115,23 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                             </div>
                         </div>
 
-                        {/* RECENT DREAMS LIST (Mock) */}
+                        {/* RECENT DREAMS LIST (Real) */}
                         <div className="space-y-3">
                             <h3 className="text-xs font-bold uppercase tracking-widest text-indigo-400 px-2">Recent Archives</h3>
-                            <div className="p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors cursor-pointer group">
-                                <span className="text-[10px] text-indigo-400 font-mono mb-1 block">Yesterday</span>
-                                <p className="text-sm text-indigo-100 line-clamp-2 opacity-80 group-hover:opacity-100">Walking through a forest of giant mushrooms that glowed...</p>
-                            </div>
-                            <div className="p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors cursor-pointer group">
-                                <span className="text-[10px] text-indigo-400 font-mono mb-1 block">2 Days Ago</span>
-                                <p className="text-sm text-indigo-100 line-clamp-2 opacity-80 group-hover:opacity-100">Chasing a train I could never catch, but I wasn't scared...</p>
-                            </div>
+                            {history.length === 0 ? (
+                                <p className="text-xs text-indigo-500 px-4">No dreams archived yet.</p>
+                            ) : (
+                                history.map(log => (
+                                    <div key={log.id} className="p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors cursor-pointer group">
+                                        <span className="text-[10px] text-indigo-400 font-mono mb-1 block">
+                                            {new Date(log.createdAt).toLocaleDateString()}
+                                        </span>
+                                        <p className="text-sm text-indigo-100 line-clamp-2 opacity-80 group-hover:opacity-100 italic">
+                                            "{log.content}"
+                                        </p>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
 

@@ -173,7 +173,7 @@ export class UserService {
             avatar: data.avatar_url || undefined,
             avatarLocked: data.avatar_locked || false,
             emailPreferences: emailPrefs || { marketing: true, updates: true },
-            themePreference: data.theme_preference || 'light',
+            themePreference: data.theme_preference || 'amber-light',
             languagePreference: data.language_preference || 'en',
             gameScores: scores || { match: 0, cloud: 0 },
             unlockedRooms: data.unlocked_rooms || []
@@ -807,7 +807,7 @@ export class UserService {
             console.warn("Failed to fetch weekly progress", error);
             return { current: 0, message: "Start your journey." };
         }
-        const count = data || 0;
+        const count = (data || 0) * 0.5;
         let message = "Start your journey.";
         if (count > 0) message = "Good start!";
         if (count >= 3) message = "Building momentum!";

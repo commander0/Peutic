@@ -513,43 +513,7 @@ $$;
 -- 8. TRIGGERS
 
 -- Auto Create User
--- 2. SYSTEM CLAIM (Manual Admin Creation)
--- Matches AdminService.ts: createRootAdmin -> rpc('claim_system_access')
-create or replace function public.claim_system_access(p_user_id uuid, p_master_key text, p_email text default null)
-returns boolean
-language plpgsql
-security definer
-as $$
-declare
-  target_user_id uuid;
-begin
-  -- 1. Check if I AM ALREADY Admin (Idempotency)
-  if exists (select 1 from public.users where id = p_user_id and role = 'ADMIN') then
-    return true;
-  end if;
 
-  -- 2. Check if ANY Admin exists
-  if exists (select 1 from public.users where role = 'ADMIN') then
-    return false;
-  end if;
-
-  -- 3. Verify Master Key (Hardcoded or Env-like check)
-  -- Matches AdminLogin.tsx / AdminService.ts expectation
-  if p_master_key != 'peutic-genesis-key' and p_master_key != 'PEUTIC_ADMIN_ACCESS_2026' then
-      return false;
-  end if;
-
-  -- 3. Promote User
-  update public.users set role = 'ADMIN' where id = p_user_id;
-  
-  -- Double check
-  if exists (select 1 from public.users where id = p_user_id and role = 'ADMIN') then
-      return true;
-  end if;
-
-  return false;
-end;
-$$;
 
 -- 3. CHECK ADMIN EXISTS (Missing RPC)
 create or replace function public.check_admin_exists()
@@ -738,8 +702,9 @@ $$;
 
 
 -- RPC: Claim System Access (Master Key Promotion)
-drop function if exists public.claim_system_access(uuid, text, text);
-create or replace function public.claim_system_access(p_user_id uuid, p_master_key text, p_email text)
+-- IMPORTANT: You MUST run this DROP command if you see "cannot change return type" error.
+drop function if exists public.claim_system_access(uuid, text, text) cascade;
+create or replace function public.claim_system_access(p_user_id uuid, p_master_key text, p_email text default null)
 returns json
 language plpgsql
 security definer
@@ -771,4 +736,67 @@ begin
   return json_build_object('success', true);
 end;
 $$;
+
+
+-- ==============================================================================
+-- 12. STORAGE BUCKETS
+-- ==============================================================================
+
+insert into storage.buckets (id, name, public) 
+values 
+  ('voice-journals', 'voice-journals', false),
+  ('user-avatars', 'user-avatars', true),
+  ('user-art', 'user-art', true)
+on conflict (id) do nothing;
+
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+
+-- Voice Journals (Private)
+create policy "User View Own Voice" on storage.objects for select using (bucket_id = 'voice-journals' and auth.uid()::text = (storage.foldername(name))[1]);
+create policy "User Upload Own Voice" on storage.objects for insert with check (bucket_id = 'voice-journals' and auth.uid()::text = (storage.foldername(name))[1]);
+create policy "User Delete Own Voice" on storage.objects for delete using (bucket_id = 'voice-journals' and auth.uid()::text = (storage.foldername(name))[1]);
+
+-- Avatars (Public Read, User Write)
+create policy "Public View Avatars" on storage.objects for select using (bucket_id = 'user-avatars');
+create policy "User Upload Own Avatar" on storage.objects for insert with check (bucket_id = 'user-avatars' and auth.uid()::text = (storage.foldername(name))[1]);
+create policy "User Update Own Avatar" on storage.objects for update using (bucket_id = 'user-avatars' and auth.uid()::text = (storage.foldername(name))[1]);
+
+
+-- ==============================================================================
+-- 11. SANCTUARY FEATURES (Restoration & Robustness)
+-- ==============================================================================
+
+-- 11.1 ZEN DOJO SESSIONS (Persistent Focus)
+create table if not exists public.focus_sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references public.users(id) on delete cascade not null,
+  duration_seconds int not null,
+  completed_at timestamptz default now(),
+  mode text check (mode in ('FOCUS', 'BREAK')) default 'FOCUS'
+);
+
+-- RLS
+alter table public.focus_sessions enable row level security;
+drop policy if exists "User Manage Focus" on public.focus_sessions;
+create policy "User Manage Focus" on public.focus_sessions for all using (auth.uid() = user_id);
+create index if not exists idx_focus_sessions_user_id on public.focus_sessions(user_id);
+create index if not exists idx_focus_sessions_completed_at on public.focus_sessions(completed_at desc);
+
+
+-- 11.2 DREAM LOGS (Observatory Archives)
+create table if not exists public.dream_logs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references public.users(id) on delete cascade not null,
+  content text not null,
+  lucidity_level int check (lucidity_level between 1 and 5),
+  sleep_quality text check (sleep_quality in ('Restful', 'Average', 'Poor')),
+  created_at timestamptz default now()
+);
+
+-- RLS
+alter table public.dream_logs enable row level security;
+drop policy if exists "User Manage Dreams" on public.dream_logs;
+create policy "User Manage Dreams" on public.dream_logs for all using (auth.uid() = user_id);
+create index if not exists idx_dream_logs_user_id on public.dream_logs(user_id);
+create index if not exists idx_dream_logs_created_at on public.dream_logs(created_at desc);
 

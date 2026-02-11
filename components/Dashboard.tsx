@@ -795,7 +795,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                                 <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
                                                                 <div className="relative z-10 w-full h-full flex flex-col items-center justify-center pointer-events-none">
                                                                     <div className="w-full h-24 md:h-32 mb-1 pointer-events-auto transition-transform group-hover:scale-105 duration-700">
-                                                                        <GardenCanvas garden={garden} width={200} height={180} interactionType={isClipping ? 'clip' : null} />
+                                                                        <Suspense fallback={<div className="w-full h-full flex items-center justify-center"><div className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div></div>}>
+                                                                            <GardenCanvas garden={garden} width={200} height={180} interactionType={isClipping ? 'clip' : null} />
+                                                                        </Suspense>
                                                                     </div>
 
                                                                     {/* Overlay Controls */}

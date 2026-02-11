@@ -3,6 +3,7 @@ import { X, Zap, Play, Pause, RotateCcw, Target, Flame, Trophy } from 'lucide-re
 import { User } from '../../types';
 import { useToast } from '../common/Toast';
 import { UserService } from '../../services/userService';
+import { SanctuaryService } from '../../services/SanctuaryService';
 
 interface DojoViewProps {
     user: User;
@@ -15,7 +16,20 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
     const [isActive, setIsActive] = useState(false);
     const [mode, setMode] = useState<'focus' | 'break'>('focus');
     const [streak, setStreak] = useState(0);
+    const [totalFocus, setTotalFocus] = useState(0);
     const timerRef = useRef<number | null>(null);
+
+    // Initial Load
+    useEffect(() => {
+        const loadHistory = async () => {
+            const history = await SanctuaryService.getFocusHistory(user.id);
+            // Simple streak logic: number of sessions today (mocked by history count for now)
+            setStreak(history.length);
+            const minutes = history.reduce((acc, curr) => acc + (curr.durationSeconds / 60), 0);
+            setTotalFocus(Math.floor(minutes));
+        };
+        loadHistory();
+    }, [user.id]);
 
     // Format time mm:ss
     const formatTime = (seconds: number) => {
@@ -50,15 +64,16 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
     const handleComplete = async () => {
         setIsActive(false);
         if (mode === 'focus') {
-            await UserService.saveJournal({
-                id: crypto.randomUUID(),
-                userId: user.id,
-                date: new Date().toISOString(),
-                content: `[DOJO] Focus Session: 25 mins`
-            });
-            await UserService.deductBalance(0, 'Focus Session Complete'); // XP Trigger
-            showToast("Focus Session Complete! (+50 XP)", "success");
-            setStreak(s => s + 1);
+            const success = await SanctuaryService.saveFocusSession(user.id, 25 * 60, 'FOCUS');
+            if (success) {
+                await UserService.deductBalance(0, 'Focus Session Complete'); // XP Trigger
+                showToast("Focus Session Recorded! (+50 XP)", "success");
+                setStreak(s => s + 1);
+                setTotalFocus(t => t + 25);
+            } else {
+                showToast("Failed to save session", "error");
+            }
+
             setMode('break');
             setTimeLeft(5 * 60);
         } else {
@@ -140,17 +155,17 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                     <div className="bg-stone-900/50 p-6 rounded-2xl border border-stone-800 flex flex-col items-center">
                         <Flame className="w-6 h-6 text-orange-500 mb-2" />
                         <span className="text-2xl font-black text-white">{streak}</span>
-                        <span className="text-[9px] uppercase tracking-widest text-stone-500 font-bold">Session Streak</span>
+                        <span className="text-[9px] uppercase tracking-widest text-stone-500 font-bold">Sessions</span>
                     </div>
                     <div className="bg-stone-900/50 p-6 rounded-2xl border border-stone-800 flex flex-col items-center">
                         <Target className="w-6 h-6 text-amber-500 mb-2" />
-                        <span className="text-2xl font-black text-white">{Math.floor(streak * 25)}m</span>
-                        <span className="text-[9px] uppercase tracking-widest text-stone-500 font-bold">Total Focus</span>
+                        <span className="text-2xl font-black text-white">{totalFocus}m</span>
+                        <span className="text-[9px] uppercase tracking-widest text-stone-500 font-bold">Total Time</span>
                     </div>
                     <div className="bg-stone-900/50 p-6 rounded-2xl border border-stone-800 flex flex-col items-center cursor-pointer hover:bg-stone-800 transition-colors">
                         <Trophy className="w-6 h-6 text-yellow-500 mb-2" />
-                        <span className="text-xs font-black text-white mt-1 uppercase tracking-widest">Achievements</span>
-                        <span className="text-[9px] uppercase tracking-widest text-stone-500 font-bold mt-1">View Hall</span>
+                        <span className="text-xs font-black text-white mt-1 uppercase tracking-widest">History</span>
+                        <span className="text-[9px] uppercase tracking-widest text-stone-500 font-bold mt-1">View Logs</span>
                     </div>
                 </div>
 

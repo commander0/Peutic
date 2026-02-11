@@ -5,7 +5,6 @@ interface GardenCanvasProps {
     garden: GardenState;
     width: number;
     height: number;
-    // Optional props for interaction effects
     interactionType?: 'clip' | 'water' | null;
 }
 
@@ -13,133 +12,145 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const frameRef = useRef<number>(0);
 
-    // --- ZEN BONSAI RENDERER ---
+    // --- ASIAN BONSAI RENDERER ---
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        let sway = 0;
-        let particles: { x: number, y: number, vy: number, vx: number, life: number, color: string, size: number }[] = [];
+        let time = 0;
+        let petals: { x: number, y: number, vx: number, vy: number, size: number, angle: number }[] = [];
 
-        // Draw Branch Function (Fractal with organic twists)
+        // Init falling petals
+        for (let i = 0; i < 20; i++) {
+            petals.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: Math.random() * 1 + 0.5,
+                size: Math.random() * 3 + 2,
+                angle: Math.random() * Math.PI
+            });
+        }
+
         const drawBranch = (startX: number, startY: number, len: number, angle: number, branchWidth: number, depth: number) => {
             ctx.save();
             ctx.translate(startX, startY);
+            ctx.rotate(angle + Math.sin(time + depth) * 0.02); // Subtle sway
 
-            // Organic sway
-            const swayOffset = Math.sin(sway * 0.5 + depth) * 0.05 * (depth * 0.2);
-            ctx.rotate(angle + swayOffset);
-
+            // Draw branch segment (Gnarled look)
             ctx.beginPath();
             ctx.moveTo(0, 0);
-            // Quadratic curve for organic look
-            ctx.quadraticCurveTo(0, -len / 2, 0, -len);
+
+            // Quadratic curves for organic, twisting growth
+            const cp1x = 0 + Math.sin(depth * 1.5) * 5;
+            const cp1y = -len * 0.5;
+            ctx.quadraticCurveTo(cp1x, cp1y, 0, -len);
 
             ctx.lineWidth = branchWidth;
             ctx.lineCap = 'round';
-            // Simple gradient for bark
-            ctx.strokeStyle = depth < 2 ? '#4e342e' : '#795548';
+            // Darker, aged wood color
+            ctx.strokeStyle = `hsl(25, ${30 + depth * 5}%, ${20 + depth * 2}%)`;
             ctx.stroke();
 
-            // Transform to end of branch for next iteration
+            // Texture (simple lines)
+            if (branchWidth > 5) {
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, -len);
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                ctx.stroke();
+            }
+
             ctx.translate(0, -len);
 
-            // Leaves / Blossoms at tips (Recursion Halt or Branch Nodes)
-            if (len < 15 || depth > (garden.level + 2)) {
-                // Determine Plant Type Colors
-                const pType = (garden.currentPlantType as string) || 'Lotus';
-                let leafColor = '#4CAF50';
-                let bloomColor = '#F48FB1';
-
-                if (pType === 'Pine') { leafColor = '#2e7d32'; bloomColor = '#a5d6a7'; }
-                if (garden.waterLevel < 30) bloomColor = '#ef5350'; // Wilted
-
+            // Foliage / Blossoms at ends
+            if (len < 10 || depth > garden.level + 3) {
+                const bloomSize = 5 + Math.sin(time * 2 + depth) * 2;
                 ctx.beginPath();
-                const bloomSize = 4 + Math.sin(frameRef.current * 0.05 + depth) * 1.5;
                 ctx.arc(0, 0, bloomSize, 0, Math.PI * 2);
 
-                // 30% chance of bloom vs leaf
-                ctx.fillStyle = (Math.random() > 0.7 || depth > 8) ? bloomColor : leafColor;
+                // Cherry Blossom Pink or Lush Green depending on "Season" (Level/Logic)
+                // For now, let's go full Cherry Blossom (Sakura)
+                const isSakura = true;
+                ctx.fillStyle = isSakura
+                    ? `rgba(255, 183, 178, ${0.7 + Math.random() * 0.3})` // Pink
+                    : `rgba(76, 175, 80, ${0.7 + Math.random() * 0.3})`; // Green
+
+                if (garden.waterLevel < 30) ctx.fillStyle = '#8d6e63'; // Dead leaves
 
                 ctx.fill();
 
-                // Glow effect
-                ctx.shadowBlur = 5;
+                // Glow
                 ctx.shadowColor = ctx.fillStyle;
-
-                ctx.restore();
-                return;
+                ctx.shadowBlur = 10;
+            } else {
+                // Recursive Draw
+                // Two branches, wider angles for spread
+                if (depth < 10) {
+                    drawBranch(0, 0, len * 0.8, -0.3 + Math.random() * 0.1, branchWidth * 0.7, depth + 1);
+                    drawBranch(0, 0, len * 0.8, 0.3 + Math.random() * 0.1, branchWidth * 0.7, depth + 1);
+                }
             }
-
-            // Recursive branching
-            // Use slightly random angles for "Zen" asymmetry
-            drawBranch(0, 0, len * 0.75, 0.45, branchWidth * 0.7, depth + 1);
-            drawBranch(0, 0, len * 0.75, -0.45, branchWidth * 0.7, depth + 1);
 
             ctx.restore();
         };
 
         const render = () => {
             frameRef.current++;
-            sway += 0.02;
+            time += 0.01;
 
-            // 1. Background (Zen Gradient)
-            const gradient = ctx.createLinearGradient(0, 0, 0, height);
-            gradient.addColorStop(0, '#e0f7fa'); // Sky
-            gradient.addColorStop(1, '#f1f8e9'); // Mist
-            ctx.fillStyle = gradient;
+            // Background (Rice Paper / Washi feel)
+            ctx.fillStyle = '#fdfbf7';
             ctx.fillRect(0, 0, width, height);
 
-            // 2. Rising Sun (Red/Orange)
+            // Sun (Red Circle)
             ctx.beginPath();
-            ctx.arc(width * 0.5, height * 0.8, 100, 0, Math.PI, true);
-            ctx.fillStyle = 'rgba(255, 87, 34, 0.15)'; // Zen sun
+            ctx.arc(width * 0.7, height * 0.3, 60, 0, Math.PI * 2);
+            ctx.fillStyle = '#ef5350';
+            ctx.globalAlpha = 0.8;
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+
+            // Ground / Moss
+            ctx.beginPath();
+            ctx.ellipse(width / 2, height - 50, 150, 40, 0, 0, Math.PI * 2);
+            ctx.fillStyle = '#558b2f'; // Moss Green
             ctx.fill();
 
-            // 3. Pot (Minimalist Ceramic)
-            const potY = height - 40;
-            const potW = 100;
-            ctx.fillStyle = '#5d4037';
+            // Pot (Ceramic Blue/White)
+            const potY = height - 50;
+            const potW = 120;
             ctx.beginPath();
-            // @ts-ignore
-            if (ctx.roundRect) ctx.roundRect(width / 2 - potW / 2, potY, potW, 30, 5);
-            else ctx.fillRect(width / 2 - potW / 2, potY, potW, 30);
+            ctx.moveTo(width / 2 - potW / 2, potY);
+            ctx.lineTo(width / 2 + potW / 2, potY);
+            ctx.lineTo(width / 2 + potW / 2 - 10, potY + 40);
+            ctx.lineTo(width / 2 - potW / 2 + 10, potY + 40);
+            ctx.closePath();
+            ctx.fillStyle = '#1a237e';
             ctx.fill();
-            // Rim
-            ctx.fillStyle = '#8d6e63';
-            ctx.fillRect(width / 2 - potW / 2 - 5, potY, potW + 10, 6);
 
+            // Base Trunk
+            drawBranch(width / 2, potY, 60, 0, 15 + garden.streakCurrent * 0.5, 0);
 
-            // 4. Tree Root
-            drawBranch(width / 2, potY, 50, 0, 10, 0);
-
-            // 5. Interaction Particles (Clip Effect)
-            if (interactionType === 'clip' && Math.random() > 0.8) {
-                particles.push({
-                    x: width / 2 + (Math.random() - 0.5) * 150,
-                    y: height / 2 + (Math.random() - 0.5) * 150,
-                    vx: (Math.random() - 0.5) * 1,
-                    vy: Math.random() * 2,
-                    life: 1.0,
-                    color: '#f48fb1',
-                    size: Math.random() * 3 + 2
-                });
-            }
-
-            // Render Particles
-            particles.forEach((p, i) => {
-                p.x += p.vx;
+            // Falling Petals
+            petals.forEach(p => {
                 p.y += p.vy;
-                p.life -= 0.02;
-                ctx.globalAlpha = p.life;
-                ctx.fillStyle = p.color;
+                p.x += Math.sin(time + p.y * 0.01) + p.vx;
+                if (p.y > height) p.y = -10;
+                if (p.x > width) p.x = 0;
+                if (p.x < 0) p.x = width;
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.angle + time);
+                ctx.fillStyle = '#ffcdd2';
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.ellipse(0, 0, p.size, p.size / 2, 0, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.globalAlpha = 1.0;
-                if (p.life <= 0) particles.splice(i, 1);
+                ctx.restore();
             });
 
             requestAnimationFrame(render);
@@ -147,14 +158,14 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
 
         const aniId = requestAnimationFrame(render);
         return () => cancelAnimationFrame(aniId);
-    }, [garden, width, height, interactionType]);
+    }, [garden, width, height]);
 
     return (
         <canvas
             ref={canvasRef}
             width={width}
             height={height}
-            className="w-full h-full object-contain drop-shadow-xl rounded-xl"
+            className="w-full h-full object-contain rounded-xl drop-shadow-2xl"
         />
     );
 };

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { UserService } from '../services/userService';
 
-export type ThemeBrand = 'default' | 'rose' | 'ocean' | 'forest' | 'sunset' | 'lavender' | 'cyberpunk' | 'midnight' | 'coffee' | 'royal' | 'amber';
+export type ThemeBrand = 'default' | 'rose' | 'ocean' | 'forest' | 'sunset' | 'lavender' | 'cyberpunk' | 'midnight' | 'coffee' | 'royal' | 'amber' | 'mint' | 'berry' | 'steel' | 'blush' | 'cloud' | 'fire' | 'earth' | 'obsidian' | 'peach' | 'ivory';
 export type ThemeMode = 'light' | 'dark';
 
 interface ThemeContextType {

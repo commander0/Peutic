@@ -39,12 +39,12 @@ const ICEBREAKERS = [
 
 // --- AMBIENT ENGAGEMENT CONTENT ---
 const WELLNESS_TIPS = [
-    "Focus on your breath. Inhale for 4 seconds, hold for 4, exhale for 4.",
-    "Notice three things in your room that are the color yellow.",
-    "Relax your shoulders and unclench your jaw. You're in a safe space.",
-    "Remember that it's okay to take things one step at a time.",
-    "Think of one thing you're looking forward to this month.",
-    "You're doing something brave by showing up for yourself today."
+    "Breathe: Inhale (4s), Hold (4s), Exhale (4s).",
+    "Look around: Find 3 yellow objects.",
+    "Relax: Drop your shoulders, unclench your jaw.",
+    "Pace yourself: One step at a time.",
+    "Future focus: One thing you're excited for?",
+    "Acknowledge: You showed up for yourself today."
 ];
 
 // --- ARTIFACT GENERATOR ---

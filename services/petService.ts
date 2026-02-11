@@ -29,12 +29,34 @@ export class PetService {
     }
 
     static async createPet(userId: string, name: string, species: Lumina['species']): Promise<Lumina> {
-        // USE GATEWAY to bypass strict RLS on insertion if necessary
-        const newPet = await BaseService.invokeGateway('create-pet', { userId, name, species });
-        if (newPet) {
-            return newPet;
+        // Direct DB Insert (Fixing flaky Gateway)
+        const { data, error } = await supabase
+            .from('pocket_pets')
+            .insert({
+                user_id: userId,
+                name,
+                species,
+                level: 1,
+                experience: 0,
+                health: 100,
+                hunger: 100,
+                happiness: 100,
+                cleanliness: 100,
+                energy: 100,
+                is_sleeping: false,
+                last_interaction_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+        if (error || !data) {
+            logger.error("Failed to create pet", error);
+            throw new Error("Failed to create pet");
         }
-        throw new Error("Failed to create pet");
+
+        const newPet = this.mapAnimaBase(data);
+        localStorage.setItem(`${this.CACHE_KEY}_${userId}`, JSON.stringify(newPet));
+        return newPet;
     }
 
     static async updatePet(anima: Lumina): Promise<void> {
