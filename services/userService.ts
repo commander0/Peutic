@@ -268,42 +268,29 @@ export class UserService {
                 throw new Error(error.message);
             }
 
-            if (data.user) {
-                const optimisticUser: User = {
-                    id: data.user.id,
-                    name: cleanName,
-                    email: email,
-                    role: UserRole.USER,
-                    balance: 0,
-                    subscriptionStatus: 'ACTIVE',
-                    joinedAt: new Date().toISOString(),
-                    lastLoginDate: new Date().toISOString(),
-                    streak: 0,
-                    provider: 'email',
-                    emailPreferences: { marketing: true, updates: true },
-                    birthday: birthday
-                };
+            const optimisticUser: User = {
+                id: data.user.id,
+                name: cleanName,
+                email: email,
+                role: UserRole.USER,
+                balance: 0,
+                subscriptionStatus: 'ACTIVE',
+                joinedAt: new Date().toISOString(),
+                lastLoginDate: new Date().toISOString(),
+                streak: 0,
+                provider: 'email',
+                emailPreferences: { marketing: true, updates: true },
+                birthday: birthday
+            };
 
-                // FORCE PERSISTENCE: Create DB Row Immediately (Upsert to handle race with Trigger)
-                const { error: dbError } = await supabase.from('users').upsert({
-                    id: data.user.id,
-                    email: email,
-                    name: cleanName,
-                    role: 'USER',
-                    balance: 0,
-                    provider: 'email',
-                    metadata: { birthday }
-                });
+            // DATA SAFETY: We rely on the DB Trigger (handle_new_user) to create the public record.
+            // We do NOT manual upsert here to avoid overwriting the "First User = Admin" logic.
+            // syncUser() below will verify existence and self-heal if the trigger failed.
 
-                if (dbError) {
-                    console.error("Critical: User DB Creation Failed", dbError);
-                    // We don't throw yet, we let syncUser try to heal it, but we warn heavily
-                }
-
-                logger.success("User Created", `Email: ${email}`);
-                return optimisticUser;
-            }
+            logger.success("User Signup Initiated", `Email: ${email}`);
+            return optimisticUser;
         }
+
         throw new Error("Failed to initialize account");
     }
 

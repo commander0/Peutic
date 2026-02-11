@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AdminService } from '../services/adminService';
 import { UserService } from '../services/userService';
 
@@ -14,7 +15,8 @@ interface AdminLoginProps {
 }
 
 const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
-    const { setSession } = useAuth();
+    const { setSession, user } = useAuth(); // SYNC: Get user from context to watch for changes
+    const navigate = useNavigate(); // SYNC: Use router hook
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -33,6 +35,14 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
     const [showReclaim, setShowReclaim] = useState(false);
     const [masterKey, setMasterKey] = useState('');
     const [settings, setSettings] = useState(AdminService.getSettings());
+
+    // REDIRECT LOGIC: Wait for User State to Propagate before Navigating
+    useEffect(() => {
+        if (user && user.role === UserRole.ADMIN) {
+            navigate('/admin/dashboard', { replace: true });
+        }
+    }, [user, navigate]);
+
 
     useEffect(() => {
         AdminService.syncGlobalSettings().then(setSettings);
@@ -94,7 +104,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             // 3. SUCCESS - Reset Failures & Proceed
             AdminService.resetAdminFailure();
             setSession(user); // CRITICAL: Update global context immediately to prevent race conditions
-            onLogin(user);
+            // onLogin(user); // REDUNDANT: useEffect handles navigation now
 
         } catch (e: any) {
             console.error("Admin Login Error:", e);
