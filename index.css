@@ -10,6 +10,7 @@
     --color-bg-base: #FFFBEB;
     /* Warm White */
     --color-text-base: #0A0A0A;
+    --color-bg-gradient: linear-gradient(to bottom right, #fef3c7, #fde68a, #fffbeb);
 }
 
 /* GLOBAL DARK MODE OVERRIDES (Base Layer) */
@@ -28,7 +29,7 @@
     --color-primary-light: #FFFBEB;
     --color-primary-border: #fef08a;
     --color-bg-base: #FFFBEB;
-    --color-bg-gradient: linear-gradient(to bottom right, #fef3c7, #fef9c3, #fffbeb);
+    --color-bg-gradient: linear-gradient(to bottom right, #fef3c7, #fde68a, #fffbeb);
 }
 
 [data-theme="sunshine"].dark {

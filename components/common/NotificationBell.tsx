@@ -75,12 +75,12 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ notification
                                     <div
                                         key={n.id}
                                         onClick={() => handleNotificationClick(n)}
-                                        className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex gap-3 group relative ${n.action ? 'cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/10' : ''}`}
+                                        className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex gap-3 group relative ${n.action ? 'cursor-pointer hover:bg-yellow-50 dark:hover:bg-yellow-900/10' : ''}`}
                                     >
                                         <div className={`mt-1 p-1.5 rounded-full shrink-0 ${n.type === 'success' ? 'bg-green-100 text-green-600' :
                                             n.type === 'warning' ? 'bg-yellow-100 text-yellow-600' :
                                                 n.type === 'error' ? 'bg-red-100 text-red-600' :
-                                                    'bg-blue-100 text-blue-600'
+                                                    'bg-yellow-100 text-yellow-600'
                                             }`}>
                                             {n.type === 'success' ? <CheckCircle className="w-3 h-3" /> :
                                                 n.type === 'warning' ? <AlertTriangle className="w-3 h-3" /> :

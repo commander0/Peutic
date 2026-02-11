@@ -43,7 +43,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 // Fallback for legacy values
                 if (user.themePreference === 'dark') { loadedMode = 'dark'; loadedTheme = 'amber'; }
                 else if (user.themePreference === 'light') { loadedMode = 'light'; loadedTheme = 'sunshine'; }
-                else { loadedTheme = user.themePreference as ThemeBrand; }
+                else {
+                    const pref = user.themePreference as string;
+                    loadedTheme = (pref === 'default' || pref === 'gold') ? 'sunshine' : (pref as ThemeBrand);
+                }
             }
         } else {
             const savedTheme = localStorage.getItem('peutic_theme') as ThemeBrand;
