@@ -139,10 +139,12 @@ export class AdminService {
 
     static async deleteUser(userId: string) {
         try {
-            const response = await BaseService.invokeGateway('delete-user', { userId });
-            if (response?.error) {
-                logger.error("Delete User Gateway Error", response.error);
-                throw new Error(response.error);
+            // DIRECT DB RPC (Bypassing Edge Function for reliability)
+            const { error } = await supabase.rpc('delete_user_account', { p_user_id: userId });
+
+            if (error) {
+                logger.error("Delete User RPC Error", error);
+                throw new Error(error.message);
             }
             logger.security("User Deleted", `ID: ${userId}`);
         } catch (e: any) {

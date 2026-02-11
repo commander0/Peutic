@@ -663,3 +663,59 @@ ON CONFLICT (id) DO UPDATE SET
   state_of_practice = EXCLUDED.state_of_practice,
   years_experience = EXCLUDED.years_experience;
 
+
+-- ==============================================================================
+-- 11. SECURITY & ADMIN RPCs
+-- ==============================================================================
+
+-- Enable RLS on Global Settings (if not already)
+alter table public.global_settings enable row level security;
+
+-- Policy: Allow Read to Everyone
+create policy "Global Settings are viewable by everyone"
+  on public.global_settings for select
+  using (true);
+
+-- Policy: Allow Update to Admins only
+create policy "Global Settings are updatable by admins only"
+  on public.global_settings for update
+  using (
+    exists (
+      select 1 from public.users
+      where users.id = auth.uid() and users.role = 'ADMIN'
+    )
+  );
+
+-- RPC: Delete User Account (Security Definer to bypass standard RLS)
+-- Note: This deletes from public.users. Auth user deletion requires Service Role or Edge Function.
+-- The existing 'on delete cascade' FKs will handle related data.
+create or replace function public.delete_user_account(p_user_id uuid)
+returns void
+language plpgsql
+security definer
+as $$
+begin
+  -- Check if requester is ADMIN
+  if not exists (select 1 from public.users where id = auth.uid() and role = 'ADMIN') then
+    raise exception 'Unauthorized';
+  end if;
+
+  -- Prevent Self-Deletion
+  if p_user_id = auth.uid() then
+    raise exception 'Cannot delete your own admin account.';
+  end if;
+  
+  -- Prevent Deleting other Admins
+  if exists (select 1 from public.users where id = p_user_id and role = 'ADMIN') then
+     raise exception 'Cannot delete another administrator.';
+  end if;
+
+  -- Delete from Public Users (Cascades to content)
+  delete from public.users where id = p_user_id;
+  
+  -- Note: The Auth User (in auth.users) will remain "orphaned" but powerless 
+  -- without a public profile, effectively banning them from this app.
+  -- Proper cleanup of auth.users requires Supabase Admin API.
+end;
+$$;
+
