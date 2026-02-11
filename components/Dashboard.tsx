@@ -650,10 +650,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
             {/* BROADCAST BANNER */}
             {settings.dashboardBroadcastMessage && (
-                <div className="bg-blue-600 text-white py-2 px-4 shadow-lg animate-in slide-in-from-top duration-500 relative z-50 overflow-hidden group">
-                    <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-[-20deg]"></div>
+                <div className="bg-yellow-500 text-black py-2 px-4 shadow-lg animate-in slide-in-from-top duration-500 relative z-50 overflow-hidden group">
+                    <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-[-20deg]"></div>
                     <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
-                        <Megaphone className="w-4 h-4 text-white/80 animate-bounce" />
+                        <Megaphone className="w-4 h-4 text-black/80 animate-bounce" />
                         <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-center shadow-sm">{settings.dashboardBroadcastMessage}</span>
                     </div>
                 </div>
@@ -1115,7 +1115,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             <p className="font-bold text-gray-900 dark:text-white text-sm mb-3">App Theme</p>
                                             <div className="grid grid-cols-5 gap-3">
                                                 {[
-                                                    { id: 'default', color: '#FACC15', label: 'Gold' },
+                                                    { id: 'sunshine', color: '#FACC15', label: 'Sunshine' },
+                                                    { id: 'amber', color: '#D97706', label: 'Amber' },
                                                     { id: 'rose', color: '#FB7185', label: 'Rose' },
                                                     { id: 'ocean', color: '#38bdf8', label: 'Ocean' },
                                                     { id: 'forest', color: '#10B981', label: 'Forest' },
@@ -1208,7 +1209,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         )}
                     </div>
                     <div className="mt-8 mb-4 max-w-4xl mx-auto px-4"><div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30 p-3 rounded-xl text-center"><p className="text-[9px] md:text-[10px] font-bold text-yellow-800 dark:text-yellow-500 uppercase tracking-wide leading-relaxed">Note: Specialist availability is subject to change frequently due to high demand. If your selected specialist is unavailable, a specialist of equal or greater qualifications will be automatically substituted to ensure immediate support.</p></div></div>
-                    <footer className="bg-[#FFFBEB] dark:bg-[#0A0A0A] text-black dark:text-white py-10 md:py-12 px-6 border-t border-yellow-200 dark:border-gray-800 transition-colors">
+                    <footer className="bg-[#FFFBEB] dark:bg-[#0A0A0A] text-black dark:text-white py-10 md:py-12 px-6 dark:border-gray-800 transition-colors">
                         <div className="max-w-7xl mx-auto">
                             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 mb-8 md:mb-10">
                                 <div className="md:col-span-5 space-y-4"><div className="flex items-center gap-2"><div className="w-7 h-7 bg-yellow-400 rounded-xl flex items-center justify-center"><Heart className="w-4 h-4 fill-black text-black" /></div><span className="text-xl font-black tracking-tight">Peutic</span></div><p className="text-gray-800 dark:text-gray-500 text-xs leading-relaxed max-w-md">Connecting the disconnected through elite-level human specialists and cutting-edge secure technology.</p><div className="flex gap-4">{[Twitter, Instagram, Linkedin].map((Icon, i) => (<button key={i} className="text-gray-800 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors hover:scale-110 transform"><Icon className="w-4 h-4" /></button>))}</div></div>

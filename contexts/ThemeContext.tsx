@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { UserService } from '../services/userService';
 
-export type ThemeBrand = 'default' | 'rose' | 'ocean' | 'forest' | 'sunset' | 'lavender' | 'cyberpunk' | 'midnight' | 'coffee' | 'royal' | 'amber' | 'mint' | 'berry' | 'steel' | 'blush' | 'cloud' | 'fire' | 'earth' | 'obsidian' | 'peach' | 'ivory';
+export type ThemeBrand = 'default' | 'sunshine' | 'amber' | 'rose' | 'ocean' | 'forest' | 'sunset' | 'lavender' | 'cyberpunk' | 'midnight' | 'coffee' | 'royal' | 'mint' | 'berry' | 'steel' | 'blush' | 'cloud' | 'fire' | 'earth' | 'obsidian' | 'peach' | 'ivory';
 export type ThemeMode = 'light' | 'dark';
 
 interface ThemeContextType {
@@ -23,13 +23,13 @@ const ThemeContext = createContext<ThemeContextType>({
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [theme, setThemeState] = useState<ThemeBrand>('amber');
+    const [theme, setThemeState] = useState<ThemeBrand>('sunshine');
     const [mode, setModeState] = useState<ThemeMode>('light');
 
     // Load from User/Storage on mount
     useEffect(() => {
         const user = UserService.getUser();
-        let loadedTheme: ThemeBrand = 'amber';
+        let loadedTheme: ThemeBrand = 'sunshine';
         let loadedMode: ThemeMode = 'light';
 
         if (user?.themePreference) {
@@ -42,7 +42,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             } else {
                 // Fallback for legacy values
                 if (user.themePreference === 'dark') { loadedMode = 'dark'; loadedTheme = 'amber'; }
-                else if (user.themePreference === 'light') { loadedMode = 'light'; loadedTheme = 'amber'; }
+                else if (user.themePreference === 'light') { loadedMode = 'light'; loadedTheme = 'sunshine'; }
                 else { loadedTheme = user.themePreference as ThemeBrand; }
             }
         } else {
@@ -52,8 +52,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             if (savedMode) loadedMode = savedMode;
         }
 
-        // Default to AMBER if not specified (User Request)
-        setThemeState(loadedTheme || 'amber');
+        // Default to SUNSHINE if not specified (User Request)
+        setThemeState(loadedTheme || 'sunshine');
         setModeState(loadedMode || 'light');
 
         // REALTIME: Subscribe to User Changes for Multi-Device/Tab Sync
@@ -113,7 +113,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         // FORCE STANDARD THEME ON LANDING PAGE
         const isLanding = window.location.pathname === '/' || window.location.hash === '#/';
-        const activeTheme = isLanding ? 'amber' : theme;
+        const activeTheme = isLanding ? 'sunshine' : theme;
 
         root.setAttribute('data-theme', activeTheme);
         root.classList.add(`theme-${activeTheme}`);

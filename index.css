@@ -1,5 +1,5 @@
 /* -----------------------------------------------------------------------------
-   PEUTIC THEME SYSTEM (10 Unique Themes)
+   PEUTIC THEME SYSTEM (20 Unique Themes)
    ----------------------------------------------------------------------------- */
 :root {
     --color-primary: #FACC15;
@@ -21,9 +21,9 @@
 }
 
 /* -----------------------------------------------------------------------------
-   1. GOLD (Peutic Default)
+   1. SUNSHINE (Bright Gold - Default)
    ----------------------------------------------------------------------------- */
-[data-theme="gold"] {
+[data-theme="sunshine"] {
     --color-primary: #FACC15;
     --color-primary-light: #FFFBEB;
     --color-primary-border: #fef08a;
@@ -31,10 +31,29 @@
     --color-bg-gradient: linear-gradient(to bottom right, #fef3c7, #fef9c3, #fffbeb);
 }
 
-[data-theme="gold"].dark {
+[data-theme="sunshine"].dark {
     --color-primary: #FACC15;
     --color-bg-base: #000000;
     --color-bg-gradient: linear-gradient(to bottom right, rgba(217, 119, 6, 0.15), rgba(0, 0, 0, 1), #000000);
+}
+
+/* -----------------------------------------------------------------------------
+   2. AMBER (Darker/Richer)
+   ----------------------------------------------------------------------------- */
+[data-theme="amber"] {
+    --color-primary: #D97706;
+    /* Amber-600 */
+    --color-primary-light: #FFFBEB;
+    --color-primary-border: #FCD34D;
+    --color-bg-base: #FFF7ED;
+    /* Orange-50ish */
+    --color-bg-gradient: linear-gradient(to bottom right, #ffedd5, #fff7ed, #ffedd5);
+}
+
+[data-theme="amber"].dark {
+    --color-primary: #fbbf24;
+    --color-bg-base: #1c1917;
+    --color-bg-gradient: linear-gradient(to bottom right, #451a03, #1c1917, #000000);
 }
 
 /* -----------------------------------------------------------------------------
@@ -162,7 +181,7 @@
 /* -----------------------------------------------------------------------------
    7. NEON (High Tech)
    ----------------------------------------------------------------------------- */
-[data-theme="neon"] {
+[data-theme="cyberpunk"] {
     --color-primary: #06b6d4;
     --color-primary-light: #ECFEFF;
     --color-primary-border: #22d3ee;
@@ -171,7 +190,7 @@
     --color-bg-gradient: linear-gradient(to bottom right, #ecfeff, #cffafe, transparent);
 }
 
-[data-theme="neon"].dark {
+[data-theme="cyberpunk"].dark {
     --color-primary: #00f0ff;
     --color-primary-light: rgba(0, 240, 255, 0.15);
     --color-primary-border: #00f0ff;
@@ -183,7 +202,7 @@
 /* -----------------------------------------------------------------------------
    8. NIGHT (Deep Indigo)
    ----------------------------------------------------------------------------- */
-[data-theme="night"] {
+[data-theme="midnight"] {
     --color-primary: #4F46E5;
     --color-primary-light: #EEF2FF;
     --color-primary-border: #C7D2FE;
@@ -191,7 +210,7 @@
     --color-bg-gradient: linear-gradient(to bottom right, #eef2ff, #e0e7ff, transparent);
 }
 
-[data-theme="night"].dark {
+[data-theme="midnight"].dark {
     --color-primary: #818CF8;
     --color-primary-light: rgba(129, 140, 248, 0.1);
     --color-primary-border: rgba(129, 140, 248, 0.3);
@@ -239,6 +258,206 @@
     /* Purple 950 */
     --color-text-base: #fdf4ff;
     --color-bg-gradient: linear-gradient(to bottom right, #3b0764, #2e1065, #000000);
+}
+
+/* -----------------------------------------------------------------------------
+   11. MINT (Fresh/Teal)
+   ----------------------------------------------------------------------------- */
+[data-theme="mint"] {
+    --color-primary: #2dd4bf;
+    --color-primary-light: #f0fdfa;
+    --color-primary-border: #99f6e4;
+    --color-bg-base: #f0fdfa;
+    --color-bg-gradient: linear-gradient(to bottom right, #ccfbf1, #f0fdfa, #ccfbf1);
+}
+
+[data-theme="mint"].dark {
+    --color-primary: #14b8a6;
+    --color-primary-light: rgba(20, 184, 166, 0.2);
+    --color-primary-border: rgba(20, 184, 166, 0.4);
+    --color-bg-base: #042f2e;
+    --color-bg-gradient: linear-gradient(to bottom right, #042f2e, #134e4a, #020617);
+}
+
+/* -----------------------------------------------------------------------------
+   12. BERRY (Pink/Red)
+   ----------------------------------------------------------------------------- */
+[data-theme="berry"] {
+    --color-primary: #db2777;
+    --color-primary-light: #fdf2f8;
+    --color-primary-border: #fbcfe8;
+    --color-bg-base: #fdf2f8;
+    --color-bg-gradient: linear-gradient(to bottom right, #fce7f3, #fdf2f8, #fce7f3);
+}
+
+[data-theme="berry"].dark {
+    --color-primary: #ec4899;
+    --color-primary-light: rgba(236, 72, 153, 0.2);
+    --color-primary-border: rgba(236, 72, 153, 0.4);
+    --color-bg-base: #500724;
+    --color-bg-gradient: linear-gradient(to bottom right, #500724, #831843, #020617);
+}
+
+/* -----------------------------------------------------------------------------
+   13. STEEL (Industrial/Blue-Grey)
+   ----------------------------------------------------------------------------- */
+[data-theme="steel"] {
+    --color-primary: #64748b;
+    --color-primary-light: #f1f5f9;
+    --color-primary-border: #cbd5e1;
+    --color-bg-base: #f8fafc;
+    --color-bg-gradient: linear-gradient(to bottom right, #e2e8f0, #f8fafc, #e2e8f0);
+}
+
+[data-theme="steel"].dark {
+    --color-primary: #94a3b8;
+    --color-primary-light: rgba(148, 163, 184, 0.2);
+    --color-primary-border: rgba(148, 163, 184, 0.4);
+    --color-bg-base: #0f172a;
+    --color-bg-gradient: linear-gradient(to bottom right, #0f172a, #1e293b, #020617);
+}
+
+/* -----------------------------------------------------------------------------
+   14. BLUSH (Soft Pink)
+   ----------------------------------------------------------------------------- */
+[data-theme="blush"] {
+    --color-primary: #fbcfe8;
+    --color-primary-light: #fff5f9;
+    --color-primary-border: #fce7f3;
+    --color-bg-base: #fff5f9;
+    --color-text-base: #86198f;
+    --color-bg-gradient: linear-gradient(to bottom right, #fff0f7, #ffe4e6, #fff0f7);
+}
+
+[data-theme="blush"].dark {
+    --color-primary: #d946ef;
+    --color-primary-light: rgba(217, 70, 239, 0.15);
+    --color-primary-border: rgba(217, 70, 239, 0.3);
+    --color-bg-base: #2a0a25;
+    --color-text-base: #fae8ff;
+    --color-bg-gradient: linear-gradient(to bottom right, #2a0a25, #4a044e, #000000);
+}
+
+/* -----------------------------------------------------------------------------
+   15. CLOUD (Peaceful Blue)
+   ----------------------------------------------------------------------------- */
+[data-theme="cloud"] {
+    --color-primary: #bae6fd;
+    --color-primary-light: #f0f9ff;
+    --color-primary-border: #e0f2fe;
+    --color-bg-base: #f0f9ff;
+    --color-text-base: #0369a1;
+    --color-bg-gradient: linear-gradient(to bottom right, #e0f2fe, #f0f9ff, #e0f2fe);
+}
+
+[data-theme="cloud"].dark {
+    --color-primary: #7dd3fc;
+    --color-primary-light: rgba(125, 211, 252, 0.15);
+    --color-primary-border: rgba(125, 211, 252, 0.3);
+    --color-bg-base: #082f49;
+    --color-text-base: #f0f9ff;
+    --color-bg-gradient: linear-gradient(to bottom right, #082f49, #0c4a6e, #020617);
+}
+
+/* -----------------------------------------------------------------------------
+   16. FIRE (Intense Red/Orange)
+   ----------------------------------------------------------------------------- */
+[data-theme="fire"] {
+    --color-primary: #ef4444;
+    --color-primary-light: #fef2f2;
+    --color-primary-border: #fca5a5;
+    --color-bg-base: #fff1f2;
+    --color-bg-gradient: linear-gradient(to bottom right, #fee2e2, #fef2f2, #fee2e2);
+}
+
+[data-theme="fire"].dark {
+    --color-primary: #f87171;
+    --color-primary-light: rgba(248, 113, 113, 0.2);
+    --color-primary-border: rgba(248, 113, 113, 0.4);
+    --color-bg-base: #450a0a;
+    --color-bg-gradient: linear-gradient(to bottom right, #450a0a, #7f1d1d, #020617);
+}
+
+/* -----------------------------------------------------------------------------
+   17. EARTH (Grounded/Brown)
+   ----------------------------------------------------------------------------- */
+[data-theme="earth"] {
+    --color-primary: #a8a29e;
+    --color-primary-light: #f5f5f4;
+    --color-primary-border: #d6d3d1;
+    --color-bg-base: #fafaf9;
+    --color-bg-gradient: linear-gradient(to bottom right, #e7e5e4, #fafaf9, #e7e5e4);
+}
+
+[data-theme="earth"].dark {
+    --color-primary: #d6d3d1;
+    --color-primary-light: rgba(214, 211, 209, 0.15);
+    --color-primary-border: rgba(214, 211, 209, 0.3);
+    --color-bg-base: #1c1917;
+    --color-bg-gradient: linear-gradient(to bottom right, #1c1917, #292524, #000000);
+}
+
+/* -----------------------------------------------------------------------------
+   18. OBSIDIAN (Monochrome/Dark)
+   ----------------------------------------------------------------------------- */
+[data-theme="obsidian"] {
+    --color-primary: #171717;
+    --color-primary-light: #f5f5f5;
+    --color-primary-border: #525252;
+    --color-bg-base: #ffffff;
+    --color-text-base: #000000;
+    --color-bg-gradient: linear-gradient(to bottom right, #e5e5e5, #ffffff, #d4d4d4);
+}
+
+[data-theme="obsidian"].dark {
+    --color-primary: #fafafa;
+    --color-primary-light: rgba(255, 255, 255, 0.1);
+    --color-primary-border: rgba(255, 255, 255, 0.3);
+    --color-bg-base: #000000;
+    --color-text-base: #ffffff;
+    --color-bg-gradient: linear-gradient(to bottom right, #0a0a0a, #000000, #171717);
+}
+
+/* -----------------------------------------------------------------------------
+   19. PEACH (Warm/Pastel)
+   ----------------------------------------------------------------------------- */
+[data-theme="peach"] {
+    --color-primary: #fdba74;
+    --color-primary-light: #fff7ed;
+    --color-primary-border: #fed7aa;
+    --color-bg-base: #fff7ed;
+    --color-text-base: #9a3412;
+    --color-bg-gradient: linear-gradient(to bottom right, #ffedd5, #fff7ed, #ffedd5);
+}
+
+[data-theme="peach"].dark {
+    --color-primary: #fb923c;
+    --color-primary-light: rgba(251, 146, 60, 0.15);
+    --color-primary-border: rgba(251, 146, 60, 0.3);
+    --color-bg-base: #431407;
+    --color-text-base: #fff7ed;
+    --color-bg-gradient: linear-gradient(to bottom right, #431407, #7c2d12, #000000);
+}
+
+/* -----------------------------------------------------------------------------
+   20. IVORY (Elegant/White)
+   ----------------------------------------------------------------------------- */
+[data-theme="ivory"] {
+    --color-primary: #fde047;
+    --color-primary-light: #ffffff;
+    --color-primary-border: #fef08a;
+    --color-bg-base: #fffff0;
+    --color-text-base: #422006;
+    --color-bg-gradient: linear-gradient(to bottom right, #fefce8, #fffff0, #fefce8);
+}
+
+[data-theme="ivory"].dark {
+    --color-primary: #facc15;
+    --color-primary-light: rgba(250, 204, 21, 0.15);
+    --color-primary-border: rgba(250, 204, 21, 0.3);
+    --color-bg-base: #2e2e2e;
+    --color-text-base: #fefce8;
+    --color-bg-gradient: linear-gradient(to bottom right, #2e2e2e, #1a1a1a, #000000);
 }
 
 /* Utility Animations */
