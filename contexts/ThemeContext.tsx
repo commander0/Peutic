@@ -55,6 +55,21 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // Default to AMBER if not specified (User Request)
         setThemeState(loadedTheme || 'amber');
         setModeState(loadedMode || 'light');
+
+        // REALTIME: Subscribe to User Changes for Multi-Device/Tab Sync
+        if (user?.id) {
+            const sub = UserService.subscribeToUserChanges(user.id, (updatedUser) => {
+                if (updatedUser.themePreference) {
+                    const parts = updatedUser.themePreference.split('-');
+                    const potentialMode = parts[parts.length - 1];
+                    if (potentialMode === 'light' || potentialMode === 'dark') {
+                        setModeState(potentialMode as ThemeMode);
+                        setThemeState(parts.slice(0, -1).join('-') as ThemeBrand);
+                    }
+                }
+            });
+            return () => sub.unsubscribe();
+        }
     }, []);
 
     const updatePreferences = (newTheme: ThemeBrand, newMode: ThemeMode) => {
@@ -107,7 +122,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Ideally we'd use useLocation, let's verify if we can import it.
 
     return (
-        <ThemeContext.Provider value={{ theme, mode, setTheme, toggleMode }}>
+        <ThemeContext.Provider value={{ theme, mode, setTheme, setMode: setModeState, toggleMode }}>
             {children}
         </ThemeContext.Provider>
     );

@@ -255,7 +255,7 @@ export class UserService {
             const { data, error } = (await BaseService.withTimeout(
                 supabase.auth.signUp({
                     email, password,
-                    options: { data: { full_name: cleanName, birthday } }
+                    options: { data: { name: cleanName, full_name: cleanName, birthday } }
                 }),
                 12000,
                 "Signup service timed out"
@@ -284,16 +284,14 @@ export class UserService {
                     birthday: birthday
                 };
 
-                // FORCE PERSISTENCE: Create DB Row Immediately
-                // We use repairUserRecord logic but inline/optimized for creation
-                const { error: dbError } = await supabase.from('users').insert({
+                // FORCE PERSISTENCE: Create DB Row Immediately (Upsert to handle race with Trigger)
+                const { error: dbError } = await supabase.from('users').upsert({
                     id: data.user.id,
                     email: email,
                     name: cleanName,
                     role: 'USER',
                     balance: 0,
                     provider: 'email',
-                    // Default JSONB fields will be handled by DB defaults or we can be explicit
                     metadata: { birthday }
                 });
 
@@ -803,13 +801,21 @@ export class UserService {
 
     static saveUserSession(user: User) { this.currentUser = user; }
 
-    static async getWeeklyProgress(userId: string): Promise<number> {
+    static async getWeeklyProgress(userId: string): Promise<{ current: number, message: string }> {
         const { data, error } = await supabase.rpc('get_weekly_activity_count', { p_user_id: userId });
         if (error) {
             console.warn("Failed to fetch weekly progress", error);
-            return 0;
+            return { current: 0, message: "Start your journey." };
         }
-        return data || 0;
+        const count = data || 0;
+        let message = "Start your journey.";
+        if (count > 0) message = "Good start!";
+        if (count >= 3) message = "Building momentum!";
+        if (count >= 5) message = "Halfway there!";
+        if (count >= 8) message = "So close!";
+        if (count >= 10) message = "🔥 You are on a hot streak!";
+
+        return { current: count, message };
     }
 
     // --- VOICE JOURNALS ---

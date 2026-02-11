@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense, useTransition } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Companion, Transaction, VoiceJournalEntry, GardenState, Lumina } from '../types';
 import { LanguageSelector } from './common/LanguageSelector';
@@ -99,16 +99,31 @@ AvatarImage.displayName = 'AvatarImage';
 
 const CollapsibleSection = React.memo(({ title, icon: Icon, children, defaultOpen = false }: { title: string, icon: any, children: React.ReactNode, defaultOpen?: boolean }) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
+    const [, startTransition] = useTransition();
+
+    const handleToggle = () => {
+        startTransition(() => {
+            setIsOpen(prev => !prev);
+        });
+    };
+
     return (
         <div className="bg-transparent rounded-3xl border border-[var(--color-primary-border)] overflow-hidden transition-all duration-300" style={{ borderColor: 'var(--color-primary-border)' }}>
-            <button onClick={() => setIsOpen(!isOpen)} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-[var(--color-primary)]/10 transition-colors">
+            <button onClick={handleToggle} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-[var(--color-primary)]/10 transition-colors">
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg" style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)' }}><Icon className="w-5 h-5" /></div>
                     <span className="font-bold text-base dark:text-white">{title}</span>
                 </div>
                 {isOpen ? <ChevronUp className="w-4 h-4 md:w-5 md:h-5 text-gray-400" /> : <ChevronDown className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />}
             </button>
-            {isOpen && <div className="p-4 lg:p-6 pt-0 animate-in slide-in-from-top-2 duration-300 bg-transparent">{children}</div>}
+            {/* Provide feedback during transition if needed, or just allow Suspense to handle it */}
+            <div className={`transition-[grid-template-rows] duration-300 grid ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                <div className="overflow-hidden">
+                    <div className="p-4 lg:p-6 pt-0 bg-transparent">
+                        {isOpen && children}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 });
@@ -151,7 +166,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         const loadWeeklyGoal = async () => {
             if (user.id) {
                 const progress = await UserService.getWeeklyProgress(user.id);
-                setWeeklyGoal(progress);
+                setWeeklyGoal(progress.current);
+                setWeeklyMessage(progress.message);
             }
         };
 
