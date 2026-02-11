@@ -255,7 +255,17 @@ export class AdminService {
             if (loginError) console.warn("Auto-login after signup failed", loginError);
         }
 
-        // 2. Claim Admin Rights via RPC (using User ID directly, no session needed)
+        // 2. CHECK STATUS (Race Condition Fix)
+        // The 'handle_new_user' trigger might have already made us Admin if we are the first user.
+        // We sync first to check.
+        let synced = await UserService.syncUser(data.user.id);
+
+        if (synced && synced.role === 'ADMIN') {
+            console.info("User automatically promoted to ADMIN by DB Trigger. Skipping manual claim.");
+            return synced;
+        }
+
+        // 3. Claim Admin Rights via RPC (using User ID directly, no session needed)
         if (masterKey) {
             const { data: claimed, error: claimError } = await supabase.rpc('claim_system_access', {
                 p_user_id: data.user.id,
@@ -269,12 +279,16 @@ export class AdminService {
             }
 
             if (!claimed) {
-                throw new Error("Admin Claim Failed: Invalid Master Key.");
+                // Double check if we are admin now (maybe race condition resolved positively)
+                synced = await UserService.syncUser(data.user.id);
+                if (synced && synced.role === 'ADMIN') return synced;
+
+                throw new Error("Admin Claim Failed: Invalid Master Key or Admin Already Exists.");
             }
         }
 
         // 3. Return mapped user (requires sync to get role)
-        const synced = await UserService.syncUser(data.user.id);
+        synced = await UserService.syncUser(data.user.id);
         if (!synced) throw new Error("User created but profile sync failed.");
         return synced;
     }
@@ -407,9 +421,17 @@ export class AdminService {
     }
 
     static async logSystemEvent(type: string, event: string, details: string) {
-        await BaseService.invokeGateway('log-event', {
-            type, event, details
+        // Direct DB Insert for maximum reliability (bypass Gateway)
+        const { error } = await supabase.from('system_logs').insert({
+            type,
+            event,
+            details,
+            timestamp: new Date().toISOString()
         });
+
+        if (error) {
+            console.error("Failed to persist system log", error);
+        }
     }
 }
 

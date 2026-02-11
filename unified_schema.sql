@@ -508,12 +508,17 @@ as $$
 declare
   target_user_id uuid;
 begin
-  -- 1. Check if ANY Admin exists
+  -- 1. Check if I AM ALREADY Admin (Idempotency)
+  if exists (select 1 from public.users where id = p_user_id and role = 'ADMIN') then
+    return true;
+  end if;
+
+  -- 2. Check if ANY Admin exists
   if exists (select 1 from public.users where role = 'ADMIN') then
     return false;
   end if;
 
-  -- 2. Verify Master Key (Hardcoded or Env-like check)
+  -- 3. Verify Master Key (Hardcoded or Env-like check)
   -- Matches AdminLogin.tsx / AdminService.ts expectation
   if p_master_key != 'peutic-genesis-key' and p_master_key != 'PEUTIC_ADMIN_ACCESS_2026' then
       return false;
@@ -542,13 +547,15 @@ begin
 end;
 $$;
 
--- Auto Create User Trigger (Restored)
+-- Auto Create User Trigger (Restored & Hardened)
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public
 as $$
 begin
+  -- Idempotency: ON CONFLICT DO NOTHING prevents errors if self-healing ran first
   insert into public.users (id, email, name, role)
-  values (new.id, new.email, new.raw_user_meta_data->>'name', case when (select count(*) from public.users) = 0 then 'ADMIN' else 'USER' end);
+  values (new.id, new.email, new.raw_user_meta_data->>'name', case when (select count(*) from public.users) = 0 then 'ADMIN' else 'USER' end)
+  on conflict (id) do nothing;
   return new;
 end;
 $$;
@@ -568,4 +575,30 @@ $$;
 
 drop trigger if exists tr_prevent_admin_deletion on public.users;
 create trigger tr_prevent_admin_deletion before delete on public.users for each row execute procedure public.prevent_admin_deletion();
+
+-- ==============================================================================
+-- 9. PERFORMANCE INDEXES (Scalability)
+-- ==============================================================================
+
+-- Foreign Key Indexes (Postgres does not create these automatically)
+create index if not exists idx_users_email on public.users(email);
+create index if not exists idx_journals_user_id on public.journals(user_id);
+create index if not exists idx_voice_journals_user_id on public.voice_journals(user_id);
+create index if not exists idx_moods_user_id on public.moods(user_id);
+create index if not exists idx_user_art_user_id on public.user_art(user_id);
+create index if not exists idx_feedback_user_id on public.feedback(user_id);
+create index if not exists idx_transactions_user_id on public.transactions(user_id);
+create index if not exists idx_garden_log_user_id on public.garden_log(user_id);
+create index if not exists idx_pocket_pets_user_id on public.pocket_pets(user_id);
+create index if not exists idx_user_achievements_user_id on public.user_achievements(user_id);
+create index if not exists idx_active_sessions_user_id on public.active_sessions(user_id);
+create index if not exists idx_session_queue_user_id on public.session_queue(user_id);
+create index if not exists idx_safety_alerts_user_id on public.safety_alerts(user_id);
+create index if not exists idx_system_logs_type on public.system_logs(type);
+
+-- Sorting/Filtering Indexes
+create index if not exists idx_transactions_date on public.transactions(date desc);
+create index if not exists idx_journals_date on public.journals(date desc);
+create index if not exists idx_moods_date on public.moods(date desc);
+create index if not exists idx_system_logs_timestamp on public.system_logs(timestamp desc);
 

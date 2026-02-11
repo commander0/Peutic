@@ -9,8 +9,7 @@ import {
 import { STABLE_AVATAR_POOL } from '../services/database';
 
 import { AdminService } from '../services/adminService';
-import { UserService } from '../services/userService';
-import { User, Companion, Transaction, GlobalSettings, SystemLog, UserRole } from '../types';
+import { User, Companion, Transaction, GlobalSettings, SystemLog } from '../types';
 import { useToast } from './common/Toast';
 import { useLanguage } from './common/LanguageContext';
 import StatCard from './admin/StatCard';
@@ -178,6 +177,10 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         }
     };
 
+    // STABILITY: Use Ref to avoid stale closures in polling
+    const activeTabRef = useRef(activeTab);
+    useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
+
     const fetchData = async (isInitial = false) => {
         if (isInitial) setLoading(true);
 
@@ -198,7 +201,8 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
             setTransactions(await AdminService.getAllTransactions());
             fetchSafetyAlerts(); // Fetch safety alerts
 
-            if (activeTab === 'financials') {
+            // Fix: Use Ref to get current tab inside async closure
+            if (activeTabRef.current === 'financials') {
                 const now = Date.now();
                 if (now - lastStripeFetch.current > 30000 || !stripeStats) {
                     fetchStripeStats();
@@ -222,9 +226,24 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
 
     useEffect(() => {
-        fetchData(true);
-        const interval = setInterval(() => fetchData(false), 3000);
-        return () => clearInterval(interval);
+        let isMounted = true;
+        let timeoutId: any;
+
+        const poll = async () => {
+            if (!isMounted) return;
+            await fetchData(false);
+            // Recursive timeout prevents stacking
+            if (isMounted) timeoutId = setTimeout(poll, 3000);
+        };
+
+        fetchData(true).then(() => {
+            if (isMounted) timeoutId = setTimeout(poll, 3000);
+        });
+
+        return () => {
+            isMounted = false;
+            clearTimeout(timeoutId);
+        };
     }, []);
 
 

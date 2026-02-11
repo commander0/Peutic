@@ -256,6 +256,13 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                             value={claimMasterKey}
                                             onChange={e => setClaimMasterKey(e.target.value)}
                                         />
+                                        <button
+                                            type="button"
+                                            onClick={() => setClaimMasterKey('peutic-genesis-key')}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-yellow-500/50 hover:text-yellow-500 uppercase font-bold tracking-wider"
+                                        >
+                                            Use Genesis Key
+                                        </button>
                                     </div>
 
                                     <input type="email" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="New Admin Email" value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} />

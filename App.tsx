@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { User, UserRole, Companion } from './types';
+
+// Logger wired in MainApp useEffect
+import { UserRole, Companion } from './types';
 import LandingPage from './components/LandingPage';
 import Dashboard from './components/Dashboard';
 import AdminDashboard from './components/AdminDashboard';
@@ -10,7 +12,6 @@ import VideoRoom from './components/VideoRoom';
 import StaticPages from './components/StaticPages';
 import { UserService } from './services/userService';
 import { AdminService } from './services/adminService';
-import { supabase } from './services/supabaseClient';
 import BookOfYou from './components/wisdom/BookOfYou';
 
 import { ToastProvider } from './components/common/Toast';
@@ -27,28 +28,39 @@ const MainApp: React.FC = () => {
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [activeSessionCompanion, setActiveSessionCompanion] = useState<Companion | null>(null);
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
-  // const [showTimeoutWarning, setShowTimeoutWarning] = useState(false); 
+  // const [maintenanceMode, setMaintenanceMode] = useState(false); // Removed unused state
 
   const lastActivityRef = useRef<number>(Date.now());
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 1. SETTINGS POLL & INIT
+  // 1. SETTINGS POLL & INIT (Safe Recursive Pattern)
   useEffect(() => {
-    const initSettings = async () => {
-      try {
-        const settings = await AdminService.syncGlobalSettings().catch(() => ({ maintenanceMode: false }));
-        if (settings) setMaintenanceMode(settings.maintenanceMode);
-      } catch (e) { console.error("Settings init failed", e); }
-    };
-    initSettings();
+    // WIRE UP LOGGER SAFELY (Once on mount)
+    if (typeof window !== 'undefined') {
+      (window as any).PersistLog = AdminService.logSystemEvent;
+    }
 
-    const interval = setInterval(async () => {
-      await AdminService.syncGlobalSettings();
-      setMaintenanceMode(AdminService.getSettings().maintenanceMode);
-    }, 5000);
-    return () => clearInterval(interval);
+    let isMounted = true;
+    let timeoutId: any;
+
+    const syncSettings = async () => {
+      try {
+        await AdminService.syncGlobalSettings().catch(() => ({ maintenanceMode: false }));
+        // if (isMounted && settings) setMaintenanceMode(settings.maintenanceMode); // Unused
+      } catch (e) {
+        console.error("Settings sync failed", e);
+      } finally {
+        if (isMounted) timeoutId = setTimeout(syncSettings, 5000); // Wait 5s AFTER finish
+      }
+    };
+
+    syncSettings();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   // 2. ROUTING CHECK (Admin Redirect)
