@@ -22,9 +22,21 @@ const ThemeContext = createContext<ThemeContextType>({
 
 export const useTheme = () => useContext(ThemeContext);
 
+export const VALID_THEMES: ThemeBrand[] = ['sunshine', 'rose', 'ocean', 'forest', 'sunset', 'lavender', 'cyberpunk', 'midnight', 'coffee', 'royal'];
+
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [theme, setThemeState] = useState<ThemeBrand>('sunshine');
     const [mode, setModeState] = useState<ThemeMode>('light');
+
+    // Helper: Validate and Sanitize
+    const validateTheme = (input: string): ThemeBrand => {
+        if (VALID_THEMES.includes(input as ThemeBrand)) return input as ThemeBrand;
+        // Legacy/Fallback Mapping
+        if (input === 'gold' || input === 'amber' || input === 'default') return 'sunshine';
+        // Check if it's a known "ghost" theme and map if possible, otherwise default
+        console.warn(`ThemeContext: Invalid theme '${input}' detected. Fallback to 'sunshine'.`);
+        return 'sunshine';
+    };
 
     // Load from User/Storage on mount
     useEffect(() => {
@@ -36,28 +48,38 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             // Parse "brand-mode" string
             const parts = user.themePreference.split('-');
             const potentialMode = parts[parts.length - 1];
+
             if (potentialMode === 'light' || potentialMode === 'dark') {
                 loadedMode = potentialMode;
-                loadedTheme = parts.slice(0, -1).join('-') as ThemeBrand;
+                // Validate the brand part
+                const rawBrand = parts.slice(0, -1).join('-');
+                loadedTheme = validateTheme(rawBrand);
             } else {
                 // Fallback for legacy values
                 if (user.themePreference === 'dark') { loadedMode = 'dark'; loadedTheme = 'sunshine'; }
                 else if (user.themePreference === 'light') { loadedMode = 'light'; loadedTheme = 'sunshine'; }
                 else {
-                    const pref = user.themePreference as string;
-                    loadedTheme = (pref === 'default' || pref === 'gold' || pref === 'amber') ? 'sunshine' : (pref as ThemeBrand);
+                    loadedTheme = validateTheme(user.themePreference);
                 }
             }
+
+            // SELF-HEALING: If DB had invalid data, update it now to prevent future issues
+            if (loadedTheme !== user.themePreference.split('-')[0]) {
+                console.log("ThemeContext: Self-healing invalid DB theme...");
+                setTimeout(() => updatePreferences(loadedTheme, loadedMode), 1000);
+            }
+
         } else {
-            const savedTheme = localStorage.getItem('peutic_theme') as ThemeBrand;
+            const savedTheme = localStorage.getItem('peutic_theme');
             const savedMode = localStorage.getItem('peutic_mode') as ThemeMode;
-            if (savedTheme) loadedTheme = savedTheme;
+
+            if (savedTheme) loadedTheme = validateTheme(savedTheme);
             if (savedMode) loadedMode = savedMode;
         }
 
-        // Default to SUNSHINE if not specified (User Request)
-        setThemeState(loadedTheme || 'sunshine');
-        setModeState(loadedMode || 'light');
+        // Apply immediately
+        setThemeState(loadedTheme);
+        setModeState(loadedMode);
 
         // REALTIME: Subscribe to User Changes for Multi-Device/Tab Sync
         if (user?.id) {
@@ -67,7 +89,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     const potentialMode = parts[parts.length - 1];
                     if (potentialMode === 'light' || potentialMode === 'dark') {
                         setModeState(potentialMode as ThemeMode);
-                        setThemeState(parts.slice(0, -1).join('-') as ThemeBrand);
+                        const validated = validateTheme(parts.slice(0, -1).join('-'));
+                        setThemeState(validated);
                     }
                 }
             });
@@ -76,15 +99,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, []);
 
     const updatePreferences = (newTheme: ThemeBrand, newMode: ThemeMode) => {
-        setThemeState(newTheme);
+        const validatedTheme = validateTheme(newTheme);
+        setThemeState(validatedTheme);
         setModeState(newMode);
-        localStorage.setItem('peutic_theme', newTheme);
+        localStorage.setItem('peutic_theme', validatedTheme);
         localStorage.setItem('peutic_mode', newMode);
 
         const user = UserService.getUser();
         if (user) {
             // Save as combined string "brand-mode"
-            const prefString = `${newTheme}-${newMode}`;
+            const prefString = `${validatedTheme}-${newMode}`;
             UserService.updateUser({ ...user, themePreference: prefString });
         }
     };
@@ -98,16 +122,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updatePreferences(theme, newMode);
     };
 
-    // Apply to DOM
+    // Apply to DOM (Tailwind)
     useEffect(() => {
-        // We need to access location here. Since ThemeProvider is inside Router in index.tsx, we can use window.location or we need to move useLocation up.
-        // But simply using window.location.hash or pathname works if we trust it updates. 
-        // Better: Assuming ThemeProvider is inside Router (which it is in index.tsx), we can try useLocation.
-        // However, useTheme is exported, but ThemeProvider is a component.
-        // Let's rely on the passed-in props or just standard DOM check, or better: 
-        // We will stick to the props theme unless we specific logic. 
-        // Actually, easiest way is to check window.location.pathname in the effect.
-
         const root = document.documentElement;
         root.className = '';
 
@@ -116,13 +132,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         // FORCE STANDARD THEME ON LANDING PAGE
         const isLanding = window.location.pathname === '/' || window.location.hash === '#/';
-        const activeTheme = isLanding ? 'sunshine' : theme;
+        // Double check validity (defensive)
+        const activeTheme = isLanding ? 'sunshine' : (VALID_THEMES.includes(theme) ? theme : 'sunshine');
 
         root.setAttribute('data-theme', activeTheme);
         root.classList.add(`theme-${activeTheme}`);
-
-    }, [theme, mode]); // Note: This won't re-run on route change unless we listen to it. 
-    // Ideally we'd use useLocation, let's verify if we can import it.
+    }, [theme, mode]);
 
     return (
         <ThemeContext.Provider value={{ theme, mode, setTheme, setMode: setModeState, toggleMode }}>
