@@ -1,6 +1,3 @@
--- FIX: Enhance handle_new_user trigger to capture all metadata and ensure Admin promotion logic is robust.
--- This replaces the existing trigger function.
-
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public
 as $$
@@ -18,13 +15,13 @@ begin
 
   -- 2. Insert with Metadata Mapping
   insert into public.users (
-    id, 
-    email, 
-    name, 
-    role, 
-    avatar_url, 
-    metadata,
-    birthday
+    "id", 
+    "email", 
+    "name", 
+    "role", 
+    "avatar_url", 
+    "metadata",
+    "birthday"
   )
   values (
     new.id, 
@@ -35,11 +32,11 @@ begin
     new.raw_user_meta_data,
     new.raw_user_meta_data->>'birthday'
   )
-  on conflict (id) do update set
+  on conflict ("id") do update set
     -- If user exists (Client Race), we only update metadata if it's missing/null
-    avatar_url = coalesce(public.users.avatar_url, excluded.avatar_url),
-    metadata = coalesce(public.users.metadata, excluded.metadata),
-    birthday = coalesce(public.users.birthday, excluded.birthday);
+    "avatar_url" = coalesce(public.users.avatar_url, excluded.avatar_url),
+    "metadata" = coalesce(public.users.metadata, excluded.metadata),
+    "birthday" = coalesce(public.users.birthday, excluded.birthday);
     
   return new;
 end;
