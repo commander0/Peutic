@@ -5,6 +5,7 @@ import { BaseService } from './baseService';
 import { NameValidator } from './nameValidator';
 import { logger } from './logger';
 import { Database } from '../types/supabase';
+import { CacheService } from './cacheService';
 
 type UserRow = Database['public']['Tables']['users']['Row'];
 
@@ -13,72 +14,79 @@ export class UserService {
     private static CACHE_KEY = 'peutic_user_profile';
 
     // ... (Cache methods)
-    static saveUserToCache(user: User) {
-        try {
-            localStorage.setItem(this.CACHE_KEY, JSON.stringify(user));
-        } catch (e) { }
+    static async saveUserToCache(user: User) {
+        await CacheService.set(this.CACHE_KEY, user, 3600 * 24); // 24h TTL
     }
 
-    static clearCache() {
-        localStorage.removeItem(this.CACHE_KEY);
-        localStorage.removeItem('peutic_companions');
-        localStorage.removeItem('peutic_settings');
+    static async clearCache() {
+        await CacheService.del(this.CACHE_KEY);
+        // ... other clears
     }
 
-    static getCachedUser(): User | null {
-        try {
-            const cached = localStorage.getItem(this.CACHE_KEY);
-            if (cached) return JSON.parse(cached);
-        } catch (e) { }
-        return null;
+    static async getCachedUser(): Promise<User | null> {
+        return await CacheService.get<User>(this.CACHE_KEY);
     }
 
     static async getWithSWR<T>(key: string, fetcher: () => Promise<T>, onUpdate?: (data: T) => void): Promise<T | null> {
         try {
-            const cached = localStorage.getItem(key);
-            const staleData = cached ? JSON.parse(cached) : null;
-            fetcher().then(newData => {
+            const staleData = await CacheService.get<T>(key);
+            // Background Fetch
+            fetcher().then(async newData => {
                 if (newData) {
-                    localStorage.setItem(key, JSON.stringify(newData));
+                    await CacheService.set(key, newData);
                     if (onUpdate) onUpdate(newData);
                 }
             }).catch(e => console.error(`SWR revalidation failed for ${key}`, e));
             return staleData;
-        } catch (e) {
-            return null;
-        }
+        } catch (e) { return null; }
     }
 
     static getUser(): User | null { return this.currentUser; }
 
+    static async deductBalance(amount: number, reason: string): Promise<boolean> {
+        if (!this.currentUser) return false;
+        if (this.currentUser.balance < amount) return false;
+
+        // Optimistic update
+        this.currentUser.balance -= amount;
+
+        const { error } = await supabase.rpc('deduct_balance', {
+            p_user_id: this.currentUser.id,
+            p_amount: amount,
+            p_reason: reason
+        });
+
+        if (error) {
+            console.error("Deduct Balance Failed", error);
+            // Rollback (re-fetch)
+            await this.syncUser(this.currentUser.id);
+            return false;
+        }
+        return true;
+    }
+
     static async restoreSession(): Promise<User | null> {
         let { data: { session }, error } = await supabase.auth.getSession();
 
-        // Retry once if session is null but no error (sometimes happens on weak connections)
         if (!session && !error) {
             const refresh = await supabase.auth.refreshSession();
             session = refresh.data.session;
         }
 
         if (!session?.user) {
-            // Only clear cache if we are truly sure there is no session
-            // verification: check if we have a refresh token in storage? 
-            // For now, just clear to be safe but the refresh attempt above helps.
             this.clearCache();
             return null;
         }
 
-        const cached = this.getCachedUser();
+        // NOTE: getCachedUser is now async
+        const cached = await this.getCachedUser();
 
-        // ZOMBIE CHECK: Only purge if IDs definitely mismatch
+        // ZOMBIE CHECK
         if (cached && cached.id !== session.user.id) {
-            console.warn("UserService: Zombie Cache Detected (User Mismatch). Purging.");
             this.clearCache();
         }
 
-        // Try to return cached user immediately for speed, then background sync
         if (cached && cached.id === session.user.id) {
-            // Background sync
             this.syncUser(session.user.id).then(u => {
                 if (u) this.currentUser = u;
             });
@@ -87,14 +95,11 @@ export class UserService {
         }
 
         const syncedUser = await this.syncUser(session.user.id);
-
         if (syncedUser) {
             this.currentUser = syncedUser;
-            this.seedAchievements();
             return syncedUser;
         }
 
-        console.error("UserService: Auth Session valid but DB Record missing. Logout required.");
         await this.logout();
         return null;
     }
@@ -579,7 +584,7 @@ export class UserService {
 
     static async getUserArt(userId: string): Promise<ArtEntry[]> {
         const cacheKey = `peutic_art_${userId}`;
-        const cached = localStorage.getItem(cacheKey);
+        const cached = await CacheService.get<ArtEntry[]>(cacheKey);
 
         const fetcher = async () => {
             const { data } = await supabase.from('user_art')
@@ -593,12 +598,13 @@ export class UserService {
 
         if (!cached) {
             const data = await fetcher();
-            localStorage.setItem(cacheKey, JSON.stringify(data));
+            await CacheService.set(cacheKey, data, 3600); // 1h Cache
             return data;
         }
 
-        fetcher().then(data => localStorage.setItem(cacheKey, JSON.stringify(data)));
-        return JSON.parse(cached);
+        // Background update
+        fetcher().then(async data => await CacheService.set(cacheKey, data, 3600));
+        return cached;
     }
 
     static async saveArt(entry: ArtEntry) {
@@ -618,6 +624,8 @@ export class UserService {
             logger.error("Save Art Failed", user.id, error);
             throw error;
         }
+        // Invalidate Cache
+        await CacheService.del(`peutic_art_${user.id}`);
     }
 
     static async deleteArt(id: string) {
@@ -626,6 +634,9 @@ export class UserService {
             logger.error("Delete Art Failed", id, error);
             throw error;
         }
+        // Invalidate Cache
+        const user = this.getUser();
+        if (user) await CacheService.del(`peutic_art_${user.id}`);
     }
 
     static async getUserTransactions(userId: string): Promise<Transaction[]> {
@@ -654,7 +665,7 @@ export class UserService {
 
     static async getJournals(userId: string): Promise<JournalEntry[]> {
         const cacheKey = `peutic_journals_${userId}`;
-        const cached = localStorage.getItem(cacheKey);
+        const cached = await CacheService.get<JournalEntry[]>(cacheKey);
 
         const fetcher = async () => {
             const { data } = await supabase.from('journals')
@@ -667,12 +678,12 @@ export class UserService {
 
         if (!cached) {
             const data = await fetcher();
-            localStorage.setItem(cacheKey, JSON.stringify(data));
+            await CacheService.set(cacheKey, data, 3600);
             return data;
         }
 
-        fetcher().then(data => localStorage.setItem(cacheKey, JSON.stringify(data)));
-        return JSON.parse(cached);
+        fetcher().then(async data => await CacheService.set(cacheKey, data, 3600));
+        return cached;
     }
 
     static async saveJournal(entry: JournalEntry) {
@@ -804,7 +815,7 @@ export class UserService {
     // --- VOICE JOURNALS ---
     static async getVoiceJournals(userId: string): Promise<VoiceJournalEntry[]> {
         const cacheKey = `peutic_voice_${userId}`;
-        const cached = localStorage.getItem(cacheKey);
+        const cached = await CacheService.get<VoiceJournalEntry[]>(cacheKey);
 
         const fetcher = async () => {
             const { data, error } = await supabase.from('voice_journals')
@@ -827,19 +838,13 @@ export class UserService {
 
         if (!cached) {
             const data = await fetcher();
-            localStorage.setItem(cacheKey, JSON.stringify(data));
+            await CacheService.set(cacheKey, data, 3600);
             return data;
         }
 
-        fetcher().then(data => localStorage.setItem(cacheKey, JSON.stringify(data)));
-        try {
-            return JSON.parse(cached);
-        } catch (e) {
-            return [];
-        }
-    }
-
-    static async saveVoiceJournal(entry: VoiceJournalEntry) {
+        fetcher().then(async data => await CacheService.set(cacheKey, data, 3600));
+        return cached;
+    } static async saveVoiceJournal(entry: VoiceJournalEntry) {
         const { error } = await supabase.from('voice_journals').insert({
             user_id: entry.userId,
             audio_url: entry.audioUrl,

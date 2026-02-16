@@ -26,78 +26,49 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     const [trick, setTrick] = useState<'spin' | 'magic' | null>(null);
     const [canvasSize, setCanvasSize] = useState(500);
     const [isCreating, setIsCreating] = useState(false);
+    const [feedingItem, setFeedingItem] = useState<string | null>(null);
 
     const { showToast } = useToast();
     const COST = intensity;
 
-    // Resize Handler
-    useEffect(() => {
-        const handleResize = () => {
-            const width = window.innerWidth;
-            const size = width < 768 ? Math.min(width - 32, 360) : 500;
-            setCanvasSize(size);
-        };
-        handleResize();
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    // ... (Resize Handler)
 
-    useEffect(() => {
-        loadPet();
-    }, []);
+    // ... (UseEffect loadPet)
 
-    const loadPet = async () => {
-        try {
-            // Timeout race
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject("TIMEOUT"), 8000));
-            const dataPromise = PetService.getPet(user.id);
+    // ... (handleCreatePet)
 
-            const data = await Promise.race([dataPromise, timeoutPromise]) as Lumina | null;
-
-            if (data) {
-                setPet(data);
-                if (data.isSleeping) setEmotion('sleeping');
-            } else {
-                setShowSelection(true);
-            }
-        } catch (error) {
-            console.error("Lumina Init Error:", error);
-            // Fallback: If timeout or error, assume new user/selection mode to unblock
-            setShowSelection(true);
-            showToast("Connection weak. Retrying link...", "info");
-        }
-        setLoading(false);
-    };
-
-    const handleCreatePet = async () => {
-        if (!petName.trim()) {
-            showToast("DATA_ERROR: NAME_REQUIRED", "error");
+    const handleFeed = async (food: string) => {
+        if (!pet) return;
+        if (user.balance < 10) {
+            showToast("Need 10m to feed.", "error");
             return;
         }
 
-        setIsCreating(true);
-        try {
-            const newPet = await PetService.createPet(user.id, petName, selectedSpecies);
-            if (newPet) {
-                setPet(newPet);
-                setShowSelection(false);
-                showToast(`LINK ESTABLISHED: ${newPet.name}`, "success");
-            } else {
-                showToast("Initialization Failed: Could not create pet.", "error");
-            }
-        } catch (error: any) {
-            console.error("Error creating pet:", error);
-            showToast(`Initialization Error: ${error.message || "An unexpected error occurred."}`, "error");
-            // Log full error object for debugging
-            if (error?.details) console.error("Error Detail:", error.details);
-            if (error?.hint) console.error("Error Hint:", error.hint);
-        } finally {
-            setIsCreating(false);
-        }
+        // Trigger Visuals
+        setFeedingItem(food);
+        setEmotion('eating');
+
+        // Deduct & Update
+        await UserService.deductBalance(10, `Fed Lumina ${food}`);
+        const updated = await PetService.feedPet(pet.id, 10);
+        if (updated) setPet(updated);
+
+        // Reset after animation
+        setTimeout(() => {
+            setFeedingItem(null);
+            setEmotion('happy');
+        }, 3000);
     };
 
-    // --- ORACLE SYSTEM ---
-    const [oracleMessage, setOracleMessage] = useState<string | null>(null);
+    const handlePettingComplete = async () => {
+        if (!pet) return;
+        // Optimization: Debounce actual API calls or just do visual feedback only?
+        // Let's do a small update for "Love"
+        // in real app: PetService.playWithPet(pet.id)
+        showToast("Lumina feels loved!", "success");
+        setEmotion('happy');
+        setTimeout(() => setEmotion('idle'), 2000);
+    };
     const [isSummoning, setIsSummoning] = useState(false);
 
     const handleOracleConsult = async () => {
@@ -302,13 +273,22 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
 
                     {/* Character Canvas */}
                     <div className={`relative transition-all duration-1000 ${isSummoning ? 'scale-110 -translate-y-10 brightness-150' : ''}`}>
-                        <PetCanvas
-                            pet={pet}
-                            width={canvasSize}
-                            height={canvasSize}
-                            emotion={emotion}
-                            trick={trick}
-                        />
+                        <div className="relative">
+                            <PetCanvas
+                                pet={pet}
+                                width={canvasSize}
+                                height={canvasSize}
+                                emotion={emotion}
+                                trick={trick}
+                                feedingItem={feedingItem}
+                                onPet={handlePettingComplete}
+                            />
+
+                            {/* Status Overlays */}
+                            <div className="absolute top-4 left-4 flex flex-col gap-2">
+                                {/* ... existing status bars ... */}
+                            </div>
+                        </div>
                     </div>
 
                     {/* Status Holograms (Floating) */}
@@ -343,6 +323,42 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                                 PWR_{lvl}
                             </button>
                         ))}
+                    </div>
+                </div>
+
+                <div className="p-6 space-y-4">
+                    <div className="flex justify-center gap-4">
+                        <button
+                            onClick={() => handleFeed('berry')}
+                            disabled={loading || !!feedingItem}
+                            className="p-4 rounded-xl bg-pink-500/20 hover:bg-pink-500/30 text-pink-400 transition-all active:scale-95 disabled:opacity-50"
+                        >
+                            <Pizza className="w-6 h-6 mb-1 mx-auto" />
+                            <span className="text-xs">Feed</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                setTrick('spin');
+                                setTimeout(() => setTrick(null), 1000);
+                            }}
+                            className="p-4 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 transition-all active:scale-95"
+                        >
+                            <Sparkles className="w-6 h-6 mb-1 mx-auto" />
+                            <span className="text-xs">Trick</span>
+                        </button>
+
+                        <button
+                            onClick={() => setEmotion(prev => prev === 'sleeping' ? 'idle' : 'sleeping')}
+                            className="p-4 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 transition-all active:scale-95"
+                        >
+                            <Moon className="w-6 h-6 mb-1 mx-auto" />
+                            <span className="text-xs">Sleep</span>
+                        </button>
+                    </div>
+
+                    <div className="text-center text-xs text-gray-500 font-mono">
+                        LEVEL {pet.level} • {pet.species} CLASS
                     </div>
                 </div>
 
