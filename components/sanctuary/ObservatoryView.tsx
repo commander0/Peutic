@@ -79,12 +79,12 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
             // Cinematic Delay
             setTimeout(() => {
                 const insights = [
-                    "The universe whispers that your resilience is your greatest shield.",
-                    "A door you thought closed is merely waiting for a different key.",
-                    "Your energy affects those around you more than you realize; shine bright.",
-                    "The path ahead is foggy, but your intuition is a lantern that never fails.",
-                    "What you seek is already seeking you. Be still and let it find you.",
-                    "Release the anchor of the past; the tide is rising in your favor."
+                    "The universe whispers that your resilience is your greatest shield. A challenge that currently looms large is merely a shadow cast by a smaller object; shift your perspective and the darkness will recede.\n\n✨ Cosmic Insight: The stars align in your sector of creativity. Now is the time to build, not destroy.",
+                    "A door you thought closed is merely waiting for a different key. Patience is not passive waiting, but active preparation. Clean your house, both literally and metaphorically, for a guest is coming.\n\n✨ Cosmic Insight: Energy flows where intention goes. Focus on what you want to grow.",
+                    "Your energy affects those around you more than you realize; shine bright. You have been playing small to make others comfortable, but your dimness serves no one. Ignite your inner sun.\n\n✨ Cosmic Insight: A chance encounter will reveal a hidden truth about your path.",
+                    "The path ahead is foggy, but your intuition is a lantern that never fails. Trust the quiet voice beneath the noise of anxiety. It knows the way home even when the map is lost.\n\n✨ Cosmic Insight: The moon phase suggests a time of release. Let go of what is heavy.",
+                    "What you seek is already seeking you. Be still and let it find you. The frantic chasing has only pushed your desire further away. Become the magnet, not the hunter.\n\n✨ Cosmic Insight: Abundance is a frequency, not a destination. Tune in.",
+                    "Release the anchor of the past; the tide is rising in your favor. The old stories you tell yourself are expired scripts. Write a new scene today, one where you are the hero.\n\n✨ Cosmic Insight: Jupiter's influence brings luck to those who take bold risks today."
                 ];
                 const msg = insights[Math.floor(Math.random() * insights.length)];
 

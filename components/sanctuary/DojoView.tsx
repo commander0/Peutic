@@ -14,12 +14,12 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
     const { showToast } = useToast();
     const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 mins
     const [isActive, setIsActive] = useState(false);
-    const [timerMode, setTimerMode] = useState<'focus' | 'break' | 'candle'>('focus');
+    const [timerMode, setTimerMode] = useState<'focus' | 'break' | 'candle'>('candle');
     const [streak, setStreak] = useState(0);
     const [totalFocus, setTotalFocus] = useState(0);
     const [breathMode, setBreathMode] = useState<'none' | '4-7-8' | 'box'>('none');
     const [koan, setKoan] = useState<string | null>(null);
-    const [soundEnabled, setSoundEnabled] = useState(false);
+    const [soundEnabled, setSoundEnabled] = useState(true);
     const timerRef = useRef<number | null>(null);
     const bellRef = useRef<HTMLAudioElement | null>(null);
 

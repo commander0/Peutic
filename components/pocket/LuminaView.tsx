@@ -85,9 +85,12 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
             } else {
                 showToast("Initialization Failed: Could not create pet.", "error");
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error creating pet:", error);
-            showToast("Initialization Error: An unexpected error occurred.", "error");
+            showToast(`Initialization Error: ${error.message || "An unexpected error occurred."}`, "error");
+            // Log full error object for debugging
+            if (error?.details) console.error("Error Detail:", error.details);
+            if (error?.hint) console.error("Error Hint:", error.hint);
         } finally {
             setIsCreating(false);
         }

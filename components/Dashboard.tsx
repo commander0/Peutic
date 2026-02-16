@@ -1288,26 +1288,21 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             {
                 showMatchGame && (
                     <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Loading Game...</div>}>
-                        <div className="fixed inset-0 z-[150] bg-base/90 backdrop-blur-xl flex flex-col items-center justify-center p-4">
-
-                            {/* Game Container */}
-                            <div className="w-full max-w-lg aspect-square bg-white dark:bg-gray-900 rounded-3xl border-4 border-violet-200 dark:border-violet-900 shadow-2xl overflow-hidden flex flex-col relative animate-in zoom-in duration-300">
-
-                                {/* Header */}
-                                <div className="bg-violet-50 dark:bg-violet-950/30 p-4 border-b border-violet-100 dark:border-violet-900/50 flex justify-between items-center">
-                                    <div className="flex items-center gap-2">
-                                        <Brain className="w-5 h-5 text-violet-500" />
-                                        <h2 className="font-black text-violet-900 dark:text-violet-300 uppercase tracking-widest text-sm">Mindful Match</h2>
-                                    </div>
-                                    <button onClick={() => setShowMatchGame(false)} className="p-2 hover:bg-violet-100 dark:hover:bg-violet-900 rounded-full transition-colors group">
-                                        <X className="w-5 h-5 text-violet-400 group-hover:text-violet-600" />
-                                    </button>
+                        <div className="fixed inset-0 z-[150] bg-base/90 backdrop-blur-xl flex flex-col">
+                            {/* Header */}
+                            <div className="bg-violet-50 dark:bg-violet-950/30 p-4 border-b border-violet-100 dark:border-violet-900/50 flex justify-between items-center shrink-0">
+                                <div className="flex items-center gap-2">
+                                    <Brain className="w-5 h-5 text-violet-500" />
+                                    <h2 className="font-black text-violet-900 dark:text-violet-300 uppercase tracking-widest text-sm">Mindful Match</h2>
                                 </div>
+                                <button onClick={() => setShowMatchGame(false)} className="p-2 hover:bg-violet-100 dark:hover:bg-violet-900 rounded-full transition-colors group">
+                                    <X className="w-6 h-6 text-violet-400 group-hover:text-violet-600" />
+                                </button>
+                            </div>
 
-                                {/* Game Area */}
-                                <div className="flex-1 overflow-hidden p-2 relative">
-                                    <MindfulMatchGame dashboardUser={dashboardUser} />
-                                </div>
+                            {/* Game Area - Full Flex Growth */}
+                            <div className="flex-1 overflow-hidden relative flex flex-col">
+                                <MindfulMatchGame dashboardUser={dashboardUser} />
                             </div>
                         </div>
                     </Suspense>

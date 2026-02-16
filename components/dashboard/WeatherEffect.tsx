@@ -108,7 +108,7 @@ const WeatherEffectComponent: React.FC<{ type: WeatherType }> = ({ type }) => {
                         y: Math.random() * h,
                         vx: 0.5,
                         vy: Math.random() * 15 + 15, // Fast rain
-                        size: Math.random() * 1.5 + 0.5, // Width
+                        size: Math.random() * 2 + 1.5, // Thicker Rain (1.5px - 3.5px)
                         color: '#60A5FA',
                         type: 'rain',
                         rotation: 0,
@@ -245,7 +245,7 @@ const WeatherEffectComponent: React.FC<{ type: WeatherType }> = ({ type }) => {
                     ctx.lineCap = 'round';
                     ctx.beginPath();
                     ctx.moveTo(p.x, p.y);
-                    ctx.lineTo(p.x, p.y + 15); // Rain length
+                    ctx.lineTo(p.x, p.y + 25); // Longer Rain drops
                     ctx.stroke();
 
                 } else if (p.type === 'cloud' && p.cloudParts) {
