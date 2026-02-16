@@ -168,90 +168,89 @@ const PetCanvas: React.FC<PetCanvasProps> = ({
         render();
 
         return () => cancelAnimationFrame(animationId);
-    }
+    }, [pet, width, height, emotion, trick, feedingItem, onPet]);
+
+    const getSpeciesColor = (species: string, level: number) => {
+        const isApex = level >= 10;
+        switch (species) {
+            case 'Neo-Shiba': return isApex ? '#d97706' : '#fbbf24'; // Gold/Orange
+            case 'Digi-Dino': return isApex ? '#166534' : '#4ade80'; // Green
+            case 'Holo-Hamu': return isApex ? '#db2777' : '#f472b6'; // Pink
+            case 'Zen-Sloth': return '#a8a29e';
+            default: return '#fbbf24';
+        }
     };
 
-const getSpeciesColor = (species: string, level: number) => {
-    const isApex = level >= 10;
-    switch (species) {
-        case 'Neo-Shiba': return isApex ? '#d97706' : '#fbbf24'; // Gold/Orange
-        case 'Digi-Dino': return isApex ? '#166534' : '#4ade80'; // Green
-        case 'Holo-Hamu': return isApex ? '#db2777' : '#f472b6'; // Pink
-        case 'Zen-Sloth': return '#a8a29e';
-        default: return '#fbbf24';
-    }
-};
+    const drawFace = (ctx: CanvasRenderingContext2D, frame: number, emotion: string, isSleeping: boolean) => {
+        const eyeColor = '#1e293b';
 
-const drawFace = (ctx: CanvasRenderingContext2D, frame: number, emotion: string, isSleeping: boolean) => {
-    const eyeColor = '#1e293b';
+        if (isSleeping) {
+            drawRect(ctx, -5, -2, 3, 1, eyeColor);
+            drawRect(ctx, 2, -2, 3, 1, eyeColor);
+            return;
+        }
 
-    if (isSleeping) {
-        drawRect(ctx, -5, -2, 3, 1, eyeColor);
-        drawRect(ctx, 2, -2, 3, 1, eyeColor);
-        return;
-    }
+        // Blink
+        if (Math.floor(frame / 60) % 5 === 0 && frame % 60 < 5) {
+            drawRect(ctx, -5, -2, 3, 1, eyeColor);
+            drawRect(ctx, 2, -2, 3, 1, eyeColor);
+        } else {
+            // Eyes
+            drawRect(ctx, -5, -3, 3, 3, eyeColor);
+            drawRect(ctx, 2, -3, 3, 3, eyeColor);
+            // Sparkle
+            drawRect(ctx, -3, -3, 1, 1, '#fff');
+            drawRect(ctx, 4, -3, 1, 1, '#fff');
+        }
 
-    // Blink
-    if (Math.floor(frame / 60) % 5 === 0 && frame % 60 < 5) {
-        drawRect(ctx, -5, -2, 3, 1, eyeColor);
-        drawRect(ctx, 2, -2, 3, 1, eyeColor);
-    } else {
-        // Eyes
-        drawRect(ctx, -5, -3, 3, 3, eyeColor);
-        drawRect(ctx, 2, -3, 3, 3, eyeColor);
-        // Sparkle
-        drawRect(ctx, -3, -3, 1, 1, '#fff');
-        drawRect(ctx, 4, -3, 1, 1, '#fff');
-    }
+        // Mouth
+        if (emotion === 'happy') {
+            drawRect(ctx, -2, 2, 4, 1, eyeColor);
+            drawRect(ctx, -3, 1, 1, 1, eyeColor);
+            drawRect(ctx, 2, 1, 1, 1, eyeColor);
+        } else if (emotion === 'eating') {
+            const open = Math.floor(frame / 10) % 2 === 0;
+            if (open) drawRect(ctx, -2, 2, 4, 3, '#ef4444');
+            else drawRect(ctx, -2, 3, 4, 1, eyeColor);
+        } else {
+            drawRect(ctx, -2, 3, 4, 1, eyeColor);
+        }
+    };
 
-    // Mouth
-    if (emotion === 'happy') {
-        drawRect(ctx, -2, 2, 4, 1, eyeColor);
-        drawRect(ctx, -3, 1, 1, 1, eyeColor);
-        drawRect(ctx, 2, 1, 1, 1, eyeColor);
-    } else if (emotion === 'eating') {
-        const open = Math.floor(frame / 10) % 2 === 0;
-        if (open) drawRect(ctx, -2, 2, 4, 3, '#ef4444');
-        else drawRect(ctx, -2, 3, 4, 1, eyeColor);
-    } else {
-        drawRect(ctx, -2, 3, 4, 1, eyeColor);
-    }
-};
+    const drawGridBackground = (ctx: CanvasRenderingContext2D, w: number, h: number, frame: number) => {
+        // Subtle moving grid
+        ctx.strokeStyle = 'rgba(6, 182, 212, 0.15)';
+        ctx.lineWidth = 1;
 
-const drawGridBackground = (ctx: CanvasRenderingContext2D, w: number, h: number, frame: number) => {
-    // Subtle moving grid
-    ctx.strokeStyle = 'rgba(6, 182, 212, 0.15)';
-    ctx.lineWidth = 1;
+        const offset = (frame * 0.5) % 20; // Scrolling floor
 
-    const offset = (frame * 0.5) % 20; // Scrolling floor
+        // Floor perspective lines
+        for (let i = -10; i < 20; i++) {
+            ctx.beginPath();
+            ctx.moveTo(w / 2 + i * 40, h / 2);
+            ctx.lineTo(w / 2 + i * 160, h);
+            ctx.stroke();
+        }
 
-    // Floor perspective lines
-    for (let i = -10; i < 20; i++) {
-        ctx.beginPath();
-        ctx.moveTo(w / 2 + i * 40, h / 2);
-        ctx.lineTo(w / 2 + i * 160, h);
-        ctx.stroke();
-    }
+        // Horizontal moving lines
+        for (let y = h / 2; y < h; y += 20) {
+            const yPos = y + offset;
+            if (yPos > h) continue;
+            ctx.beginPath();
+            ctx.moveTo(0, yPos);
+            ctx.lineTo(w, yPos);
+            ctx.stroke();
+        }
+    };
 
-    // Horizontal moving lines
-    for (let y = h / 2; y < h; y += 20) {
-        const yPos = y + offset;
-        if (yPos > h) continue;
-        ctx.beginPath();
-        ctx.moveTo(0, yPos);
-        ctx.lineTo(w, yPos);
-        ctx.stroke();
-    }
-};
-
-return (
-    <canvas
-        ref={canvasRef}
-        width={width}
-        height={height}
-        className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(6,182,212,0.4)]"
-    />
-);
+    return (
+        <canvas
+            ref={canvasRef}
+            width={width}
+            height={height}
+            className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+        />
+    );
 };
 
 export default PetCanvas;
