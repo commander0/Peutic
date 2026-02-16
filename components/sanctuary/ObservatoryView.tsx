@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Moon, Star, Sparkles, User as UserIcon, Calendar, Zap, Wind, Eye } from 'lucide-react';
+import { X, Sparkles, Eye } from 'lucide-react';
 import { User } from '../../types';
 import { useToast } from '../common/Toast';
 import { UserService } from '../../services/userService';
-import { SanctuaryService, DreamLog } from '../../services/SanctuaryService';
 
 interface ObservatoryViewProps {
     user: User;
@@ -49,7 +48,7 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
         } else {
             // Chord for reveal
             const freqs = [440, 554, 659]; // A major
-            freqs.forEach((f, i) => {
+            freqs.forEach((f) => {
                 const o = ctx.createOscillator();
                 const g = ctx.createGain();
                 o.connect(g);

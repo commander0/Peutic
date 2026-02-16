@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-    X, Heart, Pizza, Bath, Moon, Sun,
-    Sparkles, Zap, ChevronLeft, Save,
-    Gamepad2, RefreshCw, Cpu, Activity
+    Heart, Pizza, Moon, Sun,
+    Sparkles, Zap, ChevronLeft,
+    Gamepad2, RefreshCw, Cpu
 } from 'lucide-react';
 import { User, Lumina } from '../../types';
 import { PetService } from '../../services/petService';
@@ -25,6 +25,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
     const [trick, setTrick] = useState<'spin' | 'magic' | null>(null);
     const [canvasSize, setCanvasSize] = useState(500);
+    const [isCreating, setIsCreating] = useState(false);
 
     const { showToast } = useToast();
     const COST = intensity;
@@ -74,11 +75,21 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
             return;
         }
 
-        const newPet = await PetService.createPet(user.id, selectedSpecies, petName);
-        if (newPet) {
-            setPet(newPet);
-            setShowSelection(false);
-            showToast(`LINK ESTABLISHED: ${newPet.name}`, "success");
+        setIsCreating(true);
+        try {
+            const newPet = await PetService.createPet(user.id, petName, selectedSpecies);
+            if (newPet) {
+                setPet(newPet);
+                setShowSelection(false);
+                showToast(`LINK ESTABLISHED: ${newPet.name}`, "success");
+            } else {
+                showToast("Initialization Failed: Could not create pet.", "error");
+            }
+        } catch (error) {
+            console.error("Error creating pet:", error);
+            showToast("Initialization Error: An unexpected error occurred.", "error");
+        } finally {
+            setIsCreating(false);
         }
     };
 

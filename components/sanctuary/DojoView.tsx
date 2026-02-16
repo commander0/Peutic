@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Flame, Play, Pause, RotateCcw, Zap, Target, Trophy, Wind, BookOpen, Volume2, VolumeX } from 'lucide-react';
+import { X, Flame, Target, Trophy, Wind, BookOpen, Volume2, VolumeX } from 'lucide-react';
 import { User } from '../../types';
-import { useToast } from '../../contexts/ToastContext';
-import UserService from '../../services/userService';
+import { useToast } from '../common/Toast';
+import { UserService } from '../../services/userService';
 import { SanctuaryService } from '../../services/SanctuaryService';
 
 interface DojoViewProps {
@@ -47,22 +47,14 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
         bellRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/1126/1126-preview.mp3'); // Tibertan Bowl
     }, [user.id]);
 
-    // Format time mm:ss
-    const formatTime = (seconds: number) => {
-        const m = Math.floor(seconds / 60);
-        const s = seconds % 60;
-        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    };
+
 
     const toggleTimer = () => {
         if (!isActive && soundEnabled && bellRef.current) bellRef.current.play().catch(() => { });
         setIsActive(!isActive);
     };
 
-    const resetTimer = () => {
-        setIsActive(false);
-        setTimeLeft(timerMode === 'focus' || timerMode === 'candle' ? 25 * 60 : 5 * 60);
-    };
+
 
     const nextKoan = () => {
         const random = KOANS[Math.floor(Math.random() * KOANS.length)];
@@ -103,7 +95,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
         } else {
             showToast("Break over. Back to the Dojo.", "info");
             setIsActive(false);
-            playBell(); // End bell
+            if (soundEnabled && bellRef.current) bellRef.current.play().catch(() => { }); // End bell
         }
     };
 

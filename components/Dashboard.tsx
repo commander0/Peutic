@@ -1299,7 +1299,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         <Brain className="w-5 h-5 text-violet-500" />
                                         <h2 className="font-black text-violet-900 dark:text-violet-300 uppercase tracking-widest text-sm">Mindful Match</h2>
                                     </div>
-                                    <button onClick={() => setActiveGame(null)} className="p-2 hover:bg-violet-100 dark:hover:bg-violet-900 rounded-full transition-colors group">
+                                    <button onClick={() => setShowMatchGame(false)} className="p-2 hover:bg-violet-100 dark:hover:bg-violet-900 rounded-full transition-colors group">
                                         <X className="w-5 h-5 text-violet-400 group-hover:text-violet-600" />
                                     </button>
                                 </div>
