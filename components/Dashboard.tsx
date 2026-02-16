@@ -1291,20 +1291,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             {/* Game Container */}
                             <div className="w-full max-w-lg aspect-square bg-white dark:bg-gray-900 rounded-3xl border-4 border-violet-200 dark:border-violet-900 shadow-2xl overflow-hidden flex flex-col relative animate-in zoom-in duration-300">
 
-                                {/* Header */}
-                                <div className="bg-violet-50 dark:bg-violet-950/30 p-4 border-b border-violet-100 dark:border-violet-900/50 flex justify-between items-center">
-                                    <div className="flex items-center gap-2">
-                                        <Brain className="w-5 h-5 text-violet-500" />
-                                        <h2 className="font-black text-violet-900 dark:text-violet-300 uppercase tracking-widest text-sm">Mindful Match</h2>
-                                    </div>
-                                    <button onClick={() => setShowMatchGame(false)} className="p-2 hover:bg-violet-100 dark:hover:bg-violet-900 rounded-full transition-colors group">
-                                        <X className="w-5 h-5 text-violet-400 group-hover:text-violet-600" />
-                                    </button>
-                                </div>
+                                {/* Modal Content - Fullscreen on Mobile, Centered on Desktop */}
+                                <div className="flex-1 w-full h-full md:h-auto md:max-w-4xl mx-auto flex flex-col md:justify-center p-0 md:p-4 relative z-10">
+                                    <div className="bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl rounded-none md:rounded-3xl shadow-2xl overflow-hidden border-0 md:border border-stone-200 dark:border-stone-800 flex flex-col h-full md:aspect-square md:max-h-[80vh]">
+                                        {/* Header */}
+                                        <div className="flex justify-between items-center p-4 border-b border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-900/50 shrink-0">
+                                            <h3 className="font-bold text-lg dark:text-stone-200 flex items-center gap-2">
+                                                <Brain className="w-5 h-5 text-indigo-500" /> Mindful Match
+                                            </h3>
+                                            <button
+                                                onClick={() => setActiveGame(null)}
+                                                className="p-2 hover:bg-stone-200 dark:hover:bg-stone-800 rounded-full transition-colors"
+                                            >
+                                                <X className="w-5 h-5 dark:text-stone-400" />
+                                            </button>
+                                        </div>
 
-                                {/* Game Area */}
-                                <div className="flex-1 overflow-hidden p-2 relative">
-                                    <MindfulMatchGame dashboardUser={dashboardUser} />
+                                        {/* Game Area - Ensure it takes all remaining height */}
+                                        <div className="flex-1 overflow-hidden p-0 md:p-2 relative flex flex-col">
+                                            <MindfulMatchGame dashboardUser={dashboardUser} />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

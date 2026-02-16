@@ -142,11 +142,42 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                     <div className="w-72 h-72 md:w-96 md:h-96 rounded-full border border-stone-800 flex items-center justify-center relative bg-stone-900/30 backdrop-blur-sm shadow-[0_0_50px_rgba(0,0,0,0.5)]">
 
                         {timerMode === 'candle' ? (
-                            <div className="flex flex-col items-center animate-in fade-in duration-1000">
-                                {/* Candle Flame */}
-                                <div className={`w-4 h-16 bg-gradient-to-t from-orange-500 via-yellow-400 to-white rounded-full blur-[2px] animate-[pulse_0.1s_ease-in-out_infinite] shadow-[0_0_40px_rgba(251,191,36,0.6)] ${isActive ? 'scale-125' : 'scale-100 opacity-50'}`}></div>
-                                <div className="w-12 h-12 bg-stone-800 rounded-t-lg mt-2 relative">
-                                    <div className="absolute inset-x-0 top-0 h-4 bg-stone-700/50 rounded-full blur-sm"></div>
+                            <div className="flex flex-col items-center animate-in fade-in duration-1000 scale-125 md:scale-150 relative">
+                                {/* Ambient Warmth Glow */}
+                                <div className={`absolute -top-20 -left-20 right-0 bottom-0 bg-orange-500/5 rounded-full blur-[100px] transition-all duration-3000 ${isActive ? 'opacity-100 scale-110' : 'opacity-20 scale-90'}`}></div>
+
+                                {/* Candle Complex */}
+                                <div className="relative group">
+                                    {/* Flame Container */}
+                                    <div className={`relative w-8 h-32 -mt-16 origin-bottom transition-all duration-1000 ${isActive ? 'opacity-100' : 'opacity-40 grayscale'}`}>
+                                        {/* Outer Orange/Red Glow */}
+                                        <div className="absolute inset-0 bg-orange-500/40 blur-2xl rounded-full animate-pulse-slow"></div>
+
+                                        {/* Main Flame Shape */}
+                                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-4 h-14 bg-gradient-to-t from-orange-600 via-yellow-400 to-white rounded-[50%_50%_50%_50%_/_60%_60%_40%_40%] shadow-[0_0_20px_rgba(255,165,0,0.6)] animate-flicker transform-gpu">
+                                            {/* Blue Core */}
+                                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-3 bg-blue-600/80 rounded-full blur-[1px]"></div>
+                                        </div>
+
+                                        {/* Sparkles/Embers */}
+                                        {isActive && (
+                                            <>
+                                                <div className="absolute top-0 left-1/2 w-0.5 h-0.5 bg-yellow-100 shadow-[0_0_5px_white] animate-ember-fly-1"></div>
+                                                <div className="absolute top-4 left-1/2 w-0.5 h-0.5 bg-orange-100 shadow-[0_0_5px_white] animate-ember-fly-2"></div>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {/* Candle Body - Realistic Wax */}
+                                    <div className="w-24 h-32 bg-gradient-to-r from-stone-800 via-stone-700 to-stone-800 rounded-lg relative overflow-hidden shadow-2xl border-t border-stone-600/50">
+                                        {/* Wax Pool Top */}
+                                        <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-stone-600 to-stone-800 rounded-[100%] blur-[2px] opacity-80"></div>
+                                        <div className="absolute inset-x-4 top-2 h-4 bg-yellow-900/40 rounded-[100%] blur-sm opacity-60 animate-pulse"></div>
+
+                                        {/* Drips */}
+                                        <div className="absolute top-4 left-4 w-2 h-12 bg-stone-700/60 rounded-full blur-[1px] shadow-sm"></div>
+                                        <div className="absolute top-6 right-6 w-1.5 h-8 bg-stone-700/60 rounded-full blur-[1px] shadow-sm"></div>
+                                    </div>
                                 </div>
                             </div>
                         ) : (

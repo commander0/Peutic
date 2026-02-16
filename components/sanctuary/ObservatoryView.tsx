@@ -84,49 +84,70 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
             </header>
 
             {/* MAIN STAGE */}
-            <main className="flex-1 flex flex-col items-center justify-center relative z-10 perspective-1000">
+            <main className="flex-1 flex flex-col items-center justify-center relative z-10 perspective-[1000px] w-full">
 
-                {/* FORTUNE TELLER HANDS & CRYSTAL BALL */}
-                <div className="relative w-[300px] h-[300px] md:w-[400px] md:h-[400px] flex items-center justify-center">
+                {/* FORTUNE TELLER SCENE */}
+                <div className="relative w-full max-w-lg aspect-square flex items-center justify-center">
 
-                    {/* Floating Hands (Animated) */}
-                    <div className={`absolute -left-20 top-10 transition-all duration-[2000ms] ${isReading ? 'translate-x-10 translate-y-5 opacity-80' : '-translate-x-4 opacity-40'}`}>
-                        {/* Left Hand Graphic/Placeholder - utilizing CSS/Icons for abstract representation if no image */}
-                        <div className="w-32 h-32 bg-purple-900/20 blur-2xl rounded-full animate-float"></div>
+                    {/* Table Glow */}
+                    <div className="absolute bottom-0 w-3/4 h-24 bg-purple-900/40 blur-[60px] rounded-full animate-pulse-slow"></div>
+
+                    {/* Floating Hands (Enhanced) */}
+                    <div className={`absolute -left-4 md:-left-20 top-1/3 transition-all duration-[2000ms] ease-out ${isReading ? 'translate-x-12 translate-y-8 opacity-60' : '-translate-x-12 opacity-0'}`}>
+                        <div className="w-24 h-48 bg-gradient-to-b from-indigo-500/10 to-transparent blur-xl rounded-full rotate-12"></div>
                     </div>
-                    <div className={`absolute -right-20 top-10 transition-all duration-[2000ms] ${isReading ? '-translate-x-10 translate-y-5 opacity-80' : 'translate-x-4 opacity-40'}`}>
-                        {/* Right Hand Graphic/Placeholder */}
-                        <div className="w-32 h-32 bg-purple-900/20 blur-2xl rounded-full animate-float-delayed"></div>
-                    </div>
-
-                    {/* THE CRYSTAL BALL */}
-                    <div className={`relative w-48 h-48 md:w-64 md:h-64 rounded-full bg-gradient-to-br from-indigo-500/10 to-purple-900/30 backdrop-blur-sm border border-indigo-400/20 shadow-[0_0_50px_rgba(79,70,229,0.2)] overflow-hidden transition-all duration-1000 ${isReading ? 'shadow-[0_0_100px_rgba(147,51,234,0.6)] scale-105' : ''}`}>
-
-                        {/* Inner Smoke/Mist */}
-                        <div className={`absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/foggy-birds.png')] opacity-50 mix-blend-overlay transition-transform duration-[10s] ease-linear ${isReading ? 'animate-spin-slow scale-150' : ''}`}></div>
-
-                        {/* Glint */}
-                        <div className="absolute top-4 left-8 w-16 h-8 bg-white/10 rounded-full blur-xl -rotate-45"></div>
-
-                        {/* Text Reveal inside Ball */}
-                        {oracleMessage && !isReading && (
-                            <div className="absolute inset-0 flex items-center justify-center p-6 text-center animate-in fade-in zoom-in duration-1000">
-                                <p className="text-xs md:text-sm text-indigo-100 font-bold leading-relaxed drop-shadow-md italic">
-                                    "{oracleMessage}"
-                                </p>
-                            </div>
-                        )}
-
-                        {/* Loading State inside Ball */}
-                        {isReading && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <Sparkles className="w-12 h-12 text-purple-300 animate-spin-slow opacity-80" />
-                            </div>
-                        )}
+                    <div className={`absolute -right-4 md:-right-20 top-1/3 transition-all duration-[2000ms] ease-out ${isReading ? '-translate-x-12 translate-y-8 opacity-60' : 'translate-x-12 opacity-0'}`}>
+                        <div className="w-24 h-48 bg-gradient-to-b from-indigo-500/10 to-transparent blur-xl rounded-full -rotate-12"></div>
                     </div>
 
-                    {/* Base/Stand */}
-                    <div className="absolute -bottom-12 w-32 h-12 bg-black/50 blur-xl rounded-[100%]"></div>
+                    {/* THE CRYSTAL BALL - HIGH FIDELITY */}
+                    {/* Container for centering and hover effects */}
+                    <div className={`group relative w-64 h-64 md:w-80 md:h-80 transition-all duration-1000 ${isReading ? 'scale-110' : 'hover:scale-105'}`}>
+
+                        {/* 1. Base Shadow */}
+                        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-48 h-12 bg-black/60 blur-xl rounded-[100%]"></div>
+
+                        {/* 2. The Orb Body (Glass) */}
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500/10 via-purple-900/40 to-black border border-indigo-400/20 shadow-[inset_0_0_80px_rgba(0,0,0,0.8),0_0_40px_rgba(79,70,229,0.3)] backdrop-blur-[2px] overflow-hidden z-20">
+
+                            {/* Inner Mist (Animated) */}
+                            <div className={`absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/foggy-birds.png')] opacity-40 mix-blend-color-dodge transition-transform duration-[20s] linear ${isReading ? 'animate-[spin_4s_linear_infinite] scale-150' : 'animate-[spin_20s_linear_infinite] scale-110'}`}></div>
+
+                            {/* Deep Space Layer */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-purple-900/30 to-transparent opacity-50 mix-blend-overlay"></div>
+
+                            {/* Core Glow (Pulse) */}
+                            <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-indigo-400/30 rounded-full blur-[40px] mix-blend-screen transition-all duration-1000 ${isReading ? 'scale-150 opacity-100' : 'scale-100 opacity-50 animate-pulse-slow'}`}></div>
+
+                            {/* Text Reveal Area */}
+                            {oracleMessage && !isReading && (
+                                <div className="absolute inset-0 flex items-center justify-center p-8 text-center z-30 animate-in fade-in zoom-in duration-1000 bg-black/40 backdrop-blur-sm">
+                                    <p className="text-sm md:text-lg text-indigo-50 font-serif leading-relaxed drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] italic">
+                                        "{oracleMessage}"
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Loading Sparkles */}
+                            {isReading && (
+                                <div className="absolute inset-0 flex items-center justify-center z-30">
+                                    <Sparkles className="w-16 h-16 text-indigo-200 animate-spin-slow opacity-90 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]" />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 3. Surface Reflections (Gloss) */}
+                        <div className="absolute top-4 left-8 w-24 h-12 bg-gradient-to-b from-white/20 to-transparent rounded-full blur-md -rotate-45 pointer-events-none z-30"></div>
+                        <div className="absolute bottom-6 right-10 w-16 h-8 bg-gradient-to-t from-indigo-300/10 to-transparent rounded-full blur-md -rotate-45 pointer-events-none z-30"></div>
+
+                        {/* 4. Magic Aura (Outer Glow) */}
+                        <div className={`absolute -inset-4 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 blur-2xl transition-opacity duration-1000 -z-10 ${isReading ? 'opacity-40 animate-pulse-fast' : 'group-hover:opacity-20'}`}></div>
+                    </div>
+
+                    {/* Base Stand (Ornate) */}
+                    <div className="absolute -bottom-16 w-40 h-20 bg-gradient-to-b from-stone-900 to-black rounded-t-[50px] border-t border-white/10 flex items-center justify-center shadow-xl z-10">
+                        <div className="w-32 h-1 bg-indigo-500/30 blur-[2px] mt-2"></div>
+                    </div>
                 </div>
 
                 {/* CONTROLS */}

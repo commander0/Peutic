@@ -52,18 +52,38 @@ export class UserService {
     static getUser(): User | null { return this.currentUser; }
 
     static async restoreSession(): Promise<User | null> {
-        const { data: { session } } = await supabase.auth.getSession();
+        let { data: { session }, error } = await supabase.auth.getSession();
+
+        // Retry once if session is null but no error (sometimes happens on weak connections)
+        if (!session && !error) {
+            const refresh = await supabase.auth.refreshSession();
+            session = refresh.data.session;
+        }
 
         if (!session?.user) {
+            // Only clear cache if we are truly sure there is no session
+            // verification: check if we have a refresh token in storage? 
+            // For now, just clear to be safe but the refresh attempt above helps.
             this.clearCache();
             return null;
         }
 
         const cached = this.getCachedUser();
 
+        // ZOMBIE CHECK: Only purge if IDs definitely mismatch
         if (cached && cached.id !== session.user.id) {
-            console.warn("UserService: Zombie Cache Detected. Purging.");
+            console.warn("UserService: Zombie Cache Detected (User Mismatch). Purging.");
             this.clearCache();
+        }
+
+        // Try to return cached user immediately for speed, then background sync
+        if (cached && cached.id === session.user.id) {
+            // Background sync
+            this.syncUser(session.user.id).then(u => {
+                if (u) this.currentUser = u;
+            });
+            this.currentUser = cached;
+            return cached;
         }
 
         const syncedUser = await this.syncUser(session.user.id);
