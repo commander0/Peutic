@@ -80,17 +80,17 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
 
             const now = ctx.currentTime + delay;
             gain.gain.setValueAtTime(0, now);
-            gain.gain.linearRampToValueAtTime(vol, now + 0.1);
+            gain.gain.linearRampToValueAtTime(vol, now + 0.05); // Faster attack
             gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
 
             osc.start(now);
             osc.stop(now + dur);
         };
 
-        // Tibetan Bowl Chord
-        cast(160, 0, 8, 0.4); // Fundamental
-        cast(480, 0.05, 6, 0.1); // Harmonic 3rd
-        cast(800, 0.1, 5, 0.05); // Harmonic 5th
+        // Louder Tibetan Bowl Chord (User Request: "bells need to be heard")
+        cast(160, 0, 8, 0.6); // Fundamental (Boosted)
+        cast(480, 0.05, 6, 0.3); // Harmonic 3rd
+        cast(800, 0.1, 5, 0.15); // Harmonic 5th
     };
 
     const playAmbience = () => {
@@ -117,7 +117,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
         filter.frequency.value = 120;
 
         const gain = ctx.createGain();
-        gain.gain.value = 0.05; // Subtle
+        gain.gain.value = 0.08; // Slightly louder hum
 
         noise.connect(filter);
         filter.connect(gain);
@@ -191,29 +191,54 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
         }
     };
 
+    const setTime = (mins: number) => {
+        if (!isActive) setTimeLeft(mins * 60);
+    };
+
     return (
-        <div className="fixed inset-0 z-[120] bg-stone-900 text-stone-100 flex flex-col font-serif animate-in fade-in duration-700">
-            {/* Background Texture */}
-            <div className={`absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/zen-stone.png')] opacity-20 pointer-events-none mix-blend-overlay transition-opacity duration-1000 ${isActive ? 'opacity-40' : 'opacity-20'}`}></div>
+        <div className="fixed inset-0 z-[120] bg-stone-900 text-stone-100 flex flex-col font-serif animate-in fade-in duration-700 overflow-hidden">
+            {/* Real Zen Dojo Background (Unsplash) */}
+            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1545569341-9eb8b30979d9?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-40"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-stone-900 via-stone-900/80 to-stone-900/30"></div>
 
             {/* Header */}
             <header className="relative z-10 px-8 py-6 flex justify-between items-center">
                 <div className="flex items-center gap-3">
-                    <Flame className="w-5 h-5 text-orange-400" />
-                    <h2 className="text-xl font-bold tracking-widest uppercase text-stone-300">Zen Dojo</h2>
+                    <Wind className="w-6 h-6 text-stone-400" />
+                    <span className="text-xl tracking-widest uppercase opacity-80">Zen Dojo</span>
                 </div>
-                <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors">
-                    <X className="w-6 h-6 text-stone-500 hover:text-white" />
+                <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                    <X className="w-6 h-6" />
                 </button>
             </header>
 
             {/* Main Content */}
             <main className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
 
-                {/* Visualizer Container */}
-                <div className="relative mb-12 group cursor-pointer" onClick={toggleTimer}>
+                {/* Time Selection (Restored - Small) */}
+                {!isActive && (
+                    <div className="flex gap-4 mb-8 highlight-white/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {[5, 10, 15, 20, 25].map(m => (
+                            <button
+                                key={m}
+                                onClick={() => setTime(m)}
+                                className={`px-5 py-2 rounded-full text-xs font-bold tracking-widest border transition-all ${timeLeft === m * 60 ? 'bg-amber-500/20 border-amber-500/50 text-amber-200' : 'bg-white/5 border-white/10 hover:bg-white/10 text-stone-400'}`}
+                            >
+                                {m}M
+                            </button>
+                        ))}
+                    </div>
+                )}
 
-                    {/* The Circle Frame */}
+                {/* Digital Timer Preview (Small) & Candle Visualizer */}
+                <div className="relative mb-12 group cursor-pointer flex flex-col items-center" onClick={toggleTimer}>
+
+                    {/* Timer Text */}
+                    <div className="mb-4 text-4xl font-light text-stone-300 tracking-widest font-variant-numeric tabular-nums opacity-80">
+                        {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                    </div>
+
+                    {/* The Circle Frame (Candle Container) */}
                     <div className={`w-72 h-72 md:w-96 md:h-96 rounded-full border border-stone-800 flex flex-col items-center justify-center relative bg-stone-900/30 backdrop-blur-sm shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-all duration-1000 ${isActive ? 'scale-105 border-orange-900/40' : ''}`}>
 
                         {timerMode === 'candle' ? (
@@ -224,7 +249,6 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                                 {/* Candle Complex */}
                                 <div className="relative group flex flex-col items-center">
                                     {/* Flame Container */}
-                                    {/* FLAME POSITIONING FIX: Ensure it sits exactly on top of the wick */}
                                     <div className={`absolute -top-14 left-1/2 -translate-x-1/2 w-8 h-32 origin-bottom transition-all duration-1000 ${isActive ? 'opacity-100' : 'opacity-40 grayscale'}`}>
                                         {/* Outer Orange/Red Glow */}
                                         <div className="absolute inset-0 bg-orange-500/30 blur-2xl rounded-full animate-pulse-slow"></div>
@@ -244,19 +268,15 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                                         )}
                                     </div>
 
-                                    {/* Candle Body - Realistic Wax */}
+                                    {/* Candle Body */}
                                     <div className="w-24 h-32 bg-gradient-to-r from-stone-800 via-stone-700 to-stone-800 rounded-lg relative overflow-hidden shadow-2xl border-t border-stone-600/50 mt-16">
-                                        {/* Wax Pool Top */}
                                         <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-stone-600 to-stone-800 rounded-[100%] blur-[0.5px] opacity-90"></div>
                                         <div className="absolute inset-x-4 top-2 h-4 bg-yellow-900/20 rounded-[100%] blur-sm opacity-60 animate-pulse-slow"></div>
-
-                                        {/* Drips */}
                                         <div className="absolute top-4 left-4 w-2 h-12 bg-stone-700/60 rounded-full blur-[1px] shadow-sm"></div>
                                     </div>
                                 </div>
                             </div>
                         ) : (
-                            // Placeholder for Breathe/Koan modes if needed, or default svg
                             <div className="text-center space-y-4 animate-in fade-in">
                                 <span className="block text-6xl">{isActive ? "Inhale" : "Ready"}</span>
                                 <p className="text-stone-500 text-sm tracking-widest uppercase">Tap to {isActive ? "Stop" : "Begin"}</p>
@@ -268,7 +288,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                 {/* CONTROLS */}
                 <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
                     <button
-                        onClick={() => setBreathMode(breathMode === 'none' ? '4-7-8' : (breathMode === '4-7-8' ? 'box' : 'none'))}
+                        onClick={(e) => { e.stopPropagation(); setBreathMode(breathMode === 'none' ? '4-7-8' : (breathMode === '4-7-8' ? 'box' : 'none')); }}
                         className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all ${breathMode !== 'none' ? 'bg-amber-900/30 text-amber-400 border border-amber-500/20 shadow-lg' : 'bg-stone-900/50 text-stone-500 border border-stone-800 hover:text-stone-300'}`}
                     >
                         <Wind className="w-4 h-4" />
@@ -276,7 +296,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                     </button>
 
                     <button
-                        onClick={nextKoan}
+                        onClick={(e) => { e.stopPropagation(); nextKoan(); }}
                         className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all bg-stone-900/50 text-stone-400 border border-stone-800 hover:text-amber-200 hover:border-amber-500/30"
                     >
                         <BookOpen className="w-4 h-4" />
@@ -284,7 +304,8 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                     </button>
 
                     <button
-                        onClick={() => {
+                        onClick={(e) => {
+                            e.stopPropagation();
                             setSoundEnabled(!soundEnabled);
                             if (!soundEnabled && bellRef.current) bellRef.current.play().catch(() => { });
                         }}
@@ -326,7 +347,6 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                     <div className="flex flex-col items-center">
                         <Trophy className="w-5 h-5 text-yellow-600 mb-1" />
                         <span className="text-xl font-black text-stone-300">Level {Math.floor(totalFocus / 60) + 1}</span>
-                        <span className="text-[8px] uppercase tracking-widest text-stone-600 font-bold">Wisdom</span>
                     </div>
                 </div>
 

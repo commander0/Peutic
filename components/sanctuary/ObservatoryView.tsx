@@ -84,7 +84,16 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                     "Your energy affects those around you more than you realize; shine bright. You have been playing small to make others comfortable, but your dimness serves no one. Ignite your inner sun.\n\n✨ Cosmic Insight: A chance encounter will reveal a hidden truth about your path.",
                     "The path ahead is foggy, but your intuition is a lantern that never fails. Trust the quiet voice beneath the noise of anxiety. It knows the way home even when the map is lost.\n\n✨ Cosmic Insight: The moon phase suggests a time of release. Let go of what is heavy.",
                     "What you seek is already seeking you. Be still and let it find you. The frantic chasing has only pushed your desire further away. Become the magnet, not the hunter.\n\n✨ Cosmic Insight: Abundance is a frequency, not a destination. Tune in.",
-                    "Release the anchor of the past; the tide is rising in your favor. The old stories you tell yourself are expired scripts. Write a new scene today, one where you are the hero.\n\n✨ Cosmic Insight: Jupiter's influence brings luck to those who take bold risks today."
+                    "Release the anchor of the past; the tide is rising in your favor. The old stories you tell yourself are expired scripts. Write a new scene today, one where you are the hero.\n\n✨ Cosmic Insight: Jupiter's influence brings luck to those who take bold risks today.",
+                    "The confusion you feel is simply the dust settling from a recent shift. Do not rush to clarity. Let the sediment fall, and the water will become clear on its own.\n\n✨ Cosmic Insight: A sudden insight will come to you in a moment of silence.",
+                    "You are being called to step into a larger version of yourself. The fear you feel is just excitement without breath. Breathe into it.\n\n✨ Cosmic Insight: Your voice has power today. Speak your truth.",
+                    "A cycle is ending, completing a lesson you have been learning for months. Do not mourn the end; celebrate the graduation. You are ready for the next level.\n\n✨ Cosmic Insight: New beginnings are often disguised as painful endings.",
+                    "Your sensitivity is not a weakness, but a finely tuned instrument. Use it to navigate the emotional currents around you, but do not let them drown you.\n\n✨ Cosmic Insight: Protect your energy field today; not everyone deserves access.",
+                    "The answer you seek is not in the noise of the world, but in the silence of your own heart. Solitude is your sanctuary right now.\n\n✨ Cosmic Insight: A dream tonight will hold a key symbol. Pay attention.",
+                    "You are planting seeds in winter. It looks like nothing is happening, but the roots are growing deep. Trust the timing of your life.\n\n✨ Cosmic Insight: Spring is coming sooner than you think.",
+                    "Do not fear the void. It is the womb of creation. When you feel empty, know that you are simply making space for something better to enter.\n\n✨ Cosmic Insight: A creative breakthrough is imminent.",
+                    "Your past mistakes were not failures, but course corrections. You needed to go that way to know it wasn't the way. Forgive yourself and move forward.\n\n✨ Cosmic Insight: The path is clearer now than it has ever been.",
+                    "Balance is not a static state, but a constant adjustment. Like a tightrope walker, you must keep moving to stay upright. Embrace the wobble.\n\n✨ Cosmic Insight: Harmony is found in motion."
                 ];
                 const msg = insights[Math.floor(Math.random() * insights.length)];
 
@@ -99,6 +108,7 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
         <div className="fixed inset-0 z-[120] bg-black text-indigo-50 flex flex-col animate-in fade-in duration-1000 overflow-hidden font-serif selection:bg-purple-500 selection:text-white">
             {/* 1. CINEMATIC BACKGROUND */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#1e1b4b_0%,_#000000_80%)]"></div>
+            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2094&auto=format&fit=crop')] bg-cover bg-center opacity-30 animate-pulse-slow mix-blend-screen"></div>
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 animate-pulse-slow"></div>
 
             {/* 2. HEADER */}
@@ -173,7 +183,7 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                             >
                                 <div className="absolute inset-0 bg-indigo-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
                                 <span className="relative flex items-center gap-3 font-black text-sm uppercase tracking-[0.3em] text-indigo-300 group-hover:text-white transition-colors">
-                                    <Eye className="w-4 h-4" /> Consult Fate <span className="opacity-50">(-5m)</span>
+                                    <Eye className="w-4 h-4" /> Consult Fate <span className="opacity-50">(-1m)</span>
                                 </span>
                             </button>
                         )}

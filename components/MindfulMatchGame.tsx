@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Sun, Heart, Music, Zap, Star, Anchor, Feather, Cloud, RefreshCw, Trophy } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Sun, Heart, Music, Zap, Star, Anchor, Feather, Cloud, RefreshCw, Trophy, Timer } from 'lucide-react';
 import { User } from '../types';
 import { UserService } from '../services/userService';
 
@@ -13,15 +13,40 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
     const [solved, setSolved] = useState<number[]>([]);
     const [won, setWon] = useState(false);
     const [moves, setMoves] = useState(0);
+    const [time, setTime] = useState(0);
+    const [isPlaying, setIsPlaying] = useState(false);
+
+    // Best score (Lowest Time)
     const [bestScore, setBestScore] = useState(() => {
         return dashboardUser?.gameScores?.match || 0;
     });
+
+    const timerRef = useRef<number | null>(null);
 
     const ICONS = [Sun, Heart, Music, Zap, Star, Anchor, Feather, Cloud];
 
     useEffect(() => {
         initGame();
+        return () => stopTimer();
     }, []);
+
+    useEffect(() => {
+        if (isPlaying && !won) {
+            timerRef.current = window.setInterval(() => {
+                setTime(t => t + 1);
+            }, 1000);
+        } else {
+            stopTimer();
+        }
+        return () => stopTimer();
+    }, [isPlaying, won]);
+
+    const stopTimer = () => {
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+        }
+    };
 
     const initGame = () => {
         const duplicated = [...ICONS, ...ICONS];
@@ -31,16 +56,21 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
         setSolved([]);
         setWon(false);
         setMoves(0);
+        setTime(0);
+        setIsPlaying(true);
     };
 
     const handleCardClick = (index: number) => {
-        if (flipped.length === 2 || solved.includes(index) || flipped.includes(index)) return;
+        if (flipped.length === 2 || solved.includes(index) || flipped.includes(index) || !isPlaying) return;
+
         const newFlipped = [...flipped, index];
         setFlipped(newFlipped);
+
         if (newFlipped.length === 2) {
             setMoves(m => m + 1);
             const card1 = cards[newFlipped[0]];
             const card2 = cards[newFlipped[1]];
+
             if (card1.icon === card2.icon) {
                 setSolved([...solved, newFlipped[0], newFlipped[1]]);
                 setFlipped([]);
@@ -53,31 +83,69 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
     useEffect(() => {
         if (cards.length > 0 && solved.length === cards.length) {
             setWon(true);
-            if (bestScore === 0 || moves < bestScore) {
-                setBestScore(moves);
+            setIsPlaying(false);
+            stopTimer();
+
+            // Save if it's the first score OR better (lower) than best
+            if (bestScore === 0 || time < bestScore) {
+                setBestScore(time);
                 if (dashboardUser && dashboardUser.id) {
-                    UserService.updateGameScore(dashboardUser.id, 'match', moves);
+                    // Updating score with TIME (seconds)
+                    UserService.updateGameScore(dashboardUser.id, 'match', time);
                 }
             }
         }
     }, [solved]);
 
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
     return (
         <div className="bg-gradient-to-br from-yellow-50/50 to-white dark:from-gray-800 dark:to-gray-900 w-full h-full flex flex-col rounded-2xl p-4 border border-yellow-100 dark:border-gray-700 overflow-hidden relative shadow-inner items-center justify-center">
-            <div className="absolute top-3 left-4 z-20 flex gap-2">
-                <span className="text-[10px] font-bold bg-white/50 dark:bg-black/50 px-2 py-1 rounded-full text-gray-500">Moves: {moves}</span>
-                {bestScore > 0 && <span className="text-[10px] font-bold bg-yellow-100 dark:bg-yellow-900/50 px-2 py-1 rounded-full text-yellow-700 dark:text-yellow-500">Best: {bestScore}</span>}
+
+            {/* Header / HUD */}
+            <div className="absolute top-3 left-4 z-20 flex gap-3">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold bg-white/50 dark:bg-black/50 px-2.5 py-1 rounded-full text-gray-500 border border-gray-100 dark:border-gray-700">
+                    <Timer className="w-3 h-3" />
+                    {formatTime(time)}
+                </div>
+                {bestScore > 0 && (
+                    <span className="text-[10px] font-bold bg-yellow-100 dark:bg-yellow-900/40 px-2 py-1 rounded-full text-yellow-700 dark:text-yellow-500 border border-yellow-200/50 dark:border-yellow-900/50">
+                        Best: {formatTime(bestScore)}
+                    </span>
+                )}
             </div>
-            <button onClick={initGame} className="absolute top-3 right-3 p-2 hover:bg-yellow-100 dark:hover:bg-gray-700 rounded-full transition-colors z-20"><RefreshCw className="w-4 h-4 text-yellow-600 dark:text-yellow-400" /></button>
+
+            <button onClick={initGame} className="absolute top-3 right-3 p-2 hover:bg-yellow-100 dark:hover:bg-gray-700 rounded-full transition-colors z-20">
+                <RefreshCw className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+            </button>
+
             {won ? (
-                <div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in">
-                    <Trophy className="w-16 h-16 text-yellow-500 mb-4 animate-bounce" />
-                    <p className="font-black text-2xl text-yellow-900 dark:text-white">Zen Master!</p>
-                    <p className="text-sm text-gray-500 mb-6">Completed in {moves} moves</p>
-                    <button onClick={initGame} className="bg-black dark:bg-white dark:text-black text-white px-8 py-3 rounded-full font-bold text-sm hover:scale-105 transition-transform">Replay</button>
+                <div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in text-center p-6">
+                    <div className="relative mb-6">
+                        <div className="absolute inset-0 bg-yellow-400 blur-2xl opacity-20 animate-pulse"></div>
+                        <Trophy className="w-20 h-20 text-yellow-500 relative z-10 animate-bounce" />
+                    </div>
+
+                    <h2 className="font-black text-3xl text-yellow-900 dark:text-white mb-2 tracking-tight">Match Complete!</h2>
+
+                    <div className="bg-yellow-50 dark:bg-yellow-900/20 px-6 py-4 rounded-xl mb-8 border border-yellow-100 dark:border-yellow-900/30">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold mb-1">Time Taken</p>
+                        <p className="text-4xl font-black text-yellow-600 dark:text-yellow-400 font-variant-numeric tabular-nums">{formatTime(time)}</p>
+                    </div>
+
+                    <button
+                        onClick={initGame}
+                        className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-8 py-3 rounded-full font-bold text-sm hover:scale-105 hover:shadow-lg transition-all"
+                    >
+                        Play Again
+                    </button>
                 </div>
             ) : (
-                <div className="w-full h-full grid grid-cols-4 grid-rows-4 gap-px p-0.5">
+                <div className="w-full h-full max-w-2xl aspect-square grid grid-cols-4 grid-rows-4 gap-2 sm:gap-3 p-1">
                     {cards.map((card, i) => {
                         const isVisible = flipped.includes(i) || solved.includes(i);
                         const Icon = card.icon;
@@ -85,9 +153,13 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
                             <div key={i} className="perspective-1000 w-full h-full">
                                 <button
                                     onClick={() => handleCardClick(i)}
-                                    className={`w-full h-full rounded-xl flex items-center justify-center transition-all duration-500 transform-style-3d ${isVisible ? 'bg-white dark:bg-gray-700 border-2 border-yellow-400 shadow-lg rotate-y-180' : 'bg-gray-900 dark:bg-gray-800 shadow-md'}`}
+                                    className={`w-full h-full rounded-xl flex items-center justify-center transition-all duration-500 transform-style-3d shadow-sm ${isVisible ? 'bg-white dark:bg-gray-700 border-2 border-yellow-400 rotate-y-180' : 'bg-gray-900 dark:bg-gray-800 hover:bg-gray-800 dark:hover:bg-gray-700'}`}
                                 >
-                                    {isVisible ? <Icon className="w-5 h-5 md:w-8 md:h-8 text-yellow-500 animate-in zoom-in" /> : <div className="w-2 h-2 bg-gray-700 rounded-full"></div>}
+                                    {isVisible ? (
+                                        <Icon className="w-6 h-6 md:w-10 md:h-10 text-yellow-500 animate-in zoom-in" />
+                                    ) : (
+                                        <div className="w-2 h-2 bg-gray-700/50 rounded-full"></div>
+                                    )}
                                 </button>
                             </div>
                         );
