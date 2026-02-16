@@ -99,42 +99,9 @@ export class GardenService {
                 prize: data.prize,
                 message: "Clipped!"
             };
-        } catch (error) {
-            return { success: false, message: "Error clipping plant." };
+        } catch (e) {
+            console.error("Clip exception", e);
+            return { success: false, message: "Failed to clip." };
         }
-    }
-
-    static async plantSeed(userId: string, type: 'Ethereal Bonsai' | 'Crystal Lotus' | 'Neon Fern' | 'Void Orchid'): Promise<GardenState | null> {
-        // Reset garden to level 1 with new type
-        const { data, error } = await supabase.rpc('plant_seed', {
-            p_user_id: userId,
-            p_type: type
-        });
-
-        if (error) {
-            console.error("Plant Seed Failed:", error);
-            // Fallback for missing RPC: Update directly
-            const { error: updateError } = await supabase
-                .from('garden_log')
-                .update({ level: 1, current_plant_type: type, water_level: 100 })
-                .eq('user_id', userId);
-
-            if (updateError) return null;
-            return this.getGarden(userId);
-        }
-
-        if (data && data.garden) {
-            const g = data.garden;
-            return {
-                userId: g.user_id,
-                level: g.level,
-                currentPlantType: g.current_plant_type as any,
-                waterLevel: g.water_level || 50,
-                lastWateredAt: g.last_watered_at,
-                streakCurrent: g.streak_current,
-                streakBest: g.streak_best
-            };
-        }
-        return this.getGarden(userId);
     }
 }

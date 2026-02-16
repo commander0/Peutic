@@ -20,7 +20,8 @@ export class UserService {
 
     static async clearCache() {
         await CacheService.del(this.CACHE_KEY);
-        // ... other clears
+        await CacheService.del('peutic_companions');
+        await CacheService.del('peutic_settings');
     }
 
     static async getCachedUser(): Promise<User | null> {
@@ -30,6 +31,7 @@ export class UserService {
     static async getWithSWR<T>(key: string, fetcher: () => Promise<T>, onUpdate?: (data: T) => void): Promise<T | null> {
         try {
             const staleData = await CacheService.get<T>(key);
+
             // Background Fetch
             fetcher().then(async newData => {
                 if (newData) {
@@ -37,8 +39,11 @@ export class UserService {
                     if (onUpdate) onUpdate(newData);
                 }
             }).catch(e => console.error(`SWR revalidation failed for ${key}`, e));
+
             return staleData;
-        } catch (e) { return null; }
+        } catch (e) {
+            return null;
+        }
     }
 
     static getUser(): User | null { return this.currentUser; }
@@ -46,6 +51,7 @@ export class UserService {
     static async restoreSession(): Promise<User | null> {
         let { data: { session }, error } = await supabase.auth.getSession();
 
+        // Retry once if session is null but no error (sometimes happens on weak connections)
         if (!session && !error) {
             const refresh = await supabase.auth.refreshSession();
             session = refresh.data.session;
@@ -59,12 +65,15 @@ export class UserService {
         // NOTE: getCachedUser is now async
         const cached = await this.getCachedUser();
 
-        // ZOMBIE CHECK
+        // ZOMBIE CHECK: Only purge if IDs definitely mismatch
         if (cached && cached.id !== session.user.id) {
+            console.warn("UserService: Zombie Cache Detected (User Mismatch). Purging.");
             this.clearCache();
         }
 
+        // Try to return cached user immediately for speed, then background sync
         if (cached && cached.id === session.user.id) {
+            // Background sync
             this.syncUser(session.user.id).then(u => {
                 if (u) this.currentUser = u;
             });
@@ -73,11 +82,14 @@ export class UserService {
         }
 
         const syncedUser = await this.syncUser(session.user.id);
+
         if (syncedUser) {
             this.currentUser = syncedUser;
+            this.seedAchievements();
             return syncedUser;
         }
 
+        console.error("UserService: Auth Session valid but DB Record missing. Logout required.");
         await this.logout();
         return null;
     }
@@ -821,8 +833,10 @@ export class UserService {
         }
 
         fetcher().then(async data => await CacheService.set(cacheKey, data, 3600));
-        return cached;
-    } static async saveVoiceJournal(entry: VoiceJournalEntry) {
+        return cached || [];
+    }
+
+    static async saveVoiceJournal(entry: VoiceJournalEntry) {
         const { error } = await supabase.from('voice_journals').insert({
             user_id: entry.userId,
             audio_url: entry.audioUrl,

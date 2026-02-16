@@ -6,12 +6,13 @@ interface GardenCanvasProps {
     width: number;
     height: number;
     interactionType?: 'clip' | 'water' | 'breath' | 'sing' | null;
-    isBreathing?: boolean;
 }
 
-const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, interactionType, isBreathing = false }) => {
+const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, interactionType }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const frameRef = useRef<number>(0);
 
+    // --- ETHEREAL BONSAI RENDERER ---
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -19,177 +20,169 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
         if (!ctx) return;
 
         let time = 0;
-        let animationId: number;
+
+        // Petal System
+        let petals: { x: number, y: number, vx: number, vy: number, size: number, angle: number, opacity: number }[] = [];
+
+        // Initialize some petals
+        for (let i = 0; i < 30; i++) {
+            petals.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: Math.random() * 0.8 + 0.2,
+                size: Math.random() * 3 + 1,
+                angle: Math.random() * Math.PI,
+                opacity: Math.random() * 0.5 + 0.3
+            });
+        }
+
+        const drawBranch = (startX: number, startY: number, len: number, angle: number, branchWidth: number, depth: number) => {
+            ctx.save();
+            ctx.translate(startX, startY);
+            // Organic Sway: more sway at tips (high depth)
+            const sway = Math.sin(time * 0.5 + depth) * 0.015 * (depth * 0.5);
+            ctx.rotate(angle + sway);
+
+            // Tapering Branch
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+
+            // Curved Branch Logic
+            const cp1x = Math.sin(depth * 1.5 + time * 0.2) * (5 + depth);
+            const cp1y = -len * 0.5;
+            ctx.quadraticCurveTo(cp1x, cp1y, 0, -len);
+
+            ctx.lineWidth = branchWidth;
+            ctx.lineCap = 'round';
+
+            // Gradient for wood (Dark to Light) - Mystic Wood
+            const gradient = ctx.createLinearGradient(0, 0, 0, -len);
+            gradient.addColorStop(0, `hsl(25, ${30 - depth * 2}%, ${10 + depth}%)`); // Darker base
+            gradient.addColorStop(1, `hsl(25, ${25 - depth * 2}%, ${15 + depth}%)`);
+            ctx.strokeStyle = gradient;
+            ctx.stroke();
+
+            ctx.translate(0, -len);
+
+            // Foliage / Blossoms
+            const maxDepth = Math.max(5, garden.level + 6); // More levels = more depth
+
+            if (len < 12 || depth > maxDepth) {
+                // Bloom Logic
+                const bloomSize = (4 + Math.sin(time * 1.5 + depth) * 1.5) * (garden.waterLevel > 20 ? 1 : 0.7);
+
+                ctx.beginPath();
+                ctx.arc(0, 0, bloomSize, 0, Math.PI * 2);
+
+                // Dynamic Color based on Health/Water
+                let r = 255, g = 180, b = 180; // Pink default
+
+                if (garden.currentPlantType === 'Fern') {
+                    r = 100; g = 200; b = 150; // Cyan/Green
+                } else if (garden.currentPlantType === 'Sunflower') {
+                    r = 255; g = 220; b = 100; // Gold
+                } else if (garden.currentPlantType === 'Lotus') {
+                    r = 230; g = 180; b = 255; // Purple
+                }
+
+                // Adjust for "Dead" state
+                if (garden.waterLevel < 10) {
+                    r *= 0.6; g *= 0.6; b *= 0.5;
+                }
+
+                ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${0.6 + Math.random() * 0.2})`;
+                ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.8)`;
+                ctx.shadowBlur = 15; // Bloom Glow
+                ctx.fill();
+                ctx.shadowBlur = 0; // Reset
+            } else {
+                // Recursive Growth
+                if (depth < 12) {
+                    const splitAngle = 0.4 - (depth * 0.01);
+                    drawBranch(0, 0, len * 0.75, -splitAngle + Math.sin(time + depth) * 0.05, branchWidth * 0.75, depth + 1);
+                    drawBranch(0, 0, len * 0.75, splitAngle + Math.cos(time + depth) * 0.05, branchWidth * 0.75, depth + 1);
+
+                    // Occasional 3rd branch for fullness
+                    if (depth > 2 && Math.random() > 0.6) {
+                        drawBranch(0, 0, len * 0.6, 0 + Math.sin(time * 1.2) * 0.1, branchWidth * 0.6, depth + 1);
+                    }
+                }
+            }
+
+            ctx.restore();
+        };
 
         const render = () => {
+            frameRef.current++;
+            time += 0.015;
+
             // Clear
             ctx.clearRect(0, 0, width, height);
 
-            // Time Dilation (Breathing)
-            time += isBreathing ? 0.05 : 0.01;
+            // Ground / Moss Island
+            ctx.save();
+            ctx.translate(width / 2, height - 60);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 160, 30, 0, 0, Math.PI * 2);
+            const mossGrad = ctx.createRadialGradient(0, -20, 10, 0, 0, 160);
+            mossGrad.addColorStop(0, '#4ade80'); // Bright Green center
+            mossGrad.addColorStop(1, '#14532d'); // Dark Green edge
+            ctx.fillStyle = mossGrad;
+            ctx.fill();
+            ctx.shadowColor = 'rgba(74, 222, 128, 0.3)';
+            ctx.shadowBlur = 30;
+            ctx.restore();
 
-            // Pulse Effect (Breathing)
-            if (isBreathing) {
-                const pulse = Math.sin(time * 2) * 50;
+            // Draw Tree
+            drawBranch(width / 2, height - 60, 70, 0, 12 + garden.streakCurrent * 0.2, 0);
+
+            // Falling Petals Update & Draw
+            petals.forEach(p => {
+                p.y += p.vy;
+                p.x += Math.sin(time + p.y * 0.02) + p.vx;
+                p.angle += 0.02;
+
+                if (p.y > height) {
+                    p.y = -10;
+                    p.x = Math.random() * width;
+                }
+
                 ctx.save();
-                ctx.translate(width / 2, height / 2);
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.angle);
+                ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
+                ctx.shadowColor = 'white';
+                ctx.shadowBlur = 5;
                 ctx.beginPath();
-                ctx.arc(0, 0, 200 + pulse, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(167, 243, 208, 0.05)'; // Emerald Glow
+                ctx.ellipse(0, 0, p.size, p.size / 2, 0, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.restore();
-            }
-
-            // --- WATER RIPPLES ---
-            drawRipples(ctx, width, height, time);
-
-            const startX = width / 2;
-            const startY = height - 100;
-
-            // --- PLANT RENDERING ---
-            const type = garden.currentPlantType || 'Ethereal Bonsai';
-
-            if (type === 'Neon Fern') {
-                drawNeonFern(ctx, startX, startY, 120, -Math.PI / 2, 10, 0, time, garden.level);
-            } else if (type === 'Crystal Lotus') {
-                drawCrystalLotus(ctx, startX, startY, time, garden.level);
-            } else {
-                drawBonsai(ctx, startX, startY, 100, -Math.PI / 2, 12, 0, time, garden.level);
-            }
+            });
 
             // Interaction Effects
             if (interactionType === 'water') {
                 ctx.fillStyle = 'rgba(100, 200, 255, 0.3)';
-                for (let i = 0; i < 5; i++) {
+                for (let i = 0; i < 15; i++) {
                     ctx.fillRect(Math.random() * width, Math.random() * height, 1, Math.random() * 20 + 10);
                 }
             }
 
-            animationId = requestAnimationFrame(render);
+            requestAnimationFrame(render);
         };
 
-        render();
-        return () => cancelAnimationFrame(animationId);
-    }, [garden, width, height, isBreathing, interactionType]);
+        const aniId = requestAnimationFrame(render);
+        return () => cancelAnimationFrame(aniId);
+    }, [garden, width, height, interactionType]);
 
-    return <canvas ref={canvasRef} width={width} height={height} className="block" />;
+    return (
+        <canvas
+            ref={canvasRef}
+            width={width}
+            height={height}
+            className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+        />
+    );
 };
 
-// --- DRAWING FUNCTIONS ---
-
-const drawRipples = (ctx: CanvasRenderingContext2D, w: number, h: number, time: number) => {
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.lineWidth = 1;
-
-    // Horizon Line
-    const horizon = h - 80;
-
-    for (let i = 0; i < 5; i++) {
-        const y = horizon + 20 + i * 15;
-        const offset = Math.sin(time + i) * 20;
-
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        // Beizer Wave
-        ctx.bezierCurveTo(w / 3, y + offset, 2 * w / 3, y - offset, w, y);
-        ctx.stroke();
-    }
-};
-
-const drawBonsai = (ctx: CanvasRenderingContext2D, x: number, y: number, len: number, angle: number, width: number, depth: number, time: number, level: number) => {
-    ctx.save();
-    ctx.translate(x, y);
-    const sway = Math.sin(time * 0.5 + depth) * 0.02 * (depth * 0.5);
-    ctx.rotate(angle + sway);
-
-    ctx.lineWidth = width;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = `hsl(25, ${40 - depth * 2}%, ${15 + depth * 2}%)`; // Brownish
-
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.quadraticCurveTo(Math.sin(depth) * 10, -len / 2, 0, -len);
-    ctx.stroke();
-
-    ctx.translate(0, -len);
-
-    const maxDepth = Math.min(level + 4, 10);
-
-    if (depth < maxDepth) {
-        drawBonsai(ctx, 0, 0, len * 0.75, 0.3, width * 0.7, depth + 1, time, level);
-        drawBonsai(ctx, 0, 0, len * 0.75, -0.3, width * 0.7, depth + 1, time, level);
-    } else {
-        ctx.fillStyle = `rgba(134, 239, 172, ${0.5 + Math.sin(time) * 0.2})`; // Green Light
-        ctx.beginPath();
-        ctx.arc(0, 0, 5 + Math.sin(time + depth) * 2, 0, Math.PI * 2);
-        ctx.fill();
-    }
-    ctx.restore();
-};
-
-const drawNeonFern = (ctx: CanvasRenderingContext2D, x: number, y: number, len: number, angle: number, width: number, depth: number, time: number, level: number) => {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(angle);
-
-    ctx.lineWidth = width;
-    ctx.strokeStyle = `hsl(${140 + depth * 10}, 100%, 50%)`;
-    ctx.shadowColor = `hsl(${140 + depth * 10}, 100%, 50%)`;
-    ctx.shadowBlur = 10;
-
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(0, -len);
-    ctx.stroke();
-
-    ctx.translate(0, -len);
-    ctx.shadowBlur = 0; // Reset
-
-    const maxDepth = Math.min(level + 3, 8);
-
-    if (depth < maxDepth) {
-        drawNeonFern(ctx, 0, 0, len * 0.7, 0.5 + Math.sin(time) * 0.1, width * 0.6, depth + 1, time, level);
-        drawNeonFern(ctx, 0, 0, len * 0.7, -0.5 - Math.sin(time) * 0.1, width * 0.6, depth + 1, time, level);
-        drawNeonFern(ctx, 0, 0, len * 0.8, 0, width * 0.6, depth + 1, time, level);
-    }
-    ctx.restore();
-};
-
-const drawCrystalLotus = (ctx: CanvasRenderingContext2D, x: number, y: number, time: number, level: number) => {
-    ctx.save();
-    ctx.translate(x, y - 50);
-
-    const count = 3 + Math.floor(level / 2);
-
-    for (let i = 0; i < count; i++) {
-        ctx.save();
-        ctx.rotate((Math.PI * 2 / count) * i + time * 0.1);
-
-        ctx.fillStyle = `rgba(167, 139, 250, 0.4)`;
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 1;
-
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(-20, -60);
-        ctx.lineTo(0, -100);
-        ctx.lineTo(20, -60);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.restore();
-    }
-
-    // Core
-    ctx.fillStyle = '#fff';
-    ctx.shadowColor = '#d8b4fe';
-    ctx.shadowBlur = 20;
-    ctx.beginPath();
-    ctx.arc(0, 0, 15 + Math.sin(time * 2) * 5, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
-};
-
-export default GardenCanvas;
+export default React.memo(GardenCanvas);

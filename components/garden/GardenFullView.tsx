@@ -18,41 +18,8 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     const [interaction, setInteraction] = useState<'water' | 'breath' | 'sing' | null>(null);
     const [showInfo, setShowInfo] = useState(false);
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
-    const [isBreathing, setIsBreathing] = useState(false);
-    const [seedType, setSeedType] = useState<string | null>(null);
-
     const { showToast } = useToast();
     const COST = intensity;
-
-    // Breathing Sync Listener
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.code === 'Space' && !isBreathing) setIsBreathing(true);
-        };
-        const handleKeyUp = (e: KeyboardEvent) => {
-            if (e.code === 'Space') setIsBreathing(false);
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        window.addEventListener('keyup', handleKeyUp);
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-            window.removeEventListener('keyup', handleKeyUp);
-        };
-    }, [isBreathing]);
-
-    const handlePlant = async (type: string) => {
-        if (user.balance < 50) {
-            showToast("Need 50m to plant a new seed.", "error");
-            return;
-        }
-
-        await UserService.deductBalance(50, `Planted ${type}`);
-        const newGarden = await GardenService.plantSeed(user.id, type as any);
-        if (newGarden) {
-            setLocalGarden(newGarden);
-            showToast(`Planted ${type}!`, "success");
-        }
-    };
 
     const handleAction = async (type: 'water' | 'breath' | 'sing' | 'harvest') => {
         // Cost Logic
@@ -90,13 +57,6 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
         onUpdate();
     };
 
-    // SEED SHOP OVERLAY
-    if (!localGarden || localGarden.level < 0) { // Assuming level 0 means empty? Or maybe check specific empty state?
-        // Actually, let's allow planting if user clicks "Reseed" or if purely empty.
-        // For now, if currentPlantType is missing or basic?
-        // Let's just add a "New Seed" button to the UI to trigger this overlay.
-    }
-
     return (
         <div className="fixed inset-0 z-[100] overflow-hidden bg-[#050a05] text-white animate-in fade-in duration-700">
 
@@ -106,49 +66,22 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
             <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a] via-[#064e3b] to-[#022c22] opacity-80 pointer-events-none" />
 
             {/* 2. Moving Fog / Mist */}
-            <div className={`absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/foggy-birds.png')] opacity-30 animate-[pulse_10s_ease-in-out_infinite] pointer-events-none mix-blend-overlay transition-all duration-1000 ${isBreathing ? 'scale-110 opacity-50' : ''}`} />
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/foggy-birds.png')] opacity-30 animate-[pulse_10s_ease-in-out_infinite] pointer-events-none mix-blend-overlay" />
 
-            {/* 3. Ambient Particles (CSS Fireflies) - React to Breath */}
+            {/* 3. Ambient Particles (CSS Fireflies) */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 {[...Array(15)].map((_, i) => (
                     <div
                         key={i}
-                        className={`absolute w-1 h-1 bg-yellow-100 rounded-full blur-[1px] animate-[ping_4s_ease-in-out_infinite] transition-all duration-500`}
+                        className="absolute w-1 h-1 bg-yellow-100 rounded-full blur-[1px] animate-[ping_4s_ease-in-out_infinite]"
                         style={{
                             left: `${Math.random() * 100}%`,
                             top: `${Math.random() * 100}%`,
                             animationDelay: `${Math.random() * 5}s`,
-                            opacity: Math.random() * 0.5 + 0.2,
-                            transform: isBreathing ? `scale(2)` : 'scale(1)'
+                            opacity: Math.random() * 0.5 + 0.2
                         }}
                     />
                 ))}
-            </div>
-
-            {/* --- SEED SELECTION OVERLAY --- */}
-            {localGarden.level <= 1 && (
-                <div className="absolute top-20 left-0 right-0 z-50 flex justify-center">
-                    <div className="bg-black/60 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-center">
-                        <h3 className="text-sm font-bold text-emerald-400 mb-2">CHOOSE YOUR SEED</h3>
-                        <div className="flex gap-4">
-                            {['Ethereal Bonsai', 'Crystal Lotus', 'Neon Fern'].map(t => (
-                                <button key={t} onClick={() => handlePlant(t)} className="p-2 hover:bg-white/10 rounded-lg transition text-xs">
-                                    <div className="w-12 h-12 bg-emerald-900/50 rounded-full mb-1 mx-auto border border-emerald-500/30 flex items-center justify-center">
-                                        <Leaf className="w-6 h-6 text-emerald-300" />
-                                    </div>
-                                    {t}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* --- BREATHING HINT --- */}
-            <div className={`absolute bottom-32 left-0 right-0 text-center transition-all duration-1000 ${isBreathing ? 'opacity-100 translate-y-0' : 'opacity-40 translate-y-2'}`}>
-                <span className="text-xs tracking-[0.3em] text-emerald-200/50 font-light">
-                    {isBreathing ? "EXHALE..." : "HOLD [SPACE] TO BREATHE"}
-                </span>
             </div>
 
             {/* --- INTERACTION OVERLAYS --- */}
@@ -203,13 +136,12 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                 {/* Aura Ring backing the canvas */}
                 <div className="absolute w-[600px] h-[600px] bg-emerald-900/10 rounded-full blur-[100px] pointer-events-none" />
 
-                <div className="relative z-10 w-full h-full flex items-center justify-center">
+                <div className="w-full max-w-4xl h-full flex items-center justify-center p-4">
                     <GardenCanvas
                         garden={localGarden}
-                        width={window.innerWidth}
-                        height={window.innerHeight}
+                        width={600}
+                        height={500}
                         interactionType={interaction}
-                        isBreathing={isBreathing}
                     />
                 </div>
             </main>
