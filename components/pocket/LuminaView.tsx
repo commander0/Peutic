@@ -46,12 +46,24 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     }, []);
 
     const loadPet = async () => {
-        const data = await PetService.getPet(user.id);
-        if (data) {
-            setPet(data);
-            if (data.isSleeping) setEmotion('sleeping');
-        } else {
+        try {
+            // Timeout race
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject("TIMEOUT"), 8000));
+            const dataPromise = PetService.getPet(user.id);
+
+            const data = await Promise.race([dataPromise, timeoutPromise]) as Lumina | null;
+
+            if (data) {
+                setPet(data);
+                if (data.isSleeping) setEmotion('sleeping');
+            } else {
+                setShowSelection(true);
+            }
+        } catch (error) {
+            console.error("Lumina Init Error:", error);
+            // Fallback: If timeout or error, assume new user/selection mode to unblock
             setShowSelection(true);
+            showToast("Connection weak. Retrying link...", "info");
         }
         setLoading(false);
     };

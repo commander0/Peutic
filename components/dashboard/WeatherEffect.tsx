@@ -15,6 +15,7 @@ interface Particle {
     oscillation: number; // For streamers/balloons
     oscillationSpeed: number;
     opacity: number;
+    cloudParts?: { x: number, y: number, r: number }[]; // For realistic clouds
 }
 
 const WeatherEffectComponent: React.FC<{ type: WeatherType }> = ({ type }) => {
@@ -120,19 +121,32 @@ const WeatherEffectComponent: React.FC<{ type: WeatherType }> = ({ type }) => {
 
                 // 2. Clouds (8 count - procedural drift)
                 for (let i = 0; i < 8; i++) {
+                    const size = Math.random() * 60 + 40;
+                    // Generate 3-5 sub-circles for fluffiness
+                    const parts = [];
+                    const partCount = Math.floor(Math.random() * 3) + 3;
+                    for (let j = 0; j < partCount; j++) {
+                        parts.push({
+                            x: (Math.random() - 0.5) * size * 1.5,
+                            y: (Math.random() - 0.5) * size * 0.5,
+                            r: size * (Math.random() * 0.4 + 0.6)
+                        });
+                    }
+
                     tempParticles.push({
                         x: Math.random() * w,
-                        y: Math.random() * (h / 3), // Top third only
-                        vx: (Math.random() * 0.5 + 0.2) * (Math.random() > 0.5 ? 1 : -1),
+                        y: Math.random() * (h / 3),
+                        vx: (Math.random() * 0.2 + 0.05) * (Math.random() > 0.5 ? 1 : -1),
                         vy: 0,
-                        size: Math.random() * 100 + 100, // Big soft clouds
-                        color: '#94a3b8', // Grayish slate
+                        size: size,
+                        color: 'rgba(255,255,255,0.1)', // Base transparent white
                         type: 'cloud',
                         rotation: 0,
                         rotationSpeed: 0,
                         oscillation: 0,
                         oscillationSpeed: 0,
-                        opacity: Math.random() * 0.3 + 0.1
+                        opacity: Math.random() * 0.3 + 0.1,
+                        cloudParts: parts
                     });
                 }
             }
@@ -234,18 +248,23 @@ const WeatherEffectComponent: React.FC<{ type: WeatherType }> = ({ type }) => {
                     ctx.lineTo(p.x, p.y + 15); // Rain length
                     ctx.stroke();
 
-                } else if (p.type === 'cloud') {
-                    // Draw soft radial gradient for clouds
-                    const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
-                    grad.addColorStop(0, 'rgba(255,255,255,0.8)');
-                    grad.addColorStop(1, 'rgba(255,255,255,0)');
-                    ctx.fillStyle = grad;
-                    // Draw composite shape
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                    ctx.arc(p.x + p.size * 0.8, p.y + p.size * 0.2, p.size * 0.7, 0, Math.PI * 2);
-                    ctx.arc(p.x - p.size * 0.8, p.y + p.size * 0.2, p.size * 0.7, 0, Math.PI * 2);
-                    ctx.fill();
+                } else if (p.type === 'cloud' && p.cloudParts) {
+                    // Soft, multi-layered cloud drawing
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+
+                    p.cloudParts.forEach(part => {
+                        const grad = ctx.createRadialGradient(part.x, part.y, 0, part.x, part.y, part.r);
+                        grad.addColorStop(0, `rgba(255, 255, 255, ${p.opacity})`);
+                        grad.addColorStop(0.6, `rgba(220, 230, 240, ${p.opacity * 0.5})`);
+                        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                        ctx.fillStyle = grad;
+                        ctx.beginPath();
+                        ctx.arc(part.x, part.y, part.r, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+
+                    ctx.restore();
                 }
 
                 ctx.restore();

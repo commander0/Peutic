@@ -35,12 +35,12 @@
 
 [data-theme="sunshine"].dark,
 .dark[data-theme="sunshine"] {
-    --color-primary: #facc15;
-    /* Yellow 400 */
-    --color-bg-base: #1c1917;
-    /* Warm Dark */
-    --color-text-base: #F3F4F6;
-    --color-bg-gradient: linear-gradient(to bottom right, #422006, #1c1917, #000000);
+    --color-primary: #FDE047;
+    /* Yellow 300 - Radiant Sunny Glow */
+    --color-bg-base: #141005;
+    /* Deep Gold Black */
+    --color-text-base: #FFFBEB;
+    --color-bg-gradient: linear-gradient(to bottom right, #3f3205, #1a1500, #000000);
 }
 
 /* -----------------------------------------------------------------------------
