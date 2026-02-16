@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, lazy, Suspense, useTransition } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Companion, Transaction, VoiceJournalEntry, GardenState, Lumina } from '../types';
+import { User, Companion, Transaction, VoiceJournalEntry, GardenState, Lumina, Achievement } from '../types';
 import { LanguageSelector } from './common/LanguageSelector';
 import { useLanguage } from './common/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -148,13 +148,55 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     // Derived boolean for simple UI toggles
     const isDark = mode === 'dark';
 
+    // Achievements Listener
+    const [allAchievements, setAllAchievements] = useState<Achievement[]>([]);
+    const prevAchievementsRef = useRef<string[]>([]);
+    const isFirstLoadRef = useRef(true);
+
+    useEffect(() => {
+        UserService.getAchievements().then(setAllAchievements);
+    }, []);
+
+    useEffect(() => {
+        if (user?.unlockedAchievements) {
+            const currentIds = user.unlockedAchievements;
+            const prevIds = prevAchievementsRef.current;
+
+            // Find new unlocks
+            const newUnlocks = currentIds.filter(id => !prevIds.includes(id));
+
+            if (newUnlocks.length > 0 && prevIds.length > 0) { // Skip on initial load
+                newUnlocks.forEach(id => {
+                    const ach = allAchievements.find(a => a.id === id);
+                    const title = ach?.title || id;
+
+                    const sound = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
+                    sound.volume = 0.5;
+                    sound.play().catch(() => { });
+
+                    showToast(`Achievement Unlocked: ${title}`, "success");
+
+                    setNotifications(prev => [{
+                        id: Date.now().toString(),
+                        title: "New Achievement!",
+                        message: `You unlocked: ${title}`,
+                        type: 'success',
+                        read: false,
+                        timestamp: new Date()
+                    }, ...prev]);
+                });
+            }
+            prevAchievementsRef.current = currentIds;
+        }
+    }, [user?.unlockedAchievements, allAchievements]);
+
     const [balance, setBalance] = useState(user.balance);
     // CRITICAL FIX: Initialize with empty array to prevent map crashes
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [companions, setCompanions] = useState<Companion[]>([]);
     const [loadingCompanions, setLoadingCompanions] = useState(true);
     const [weeklyGoal, setWeeklyGoal] = useState(0);
-    const weeklyTarget = 10;
+    const weeklyTarget = 100; // Updated from 10
     const [weeklyMessage, setWeeklyMessage] = useState("Start your journey.");
     const [dashboardUser, setDashboardUser] = useState(user);
     const [settings, setSettings] = useState(AdminService.getSettings());
@@ -1412,9 +1454,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     <Suspense fallback={null}>
                         <ThoughtShredder onClose={() => setShowShredder(false)} />
                     </Suspense>
-                )
-            }
-        </div >
+                )}
+        </div>
     );
 };
 

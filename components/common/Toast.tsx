@@ -37,8 +37,8 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 {toasts.map(toast => (
                     <div
                         key={toast.id}
-                        className={`pointer-events-auto flex items-center justify-between gap-3 p-3 rounded-xl shadow-lg border min-w-[200px] max-w-[320px] animate-in slide-in-from-right-5 duration-300 backdrop-blur-md
-                            ${toast.type === 'success' ? 'bg-green-50/90 border-green-100 text-green-800' :
+                        className={`pointer-events-auto flex items-center justify-between gap-3 p-3 rounded-xl shadow-lg border min-w-[200px] max-w-[320px] animate-in slide-in-from-right-5 duration-300 backdrop-blur-md 
+                        ${toast.type === 'success' ? 'bg-green-50/90 border-green-100 text-green-800' :
                                 toast.type === 'error' ? 'bg-red-50/90 border-red-100 text-red-800' :
                                     'bg-white/90 dark:bg-gray-800/90 border-gray-100 dark:border-gray-700 dark:text-gray-200'}`}
                     >

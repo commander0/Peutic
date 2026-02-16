@@ -388,8 +388,8 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                                         key={type}
                                         onClick={(e) => { e.stopPropagation(); setAmbienceType(type); }}
                                         className={`px-3 py-2 rounded-lg text-sm text-left transition-all ${ambienceType === type
-                                                ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-500/30'
-                                                : 'hover:bg-white/5 text-gray-500'
+                                            ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-500/30'
+                                            : 'hover:bg-white/5 text-gray-500'
                                             }`}
                                     >
                                         {type.charAt(0).toUpperCase() + type.slice(1)}
@@ -406,8 +406,8 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                                         key={sec}
                                         onClick={(e) => { e.stopPropagation(); setBellInterval(sec); }}
                                         className={`px-3 py-2 rounded-lg text-sm text-left transition-all ${bellInterval === sec
-                                                ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-500/30'
-                                                : 'hover:bg-white/5 text-gray-500'
+                                            ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-500/30'
+                                            : 'hover:bg-white/5 text-gray-500'
                                             }`}
                                     >
                                         {sec === 0 ? 'Start/End Only' : `Every ${sec / 60 >= 1 ? sec / 60 + ' min' : sec + ' sec'}`}

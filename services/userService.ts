@@ -447,6 +447,15 @@ export class UserService {
 
     private static lastAchievementCheck: number = 0;
 
+    static async getAchievements(): Promise<Achievement[]> {
+        const { data, error } = await supabase.from('achievements').select('*');
+        if (error) {
+            console.error("Failed to fetch achievements", error);
+            return [];
+        }
+        return data as Achievement[];
+    }
+
     static async checkAchievements(user: User) {
         if (!user || !user.id) return;
 
