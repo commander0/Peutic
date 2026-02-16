@@ -1,4 +1,4 @@
-import { User, UserRole, Transaction, MoodEntry, JournalEntry, ArtEntry, SessionFeedback, VoiceJournalEntry } from '../types';
+import { User, UserRole, Transaction, MoodEntry, JournalEntry, ArtEntry, SessionFeedback, VoiceJournalEntry, Achievement } from '../types';
 
 import { supabase } from './supabaseClient';
 import { BaseService } from './baseService';
@@ -12,7 +12,7 @@ export class UserService {
     private static currentUser: User | null = null;
     private static CACHE_KEY = 'peutic_user_profile';
 
-    // ... (Cache methods remain unchanged)
+    // ... (Cache methods)
     static saveUserToCache(user: User) {
         try {
             localStorage.setItem(this.CACHE_KEY, JSON.stringify(user));
@@ -33,7 +33,6 @@ export class UserService {
         return null;
     }
 
-    // ... (SWR remains unchanged)
     static async getWithSWR<T>(key: string, fetcher: () => Promise<T>, onUpdate?: (data: T) => void): Promise<T | null> {
         try {
             const cached = localStorage.getItem(key);
@@ -55,46 +54,40 @@ export class UserService {
     static async restoreSession(): Promise<User | null> {
         const { data: { session } } = await supabase.auth.getSession();
 
-        // 1. No Session? Purge everything.
         if (!session?.user) {
             this.clearCache();
             return null;
         }
 
-        // 2. Session exists. Check Cache.
         const cached = this.getCachedUser();
 
-        // 3. Cache Mismatch? (Zombie Detection)
         if (cached && cached.id !== session.user.id) {
             console.warn("UserService: Zombie Cache Detected. Purging.");
             this.clearCache();
         }
 
-        // 4. Always Sync with DB to be sure (Single Source of Truth)
         const syncedUser = await this.syncUser(session.user.id);
 
         if (syncedUser) {
             this.currentUser = syncedUser;
+            this.seedAchievements();
             return syncedUser;
         }
 
-        // 5. DB Record Missing? (Orphaned Auth User)
         console.error("UserService: Auth Session valid but DB Record missing. Logout required.");
-        await this.logout(); // Force logout to clear bad state
+        await this.logout();
         return null;
     }
 
     static async syncUser(userId: string): Promise<User | null> {
         if (!userId) return null;
         try {
-            // STRICT TYPING: Select matching the Row definition
             const response = await BaseService.withTimeout(
                 supabase.from('users').select('*').eq('id', userId).maybeSingle(),
                 5000,
                 "User sync timeout"
             );
 
-            // Supabase types are complex, safe cast to allow destructuring while keeping data typed below
             const { data, error } = response as any;
 
             if (error) {
@@ -103,7 +96,6 @@ export class UserService {
             }
 
             if (data) {
-                // 'data' is now strictly typed as UserRow (partial)
                 this.currentUser = this.mapUser(data as UserRow);
                 this.saveUserToCache(this.currentUser);
                 this.checkAchievements(this.currentUser);
@@ -114,8 +106,6 @@ export class UserService {
                 if (session.data.user && session.data.user.id === userId) {
                     console.warn("Attempting Self-Healing: Force Creating User Profile over REST", { userId });
 
-                    // FAIL-SAFE: If Trigger failed, we must insert from Client.
-                    // RLS "User Insert Own" Policy allows this.
                     const metadata = session.data.user.user_metadata || {};
                     const name = metadata.full_name || metadata.name || session.data.user.email?.split('@')[0] || 'User';
 
@@ -123,7 +113,7 @@ export class UserService {
                         id: userId,
                         email: session.data.user.email,
                         name: name,
-                        role: 'USER', // Safe default. Use "Claim System" for Admin if needed.
+                        role: 'USER',
                         created_at: new Date().toISOString()
                     });
 
@@ -133,7 +123,6 @@ export class UserService {
                         console.info("Self-Healing Insert Success");
                     }
 
-                    // RETRY: Fetch again (now it should exist)
                     await new Promise(r => setTimeout(r, 500));
                     const retry = await supabase.from('users').select('*').eq('id', userId).single();
                     if (retry.data) {
@@ -141,7 +130,6 @@ export class UserService {
                         return this.currentUser;
                     }
 
-                    console.error("CRITICAL: User Sync Failed even after self-healing. DB integrity issue.");
                     return null;
                 }
             }
@@ -152,9 +140,7 @@ export class UserService {
         return null;
     }
 
-    // ADAPTER: Snake_Case (DB) -> CamelCase (Domain)
     static mapUser(data: UserRow): User {
-        // Safe Cast for JSON fields
         const scores = data.game_scores as { match: number; cloud: number } | null;
         const emailPrefs = data.email_preferences as { marketing: boolean; updates: boolean } | null;
 
@@ -166,24 +152,21 @@ export class UserService {
             role: (data.role as UserRole) || UserRole.USER,
             balance: data.balance || 0,
             subscriptionStatus: (data.subscription_status as any) || 'ACTIVE',
-            joinedAt: data.created_at, // BRIDGE: Correct mapping
+            joinedAt: data.created_at,
             lastLoginDate: data.last_login_date || new Date().toISOString(),
             streak: data.streak || 0,
-            provider: 'email', // Default, as this isn't always in public.users
+            provider: 'email',
             avatar: data.avatar_url || undefined,
             avatarLocked: data.avatar_locked || false,
             emailPreferences: emailPrefs || { marketing: true, updates: true },
             themePreference: data.theme_preference || 'amber-light',
             languagePreference: data.language_preference || 'en',
             gameScores: scores || { match: 0, cloud: 0 },
-            unlockedRooms: data.unlocked_rooms || []
+            unlockedRooms: data.unlocked_rooms || [],
+            unlockedAchievements: []
         };
     }
 
-    // FALLBACK REMOVED: Strict Consistency Enforced
-    // static createFallbackUser(sessionUser: any): User { ... }
-
-    // RECURRING: Subscribe to Realtime Changes
     static subscribeToUserChanges(userId: string, callback: (payload: any) => void) {
         return supabase
             .channel('public:users')
@@ -200,14 +183,10 @@ export class UserService {
             .subscribe();
     }
 
-    // REPAIR: Attempt to fix missing public.users record
     static async repairUserRecord(sessionUser: any): Promise<User | null> {
         try {
             console.log("Repair Requested: Manual Insert...", sessionUser.id);
-
-            // DIRECT RESTORE (Bypassing Edge Function)
             const fallbackName = sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || "Buddy";
-
             const { error } = await supabase.from('users').insert({
                 id: sessionUser.id,
                 email: sessionUser.email,
@@ -216,16 +195,9 @@ export class UserService {
                 balance: 0,
                 provider: sessionUser.app_metadata?.provider || 'email'
             });
-
-            if (error) {
-                console.error("Direct Repair Failed:", error);
-                return null;
-            }
-
-            // Retry Sync immediately
+            if (error) return null;
             return await this.syncUser(sessionUser.id);
         } catch (e) {
-            console.error("Repair Exception:", e);
             return null;
         }
     }
@@ -283,14 +255,9 @@ export class UserService {
                 birthday: birthday
             };
 
-            // DATA SAFETY: We rely on the DB Trigger (handle_new_user) to create the public record.
-            // We do NOT manual upsert here to avoid overwriting the "First User = Admin" logic.
-            // syncUser() below will verify existence and self-heal if the trigger failed.
-
             logger.success("User Signup Initiated", `Email: ${email}`);
             return optimisticUser;
         }
-
         throw new Error("Failed to initialize account");
     }
 
@@ -298,7 +265,6 @@ export class UserService {
         if (!user.id) return;
         this.currentUser = user;
 
-        // STRICT TYPING: Ensure payload matches Database Update definition
         type UserUpdate = Database['public']['Tables']['users']['Update'];
 
         const payload: UserUpdate = {
@@ -310,21 +276,256 @@ export class UserService {
             language_preference: user.languagePreference,
             last_login_date: user.lastLoginDate,
             streak: user.streak,
-            game_scores: user.gameScores
+            game_scores: user.gameScores,
+            unlocked_rooms: user.unlockedRooms
         };
 
         const { error } = await supabase.from('users').update(payload).eq('id', user.id);
         if (error) {
             logger.error("Update Profile Failed", user.id, error);
         } else {
-            // Keep cache in sync
             this.saveUserToCache(user);
         }
     }
 
+    static async sendKeepAlive(userId: string) {
+        await BaseService.invokeGateway('session-keepalive', { userId });
+    }
+
+    static async addBalance(amount: number, reason: string): Promise<boolean> {
+        const user = this.getUser();
+        if (!user) return false;
+
+        const previousBalance = user.balance;
+        user.balance = (user.balance || 0) + amount;
+        this.saveUserToCache(user);
+
+        try {
+            await BaseService.invokeGateway('process-topup', {
+                userId: user.id,
+                amount: amount,
+                cost: 0,
+                description: reason
+            });
+            return true;
+        } catch (e) {
+            console.error("Add Balance Failed", e);
+            user.balance = previousBalance;
+            this.saveUserToCache(user);
+            return false;
+        }
+    }
+
+    static async deductBalance(amount: number, reason: string = "Game Action"): Promise<boolean> {
+        const user = this.getUser();
+        if (!user) return false;
+
+        if (user.gamificationEnabled === false) return true;
+
+        if (user.balance < amount) {
+            console.warn(`[Balance] Denied: Insufficient funds. Need ${amount}, have ${user.balance}`);
+            return false;
+        }
+
+        const previousBalance = user.balance;
+        user.balance = Math.max(0, user.balance - amount);
+        this.saveUserToCache(user);
+
+        try {
+            const { error, data } = await BaseService.invokeGateway('process-topup', {
+                userId: user.id,
+                amount: -amount,
+                cost: 0,
+                description: reason
+            });
+
+            if (error) {
+                console.error("Balance Deduction Failed", error);
+                user.balance = previousBalance;
+                this.saveUserToCache(user);
+                return false;
+            }
+
+            if (data?.newBalance !== undefined) {
+                user.balance = data.newBalance;
+                this.saveUserToCache(user);
+
+                if (user.balance >= 100) {
+                    this.unlockAchievement(user.id, 'WEALTHY_100');
+                }
+            }
+            return true;
+
+        } catch (e) {
+            console.error("Balance Deduction Exception", e);
+            user.balance = previousBalance;
+            this.saveUserToCache(user);
+            return false;
+        }
+    }
+
+    static async saveTransaction(tx: Transaction) {
+        const { error } = await supabase.from('transactions').insert({
+            id: tx.id,
+            user_id: tx.userId,
+            date: tx.date || new Date().toISOString(),
+            amount: tx.amount,
+            cost: tx.cost,
+            description: tx.description,
+            status: tx.status
+        });
+        if (error) logger.error("Save Transaction Failed", tx.id, error);
+    }
+
+    static async saveFeedback(feedback: SessionFeedback) {
+        const { error } = await supabase.from('feedback').insert({
+            user_id: feedback.userId,
+            companion_name: feedback.companionName,
+            rating: feedback.rating,
+            tags: feedback.tags,
+            date: feedback.date || new Date().toISOString()
+        });
+        if (error) logger.error("Save Feedback Failed", feedback.userId, error);
+    }
+
+    static async updateGameScore(userId: string, game: 'match' | 'cloud', score: number) {
+        const user = this.getUser();
+        if (!user || user.id !== userId) return;
+
+        const currentScores = user.gameScores || { match: 0, cloud: 0 };
+        let newScore = score;
+
+        if (game === 'match') {
+            const current = currentScores.match || 0;
+            newScore = (current === 0) ? score : Math.min(current, score);
+        } else {
+            newScore = Math.max(currentScores.cloud || 0, score);
+        }
+
+        const newScores = { ...currentScores, [game]: newScore };
+        user.gameScores = newScores;
+
+        const { error } = await supabase.from('users').update({ game_scores: newScores }).eq('id', userId);
+        if (error) {
+            logger.error("Update Game Score Failed", userId, error);
+        }
+    }
+
+    static recordBreathSession(userId: string, duration: number) {
+        logger.info("Breath session completed", `User: ${userId}, Duration: ${duration}s`);
+    }
+
+    static async deleteUser(id: string) {
+        try {
+            const { error: rpcError } = await supabase.rpc('request_account_deletion');
+            if (rpcError) throw rpcError;
+
+            await BaseService.invokeGateway('delete-user', { userId: id }).catch(e => {
+                logger.warn("Gateway cleanup skipped - database wipe was successful", e.message);
+            });
+        } catch (e) {
+            logger.error("Total system wipe failed", id, e);
+            throw e;
+        }
+        await this.logout();
+    }
+
+    private static lastAchievementCheck: number = 0;
+
+    static async checkAchievements(user: User) {
+        if (!user || !user.id) return;
+
+        if (Date.now() - this.lastAchievementCheck < 5 * 60 * 1000) return;
+        this.lastAchievementCheck = Date.now();
+
+        try {
+            const { data: allAchievements } = await supabase.from('achievements').select('*');
+            const { data: unlocked } = await supabase.from('user_achievements').select('achievement_id').eq('user_id', user.id);
+
+            if (!allAchievements) return;
+            const unlockedIds = new Set(unlocked?.map((u: any) => u.achievement_id));
+            const newUnlocks: string[] = [];
+
+            const [gRes, pRes, jRes] = await Promise.all([
+                supabase.from('garden_state').select('level').eq('user_id', user.id).maybeSingle(),
+                supabase.from('pocket_pets').select('level').eq('user_id', user.id).maybeSingle(),
+                supabase.from('voice_journals').select('id', { count: 'exact', head: true }).eq('user_id', user.id)
+            ]);
+
+            const gardenLevel = gRes.data?.level || 1;
+            const animaLevel = pRes.data?.level || 1;
+            const journalCount = jRes.count || 0;
+
+            for (const ach of allAchievements) {
+                if (unlockedIds.has(ach.id)) continue;
+
+                let shouldUnlock = false;
+                switch (ach.code) {
+                    case 'FIRST_STEP': shouldUnlock = true; break;
+                    case 'STREAK_3': shouldUnlock = user.streak >= 3; break;
+                    case 'STREAK_7': shouldUnlock = user.streak >= 7; break;
+                    case 'GARDEN_5': shouldUnlock = gardenLevel >= 5; break;
+                    case 'ANIMA_5': shouldUnlock = animaLevel >= 5; break;
+                    case 'JOURNAL_5': shouldUnlock = journalCount >= 5; break;
+                }
+
+                if (shouldUnlock) {
+                    await this.unlockAchievement(user.id, ach.code);
+                    newUnlocks.push(ach.title);
+                }
+            }
+
+            if (newUnlocks.length > 0) {
+                console.log("New Achievements Unlocked:", newUnlocks.join(", "));
+            }
+
+        } catch (e) {
+            console.error("Achievement Check Failed", e);
+        }
+    }
+
+    static async unlockAchievement(userId: string, code: string): Promise<Achievement | null> {
+        if (!userId) return null;
+
+        try {
+            const { data: achievement, error: achError } = await supabase
+                .from('achievements')
+                .select('*')
+                .eq('code', code)
+                .single();
+
+            if (achError || !achievement) return null;
+
+            const { data: existing } = await supabase
+                .from('user_achievements')
+                .select('id')
+                .eq('user_id', userId)
+                .eq('achievement_id', achievement.id)
+                .maybeSingle();
+
+            if (existing) return null;
+
+            const { error: insertError } = await supabase
+                .from('user_achievements')
+                .insert({ user_id: userId, achievement_id: achievement.id });
+
+            if (insertError) throw insertError;
+
+            logger.info("Achievement Unlocked!", { userId, code, title: achievement.title });
+
+            return achievement as Achievement;
+
+        } catch (e) {
+            console.error("Unlock achievement failed", e);
+            return null;
+        }
+    }
+
     static checkAndIncrementStreak(user: User): User {
-        const today = new Date().toDateString();
-        const lastLogin = user.lastLoginDate ? new Date(user.lastLoginDate).toDateString() : null;
+        const today = new Date().toISOString().split('T')[0];
+        const lastLogin = user.lastLoginDate ? user.lastLoginDate.split('T')[0] : null;
+
+        let newStreak = user.streak;
 
         if (lastLogin === today) {
             return user;
@@ -332,14 +533,16 @@ export class UserService {
 
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toDateString();
+        const yesterdayString = yesterday.toISOString().split('T')[0];
 
-        let newStreak = user.streak || 0;
-        if (lastLogin === yesterdayStr) {
-            newStreak++;
-        } else if (lastLogin !== today) {
+        if (lastLogin === yesterdayString) {
+            newStreak += 1;
+        } else {
             newStreak = 1;
         }
+
+        if (newStreak === 3) this.unlockAchievement(user.id, 'STREAK_3');
+        if (newStreak === 7) this.unlockAchievement(user.id, 'STREAK_7');
 
         const updatedUser = { ...user, streak: newStreak, lastLoginDate: new Date().toISOString() };
         BaseService.invokeGateway('user-update', updatedUser).catch(console.error);
@@ -347,15 +550,12 @@ export class UserService {
         return updatedUser;
     }
 
-
     static async logout() {
         this.clearCache();
         await supabase.auth.signOut();
         this.currentUser = null;
         logger.info("User Logout", "Session cleared");
     }
-
-
 
     static async getUserArt(userId: string): Promise<ArtEntry[]> {
         const cacheKey = `peutic_art_${userId}`;
@@ -371,7 +571,6 @@ export class UserService {
             }));
         };
 
-        // If no cache, wait for fetch. Otherwise, fetch in background.
         if (!cached) {
             const data = await fetcher();
             localStorage.setItem(cacheKey, JSON.stringify(data));
@@ -383,14 +582,12 @@ export class UserService {
     }
 
     static async saveArt(entry: ArtEntry) {
-        // SECURITY: Always use the live session ID, never trust the client payload
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error("No active session for Art Save");
 
-        console.log("UserService: Saving art...", entry.id);
         const { error } = await supabase.from('user_art').insert({
             id: entry.id,
-            user_id: user.id, // STRICT OVERRIDE
+            user_id: user.id,
             image_url: entry.imageUrl,
             prompt: entry.prompt,
             title: entry.title || "Untitled Masterpiece",
@@ -411,7 +608,6 @@ export class UserService {
         }
     }
 
-
     static async getUserTransactions(userId: string): Promise<Transaction[]> {
         const { data } = await supabase.from('transactions')
             .select('id, user_id, date, amount, cost, description, status')
@@ -426,7 +622,6 @@ export class UserService {
         const { data, error } = await supabase.rpc('get_book_stats', { p_user_id: userId });
         if (error) {
             console.error("Get Book Stats Failed", error);
-            // Fallback object to preventing crashing
             return {
                 isLocked: false,
                 daysRemaining: 0,
@@ -462,14 +657,19 @@ export class UserService {
 
     static async saveJournal(entry: JournalEntry) {
         const { error } = await supabase.from('journals').insert({
-            id: entry.id || crypto.randomUUID(),
             user_id: entry.userId,
-            date: entry.date || new Date().toISOString(),
+            date: entry.date,
             content: entry.content
         });
+
         if (error) {
             logger.error("Save Journal Failed", entry.userId, error);
             throw error;
+        }
+
+        const count = await supabase.from('journals').select('id', { count: 'exact', head: true }).eq('user_id', entry.userId);
+        if ((count.count || 0) >= 5) {
+            this.unlockAchievement(entry.userId, 'JOURNAL_5');
         }
     }
 
@@ -490,7 +690,7 @@ export class UserService {
         return (data || []).map((m: any) => ({ id: m.id, userId: m.user_id, date: m.date, mood: m.mood as any }));
     }
 
-    static async saveMood(userId: string, mood: 'confetti' | 'rain') {
+    static async saveMood(userId: string, mood: 'confetti' | 'rain' | 'Anxious' | 'Sad') {
         const { error } = await supabase.from('moods').insert({
             user_id: userId,
             date: new Date().toISOString(),
@@ -498,8 +698,6 @@ export class UserService {
         });
         if (error) console.error("Save Mood Failed:", error);
     }
-
-
 
     static async endSession(userId: string) {
         await supabase.from('active_sessions').delete().eq('user_id', userId);
@@ -554,228 +752,6 @@ export class UserService {
             return 1;
         }
     }
-
-    static async sendKeepAlive(userId: string) {
-        await BaseService.invokeGateway('session-keepalive', { userId });
-    }
-
-
-    static async addBalance(amount: number, reason: string): Promise<boolean> {
-        const user = this.getUser();
-        if (!user) return false;
-
-        // Optimistic Update
-        const previousBalance = user.balance;
-        user.balance = (user.balance || 0) + amount;
-        this.saveUserToCache(user);
-
-        try {
-            await BaseService.invokeGateway('process-topup', {
-                userId: user.id,
-                amount: amount,
-                cost: 0,
-                description: reason
-            });
-            return true;
-        } catch (e) {
-            console.error("Add Balance Failed", e);
-            user.balance = previousBalance;
-            this.saveUserToCache(user);
-            return false;
-        }
-    }
-
-    static async deductBalance(amount: number, reason: string = "Game Action"): Promise<boolean> {
-        const user = this.getUser();
-        if (!user) return false;
-
-        // Optional Gamification Logic
-        if (user.gamificationEnabled === false) {
-            console.log(`[Balance] Skipped deduction (${amount}m) - Gamification Disabled`);
-            return true;
-        }
-
-        // --- NEW SAFETY CHECK: Prevent Negative Balance ---
-        if (user.balance < amount) {
-            console.warn(`[Balance] Denied: Insufficient funds. Need ${amount}, have ${user.balance}`);
-            return false;
-        }
-
-        // Optimistic UI Update
-        const previousBalance = user.balance;
-        user.balance = Math.max(0, user.balance - amount);
-        this.saveUserToCache(user);
-
-        // Notify UI (in a real app, use an event bus)
-        console.log(`[Balance] Deducting ${amount} mins for ${reason}. New Balance: ${user.balance}`);
-
-        try {
-            // Use Gateway for secure transaction
-            const { error, data } = await BaseService.invokeGateway('process-topup', {
-                userId: user.id,
-                amount: -amount, // Negative amount for deduction
-                cost: 0,
-                description: reason
-            });
-
-            if (error) {
-                console.error("Balance Deduction Failed", error);
-                // Revert
-                user.balance = previousBalance;
-                this.saveUserToCache(user);
-                return false;
-            }
-
-            if (data?.newBalance !== undefined) {
-                user.balance = data.newBalance;
-                this.saveUserToCache(user);
-            }
-            return true;
-
-        } catch (e) {
-            console.error("Balance Deduction Exception", e);
-            user.balance = previousBalance;
-            this.saveUserToCache(user);
-            return false;
-        }
-    }
-
-    static async saveTransaction(tx: Transaction) {
-        const { error } = await supabase.from('transactions').insert({
-            id: tx.id,
-            user_id: tx.userId,
-            date: tx.date || new Date().toISOString(),
-            amount: tx.amount,
-            cost: tx.cost,
-            description: tx.description,
-            status: tx.status
-        });
-        if (error) logger.error("Save Transaction Failed", tx.id, error);
-    }
-
-    static async saveFeedback(feedback: SessionFeedback) {
-        const { error } = await supabase.from('feedback').insert({
-            user_id: feedback.userId,
-            companion_name: feedback.companionName,
-            rating: feedback.rating,
-            tags: feedback.tags,
-            date: feedback.date || new Date().toISOString()
-        });
-        if (error) logger.error("Save Feedback Failed", feedback.userId, error);
-    }
-
-    static async updateGameScore(userId: string, game: 'match' | 'cloud', score: number) {
-        const user = this.getUser();
-        if (!user || user.id !== userId) return;
-
-        // Optimistic update
-        const currentScores = user.gameScores || { match: 0, cloud: 0 };
-        let newScore = score;
-
-        if (game === 'match') {
-            // Fewer moves is better. Only update if current is 0 or new score is lower.
-            const current = currentScores.match || 0;
-            newScore = (current === 0) ? score : Math.min(current, score);
-        } else {
-            // Higher height/score is better.
-            newScore = Math.max(currentScores.cloud || 0, score);
-        }
-
-        const newScores = { ...currentScores, [game]: newScore };
-        user.gameScores = newScores;
-
-        const { error } = await supabase.from('users').update({ game_scores: newScores }).eq('id', userId);
-        if (error) {
-            logger.error("Update Game Score Failed", userId, error);
-        }
-    }
-
-    static recordBreathSession(userId: string, duration: number) {
-        logger.info("Breath session completed", `User: ${userId}, Duration: ${duration}s`);
-    }
-
-
-    static async deleteUser(id: string) {
-        try {
-            // Priority 1: Instant atomic database wipe (Deletes Auth record which then cascades)
-            const { error: rpcError } = await supabase.rpc('request_account_deletion');
-            if (rpcError) throw rpcError;
-
-            // Priority 2: Cleanup Auth via Gateway as backup (ensures session invalidation)
-            await BaseService.invokeGateway('delete-user', { userId: id }).catch(e => {
-                logger.warn("Gateway cleanup skipped - database wipe was successful", e.message);
-            });
-        } catch (e) {
-            logger.error("Total system wipe failed", id, e);
-            throw e;
-        }
-        await this.logout();
-    }
-
-    // --- ACHIEVEMENTS ---
-    private static lastAchievementCheck: number = 0;
-
-    static async checkAchievements(user: User) {
-        if (!user || !user.id) return;
-
-        // THROTTLE: Only check every 5 minutes
-        if (Date.now() - this.lastAchievementCheck < 5 * 60 * 1000) return;
-        this.lastAchievementCheck = Date.now();
-
-        try {
-            // 1. Fetch Definition & Status
-            const { data: allAchievements } = await supabase.from('achievements').select('*');
-            const { data: unlocked } = await supabase.from('user_achievements').select('achievement_id').eq('user_id', user.id);
-
-            if (!allAchievements) return;
-            const unlockedIds = new Set(unlocked?.map((u: any) => u.achievement_id));
-            const newUnlocks: string[] = [];
-
-            // 2. Gather Stats (Parallel for performance)
-            const [gRes, pRes, jRes] = await Promise.all([
-                supabase.from('garden_state').select('level').eq('user_id', user.id).maybeSingle(),
-                supabase.from('pocket_pets').select('level').eq('user_id', user.id).maybeSingle(),
-                supabase.from('voice_journals').select('id', { count: 'exact', head: true }).eq('user_id', user.id)
-            ]);
-
-            const gardenLevel = gRes.data?.level || 1;
-            const animaLevel = pRes.data?.level || 1;
-            const journalCount = jRes.count || 0;
-
-            // 3. Check Triggers
-            for (const ach of allAchievements) {
-                if (unlockedIds.has(ach.id)) continue;
-
-                let shouldUnlock = false;
-                switch (ach.code) {
-                    case 'FIRST_STEP': shouldUnlock = true; break; // Triggered on check (login)
-                    case 'STREAK_3': shouldUnlock = user.streak >= 3; break;
-                    case 'STREAK_7': shouldUnlock = user.streak >= 7; break;
-                    case 'GARDEN_5': shouldUnlock = gardenLevel >= 5; break;
-                    case 'ANIMA_5': shouldUnlock = animaLevel >= 5; break;
-                    case 'JOURNAL_5': shouldUnlock = journalCount >= 5; break;
-                }
-
-                if (shouldUnlock) {
-                    await supabase.from('user_achievements').insert({ user_id: user.id, achievement_id: ach.id });
-                    newUnlocks.push(ach.title);
-                }
-            }
-
-            // 4. Notify
-            if (newUnlocks.length > 0) {
-                // In a real app, we'd trigger a specialized Toast or Modal here via a callback or event
-                console.log("New Achievements Unlocked:", newUnlocks.join(", "));
-                // For now, we rely on the component polling or re-fetching to see the badge
-            }
-
-        } catch (e) {
-            console.error("Achievement Check Failed", e);
-        }
-    }
-
-
-
 
     static async topUpWallet(amount: number, cost: number, userId?: string, paymentToken?: string) {
         const uid = userId || this.getUser()?.id;
@@ -836,19 +812,31 @@ export class UserService {
         }
 
         fetcher().then(data => localStorage.setItem(cacheKey, JSON.stringify(data)));
-        return JSON.parse(cached);
+        try {
+            return JSON.parse(cached);
+        } catch (e) {
+            return [];
+        }
     }
 
     static async saveVoiceJournal(entry: VoiceJournalEntry) {
         const { error } = await supabase.from('voice_journals').insert({
-            id: entry.id,
             user_id: entry.userId,
             audio_url: entry.audioUrl,
             duration_seconds: entry.durationSeconds,
             title: entry.title,
-            created_at: entry.createdAt
+            created_at: entry.createdAt || new Date().toISOString()
         });
-        if (error) throw error;
+
+        if (error) {
+            console.error("Save Voice Journal Failed", error);
+            throw error;
+        }
+
+        const count = await supabase.from('voice_journals').select('id', { count: 'exact', head: true }).eq('user_id', entry.userId);
+        if ((count.count || 0) >= 5) {
+            this.unlockAchievement(entry.userId, 'JOURNAL_5');
+        }
     }
 
     static async deleteVoiceJournal(id: string) {
@@ -856,7 +844,6 @@ export class UserService {
         if (error) throw error;
     }
 
-    // --- MOOD PREDICTION (DAILY PULSE) ---
     static async predictMoodRisk(userId: string): Promise<boolean> {
         try {
             const threeDaysAgo = new Date();
@@ -877,8 +864,16 @@ export class UserService {
             return false;
         }
     }
+
+    static async seedAchievements() {
+        const newAchievements = [
+            { code: 'WEALTHY_100', title: 'Abundance', description: 'Accumulate a balance of 100m.', icon_name: 'Star', xp_reward: 50 },
+            { code: 'EXPLORER', title: 'Seeker', description: 'Unlock a Sanctuary Room.', icon_name: 'Zap', xp_reward: 25 },
+            { code: 'SESSION_1', title: 'Connection', description: 'Complete your first session.', icon_name: 'Heart', xp_reward: 20 },
+            { code: 'JOURNAL_5', title: 'Voice of Truth', description: 'Record 5 Voice Journals.', icon_name: 'Mic', xp_reward: 30 }
+        ];
+
+        const { error } = await supabase.from('achievements').upsert(newAchievements, { onConflict: 'code', ignoreDuplicates: true });
+        if (error) console.error("Failed to seed achievements", error);
+    }
 }
-
-
-
-

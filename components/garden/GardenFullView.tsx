@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Droplets, Leaf, Sprout, Wind, Heart, Info, ChevronLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Droplets, Leaf, Wind, Heart, Info, ChevronLeft, Sparkles, Music } from 'lucide-react';
 import GardenCanvas from './GardenCanvas';
 import { UserService } from '../../services/userService';
 import { GardenState, User } from '../../types';
@@ -15,233 +15,235 @@ interface GardenFullViewProps {
 
 const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, onUpdate }) => {
     const [localGarden, setLocalGarden] = useState(garden);
-    const [isWatering, setIsWatering] = useState(false);
-    const [tierEffect, setTierEffect] = useState<'growth' | 'ecosystem' | null>(null);
+    const [interaction, setInteraction] = useState<'water' | 'breath' | 'sing' | null>(null);
     const [showInfo, setShowInfo] = useState(false);
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
     const { showToast } = useToast();
     const COST = intensity;
 
-    const handleWater = async () => {
-        setIsWatering(true);
+    const handleAction = async (type: 'water' | 'breath' | 'sing' | 'harvest') => {
+        // Cost Logic
+        const actionCost = type === 'harvest' ? 5 : COST;
 
-        // Tier Effect Logic
-        if (intensity === 2) setTierEffect('growth');
-        if (intensity === 3) setTierEffect('ecosystem');
-
-        if (user.balance < COST) {
-            showToast(`Not enough minutes. Need ${COST}m.`, "error");
-            setIsWatering(false);
-            setTierEffect(null);
+        if (user.balance < actionCost) {
+            showToast(`Need ${actionCost}m to ${type}.`, "error");
             return;
         }
-        const success = await UserService.deductBalance(COST, "Garden Water");
 
-        if (success) {
-            try {
-                // Scaled Water effect
-                const updated = await GardenService.waterPlant(garden.userId);
-                if (updated) {
-                    setLocalGarden(updated);
-                    onUpdate();
-                    showToast(`Garden Watered! (-${COST}m)`, "success");
-                }
-            } catch (e) {
-                // Refund conceptually, but for now just show error
-                showToast("Failed to sync garden state.", "error");
-            }
-        } else {
-            showToast(`Not enough minutes. Need ${COST}m.`, "error");
+        // Trigger Visuals
+        if (type !== 'harvest') {
+            setInteraction(type);
+            setTimeout(() => setInteraction(null), 4000); // Effect duration
         }
-        setTimeout(() => { setIsWatering(false); setTierEffect(null); }, 2000);
-    };
 
-    const handleHarvest = async () => {
-        const harvestCost = 5;
-        const success = await UserService.deductBalance(harvestCost, "Garden Harvest");
-        if (success) {
-            // Logic for harvest (XP gain would go here)
-            // For now, visual feedback
-            showToast(`Harvested! +50 XP (-${harvestCost}m)`, "success");
-            // Optionally reset plant or evolve
-        } else {
-            showToast(`Harvest requires ${harvestCost}m.`, "error");
-        }
-    };
+        // Deduct Balance
+        const success = await UserService.deductBalance(actionCost, `Garden ${type}`);
+        if (!success) return;
 
-    const handleNurture = async (action: 'breath' | 'sing') => {
-        const success = await UserService.deductBalance(COST, action === 'breath' ? "Garden Breath" : "Garden Song");
-        if (success) {
-            showToast(action === 'breath' ? `Deep breath taken. (-${COST}m)` : `Sang to the garden. (-${COST}m)`, "success");
+        // Perform Service Action
+        if (type === 'water') {
+            const updated = await GardenService.waterPlant(garden.userId, intensity);
+            if (updated) setLocalGarden(updated);
+            showToast("Garden Watered", "success");
+        } else if (type === 'harvest') {
+            // Mock Harvest Logic
+            showToast("Harvested! (+50 XP)", "success");
+            // In real app, call GardenService.harvest()
         } else {
-            showToast(`Not enough minutes. Need ${COST}m.`, "error");
+            // Breath / Sing
+            showToast(`Shared ${type} with garden.`, "success");
         }
+
+        onUpdate();
     };
 
     return (
-        <div className="fixed inset-0 z-[100] bg-[#081508] text-white flex flex-col animate-in fade-in duration-500 overflow-hidden">
-            {/* AMBIENT BACKGROUND */}
-            <div className="absolute inset-0 bg-gradient-to-b from-green-900 via-emerald-950 to-black pointer-events-none"></div>
-            <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] pointer-events-none mix-blend-overlay"></div>
+        <div className="fixed inset-0 z-[100] overflow-hidden bg-[#050a05] text-white animate-in fade-in duration-700">
 
-            {/* OVERLAY GLOWS */}
-            <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-green-500/20 blur-[150px] rounded-full animate-pulse pointer-events-none"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-emerald-400/10 blur-[150px] rounded-full animate-pulse delay-1000 pointer-events-none"></div>
+            {/* --- ATMOSPHERIC LAYERS --- */}
 
-            {/* HEADER */}
-            <header className="relative z-10 p-6 flex items-center justify-between">
-                <button onClick={onClose} className="flex items-center gap-2 text-green-400 font-bold hover:text-green-300 transition-colors bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-green-500/20">
-                    <ChevronLeft className="w-5 h-5" /> Back to Sanctuary
-                </button>
-                <div className="text-center">
-                    <h1 className="text-xl md:text-3xl font-black uppercase tracking-[0.3em] text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-200 drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]">
-                        Inner Garden
-                    </h1>
-                    <p className="text-[10px] md:text-xs font-bold text-green-500 uppercase tracking-widest mt-1">Level {localGarden.level} &bull; {localGarden.currentPlantType} Ecosystem</p>
+            {/* 1. Deep Space / Night Sky Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a] via-[#064e3b] to-[#022c22] opacity-80 pointer-events-none" />
+
+            {/* 2. Moving Fog / Mist */}
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/foggy-birds.png')] opacity-30 animate-[pulse_10s_ease-in-out_infinite] pointer-events-none mix-blend-overlay" />
+
+            {/* 3. Ambient Particles (CSS Fireflies) */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                {[...Array(15)].map((_, i) => (
+                    <div
+                        key={i}
+                        className="absolute w-1 h-1 bg-yellow-100 rounded-full blur-[1px] animate-[ping_4s_ease-in-out_infinite]"
+                        style={{
+                            left: `${Math.random() * 100}%`,
+                            top: `${Math.random() * 100}%`,
+                            animationDelay: `${Math.random() * 5}s`,
+                            opacity: Math.random() * 0.5 + 0.2
+                        }}
+                    />
+                ))}
+            </div>
+
+            {/* --- INTERACTION OVERLAYS --- */}
+
+            {/* Rain Effect */}
+            {interaction === 'water' && (
+                <div className="absolute inset-0 z-20 pointer-events-none flex justify-center overflow-hidden">
+                    {/* CSS Rain */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-blue-500/10 to-transparent mix-blend-overlay" />
                 </div>
-                <button onClick={() => setShowInfo(!showInfo)} className="p-2 border border-green-500/30 bg-black/40 rounded-full hover:bg-green-500/10 transition-colors backdrop-blur-md">
-                    <Info className="w-5 h-5 text-green-500" />
+            )}
+
+            {/* Wind/Breath Effect */}
+            {interaction === 'breath' && (
+                <div className="absolute inset-0 z-20 pointer-events-none bg-white/5 backdrop-blur-[2px] animate-[pulse_2s_ease-in-out_infinite]" />
+            )}
+
+            {/* Sing/Music Effect */}
+            {interaction === 'sing' && (
+                <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center">
+                    <div className="w-[500px] h-[500px] rounded-full border border-pink-500/20 animate-[ping_2s_linear_infinite]" />
+                    <div className="absolute w-[300px] h-[300px] rounded-full border border-purple-500/30 animate-[ping_2s_linear_infinite_reverse]" />
+                </div>
+            )}
+
+            {/* --- HEADER --- */}
+            <header className="relative z-30 p-6 flex justify-between items-center bg-gradient-to-b from-black/60 to-transparent">
+                <button onClick={onClose} className="flex items-center gap-2 text-white/70 hover:text-white transition-colors group">
+                    <div className="p-2 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10">
+                        <ChevronLeft className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm font-medium tracking-widest uppercase">Sanctuary</span>
+                </button>
+
+                <div className="text-center">
+                    <h1 className="text-2xl font-light tracking-[0.3em] text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 to-teal-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.5)]">
+                        {localGarden.currentPlantType.toUpperCase()}
+                    </h1>
+                    <div className="flex items-center justify-center gap-2 mt-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[10px] font-bold tracking-widest text-emerald-400/80">LEVEL {localGarden.level}</span>
+                    </div>
+                </div>
+
+                <button onClick={() => setShowInfo(!showInfo)} className="p-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                    <Info className="w-5 h-5 text-emerald-300" />
                 </button>
             </header>
 
-            {/* MAIN GARDEN AREA */}
-            <main className="flex-1 relative flex flex-col items-center justify-center p-4">
-                <div className="relative group">
-                    {/* Ring Aura - Enhanced - Four Fledged Representation */}
-                    <div className="absolute inset-0 -m-12 border-4 border-green-500/10 rounded-full animate-[spin_20s_linear_infinite]"></div>
-                    <div className="absolute inset-0 -m-16 border-2 border-emerald-400/20 rounded-full animate-[spin_25s_linear_infinite_reverse] border-dashed"></div>
-                    <div className="absolute inset-0 -m-24 border border-teal-300/10 rounded-full animate-[spin_40s_linear_infinite]"></div>
+            {/* --- MAIN STAGE --- */}
+            <main className="relative z-10 flex-1 h-[60vh] flex items-center justify-center">
+                {/* Aura Ring backing the canvas */}
+                <div className="absolute w-[600px] h-[600px] bg-emerald-900/10 rounded-full blur-[100px] pointer-events-none" />
 
-                    {/* Seasonal/Atmospheric Overlay */}
-                    <div className="absolute inset-0 z-0 bg-gradient-radial from-green-500/5 to-transparent blur-3xl rounded-full"></div>
-
-                    {/* Particles */}
-                    <div className="absolute inset-0 pointer-events-none">
-                        {[...Array(12)].map((_, i) => (
-                            <div key={i} className="absolute w-1.5 h-1.5 bg-white/40 rounded-full animate-pulse" style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`, animationDelay: `${i * 0.5}s` }}></div>
-                        ))}
-                    </div>
-
-                    {/* RAIN EFFECT DURING WATERING */}
-                    {isWatering && (
-                        <div className="absolute inset-0 z-20 pointer-events-none">
-                            {[...Array(intensity * 15)].map((_, i) => (
-                                <div
-                                    key={i}
-                                    className={`absolute w-0.5 h-6 animate-fall shadow-[0_0_5px_rgba(147,197,253,0.8)] ${tierEffect === 'ecosystem' ? 'bg-cyan-300' : 'bg-blue-300'}`}
-                                    style={{
-                                        left: `${Math.random() * 100}%`,
-                                        top: `-50px`,
-                                        animationDelay: `${Math.random() * 0.5}s`,
-                                        animationDuration: '0.6s'
-                                    }}
-                                ></div>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* TIER 2: GROWTH GLOW */}
-                    {tierEffect === 'growth' && (
-                        <div className="absolute inset-0 z-10 bg-green-400/20 blur-3xl animate-pulse pointer-events-none"></div>
-                    )}
-
-                    {/* TIER 3: ECOSYSTEM (BUTTERFLIES/PARTICLES) */}
-                    {tierEffect === 'ecosystem' && (
-                        <div className="absolute inset-0 z-20 pointer-events-none">
-                            {[...Array(8)].map((_, i) => (
-                                <div key={i} className="absolute w-2 h-2 bg-yellow-300 rounded-full blur-[1px] animate-float"
-                                    style={{
-                                        left: `${20 + Math.random() * 60}%`,
-                                        top: `${40 + Math.random() * 40}%`,
-                                        animationDuration: `${2 + Math.random()}s`
-                                    }}
-                                ></div>
-                            ))}
-                        </div>
-                    )}
-
-                    <div className="relative z-10 transition-transform duration-1000 transform hover:scale-105 filter drop-shadow-[0_0_20px_rgba(34,197,94,0.3)]">
-                        <GardenCanvas garden={localGarden} width={500} height={500} />
-                    </div>
-                </div>
-
-                {/* INTENSITY TOGGLE */}
-                <div className="relative z-20 flex justify-center pb-8 mt-8">
-                    <div className="bg-black/80 backdrop-blur-xl border border-green-500/30 rounded-full p-1.5 flex items-center gap-1 shadow-2xl">
-                        <span className="text-[9px] font-black uppercase text-green-500 px-3 tracking-widest hidden md:block">Nurture Level</span>
-                        {[1, 2, 3].map((level) => (
-                            <button
-                                key={level}
-                                onClick={() => setIntensity(level as 1 | 2 | 3)}
-                                className={`w-10 h-8 md:w-12 md:h-10 rounded-full flex items-center justify-center text-[10px] md:text-xs font-black transition-all ${intensity === level ? 'bg-green-500 text-black shadow-[0_0_15px_rgba(34,197,94,0.6)]' : 'text-green-500/50 hover:bg-green-500/10'}`}
-                            >
-                                {level}m
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* INTERACTIVE CONTROLS - "Four Fledged" (4 distinct actions) */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 relative z-10 px-6 pb-8">
-                    <ActionButton icon={Droplets} label={`Hydrate (-${COST}m)`} onClick={handleWater} active={isWatering} />
-                    <ActionButton icon={Wind} label={`Breath (-${COST}m)`} onClick={() => handleNurture('breath')} color="blue" />
-                    <ActionButton icon={Heart} label={`Sing (-${COST}m)`} onClick={() => handleNurture('sing')} color="pink" />
-                    <ActionButton icon={Leaf} label="Harvest (-5m)" onClick={handleHarvest} color="emerald" />
+                <div className="w-full max-w-4xl h-full flex items-center justify-center p-4">
+                    <GardenCanvas
+                        garden={localGarden}
+                        width={600}
+                        height={500}
+                        interactionType={interaction}
+                    />
                 </div>
             </main>
 
-            {/* FOOTER STATS */}
-            <footer className="relative z-10 p-6 md:p-8 grid grid-cols-3 gap-4 border-t border-green-500/20 bg-black/80 backdrop-blur-xl">
-                <StatBox label="Streak" value={`${localGarden.streakCurrent} Days`} />
-                <StatBox label="Vitality" value="98%" />
-                <StatBox label="Phase" value="Bloom" />
-            </footer>
+            {/* --- CONTROLS --- */}
+            <footer className="relative z-30 pb-10 px-6 flex flex-col items-center gap-8 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
 
-            {/* INFO PANEL */}
-            {showInfo && (
-                <div className="absolute inset-0 z-[110] bg-black/95 p-10 flex flex-col items-center justify-center animate-in slide-in-from-right duration-500">
-                    <button onClick={() => setShowInfo(false)} className="absolute top-10 right-10 text-white/50 hover:text-white"><X className="w-8 h-8" /></button>
-                    <div className="max-w-xl text-center space-y-6">
-                        <Sprout className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                        <h2 className="text-3xl font-black uppercase text-green-400">Garden Wisdom</h2>
-                        <p className="text-gray-400 leading-relaxed">
-                            Your inner garden reflects your daily presence. By checking in, watering, and caring for this space, you harmonize your mental state. As the plant evolves, so does your capacity for resilience and mindfulness.
-                        </p>
-                        <div className="grid grid-cols-2 gap-4 text-left">
-                            <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                                <h4 className="font-bold text-green-400 text-sm mb-1">Watering</h4>
-                                <p className="text-xs text-gray-500">Maintain your streak to help the plant evolve through its 5 growth stages.</p>
-                            </div>
-                            <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                                <h4 className="font-bold text-green-400 text-sm mb-1">Spirit Wisp</h4>
-                                <p className="text-xs text-gray-500">The floating wisp represents your focus. It becomes more stable as you spend time here.</p>
-                            </div>
-                        </div>
+                {/* Intensity Slider (Abstracted) */}
+                <div className="flex items-center gap-4 p-1.5 rounded-full bg-black/40 border border-white/10 backdrop-blur-md">
+                    {[1, 2, 3].map((lvl) => (
+                        <button
+                            key={lvl}
+                            onClick={() => setIntensity(lvl as 1 | 2 | 3)}
+                            className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${intensity === lvl
+                                    ? 'bg-emerald-500 text-black shadow-[0_0_15px_rgba(16,185,129,0.5)]'
+                                    : 'text-white/30 hover:bg-white/5'
+                                }`}
+                        >
+                            {lvl}m
+                        </button>
+                    ))}
+                </div>
+
+                {/* Action Dock */}
+                <div className="flex items-center gap-6 md:gap-12">
+                    <ControlBtn
+                        icon={Droplets}
+                        label="Nourish"
+                        sub={`-${COST}m`}
+                        active={interaction === 'water'}
+                        onClick={() => handleAction('water')}
+                        color="cyan"
+                    />
+                    <ControlBtn
+                        icon={Wind}
+                        label="Breathe"
+                        sub={`-${COST}m`}
+                        active={interaction === 'breath'}
+                        onClick={() => handleAction('breath')}
+                        color="teal"
+                    />
+                    <ControlBtn
+                        icon={Music}
+                        label="Sing"
+                        sub={`-${COST}m`}
+                        active={interaction === 'sing'}
+                        onClick={() => handleAction('sing')}
+                        color="purple"
+                    />
+                    <ControlBtn
+                        icon={Leaf}
+                        label="Harvest"
+                        sub="-5m"
+                        active={false}
+                        onClick={() => handleAction('harvest')}
+                        color="emerald"
+                    />
+                </div>
+
+                {/* Stats Minimal */}
+                <div className="flex gap-8 text-[10px] font-bold tracking-widest text-white/40 uppercase">
+                    <div className="flex items-center gap-2">
+                        <span className="text-emerald-500">{localGarden.streakCurrent} Day Streak</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-blue-400">{localGarden.waterLevel}% Hydration</span>
                     </div>
                 </div>
-            )}
+            </footer>
         </div>
     );
 };
 
-const ActionButton: React.FC<{ icon: any, label: string, onClick: () => void, color?: string, active?: boolean }> = ({ icon: Icon, label, onClick, color = 'green', active }) => (
+// Sub-component for buttons
+const ControlBtn: React.FC<{
+    icon: any,
+    label: string,
+    sub: string,
+    onClick: () => void,
+    active: boolean,
+    color: string
+}> = ({ icon: Icon, label, sub, onClick, active, color }) => (
     <button
         onClick={onClick}
         disabled={active}
-        className={`group flex flex-col items-center gap-2 transition-all hover:-translate-y-2 ${active ? 'opacity-50 grayscale' : ''}`}
+        className={`group relative flex flex-col items-center gap-3 transition-all duration-300 ${active ? 'scale-95 opacity-50' : 'hover:-translate-y-1'}`}
     >
-        <div className={`p-4 md:p-5 rounded-3xl border-2 border-${color}-500/30 bg-black/60 shadow-lg backdrop-blur-md group-hover:bg-${color}-500/20 group-hover:shadow-[0_0_30px_rgba(34,197,94,0.3)] group-hover:border-${color}-500/60 transition-all`}>
-            <Icon className={`w-6 h-6 text-${color}-400 group-hover:scale-110 transition-transform`} />
+        <div className={`
+            w-16 h-16 rounded-2xl flex items-center justify-center
+            bg-white/5 border border-white/10 backdrop-blur-md
+            shadow-[0_4px_20px_rgba(0,0,0,0.3)]
+            group-hover:bg-white/10 group-hover:border-${color}-400/30
+            group-hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]
+            transition-all
+        `}>
+            <Icon className={`w-7 h-7 text-gray-400 group-hover:text-${color}-300 transition-colors`} />
         </div>
-        <span className="text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md group-hover:text-${color}-300 bg-black/40 px-2 py-0.5 rounded-md">{label}</span>
+        <div className="text-center">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-white/70 group-hover:text-white">{label}</div>
+            <div className={`text-[9px] font-medium text-${color}-400/50`}>{sub}</div>
+        </div>
     </button>
-);
-
-const StatBox: React.FC<{ label: string, value: string }> = ({ label, value }) => (
-    <div className="text-center">
-        <p className="text-[8px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">{label}</p>
-        <p className="text-sm md:text-xl font-black text-green-400">{value}</p>
-    </div>
 );
 
 export default GardenFullView;

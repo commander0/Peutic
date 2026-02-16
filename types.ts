@@ -32,6 +32,7 @@ export interface User {
   languagePreference?: string;
   gamificationEnabled?: boolean;
   unlockedRooms?: string[]; // 'observatory', 'dojo', etc.
+  unlockedAchievements?: string[]; // codes like 'STREAK_7', 'EXPLORER'
 }
 
 export interface Companion {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     X, Heart, Pizza, Bath, Moon, Sun,
     Sparkles, Zap, ChevronLeft, Save,
-    Gamepad2, RefreshCw
+    Gamepad2, RefreshCw, Cpu, Activity
 } from 'lucide-react';
 import { User, Lumina } from '../../types';
 import { PetService } from '../../services/petService';
@@ -24,25 +24,22 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     const [petName, setPetName] = useState('');
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
     const [trick, setTrick] = useState<'spin' | 'magic' | null>(null);
-
-    // Dynamic canvas sizing for responsive pet
     const [canvasSize, setCanvasSize] = useState(500);
 
-    // Responsive Canvas Listener
+    const { showToast } = useToast();
+    const COST = intensity;
+
+    // Resize Handler
     useEffect(() => {
         const handleResize = () => {
-            // Dynamic sizing based on available width/height ratio to prevent "square" skewing
             const width = window.innerWidth;
             const size = width < 768 ? Math.min(width - 32, 360) : 500;
             setCanvasSize(size);
         };
-        handleResize(); // Init
+        handleResize();
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
-
-    const { showToast } = useToast();
-    const COST = intensity; // 1m, 2m, or 3m
 
     useEffect(() => {
         loadPet();
@@ -61,185 +58,138 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
 
     const handleCreatePet = async () => {
         if (!petName.trim()) {
-            showToast("Please give your friend a name!", "error");
+            showToast("DATA_ERROR: NAME_REQUIRED", "error");
             return;
         }
 
-        const newPet = await PetService.createPet(user.id, selectedSpecies as 'Holo-Hamu' | 'Digi-Dino' | 'Neo-Shiba' | 'Zen-Sloth', petName);
+        const newPet = await PetService.createPet(user.id, selectedSpecies, petName);
         if (newPet) {
             setPet(newPet);
             setShowSelection(false);
-            showToast(`Welcome, ${newPet.name}! (+50 XP)`, "success");
+            showToast(`LINK ESTABLISHED: ${newPet.name}`, "success");
         }
     };
 
-    // ORACLE STATE
+    // --- ORACLE SYSTEM ---
     const [oracleMessage, setOracleMessage] = useState<string | null>(null);
+    const [isSummoning, setIsSummoning] = useState(false);
 
     const handleOracleConsult = async () => {
         const PRICE = 5;
         if (user.balance < PRICE) {
-            showToast(`The Oracle requires ${PRICE}m offering.`, "error");
+            showToast(`INSUFFICIENT_FUNDS: REQ ${PRICE}m`, "error");
             return;
         }
 
         if (await UserService.deductBalance(PRICE, `Oracle: ${pet?.name}`)) {
-            // Trigger Magic Animation
-            setTrick('magic');
+            setIsSummoning(true);
+            setTrick('magic'); // Pet floats/spins
 
-            // Generate Wisdom (Mock for now, could be AI)
-            const wisdoms = [
-                "The stars align for your success today.",
-                "Patience is not simply the ability to wait - it's how we behave while we're waiting.",
-                "Your inner garden is blooming, even if you cannot see the roots yet.",
-                "A friend will reach out to you soon.",
-                "Focus on the present moment; the future will take care of itself.",
-                "You are stronger than you think.",
-                "Breathe. Just breathe."
-            ];
-            const msg = wisdoms[Math.floor(Math.random() * wisdoms.length)];
-
+            // Simulate "Decoding" delay
             setTimeout(() => {
+                const wisdoms = [
+                    "SYSTEM_MSG: Trust the process.",
+                    "The glitch is just an undocumented feature of your growth.",
+                    "Your potential energy is higher than you calculate.",
+                    "Reboot your perspective.",
+                    "Connection established. You are loved.",
+                    "Focus on the signal, ignore the noise.",
+                    "Update available: Kindness v2.0"
+                ];
+                const msg = wisdoms[Math.floor(Math.random() * wisdoms.length)];
                 setOracleMessage(msg);
-                showToast("The Oracle has spoken (-5m)", "success");
-            }, 1500); // Wait for spin up
-        }
-    };
-
-    const handleAction = async (action: 'feed' | 'play' | 'clean' | 'sleep') => {
-        // ... (existing checks)
-        if (!pet || (pet.isSleeping && action !== 'sleep')) return;
-
-        // Check if user has enough balance
-        if (action !== 'sleep' && user.balance < COST) {
-            showToast(`You need ${COST}m to care for ${pet.name}.`, "error");
-            return;
-        }
-
-        let updatedPet = { ...pet, lastInteractionAt: new Date().toISOString() };
-        let newEmotion: typeof emotion = 'happy';
-
-        let statGain = 0;
-        let xpGain = 0;
-
-        // Scale rewards based on intensity (Time Investment)
-        switch (intensity) {
-            case 1: statGain = 10; xpGain = 2; break;
-            case 2: statGain = 25; xpGain = 5; break;
-            case 3: statGain = 45; xpGain = 10; break;
-        }
-
-        switch (action) {
-            case 'feed':
-                if (pet.hunger >= 100) { showToast(`${pet.name} is full!`, "info"); return; }
-                if (await UserService.deductBalance(COST, `Fed ${pet.name}`)) {
-                    updatedPet.hunger = Math.min(100, pet.hunger + statGain);
-                    updatedPet.experience += xpGain;
-                    newEmotion = 'eating';
-                    showToast(`Fed ${pet.name}! (+${statGain} Saturation, -${COST}m)`, "success");
-                }
-                break;
-            case 'play':
-                if (pet.energy < 20) { showToast(`${pet.name} is too tired to play.`, "info"); return; }
-                if (await UserService.deductBalance(COST, `Played with ${pet.name}`)) {
-                    updatedPet.happiness = Math.min(100, pet.happiness + statGain);
-                    updatedPet.energy = Math.max(0, pet.energy - (10 * intensity));
-                    updatedPet.experience += xpGain * 1.5;
-                    newEmotion = 'happy';
-
-                    // TRICK LOGIC
-                    if (intensity === 2) setTrick('spin');
-                    if (intensity === 3) setTrick('magic');
-
-                    showToast(`Played with ${pet.name}! (+${statGain} Joy, -${COST}m)`, "success");
-                }
-                break;
-            case 'clean':
-                if (await UserService.deductBalance(COST, `Cleaned ${pet.name}`)) {
-                    updatedPet.cleanliness = Math.min(100, pet.cleanliness + (statGain * 2));
-                    updatedPet.experience += xpGain;
-                    newEmotion = 'happy';
-                    showToast(`Cleaned ${pet.name}! (-${COST}m)`, "success");
-                }
-                break;
-            case 'sleep':
-                updatedPet.isSleeping = !pet.isSleeping;
-                newEmotion = updatedPet.isSleeping ? 'sleeping' : 'idle';
-                break;
-        }
-
-        // Evolution logic
-        if (updatedPet.experience >= updatedPet.level * 100) {
-            updatedPet.level += 1;
-            updatedPet.experience = 0;
-            showToast(`${pet.name} leveled up to Lvl ${updatedPet.level}!`, "success");
-        }
-
-        setPet(updatedPet);
-        setEmotion(newEmotion);
-        await PetService.updatePet(updatedPet);
-
-        if (newEmotion !== 'sleeping') {
-            setTimeout(() => {
-                setEmotion('idle');
+                setIsSummoning(false);
                 setTrick(null);
             }, 3000);
         }
     };
 
-    if (loading) {
-        return (
-            <div className="fixed inset-0 z-[120] bg-black flex flex-col items-center justify-center text-white font-black uppercase tracking-[0.3em]">
-                <RefreshCw className="w-12 h-12 mb-4 animate-spin text-cyan-400" />
-                Initializing Link...
-            </div>
-        );
-    }
+    const handleAction = async (action: 'feed' | 'play' | 'clean' | 'sleep') => {
+        if (!pet || (pet.isSleeping && action !== 'sleep')) return;
+        if (action !== 'sleep' && user.balance < COST) {
+            showToast(`INSUFFICIENT_FUNDS: REQ ${COST}m`, "error");
+            return;
+        }
+
+        if (action !== 'sleep' && !await UserService.deductBalance(COST, `Lumina ${action}`)) return;
+
+        let updated = { ...pet };
+        let newEmotion: typeof emotion = 'happy';
+
+        // Stats Logic
+        const statGain = intensity * 15;
+
+        switch (action) {
+            case 'feed':
+                updated.hunger = Math.min(100, pet.hunger + statGain);
+                newEmotion = 'eating';
+                showToast(`SATURATION INCREASED`, "success");
+                break;
+            case 'play':
+                updated.happiness = Math.min(100, pet.happiness + statGain);
+                newEmotion = 'happy';
+                setTrick('spin');
+                showToast(`DOPAMINE SYNCED`, "success");
+                break;
+            case 'clean':
+                updated.cleanliness = Math.min(100, pet.cleanliness + statGain);
+                showToast(`CACHE CLEARED`, "success");
+                break;
+            case 'sleep':
+                updated.isSleeping = !pet.isSleeping;
+                newEmotion = updated.isSleeping ? 'sleeping' : 'idle';
+                break;
+        }
+
+        // XP & Level Up
+        if (action !== 'sleep') updated.experience += intensity * 5;
+        if (updated.experience >= updated.level * 100) {
+            updated.level++;
+            updated.experience = 0;
+            showToast(`SYSTEM UPGRADE: LEVEL ${updated.level}`, "success");
+        }
+
+        setPet(updated);
+        setEmotion(newEmotion);
+        PetService.updatePet(updated);
+
+        if (newEmotion !== 'sleeping') {
+            setTimeout(() => {
+                setEmotion('idle');
+                setTrick(null);
+            }, 2500);
+        }
+    };
+
+    if (loading) return <div className="fixed inset-0 bg-black text-cyan-500 flex items-center justify-center font-mono">INITIALIZING LINK...</div>;
 
     if (showSelection) {
         return (
-            <div className="fixed inset-0 z-[120] bg-gray-950 text-white flex flex-col items-center justify-center p-6 animate-in fade-in duration-700">
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 pointer-events-none"></div>
-                <div className="relative z-10 w-full max-w-md bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/10 p-8 shadow-2xl">
-                    <h2 className="text-2xl font-black uppercase tracking-widest text-center mb-8 flex items-center justify-center gap-3">
-                        <Sparkles className="w-6 h-6 text-cyan-400" /> Summon Your Lumina
-                    </h2>
+            <div className="fixed inset-0 z-[120] bg-gray-950 text-cyan-400 font-mono flex flex-col items-center justify-center p-6">
+                <div className="w-full max-w-md bg-black/80 border border-cyan-500/30 p-8 rounded-xl shadow-[0_0_50px_rgba(6,182,212,0.2)]">
+                    <h2 className="text-2xl font-bold mb-8 text-center tracking-[0.2em] animate-pulse">CHOOSE COMPANION</h2>
 
-                    <div className="space-y-6">
-                        <div>
-                            <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2 block">Choose Species</label>
-                            <div className="grid grid-cols-2 gap-3">
-                                {(['Holo-Hamu', 'Digi-Dino', 'Neo-Shiba', 'Zen-Sloth'] as const).map(s => (
-                                    <button
-                                        key={s}
-                                        onClick={() => setSelectedSpecies(s)}
-                                        className={`p-4 rounded-2xl border transition-all text-xs font-bold uppercase tracking-widest ${selectedSpecies === s ? 'bg-cyan-500/20 border-cyan-400 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/30'}`}
-                                    >
-                                        {s}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2 block">Name Your Friend</label>
-                            <input
-                                type="text"
-                                value={petName}
-                                onChange={(e) => setPetName(e.target.value)}
-                                placeholder="E.g. Pixel, Sparky..."
-                                className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-gray-700 focus:border-cyan-400 outline-none transition-all font-bold"
-                                maxLength={12}
-                            />
-                        </div>
-
-                        <button
-                            onClick={handleCreatePet}
-                            className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-black py-4 rounded-2xl transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-95 uppercase tracking-widest flex items-center justify-center gap-2"
-                        >
-                            Establish Link <Save className="w-4 h-4" />
-                        </button>
+                    <div className="grid grid-cols-2 gap-4 mb-8">
+                        {['Holo-Hamu', 'Digi-Dino', 'Neo-Shiba', 'Zen-Sloth'].map(s => (
+                            <button key={s} onClick={() => setSelectedSpecies(s as any)}
+                                className={`p-4 border ${selectedSpecies === s ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300' : 'border-white/10 text-gray-500'} transition-all`}
+                            >
+                                {s}
+                            </button>
+                        ))}
                     </div>
+
+                    <input
+                        className="w-full bg-black border border-cyan-500/30 p-4 mb-4 text-center text-xl uppercase tracking-widest focus:outline-none focus:border-cyan-400"
+                        placeholder="ENTER_NAME"
+                        value={petName}
+                        onChange={e => setPetName(e.target.value)}
+                        maxLength={12}
+                    />
+
+                    <button onClick={handleCreatePet} className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold p-4 tracking-widest hover:shadow-[0_0_20px_rgba(6,182,212,0.6)] transition-all">
+                        INITIALIZE
+                    </button>
                 </div>
             </div>
         );
@@ -248,179 +198,152 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     if (!pet) return null;
 
     return (
-        <div className="fixed inset-0 z-[120] bg-gray-50 dark:bg-[#0a0f0d] text-gray-900 dark:text-white flex flex-col animate-in fade-in duration-700 overflow-hidden">
-            {/* GRID BACKGROUND */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.05)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 via-transparent to-transparent pointer-events-none"></div>
+        <div className="fixed inset-0 z-[120] bg-[#050505] text-cyan-500 font-mono tracking-wider overflow-hidden">
 
-            {/* ORACLE OVERLAY */}
+            {/* --- CYBER BACKGROUND --- */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(34,211,238,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/10 via-transparent to-transparent pointer-events-none" />
+
+            {/* --- ORACLE OVERLAY --- */}
             {oracleMessage && (
-                <div onClick={() => setOracleMessage(null)} className="absolute inset-0 z-[130] flex items-center justify-center bg-black/80 backdrop-blur-md cursor-pointer animate-in fade-in">
-                    <div className="max-w-md p-8 text-center">
-                        <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-4 animate-spin-slow" />
-                        <h3 className="text-2xl font-black text-purple-400 mb-4 tracking-widest uppercase">Oracle Wisdom</h3>
-                        <p className="text-xl text-white font-serif italic leading-relaxed">"{oracleMessage}"</p>
-                        <p className="text-xs text-gray-500 mt-8 font-black uppercase tracking-widest">Click to dismiss</p>
+                <div onClick={() => setOracleMessage(null)} className="absolute inset-0 z-[150] bg-black/90 backdrop-blur-md flex items-center justify-center cursor-pointer animate-in fade-in">
+                    <div className="max-w-xl p-10 border border-purple-500/50 bg-purple-900/10 shadow-[0_0_100px_rgba(168,85,247,0.2)] text-center relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-purple-500 animate-[loading_2s_ease-in-out_infinite]" />
+                        <Cpu className="w-16 h-16 text-purple-400 mx-auto mb-6 animate-pulse" />
+                        <h3 className="text-3xl font-black text-purple-400 mb-6 font-mono">ORACLE_OUTPUT</h3>
+                        <p className="text-xl text-white/90 leading-relaxed type-writer-effect">"{oracleMessage}"</p>
+                        <p className="mt-8 text-xs text-purple-500/50 blink">TAP_TO_DISMISS</p>
                     </div>
                 </div>
             )}
 
-            {/* HEADER */}
-            <header className="relative z-10 px-6 py-4 flex justify-between items-center border-b border-white/5 backdrop-blur-md">
+            {/* --- HUD HEADER --- */}
+            <header className="relative z-10 px-6 py-4 flex justify-between items-end border-b border-cyan-500/20 bg-black/40 backdrop-blur-sm">
                 <div className="flex items-center gap-4">
-                    <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl transition-colors">
-                        <ChevronLeft className="w-6 h-6 text-cyan-400" />
-                    </button>
+                    <button onClick={onClose} className="hover:text-white transition-colors"><ChevronLeft /></button>
                     <div>
-                        <h2 className="text-sm font-black uppercase tracking-[0.2em]">{pet.name}</h2>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Level {pet.level} {pet.species}</span>
-                            <div className="w-24 h-1 bg-gray-800 rounded-full overflow-hidden">
-                                <div className="h-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" style={{ width: `${pet.experience % 100}%` }}></div>
-                            </div>
+                        <h1 className="text-2xl font-black italic transform -skew-x-12">{pet.name.toUpperCase()}</h1>
+                        <div className="text-[10px] text-cyan-500/60 flex gap-2">
+                            <span>LVL_0{pet.level}</span>
+                            <span>//</span>
+                            <span>{pet.species.toUpperCase()}</span>
                         </div>
                     </div>
                 </div>
-                <div className="flex items-center gap-6">
-                    <div className="hidden md:flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-yellow-400" />
-                        <span className="text-xs font-black">{user.balance}m</span>
-                    </div>
-                    <button onClick={onClose} className="p-2 hover:bg-red-500/20 rounded-xl transition-colors text-gray-500 hover:text-red-400">
-                        <X className="w-6 h-6" />
-                    </button>
+
+                {/* Visualizer Bars */}
+                <div className="flex gap-1 items-end h-8">
+                    {[...Array(5)].map((_, i) => (
+                        <div key={i} className={`w-1 bg-cyan-500/40 animate-[bounce_${0.5 + i * 0.1}s_infinite]`} style={{ height: `${20 + Math.random() * 80}%` }} />
+                    ))}
                 </div>
             </header>
 
-            {/* MAIN PORTAL */}
-            <main className="flex-1 relative flex items-center justify-center p-4 min-h-0 overflow-visible">
-                <div className="relative w-full md:max-w-lg aspect-square flex items-center justify-center">
-                    {/* HOLOGRAPHIC RING - Fixed: Removed border-width animation to prevent layout shift */}
-                    <div className="absolute inset-0 -m-4 md:-m-12 border-[4px] md:border-[8px] border-cyan-500/10 rounded-full animate-[spin_10s_linear_infinite]"></div>
-                    <div className="absolute inset-0 -m-4 md:-m-12 border-t-[4px] md:border-t-[8px] border-cyan-400 rounded-full animate-[spin_3s_linear_infinite]"></div>
-                    <div className="absolute inset-[10%] border-2 border-dashed border-cyan-500/20 rounded-full animate-[spin_15s_linear_infinite_reverse]"></div>
+            {/* --- MAIN PORTAL --- */}
+            <main className="flex-1 relative flex flex-col items-center justify-center p-4">
 
-                    {/* Ambient Particles */}
-                    <div className="absolute inset-0 pointer-events-none">
-                        {[...Array(6)].map((_, i) => (
-                            <div key={i} className="absolute w-1 h-1 bg-cyan-400/40 rounded-full animate-pulse"
-                                style={{
-                                    left: `${Math.random() * 100}%`,
-                                    top: `${Math.random() * 100}%`,
-                                    animationDelay: `${i * 0.5}s`
-                                }}></div>
-                        ))}
+                {/* CONTAINER */}
+                <div className="relative group perspective-1000">
+
+                    {/* Ring System */}
+                    <div className={`absolute inset-0 -m-12 border border-cyan-500/20 rounded-full animate-[spin_20s_linear_infinite] ${isSummoning ? 'border-purple-500/40 speed-up' : ''}`} />
+                    <div className="absolute inset-0 -m-6 border-t border-b border-cyan-400/40 rounded-full animate-[spin_5s_linear_infinite_reverse]" />
+
+                    {/* Character Canvas */}
+                    <div className={`relative transition-all duration-1000 ${isSummoning ? 'scale-110 -translate-y-10 brightness-150' : ''}`}>
+                        <PetCanvas
+                            pet={pet}
+                            width={canvasSize}
+                            height={canvasSize}
+                            emotion={emotion}
+                            trick={trick}
+                        />
                     </div>
 
-                    {/* PET CANVAS */}
-                    <div className="absolute inset-0 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                        <PetCanvas pet={pet} width={canvasSize} height={canvasSize} emotion={emotion} trick={trick} />
-                    </div>
-
-                    {/* STATUS BARS (Responsive: Bottom row on mobile, Right column on desktop) */}
-                    <div className="absolute -bottom-16 left-0 right-0 md:top-0 md:bottom-auto md:-right-32 md:left-auto md:w-48 bg-black/40 backdrop-blur-xl border border-white/10 p-3 md:p-5 rounded-3xl flex md:flex-col justify-between gap-2 md:gap-4 animate-in slide-in-from-bottom md:slide-in-from-right duration-1000 z-20">
-                        <StatusIndicator icon={Pizza} label="Hunger" val={pet.hunger} color="bg-orange-500" compact />
-                        <StatusIndicator icon={Heart} label="Happiness" val={pet.happiness} color="bg-rose-500" compact />
-                        <StatusIndicator icon={Bath} label="Clean" val={pet.cleanliness} color="bg-blue-400" compact />
-                        <StatusIndicator icon={Zap} label="Energy" val={pet.energy} color="bg-yellow-400" compact />
+                    {/* Status Holograms (Floating) */}
+                    <div className="absolute -right-20 top-10 flex flex-col gap-4 hidden md:flex">
+                        <StatusHolo icon={Pizza} value={pet.hunger} label="HGR" />
+                        <StatusHolo icon={Heart} value={pet.happiness} label="HAP" />
+                        <StatusHolo icon={Zap} value={pet.energy} label="NRG" />
                     </div>
                 </div>
+
+                {/* Mobile Status Row */}
+                <div className="md:hidden flex w-full justify-between px-8 mt-8">
+                    <StatusHolo icon={Pizza} value={pet.hunger} label="HGR" compact />
+                    <StatusHolo icon={Heart} value={pet.happiness} label="HAP" compact />
+                    <StatusHolo icon={Zap} value={pet.energy} label="NRG" compact />
+                </div>
+
             </main>
 
-            {/* INTENSITY TOGGLE */}
-            <div className="relative z-20 flex justify-center pb-4 animate-in slide-in-from-bottom duration-700">
-                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-full p-1 flex items-center gap-1">
-                    <span className="text-[9px] font-black uppercase text-gray-500 px-3 tracking-widest hidden md:block">Investment</span>
-                    {[1, 2, 3].map((level) => (
-                        <button
-                            key={level}
-                            onClick={() => setIntensity(level as 1 | 2 | 3)}
-                            className={`w-10 h-8 md:w-12 md:h-10 rounded-full flex items-center justify-center text-[10px] md:text-xs font-black transition-all ${intensity === level ? 'bg-cyan-500 text-black shadow-[0_0_15px_rgba(6,182,212,0.6)]' : 'text-gray-500 hover:bg-white/10'}`}
-                        >
-                            {level}m
-                        </button>
-                    ))}
-                </div>
-            </div>
+            {/* --- CONTROL DECK --- */}
+            <footer className="relative z-20 bg-black/80 border-t border-cyan-500/20 p-6">
 
-            {/* INTERACTION TRAY */}
-            <footer className="relative z-10 p-8 pb-12 flex justify-center gap-4 md:gap-8 flex-wrap">
-                <ActionButton
-                    icon={Pizza}
-                    label="Feed"
-                    color="cyan"
-                    onClick={() => handleAction('feed')}
-                    disabled={pet.isSleeping}
-                />
-                <ActionButton
-                    icon={Gamepad2}
-                    label="Play"
-                    color="cyan"
-                    onClick={() => handleAction('play')}
-                    disabled={pet.isSleeping || pet.energy < 20}
-                />
-                <ActionButton
-                    icon={Sparkles}
-                    label="Oracle"
-                    color="purple"
-                    onClick={handleOracleConsult}
-                    disabled={pet.isSleeping}
-                />
-                <ActionButton
-                    icon={Bath}
-                    label="Wash"
-                    color="cyan"
-                    onClick={() => handleAction('clean')}
-                    disabled={pet.isSleeping}
-                />
-                <ActionButton
-                    icon={pet.isSleeping ? Sun : Moon}
-                    label={pet.isSleeping ? "Wake" : "Sleep"}
-                    color={pet.isSleeping ? "yellow" : "cyan"}
-                    onClick={() => handleAction('sleep')}
-                />
+                {/* Power Level Selector */}
+                <div className="flex justify-center mb-6">
+                    <div className="flex bg-black border border-cyan-500/30 rounded p-1">
+                        {[1, 2, 3].map(lvl => (
+                            <button
+                                key={lvl}
+                                onClick={() => setIntensity(lvl as 1 | 2 | 3)}
+                                className={`px-4 py-1 text-xs font-bold ${intensity === lvl ? 'bg-cyan-500 text-black shadow-[0_0_10px_rgba(34,211,238,0.5)]' : 'text-cyan-500/40 hover:text-cyan-400'}`}
+                            >
+                                PWR_{lvl}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex justify-center gap-4 flex-wrap">
+                    <CyberBtn icon={Pizza} label="FEED" onClick={() => handleAction('feed')} />
+                    <CyberBtn icon={Gamepad2} label="PLAY" onClick={() => handleAction('play')} />
+                    <CyberBtn icon={Sparkles} label="ORACLE" onClick={handleOracleConsult} color="purple" />
+                    <CyberBtn icon={RefreshCw} label="CLEAN" onClick={() => handleAction('clean')} />
+                    <CyberBtn
+                        icon={pet.isSleeping ? Sun : Moon}
+                        label={pet.isSleeping ? "WAKE" : "SLEEP"}
+                        onClick={() => handleAction('sleep')}
+                        color={pet.isSleeping ? "yellow" : "cyan"}
+                    />
+                </div>
             </footer>
-
-            {pet.isSleeping && (
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-none flex items-center justify-center">
-                    <div className="text-white font-black text-4xl animate-pulse tracking-[1em] opacity-30">ZZZZZ</div>
-                </div>
-            )}
         </div>
     );
 };
 
-const StatusIndicator: React.FC<{ icon: any, label: string, val: number, color: string, compact?: boolean }> = ({ icon: Icon, label, val, color, compact }) => (
-    <div className={`space-y-1.5 ${compact ? 'flex-1' : ''}`}>
-        <div className="flex justify-between items-center text-[8px] md:text-[10px] font-black uppercase tracking-widest text-gray-500">
-            <div className={`flex items-center ${compact ? 'justify-center w-full mb-1' : 'gap-1.5'}`}>
-                <Icon className="w-3 h-3 md:mr-1" /> {!compact && label}
-            </div>
-            {!compact && <span>{Math.floor(val)}%</span>}
+const StatusHolo: React.FC<{ icon: any, value: number, label: string, compact?: boolean }> = ({ icon: Icon, value, label, compact }) => (
+    <div className="flex flex-col items-center gap-1 group">
+        <div className="relative">
+            <Icon className={`w-5 h-5 text-cyan-400 ${value < 30 ? 'animate-pulse text-red-500' : ''}`} />
+            <div className="absolute inset-0 blur-sm bg-cyan-400/20" />
         </div>
-        <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-            <div className={`h-full ${color} transition-all duration-1000 shadow-[0_0_8px_rgba(0,0,0,0.5)]`} style={{ width: `${val}%` }}></div>
+        {!compact && <span className="text-[9px] font-bold text-cyan-500/70">{label}</span>}
+        <div className="w-1 h-8 bg-gray-900 rounded-full overflow-hidden mt-1">
+            <div className={`w-full bg-cyan-400 transition-all duration-1000`} style={{ height: `${value}%`, marginTop: `${100 - value}%` }} />
         </div>
     </div>
 );
 
-const ActionButton: React.FC<{ icon: any, label: string, color: 'cyan' | 'yellow' | 'red' | 'purple', onClick: () => void, disabled?: boolean }> = ({ icon: Icon, label, color, onClick, disabled }) => {
-    const colorClass = color === 'cyan' ? 'hover:bg-cyan-500/20 text-cyan-400 border-cyan-500/30' :
-        color === 'yellow' ? 'hover:bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
-            color === 'purple' ? 'hover:bg-purple-500/20 text-purple-400 border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.3)]' :
-                'hover:bg-red-500/20 text-red-400 border-red-500/30';
-
+const CyberBtn: React.FC<{ icon: any, label: string, onClick: () => void, color?: string }> = ({ icon: Icon, label, onClick, color = "cyan" }) => {
+    const colorClass = color === "purple" ? "text-purple-400 border-purple-500/50 hover:bg-purple-900/20" :
+        color === "yellow" ? "text-yellow-400 border-yellow-500/50 hover:bg-yellow-900/20" :
+            "text-cyan-400 border-cyan-500/50 hover:bg-cyan-900/20";
     return (
         <button
             onClick={onClick}
-            disabled={disabled}
-            className={`group relative flex flex-col items-center gap-2 p-4 md:p-6 rounded-[2rem] border backdrop-blur-xl transition-all active:scale-90 ${disabled ? 'opacity-20 cursor-not-allowed border-white/5 text-gray-700' : colorClass}`}
+            className={`
+                group relative px-6 py-4 border ${colorClass} 
+                clip-path-polygon flex flex-col items-center gap-2
+                transition-all active:scale-95 hover:shadow-[0_0_15px_rgba(34,211,238,0.2)]
+            `}
         >
-            <div className="relative">
-                <Icon className="w-6 h-6 md:w-8 md:h-8" />
-                <div className="absolute -inset-4 bg-current opacity-0 group-hover:opacity-10 blur-xl transition-opacity"></div>
-            </div>
-            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em]">{label}</span>
+            <Icon className="w-6 h-6" />
+            <span className="text-[10px] font-bold tracking-[0.2em]">{label}</span>
+            {/* Corner Accents */}
+            <div className="absolute top-0 left-0 w-2 h-2 border-l border-t border-current opacity-50" />
+            <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-current opacity-50" />
         </button>
     );
 };

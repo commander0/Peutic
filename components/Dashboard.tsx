@@ -10,10 +10,11 @@ import {
     BookOpen, Flame, Trophy,
     Sun, Feather, LifeBuoy, RefreshCw, Star, Edit2, Zap, Gamepad2,
     ChevronDown, ChevronUp, User as UserIcon, Moon, Scissors,
-    Twitter, Instagram, Linkedin,
+    Twitter, Instagram, Linkedin, Wind, Palette,
     Mail, Eye, EyeOff, Megaphone, Sparkles, Save, Video
 } from 'lucide-react';
 import { NotificationBell, Notification } from './common/NotificationBell';
+import { ThemeToggle } from './common/ThemeToggle';
 import { UserService } from '../services/userService';
 import { AdminService } from '../services/adminService';
 import { useToast } from './common/Toast';
@@ -203,6 +204,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [showPocketPet, setShowPocketPet] = useState(false);
     const [showObservatory, setShowObservatory] = useState(false);
     const [showDojo, setShowDojo] = useState(false);
+    const [showMatchGame, setShowMatchGame] = useState(false);
+    const [showCloudHop, setShowCloudHop] = useState(false);
     // Lumina state moved to grouped section
     const [notifications, setNotifications] = useState<Notification[]>([]);
 
@@ -593,6 +596,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             await UserService.updateUser(updatedUser); // Persist
             showToast(`${roomId.replace(/^\w/, c => c.toUpperCase())} Unlocked!`, "success");
 
+            // Achievement Hook
+            const unlockedAch = await UserService.unlockAchievement(dashboardUser.id, 'EXPLORER');
+            if (unlockedAch) {
+                showToast(`🏆 Achievement Unlocked: ${unlockedAch.title}`, "success");
+            }
+
             // Open immediately
             if (roomId === 'observatory') setShowObservatory(true);
             if (roomId === 'dojo') setShowDojo(true);
@@ -886,57 +895,98 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 </div>
 
                                                 {/* ROW 2: OBSERVATORY & ZEN DOJO (2-Col Grid) */}
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    {/* TILE 4: OBSERVATORY */}
-                                                    <div
-                                                        onClick={() => handleRoomInteraction('observatory', 25)}
-                                                        className={`group relative rounded-xl md:rounded-3xl border transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer ${dashboardUser?.unlockedRooms?.includes('observatory')
-                                                            ? 'bg-gradient-to-br from-indigo-900 to-black border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.4)]'
-                                                            : 'bg-indigo-900/20 backdrop-blur-md border-dashed border-indigo-200/30 dark:border-gray-700/50 hover:bg-indigo-900/30'}`}
-                                                    >
-                                                        <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
-                                                            {dashboardUser?.unlockedRooms?.includes('observatory') ? (
-                                                                <>
-                                                                    <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-indigo-950 flex items-center justify-center text-indigo-200 shadow-[0_0_15px_rgba(99,102,241,0.5)] group-hover:scale-110 transition-transform"><Star className="w-5 h-5 md:w-8 md:h-8 fill-indigo-200" /></div>
-                                                                    <h3 className="text-[7px] md:text-xs font-black text-indigo-100 uppercase tracking-widest drop-shadow-lg">Observatory</h3>
-                                                                    <p className="hidden md:block text-[9px] text-indigo-300 mt-1">Track Dreams & Sleep</p>
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <div className="w-8 h-8 md:w-12 md:h-12 bg-black/20 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-indigo-300" /></div>
-                                                                    <h3 className="text-[7px] md:text-xs font-black text-indigo-900 dark:text-indigo-200 uppercase tracking-widest">Observatory</h3>
-                                                                    <div className="mt-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-[8px] md:text-[10px] font-black px-3 py-1 rounded-full shadow-lg">25m</div>
-                                                                </>
-                                                            )}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* ZEN DOJO */}
-                                                    <div
-                                                        onClick={() => handleRoomInteraction('dojo', 15)}
-                                                        className={`group relative rounded-xl md:rounded-3xl border transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer ${dashboardUser?.unlockedRooms?.includes('dojo')
-                                                            ? 'bg-gradient-to-br from-amber-900 to-stone-900 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.4)]'
-                                                            : 'bg-amber-900/20 backdrop-blur-md border-dashed border-amber-200/30 dark:border-gray-700/50 hover:bg-amber-900/30'}`}
-                                                    >
-                                                        <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
-                                                            {dashboardUser?.unlockedRooms?.includes('dojo') ? (
-                                                                <>
-                                                                    <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-stone-800 flex items-center justify-center text-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform"><Zap className="w-5 h-5 md:w-8 md:h-8 fill-amber-500" /></div>
-                                                                    <h3 className="text-[7px] md:text-xs font-black text-amber-100 uppercase tracking-widest drop-shadow-lg">Zen Dojo</h3>
-                                                                    <p className="hidden md:block text-[9px] text-amber-300 mt-1">Focus & Mastery</p>
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <div className="w-8 h-8 md:w-12 md:h-12 bg-black/20 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-amber-700 dark:text-amber-500" /></div>
-                                                                    <h3 className="text-[7px] md:text-xs font-black text-amber-900 dark:text-amber-200 uppercase tracking-widest">Zen Dojo</h3>
-                                                                    <div className="mt-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[8px] md:text-[10px] font-black px-3 py-1 rounded-full shadow-lg">15m</div>
-                                                                </>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                {/* This section is removed as it's replaced by the new Sanctuary Spaces grid */}
                                             </div>
                                         </CollapsibleSection>
+                                    </div>
+                                </div>
+
+                                {/* SANCTUARY GRID */}
+                                <div className="mt-8 mb-24">
+                                    <div className="flex justify-between items-end mb-8 relative">
+                                        <div>
+                                            <h2 className="text-2xl md:text-3xl font-black text-text-base flex items-center gap-3">
+                                                <span className="p-2 rounded-xl bg-primary/10 text-primary"><Star className="w-6 h-6 fill-current" /></span>
+                                                Sanctuary Spaces
+                                            </h2>
+                                            <p className="text-text-base/60 font-medium ml-1 mt-1">Unlock mystical realms to enhance your journey.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-6">
+
+                                        {/* ORACLE (OBSERVATORY) */}
+                                        <div
+                                            onClick={() => handleRoomInteraction('observatory', 25)}
+                                            className={`aspect-square rounded-3xl relative group cursor-pointer overflow-hidden border transition-all duration-300
+                                ${dashboardUser?.unlockedRooms?.includes('observatory')
+                                                    ? 'bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-950 border-indigo-500/50 shadow-lg shadow-indigo-900/40' // Keep mystical colors for Oracle
+                                                    : 'bg-base/40 border-dashed border-primary/20 hover:bg-base/60'}`}
+                                        >
+                                            <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center h-full">
+                                                {dashboardUser?.unlockedRooms?.includes('observatory') ? (
+                                                    <>
+                                                        <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-indigo-950 flex items-center justify-center text-indigo-200 shadow-[0_0_15px_rgba(99,102,241,0.5)] group-hover:scale-110 transition-transform"><Moon className="w-5 h-5 md:w-8 md:h-8 fill-indigo-200" /></div>
+                                                        <h3 className="text-[7px] md:text-xs font-black text-indigo-100 uppercase tracking-widest drop-shadow-lg">Oracle</h3>
+                                                        <p className="hidden md:block text-[9px] text-indigo-300 mt-1">Track Dreams & Sleep</p>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div className="w-8 h-8 md:w-12 md:h-12 bg-black/10 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-text-base/40" /></div>
+                                                        <h3 className="text-[7px] md:text-xs font-black text-text-base uppercase tracking-widest">Oracle</h3>
+                                                        <div className="mt-2 bg-gradient-to-r from-primary to-primary-border text-text-base text-[8px] md:text-[10px] font-black px-3 py-1 rounded-full shadow-lg">25m</div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* ZEN DOJO */}
+                                        <div
+                                            onClick={() => handleRoomInteraction('dojo', 50)}
+                                            className={`aspect-square rounded-3xl relative group cursor-pointer overflow-hidden border transition-all duration-300
+                                ${dashboardUser?.unlockedRooms?.includes('dojo')
+                                                    ? 'bg-gradient-to-br from-orange-900 via-red-900 to-orange-950 border-orange-500/50 shadow-lg shadow-orange-900/40' // Keep warm colors for Dojo
+                                                    : 'bg-base/40 border-dashed border-primary/20 hover:bg-base/60'}`}
+                                        >
+                                            <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center h-full">
+                                                {dashboardUser?.unlockedRooms?.includes('dojo') ? (
+                                                    <>
+                                                        <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-orange-950 flex items-center justify-center text-orange-200 shadow-[0_0_15px_rgba(249,115,22,0.5)] group-hover:scale-110 transition-transform"><Flame className="w-5 h-5 md:w-8 md:h-8 fill-orange-200" /></div>
+                                                        <h3 className="text-[7px] md:text-xs font-black text-orange-100 uppercase tracking-widest drop-shadow-lg">Zen Dojo</h3>
+                                                        <p className="hidden md:block text-[9px] text-orange-300 mt-1">Focus & Discipline</p>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div className="w-8 h-8 md:w-12 md:h-12 bg-black/10 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-text-base/40" /></div>
+                                                        <h3 className="text-[7px] md:text-xs font-black text-text-base uppercase tracking-widest">Zen Dojo</h3>
+                                                        <div className="mt-2 bg-gradient-to-r from-primary to-primary-border text-text-base text-[8px] md:text-[10px] font-black px-3 py-1 rounded-full shadow-lg">50m</div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* ARCADE GAMES */}
+                                        <div onClick={() => setShowMatchGame(true)} className="aspect-square bg-base/40 backdrop-blur-md rounded-3xl p-4 border border-primary/20 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-primary/10 transition-all group">
+                                            <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                <Gamepad2 className="w-6 h-6 text-primary" />
+                                            </div>
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-text-base">Mindful Match</span>
+                                        </div>
+
+                                        <div onClick={() => setShowCloudHop(true)} className="aspect-square bg-base/40 backdrop-blur-md rounded-3xl p-4 border border-primary/20 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-primary/10 transition-all group">
+                                            <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                <Wind className="w-6 h-6 text-blue-500" />
+                                            </div>
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-text-base">Cloud Hop</span>
+                                        </div>
+
+
+                                        {/* COMING SOON PLACEHOLDERS */}
+                                        {[1, 2].map(i => (
+                                            <div key={i} className="aspect-square bg-base/20 rounded-3xl border border-dashed border-primary/10 flex items-center justify-center opacity-50">
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-text-base/30">Soon</span>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
 
@@ -1249,8 +1299,34 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             {showGrounding && <GroundingMode onClose={() => setShowGrounding(false)} />}
             {showTechCheck && (<TechCheck onConfirm={confirmSession} onCancel={() => setShowTechCheck(false)} />)}
 
+            {/* GAMES */}
+            {showMatchGame && (
+                <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Loading Game...</div>}>
+                    <div className="fixed inset-0 z-[150] bg-base/90 backdrop-blur-xl flex flex-col">
+                        <div className="p-4 flex justify-end">
+                            <button onClick={() => setShowMatchGame(false)} className="p-2 bg-base/50 rounded-full hover:bg-primary/20"><X className="w-6 h-6 text-text-base" /></button>
+                        </div>
+                        <div className="flex-1 overflow-hidden">
+                            <MindfulMatchGame onClose={() => setShowMatchGame(false)} />
+                        </div>
+                    </div>
+                </Suspense>
+            )}
+
+            {showCloudHop && (
+                <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Loading Cloud Engine...</div>}>
+                    <div className="fixed inset-0 z-[150] bg-base/90 backdrop-blur-xl flex flex-col">
+                        <div className="p-4 flex justify-end">
+                            <button onClick={() => setShowCloudHop(false)} className="p-2 bg-base/50 rounded-full hover:bg-primary/20"><X className="w-6 h-6 text-text-base" /></button>
+                        </div>
+                        <div className="flex-1 overflow-hidden">
+                            <CloudHopGame onClose={() => setShowCloudHop(false)} />
+                        </div>
+                    </div>
+                </Suspense>
+            )}
+
             {/* MOOD PULSE ALERT */}
-            {/* MOOD PULSE ALERT (Removed Banner, Logic Kept for Floating Button) */}
             {
                 moodRiskAlert && (
                     // Hidden banner logic - now relying on user initiative or smaller cues
