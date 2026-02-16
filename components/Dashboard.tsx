@@ -786,201 +786,171 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         {activeTab === 'inner_sanctuary' && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
 
-                                {/* THE PLAYGROUND (Collapsible 3-Column Tile Menu) */}
                                 <div className="space-y-4">
-                                    <div className="space-y-4">
-                                        <CollapsibleSection title="The Hub" icon={Zap} defaultOpen={false}>
-                                            <div className="space-y-4">
-                                                {/* ROW 1: CORE TRIO */}
-                                                <div className="grid grid-cols-3 gap-1 md:gap-4">
-                                                    {/* TILE 1: INNER GARDEN */}
-                                                    {garden && (
-                                                        <div
-                                                            onClick={() => setShowGardenFull(true)}
-                                                            className="group relative bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-black dark:to-emerald-950 rounded-xl md:rounded-3xl border border-green-400/30 dark:border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.15)] hover:shadow-[0_0_25px_rgba(34,197,94,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
-                                                        >
-                                                            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 pointer-events-none"></div>
-                                                            <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
-                                                                <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
-                                                                <div className="relative z-10 w-full h-full flex flex-col items-center justify-center pointer-events-none">
-                                                                    <div className="w-full h-24 md:h-32 mb-1 pointer-events-auto transition-transform group-hover:scale-105 duration-700">
-                                                                        <Suspense fallback={<div className="w-full h-full flex items-center justify-center"><div className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div></div>}>
-                                                                            <GardenCanvas garden={garden} width={200} height={180} interactionType={isClipping ? 'clip' : null} />
-                                                                        </Suspense>
-                                                                    </div>
-
-                                                                    {/* Overlay Controls */}
-                                                                    <div className="absolute top-2 right-2 pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                handleClipPlant();
-                                                                            }}
-                                                                            className="p-2 bg-white/90 dark:bg-black/80 rounded-full shadow-lg hover:scale-110 active:scale-95 text-pink-500 transition-all"
-                                                                            title="Clip for Inspiration"
-                                                                        >
-                                                                            <Scissors className="w-4 h-4" />
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                                <h3 className="text-[7px] md:text-sm font-black text-green-700 dark:text-green-300 uppercase tracking-widest drop-shadow-sm text-center mt-[-10px] relative z-20">Zen Bonzai</h3>
-                                                                <p className="hidden md:block text-[9px] font-bold text-green-600/70 dark:text-green-400/60 uppercase tracking-tighter">Lvl {garden.level} &bull; {garden.currentPlantType}</p>
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    {/* TILE 2: BOOK OF YOU */}
-                                                    {(() => {
-                                                        const joinedDate = new Date(dashboardUser?.joinedAt || new Date().toISOString());
-                                                        const now = new Date();
-                                                        const diffTime = Math.abs(now.getTime() - joinedDate.getTime());
-                                                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                                                        const isLocked = diffDays < 7;
-                                                        const daysRemaining = 7 - diffDays;
-
-                                                        return (
-                                                            <div
-                                                                onClick={() => {
-                                                                    if (!isLocked) {
-                                                                        setShowBookFull(true);
-                                                                    } else {
-                                                                        showToast(`Locked for ${daysRemaining} more days.`, "info");
-                                                                    }
-                                                                }}
-                                                                className="group relative bg-gradient-to-br from-fuchsia-50 via-purple-50 to-indigo-50 dark:from-purple-950 dark:via-black dark:to-indigo-950 rounded-xl md:rounded-3xl border border-purple-400/30 dark:border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] transition-all overflow-hidden cursor-pointer h-[100px] md:h-[220px]"
-                                                            >
-                                                                {/* Animated shimmer overlay */}
-                                                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_3s_infinite] pointer-events-none"></div>
-                                                                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')] opacity-[0.15] pointer-events-none"></div>
-
-                                                                <div className="flex flex-col items-center justify-center h-full p-2 md:p-6 text-center relative z-10">
-                                                                    <div className="relative mb-1 md:mb-4">
-                                                                        {/* Pulsing glow ring */}
-                                                                        <div className="absolute -inset-4 md:-inset-6 bg-purple-400/30 dark:bg-purple-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                                        <div className="absolute -inset-2 border border-purple-300/50 dark:border-purple-500/30 rounded-full animate-[spin_8s_linear_infinite]"></div>
-                                                                        <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-purple-600 to-indigo-700 border border-purple-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_20px_rgba(168,85,247,0.5)] group-hover:scale-110 transition-transform">
-                                                                            <BookOpen className="w-5 h-5 md:w-10 md:h-10" />
-                                                                        </div>
-                                                                        {isLocked && <div className="absolute -top-2 -right-2 bg-primary text-black p-1 rounded-lg shadow-lg"><Lock className="w-3 h-3" /></div>}
-                                                                    </div>
-                                                                    <h3 className="text-[7px] md:text-sm font-black text-purple-700 dark:text-purple-300 uppercase tracking-widest drop-shadow-[0_0_6px_rgba(168,85,247,0.6)]">Book of You</h3>
-                                                                    <p className="hidden md:block text-[10px] font-bold text-purple-500/70 dark:text-purple-400/50 uppercase tracking-widest">
-                                                                        {isLocked ? `Unlocked in ${daysRemaining}d` : 'Open Chronicle'}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    })()}
-
-                                                    {/* TILE 3: ANIMA */}
+                                    <CollapsibleSection title="Spaces" icon={Zap} defaultOpen={true}>
+                                        <div className="space-y-4">
+                                            {/* SPACES GRID (2 Rows of 3) */}
+                                            <div className="grid grid-cols-3 gap-1 md:gap-4">
+                                                {/* TILE 1: ZEN BONZAI */}
+                                                {garden && (
                                                     <div
-                                                        onClick={() => setShowPocketPet(true)}
-                                                        className="group relative bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50 dark:from-cyan-950 dark:via-black dark:to-blue-950 rounded-xl md:rounded-3xl border border-cyan-400/30 dark:border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)] hover:shadow-[0_0_25px_rgba(6,182,212,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                        onClick={() => setShowGardenFull(true)}
+                                                        className="group relative bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-black dark:to-emerald-950 rounded-xl md:rounded-3xl border border-green-400/30 dark:border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.15)] hover:shadow-[0_0_25px_rgba(34,197,94,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                                     >
-                                                        {/* Changed from mix-blend-multiply to simple transparency for better light mode visibility */}
-                                                        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-600/5 pointer-events-none data-[mode=dark]:mix-blend-overlay"></div>
+                                                        <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 pointer-events-none"></div>
                                                         <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
-                                                            <div className="relative mb-1 md:mb-4">
-                                                                <div className="absolute -inset-4 bg-cyan-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                                <div className="w-10 h-10 md:w-20 md:h-20 bg-white/10 dark:bg-black/40 border border-cyan-500/50 rounded-2xl flex items-center justify-center text-cyan-500 dark:text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform">
-                                                                    <Sparkles className="w-5 h-5 md:w-10 md:h-10 animate-bounce" />
+                                                            <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
+                                                            <div className="relative z-10 w-full h-full flex flex-col items-center justify-center pointer-events-none">
+                                                                <div className="w-full h-24 md:h-32 mb-1 pointer-events-auto transition-transform group-hover:scale-105 duration-700">
+                                                                    <Suspense fallback={<div className="w-full h-full flex items-center justify-center"><div className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div></div>}>
+                                                                        <GardenCanvas garden={garden} width={200} height={180} interactionType={isClipping ? 'clip' : null} />
+                                                                    </Suspense>
+                                                                </div>
+                                                                {/* Overlay Controls */}
+                                                                <div className="absolute top-2 right-2 pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleClipPlant();
+                                                                        }}
+                                                                        className="p-2 bg-white/90 dark:bg-black/80 rounded-full shadow-lg hover:scale-110 active:scale-95 text-pink-500 transition-all"
+                                                                        title="Clip for Inspiration"
+                                                                    >
+                                                                        <Scissors className="w-4 h-4" />
+                                                                    </button>
                                                                 </div>
                                                             </div>
-                                                            {/* Text colors adjusted for better contrast in light mode */}
-                                                            <h3 className="text-[7px] md:text-sm font-black text-cyan-700 dark:text-cyan-50 uppercase tracking-[0.2em] mb-1">Lumina</h3>
-                                                            <p className="hidden md:block text-[10px] font-bold text-cyan-600/60 dark:text-cyan-400/50 uppercase tracking-widest">
-                                                                {lumina ? `${lumina.name} Lvl ${lumina.level}` : 'Summon Friend'}
-                                                            </p>
+                                                            <h3 className="text-[7px] md:text-sm font-black text-green-700 dark:text-green-300 uppercase tracking-widest drop-shadow-sm text-center mt-[-10px] relative z-20">Zen Bonzai</h3>
+                                                            <p className="hidden md:block text-[9px] font-bold text-green-600/70 dark:text-green-400/60 uppercase tracking-tighter">Lvl {garden.level} &bull; {garden.currentPlantType}</p>
                                                         </div>
+                                                    </div>
+                                                )}
+
+                                                {/* TILE 2: BOOK OF YOU */}
+                                                {(() => {
+                                                    const joinedDate = new Date(dashboardUser?.joinedAt || new Date().toISOString());
+                                                    const now = new Date();
+                                                    const diffTime = Math.abs(now.getTime() - joinedDate.getTime());
+                                                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                                                    const isLocked = diffDays < 7;
+                                                    const daysRemaining = 7 - diffDays;
+
+                                                    return (
+                                                        <div
+                                                            onClick={() => {
+                                                                if (!isLocked) {
+                                                                    setShowBookFull(true);
+                                                                } else {
+                                                                    showToast(`Locked for ${daysRemaining} more days.`, "info");
+                                                                }
+                                                            }}
+                                                            className="group relative bg-gradient-to-br from-fuchsia-50 via-purple-50 to-indigo-50 dark:from-purple-950 dark:via-black dark:to-indigo-950 rounded-xl md:rounded-3xl border border-purple-400/30 dark:border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] transition-all overflow-hidden cursor-pointer h-[100px] md:h-[220px]"
+                                                        >
+                                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_3s_infinite] pointer-events-none"></div>
+                                                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')] opacity-[0.15] pointer-events-none"></div>
+                                                            <div className="flex flex-col items-center justify-center h-full p-2 md:p-6 text-center relative z-10">
+                                                                <div className="relative mb-1 md:mb-4">
+                                                                    <div className="absolute -inset-4 md:-inset-6 bg-purple-400/30 dark:bg-purple-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                                    <div className="absolute -inset-2 border border-purple-300/50 dark:border-purple-500/30 rounded-full animate-[spin_8s_linear_infinite]"></div>
+                                                                    <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-purple-600 to-indigo-700 border border-purple-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_20px_rgba(168,85,247,0.5)] group-hover:scale-110 transition-transform">
+                                                                        <BookOpen className="w-5 h-5 md:w-10 md:h-10" />
+                                                                    </div>
+                                                                    {isLocked && <div className="absolute -top-2 -right-2 bg-primary text-black p-1 rounded-lg shadow-lg"><Lock className="w-3 h-3" /></div>}
+                                                                </div>
+                                                                <h3 className="text-[7px] md:text-sm font-black text-purple-700 dark:text-purple-300 uppercase tracking-widest drop-shadow-[0_0_6px_rgba(168,85,247,0.6)]">Book of You</h3>
+                                                                <p className="hidden md:block text-[10px] font-bold text-purple-500/70 dark:text-purple-400/50 uppercase tracking-widest">
+                                                                    {isLocked ? `Unlocked in ${daysRemaining}d` : 'Open Chronicle'}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })()}
+
+                                                {/* TILE 3: LUMINA */}
+                                                <div
+                                                    onClick={() => setShowPocketPet(true)}
+                                                    className="group relative bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50 dark:from-cyan-950 dark:via-black dark:to-blue-950 rounded-xl md:rounded-3xl border border-cyan-400/30 dark:border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)] hover:shadow-[0_0_25px_rgba(6,182,212,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                >
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-600/5 pointer-events-none data-[mode=dark]:mix-blend-overlay"></div>
+                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
+                                                        <div className="relative mb-1 md:mb-4">
+                                                            <div className="absolute -inset-4 bg-cyan-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                            <div className="w-10 h-10 md:w-20 md:h-20 bg-white/10 dark:bg-black/40 border border-cyan-500/50 rounded-2xl flex items-center justify-center text-cyan-500 dark:text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform">
+                                                                <Sparkles className="w-5 h-5 md:w-10 md:h-10 animate-bounce" />
+                                                            </div>
+                                                        </div>
+                                                        <h3 className="text-[7px] md:text-sm font-black text-cyan-700 dark:text-cyan-50 uppercase tracking-[0.2em] mb-1">Lumina</h3>
+                                                        <p className="hidden md:block text-[10px] font-bold text-cyan-600/60 dark:text-cyan-400/50 uppercase tracking-widest">
+                                                            {lumina ? `${lumina.name} Lvl ${lumina.level}` : 'Summon Friend'}
+                                                        </p>
                                                     </div>
                                                 </div>
 
-                                                {/* ROW 2: OBSERVATORY & ZEN DOJO (2-Col Grid) */}
-                                                {/* This section is removed as it's replaced by the new Sanctuary Spaces grid */}
-                                            </div>
-                                        </CollapsibleSection>
-                                    </div>
-                                </div>
-
-                                {/* SANCTUARY GRID */}
-                                <div className="mt-8 mb-24">
-                                    <div className="flex justify-between items-end mb-8 relative">
-                                        <div>
-                                            <h2 className="text-2xl md:text-3xl font-black text-text-base flex items-center gap-3">
-                                                <span className="p-2 rounded-xl bg-primary/10 text-primary"><Star className="w-6 h-6 fill-current" /></span>
-                                                Sanctuary Spaces
-                                            </h2>
-                                            <p className="text-text-base/60 font-medium ml-1 mt-1">Unlock mystical realms to enhance your journey.</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-6">
-
-                                        {/* ORACLE (OBSERVATORY) */}
-                                        <div
-                                            onClick={() => handleRoomInteraction('observatory', 25)}
-                                            className={`aspect-square rounded-3xl relative group cursor-pointer overflow-hidden border transition-all duration-300
-                                ${dashboardUser?.unlockedRooms?.includes('observatory')
-                                                    ? 'bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-950 border-indigo-500/50 shadow-lg shadow-indigo-900/40' // Keep mystical colors for Oracle
-                                                    : 'bg-base/40 border-dashed border-primary/20 hover:bg-base/60'}`}
-                                        >
-                                            <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center h-full">
-                                                {dashboardUser?.unlockedRooms?.includes('observatory') ? (
-                                                    <>
-                                                        <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-indigo-950 flex items-center justify-center text-indigo-200 shadow-[0_0_15px_rgba(99,102,241,0.5)] group-hover:scale-110 transition-transform"><Moon className="w-5 h-5 md:w-8 md:h-8 fill-indigo-200" /></div>
-                                                        <h3 className="text-[7px] md:text-xs font-black text-indigo-100 uppercase tracking-widest drop-shadow-lg">Oracle</h3>
-                                                        <p className="hidden md:block text-[9px] text-indigo-300 mt-1">Track Dreams & Sleep</p>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <div className="w-8 h-8 md:w-12 md:h-12 bg-black/10 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-text-base/40" /></div>
-                                                        <h3 className="text-[7px] md:text-xs font-black text-text-base uppercase tracking-widest">Oracle</h3>
-                                                        <div className="mt-2 bg-gradient-to-r from-primary to-primary-border text-text-base text-[8px] md:text-[10px] font-black px-3 py-1 rounded-full shadow-lg">25m</div>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* ZEN DOJO */}
-                                        <div
-                                            onClick={() => handleRoomInteraction('dojo', 50)}
-                                            className={`aspect-square rounded-3xl relative group cursor-pointer overflow-hidden border transition-all duration-300
-                                ${dashboardUser?.unlockedRooms?.includes('dojo')
-                                                    ? 'bg-gradient-to-br from-orange-900 via-red-900 to-orange-950 border-orange-500/50 shadow-lg shadow-orange-900/40' // Keep warm colors for Dojo
-                                                    : 'bg-base/40 border-dashed border-primary/20 hover:bg-base/60'}`}
-                                        >
-                                            <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center h-full">
-                                                {dashboardUser?.unlockedRooms?.includes('dojo') ? (
-                                                    <>
-                                                        <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-orange-950 flex items-center justify-center text-orange-200 shadow-[0_0_15px_rgba(249,115,22,0.5)] group-hover:scale-110 transition-transform"><Flame className="w-5 h-5 md:w-8 md:h-8 fill-orange-200" /></div>
-                                                        <h3 className="text-[7px] md:text-xs font-black text-orange-100 uppercase tracking-widest drop-shadow-lg">Zen Dojo</h3>
-                                                        <p className="hidden md:block text-[9px] text-orange-300 mt-1">Focus & Discipline</p>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <div className="w-8 h-8 md:w-12 md:h-12 bg-black/10 rounded-full flex items-center justify-center mb-2"><Lock className="w-4 h-4 md:w-6 md:h-6 text-text-base/40" /></div>
-                                                        <h3 className="text-[7px] md:text-xs font-black text-text-base uppercase tracking-widest">Zen Dojo</h3>
-                                                        <div className="mt-2 bg-gradient-to-r from-primary to-primary-border text-text-base text-[8px] md:text-[10px] font-black px-3 py-1 rounded-full shadow-lg">50m</div>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </div>
-
-
-                                        {/* THOUGHT SHREDDER */}
-                                        <div
-                                            onClick={() => setShowShredder(true)}
-                                            className="aspect-square rounded-3xl relative group cursor-pointer overflow-hidden border transition-all duration-300 bg-base/40 border-dashed border-red-500/20 hover:bg-base/60 hover:border-red-500/50"
-                                        >
-                                            <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center h-full">
-                                                <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 group-hover:bg-red-500 group-hover:text-white transition-colors shadow-sm">
-                                                    <Scissors className="w-5 h-5 md:w-8 md:h-8" />
+                                                {/* TILE 4: ORACLE */}
+                                                <div
+                                                    onClick={() => handleRoomInteraction('observatory', 25)}
+                                                    className={`group relative bg-gradient-to-br from-indigo-50 via-violet-50 to-purple-50 dark:from-indigo-950 dark:via-black dark:to-violet-950 rounded-xl md:rounded-3xl border ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'border-indigo-400/30 dark:border-indigo-500/30' : 'border-gray-300 dark:border-gray-700 opacity-80'} shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:shadow-[0_0_25px_rgba(99,102,241,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
+                                                >
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-600/5 pointer-events-none"></div>
+                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                                        <div className="relative mb-1 md:mb-4">
+                                                            <div className="absolute -inset-4 bg-indigo-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                            <div className={`w-10 h-10 md:w-20 md:h-20 bg-white/10 dark:bg-black/40 border ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'border-indigo-500/50' : 'border-gray-400/50'} rounded-2xl flex items-center justify-center text-indigo-500 dark:text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.4)] group-hover:scale-110 transition-transform`}>
+                                                                {dashboardUser?.unlockedRooms?.includes('observatory') ? <Moon className="w-5 h-5 md:w-8 md:h-8" /> : <Lock className="w-4 h-4 md:w-6 md:h-6" />}
+                                                            </div>
+                                                        </div>
+                                                        <h3 className="text-[7px] md:text-sm font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-[0.2em] mb-1">Oracle</h3>
+                                                        {dashboardUser?.unlockedRooms?.includes('observatory') ? (
+                                                            <p className="hidden md:block text-[10px] font-bold text-indigo-600/60 dark:text-indigo-400/50 uppercase tracking-widest">Dreams & Vision</p>
+                                                        ) : (
+                                                            <p className="hidden md:block text-[10px] font-bold text-gray-500 uppercase tracking-widest">Unlock 25m</p>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <h3 className="text-[7px] md:text-xs font-black text-text-base uppercase tracking-widest">Shredder</h3>
-                                                <p className="hidden md:block text-[9px] text-text-base/60 mt-1">Release Negativity</p>
+
+                                                {/* TILE 5: ZEN DOJO */}
+                                                <div
+                                                    onClick={() => handleRoomInteraction('dojo', 50)}
+                                                    className={`group relative bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-amber-950 dark:via-black dark:to-orange-950 rounded-xl md:rounded-3xl border ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'border-amber-400/30 dark:border-amber-500/30' : 'border-gray-300 dark:border-gray-700 opacity-80'} shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:shadow-[0_0_25px_rgba(245,158,11,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
+                                                >
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-600/5 pointer-events-none"></div>
+                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                                        <div className="relative mb-1 md:mb-4">
+                                                            <div className="absolute -inset-4 bg-amber-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                            <div className={`w-10 h-10 md:w-20 md:h-20 bg-white/10 dark:bg-black/40 border ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'border-amber-500/50' : 'border-gray-400/50'} rounded-2xl flex items-center justify-center text-amber-500 dark:text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)] group-hover:scale-110 transition-transform`}>
+                                                                {dashboardUser?.unlockedRooms?.includes('dojo') ? <Zap className="w-5 h-5 md:w-8 md:h-8" /> : <Lock className="w-4 h-4 md:w-6 md:h-6" />}
+                                                            </div>
+                                                        </div>
+                                                        <h3 className="text-[7px] md:text-sm font-black text-amber-700 dark:text-amber-300 uppercase tracking-[0.2em] mb-1">Zen Dojo</h3>
+                                                        {dashboardUser?.unlockedRooms?.includes('dojo') ? (
+                                                            <p className="hidden md:block text-[10px] font-bold text-amber-600/60 dark:text-amber-400/50 uppercase tracking-widest">Focus & Flow</p>
+                                                        ) : (
+                                                            <p className="hidden md:block text-[10px] font-bold text-gray-500 uppercase tracking-widest">Unlock 50m</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* TILE 6: THOUGHT SHREDDER */}
+                                                <div
+                                                    onClick={() => setShowShredder(true)}
+                                                    className="group relative bg-gradient-to-br from-red-50 via-rose-50 to-pink-50 dark:from-red-950 dark:via-black dark:to-rose-950 rounded-xl md:rounded-3xl border border-red-400/30 dark:border-red-500/30 shadow-[0_0_15px_rgba(244,63,94,0.2)] hover:shadow-[0_0_25px_rgba(244,63,94,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                >
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-600/5 pointer-events-none"></div>
+                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                                        <div className="relative mb-1 md:mb-4">
+                                                            <div className="absolute -inset-4 bg-red-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                            <div className="w-10 h-10 md:w-20 md:h-20 bg-white/10 dark:bg-black/40 border border-red-500/50 rounded-2xl flex items-center justify-center text-red-500 dark:text-red-400 shadow-[0_0_15px_rgba(244,63,94,0.4)] group-hover:scale-110 transition-transform">
+                                                                <Scissors className="w-5 h-5 md:w-8 md:h-8" />
+                                                            </div>
+                                                        </div>
+                                                        <h3 className="text-[7px] md:text-sm font-black text-red-700 dark:text-red-300 uppercase tracking-[0.2em] mb-1">Shredder</h3>
+                                                        <p className="hidden md:block text-[10px] font-bold text-red-600/60 dark:text-red-400/50 uppercase tracking-widest">Release & Let Go</p>
+                                                    </div>
+                                                </div>
+
                                             </div>
                                         </div>
-                                    </div>
+                                    </CollapsibleSection>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
@@ -994,6 +964,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 </div>
 
                                 <CollapsibleSection title="Arcade" icon={Gamepad2}>
+                                    {/* Arcade Content */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
                                         <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-white/20 dark:border-gray-700 shadow-sm flex flex-col bg-transparent">
                                             <div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none">
@@ -1013,7 +984,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         </div>
                                     </div>
                                 </CollapsibleSection>
-                                <CollapsibleSection title={t('dash_hub')} icon={Feather}>
+                                <CollapsibleSection title="Journal" icon={Feather}>
                                     <GlobalErrorBoundary fallback={
                                         <div className="p-6 text-center border border-red-500/20 bg-red-500/5 rounded-xl">
                                             <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
@@ -1293,31 +1264,35 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             {showTechCheck && (<TechCheck onConfirm={confirmSession} onCancel={() => setShowTechCheck(false)} />)}
 
             {/* GAMES */}
-            {showMatchGame && (
-                <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Loading Game...</div>}>
-                    <div className="fixed inset-0 z-[150] bg-base/90 backdrop-blur-xl flex flex-col">
-                        <div className="p-4 flex justify-end">
-                            <button onClick={() => setShowMatchGame(false)} className="p-2 bg-base/50 rounded-full hover:bg-primary/20"><X className="w-6 h-6 text-text-base" /></button>
+            {
+                showMatchGame && (
+                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Loading Game...</div>}>
+                        <div className="fixed inset-0 z-[150] bg-base/90 backdrop-blur-xl flex flex-col">
+                            <div className="p-4 flex justify-end">
+                                <button onClick={() => setShowMatchGame(false)} className="p-2 bg-base/50 rounded-full hover:bg-primary/20"><X className="w-6 h-6 text-text-base" /></button>
+                            </div>
+                            <div className="flex-1 overflow-hidden">
+                                <MindfulMatchGame onClose={() => setShowMatchGame(false)} />
+                            </div>
                         </div>
-                        <div className="flex-1 overflow-hidden">
-                            <MindfulMatchGame onClose={() => setShowMatchGame(false)} />
-                        </div>
-                    </div>
-                </Suspense>
-            )}
+                    </Suspense>
+                )
+            }
 
-            {showCloudHop && (
-                <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Loading Cloud Engine...</div>}>
-                    <div className="fixed inset-0 z-[150] bg-base/90 backdrop-blur-xl flex flex-col">
-                        <div className="p-4 flex justify-end">
-                            <button onClick={() => setShowCloudHop(false)} className="p-2 bg-base/50 rounded-full hover:bg-primary/20"><X className="w-6 h-6 text-text-base" /></button>
+            {
+                showCloudHop && (
+                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Loading Cloud Engine...</div>}>
+                        <div className="fixed inset-0 z-[150] bg-base/90 backdrop-blur-xl flex flex-col">
+                            <div className="p-4 flex justify-end">
+                                <button onClick={() => setShowCloudHop(false)} className="p-2 bg-base/50 rounded-full hover:bg-primary/20"><X className="w-6 h-6 text-text-base" /></button>
+                            </div>
+                            <div className="flex-1 overflow-hidden">
+                                <CloudHopGame onClose={() => setShowCloudHop(false)} />
+                            </div>
                         </div>
-                        <div className="flex-1 overflow-hidden">
-                            <CloudHopGame onClose={() => setShowCloudHop(false)} />
-                        </div>
-                    </div>
-                </Suspense>
-            )}
+                    </Suspense>
+                )
+            }
 
             {/* MOOD PULSE ALERT */}
             {

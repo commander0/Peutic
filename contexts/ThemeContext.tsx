@@ -134,7 +134,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (mode === 'dark') root.classList.add('dark');
 
         // FORCE STANDARD THEME ON LANDING PAGE
-        const isLanding = window.location.pathname === '/' || window.location.hash === '#/';
+        // Only force if user is NOT logged in. If logged in, Dashboard is at '/' and should show user theme.
+        const user = UserService.getUser();
+        const isLanding = (window.location.pathname === '/' || window.location.hash === '#/') && !user;
         const activeTheme = isLanding ? 'sunshine' : (VALID_THEMES.includes(theme) ? theme : 'sunshine');
 
         root.setAttribute('data-theme', activeTheme);
