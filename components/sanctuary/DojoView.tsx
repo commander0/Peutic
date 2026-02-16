@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Zap, Play, Pause, RotateCcw, Target, Flame, Trophy } from 'lucide-react';
+import { X, Zap, Play, Pause, RotateCcw, Target, Flame, Trophy, Wind, BookOpen, Volume2, VolumeX } from 'lucide-react';
 import { User } from '../../types';
 import { useToast } from '../common/Toast';
 import { UserService } from '../../services/userService';
@@ -14,10 +14,24 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
     const { showToast } = useToast();
     const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 mins
     const [isActive, setIsActive] = useState(false);
-    const [mode, setMode] = useState<'focus' | 'break'>('focus');
+    const [timerMode, setTimerMode] = useState<'focus' | 'break'>('focus');
     const [streak, setStreak] = useState(0);
     const [totalFocus, setTotalFocus] = useState(0);
+    const [breathMode, setBreathMode] = useState<'none' | '4-7-8' | 'box'>('none');
+    const [koan, setKoan] = useState<string | null>(null);
+    const [soundEnabled, setSoundEnabled] = useState(false);
     const timerRef = useRef<number | null>(null);
+
+    const KOANS = [
+        "What is the sound of one hand clapping?",
+        "If you meet the Buddha on the road, kill him.",
+        "The foot feels the foot when it feels the ground.",
+        "When you do nothing, you do everything.",
+        "The obstacle is the path.",
+        "Before enlightenment, chop wood, carry water. After enlightenment, chop wood, carry water.",
+        "Does a dog have Buddha nature?",
+        "Empty your cup so that it may be filled."
+    ];
 
     // Initial Load
     useEffect(() => {
@@ -44,7 +58,12 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
 
     const resetTimer = () => {
         setIsActive(false);
-        setTimeLeft(mode === 'focus' ? 25 * 60 : 5 * 60);
+        setTimeLeft(timerMode === 'focus' ? 25 * 60 : 5 * 60);
+    };
+
+    const nextKoan = () => {
+        const random = KOANS[Math.floor(Math.random() * KOANS.length)];
+        setKoan(random);
     };
 
     useEffect(() => {
@@ -63,7 +82,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
 
     const handleComplete = async () => {
         setIsActive(false);
-        if (mode === 'focus') {
+        if (timerMode === 'focus') {
             const success = await SanctuaryService.saveFocusSession(user.id, 25 * 60, 'FOCUS');
             if (success) {
                 await UserService.deductBalance(0, 'Focus Session Complete'); // XP Trigger
@@ -74,11 +93,11 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                 showToast("Failed to save session", "error");
             }
 
-            setMode('break');
+            setTimerMode('break');
             setTimeLeft(5 * 60);
         } else {
             showToast("Break over. Back to the Dojo.", "info");
-            setMode('focus');
+            setTimerMode('focus');
             setTimeLeft(25 * 60);
         }
     };
@@ -122,14 +141,14 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                                 cx="50%" cy="50%" r="48%"
                                 fill="none" stroke="#f59e0b" strokeWidth="8"
                                 strokeDasharray="300%"
-                                strokeDashoffset={`${300 * (1 - timeLeft / (mode === 'focus' ? 1500 : 300))}%`}
+                                strokeDashoffset={`${300 * (1 - timeLeft / (timerMode === 'focus' ? 1500 : 300))}%`}
                                 className="transition-all duration-1000 ease-linear"
                                 strokeLinecap="round"
                             />
                         </svg>
 
                         <div className="text-center z-10">
-                            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-600 mb-4">{mode === 'focus' ? 'Focus Mode' : 'Rest & Recover'}</div>
+                            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-600 mb-4">{timerMode === 'focus' ? 'Focus Mode' : 'Rest & Recover'}</div>
                             <div className="text-7xl md:text-8xl font-black text-amber-50 font-mono tracking-tighter mb-6">{formatTime(timeLeft)}</div>
 
                             <div className="flex items-center justify-center gap-4">
@@ -149,6 +168,48 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                         </div>
                     </div>
                 </div>
+
+                {/* BREATHING & KOAN CONTROLS */}
+                <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
+                    <button
+                        onClick={() => setBreathMode(breathMode === 'none' ? '4-7-8' : (breathMode === '4-7-8' ? 'box' : 'none'))}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all ${breathMode !== 'none' ? 'bg-amber-500 text-stone-900 shadow-lg shadow-amber-500/20' : 'bg-stone-800 text-stone-400 hover:text-white'}`}
+                    >
+                        <Wind className="w-4 h-4" />
+                        {breathMode === 'none' ? 'Breathing: Off' : `Breathing: ${breathMode}`}
+                    </button>
+
+                    <button
+                        onClick={nextKoan}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all ${koan ? 'bg-stone-100 text-stone-900' : 'bg-stone-800 text-stone-400 hover:text-white'}`}
+                    >
+                        <BookOpen className="w-4 h-4" />
+                        Seek Wisdom
+                    </button>
+
+                    <button
+                        onClick={() => setSoundEnabled(!soundEnabled)}
+                        className={`p-2 rounded-full transition-all ${soundEnabled ? 'bg-amber-500/20 text-amber-500' : 'bg-stone-800 text-stone-500 hover:text-white'}`}
+                    >
+                        {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                    </button>
+                </div>
+
+                {/* KOAN DISPLAY */}
+                {koan && (
+                    <div className="mb-8 max-w-md text-center animate-in fade-in slide-in-from-bottom-4">
+                        <p className="text-xl font-serif italic text-amber-100 leading-relaxed">"{koan}"</p>
+                        <button onClick={() => setKoan(null)} className="text-[9px] text-stone-500 hover:text-stone-300 mt-2 uppercase tracking-widest font-bold">Dismiss</button>
+                    </div>
+                )}
+
+                {/* BREATHING VISUALIZER OVERLAY */}
+                {breathMode !== 'none' && (
+                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-0">
+                        <div className={`rounded-full border-2 border-amber-500/30 transition-all duration-[4000ms] ease-in-out ${isActive ? 'w-[500px] h-[500px] opacity-20' : 'w-20 h-20 opacity-0'}`}></div>
+                        <div className={`absolute rounded-full bg-amber-500/5 transition-all duration-[4000ms] ease-in-out ${isActive ? 'w-[400px] h-[400px]' : 'w-10 h-10'}`}></div>
+                    </div>
+                )}
 
                 {/* STATS ROW */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-2xl">

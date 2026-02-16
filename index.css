@@ -29,14 +29,17 @@
     --color-primary-light: #FFFBEB;
     --color-primary-border: #fef08a;
     --color-bg-base: #FFFBEB;
+    --color-text-base: #0A0A0A;
     --color-bg-gradient: linear-gradient(to bottom right, #fef3c7, #fde68a, #fffbeb);
 }
 
-[data-theme="sunshine"].dark {
+[data-theme="sunshine"].dark,
+.dark[data-theme="sunshine"] {
     --color-primary: #fbbf24;
     /* Amber 400 */
     --color-bg-base: #1c1917;
     /* Warm Dark */
+    --color-text-base: #F3F4F6;
     --color-bg-gradient: linear-gradient(to bottom right, #451a03, #1c1917, #000000);
 }
 
@@ -51,7 +54,8 @@
     --color-bg-gradient: linear-gradient(to bottom right, #fff1f2, #ffe4e6, transparent);
 }
 
-[data-theme="rose"].dark {
+[data-theme="rose"].dark,
+.dark[data-theme="rose"] {
     --color-primary: #F43F5E;
     --color-primary-light: rgba(244, 63, 94, 0.1);
     --color-primary-border: rgba(244, 63, 94, 0.3);
@@ -70,15 +74,14 @@
     --color-bg-gradient: linear-gradient(to bottom right, #e0f2fe, #bae6fd, #e0f2fe);
 }
 
-[data-theme="ocean"].dark {
+[data-theme="ocean"].dark,
+.dark[data-theme="ocean"] {
     --color-primary: #38bdf8;
     --color-primary-light: rgba(56, 189, 248, 0.2);
     --color-primary-border: rgba(56, 189, 248, 0.4);
     --color-bg-base: #0c4a6e;
     --color-bg-gradient: linear-gradient(to bottom right, #0c4a6e, #082f49, #020617);
 }
-
-
 
 /* -----------------------------------------------------------------------------
    4. FOREST (Nature/Green)
@@ -91,7 +94,8 @@
     --color-bg-gradient: linear-gradient(to bottom right, #d1fae5, #a7f3d0, #ecfdf5);
 }
 
-[data-theme="forest"].dark {
+[data-theme="forest"].dark,
+.dark[data-theme="forest"] {
     --color-primary: #10b981;
     --color-primary-light: rgba(16, 185, 129, 0.2);
     --color-primary-border: rgba(16, 185, 129, 0.4);
@@ -110,7 +114,8 @@
     --color-bg-gradient: linear-gradient(to bottom right, #fff7ed, #ffedd5, transparent);
 }
 
-[data-theme="sunset"].dark {
+[data-theme="sunset"].dark,
+.dark[data-theme="sunset"] {
     --color-primary: #FB923C;
     --color-primary-light: rgba(251, 146, 60, 0.1);
     --color-primary-border: rgba(251, 146, 60, 0.3);
@@ -123,16 +128,15 @@
    ----------------------------------------------------------------------------- */
 [data-theme="lavender"] {
     --color-primary: #7c3aed;
-    /* Violet 600 */
     --color-primary-light: #ede9fe;
     --color-primary-border: #c4b5fd;
     --color-bg-base: #f5f3ff;
     --color-bg-gradient: linear-gradient(to bottom right, #ede9fe, #ddd6fe, #f5f3ff);
 }
 
-[data-theme="lavender"].dark {
+[data-theme="lavender"].dark,
+.dark[data-theme="lavender"] {
     --color-primary: #a78bfa;
-    /* Violet 400 */
     --color-primary-light: rgba(167, 139, 250, 0.2);
     --color-primary-border: rgba(167, 139, 250, 0.4);
     --color-bg-base: #2e1065;
@@ -151,7 +155,8 @@
     --color-bg-gradient: linear-gradient(to bottom right, #ecfeff, #cffafe, transparent);
 }
 
-[data-theme="cyberpunk"].dark {
+[data-theme="cyberpunk"].dark,
+.dark[data-theme="cyberpunk"] {
     --color-primary: #00f0ff;
     --color-primary-light: rgba(0, 240, 255, 0.15);
     --color-primary-border: #00f0ff;
@@ -171,7 +176,8 @@
     --color-bg-gradient: linear-gradient(to bottom right, #eef2ff, #e0e7ff, transparent);
 }
 
-[data-theme="midnight"].dark {
+[data-theme="midnight"].dark,
+.dark[data-theme="midnight"] {
     --color-primary: #818CF8;
     --color-primary-light: rgba(129, 140, 248, 0.1);
     --color-primary-border: rgba(129, 140, 248, 0.3);
@@ -190,7 +196,8 @@
     --color-bg-gradient: linear-gradient(to bottom right, #fffbf0, #aaaa8a, transparent);
 }
 
-[data-theme="coffee"].dark {
+[data-theme="coffee"].dark,
+.dark[data-theme="coffee"] {
     --color-primary: #d4a373;
     --color-primary-light: rgba(212, 163, 115, 0.1);
     --color-primary-border: rgba(212, 163, 115, 0.3);
@@ -204,19 +211,18 @@
    ----------------------------------------------------------------------------- */
 [data-theme="royal"] {
     --color-primary: #7e22ce;
-    /* Purple 700 */
     --color-primary-light: #f3e8ff;
     --color-primary-border: #d8b4fe;
     --color-bg-base: #faf5ff;
     --color-bg-gradient: linear-gradient(to bottom right, #f3e8ff, #e9d5ff, #faf5ff);
 }
 
-[data-theme="royal"].dark {
+[data-theme="royal"].dark,
+.dark[data-theme="royal"] {
     --color-primary: #ffd700;
     --color-primary-light: rgba(255, 215, 0, 0.15);
     --color-primary-border: rgba(255, 215, 0, 0.5);
     --color-bg-base: #3b0764;
-    /* Purple 950 */
     --color-text-base: #fdf4ff;
     --color-bg-gradient: linear-gradient(to bottom right, #3b0764, #2e1065, #000000);
 }

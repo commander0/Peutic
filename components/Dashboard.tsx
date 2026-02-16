@@ -10,11 +10,10 @@ import {
     BookOpen, Flame, Trophy,
     Sun, Feather, LifeBuoy, RefreshCw, Star, Edit2, Zap, Gamepad2,
     ChevronDown, ChevronUp, User as UserIcon, Moon, Scissors,
-    Twitter, Instagram, Linkedin, Wind, Palette,
+    Twitter, Instagram, Linkedin,
     Mail, Eye, EyeOff, Megaphone, Sparkles, Save, Video
 } from 'lucide-react';
 import { NotificationBell, Notification } from './common/NotificationBell';
-import { ThemeToggle } from './common/ThemeToggle';
 import { UserService } from '../services/userService';
 import { AdminService } from '../services/adminService';
 import { useToast } from './common/Toast';
@@ -48,6 +47,7 @@ const BookOfYouView = lazy(() => import('./retention/BookOfYouView'));
 const LuminaView = lazy(() => import('./pocket/LuminaView'));
 const ObservatoryView = lazy(() => import('./sanctuary/ObservatoryView'));
 const DojoView = lazy(() => import('./sanctuary/DojoView'));
+const ThoughtShredder = lazy(() => import('./tools/ThoughtShredder'));
 
 
 import EmergencyOverlay from './safety/EmergencyOverlay';
@@ -204,6 +204,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [showPocketPet, setShowPocketPet] = useState(false);
     const [showObservatory, setShowObservatory] = useState(false);
     const [showDojo, setShowDojo] = useState(false);
+    const [showShredder, setShowShredder] = useState(false);
     const [showMatchGame, setShowMatchGame] = useState(false);
     const [showCloudHop, setShowCloudHop] = useState(false);
     // Lumina state moved to grouped section
@@ -965,28 +966,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             </div>
                                         </div>
 
-                                        {/* ARCADE GAMES */}
-                                        <div onClick={() => setShowMatchGame(true)} className="aspect-square bg-base/40 backdrop-blur-md rounded-3xl p-4 border border-primary/20 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-primary/10 transition-all group">
-                                            <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                <Gamepad2 className="w-6 h-6 text-primary" />
+
+                                        {/* THOUGHT SHREDDER */}
+                                        <div
+                                            onClick={() => setShowShredder(true)}
+                                            className="aspect-square rounded-3xl relative group cursor-pointer overflow-hidden border transition-all duration-300 bg-base/40 border-dashed border-red-500/20 hover:bg-base/60 hover:border-red-500/50"
+                                        >
+                                            <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center h-full">
+                                                <div className="w-10 h-10 md:w-16 md:h-16 mb-2 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 group-hover:bg-red-500 group-hover:text-white transition-colors shadow-sm">
+                                                    <Scissors className="w-5 h-5 md:w-8 md:h-8" />
+                                                </div>
+                                                <h3 className="text-[7px] md:text-xs font-black text-text-base uppercase tracking-widest">Shredder</h3>
+                                                <p className="hidden md:block text-[9px] text-text-base/60 mt-1">Release Negativity</p>
                                             </div>
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-text-base">Mindful Match</span>
                                         </div>
-
-                                        <div onClick={() => setShowCloudHop(true)} className="aspect-square bg-base/40 backdrop-blur-md rounded-3xl p-4 border border-primary/20 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-primary/10 transition-all group">
-                                            <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                <Wind className="w-6 h-6 text-blue-500" />
-                                            </div>
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-text-base">Cloud Hop</span>
-                                        </div>
-
-
-                                        {/* COMING SOON PLACEHOLDERS */}
-                                        {[1, 2].map(i => (
-                                            <div key={i} className="aspect-square bg-base/20 rounded-3xl border border-dashed border-primary/10 flex items-center justify-center opacity-50">
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-text-base/30">Soon</span>
-                                            </div>
-                                        ))}
                                     </div>
                                 </div>
 
@@ -1400,6 +1393,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                 showDojo && (
                     <Suspense fallback={null}>
                         <DojoView user={dashboardUser} onClose={() => setShowDojo(false)} />
+                    </Suspense>
+                )
+            }
+            {
+                showShredder && (
+                    <Suspense fallback={null}>
+                        <ThoughtShredder onClose={() => setShowShredder(false)} />
                     </Suspense>
                 )
             }

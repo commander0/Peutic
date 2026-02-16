@@ -125,18 +125,23 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Apply to DOM (Tailwind)
     useEffect(() => {
         const root = document.documentElement;
-        root.className = '';
+
+        // Remove all previous theme classes
+        VALID_THEMES.forEach(t => root.classList.remove(`theme-${t}`));
+        root.classList.remove('dark');
 
         // Apply Mode
         if (mode === 'dark') root.classList.add('dark');
 
         // FORCE STANDARD THEME ON LANDING PAGE
         const isLanding = window.location.pathname === '/' || window.location.hash === '#/';
-        // Double check validity (defensive)
         const activeTheme = isLanding ? 'sunshine' : (VALID_THEMES.includes(theme) ? theme : 'sunshine');
 
         root.setAttribute('data-theme', activeTheme);
         root.classList.add(`theme-${activeTheme}`);
+
+        // Debug
+        // console.log(`Theme Applied: ${activeTheme} (${mode})`);
     }, [theme, mode]);
 
     return (
