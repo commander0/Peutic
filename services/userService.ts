@@ -43,28 +43,6 @@ export class UserService {
 
     static getUser(): User | null { return this.currentUser; }
 
-    static async deductBalance(amount: number, reason: string): Promise<boolean> {
-        if (!this.currentUser) return false;
-        if (this.currentUser.balance < amount) return false;
-
-        // Optimistic update
-        this.currentUser.balance -= amount;
-
-        const { error } = await supabase.rpc('deduct_balance', {
-            p_user_id: this.currentUser.id,
-            p_amount: amount,
-            p_reason: reason
-        });
-
-        if (error) {
-            console.error("Deduct Balance Failed", error);
-            // Rollback (re-fetch)
-            await this.syncUser(this.currentUser.id);
-            return false;
-        }
-        return true;
-    }
-
     static async restoreSession(): Promise<User | null> {
         let { data: { session }, error } = await supabase.auth.getSession();
 
