@@ -36,11 +36,16 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
 
     // Audio Context Ref
     const audioCtxRef = useRef<AudioContext | null>(null);
+    const audioNodesRef = useRef<{
+        ambience: { node: AudioBufferSourceNode, gain: GainNode } | null;
+        bells: { intervalId: any } | null;
+    }>({ ambience: null, bells: null });
 
-    // Ambience Ref
-    const ambienceRef = useRef<{ node: AudioBufferSourceNode, gain: GainNode } | null>(null);
+    // Preferences
+    const [ambienceType, setAmbienceType] = useState<'rain' | 'wind' | 'brown'>('rain');
+    const [bellInterval, setBellInterval] = useState<number>(0); // 0 = start/end only, >0 = every X seconds
 
-    // Initial Load - Init AudioContext on interaction
+    // Initial Load
     useEffect(() => {
         const loadHistory = async () => {
             const history = await SanctuaryService.getFocusHistory(user.id);
@@ -51,7 +56,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
         loadHistory();
 
         return () => {
-            stopAmbience();
+            stopAudio();
             if (audioCtxRef.current) audioCtxRef.current.close();
         };
     }, [user.id]);
@@ -66,7 +71,8 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
         return audioCtxRef.current;
     };
 
-    const playBell = () => {
+    // Procedural Bell Generation (Tibetan Bowl)
+    const playBellSound = () => {
         if (!soundEnabled) return;
         const ctx = initAudio();
 
@@ -80,70 +86,120 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
 
             const now = ctx.currentTime + delay;
             gain.gain.setValueAtTime(0, now);
-            gain.gain.linearRampToValueAtTime(vol, now + 0.05); // Faster attack
+            gain.gain.linearRampToValueAtTime(vol, now + 0.1);
             gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
 
             osc.start(now);
             osc.stop(now + dur);
         };
 
-        // Louder Tibetan Bowl Chord (User Request: "bells need to be heard")
-        cast(160, 0, 8, 0.6); // Fundamental (Boosted)
-        cast(480, 0.05, 6, 0.3); // Harmonic 3rd
-        cast(800, 0.1, 5, 0.15); // Harmonic 5th
+        // Create a rich, resonant chord
+        const baseFreq = 160;
+        cast(baseFreq, 0, 8, 0.4);       // Fundamental
+        cast(baseFreq * 1.5, 0.05, 7, 0.2); // Fifth
+        cast(baseFreq * 2, 0.1, 6, 0.1);    // Octave
+        cast(baseFreq * 2.5, 0.15, 5, 0.05); // Major 10th
     };
 
-    const playAmbience = () => {
-        if (!soundEnabled) return;
+    // Procedural Nature Sounds
+    let lastOut = 0;
+    const startAmbience = () => {
+        if (audioNodesRef.current.ambience || !soundEnabled) return;
         const ctx = initAudio();
-
-        // Brown Noise Buffer
         const bufferSize = 2 * ctx.sampleRate;
         const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const data = buffer.getChannelData(0);
+
+        // Pink Noise Generator (Better for Rain/Wind)
         for (let i = 0; i < bufferSize; i++) {
             const white = Math.random() * 2 - 1;
-            data[i] = (0 + (0.02 * white)) / 1.02; // Simple approx
-            data[i] *= 3.5; // Gain up
+            data[i] = (lastOut + (0.02 * white)) / 1.02;
+            lastOut = data[i];
+            data[i] *= 3.5; // Compensate for gain loss
         }
 
         const noise = ctx.createBufferSource();
         noise.buffer = buffer;
         noise.loop = true;
 
-        // Lowpass Filter for "Hum/Womb" effect
-        const filter = ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = 120;
-
         const gain = ctx.createGain();
-        gain.gain.value = 0.08; // Slightly louder hum
+        // Adjust volume based on type
+        // Rain needs higher frequencies, Wind needs low pass
+        gain.gain.value = 0.05;
+
+        const filter = ctx.createBiquadFilter();
+        if (ambienceType === 'wind') {
+            filter.type = 'lowpass';
+            filter.frequency.value = 400;
+        } else if (ambienceType === 'rain') {
+            filter.type = 'lowpass';
+            filter.frequency.value = 1200; // Rain has more sizzle
+        } else {
+            filter.type = 'lowpass';
+            filter.frequency.value = 100; // Brown-ish
+        }
 
         noise.connect(filter);
         filter.connect(gain);
         gain.connect(ctx.destination);
         noise.start();
 
-        ambienceRef.current = { node: noise, gain };
+        // Fade In
+        gain.gain.setValueAtTime(0, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 2);
+
+        audioNodesRef.current.ambience = { node: noise, gain };
     };
 
-    const stopAmbience = () => {
-        if (ambienceRef.current) {
-            ambienceRef.current.gain.gain.setTargetAtTime(0, audioCtxRef.current?.currentTime || 0, 0.5);
-            setTimeout(() => {
-                ambienceRef.current?.node.stop();
-                ambienceRef.current = null;
-            }, 1000);
+    const stopAudio = () => {
+        // Stop Ambience
+        if (audioNodesRef.current.ambience) {
+            const { node, gain } = audioNodesRef.current.ambience;
+            try {
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtxRef.current!.currentTime + 1);
+                setTimeout(() => { try { node.stop(); } catch (e) { } }, 1000);
+            } catch (e) { }
+            audioNodesRef.current.ambience = null;
+        }
+
+        // Stop Interval Bells
+        if (audioNodesRef.current.bells) {
+            clearInterval(audioNodesRef.current.bells.intervalId);
+            audioNodesRef.current.bells = null;
         }
     };
+
+    // Toggle logic for Timer
+    useEffect(() => {
+        if (isActive) {
+            playBellSound(); // Start Bell
+            startAmbience();
+
+            // Loop bells if requested
+            if (bellInterval > 0) {
+                const id = setInterval(playBellSound, bellInterval * 1000);
+                audioNodesRef.current.bells = { intervalId: id };
+            }
+        } else {
+            stopAudio();
+            if (timeLeft === 0) playBellSound(); // End Bell
+        }
+    }, [isActive]); // Re-run if active state changes
+
+    // Watch for ambience type changes while active
+    useEffect(() => {
+        if (isActive) {
+            stopAudio();
+            startAmbience();
+            // Re-trigger interval if needed
+            if (bellInterval > 0) {
+                const id = setInterval(playBellSound, bellInterval * 1000);
+                audioNodesRef.current.bells = { intervalId: id };
+            }
+        }
+    }, [ambienceType, bellInterval]);
 
     const toggleTimer = () => {
-        if (!isActive) {
-            playBell();
-            playAmbience();
-        } else {
-            stopAmbience();
-        }
         setIsActive(!isActive);
     };
 
@@ -168,8 +224,8 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
 
     const handleComplete = async () => {
         setIsActive(false);
-        playBell();
-        stopAmbience();
+        stopAudio();
+        playBellSound();
 
         if (timerMode === 'focus' || timerMode === 'candle') {
             const success = await SanctuaryService.saveFocusSession(user.id, 25 * 60, 'FOCUS');
@@ -187,7 +243,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
         } else {
             showToast("Break over. Back to the Dojo.", "info");
             setIsActive(false);
-            playBell(); // End bell
+            playBellSound(); // End bell
         }
     };
 
@@ -314,6 +370,52 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                         {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                     </button>
                     <span className="text-[9px] uppercase tracking-widest text-stone-600 font-bold">{soundEnabled ? 'Bells On' : 'Silent'}</span>
+                </div>
+
+                {/* --- NEW SOUNDSCAPE CONTROLS --- */}
+                <div className="bg-white/5 dark:bg-black/20 rounded-2xl p-6 backdrop-blur-sm border border-white/10 w-full max-w-lg mb-8">
+                    <h3 className="text-lg font-serif text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                        <Volume2 className="w-4 h-4" />
+                        Soundscape Layering
+                    </h3>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-xs font-bold text-gray-500 mb-2 block">AMBIENCE MODE</label>
+                            <div className="flex flex-col gap-2">
+                                {(['rain', 'wind', 'brown'] as const).map((type) => (
+                                    <button
+                                        key={type}
+                                        onClick={(e) => { e.stopPropagation(); setAmbienceType(type); }}
+                                        className={`px-3 py-2 rounded-lg text-sm text-left transition-all ${ambienceType === type
+                                                ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-500/30'
+                                                : 'hover:bg-white/5 text-gray-500'
+                                            }`}
+                                    >
+                                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="text-xs font-bold text-gray-500 mb-2 block">BELL INTERVAL</label>
+                            <div className="flex flex-col gap-2">
+                                {[0, 60, 300].map((sec) => (
+                                    <button
+                                        key={sec}
+                                        onClick={(e) => { e.stopPropagation(); setBellInterval(sec); }}
+                                        className={`px-3 py-2 rounded-lg text-sm text-left transition-all ${bellInterval === sec
+                                                ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-500/30'
+                                                : 'hover:bg-white/5 text-gray-500'
+                                            }`}
+                                    >
+                                        {sec === 0 ? 'Start/End Only' : `Every ${sec / 60 >= 1 ? sec / 60 + ' min' : sec + ' sec'}`}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* KOAN DISPLAY */}

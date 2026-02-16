@@ -149,39 +149,40 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
 
                             {/* B5. TEXT REVEAL (The Insight) */}
                             {oracleMessage && !isReading && (
-                                <div className="absolute inset-0 flex items-center justify-center p-6 md:p-10 text-center z-30 animate-in fade-in zoom-in duration-1000 bg-black/50 backdrop-blur-[2px] overflow-y-auto">
-                                    <p className="text-sm md:text-xl text-transparent bg-clip-text bg-gradient-to-br from-white via-indigo-200 to-indigo-400 font-serif leading-relaxed drop-shadow-sm italic whitespace-pre-wrap">
-                                        "{oracleMessage}"
-                                    </p>
+                                <div className="absolute inset-0 flex items-center justify-center p-8 md:p-12 text-center z-30 bg-black/40 backdrop-blur-[1px] overflow-y-auto rounded-full">
+                                    <div className="text-transparent bg-clip-text bg-gradient-to-br from-indigo-100 via-white to-purple-200 font-serif leading-relaxed drop-shadow-sm italic">
+                                        <Typewriter text={`"${oracleMessage}"`} speed={30} />
+                                    </div>
                                 </div>
                             )}
 
                             {/* B6. Loading/Channeling State */}
                             {isReading && (
-                                <div className="absolute inset-0 flex items-center justify-center z-30">
-                                    <Sparkles className="w-20 h-20 text-indigo-100 animate-spin-slow opacity-90 drop-shadow-[0_0_25px_rgba(255,255,255,1)]" />
+                                <div className="absolute inset-0 flex flex-col items-center justify-center z-30">
+                                    <Sparkles className="w-16 h-16 text-indigo-200 animate-spin-slow opacity-90 drop-shadow-[0_0_25px_rgba(255,255,255,0.8)]" />
+                                    <span className="mt-4 text-[10px] uppercase tracking-[0.3em] text-indigo-200/60 animate-pulse">Divining...</span>
                                 </div>
                             )}
                         </div>
 
-                        {/* B7. Surface Reflections (Gloss) - Static for realism */}
-                        <div className="absolute top-8 left-12 w-32 h-16 bg-gradient-to-b from-white/10 to-transparent rounded-[100%] blur-md -rotate-45 pointer-events-none z-30"></div>
-
+                        {/* B7. Surface Reflections (Gloss) */}
+                        <div className="absolute top-8 left-12 w-32 h-16 bg-gradient-to-b from-white/20 to-transparent rounded-[100%] blur-md -rotate-45 pointer-events-none z-30 mix-blend-overlay"></div>
                     </div>
 
                     {/* C. BASE/STAND */}
-                    <div className="w-48 h-16 bg-gradient-to-b from-stone-900 via-black to-transparent rounded-[100%] relative -mt-8 z-10 flex items-center justify-center">
-                        <div className="w-32 h-1 bg-indigo-500/50 blur-[4px] absolute top-0"></div>
+                    <div className="w-40 h-12 bg-gradient-to-b from-stone-900 via-black to-transparent rounded-[100%] relative -mt-6 z-10 flex items-center justify-center shadow-2xl">
+                        <div className="w-24 h-1 bg-indigo-500/50 blur-[4px] absolute top-0 animate-pulse"></div>
                     </div>
 
                     {/* D. INTERACTION BUTTON */}
-                    <div className="mt-16 relative z-40">
+                    <div className="mt-16 relative z-40 transition-all duration-500">
                         {!isReading && !oracleMessage && (
                             <button
                                 onClick={divineInsight}
-                                className="group relative px-10 py-4 bg-transparent border border-indigo-500/30 overflow-hidden transition-all hover:border-indigo-400"
+                                className="group relative px-10 py-4 bg-transparent overflow-hidden transition-all"
                             >
-                                <div className="absolute inset-0 bg-indigo-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
+                                <div className="absolute inset-0 border border-indigo-500/30 group-hover:border-indigo-400 rounded-full transition-colors"></div>
+                                <div className="absolute inset-0 bg-indigo-500/10 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left rounded-full"></div>
                                 <span className="relative flex items-center gap-3 font-black text-sm uppercase tracking-[0.3em] text-indigo-300 group-hover:text-white transition-colors">
                                     <Eye className="w-4 h-4" /> Consult Fate <span className="opacity-50">(-1m)</span>
                                 </span>
@@ -191,14 +192,10 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                         {oracleMessage && !isReading && (
                             <button
                                 onClick={() => setOracleMessage(null)}
-                                className="text-indigo-500/50 hover:text-indigo-300 text-xs uppercase tracking-[0.2em] transition-colors animate-pulse"
+                                className="text-indigo-500/50 hover:text-indigo-300 text-xs uppercase tracking-[0.2em] transition-colors animate-pulse hover:animate-none"
                             >
                                 Clear Vision
                             </button>
-                        )}
-
-                        {isReading && (
-                            <p className="text-indigo-400/60 text-xs uppercase tracking-[0.5em] animate-pulse">Channeling...</p>
                         )}
                     </div>
                 </div>
@@ -206,6 +203,27 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
             </main>
         </div>
     );
+};
+
+// Simple Typewriter Component
+const Typewriter = ({ text, speed = 40 }: { text: string, speed?: number }) => {
+    const [displayed, setDisplayed] = useState('');
+
+    useEffect(() => {
+        setDisplayed('');
+        let i = 0;
+        const timer = setInterval(() => {
+            if (i < text.length) {
+                setDisplayed((prev) => prev + text.charAt(i));
+                i++;
+            } else {
+                clearInterval(timer);
+            }
+        }, speed);
+        return () => clearInterval(timer);
+    }, [text, speed]);
+
+    return <span className="animate-in fade-in duration-300">{displayed}</span>;
 };
 
 export default ObservatoryView;

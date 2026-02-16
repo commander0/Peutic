@@ -142,6 +142,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                         width={600}
                         height={500}
                         interactionType={interaction}
+                        streak={localGarden.streakCurrent}
                     />
                 </div>
             </main>

@@ -69,6 +69,23 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
         setLoading(false);
     };
 
+    // React to User Mood
+    useEffect(() => {
+        const syncMood = async () => {
+            const moods = await UserService.getMoods(user.id);
+            if (moods.length > 0) {
+                const last = moods[0];
+                const isRecent = new Date(last.date).getTime() > Date.now() - (24 * 60 * 60 * 1000); // Last 24h
+
+                if (isRecent) {
+                    if (last.mood === 'confetti') setEmotion('happy');
+                    else if (last.mood === 'rain' || last.mood === 'Sad' || last.mood === 'Anxious') setEmotion('sad');
+                }
+            }
+        };
+        syncMood();
+    }, [user.id]);
+
     const handleCreatePet = async () => {
         if (!petName.trim()) {
             showToast("DATA_ERROR: NAME_REQUIRED", "error");

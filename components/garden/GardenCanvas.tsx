@@ -6,9 +6,10 @@ interface GardenCanvasProps {
     width: number;
     height: number;
     interactionType?: 'clip' | 'water' | 'breath' | 'sing' | null;
+    streak?: number; // Added for growth density
 }
 
-const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, interactionType }) => {
+const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, interactionType, streak = 0 }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const frameRef = useRef<number>(0);
 
