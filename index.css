@@ -261,3 +261,168 @@ body {
     background: var(--color-primary);
     color: black;
 }
+
+/* --- CRITICAL VISUAL FX ENGINE --- */
+
+/* 1. Realistic Candle Flicker */
+@keyframes flicker {
+
+    0%,
+    100% {
+        transform: translateX(-50%) scale(1);
+        opacity: 1;
+    }
+
+    10% {
+        transform: translateX(-52%) scale(0.9) skewX(-2deg);
+        opacity: 0.9;
+    }
+
+    20% {
+        transform: translateX(-48%) scale(1.1) skewX(2deg);
+        opacity: 1;
+    }
+
+    30% {
+        transform: translateX(-51%) scale(0.95);
+        opacity: 0.95;
+    }
+
+    40% {
+        transform: translateX(-49%) scale(1.05);
+        opacity: 1;
+    }
+
+    50% {
+        transform: translateX(-50%) scale(1);
+        opacity: 1;
+        filter: brightness(1.2);
+    }
+
+    60% {
+        transform: translateX(-51%) scale(0.9);
+        opacity: 0.9;
+    }
+
+    70% {
+        transform: translateX(-49%) scale(1.1);
+        opacity: 1;
+    }
+
+    80% {
+        transform: translateX(-52%) scale(0.95);
+        opacity: 0.95;
+    }
+
+    90% {
+        transform: translateX(-48%) scale(1.05);
+        opacity: 1;
+    }
+}
+
+.animate-flicker {
+    animation: flicker 3s infinite alternate cubic-bezier(0.45, 0.05, 0.55, 0.95);
+}
+
+/* 2. Floating Levitation */
+@keyframes float {
+    0% {
+        transform: translateY(0px) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-15px) rotate(2deg);
+    }
+
+    100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+}
+
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float-delayed {
+    0% {
+        transform: translateY(0px) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-10px) rotate(-2deg);
+    }
+
+    100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+}
+
+.animate-float-delayed {
+    animation: float-delayed 7s ease-in-out infinite 2s;
+}
+
+/* 3. Ember Particles */
+@keyframes ember-fly-1 {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(-20px, -80px) scale(0);
+        opacity: 0;
+    }
+}
+
+.animate-ember-fly-1 {
+    animation: ember-fly-1 2s linear infinite;
+}
+
+@keyframes ember-fly-2 {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(20px, -60px) scale(0);
+        opacity: 0;
+    }
+}
+
+.animate-ember-fly-2 {
+    animation: ember-fly-2 2.5s linear infinite 0.5s;
+}
+
+/* 4. Pulse Slow & Fast */
+.animate-pulse-slow {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-pulse-fast {
+    animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 5. Spin Slow */
+.animate-spin-slow {
+    animation: spin 12s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 6. Tilt for Holo Cards */
+.perspective-1000 {
+    perspective: 1000px;
+}
+
+.preserve-3d {
+    transform-style: preserve-3d;
+}

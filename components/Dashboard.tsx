@@ -1285,33 +1285,34 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             {/* GAMES */}
             {
                 showMatchGame && (
-                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Loading Game...</div>}>
-                        <div className="fixed inset-0 z-[150] bg-base/90 backdrop-blur-xl flex flex-col items-center justify-center p-4">
+                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Loading...</div>}>
+                        {/* Mindful Match - Fullscreen Console Mode */}
+                        <div className="fixed inset-0 z-[200] bg-black flex flex-col justify-center items-center animate-in zoom-in duration-300">
 
-                            {/* Game Container */}
-                            <div className="w-full max-w-lg aspect-square bg-white dark:bg-gray-900 rounded-3xl border-4 border-violet-200 dark:border-violet-900 shadow-2xl overflow-hidden flex flex-col relative animate-in zoom-in duration-300">
+                            {/* Console Border Container */}
+                            <div className="relative w-full h-full md:max-w-md md:h-auto md:aspect-[9/16] bg-stone-900 md:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col border-[12px] md:border-[20px] border-stone-800 ring-2 ring-stone-700/50">
 
-                                {/* Modal Content - Fullscreen on Mobile, Centered on Desktop */}
-                                <div className="flex-1 w-full h-full md:h-auto md:max-w-4xl mx-auto flex flex-col md:justify-center p-0 md:p-4 relative z-10">
-                                    <div className="bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl rounded-none md:rounded-3xl shadow-2xl overflow-hidden border-0 md:border border-stone-200 dark:border-stone-800 flex flex-col h-full md:aspect-square md:max-h-[80vh]">
-                                        {/* Header */}
-                                        <div className="flex justify-between items-center p-4 border-b border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-900/50 shrink-0">
-                                            <h3 className="font-bold text-lg dark:text-stone-200 flex items-center gap-2">
-                                                <Brain className="w-5 h-5 text-indigo-500" /> Mindful Match
-                                            </h3>
-                                            <button
-                                                onClick={() => setActiveGame(null)}
-                                                className="p-2 hover:bg-stone-200 dark:hover:bg-stone-800 rounded-full transition-colors"
-                                            >
-                                                <X className="w-5 h-5 dark:text-stone-400" />
-                                            </button>
-                                        </div>
+                                {/* Header / Dynamic Island */}
+                                <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/80 to-transparent pointer-events-none z-20"></div>
 
-                                        {/* Game Area - Ensure it takes all remaining height */}
-                                        <div className="flex-1 overflow-hidden p-0 md:p-2 relative flex flex-col">
-                                            <MindfulMatchGame dashboardUser={dashboardUser} />
-                                        </div>
+                                <div className="absolute top-6 left-6 z-50">
+                                    <button
+                                        onClick={() => setActiveGame(null)}
+                                        className="group bg-white/10 hover:bg-red-500/90 backdrop-blur-md text-white rounded-full p-3 transition-all border border-white/10 hover:border-red-500/50 hover:rotate-90 hover:scale-110 shadow-xl"
+                                    >
+                                        <X className="w-6 h-6" />
+                                    </button>
+                                </div>
+
+                                <div className="absolute top-6 right-6 z-50 pointer-events-none">
+                                    <div className="bg-indigo-500/20 backdrop-blur-md px-4 py-2 rounded-full border border-indigo-500/30">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-300">Mindful OS</span>
                                     </div>
+                                </div>
+
+                                {/* Game Viewport */}
+                                <div className="flex-1 bg-white dark:bg-black w-full h-full relative">
+                                    <MindfulMatchGame dashboardUser={dashboardUser} />
                                 </div>
                             </div>
                         </div>

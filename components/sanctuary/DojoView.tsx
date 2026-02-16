@@ -102,59 +102,51 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
             setTimeLeft(5 * 60);
         } else {
             showToast("Break over. Back to the Dojo.", "info");
-            setTimerMode('focus');
-            setTimeLeft(25 * 60);
+            setIsActive(false);
+            playBell(); // End bell
         }
     };
 
     return (
-        <div className="fixed inset-0 z-[120] bg-stone-950 text-amber-50 flex flex-col animate-in fade-in duration-700 overflow-hidden font-sans">
-            {/* DOJO ATMOSPHERE */}
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/washi.png')] opacity-10 pointer-events-none"></div>
-            <div className="absolute inset-0 bg-gradient-to-b from-stone-900 via-stone-950 to-black pointer-events-none"></div>
+        <div className="fixed inset-0 z-[120] bg-stone-900 text-stone-100 flex flex-col font-serif animate-in fade-in duration-700">
+            {/* Background Texture */}
+            <div className={`absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/zen-stone.png')] opacity-20 pointer-events-none mix-blend-overlay transition-opacity duration-1000 ${isActive ? 'opacity-40' : 'opacity-20'}`}></div>
 
-            {/* HEADER */}
-            <header className="relative z-10 px-6 py-6 flex justify-between items-center bg-stone-900/50 backdrop-blur-md border-b border-amber-900/20">
-                <div className="flex items-center gap-4">
-                    <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors text-amber-500/80 hover:text-amber-400">
-                        <X className="w-6 h-6" />
-                    </button>
-                    <div>
-                        <h2 className="text-xl font-black uppercase tracking-[0.2em] flex items-center gap-2 text-amber-100">
-                            <Zap className="w-5 h-5 text-amber-500" /> Zen Dojo
-                        </h2>
-                        <p className="text-[10px] text-amber-600 font-bold uppercase tracking-widest">Mastery & Focus</p>
-                    </div>
+            {/* Header */}
+            <header className="relative z-10 px-8 py-6 flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                    <Flame className="w-5 h-5 text-orange-400" />
+                    <h2 className="text-xl font-bold tracking-widest uppercase text-stone-300">Zen Dojo</h2>
                 </div>
-                <div className="flex bg-stone-900 rounded-lg p-1 border border-stone-800">
-                    <button onClick={() => { setTimerMode('focus'); resetTimer(); }} className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded transition-all ${timerMode === 'focus' ? 'bg-amber-500 text-stone-950' : 'text-stone-500 hover:text-stone-300'}`}>Timer</button>
-                    <button onClick={() => { setTimerMode('candle'); resetTimer(); }} className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded transition-all ${timerMode === 'candle' ? 'bg-amber-500 text-stone-950' : 'text-stone-500 hover:text-stone-300'}`}>Candle</button>
-                </div>
+                <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors">
+                    <X className="w-6 h-6 text-stone-500 hover:text-white" />
+                </button>
             </header>
 
-            {/* MAIN CONTENT */}
+            {/* Main Content */}
             <main className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
 
-                {/* VISUALIZER */}
-                <div className="relative mb-12 group">
-                    <div className={`absolute -inset-4 rounded-full blur-3xl transition-all duration-1000 ${isActive ? 'bg-amber-500/10 scale-110' : 'bg-transparent scale-100'}`}></div>
+                {/* Visualizer Container */}
+                <div className="relative mb-12 group cursor-pointer" onClick={toggleTimer}>
 
-                    <div className="w-72 h-72 md:w-96 md:h-96 rounded-full border border-stone-800 flex items-center justify-center relative bg-stone-900/30 backdrop-blur-sm shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                    {/* The Circle Frame */}
+                    <div className={`w-72 h-72 md:w-96 md:h-96 rounded-full border border-stone-800 flex flex-col items-center justify-center relative bg-stone-900/30 backdrop-blur-sm shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-all duration-1000 ${isActive ? 'scale-105 border-orange-900/40' : ''}`}>
 
                         {timerMode === 'candle' ? (
-                            <div className="flex flex-col items-center animate-in fade-in duration-1000 scale-125 md:scale-150 relative">
+                            <div className="flex flex-col items-center justify-center animate-in fade-in duration-1000 scale-125 md:scale-150 relative -mt-8">
                                 {/* Ambient Warmth Glow */}
                                 <div className={`absolute -top-20 -left-20 right-0 bottom-0 bg-orange-500/5 rounded-full blur-[100px] transition-all duration-3000 ${isActive ? 'opacity-100 scale-110' : 'opacity-20 scale-90'}`}></div>
 
                                 {/* Candle Complex */}
-                                <div className="relative group">
+                                <div className="relative group flex flex-col items-center">
                                     {/* Flame Container */}
-                                    <div className={`relative w-8 h-32 -mt-16 origin-bottom transition-all duration-1000 ${isActive ? 'opacity-100' : 'opacity-40 grayscale'}`}>
+                                    {/* FLAME POSITIONING FIX: Ensure it sits exactly on top of the wick */}
+                                    <div className={`absolute -top-14 left-1/2 -translate-x-1/2 w-8 h-32 origin-bottom transition-all duration-1000 ${isActive ? 'opacity-100' : 'opacity-40 grayscale'}`}>
                                         {/* Outer Orange/Red Glow */}
-                                        <div className="absolute inset-0 bg-orange-500/40 blur-2xl rounded-full animate-pulse-slow"></div>
+                                        <div className="absolute inset-0 bg-orange-500/30 blur-2xl rounded-full animate-pulse-slow"></div>
 
                                         {/* Main Flame Shape */}
-                                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-4 h-14 bg-gradient-to-t from-orange-600 via-yellow-400 to-white rounded-[50%_50%_50%_50%_/_60%_60%_40%_40%] shadow-[0_0_20px_rgba(255,165,0,0.6)] animate-flicker transform-gpu">
+                                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-14 bg-gradient-to-t from-orange-600 via-yellow-400 to-white rounded-[50%_50%_50%_50%_/_60%_60%_40%_40%] shadow-[0_0_20px_rgba(255,165,0,0.6)] animate-flicker transform-gpu">
                                             {/* Blue Core */}
                                             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-3 bg-blue-600/80 rounded-full blur-[1px]"></div>
                                         </div>
@@ -162,57 +154,30 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                                         {/* Sparkles/Embers */}
                                         {isActive && (
                                             <>
-                                                <div className="absolute top-0 left-1/2 w-0.5 h-0.5 bg-yellow-100 shadow-[0_0_5px_white] animate-ember-fly-1"></div>
-                                                <div className="absolute top-4 left-1/2 w-0.5 h-0.5 bg-orange-100 shadow-[0_0_5px_white] animate-ember-fly-2"></div>
+                                                <div className="absolute bottom-2 left-1/2 w-0.5 h-0.5 bg-yellow-100 shadow-[0_0_5px_white] animate-ember-fly-1"></div>
+                                                <div className="absolute bottom-4 left-1/2 w-0.5 h-0.5 bg-orange-100 shadow-[0_0_5px_white] animate-ember-fly-2"></div>
                                             </>
                                         )}
                                     </div>
 
                                     {/* Candle Body - Realistic Wax */}
-                                    <div className="w-24 h-32 bg-gradient-to-r from-stone-800 via-stone-700 to-stone-800 rounded-lg relative overflow-hidden shadow-2xl border-t border-stone-600/50">
+                                    <div className="w-24 h-32 bg-gradient-to-r from-stone-800 via-stone-700 to-stone-800 rounded-lg relative overflow-hidden shadow-2xl border-t border-stone-600/50 mt-16">
                                         {/* Wax Pool Top */}
-                                        <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-stone-600 to-stone-800 rounded-[100%] blur-[2px] opacity-80"></div>
-                                        <div className="absolute inset-x-4 top-2 h-4 bg-yellow-900/40 rounded-[100%] blur-sm opacity-60 animate-pulse"></div>
+                                        <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-stone-600 to-stone-800 rounded-[100%] blur-[0.5px] opacity-90"></div>
+                                        <div className="absolute inset-x-4 top-2 h-4 bg-yellow-900/20 rounded-[100%] blur-sm opacity-60 animate-pulse-slow"></div>
 
                                         {/* Drips */}
                                         <div className="absolute top-4 left-4 w-2 h-12 bg-stone-700/60 rounded-full blur-[1px] shadow-sm"></div>
-                                        <div className="absolute top-6 right-6 w-1.5 h-8 bg-stone-700/60 rounded-full blur-[1px] shadow-sm"></div>
                                     </div>
                                 </div>
                             </div>
                         ) : (
-                            <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none">
-                                <circle cx="50%" cy="50%" r="48%" fill="none" stroke="#292524" strokeWidth="2" />
-                                <circle
-                                    cx="50%" cy="50%" r="48%"
-                                    fill="none" stroke="#d97706" strokeWidth="2"
-                                    strokeDasharray="300%"
-                                    strokeDashoffset={`${300 * (1 - timeLeft / (timerMode === 'focus' ? 1500 : 300))}%`}
-                                    className="transition-all duration-1000 ease-linear shadow-[0_0_15px_rgba(217,119,6,0.5)]"
-                                    strokeLinecap="round"
-                                />
-                            </svg>
-                        )}
-
-                        <div className={`text-center z-10 ${timerMode === 'candle' ? 'absolute bottom-10' : ''}`}>
-                            {timerMode !== 'candle' && <div className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-700 mb-4">{timerMode === 'focus' ? 'Focus Mode' : 'Rest & Recover'}</div>}
-                            <div className={`font-black text-amber-50 font-mono tracking-tighter mb-6 ${timerMode === 'candle' ? 'text-4xl opacity-50' : 'text-7xl md:text-8xl'}`}>{formatTime(timeLeft)}</div>
-
-                            <div className="flex items-center justify-center gap-4">
-                                <button
-                                    onClick={toggleTimer}
-                                    className="w-16 h-16 rounded-full bg-amber-600 hover:bg-amber-500 text-stone-950 flex items-center justify-center transition-all hover:scale-110 shadow-[0_0_30px_rgba(217,119,6,0.3)]"
-                                >
-                                    {isActive ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current ml-1" />}
-                                </button>
-                                <button
-                                    onClick={resetTimer}
-                                    className="w-12 h-12 rounded-full border border-stone-700 text-stone-500 hover:text-amber-500 hover:border-amber-500 flex items-center justify-center transition-all"
-                                >
-                                    <RotateCcw className="w-5 h-5" />
-                                </button>
+                            // Placeholder for Breathe/Koan modes if needed, or default svg
+                            <div className="text-center space-y-4 animate-in fade-in">
+                                <span className="block text-6xl">{isActive ? "Inhale" : "Ready"}</span>
+                                <p className="text-stone-500 text-sm tracking-widest uppercase">Tap to {isActive ? "Stop" : "Begin"}</p>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
 
