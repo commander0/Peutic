@@ -199,9 +199,11 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                         maxLength={12}
                     />
 
-                    <button onClick={handleCreatePet} className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold p-4 tracking-widest hover:shadow-[0_0_20px_rgba(6,182,212,0.6)] transition-all">
-                        INITIALIZE
-                    </button>
+                    <div className="relative z-[150]">
+                        <button onClick={handleCreatePet} className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold p-4 tracking-widest hover:shadow-[0_0_20px_rgba(6,182,212,0.6)] transition-all cursor-pointer relative z-50">
+                            INITIALIZE
+                        </button>
+                    </div>
                 </div>
             </div>
         );
