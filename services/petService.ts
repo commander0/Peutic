@@ -99,6 +99,37 @@ export class PetService {
         }
     }
 
+    static async feedPet(petId: string, amount: number): Promise<Lumina | null> {
+        // 1. Get current
+        const { data, error } = await supabase
+            .from('pocket_pets')
+            .select('*')
+            .eq('id', petId)
+            .single();
+
+        if (error || !data) return null;
+
+        // 2. Update stats (Clamp to 100)
+        const updates = {
+            hunger: Math.min(100, data.hunger + amount),
+            happiness: Math.min(100, data.happiness + 5), // Feeding makes happy
+            last_interaction_at: new Date().toISOString()
+        };
+
+        const { data: updated, error: updateError } = await supabase
+            .from('pocket_pets')
+            .update(updates)
+            .eq('id', petId)
+            .select()
+            .single();
+
+        if (updateError || !updated) return null;
+
+        const newPet = this.mapAnimaBase(updated);
+        localStorage.setItem(`${this.CACHE_KEY}_${updated.user_id}`, JSON.stringify(newPet));
+        return newPet;
+    }
+
     private static calculateDecay(anima: Lumina): Lumina {
         const now = new Date();
         const last = new Date(anima.lastInteractionAt);
