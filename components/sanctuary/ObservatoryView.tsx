@@ -65,7 +65,7 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
     };
 
     const divineInsight = async () => {
-        const COST = 5;
+        const COST = 1;
         if (user.balance < COST) {
             showToast(`The spirits require an offering of ${COST} minutes.`, "error");
             return;

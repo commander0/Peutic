@@ -29,7 +29,7 @@ export class PetService {
     }
 
     static async createPet(userId: string, name: string, species: Lumina['species']): Promise<Lumina> {
-        // Direct DB Insert (Fixing flaky Gateway)
+        // 1. Try to create
         const { data, error } = await supabase
             .from('pocket_pets')
             .insert({
@@ -49,11 +49,19 @@ export class PetService {
             .select()
             .single();
 
-        if (error || !data) {
+        if (error) {
+            // Handle Duplicate Key (User already has a pet)
+            if (error.code === '23505') {
+                logger.warn("Pet already exists for user, fetching existing...");
+                const existing = await this.getPet(userId);
+                if (existing) return existing;
+            }
+
             logger.error("Failed to create pet", error);
-            // THROW FULL ERROR for UI to catch
             throw error || new Error("Failed to create pet record");
         }
+
+        if (!data) throw new Error("No data returned from pet creation");
 
         const newPet = this.mapAnimaBase(data);
         localStorage.setItem(`${this.CACHE_KEY}_${userId}`, JSON.stringify(newPet));

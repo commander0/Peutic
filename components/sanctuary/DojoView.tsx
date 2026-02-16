@@ -37,6 +37,9 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
     // Audio Context Ref
     const audioCtxRef = useRef<AudioContext | null>(null);
 
+    // Ambience Ref
+    const ambienceRef = useRef<{ node: AudioBufferSourceNode, gain: GainNode } | null>(null);
+
     // Initial Load - Init AudioContext on interaction
     useEffect(() => {
         const loadHistory = async () => {
@@ -48,61 +51,101 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
         loadHistory();
 
         return () => {
+            stopAmbience();
             if (audioCtxRef.current) audioCtxRef.current.close();
         };
     }, [user.id]);
 
-    const playBell = () => {
-        if (!soundEnabled) return;
-
-        // Init context if needed (must be user gesture)
+    const initAudio = () => {
         if (!audioCtxRef.current) {
             audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
         }
-
-        const ctx = audioCtxRef.current;
-        if (ctx.state === 'suspended') ctx.resume();
-
-        // Synthesize a Tibetan Bowl sound
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        const harmonic = ctx.createOscillator();
-        const harmonicGain = ctx.createGain();
-
-        // Main Tone
-        osc.frequency.setValueAtTime(180, ctx.currentTime); // Low resonant freq
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        // Harmonic Tone (for metallic ring)
-        harmonic.frequency.setValueAtTime(540, ctx.currentTime); // 3rd harmonic
-        harmonic.connect(harmonicGain);
-        harmonicGain.connect(ctx.destination);
-
-        // Envelopes
-        const now = ctx.currentTime;
-        gain.gain.setValueAtTime(0, now);
-        gain.gain.linearRampToValueAtTime(0.5, now + 0.05); // Attack
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 4); // Long decay
-
-        harmonicGain.gain.setValueAtTime(0, now);
-        harmonicGain.gain.linearRampToValueAtTime(0.1, now + 0.02);
-        harmonicGain.gain.exponentialRampToValueAtTime(0.001, now + 3);
-
-        osc.start(now);
-        harmonic.start(now);
-        osc.stop(now + 4);
-        harmonic.stop(now + 4);
+        if (audioCtxRef.current.state === 'suspended') {
+            audioCtxRef.current.resume();
+        }
+        return audioCtxRef.current;
     };
 
+    const playBell = () => {
+        if (!soundEnabled) return;
+        const ctx = initAudio();
 
+        const cast = (freq: number, delay: number, dur: number, vol: number) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.frequency.value = freq;
+            osc.type = 'sine';
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            const now = ctx.currentTime + delay;
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(vol, now + 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+            osc.start(now);
+            osc.stop(now + dur);
+        };
+
+        // Tibetan Bowl Chord
+        cast(160, 0, 8, 0.4); // Fundamental
+        cast(480, 0.05, 6, 0.1); // Harmonic 3rd
+        cast(800, 0.1, 5, 0.05); // Harmonic 5th
+    };
+
+    const playAmbience = () => {
+        if (!soundEnabled) return;
+        const ctx = initAudio();
+
+        // Brown Noise Buffer
+        const bufferSize = 2 * ctx.sampleRate;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            const white = Math.random() * 2 - 1;
+            data[i] = (0 + (0.02 * white)) / 1.02; // Simple approx
+            data[i] *= 3.5; // Gain up
+        }
+
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        noise.loop = true;
+
+        // Lowpass Filter for "Hum/Womb" effect
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 120;
+
+        const gain = ctx.createGain();
+        gain.gain.value = 0.05; // Subtle
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        noise.start();
+
+        ambienceRef.current = { node: noise, gain };
+    };
+
+    const stopAmbience = () => {
+        if (ambienceRef.current) {
+            ambienceRef.current.gain.gain.setTargetAtTime(0, audioCtxRef.current?.currentTime || 0, 0.5);
+            setTimeout(() => {
+                ambienceRef.current?.node.stop();
+                ambienceRef.current = null;
+            }, 1000);
+        }
+    };
 
     const toggleTimer = () => {
-        if (!isActive) playBell();
+        if (!isActive) {
+            playBell();
+            playAmbience();
+        } else {
+            stopAmbience();
+        }
         setIsActive(!isActive);
     };
-
-
 
     const nextKoan = () => {
         const random = KOANS[Math.floor(Math.random() * KOANS.length)];
@@ -126,6 +169,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
     const handleComplete = async () => {
         setIsActive(false);
         playBell();
+        stopAmbience();
 
         if (timerMode === 'focus' || timerMode === 'candle') {
             const success = await SanctuaryService.saveFocusSession(user.id, 25 * 60, 'FOCUS');
