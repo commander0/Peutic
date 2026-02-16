@@ -125,11 +125,14 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                         {/* B1. Outer Glow (Aura) */}
                         <div className={`absolute -inset-10 bg-indigo-600/20 rounded-full blur-3xl transition-opacity duration-1000 ${isReading ? 'opacity-100 animate-pulse-fast' : 'opacity-30'}`}></div>
 
-                        {/* B2. The Glass Sphere */}
-                        <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,_rgba(255,255,255,0.1)_0%,_rgba(79,70,229,0.1)_20%,_rgba(0,0,0,0.8)_80%)] shadow-[inset_0_0_60px_rgba(0,0,0,0.9),0_0_30px_rgba(79,70,229,0.3)] border border-indigo-500/20 backdrop-blur-sm overflow-hidden z-20">
+                        {/* B2. The Glass Sphere (Ultra-Realistic) */}
+                        <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,_rgba(255,255,255,0.1)_0%,_rgba(79,70,229,0.05)_20%,_rgba(0,0,0,0.9)_90%)] shadow-[inset_0_0_80px_rgba(0,0,0,0.9),inset_10px_10px_20px_rgba(255,255,255,0.05),0_0_50px_rgba(79,70,229,0.2)] border border-indigo-500/10 backdrop-blur-[1px] overflow-hidden z-20">
 
-                            {/* B3. Internal Mist (Dynamic) */}
-                            <div className={`absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/foggy-birds.png')] opacity-30 mix-blend-color-dodge transition-transform duration-[10s] ease-linear ${isReading ? 'animate-[spin_3s_linear_infinite] scale-150 opacity-60' : 'animate-[spin_20s_linear_infinite] scale-110'}`}></div>
+                            {/* B3. Internal Mist (Dynamic Volumetric) */}
+                            <div className={`absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/foggy-birds.png')] mix-blend-color-dodge transition-transform duration-[20s] ease-linear ${isReading ? 'animate-[spin_4s_linear_infinite] scale-150 opacity-80' : 'animate-[spin_30s_linear_infinite] scale-125 opacity-20'}`}></div>
+
+                            {/* B3.1. Nebula Clouds */}
+                            <div className={`absolute inset-0 bg-gradient-to-tr from-indigo-900/0 via-purple-500/10 to-indigo-900/0 mix-blend-overlay ${isReading ? 'animate-pulse' : ''}`}></div>
 
                             {/* B4. Core Energy */}
                             <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-indigo-500 rounded-full blur-[50px] mix-blend-screen transition-all duration-500 ${isReading ? 'scale-150 opacity-80' : 'scale-100 opacity-30 animate-pulse-slow'}`}></div>

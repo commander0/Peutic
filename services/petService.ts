@@ -51,7 +51,8 @@ export class PetService {
 
         if (error || !data) {
             logger.error("Failed to create pet", error);
-            throw new Error("Failed to create pet");
+            // THROW FULL ERROR for UI to catch
+            throw error || new Error("Failed to create pet record");
         }
 
         const newPet = this.mapAnimaBase(data);

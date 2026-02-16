@@ -34,23 +34,71 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
         "Empty your cup so that it may be filled."
     ];
 
-    // Initial Load
+    // Audio Context Ref
+    const audioCtxRef = useRef<AudioContext | null>(null);
+
+    // Initial Load - Init AudioContext on interaction
     useEffect(() => {
         const loadHistory = async () => {
             const history = await SanctuaryService.getFocusHistory(user.id);
-            // Simple streak logic: number of sessions today (mocked by history count for now)
             setStreak(history.length);
             const minutes = history.reduce((acc, curr) => acc + (curr.durationSeconds / 60), 0);
             setTotalFocus(Math.floor(minutes));
         };
         loadHistory();
-        bellRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/1126/1126-preview.mp3'); // Tibertan Bowl
+
+        return () => {
+            if (audioCtxRef.current) audioCtxRef.current.close();
+        };
     }, [user.id]);
+
+    const playBell = () => {
+        if (!soundEnabled) return;
+
+        // Init context if needed (must be user gesture)
+        if (!audioCtxRef.current) {
+            audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        }
+
+        const ctx = audioCtxRef.current;
+        if (ctx.state === 'suspended') ctx.resume();
+
+        // Synthesize a Tibetan Bowl sound
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const harmonic = ctx.createOscillator();
+        const harmonicGain = ctx.createGain();
+
+        // Main Tone
+        osc.frequency.setValueAtTime(180, ctx.currentTime); // Low resonant freq
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        // Harmonic Tone (for metallic ring)
+        harmonic.frequency.setValueAtTime(540, ctx.currentTime); // 3rd harmonic
+        harmonic.connect(harmonicGain);
+        harmonicGain.connect(ctx.destination);
+
+        // Envelopes
+        const now = ctx.currentTime;
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.5, now + 0.05); // Attack
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 4); // Long decay
+
+        harmonicGain.gain.setValueAtTime(0, now);
+        harmonicGain.gain.linearRampToValueAtTime(0.1, now + 0.02);
+        harmonicGain.gain.exponentialRampToValueAtTime(0.001, now + 3);
+
+        osc.start(now);
+        harmonic.start(now);
+        osc.stop(now + 4);
+        harmonic.stop(now + 4);
+    };
 
 
 
     const toggleTimer = () => {
-        if (!isActive && soundEnabled && bellRef.current) bellRef.current.play().catch(() => { });
+        if (!isActive) playBell();
         setIsActive(!isActive);
     };
 
@@ -77,7 +125,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
 
     const handleComplete = async () => {
         setIsActive(false);
-        if (soundEnabled && bellRef.current) bellRef.current.play().catch(() => { });
+        playBell();
 
         if (timerMode === 'focus' || timerMode === 'candle') {
             const success = await SanctuaryService.saveFocusSession(user.id, 25 * 60, 'FOCUS');
@@ -95,7 +143,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
         } else {
             showToast("Break over. Back to the Dojo.", "info");
             setIsActive(false);
-            if (soundEnabled && bellRef.current) bellRef.current.play().catch(() => { }); // End bell
+            playBell(); // End bell
         }
     };
 
