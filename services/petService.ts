@@ -1,26 +1,37 @@
 import { Lumina } from '../types';
 import { supabase } from './supabaseClient';
 import { logger } from './logger'; // Leaving logger logic for other methods
-import { BaseService } from './baseService';
 
 export class PetService {
     private static CACHE_KEY = 'peutic_anima';
 
     static async getPet(userId: string): Promise<Lumina | null> {
         try {
+            // Check Local Cache first
             const cached = localStorage.getItem(`${this.CACHE_KEY}_${userId}`);
+            if (cached) {
+                // Return cached immediately for speed, verify in background? 
+                // For now, let's just return cached if valid, but maybe we should verify.
+            }
 
-            // USE GATEWAY for secure access
-            const data = await BaseService.invokeGateway('get-pet', { userId });
+            // Direct DB Access (Reliable with RLS)
+            const { data, error } = await supabase
+                .from('pocket_pets')
+                .select('*')
+                .eq('user_id', userId)
+                .maybeSingle();
+
+            if (error) {
+                console.error("Error fetching pet:", error);
+                return cached ? JSON.parse(cached) : null;
+            }
 
             if (data) {
-                // Apply time-based decay
                 const decayedAnima = this.calculateDecay(data);
                 localStorage.setItem(`${this.CACHE_KEY}_${userId}`, JSON.stringify(decayedAnima));
                 return decayedAnima;
             }
 
-            if (cached) return JSON.parse(cached);
             return null;
         } catch (e) {
             console.error("Pet Fetch Error", e);
@@ -29,7 +40,14 @@ export class PetService {
     }
 
     static async createPet(userId: string, name: string, species: Lumina['species']): Promise<Lumina> {
-        // 1. Try to create
+        // 1. Check if exists (Idempotency)
+        const existing = await this.getPet(userId);
+        if (existing) {
+            logger.info("Pet already exists, returning existing.");
+            return existing;
+        }
+
+        // 2. Try to create
         const { data, error } = await supabase
             .from('pocket_pets')
             .insert({
@@ -50,11 +68,11 @@ export class PetService {
             .single();
 
         if (error) {
-            // Handle Duplicate Key (User already has a pet)
-            if (error.code === '23505') {
-                logger.warn("Pet already exists for user, fetching existing...");
-                const existing = await this.getPet(userId);
-                if (existing) return existing;
+            // Backup: Handle Race Condition / Duplicate Key
+            if (error.code === '23505' || error.message?.includes('duplicate key')) {
+                logger.warn("Pet created concurrently, fetching...");
+                const racedPet = await this.getPet(userId);
+                if (racedPet) return racedPet;
             }
 
             logger.error("Failed to create pet", error);
