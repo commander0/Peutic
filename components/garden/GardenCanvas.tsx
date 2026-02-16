@@ -185,4 +185,4 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
     );
 };
 
-export default GardenCanvas;
+export default React.memo(GardenCanvas);

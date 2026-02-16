@@ -11,7 +11,7 @@ import {
     Sun, Feather, LifeBuoy, RefreshCw, Star, Edit2, Zap, Gamepad2,
     ChevronDown, ChevronUp, User as UserIcon, Moon, Scissors,
     Twitter, Instagram, Linkedin,
-    Mail, Eye, EyeOff, Megaphone, Sparkles, Save, Video
+    Mail, Eye, EyeOff, Megaphone, Sparkles, Save, Video, Brain, Cloud
 } from 'lucide-react';
 import { NotificationBell, Notification } from './common/NotificationBell';
 import { UserService } from '../services/userService';
@@ -787,7 +787,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
 
                                 <div className="space-y-4">
-                                    <CollapsibleSection title="Spaces" icon={Zap} defaultOpen={true}>
+                                    <CollapsibleSection title="Spaces" icon={Zap} defaultOpen={false}>
                                         <div className="space-y-4">
                                             {/* SPACES GRID (2 Rows of 3) */}
                                             <div className="grid grid-cols-3 gap-1 md:gap-4">
@@ -965,22 +965,41 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                                 <CollapsibleSection title="Arcade" icon={Gamepad2}>
                                     {/* Arcade Content */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
-                                        <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-white/20 dark:border-gray-700 shadow-sm flex flex-col bg-transparent">
-                                            <div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none">
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-gray-500 bg-white/90 dark:bg-black/90 px-3 py-1.5 rounded-full shadow-sm">Mindful Match</span>
+                                    <div className="grid grid-cols-2 gap-3 md:gap-5 w-full">
+                                        {/* TILE 1: MINDFUL MATCH */}
+                                        <div
+                                            onClick={() => setShowMatchGame(true)}
+                                            className="group relative bg-gradient-to-br from-violet-50 via-fuchsia-50 to-pink-50 dark:from-violet-950 dark:via-black dark:to-pink-950 rounded-xl md:rounded-3xl border border-violet-400/30 dark:border-violet-500/30 shadow-[0_0_15px_rgba(139,92,246,0.2)] hover:shadow-[0_0_25px_rgba(139,92,246,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-pink-600/5 pointer-events-none"></div>
+                                            <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                                <div className="relative mb-1 md:mb-4">
+                                                    <div className="absolute -inset-4 bg-violet-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                    <div className="w-10 h-10 md:w-20 md:h-20 bg-white/10 dark:bg-black/40 border border-violet-500/50 rounded-2xl flex items-center justify-center text-violet-500 dark:text-violet-400 shadow-[0_0_15px_rgba(139,92,246,0.4)] group-hover:scale-110 transition-transform">
+                                                        <Brain className="w-5 h-5 md:w-8 md:h-8" />
+                                                    </div>
+                                                </div>
+                                                <h3 className="text-[7px] md:text-sm font-black text-violet-700 dark:text-violet-300 uppercase tracking-[0.2em] mb-1">Mindful Match</h3>
+                                                <p className="hidden md:block text-[10px] font-bold text-violet-600/60 dark:text-violet-400/50 uppercase tracking-widest">Memory & Focus</p>
                                             </div>
-                                            <Suspense fallback={<div className="flex-1 flex items-center justify-center text-xs font-bold text-gray-400 animate-pulse">Initializing Neural Match...</div>}>
-                                                <MindfulMatchGame dashboardUser={dashboardUser} />
-                                            </Suspense>
                                         </div>
-                                        <div className="relative w-full h-[320px] md:h-[300px] xl:h-[360px] rounded-3xl overflow-hidden border border-white/20 dark:border-gray-700 shadow-sm flex flex-col bg-transparent">
-                                            <div className="absolute top-3 left-0 right-0 text-center z-10 pointer-events-none">
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-gray-500 bg-white/90 dark:bg-black/90 px-3 py-1.5 rounded-full shadow-sm">Cloud Hop</span>
+
+                                        {/* TILE 2: CLOUD HOP */}
+                                        <div
+                                            onClick={() => setShowCloudHop(true)}
+                                            className="group relative bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-50 dark:from-sky-950 dark:via-black dark:to-cyan-950 rounded-xl md:rounded-3xl border border-sky-400/30 dark:border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.2)] hover:shadow-[0_0_25px_rgba(14,165,233,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-cyan-600/5 pointer-events-none"></div>
+                                            <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                                <div className="relative mb-1 md:mb-4">
+                                                    <div className="absolute -inset-4 bg-sky-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                    <div className="w-10 h-10 md:w-20 md:h-20 bg-white/10 dark:bg-black/40 border border-sky-500/50 rounded-2xl flex items-center justify-center text-sky-500 dark:text-sky-400 shadow-[0_0_15px_rgba(14,165,233,0.4)] group-hover:scale-110 transition-transform">
+                                                        <Cloud className="w-5 h-5 md:w-8 md:h-8" />
+                                                    </div>
+                                                </div>
+                                                <h3 className="text-[7px] md:text-sm font-black text-sky-700 dark:text-sky-300 uppercase tracking-[0.2em] mb-1">Cloud Hop</h3>
+                                                <p className="hidden md:block text-[10px] font-bold text-sky-600/60 dark:text-sky-400/50 uppercase tracking-widest">Relax & Soar</p>
                                             </div>
-                                            <Suspense fallback={<div className="flex-1 flex items-center justify-center text-xs font-bold text-gray-400 animate-pulse">Launching Cloud Engine...</div>}>
-                                                <CloudHopGame dashboardUser={dashboardUser} />
-                                            </Suspense>
                                         </div>
                                     </div>
                                 </CollapsibleSection>
@@ -1272,7 +1291,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <button onClick={() => setShowMatchGame(false)} className="p-2 bg-base/50 rounded-full hover:bg-primary/20"><X className="w-6 h-6 text-text-base" /></button>
                             </div>
                             <div className="flex-1 overflow-hidden">
-                                <MindfulMatchGame onClose={() => setShowMatchGame(false)} />
+                                <MindfulMatchGame dashboardUser={dashboardUser} />
                             </div>
                         </div>
                     </Suspense>
@@ -1287,7 +1306,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <button onClick={() => setShowCloudHop(false)} className="p-2 bg-base/50 rounded-full hover:bg-primary/20"><X className="w-6 h-6 text-text-base" /></button>
                             </div>
                             <div className="flex-1 overflow-hidden">
-                                <CloudHopGame onClose={() => setShowCloudHop(false)} />
+                                <CloudHopGame dashboardUser={dashboardUser} />
                             </div>
                         </div>
                     </Suspense>

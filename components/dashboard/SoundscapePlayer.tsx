@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Music, Minimize2, CloudRain, Trees, Anchor, Flame, Volume2, Play } from 'lucide-react';
 
-export const SoundscapePlayer: React.FC = () => {
+export const SoundscapePlayer = React.memo(() => {
     const [playing, setPlaying] = useState(false);
     const [volume, setVolume] = useState(0.4);
     const [track, setTrack] = useState<'rain' | 'forest' | 'ocean' | 'fire'>('rain');
@@ -67,4 +67,4 @@ export const SoundscapePlayer: React.FC = () => {
             )}
         </div>
     );
-};
+});
