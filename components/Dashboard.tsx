@@ -1313,8 +1313,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                 showCloudHop && (
                     <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Loading Cloud Engine...</div>}>
                         <div className="fixed inset-0 z-[150] bg-base/90 backdrop-blur-xl flex flex-col">
-                            <div className="p-4 flex justify-end">
-                                <button onClick={() => setShowCloudHop(false)} className="p-2 bg-base/50 rounded-full hover:bg-primary/20"><X className="w-6 h-6 text-text-base" /></button>
+                            <div className="bg-sky-50 dark:bg-sky-950/30 p-4 border-b border-sky-100 dark:border-sky-900/50 flex justify-between items-center shrink-0">
+                                <div className="flex items-center gap-2">
+                                    <Cloud className="w-5 h-5 text-sky-500" />
+                                    <h2 className="font-black text-sky-900 dark:text-sky-300 uppercase tracking-widest text-sm">Cloud Hop</h2>
+                                </div>
+                                <button onClick={() => setShowCloudHop(false)} className="p-2 hover:bg-sky-100 dark:hover:bg-sky-900 rounded-full transition-colors group">
+                                    <X className="w-6 h-6 text-sky-400 group-hover:text-sky-600" />
+                                </button>
                             </div>
                             <div className="flex-1 overflow-hidden">
                                 <CloudHopGame dashboardUser={dashboardUser} />

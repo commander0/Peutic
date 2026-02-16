@@ -136,8 +136,8 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
 
                             {/* B5. TEXT REVEAL (The Insight) */}
                             {oracleMessage && !isReading && (
-                                <div className="absolute inset-0 flex items-center justify-center p-10 text-center z-30 animate-in fade-in zoom-in duration-1000 bg-black/50 backdrop-blur-[2px]">
-                                    <p className="text-lg md:text-2xl text-transparent bg-clip-text bg-gradient-to-br from-white via-indigo-200 to-indigo-400 font-serif leading-relaxed drop-shadow-sm italic">
+                                <div className="absolute inset-0 flex items-center justify-center p-6 md:p-10 text-center z-30 animate-in fade-in zoom-in duration-1000 bg-black/50 backdrop-blur-[2px] overflow-y-auto">
+                                    <p className="text-sm md:text-xl text-transparent bg-clip-text bg-gradient-to-br from-white via-indigo-200 to-indigo-400 font-serif leading-relaxed drop-shadow-sm italic whitespace-pre-wrap">
                                         "{oracleMessage}"
                                     </p>
                                 </div>
