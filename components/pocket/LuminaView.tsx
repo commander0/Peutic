@@ -56,12 +56,14 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     const [pet, setPet] = useState<Lumina | null>(null);
     const [emotion, setEmotion] = useState<'idle' | 'happy' | 'hungry' | 'sleeping' | 'sad' | 'eating'>('idle');
     const [loading, setLoading] = useState(true);
-    const [showSelection, setShowSelection] = useState(false);
+    // Removed unused selection state as we are using a simplified flow for now, or defaulting.
+    // actually, let's keep selectedSpecies but defaulting to Holo-Hamu if we don't show UI.
     const [selectedSpecies, setSelectedSpecies] = useState<'Holo-Hamu' | 'Digi-Dino' | 'Neo-Shiba' | 'Zen-Sloth'>('Holo-Hamu');
     const [petName, setPetName] = useState('');
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
     const [trick, setTrick] = useState<'spin' | 'magic' | null>(null);
-    const [canvasSize, setCanvasSize] = useState(500);
+    // canvasSize removed if unused, or keep if used in JSX (it was passed to PetCanvas)
+    const [canvasSize] = useState(500);
     const [isCreating, setIsCreating] = useState(false);
     const [feedingItem, setFeedingItem] = useState<string | null>(null);
 
@@ -96,7 +98,8 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
         if (!petName.trim()) return;
         setIsCreating(true);
         try {
-            const p = await PetService.createPet(user.id, petName, 'glimmer');
+            // Fix: Use selectedSpecies valid type instead of 'glimmer'
+            const p = await PetService.createPet(user.id, petName, selectedSpecies);
             setPet(p);
             showToast("Lumina Link Established!", "success");
         } catch (e) {

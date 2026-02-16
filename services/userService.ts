@@ -514,7 +514,7 @@ export class UserService {
 
             if (insertError) throw insertError;
 
-            logger.info("Achievement Unlocked!", { userId, code, title: achievement.title });
+            logger.info("Achievement Unlocked!", JSON.stringify({ userId, code, title: achievement.title }));
 
             return achievement as Achievement;
 
