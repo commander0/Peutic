@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Zap, Play, Pause, RotateCcw, Target, Flame, Trophy, Wind, BookOpen, Volume2, VolumeX } from 'lucide-react';
+import { X, Flame, Play, Pause, RotateCcw, Zap, Target, Trophy, Wind, BookOpen, Volume2, VolumeX } from 'lucide-react';
 import { User } from '../../types';
-import { useToast } from '../common/Toast';
-import { UserService } from '../../services/userService';
+import { useToast } from '../../contexts/ToastContext';
+import UserService from '../../services/userService';
 import { SanctuaryService } from '../../services/SanctuaryService';
 
 interface DojoViewProps {

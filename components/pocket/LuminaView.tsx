@@ -191,18 +191,41 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                         ))}
                     </div>
 
-                    <input
-                        className="w-full bg-black border border-cyan-500/30 p-4 mb-4 text-center text-xl uppercase tracking-widest focus:outline-none focus:border-cyan-400"
-                        placeholder="ENTER_NAME"
-                        value={petName}
-                        onChange={e => setPetName(e.target.value)}
-                        maxLength={12}
-                    />
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 relative z-[60]">
+                        <div className="bg-cyan-950/50 p-6 rounded-2xl border border-cyan-800/50 backdrop-blur-sm">
+                            <p className="text-cyan-200 text-center font-mono text-sm leading-relaxed">
+                                "I am a digital consciousness awaiting a form. Give me a name, and I shall be your companion."
+                            </p>
+                        </div>
 
-                    <div className="relative z-[150]">
-                        <button onClick={handleCreatePet} className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold p-4 tracking-widest hover:shadow-[0_0_20px_rgba(6,182,212,0.6)] transition-all cursor-pointer relative z-50">
-                            INITIALIZE
-                        </button>
+                        <div className="space-y-4">
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    placeholder="Enter Pet Name..."
+                                    value={petName}
+                                    onChange={(e) => setPetName(e.target.value)}
+                                    className="w-full bg-black/50 border-2 border-cyan-700/50 rounded-xl px-4 py-3 text-center text-cyan-100 placeholder-cyan-700/50 focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-500/20 transition-all font-bold tracking-widest uppercase"
+                                />
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <Sparkles className="w-4 h-4 text-cyan-500 animate-pulse" />
+                                </div>
+                            </div>
+
+                            <div className="relative z-[150]">
+                                <button
+                                    onClick={handleCreatePet}
+                                    disabled={!petName.trim() || isCreating}
+                                    className="w-full bg-cyan-500 hover:bg-cyan-400 disabled:bg-cyan-900 disabled:text-cyan-700 text-black font-bold p-4 rounded-xl tracking-widest hover:shadow-[0_0_20px_rgba(6,182,212,0.6)] transition-all cursor-pointer relative z-50 flex items-center justify-center gap-2"
+                                >
+                                    {isCreating ? (
+                                        <>Initializing <Sparkles className="w-4 h-4 animate-spin" /></>
+                                    ) : (
+                                        "INITIALIZE LINK"
+                                    )}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Moon, Star, Sparkles, User as UserIcon, Calendar, Zap, Wind } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Moon, Star, Sparkles, User as UserIcon, Calendar, Zap, Wind, Eye } from 'lucide-react';
 import { User } from '../../types';
 import { useToast } from '../common/Toast';
 import { UserService } from '../../services/userService';

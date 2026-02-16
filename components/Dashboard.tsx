@@ -110,10 +110,12 @@ const CollapsibleSection = React.memo(({ title, icon: Icon, children, defaultOpe
 
     return (
         <div className="bg-transparent rounded-3xl border border-[var(--color-primary-border)] overflow-hidden transition-all duration-300" style={{ borderColor: 'var(--color-primary-border)' }}>
-            <button onClick={handleToggle} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-[var(--color-primary)]/10 transition-colors">
+            <button onClick={handleToggle} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-[var(--color-primary)]/10 transition-colors group">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg" style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)' }}><Icon className="w-5 h-5" /></div>
-                    <span className="font-bold text-base dark:text-white">{title}</span>
+                    <div className="p-2 rounded-lg bg-primary/10 text-primary dark:bg-gray-800 dark:text-indigo-400 group-hover:bg-primary/20 dark:group-hover:bg-gray-700 transition-colors">
+                        <Icon className="w-5 h-5" />
+                    </div>
+                    <span className="font-bold text-base dark:text-gray-200">{title}</span>
                 </div>
                 {isOpen ? <ChevronUp className="w-4 h-4 md:w-5 md:h-5 text-gray-400" /> : <ChevronDown className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />}
             </button>
@@ -956,8 +958,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                                     {dashboardUser ? (
                                         <div className="bg-transparent dark:bg-transparent p-4 md:p-5 rounded-3xl border border-transparent shadow-none col-span-1 md:col-span-2 relative overflow-hidden group min-h-[120px] md:min-h-[140px]">
-                                            {weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-3 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-12 h-12 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div><div className="absolute w-10 h-10 bg-blue-500/30 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-blue-400/10 rounded-full animate-ping"></div><div className="absolute w-6 h-6 bg-blue-400/50 rounded-full blur-lg animate-pulse"></div><Flame className="w-8 h-8 text-blue-500 fill-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy className="w-20 h-20" style={{ color: 'var(--color-primary)' }} /></div>)}
-                                            <div className="relative z-10"><h3 className="font-bold text-gray-500 dark:text-gray-400 text-[10px] md:text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3><div className="flex items-end gap-2 mb-2 md:mb-3"><span className="text-2xl md:text-4xl font-black" style={{ color: 'var(--color-primary)' }}>{weeklyGoal}</span><span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span></div><div className="w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-2 md:mb-3"><div className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= weeklyTarget ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-pulse' : ''}`} style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%`, backgroundColor: weeklyGoal >= weeklyTarget ? undefined : 'var(--color-primary)' }}></div></div><p className="text-[10px] md:text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}</p></div>
+                                            {weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-3 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-12 h-12 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div><div className="absolute w-10 h-10 bg-blue-500/30 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-blue-400/10 rounded-full animate-ping"></div><div className="absolute w-6 h-6 bg-blue-400/50 rounded-full blur-lg animate-pulse"></div><Flame className="w-8 h-8 text-blue-500 fill-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy className="w-20 h-20 text-primary dark:text-yellow-500" /></div>)}
+                                            <div className="relative z-10"><h3 className="font-bold text-gray-500 dark:text-gray-400 text-[10px] md:text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3><div className="flex items-end gap-2 mb-2 md:mb-3"><span className="text-2xl md:text-4xl font-black text-primary dark:text-yellow-400">{weeklyGoal}</span><span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span></div><div className="w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-2 md:mb-3"><div className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= weeklyTarget ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-pulse' : ''} bg-primary dark:bg-yellow-500`} style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}></div></div><p className="text-[10px] md:text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}</p></div>
                                         </div>
                                     ) : <StatSkeleton />}
                                     <MoodTracker onMoodSelect={handleMoodSelect} />
@@ -1285,33 +1287,25 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             {/* GAMES */}
             {
                 showMatchGame && (
-                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Loading...</div>}>
-                        {/* Mindful Match - Fullscreen Console Mode */}
-                        <div className="fixed inset-0 z-[200] bg-black flex flex-col justify-center items-center animate-in zoom-in duration-300">
+                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Loading Game...</div>}>
+                        <div className="fixed inset-0 z-[150] bg-base/90 backdrop-blur-xl flex flex-col items-center justify-center p-4">
 
-                            {/* Console Border Container */}
-                            <div className="relative w-full h-full md:max-w-md md:h-auto md:aspect-[9/16] bg-stone-900 md:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col border-[12px] md:border-[20px] border-stone-800 ring-2 ring-stone-700/50">
+                            {/* Game Container */}
+                            <div className="w-full max-w-lg aspect-square bg-white dark:bg-gray-900 rounded-3xl border-4 border-violet-200 dark:border-violet-900 shadow-2xl overflow-hidden flex flex-col relative animate-in zoom-in duration-300">
 
-                                {/* Header / Dynamic Island */}
-                                <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/80 to-transparent pointer-events-none z-20"></div>
-
-                                <div className="absolute top-6 left-6 z-50">
-                                    <button
-                                        onClick={() => setActiveGame(null)}
-                                        className="group bg-white/10 hover:bg-red-500/90 backdrop-blur-md text-white rounded-full p-3 transition-all border border-white/10 hover:border-red-500/50 hover:rotate-90 hover:scale-110 shadow-xl"
-                                    >
-                                        <X className="w-6 h-6" />
+                                {/* Header */}
+                                <div className="bg-violet-50 dark:bg-violet-950/30 p-4 border-b border-violet-100 dark:border-violet-900/50 flex justify-between items-center">
+                                    <div className="flex items-center gap-2">
+                                        <Brain className="w-5 h-5 text-violet-500" />
+                                        <h2 className="font-black text-violet-900 dark:text-violet-300 uppercase tracking-widest text-sm">Mindful Match</h2>
+                                    </div>
+                                    <button onClick={() => setActiveGame(null)} className="p-2 hover:bg-violet-100 dark:hover:bg-violet-900 rounded-full transition-colors group">
+                                        <X className="w-5 h-5 text-violet-400 group-hover:text-violet-600" />
                                     </button>
                                 </div>
 
-                                <div className="absolute top-6 right-6 z-50 pointer-events-none">
-                                    <div className="bg-indigo-500/20 backdrop-blur-md px-4 py-2 rounded-full border border-indigo-500/30">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-300">Mindful OS</span>
-                                    </div>
-                                </div>
-
-                                {/* Game Viewport */}
-                                <div className="flex-1 bg-white dark:bg-black w-full h-full relative">
+                                {/* Game Area */}
+                                <div className="flex-1 overflow-hidden p-2 relative">
                                     <MindfulMatchGame dashboardUser={dashboardUser} />
                                 </div>
                             </div>
