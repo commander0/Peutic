@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ArrowLeft, Shield, Lock, FileText, Mail, Send, MessageCircle, CheckCircle, Heart, Globe, Users, Phone, AlertTriangle, Award, Star, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { STABLE_AVATAR_POOL } from '../services/database';
 import { useLanguage } from './common/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface StaticPageProps {
   type: 'privacy' | 'terms' | 'support' | 'about' | 'press' | 'safety' | 'crisis';
@@ -10,19 +11,10 @@ interface StaticPageProps {
 
 const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
   const { t } = useLanguage();
+  useTheme(); // Subscribe to theme changes
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [sent, setSent] = useState(false);
-
-  useEffect(() => {
-    // Check local storage for theme preference set on landing page or dashboard
-    const storedTheme = localStorage.getItem('peutic_theme');
-    if (storedTheme === 'dark' || (!storedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
 
   const handleSupportSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,8 +27,8 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
       case 'about':
         return (
           <div className="space-y-8 md:space-y-12 animate-in fade-in duration-500">
-            <div className="text-center pb-6 md:pb-8 border-b border-yellow-200 dark:border-gray-700">
-              <Heart className="w-12 h-12 md:w-16 md:h-16 text-yellow-500 fill-yellow-500 mx-auto mb-4 animate-pulse" />
+            <div className="text-center pb-6 md:pb-8 border-b border-[var(--color-primary-border)] dark:border-gray-700">
+              <Heart className="w-12 h-12 md:w-16 md:h-16 text-[var(--color-primary)] fill-[var(--color-primary)] mx-auto mb-4 animate-pulse" />
               <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4 tracking-tight">{t('hero_title_1')} {t('hero_title_2')}</h1>
               <p className="text-base md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">We are building the future of emotional support by combining the warmth of human connection with the accessibility of modern technology.</p>
             </div>
@@ -46,7 +38,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
                 <h2 className="text-2xl md:text-3xl font-black mb-4 dark:text-white">Our Mission</h2>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4 text-base md:text-lg">
                   Loneliness is a global epidemic. Traditional therapy is often inaccessible, expensive, or bound by waitlists.
-                  Peutic was born from a simple belief: <span className="font-bold bg-yellow-100 dark:bg-yellow-900/40 dark:text-yellow-200 px-1">everyone deserves to be heard, instantly.</span>
+                  Peutic was born from a simple belief: <span className="font-bold bg-[var(--color-primary-light)] dark:bg-[var(--color-primary)]/20 dark:text-[var(--color-primary-light)] px-1">everyone deserves to be heard, instantly.</span>
                 </p>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-base md:text-lg">
                   We connect you with empathetic, verified specialists in seconds. No judgment. No stigma. Just pure, unfiltered human connection when you need it most.
@@ -54,28 +46,28 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
               </div>
               <div className="relative">
                 <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=800&auto=format&fit=crop" className="rounded-3xl shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500" alt="Team meeting" />
-                <div className="absolute -bottom-6 -left-6 bg-white dark:bg-gray-800 p-4 md:p-6 rounded-2xl shadow-xl border border-yellow-100 dark:border-gray-700">
-                  <p className="font-black text-2xl md:text-4xl text-yellow-500">1M+</p>
+                <div className="absolute -bottom-6 -left-6 bg-white dark:bg-gray-800 p-4 md:p-6 rounded-2xl shadow-xl border border-[var(--color-primary-border)] dark:border-gray-700">
+                  <p className="font-black text-2xl md:text-4xl text-[var(--color-primary)]">1M+</p>
                   <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Sessions Completed</p>
                 </div>
               </div>
             </section>
 
-            <section className="bg-yellow-50 dark:bg-yellow-900/10 rounded-3xl p-6 md:p-10 border border-yellow-100 dark:border-yellow-900/30">
+            <section className="bg-[var(--color-primary-light)]/50 dark:bg-[var(--color-primary)]/10 rounded-3xl p-6 md:p-10 border border-[var(--color-primary-border)] dark:border-[var(--color-primary)]/30">
               <h2 className="text-2xl md:text-3xl font-black mb-8 text-center dark:text-white">Our Core Values</h2>
               <div className="grid md:grid-cols-3 gap-8">
                 <div className="text-center">
-                  <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-yellow-200 dark:border-gray-700"><Globe className="w-6 h-6 text-yellow-600 dark:text-yellow-500" /></div>
+                  <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-[var(--color-primary-border)] dark:border-gray-700"><Globe className="w-6 h-6 text-[var(--color-primary)] dark:text-[var(--color-primary)]" /></div>
                   <h3 className="font-bold text-lg mb-2 dark:text-white">Universal Access</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Democratizing mental wellness for every time zone and budget.</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-yellow-200 dark:border-gray-700"><Shield className="w-6 h-6 text-yellow-600 dark:text-yellow-500" /></div>
+                  <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-[var(--color-primary-border)] dark:border-gray-700"><Shield className="w-6 h-6 text-[var(--color-primary)] dark:text-[var(--color-primary)]" /></div>
                   <h3 className="font-bold text-lg mb-2 dark:text-white">Radical Privacy</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">What happens in a session, stays in a session. Cryptographically guaranteed.</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-yellow-200 dark:border-gray-700"><Users className="w-6 h-6 text-yellow-600 dark:text-yellow-500" /></div>
+                  <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-[var(--color-primary-border)] dark:border-gray-700"><Users className="w-6 h-6 text-[var(--color-primary)] dark:text-[var(--color-primary)]" /></div>
                   <h3 className="font-bold text-lg mb-2 dark:text-white">Human First</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Technology connects us, but empathy heals us.</p>
                 </div>
@@ -87,9 +79,9 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
       case 'press':
         return (
           <div className="space-y-8 md:space-y-12 animate-in fade-in duration-500">
-            <div className="text-center pb-6 md:pb-8 border-b border-yellow-200 dark:border-gray-700">
+            <div className="text-center pb-6 md:pb-8 border-b border-[var(--color-primary-border)] dark:border-gray-700">
               <div className="inline-flex items-center gap-2 bg-black dark:bg-white text-white dark:text-black px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
-                <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" /> Impact Report
+                <Star className="w-4 h-4 text-[var(--color-primary)] fill-[var(--color-primary)]" /> Impact Report
               </div>
               <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">{t('page_press')}</h1>
               <p className="text-base md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">Real stories from the Peutic community. See how instant connection is transforming mental wellness.</p>
@@ -106,7 +98,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
               ].map((story, i) => (
                 <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
                   <div className="flex items-center gap-4 mb-4">
-                    <img src={story.img} alt={story.name} className="w-14 h-14 rounded-full object-cover border-2 border-yellow-200 dark:border-yellow-600" />
+                    <img src={story.img} alt={story.name} className="w-14 h-14 rounded-full object-cover border-2 border-[var(--color-primary-border)] dark:border-[var(--color-primary)]/50" />
                     <div>
                       <h3 className="font-bold text-gray-900 dark:text-white">{story.name}</h3>
                       <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">{story.role}</p>
@@ -114,7 +106,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
                   </div>
                   <p className="text-gray-600 dark:text-gray-300 italic leading-relaxed text-sm md:text-base">"{story.quote}"</p>
                   <div className="mt-4 flex gap-1">
-                    {[1, 2, 3, 4, 5].map(s => <Star key={s} className="w-4 h-4 text-yellow-400 fill-yellow-400" />)}
+                    {[1, 2, 3, 4, 5].map(s => <Star key={s} className="w-4 h-4 text-[var(--color-primary)] fill-[var(--color-primary)]" />)}
                   </div>
                 </div>
               ))}
@@ -124,7 +116,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
               <div className="relative z-10">
                 <h2 className="text-2xl md:text-3xl font-black mb-6">Media Inquiries</h2>
                 <p className="text-gray-400 dark:text-gray-600 mb-8 max-w-xl mx-auto text-sm md:text-base">Writing a story about the future of mental health? We'd love to chat.</p>
-                <a href="mailto:press@peutic.com" className="inline-flex items-center gap-2 bg-white dark:bg-black text-black dark:text-white px-6 py-3 md:px-8 md:py-4 rounded-xl font-bold hover:bg-yellow-400 dark:hover:bg-yellow-400 hover:text-black transition-colors text-sm md:text-base">
+                <a href="mailto:press@peutic.com" className="inline-flex items-center gap-2 bg-white dark:bg-black text-black dark:text-white px-6 py-3 md:px-8 md:py-4 rounded-xl font-bold hover:bg-[var(--color-primary)] dark:hover:bg-[var(--color-primary)] hover:text-black transition-colors text-sm md:text-base">
                   <Mail className="w-5 h-5" /> Contact Press Team
                 </a>
               </div>
@@ -135,7 +127,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
       case 'safety':
         return (
           <div className="space-y-8 md:space-y-12 animate-in fade-in duration-500">
-            <div className="text-center pb-6 md:pb-8 border-b border-yellow-200 dark:border-gray-700">
+            <div className="text-center pb-6 md:pb-8 border-b border-[var(--color-primary-border)] dark:border-gray-700">
               <ShieldCheck className="w-12 h-12 md:w-16 md:h-16 text-green-600 mx-auto mb-4" />
               <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">{t('page_safety')}</h1>
               <p className="text-base md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">Your safety and privacy are the foundation of our platform. We go beyond industry standards.</p>
@@ -149,7 +141,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
                 </p>
               </div>
               <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                <h3 className="text-xl md:text-2xl font-bold mb-4 flex items-center gap-2 dark:text-white"><Award className="w-5 h-5 md:w-6 md:h-6 text-yellow-600" /> Specialist Vetting</h3>
+                <h3 className="text-xl md:text-2xl font-bold mb-4 flex items-center gap-2 dark:text-white"><Award className="w-5 h-5 md:w-6 md:h-6 text-[var(--color-primary)]" /> Specialist Vetting</h3>
                 <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm md:text-base">
                   We accept less than 1% of applicants. Every specialist undergoes a vigorous 5-step background check, credential verification, and emotional resonance testing before they ever speak to a user.
                 </p>
@@ -232,7 +224,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
       case 'privacy':
         return (
           <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300">
-            <div className="border-b border-yellow-200 dark:border-gray-700 pb-4 md:pb-6">
+            <div className="border-b border-[var(--color-primary-border)] dark:border-gray-700 pb-4 md:pb-6">
               <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2">{t('page_privacy')}</h1>
               <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">Last Updated: October 24, 2025</p>
             </div>
@@ -272,7 +264,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
       case 'terms':
         return (
           <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300">
-            <div className="border-b border-yellow-200 dark:border-gray-700 pb-4 md:pb-6">
+            <div className="border-b border-[var(--color-primary-border)] dark:border-gray-700 pb-4 md:pb-6">
               <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2">{t('page_terms')}</h1>
               <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">Effective Date: October 24, 2025</p>
             </div>
@@ -311,7 +303,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
       case 'support':
         return (
           <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300">
-            <div className="border-b border-yellow-200 dark:border-gray-700 pb-4 md:pb-6">
+            <div className="border-b border-[var(--color-primary-border)] dark:border-gray-700 pb-4 md:pb-6">
               <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2">{t('page_support')}</h1>
               <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">We are here to help, 24/7.</p>
             </div>
@@ -383,9 +375,8 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
 
   return (
     <div className="min-h-screen font-sans transition-colors duration-500 relative">
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[#FFFBEB] dark:bg-[#0A0A0A] transition-colors duration-500"></div>
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-yellow-50/50 to-transparent dark:from-gray-900 dark:via-gray-900 dark:to-black opacity-100 transition-opacity duration-500"></div>
+      <div className="fixed inset-0 pointer-events-none z-0" style={{ backgroundColor: 'var(--color-bg-base)' }}>
+        <div className="absolute inset-0 transition-opacity duration-500" style={{ backgroundImage: 'var(--color-bg-gradient)' }}></div>
       </div>
       <div className="max-w-4xl mx-auto px-4 py-8 md:py-12 relative z-10">
         <Link to="/" className="inline-flex items-center gap-2 font-bold text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white mb-6 md:mb-8 transition-colors text-sm md:text-base">
