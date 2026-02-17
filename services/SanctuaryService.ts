@@ -34,7 +34,7 @@ export class SanctuaryService {
             }
             return true;
         } catch (e) {
-            logger.error("System Error saving focus", e);
+            logger.error("System Error saving focus", e as any);
             return false;
         }
     }
@@ -75,7 +75,7 @@ export class SanctuaryService {
             }
             return true;
         } catch (e) {
-            logger.error("System Error saving dream", e);
+            logger.error("System Error saving dream", e as any);
             return false;
         }
     }

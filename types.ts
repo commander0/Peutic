@@ -211,7 +211,7 @@ export interface Achievement {
   code: string;
   title: string;
   description: string;
-  icon_name: string;
+  icon: string;
   xp_reward: number;
 }
 

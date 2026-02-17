@@ -233,6 +233,14 @@ export class UserService {
         if (data.user) {
             const user = await this.syncUser(data.user.id);
             if (user) {
+                // Avatar Rotation Hook
+                if (!user.avatarLocked) {
+                    const newAvatar = `https://api.dicebear.com/7.x/notionists/svg?seed=${Date.now()}-${user.id.substring(0, 5)}`;
+                    user.avatar = newAvatar;
+                    // We don't await this update to avoid blocking login flow
+                    this.updateUser(user).catch(console.error);
+                }
+
                 logger.success("User Login", `Email: ${email}`);
                 return user;
             }

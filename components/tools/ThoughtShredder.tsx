@@ -93,6 +93,16 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
                 setIsShredding(false);
                 setText('');
                 showToast("Thoughts Released into the Void.", "success");
+
+                // Achievement Hook
+                import('../../services/userService').then(({ UserService }) => {
+                    const user = UserService.getUser();
+                    if (user) {
+                        UserService.unlockAchievement(user.id, 'CLEAR_MIND').then(ach => {
+                            if (ach) showToast(`🏆 Unlocked: ${ach.title}`, "success");
+                        });
+                    }
+                });
             }
         };
 

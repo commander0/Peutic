@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Trophy, Lock, Star, Zap, Heart, BookOpen, Crown, MapPin, Activity } from 'lucide-react';
-import { Achievement, UserAchievement } from '../../types';
-import { UserService } from '../../services/userService';
+import { Achievement } from '../../types';
 import { supabase } from '../../services/supabaseClient';
 
 interface AchievementGridProps {
@@ -38,7 +37,7 @@ const AchievementGrid: React.FC<AchievementGridProps> = ({ userId }) => {
             setAchievements(allAch || []);
 
             // Create a Set of unlocked IDs for O(1) lookup
-            const unlockedSet = new Set<string>((userAch || []).map(ua => ua.achievement_id));
+            const unlockedSet = new Set<string>((userAch || []).map((ua: any) => ua.achievement_id));
             setUserAchievements(unlockedSet);
 
         } catch (e) {
@@ -85,16 +84,16 @@ const AchievementGrid: React.FC<AchievementGridProps> = ({ userId }) => {
                     <div
                         key={ach.id}
                         className={`relative p-4 rounded-2xl border transition-all duration-300 flex items-center gap-4 ${isUnlocked
-                                ? 'bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/10 dark:to-orange-900/10 border-yellow-200 dark:border-yellow-700/30 shadow-sm'
-                                : 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 grayscale opacity-80'
+                            ? 'bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/10 dark:to-orange-900/10 border-yellow-200 dark:border-yellow-700/30 shadow-sm'
+                            : 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 grayscale opacity-80'
                             }`}
                     >
                         {/* Icon Container */}
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 shadow-inner ${isUnlocked
-                                ? 'bg-yellow-400 border-yellow-300'
-                                : 'bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600'
+                            ? 'bg-yellow-400 border-yellow-300'
+                            : 'bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600'
                             }`}>
-                            {isUnlocked ? getIcon(ach.icon_name, true) : <Lock className="w-5 h-5 text-gray-400" />}
+                            {isUnlocked ? getIcon(ach.icon, true) : <Lock className="w-5 h-5 text-gray-400" />}
                         </div>
 
                         {/* Content */}
