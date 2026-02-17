@@ -13,13 +13,14 @@
     "backend:setup": "node scripts/setup-backend.js",
     "backend:login": "npx supabase login",
     "backend:link": "npx supabase link",
-    "backend:deploy": "npx supabase functions deploy api-gateway --no-verify-jwt && npx supabase functions deploy tavus-proxy --no-verify-jwt"
+    "backend:deploy": "npx supabase functions deploy api-gateway --no-verify-jwt && npx supabase functions deploy tavus-proxy --no-verify-jwt && npx supabase functions deploy redis-proxy --no-verify-jwt"
   },
   "dependencies": {
     "@capacitor/android": "^6.0.0",
     "@capacitor/core": "^6.0.0",
     "@capacitor/ios": "^6.0.0",
     "@google/genai": "*",
+    "@sentry/react": "^10.39.0",
     "@supabase/supabase-js": "^2.39.0",
     "lucide-react": "^0.344.0",
     "react": "^18.2.0",

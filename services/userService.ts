@@ -6,6 +6,7 @@ import { NameValidator } from './nameValidator';
 import { logger } from './logger';
 import { Database } from '../types/supabase';
 import { CacheService } from './cacheService';
+import { debounce } from '../utils/debounce';
 
 type UserRow = Database['public']['Tables']['users']['Row'];
 
@@ -183,17 +184,20 @@ export class UserService {
     }
 
     static subscribeToUserChanges(userId: string, callback: (payload: any) => void) {
+        // Debounce the callback to avoid UI thrashing on frequent updates (e.g. game scores)
+        const debouncedCallback = debounce((payload: any) => {
+            const freshUser = this.mapUser(payload.new);
+            this.currentUser = freshUser;
+            this.saveUserToCache(freshUser);
+            callback(freshUser);
+        }, 500); // 500ms debounce
+
         return supabase
             .channel('public:users')
             .on(
                 'postgres_changes',
                 { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${userId}` },
-                (payload: any) => {
-                    const freshUser = this.mapUser(payload.new);
-                    this.currentUser = freshUser;
-                    this.saveUserToCache(freshUser);
-                    callback(freshUser);
-                }
+                (payload: any) => debouncedCallback(payload)
             )
             .subscribe();
     }

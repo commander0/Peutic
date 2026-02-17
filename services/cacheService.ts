@@ -1,4 +1,5 @@
 import { logger } from './logger';
+import { supabase } from './supabaseClient';
 
 /**
  * CacheService: A unified interface for caching strategies.
@@ -50,50 +51,42 @@ class LocalStorageProvider implements CacheProvider {
     }
 }
 
-// Placeholder for Upstash Redis (HTTP)
-// In a real scenario, you would fetch from https://<UPSTASH_URL>/set/key/value?_token=<TOKEN>
-class UpstashRedisProvider implements CacheProvider {
-    private url: string;
-    private token: string;
-
-    constructor(url: string, token: string) {
-        this.url = url;
-        this.token = token;
-    }
+// Provider using Supabase Edge Function to proxy to Redis (TCP)
+class SupabaseRedisProvider implements CacheProvider {
 
     async get<T>(key: string): Promise<T | null> {
         try {
-            const res = await fetch(`${this.url}/get/${key}`, {
-                headers: { Authorization: `Bearer ${this.token}` }
+            const { data, error } = await supabase.functions.invoke('redis-proxy', {
+                body: { action: 'get', key }
             });
-            const data = await res.json();
-            return data.result ? JSON.parse(data.result) : null;
+            if (error || !data) return null;
+            return typeof data === 'string' ? JSON.parse(data) : data;
         } catch (e) {
-            logger.error("Redis Get Failed", key, e);
+            console.warn("Redis Proxy Get Failed", key, e);
             return null;
         }
     }
 
     async set(key: string, value: any, ttlSeconds: number = 3600) {
         try {
-            await fetch(`${this.url}/set/${key}/${JSON.stringify(value)}?ex=${ttlSeconds}`, {
-                headers: { Authorization: `Bearer ${this.token}` }
+            await supabase.functions.invoke('redis-proxy', {
+                body: { action: 'set', key, value, ttl: ttlSeconds }
             });
         } catch (e) {
-            logger.error("Redis Set Failed", key, e);
+            console.warn("Redis Proxy Set Failed", key, e);
         }
     }
 
     async del(key: string) {
         try {
-            await fetch(`${this.url}/del/${key}`, {
-                headers: { Authorization: `Bearer ${this.token}` }
+            await supabase.functions.invoke('redis-proxy', {
+                body: { action: 'del', key }
             });
         } catch (e) { }
     }
 
     async clear() {
-        // flushdb command
+        // Not implemented for safety
     }
 }
 
@@ -102,10 +95,12 @@ export class CacheService {
     private static useRedis = false;
 
     static init(config?: { redisUrl: string, redisToken: string }) {
-        if (config?.redisUrl && config?.redisToken) {
-            this.provider = new UpstashRedisProvider(config.redisUrl, config.redisToken);
+        // Even if config is passed, we use the Proxy provider which uses Supabase Auth + Env vars on server
+        // We check if the Env vars exist in Client just as a signal to enable it
+        if (config?.redisUrl) {
+            this.provider = new SupabaseRedisProvider();
             this.useRedis = true;
-            logger.info("CacheService", "Switched to Redis (Upstash) Provider");
+            logger.info("CacheService", "Switched to Redis (Edge Proxy) Provider");
         } else {
             logger.info("CacheService", "Using LocalStorage Provider");
         }
