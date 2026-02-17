@@ -1398,7 +1398,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             {
                 showVoiceJournal && (
                     <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="bg-primary-light dark:bg-gray-900 w-full max-w-lg rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="bg-primary-light dark:bg-black/50 dark:backdrop-blur-xl dark:border dark:border-white/10 w-full max-w-lg rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-xl font-black flex items-center gap-2 dark:text-primary"><Mic className="w-5 h-5 text-red-500" /> Voice Journal</h2>
                                 <button onClick={() => setShowVoiceJournal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"><X className="w-5 h-5" /></button>
