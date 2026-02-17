@@ -26,8 +26,9 @@
    ----------------------------------------------------------------------------- */
 [data-theme="sunshine"] {
     --color-primary: #FACC15;
-    --color-primary-light: #FFFBEB;
-    --color-primary-border: #fef08a;
+    --color-primary-light: #fef08a;
+    /* Changed from #FFFBEB to Yellow-200 */
+    --color-primary-border: #fdee00;
     --color-bg-base: #FFFBEB;
     --color-text-base: #0A0A0A;
     --color-bg-gradient: linear-gradient(to bottom right, #fef3c7, #fde68a, #fffbeb);
@@ -48,7 +49,8 @@
    ----------------------------------------------------------------------------- */
 [data-theme="rose"] {
     --color-primary: #FB7185;
-    --color-primary-light: #FFF1F2;
+    --color-primary-light: #ffe4e6;
+    /* Changed from #FFF1F2 to Rose-100 */
     --color-primary-border: #FECDD3;
     --color-bg-base: #FFF1F2;
     --color-bg-gradient: linear-gradient(to bottom right, #fff1f2, #ffe4e6, transparent);
