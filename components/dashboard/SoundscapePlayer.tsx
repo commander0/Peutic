@@ -31,10 +31,10 @@ export const SoundscapePlayer = React.memo(() => {
     }, [track]);
 
     return (
-        <div className={`fixed bottom-6 right-6 z-[80] transition-all duration-500 ease-in-out border border-white/20 dark:border-white/10 shadow-2xl overflow-hidden backdrop-blur-md ${minimized ? 'w-12 h-12 rounded-full bg-white/80 dark:bg-black/40' : 'w-72 rounded-3xl p-4 bg-white/90 dark:bg-black/60'}`}>
+        <div className={`fixed bottom-6 right-6 z-[80] transition-all duration-500 ease-in-out border border-white/20 dark:border-white/10 shadow-2xl overflow-hidden backdrop-blur-md ${minimized ? 'w-12 h-12 rounded-full bg-transparent' : 'w-72 rounded-3xl p-4 bg-transparent'}`}>
             <audio ref={audioRef} src={SOUND_URLS[track]} loop crossOrigin="anonymous" />
             {minimized ? (
-                <button onClick={() => setMinimized(false)} className={`w-full h-full flex items-center justify-center hover:scale-110 transition-transform ${playing ? 'bg-primary dark:bg-transparent animate-pulse text-black dark:text-primary' : 'bg-primary dark:bg-transparent text-black dark:text-primary'}`}>
+                <button onClick={() => setMinimized(false)} className={`w-full h-full flex items-center justify-center hover:scale-110 transition-transform ${playing ? 'bg-transparent animate-pulse text-primary' : 'bg-transparent text-primary'}`}>
                     <Music className="w-5 h-5" />
                 </button>
             ) : (
