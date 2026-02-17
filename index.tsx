@@ -12,8 +12,8 @@ import * as Sentry from "@sentry/react";
 const env = import.meta.env || {};
 
 CacheService.init({
-  redisUrl: env.VITE_REDIS_URL,
-  redisToken: env.VITE_REDIS_TOKEN
+  redisUrl: env.VITE_REDIS_URL || '',
+  redisToken: env.VITE_REDIS_TOKEN || ''
 });
 
 // Initialize Sentry Monitoring (if DSN provided)
