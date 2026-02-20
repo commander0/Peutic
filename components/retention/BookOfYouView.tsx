@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { UserService } from '../../services/userService';
 import { User, JournalEntry, MoodEntry, ArtEntry, GardenState } from '../../types';
-import { BookOpen, Heart, Sparkles, Image as ImageIcon, Lock, Sun, CloudRain, ChevronLeft, Download } from 'lucide-react';
+import { BookOpen, Lock, Sun, CloudRain, ChevronLeft, Download } from 'lucide-react';
 
 interface BookOfYouViewProps {
     user: User;
@@ -87,18 +87,17 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
     // LOCKED STATE
     if (isLocked) {
         return (
-            <div className="fixed inset-0 z-[120] flex flex-col items-center justify-center bg-black/90 backdrop-blur-3xl p-8 text-center animate-in fade-in duration-500">
-                <button onClick={onClose} className="absolute top-8 left-8 text-white/40 hover:text-white flex items-center gap-2 transition-colors">
+            <div className="fixed inset-0 z-[120] flex flex-col items-center justify-center bg-amber-50/95 dark:bg-stone-900/95 backdrop-blur-md p-8 text-center animate-in fade-in duration-500">
+                <button onClick={onClose} className="absolute top-8 left-8 text-amber-900/40 dark:text-stone-400 hover:text-amber-900 dark:hover:text-stone-200 flex items-center gap-2 transition-colors font-serif">
                     <ChevronLeft className="w-5 h-5" /> Return
                 </button>
-                <div className="bg-white/5 border border-white/10 backdrop-blur-xl p-8 rounded-[2rem] shadow-2xl max-w-md relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-50"></div>
-                    <div className="bg-white/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 relative z-10 border border-white/20">
-                        <Lock className="w-8 h-8 text-white/60" />
+                <div className="bg-[#fdfaf6] dark:bg-[#2a2826] border border-amber-900/10 dark:border-stone-700 p-12 rounded-sm shadow-2xl max-w-md relative overflow-hidden before:absolute before:inset-0 before:bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] before:opacity-50 before:pointer-events-none">
+                    <div className="bg-amber-100/50 dark:bg-stone-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 relative z-10 border border-amber-900/5 dark:border-stone-700">
+                        <Lock className="w-8 h-8 text-amber-900/40 dark:text-stone-400" />
                     </div>
-                    <h2 className="text-2xl font-black text-white tracking-widest uppercase mb-3 relative z-10 shadow-sm drop-shadow-md">The Ink is Still Drying</h2>
-                    <p className="text-white/60 mb-8 relative z-10 leading-relaxed text-sm">Your story is just beginning. The Chronicle requires at least one week of history to weave your narrative.</p>
-                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-400 relative z-10 bg-purple-500/10 py-2 rounded-full border border-purple-500/20">Unlocked after {user ? new Date(new Date(user.joinedAt).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString() : '7 Days'}</div>
+                    <h2 className="text-2xl font-serif text-amber-900 dark:text-stone-200 mb-4 relative z-10">The Ink is Still Drying</h2>
+                    <p className="text-amber-900/60 dark:text-stone-400 mb-8 relative z-10 font-serif leading-relaxed">Your story is just beginning. The Chronicle requires at least one week of history to weave your narrative.</p>
+                    <div className="text-xs font-serif italic text-amber-900/50 dark:text-stone-500 relative z-10">Unlocked after {user ? new Date(new Date(user.joinedAt).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString() : '7 Days'}</div>
                 </div>
             </div>
         );
@@ -108,80 +107,66 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
     const isSunny = moodRatio.sun >= moodRatio.rain;
 
     return (
-        <div className="fixed inset-0 z-[120] bg-black text-white overflow-y-auto animate-in fade-in duration-1000 font-sans custom-scrollbar">
-            {/* ETHEREAL ATMOSPHERE ENGINES */}
-            <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-                {isSunny ? (
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/40 via-purple-900/40 to-black mix-blend-screen opacity-50">
-                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-yellow-400/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 animate-pulse-slow"></div>
-                        <div className="absolute bottom-0 left-0 w-[800px] h-[800px] bg-purple-600/20 rounded-full blur-[150px] translate-y-1/3 -translate-x-1/3"></div>
-                    </div>
-                ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900/40 to-black mix-blend-screen opacity-50">
-                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-500/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 animate-pulse-slow"></div>
-                        <div className="absolute bottom-1/4 left-0 w-[500px] h-[500px] bg-cyan-700/20 rounded-full blur-[120px] -translate-x-1/2"></div>
-                    </div>
-                )}
-                {/* Dusted stars / noise overlay */}
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 mix-blend-screen"></div>
-            </div>
+        <div className="fixed inset-0 z-[120] bg-[#f4f1ea] dark:bg-[#1a1918] text-amber-950 dark:text-stone-200 overflow-y-auto animate-in fade-in duration-1000 font-serif custom-scrollbar relative">
+
+            {/* PAPER TEXTURE OVERLAY */}
+            <div className="fixed inset-0 pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] opacity-[0.8] dark:opacity-30 dark:bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] mix-blend-multiply dark:mix-blend-color-burn"></div>
 
             {/* FLOATING ACTION BAR */}
-            <div className="fixed top-0 inset-x-0 h-24 bg-gradient-to-b from-black/80 to-transparent pointer-events-none z-50"></div>
+            <div className="fixed top-0 inset-x-0 h-24 bg-gradient-to-b from-[#f4f1ea]/90 dark:from-[#1a1918]/90 to-transparent pointer-events-none z-50"></div>
+
             <button
                 onClick={onClose}
-                className="fixed top-6 left-6 md:top-8 md:left-8 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/20 text-white/80 hover:text-white py-3 px-6 rounded-full flex items-center gap-3 transition-all shadow-[0_4px_30px_rgba(0,0,0,0.1)] z-[60] group"
+                className="fixed top-6 left-6 md:top-8 md:left-8 bg-[#fdfaf6] dark:bg-[#2a2826] border border-amber-900/10 dark:border-stone-700 hover:bg-amber-50 dark:hover:bg-stone-800 text-amber-900/70 dark:text-stone-400 hover:text-amber-900 dark:hover:text-stone-200 py-2.5 px-5 rounded-sm flex items-center gap-3 transition-all shadow-sm z-[60] group"
             >
                 <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                <span className="font-bold text-xs uppercase tracking-[0.2em]">Sanctuary</span>
+                <span className="font-bold text-xs uppercase tracking-widest font-sans">Close Book</span>
             </button>
 
             <button
                 onClick={() => window.print()}
-                className="fixed top-6 right-6 md:top-8 md:right-8 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/20 text-white/80 hover:text-white w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-[0_4px_30px_rgba(0,0,0,0.1)] z-[60] group print:hidden"
-                title="Export Chronicle"
+                className="fixed top-6 right-6 md:top-8 md:right-8 bg-[#fdfaf6] dark:bg-[#2a2826] border border-amber-900/10 dark:border-stone-700 hover:bg-amber-50 dark:hover:bg-stone-800 text-amber-900/70 dark:text-stone-400 hover:text-amber-900 dark:hover:text-stone-200 w-11 h-11 rounded-sm flex items-center justify-center transition-all shadow-sm z-[60] group print:hidden"
+                title="Print Pages"
             >
-                <Download className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
+                <Download className="w-4 h-4 group-hover:-translate-y-1 transition-transform" />
             </button>
 
 
             <div className="max-w-5xl mx-auto pt-32 pb-24 px-4 sm:px-8 relative z-10">
 
-                {/* HERO COVER: Premium Glassmorphism */}
-                <div className="text-center mb-24 relative">
-                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-purple-500/30 blur-[100px] pointer-events-none"></div>
-                    <div className="inline-flex justify-center items-center w-24 h-24 rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 shadow-2xl mb-8 relative group">
-                        <div className="absolute inset-0 rounded-3xl border border-purple-500/50 scale-105 opacity-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 pointer-events-none"></div>
-                        <Sparkles className="w-10 h-10 text-purple-400 group-hover:text-purple-300 transition-colors drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]" />
+                {/* HERO COVER: Book Title Page */}
+                <div className="text-center mb-32 mt-12 relative">
+                    <div className="inline-flex justify-center items-center w-20 h-20 rounded-full border border-amber-900/20 dark:border-stone-600 mb-8 relative group">
+                        <BookOpen className="w-8 h-8 text-amber-900/40 dark:text-stone-400 group-hover:text-amber-900" />
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-100 to-white/60 mb-6 tracking-tighter drop-shadow-sm">The Book of You</h1>
-                    <p className="text-xl text-purple-200/60 font-medium tracking-wide">A digital chronicle of {user.name}'s inner universe.</p>
-                    <div className="mt-12 flex justify-center gap-6 text-[10px] font-black uppercase tracking-[0.3em] text-white/40">
-                        <span className="bg-white/5 px-4 py-1.5 rounded-full border border-white/10">Vol. 1</span>
-                        <span className="bg-white/5 px-4 py-1.5 rounded-full border border-white/10">{new Date().getFullYear()}</span>
+                    <div className="w-full h-px bg-gradient-to-r from-transparent via-amber-900/20 dark:via-stone-700 to-transparent mb-12"></div>
+                    <h1 className="text-5xl md:text-7xl font-light text-amber-950 dark:text-stone-100 mb-6 tracking-normal">The Book of You</h1>
+                    <p className="text-xl text-amber-900/60 dark:text-stone-400 font-medium italic">A chronicle of {user.name}'s journey.</p>
+                    <div className="mt-16 flex justify-center gap-8 text-[10px] font-sans font-black uppercase tracking-[0.3em] text-amber-900/40 dark:text-stone-500">
+                        <span>Volume I</span>
+                        <span>&bull;</span>
+                        <span>{new Date().getFullYear()}</span>
                     </div>
                 </div>
 
                 {/* CHAPTER 1: REFLECTIONS */}
-                <div className="mb-24 relative">
-                    <div className="flex items-center gap-4 mb-10">
-                        <div className="p-3 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
-                            <BookOpen className="w-6 h-6" />
-                        </div>
-                        <h2 className="text-2xl md:text-3xl font-black tracking-widest uppercase text-white drop-shadow-md">Reflections</h2>
+                <div className="mb-24 relative break-after-page">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl font-light tracking-wide text-amber-950 dark:text-stone-200 mb-4 inline-block border-b border-amber-900/20 dark:border-stone-700 pb-2">Chapter I: Reflections</h2>
                     </div>
 
                     {journals.length === 0 ? (
-                        <div className="p-8 rounded-[2rem] bg-white/5 border border-dashed border-white/20 backdrop-blur-md text-center">
-                            <p className="text-white/40 italic font-medium">The pages are blank, waiting for your thoughts.</p>
+                        <div className="p-12 text-center">
+                            <p className="text-amber-900/40 dark:text-stone-500 italic text-lg">The pages are blank, waiting for your thoughts.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                             {journals.map((j) => (
-                                <div key={j.id} className="p-8 rounded-[2.5rem] bg-white/5 border border-white/10 backdrop-blur-xl hover:bg-white/10 hover:-translate-y-1 transition-all duration-500 group relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[50px] group-hover:bg-indigo-500/20 transition-colors pointer-events-none"></div>
-                                    <h3 className="text-[10px] font-black text-indigo-400 mb-4 uppercase tracking-[0.2em]">{new Date(j.date).toLocaleDateString(undefined, { weekday: 'short', month: 'long', day: 'numeric' })}</h3>
-                                    <p className="text-white/80 leading-relaxed whitespace-pre-wrap group-hover:text-white transition-colors">{j.content}</p>
+                                <div key={j.id} className="group relative">
+                                    <h3 className="text-sm font-sans font-bold text-amber-900/60 dark:text-stone-400 mb-3 uppercase tracking-widest">{new Date(j.date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</h3>
+                                    <div className="pl-6 border-l-2 border-amber-900/10 dark:border-stone-700/50">
+                                        <p className="text-amber-950/80 dark:text-stone-300 leading-loose whitespace-pre-wrap text-lg first-letter:text-5xl first-letter:font-bold first-letter:-ml-8 first-letter:mr-2 first-letter:float-left first-letter:text-amber-900/30 dark:first-letter:text-stone-600">{j.content}</p>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -189,56 +174,49 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                 </div>
 
                 {/* CHAPTER 2: EMOTIONAL CLIMATE */}
-                <div className="mb-24 relative">
-                    <div className="flex items-center gap-4 mb-10">
-                        <div className="p-3 rounded-2xl bg-rose-500/20 border border-rose-500/30 text-rose-400 shadow-[0_0_20px_rgba(244,63,94,0.2)]">
-                            <Heart className="w-6 h-6" />
-                        </div>
-                        <h2 className="text-2xl md:text-3xl font-black tracking-widest uppercase text-white drop-shadow-md">Emotional Climate</h2>
+                <div className="mb-24 relative break-after-page">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl font-light tracking-wide text-amber-950 dark:text-stone-200 mb-4 inline-block border-b border-amber-900/20 dark:border-stone-700 pb-2">Chapter II: Emotional Climate</h2>
                     </div>
 
-                    {/* VISUAL RATIO SCALE - GLASSMORPHIC */}
-                    <div className="p-8 md:p-12 rounded-[3rem] bg-white/5 border border-white/10 backdrop-blur-2xl mb-10 flex flex-col items-center relative overflow-hidden shadow-2xl">
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-2xl blur-[100px] pointer-events-none opacity-30">
-                            <div className="w-full h-full bg-gradient-to-r from-yellow-500 to-blue-500"></div>
+                    {/* VISUAL RATIO SCALE - PAPER */}
+                    <div className="p-8 md:p-12 mb-16 flex flex-col items-center border-b border-t border-amber-900/10 dark:border-stone-700/50 relative">
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] opacity-30 mix-blend-multiply pointer-events-none"></div>
+
+                        <h3 className="font-serif italic text-amber-900/50 dark:text-stone-500 mb-8 relative z-10 text-lg">Dominant Weather Pattern</h3>
+
+                        <div className="w-full max-w-xl h-4 bg-amber-900/5 dark:bg-stone-800 rounded-sm flex relative shadow-inner z-10 overflow-hidden border border-amber-900/10 dark:border-stone-700">
+                            <div className="h-full transition-all duration-1000 bg-amber-500 dark:bg-amber-600" style={{ width: `${Math.max(2, moodRatio.sun)}%` }}></div>
+                            <div className="h-full transition-all duration-1000 bg-slate-400 dark:bg-slate-600 blur-[1px]" style={{ width: `${Math.max(2, moodRatio.rain)}%` }}></div>
                         </div>
 
-                        <h3 className="font-bold text-[10px] text-white/50 tracking-[0.3em] uppercase mb-8 relative z-10">Dominant Weather Pattern</h3>
-
-                        <div className="w-full max-w-xl h-6 bg-black/40 rounded-full p-1 flex relative shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] z-10 border border-white/5">
-                            <div className="h-full rounded-full transition-all duration-1000 bg-gradient-to-r from-amber-200 to-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.6)]" style={{ width: `${Math.max(2, moodRatio.sun)}%` }}></div>
-                            <div className="h-full rounded-full transition-all duration-1000 bg-gradient-to-r from-blue-400 to-indigo-600 shadow-[0_0_15px_rgba(79,70,229,0.5)] ml-1" style={{ width: `${Math.max(2, moodRatio.rain)}%` }}></div>
-                        </div>
-
-                        <div className="flex justify-between w-full max-w-xl mt-6 text-[10px] font-black uppercase tracking-[0.2em] z-10">
-                            <div className={`flex items-center gap-2 ${isSunny ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)] scale-110' : 'text-white/30'} transition-all`}>
+                        <div className="flex justify-between w-full max-w-xl mt-4 font-serif text-sm z-10">
+                            <div className={`flex items-center gap-2 ${isSunny ? 'text-amber-700 dark:text-amber-500 font-bold' : 'text-amber-900/40 dark:text-stone-500'} transition-all`}>
                                 <Sun className="w-4 h-4" /> Sunny ({Math.round(moodRatio.sun)}%)
                             </div>
-                            <div className={`flex items-center gap-2 ${!isSunny ? 'text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)] scale-110' : 'text-white/30'} transition-all`}>
+                            <div className={`flex items-center gap-2 ${!isSunny ? 'text-slate-600 dark:text-slate-400 font-bold' : 'text-amber-900/40 dark:text-stone-500'} transition-all`}>
                                 Rainy ({Math.round(moodRatio.rain)}%) <CloudRain className="w-4 h-4" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
+                    <div className="grid grid-cols-4 md:grid-cols-8 gap-4 px-4">
                         {moods.slice(0, 8).map((m, i) => {
                             const isPositive = (m.mood as any) === 'confetti' || (m.mood as any) === 'Happy' || (m.mood as any) === 'Calm' || (m.mood as any) === 'sun';
                             const isNegative = (m.mood as any) === 'rain' || (m.mood as any) === 'Anxious' || (m.mood as any) === 'Sad';
                             let emoji = '😐';
-                            let color = 'from-gray-500/20 to-gray-600/20';
 
                             if (isPositive) {
                                 emoji = ['confetti', 'Happy'].includes(String(m.mood)) ? '🎉' : '☀️';
-                                color = 'from-yellow-400/20 to-orange-500/20 shadow-[0_0_15px_rgba(250,204,21,0.15)]';
                             } else if (isNegative) {
                                 emoji = ['rain', 'Sad'].includes(String(m.mood)) ? '🌧️' : '😰';
-                                color = 'from-blue-500/20 to-cyan-600/20 shadow-[0_0_15px_rgba(59,130,246,0.15)]';
                             }
 
                             return (
-                                <div key={i} className={`aspect-square p-2 bg-gradient-to-br ${color} rounded-3xl border border-white/10 backdrop-blur-md flex flex-col items-center justify-center hover:scale-110 transition-transform`}>
-                                    <span className="text-3xl md:text-4xl block mb-1 drop-shadow-lg filter">{emoji}</span>
-                                    <div className="text-[8px] font-black uppercase text-white/50 tracking-widest">{new Date(m.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+                                <div key={i} className={`aspect-square p-2 bg-amber-900/5 dark:bg-stone-800/50 rounded-sm border border-amber-900/10 dark:border-stone-700 flex flex-col items-center justify-center relative group`}>
+                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] opacity-10 mix-blend-multiply pointer-events-none"></div>
+                                    <span className="text-3xl md:text-4xl block mb-2 filter sepia-[0.3] group-hover:sepia-0 transition-all">{emoji}</span>
+                                    <div className="text-[9px] font-sans font-bold uppercase text-amber-900/50 dark:text-stone-500 tracking-widest">{new Date(m.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
                                 </div>
                             );
                         })}
@@ -247,28 +225,27 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
 
                 {/* CHAPTER 3: VISIONS (ART) */}
                 <div className="mb-16 relative">
-                    <div className="flex items-center gap-4 mb-10">
-                        <div className="p-3 rounded-2xl bg-fuchsia-500/20 border border-fuchsia-500/30 text-fuchsia-400 shadow-[0_0_20px_rgba(217,70,239,0.2)]">
-                            <ImageIcon className="w-6 h-6" />
-                        </div>
-                        <h2 className="text-2xl md:text-3xl font-black tracking-widest uppercase text-white drop-shadow-md">Visions</h2>
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl font-light tracking-wide text-amber-950 dark:text-stone-200 mb-4 inline-block border-b border-amber-900/20 dark:border-stone-700 pb-2">Chapter III: Visions</h2>
                     </div>
 
                     {arts.length === 0 ? (
-                        <div className="p-8 rounded-[2rem] bg-white/5 border border-dashed border-white/20 backdrop-blur-md text-center">
-                            <p className="text-white/40 italic font-medium">The canvas awaits your dreams.</p>
+                        <div className="p-12 text-center">
+                            <p className="text-amber-900/40 dark:text-stone-500 italic text-lg">The canvas awaits your dreams.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
                             {arts.map(a => (
-                                <div key={a.id} className="group flex flex-col">
-                                    <div className="aspect-square bg-white/5 rounded-[2rem] overflow-hidden mb-4 border border-white/10 shadow-2xl hover:shadow-[0_0_30px_rgba(217,70,239,0.3)] transition-all duration-700 relative">
-                                        <img src={a.imageUrl} alt={a.prompt} className="w-full h-full object-cover group-hover:scale-110 group-hover:rotate-1 transition-transform duration-1000 ease-out" />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                <div key={a.id} className="group flex flex-col relative">
+                                    <div className="bg-[#fcfaf7] dark:bg-[#201e1c] p-3 shadow-md border border-amber-900/10 dark:border-stone-700 mb-4 relative rotate-1 hover:rotate-0 transition-transform duration-500">
+                                        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-red-400/20 rounded-full blur-[1px]"></div>
+                                        <div className="aspect-square overflow-hidden bg-amber-900/5 dark:bg-black/50 filter sepia-[0.2] dark:sepia-[0.3]">
+                                            <img src={a.imageUrl} alt={a.prompt} className="w-full h-full object-cover transition-transform duration-1000 ease-out" />
+                                        </div>
                                     </div>
-                                    <div className="px-2">
-                                        <p className="font-medium text-sm text-white/80 leading-relaxed mb-2 line-clamp-3">"{a.prompt}"</p>
-                                        <p className="text-[9px] font-black text-fuchsia-400/80 uppercase tracking-[0.2em]">{new Date(a.createdAt).toLocaleDateString()}</p>
+                                    <div className="px-4 text-center">
+                                        <p className="font-serif italic text-lg text-amber-950/80 dark:text-stone-300 leading-relaxed mb-3">"{a.prompt}"</p>
+                                        <p className="text-[10px] font-sans font-bold text-amber-900/40 dark:text-stone-500 uppercase tracking-widest">{new Date(a.createdAt).toLocaleDateString()}</p>
                                     </div>
                                 </div>
                             ))}
@@ -277,12 +254,12 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                 </div>
 
                 {/* FOOTER */}
-                <div className="mt-32 pt-12 border-t border-white/10 text-center relative z-10">
-                    <div className="w-12 h-12 rounded-full border border-white/20 bg-white/5 mx-auto mb-6 flex items-center justify-center backdrop-blur-xl">
-                        <Sparkles className="w-5 h-5 text-white/40" />
+                {/* FOOTER */}
+                <div className="mt-40 pt-16 border-t border-amber-900/10 dark:border-stone-700/50 text-center relative z-10 pb-8">
+                    <div className="w-10 h-10 border border-amber-900/20 dark:border-stone-600 bg-transparent mx-auto mb-6 flex items-center justify-center rounded-sm rotate-45">
+                        <div className="-rotate-45"><BookOpen className="w-4 h-4 text-amber-900/40 dark:text-stone-500" /></div>
                     </div>
-                    <p className="font-black tracking-[0.4em] uppercase text-[9px] text-white/30">Created with Peutic</p>
-                    <p className="font-bold tracking-widest uppercase text-[8px] text-white/20 mt-2">End-to-End Encrypted Chronicle</p>
+                    <p className="font-serif italic text-amber-900/50 dark:text-stone-500 text-sm">Chronicle complete.</p>
                 </div>
             </div>
         </div>
