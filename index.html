@@ -34,10 +34,13 @@
   <script>
     // Immediate theme check to prevent flash of unstyled content (FOUC)
     try {
-      const local = localStorage.getItem('peutic_theme');
+      const localMode = localStorage.getItem('peutic_mode');
+      const localTheme = localStorage.getItem('peutic_theme'); // Legacy support
       const userPref = localStorage.getItem('supabase.auth.token') && JSON.parse(atob(localStorage.getItem('supabase.auth.token').split('.')[1] || '{}'))?.user_metadata?.theme_preference;
 
-      if (local === 'dark' || (!local && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      const isDark = localMode === 'dark' || localTheme === 'dark';
+
+      if (isDark || (!localMode && !localTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
       } else {
         document.documentElement.classList.remove('dark');

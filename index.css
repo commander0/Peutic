@@ -10,7 +10,7 @@
     --color-bg-base: #FFFBEB;
     /* Warm White */
     --color-text-base: #0A0A0A;
-    --color-bg-gradient: linear-gradient(to bottom right, #fef3c7, #fde68a, #fffbeb);
+    --color-bg-gradient: radial-gradient(ellipse at top left, #fef3c7 0%, transparent 70%), radial-gradient(ellipse at bottom right, #fde68a 0%, transparent 70%);
 }
 
 /* GLOBAL DARK MODE OVERRIDES (Base Layer) */
@@ -31,7 +31,7 @@
     --color-primary-border: #fdee00;
     --color-bg-base: #FFFBEB;
     --color-text-base: #0A0A0A;
-    --color-bg-gradient: linear-gradient(to bottom right, #fef3c7, #fde68a, #fffbeb);
+    --color-bg-gradient: radial-gradient(ellipse at top left, #fef3c7 0%, transparent 70%), radial-gradient(ellipse at bottom right, #fde68a 0%, transparent 70%);
 }
 
 [data-theme="sunshine"].dark,
@@ -41,7 +41,7 @@
     --color-bg-base: #141005;
     /* Deep Gold Black */
     --color-text-base: #FFFBEB;
-    --color-bg-gradient: linear-gradient(to bottom right, #3f3205, #1a1500, #000000);
+    --color-bg-gradient: radial-gradient(ellipse at top left, #3f3205 0%, transparent 70%), radial-gradient(ellipse at bottom right, #1a1500 0%, transparent 70%);
 }
 
 /* -----------------------------------------------------------------------------
@@ -53,7 +53,7 @@
     /* Changed from #FFF1F2 to Rose-100 */
     --color-primary-border: #FECDD3;
     --color-bg-base: #FFF1F2;
-    --color-bg-gradient: linear-gradient(to bottom right, #fff1f2, #ffe4e6, transparent);
+    --color-bg-gradient: radial-gradient(ellipse at top left, #fff1f2 0%, transparent 70%), radial-gradient(ellipse at bottom right, #ffe4e6 0%, transparent 70%);
 }
 
 [data-theme="rose"].dark,
@@ -62,7 +62,7 @@
     --color-primary-light: rgba(244, 63, 94, 0.1);
     --color-primary-border: rgba(244, 63, 94, 0.3);
     --color-bg-base: #1c0508;
-    --color-bg-gradient: linear-gradient(to bottom right, rgba(244, 63, 94, 0.1), #1c0508, #000000);
+    --color-bg-gradient: radial-gradient(ellipse at top left, rgba(244 0%, transparent 70%), radial-gradient(ellipse at bottom right, 63 0%, transparent 70%);
 }
 
 /* -----------------------------------------------------------------------------
@@ -73,7 +73,7 @@
     --color-primary-light: #e0f2fe;
     --color-primary-border: #7dd3fc;
     --color-bg-base: #f0f9ff;
-    --color-bg-gradient: linear-gradient(to bottom right, #e0f2fe, #bae6fd, #e0f2fe);
+    --color-bg-gradient: radial-gradient(ellipse at top left, #e0f2fe 0%, transparent 70%), radial-gradient(ellipse at bottom right, #bae6fd 0%, transparent 70%);
 }
 
 [data-theme="ocean"].dark,
@@ -82,7 +82,7 @@
     --color-primary-light: rgba(56, 189, 248, 0.2);
     --color-primary-border: rgba(56, 189, 248, 0.4);
     --color-bg-base: #0c4a6e;
-    --color-bg-gradient: linear-gradient(to bottom right, #0c4a6e, #082f49, #020617);
+    --color-bg-gradient: radial-gradient(ellipse at top left, #0c4a6e 0%, transparent 70%), radial-gradient(ellipse at bottom right, #082f49 0%, transparent 70%);
 }
 
 /* -----------------------------------------------------------------------------
@@ -93,7 +93,7 @@
     --color-primary-light: #d1fae5;
     --color-primary-border: #6ee7b7;
     --color-bg-base: #ecfdf5;
-    --color-bg-gradient: linear-gradient(to bottom right, #d1fae5, #a7f3d0, #ecfdf5);
+    --color-bg-gradient: radial-gradient(ellipse at top left, #d1fae5 0%, transparent 70%), radial-gradient(ellipse at bottom right, #a7f3d0 0%, transparent 70%);
 }
 
 [data-theme="forest"].dark,
@@ -102,7 +102,7 @@
     --color-primary-light: rgba(16, 185, 129, 0.2);
     --color-primary-border: rgba(16, 185, 129, 0.4);
     --color-bg-base: #064e3b;
-    --color-bg-gradient: linear-gradient(to bottom right, #064e3b, #022c22, #020617);
+    --color-bg-gradient: radial-gradient(ellipse at top left, #064e3b 0%, transparent 70%), radial-gradient(ellipse at bottom right, #022c22 0%, transparent 70%);
 }
 
 /* -----------------------------------------------------------------------------
@@ -113,7 +113,7 @@
     --color-primary-light: #FFF7ED;
     --color-primary-border: #FFEDD5;
     --color-bg-base: #fff8f4;
-    --color-bg-gradient: linear-gradient(to bottom right, #fff7ed, #ffedd5, transparent);
+    --color-bg-gradient: radial-gradient(ellipse at top left, #fff7ed 0%, transparent 70%), radial-gradient(ellipse at bottom right, #ffedd5 0%, transparent 70%);
 }
 
 [data-theme="sunset"].dark,
@@ -122,7 +122,7 @@
     --color-primary-light: rgba(251, 146, 60, 0.1);
     --color-primary-border: rgba(251, 146, 60, 0.3);
     --color-bg-base: #1e0901;
-    --color-bg-gradient: linear-gradient(to bottom right, rgba(249, 115, 22, 0.1), #1e0901, #000000);
+    --color-bg-gradient: radial-gradient(ellipse at top left, rgba(249 0%, transparent 70%), radial-gradient(ellipse at bottom right, 115 0%, transparent 70%);
 }
 
 /* -----------------------------------------------------------------------------
@@ -133,7 +133,7 @@
     --color-primary-light: #ede9fe;
     --color-primary-border: #c4b5fd;
     --color-bg-base: #f5f3ff;
-    --color-bg-gradient: linear-gradient(to bottom right, #ede9fe, #ddd6fe, #f5f3ff);
+    --color-bg-gradient: radial-gradient(ellipse at top left, #ede9fe 0%, transparent 70%), radial-gradient(ellipse at bottom right, #ddd6fe 0%, transparent 70%);
 }
 
 [data-theme="lavender"].dark,
@@ -142,7 +142,7 @@
     --color-primary-light: rgba(167, 139, 250, 0.2);
     --color-primary-border: rgba(167, 139, 250, 0.4);
     --color-bg-base: #2e1065;
-    --color-bg-gradient: linear-gradient(to bottom right, #2e1065, #1e1b4b, #020617);
+    --color-bg-gradient: radial-gradient(ellipse at top left, #2e1065 0%, transparent 70%), radial-gradient(ellipse at bottom right, #1e1b4b 0%, transparent 70%);
 }
 
 /* -----------------------------------------------------------------------------
@@ -154,7 +154,7 @@
     --color-primary-border: #22d3ee;
     --color-bg-base: #ffffff;
     --color-text-base: #080808;
-    --color-bg-gradient: linear-gradient(to bottom right, #ecfeff, #cffafe, transparent);
+    --color-bg-gradient: radial-gradient(ellipse at top left, #ecfeff 0%, transparent 70%), radial-gradient(ellipse at bottom right, #cffafe 0%, transparent 70%);
 }
 
 [data-theme="cyberpunk"].dark,
@@ -164,7 +164,7 @@
     --color-primary-border: #00f0ff;
     --color-bg-base: #050510;
     --color-text-base: #e0faff;
-    --color-bg-gradient: linear-gradient(to bottom right, #050510, #001e1e, #000000);
+    --color-bg-gradient: radial-gradient(ellipse at top left, #050510 0%, transparent 70%), radial-gradient(ellipse at bottom right, #001e1e 0%, transparent 70%);
 }
 
 /* -----------------------------------------------------------------------------
@@ -175,7 +175,7 @@
     --color-primary-light: #EEF2FF;
     --color-primary-border: #C7D2FE;
     --color-bg-base: #F5F7FF;
-    --color-bg-gradient: linear-gradient(to bottom right, #eef2ff, #e0e7ff, transparent);
+    --color-bg-gradient: radial-gradient(ellipse at top left, #eef2ff 0%, transparent 70%), radial-gradient(ellipse at bottom right, #e0e7ff 0%, transparent 70%);
 }
 
 [data-theme="midnight"].dark,
@@ -184,7 +184,7 @@
     --color-primary-light: rgba(129, 140, 248, 0.1);
     --color-primary-border: rgba(129, 140, 248, 0.3);
     --color-bg-base: #060614;
-    --color-bg-gradient: linear-gradient(to bottom right, rgba(79, 70, 229, 0.1), #060614, #000000);
+    --color-bg-gradient: radial-gradient(ellipse at top left, rgba(79 0%, transparent 70%), radial-gradient(ellipse at bottom right, 70 0%, transparent 70%);
 }
 
 /* -----------------------------------------------------------------------------
@@ -195,7 +195,7 @@
     --color-primary-light: #fefce8;
     --color-primary-border: #dcb068;
     --color-bg-base: #fffbf0;
-    --color-bg-gradient: linear-gradient(to bottom right, #fffbf0, #aaaa8a, transparent);
+    --color-bg-gradient: radial-gradient(ellipse at top left, #fffbf0 0%, transparent 70%), radial-gradient(ellipse at bottom right, #aaaa8a 0%, transparent 70%);
 }
 
 [data-theme="coffee"].dark,
@@ -205,7 +205,7 @@
     --color-primary-border: rgba(212, 163, 115, 0.3);
     --color-bg-base: #140d08;
     --color-text-base: #eaddcf;
-    --color-bg-gradient: linear-gradient(to bottom right, rgba(120, 53, 15, 0.1), #140d08, #000000);
+    --color-bg-gradient: radial-gradient(ellipse at top left, rgba(120 0%, transparent 70%), radial-gradient(ellipse at bottom right, 53 0%, transparent 70%);
 }
 
 /* -----------------------------------------------------------------------------
@@ -216,7 +216,7 @@
     --color-primary-light: #f3e8ff;
     --color-primary-border: #d8b4fe;
     --color-bg-base: #faf5ff;
-    --color-bg-gradient: linear-gradient(to bottom right, #f3e8ff, #e9d5ff, #faf5ff);
+    --color-bg-gradient: radial-gradient(ellipse at top left, #f3e8ff 0%, transparent 70%), radial-gradient(ellipse at bottom right, #e9d5ff 0%, transparent 70%);
 }
 
 [data-theme="royal"].dark,
@@ -226,7 +226,7 @@
     --color-primary-border: rgba(255, 215, 0, 0.5);
     --color-bg-base: #3b0764;
     --color-text-base: #fdf4ff;
-    --color-bg-gradient: linear-gradient(to bottom right, #3b0764, #2e1065, #000000);
+    --color-bg-gradient: radial-gradient(ellipse at top left, #3b0764 0%, transparent 70%), radial-gradient(ellipse at bottom right, #2e1065 0%, transparent 70%);
 }
 
 

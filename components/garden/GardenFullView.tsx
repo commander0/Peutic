@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Droplets, Leaf, Wind, Info, ChevronLeft, Music } from 'lucide-react';
+import { Droplets, Wind, Info, ChevronLeft, Music, Scissors } from 'lucide-react';
 import GardenCanvas from './GardenCanvas';
 import { UserService } from '../../services/userService';
 import { GardenState, User } from '../../types';
@@ -15,7 +15,7 @@ interface GardenFullViewProps {
 
 const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, onUpdate }) => {
     const [localGarden, setLocalGarden] = useState(garden);
-    const [interaction, setInteraction] = useState<'water' | 'breath' | 'sing' | null>(null);
+    const [interaction, setInteraction] = useState<'water' | 'breath' | 'sing' | 'harvest' | null>(null);
     const [showInfo, setShowInfo] = useState(false);
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
     const { showToast } = useToast();
@@ -36,7 +36,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
 
     const handleAction = async (type: 'water' | 'breath' | 'sing' | 'harvest') => {
         // Cost Logic
-        const actionCost = type === 'harvest' ? 5 : COST;
+        const actionCost = type === 'harvest' ? 1 : COST;
 
         if (user.balance < actionCost) {
             showToast(`Need ${actionCost}m to ${type}.`, "error");
@@ -59,11 +59,11 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
             await GardenService.addFocusMinutes(garden.userId, actionCost);
             showToast("Garden Watered", "success");
         } else if (type === 'harvest') {
-            const result = await GardenService.harvestPlant(garden.userId, UserService);
+            const result = await GardenService.clipPlant(garden.userId);
             if (result.success) {
-                showToast(result.message, "success");
+                showToast(`Harvested! ${result.reward ? `"${result.reward}"` : ''}`, "success");
             } else {
-                showToast(result.message, "error");
+                showToast(result.message || "Failed to harvest.", "error");
             }
         } else {
             // Breath / Sing
@@ -213,12 +213,12 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                         color="purple"
                     />
                     <ControlBtn
-                        icon={Leaf}
+                        icon={Scissors}
                         label="Harvest"
-                        sub="100m req"
-                        active={localGarden.focusMinutes < 100}
+                        sub="-1m"
+                        active={interaction === 'harvest'}
                         onClick={() => handleAction('harvest')}
-                        color="emerald"
+                        color="amber"
                     />
                 </div>
 

@@ -12,7 +12,7 @@ interface GardenCanvasProps {
 const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, interactionType }) => {
 
     // Scale focus minutes to a "Tree Age"
-    const maxMinutes = 10;
+    const maxMinutes = 20; // Doubled difficulty
     const progress = Math.min((garden.focusMinutes || 0) / maxMinutes, 1);
 
     // The previous design had defined stages: 0 (seed), 1 (sprout), 2 (small tree), 3 (full bloom)
