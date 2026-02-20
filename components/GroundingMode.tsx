@@ -185,20 +185,21 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
     const fallbackSpeak = (text: string) => {
         if (!voiceEnabled) return;
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.85; // Natural pacing
-        utterance.pitch = 0.98; // Slightly lower, calmer
+        utterance.rate = 0.80; // Slower, deliberate pacing
+        utterance.pitch = 0.85; // Lower, warmer, less computerized
         utterance.volume = 1.0;
 
-        // HYPER-ORGANIC VOICE SELECTION
+        // HYPER-ORGANIC SOOTHING VOICE SELECTION
         const voices = window.speechSynthesis.getVoices();
+
+        // Prioritize Neural/Online premium voices, then standard natural ones
         const preferredVoice = voices.find(v =>
-            // Tier 1: Premium Neural Voices
             v.name.includes("Google US English") ||
-            v.name.includes("Microsoft Aria") ||
-            v.name.includes("Microsoft Guy") ||
-            // Tier 2: Quality Fallbacks
-            v.name.includes("Samantha") ||
+            v.name.includes("Microsoft Aria Online") ||
+            v.name.includes("Microsoft Guy Online") ||
+            v.name.includes("Neural") ||
             v.name.includes("Natural") ||
+            v.name.includes("Samantha") ||
             (v.lang === 'en-US' && v.name.includes("Female"))
         );
 

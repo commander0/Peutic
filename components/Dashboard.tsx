@@ -814,8 +814,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     <LogOut className="w-5 h-5" />
                                 </button>
 
-                                <button onClick={() => setShowGrounding(true)} className="p-2.5 rounded-2xl bg-white dark:bg-gray-800 border border-blue-100 dark:border-gray-700 shadow-sm hover:scale-105 transition-all text-blue-500" title="Grounding Mode">
-                                    <LifeBuoy className="w-5 h-5" />
+                                <button onClick={() => setShowGrounding(true)} className="relative p-2.5 rounded-2xl bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-900 shadow-[0_0_10px_rgba(59,130,246,0.3)] hover:shadow-[0_0_20px_rgba(59,130,246,0.6)] hover:scale-105 transition-all text-blue-500 overflow-hidden" title="Panic Relief / Grounding Mode">
+                                    <div className="absolute inset-0 bg-blue-400/10 blur-md rounded-2xl animate-pulse pointer-events-none"></div>
+                                    <LifeBuoy className="w-5 h-5 relative z-10" />
                                 </button>
 
                                 <button onClick={toggleDarkMode} className="p-2.5 rounded-2xl bg-white dark:bg-gray-800 border border-primary-light dark:border-gray-700 shadow-sm hover:scale-105 transition-all">
