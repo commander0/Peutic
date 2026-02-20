@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Heart, Pizza, Moon, Sun,
     Sparkles, Zap, ChevronLeft,
-    Gamepad2, RefreshCw, Cpu
+    Gamepad2, RefreshCw, Cpu, Target, CheckCircle2, Award
 } from 'lucide-react';
 import { User, Lumina } from '../../types';
 import { PetService } from '../../services/petService';
@@ -47,6 +47,14 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     const [trick, setTrick] = useState<'spin' | 'magic' | null>(null);
     const [canvasSize, setCanvasSize] = useState(500);
     const [isCreating, setIsCreating] = useState(false);
+    const [showMissions, setShowMissions] = useState(false);
+
+    // Mission State (Mocked for gamification)
+    const [missions, setMissions] = useState([
+        { id: 1, title: 'First Bite', desc: 'Feed your Lumina today', req: 1, progress: 0, reward: 50, claimed: false },
+        { id: 2, title: 'Oracle Seeker', desc: 'Seek wisdom from the Oracle', req: 1, progress: 0, reward: 100, claimed: false },
+        { id: 3, title: 'Rest Cycle', desc: 'Put your Lumina to sleep', req: 1, progress: 0, reward: 30, claimed: false },
+    ]);
 
     const { showToast } = useToast();
     const COST = intensity;
@@ -164,6 +172,9 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                 setOracleMessage(msg);
                 setIsSummoning(false);
                 setTrick(null);
+
+                // Mission Progress
+                setMissions(prev => prev.map(m => m.id === 2 ? { ...m, progress: 1 } : m));
             }, 3000);
         }
     };
@@ -188,6 +199,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                 updated.hunger = Math.min(100, pet.hunger + statGain);
                 newEmotion = 'eating';
                 showToast(`SATURATION INCREASED`, "success");
+                setMissions(prev => prev.map(m => m.id === 1 ? { ...m, progress: 1 } : m));
                 break;
             case 'play':
                 updated.happiness = Math.min(100, pet.happiness + statGain);
@@ -202,6 +214,9 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
             case 'sleep':
                 updated.isSleeping = !pet.isSleeping;
                 newEmotion = updated.isSleeping ? 'sleeping' : 'idle';
+                if (updated.isSleeping) {
+                    setMissions(prev => prev.map(m => m.id === 3 ? { ...m, progress: 1 } : m));
+                }
                 break;
         }
 
@@ -223,6 +238,25 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                 setTrick(null);
             }, 2500);
         }
+    };
+
+    const handleClaimMission = (id: number) => {
+        const mission = missions.find(m => m.id === id);
+        if (!mission || mission.claimed || mission.progress < mission.req || !pet) return;
+
+        let updated = { ...pet };
+        updated.experience += mission.reward;
+
+        if (updated.experience >= updated.level * 100) {
+            updated.level++;
+            updated.experience = 0;
+            showToast(`SYSTEM UPGRADE: LEVEL ${updated.level}`, "success");
+        }
+
+        setPet(updated);
+        PetService.updatePet(updated);
+        setMissions(prev => prev.map(m => m.id === id ? { ...m, claimed: true } : m));
+        showToast(`MISSION ACCOMPLISHED: +${mission.reward} XP`, "success");
     };
 
     if (loading) return <div className="fixed inset-0 bg-black text-cyan-500 flex items-center justify-center font-mono">INITIALIZING LINK...</div>;
@@ -316,15 +350,18 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                             <span>LVL_0{pet.level}</span>
                             <span>//</span>
                             <span>{pet.species.toUpperCase()}</span>
+                            <span>//</span>
+                            <span>XP: {pet.experience}/{pet.level * 100}</span>
                         </div>
                     </div>
                 </div>
 
-                {/* Visualizer Bars */}
-                <div className="flex gap-1 items-end h-8">
-                    {[...Array(5)].map((_, i) => (
-                        <div key={i} className={`w-1 bg-cyan-500/40 animate-[bounce_${0.5 + i * 0.1}s_infinite]`} style={{ height: `${20 + Math.random() * 80}%` }} />
-                    ))}
+                {/* Progress Bar (Visualizer replacement) */}
+                <div className="flex flex-col items-end w-32 md:w-48">
+                    <div className="text-[10px] text-cyan-500/60 mb-1">XP PROGRESS</div>
+                    <div className="w-full h-1.5 bg-gray-900 rounded-full overflow-hidden">
+                        <div className="h-full bg-cyan-400" style={{ width: `${(pet.experience / (pet.level * 100)) * 100}%` }} />
+                    </div>
                 </div>
             </header>
 
@@ -385,6 +422,44 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                     <StatusHolo icon={Zap} value={pet.energy} label="NRG" compact />
                 </div>
 
+                {/* --- MISSIONS PANEL OVERLAY --- */}
+                {showMissions && (
+                    <div className="absolute inset-y-0 right-0 w-full md:w-80 bg-black/95 border-l border-cyan-500/30 z-50 p-6 shadow-[-20px_0_50px_rgba(6,182,212,0.15)] flex flex-col animate-in slide-in-from-right duration-300">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold tracking-widest text-cyan-400 flex items-center gap-2"><Target className="w-5 h-5" /> DIRECTIVES</h2>
+                            <button onClick={() => setShowMissions(false)} className="text-gray-500 hover:text-white"><ChevronLeft className="w-5 h-5 rotate-180" /></button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+                            {missions.map(m => {
+                                const isReady = m.progress >= m.req;
+                                return (
+                                    <div key={m.id} className={`p-4 rounded-xl border ${m.claimed ? 'bg-cyan-900/10 border-cyan-900/30 opacity-60' : isReady ? 'bg-cyan-900/20 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]' : 'bg-white/5 border-white/10'} transition-all`}>
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h3 className={`text-sm font-bold ${isReady && !m.claimed ? 'text-cyan-300' : 'text-gray-300'}`}>{m.title}</h3>
+                                            <div className="text-[10px] flex items-center gap-1 font-bold text-yellow-500"><Award className="w-3 h-3" /> {m.reward} XP</div>
+                                        </div>
+                                        <p className="text-[10px] text-gray-400 mb-3">{m.desc}</p>
+
+                                        <div className="flex justify-between items-center">
+                                            <div className="text-[10px] font-mono text-cyan-500/50">
+                                                {m.progress} / {m.req} COMPLETED
+                                            </div>
+                                            {isReady && !m.claimed && (
+                                                <button onClick={() => handleClaimMission(m.id)} className="px-3 py-1 bg-cyan-500 hover:bg-cyan-400 text-black text-[10px] font-bold rounded flex items-center gap-1 transition-colors">
+                                                    CLAIM
+                                                </button>
+                                            )}
+                                            {m.claimed && (
+                                                <span className="text-cyan-500 flex items-center gap-1 text-[10px] font-bold"><CheckCircle2 className="w-3 h-3" /> VERIFIED</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
             </main>
 
             {/* --- CONTROL DECK --- */}
@@ -411,6 +486,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                     <CyberBtn icon={Gamepad2} label="PLAY" onClick={() => handleAction('play')} />
                     <CyberBtn icon={Sparkles} label="ORACLE" onClick={handleOracleConsult} color="purple" />
                     <CyberBtn icon={RefreshCw} label="CLEAN" onClick={() => handleAction('clean')} />
+                    <CyberBtn icon={Target} label="MISSIONS" onClick={() => setShowMissions(true)} color="yellow" />
                     <CyberBtn
                         icon={pet.isSleeping ? Sun : Moon}
                         label={pet.isSleeping ? "WAKE" : "SLEEP"}

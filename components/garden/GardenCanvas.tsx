@@ -5,113 +5,149 @@ interface GardenCanvasProps {
     garden: GardenState;
     width: number;
     height: number;
-    interactionType?: 'clip' | 'water' | 'breath' | 'sing' | null;
-    streak?: number;
+    interactionType?: 'clip' | 'water' | 'breath' | 'sing' | 'harvest' | null;
 }
 
 const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, interactionType }) => {
-    // Stage logic matches SQL: Level 1 (<5m), Level 2 (5-14m), Level 3 (15m+)
-    const stage = Math.min(Math.max(garden.level, 1), 3);
+
+    // Scale focus minutes to a "Tree Age" from 0 to 1
+    const maxMinutes = 100; // 100 minutes to fully grow
+    const progress = Math.min(garden.focusMinutes / maxMinutes, 1);
+    const treeAge = 0.1 + (progress * 0.9); // 0.1 to 1.0
+
+    // Determine colors
+    const trunkColor = garden.currentPlantType === 'Fern' as any ? '#064e3b' : '#451a03';
+    const leafColor = garden.currentPlantType === 'Rose' as any ? '#be123c' :
+        garden.currentPlantType === 'Sunflower' as any ? '#ca8a04' :
+            '#15803d';
+
+    const bloomColor = garden.currentPlantType === 'Rose' as any ? '#f43f5e' :
+        garden.currentPlantType === 'Sunflower' as any ? '#fde047' :
+            '#86efac';
+
+    const generateDeterministicTree = (
+        x: number, y: number, length: number, angle: number,
+        depth: number, maxDepth: number,
+        branches: React.ReactNode[], leaves: React.ReactNode[],
+        treeAge: number, index: number = 1
+    ) => {
+        if (depth >= maxDepth) return;
+
+        // Pseudo-random deterministic factor based on depth and index
+        const pseudoRand = (Math.sin(depth * 13.3 + index * 5.7) + 1) / 2; // 0 to 1
+
+        const scaledLength = length * (0.8 + pseudoRand * 0.4) * (0.5 + treeAge * 0.5);
+        const x2 = x + Math.cos(angle) * scaledLength;
+        const y2 = y + Math.sin(angle) * scaledLength;
+
+        const branchWidth = Math.max((maxDepth - depth) * 1.5 * treeAge, 0.5);
+
+        branches.push(
+            <line
+                key={`b-${depth}-${index}`}
+                x1={x} y1={y} x2={x2} y2={y2}
+                stroke={trunkColor}
+                strokeWidth={branchWidth}
+                strokeLinecap="round"
+            />
+        );
+
+        if (depth === maxDepth - 1 && treeAge > 0.3) {
+            const leafSize = (2 + pseudoRand * 2) * treeAge;
+            leaves.push(
+                <circle
+                    key={`l-${depth}-${index}`}
+                    cx={x2} cy={y2}
+                    r={leafSize}
+                    fill={leafColor}
+                    opacity={0.8}
+                    className="animate-pulse-slow"
+                />
+            );
+
+            if (treeAge > 0.8 && pseudoRand > 0.3) {
+                // Bloom Phase
+                leaves.push(
+                    <circle
+                        key={`f-${depth}-${index}`}
+                        cx={x2 + (pseudoRand * 4 - 2)} cy={y2 + (pseudoRand * 4 - 2)}
+                        r={leafSize * 1.4}
+                        fill={bloomColor}
+                        opacity={0.9}
+                        style={{ animation: `pulse ${2 + pseudoRand}s ease-in-out infinite` }}
+                    />
+                );
+            }
+        }
+
+        const angleOffset = 0.2 + (pseudoRand * 0.4); // 0.2 to 0.6 radians
+        generateDeterministicTree(x2, y2, length * 0.75, angle - angleOffset, depth + 1, maxDepth, branches, leaves, treeAge, index * 2);
+        generateDeterministicTree(x2, y2, length * 0.75, angle + angleOffset, depth + 1, maxDepth, branches, leaves, treeAge, index * 2 + 1);
+    };
 
     const SvgContent = useMemo(() => {
-        if (stage === 1) {
-            // Seedling SVG
-            return (
-                <svg viewBox="0 0 100 100" className="w-full h-full animate-ethereal-breathe filter drop-shadow-[0_0_10px_rgba(34,197,94,0.3)]">
-                    {/* Dirt Mound */}
-                    <path d="M 20 80 Q 50 70 80 80 Q 90 90 50 95 Q 10 90 20 80" fill="#2d3748" />
-                    {/* Tiny Sprout */}
-                    <path d="M 50 80 Q 48 60 55 50" fill="none" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" />
-                    <circle cx="55" cy="50" r="4" fill="#a3e635" />
-                    <circle cx="50" cy="65" r="3" fill="#84cc16" />
-                </svg>
-            );
-        } else if (stage === 2) {
-            // Sapling SVG
-            return (
-                <svg viewBox="0 0 100 100" className="w-full h-full animate-ethereal-breathe filter drop-shadow-[0_0_15px_rgba(74,222,128,0.4)]">
-                    {/* Dirt Mound */}
-                    <path d="M 15 85 Q 50 75 85 85 Q 95 95 50 98 Q 5 95 15 85" fill="#1a202c" />
-                    {/* Main Stem */}
-                    <path d="M 50 85 Q 45 50 50 20" fill="none" stroke="#16a34a" strokeWidth="4" strokeLinecap="round" />
-                    {/* Branches */}
-                    <path d="M 48 60 Q 30 50 25 40" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" />
-                    <path d="M 49 40 Q 70 30 75 25" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" />
-                    {/* Leaves */}
-                    <path d="M 50 20 Q 40 10 50 5 Q 60 10 50 20" fill="#a3e635" className="animate-pulse" />
-                    <path d="M 25 40 Q 15 35 25 25 Q 35 30 25 40" fill="#84cc16" className="animate-pulse" style={{ animationDelay: '0.5s' }} />
-                    <path d="M 75 25 Q 85 15 80 5 Q 70 10 75 25" fill="#bef264" className="animate-pulse" style={{ animationDelay: '1s' }} />
-                </svg>
-            );
-        } else {
-            // Full Bloom SVG (Stage 3+)
-            // Determine color based on plant type
-            let bloomColor = '#f472b6'; // Default Pink (Rose/Lotus)
-            let coreColor = '#fb7185';
-            if (garden.currentPlantType === 'Sunflower') {
-                bloomColor = '#fde047'; // Yellow
-                coreColor = '#fbbf24';
-            } else if (garden.currentPlantType === 'Fern') {
-                bloomColor = '#6ee7b7'; // Cyan/Green
-                coreColor = '#34d399';
-            }
+        const branches: React.ReactNode[] = [];
+        const leaves: React.ReactNode[] = [];
 
-            return (
-                <svg viewBox="0 0 100 100" className="w-full h-full filter drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]">
-                    {/* Glowing Aura */}
-                    <circle cx="50" cy="40" r="35" fill={`url(#bloomGlow)`} className="animate-pulse-slow object-center transform origin-center" />
-                    <defs>
-                        <radialGradient id="bloomGlow">
-                            <stop offset="0%" stopColor={bloomColor} stopOpacity="0.3" />
-                            <stop offset="100%" stopColor={bloomColor} stopOpacity="0" />
-                        </radialGradient>
-                    </defs>
+        const startX = 50;
+        const startY = 90;
+        const initialLength = 25 * treeAge;
+        const initialAngle = -Math.PI / 2;
 
-                    {/* Elegant Trunk */}
-                    <path d="M 50 90 Q 45 60 50 40" fill="none" stroke="#4a2e15" strokeWidth="5" strokeLinecap="round" />
-                    <path d="M 48 70 Q 30 50 20 40" fill="none" stroke="#4a2e15" strokeWidth="3" strokeLinecap="round" />
-                    <path d="M 49 55 Q 70 40 80 30" fill="none" stroke="#4a2e15" strokeWidth="3" strokeLinecap="round" />
+        // Depth scales from 2 to 7 based on age
+        const maxDepth = Math.max(2, Math.floor(treeAge * 7));
 
-                    {/* Foliage / Blossoms */}
-                    {/* Core Bloom */}
-                    <circle cx="50" cy="40" r="15" fill={coreColor} className="animate-pulse" />
-                    <circle cx="50" cy="40" r="8" fill="#ffffff" opacity="0.8" />
+        generateDeterministicTree(startX, startY, initialLength, initialAngle, 0, maxDepth, branches, leaves, treeAge, 1);
 
-                    {/* Left Bloom */}
-                    <circle cx="20" cy="40" r="10" fill={bloomColor} className="animate-pulse" style={{ animationDelay: '0.3s' }} />
-                    <circle cx="20" cy="40" r="4" fill="#ffffff" opacity="0.6" />
+        return (
+            <svg viewBox="0 0 100 100" className="w-full h-full filter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+                {/* Pot / Ground */}
+                <path d="M 35 90 L 65 90 L 60 98 L 40 98 Z" fill="#1f2937" />
+                <path d="M 30 90 Q 50 85 70 90" fill="none" stroke="#0f172a" strokeWidth="2" />
 
-                    {/* Right Bloom */}
-                    <circle cx="80" cy="30" r="12" fill={bloomColor} className="animate-pulse" style={{ animationDelay: '0.6s' }} />
-                    <circle cx="80" cy="30" r="5" fill="#ffffff" opacity="0.7" />
+                {/* Tree */}
+                <g className={interactionType === 'sing' ? 'animate-[spin_3s_ease-in-out_infinite]' : ''} style={{ transformOrigin: '50px 90px' }}>
+                    {branches}
+                    {leaves}
+                </g>
 
-                    {/* Magic Particles (SVG animations) */}
-                    <circle cx="35" cy="20" r="1.5" fill="#fff" className="animate-particle-float" />
-                    <circle cx="65" cy="15" r="2" fill="#fff" className="animate-particle-float" style={{ animationDelay: '1.2s' }} />
-                    <circle cx="50" cy="10" r="1" fill="#fff" className="animate-particle-float" style={{ animationDelay: '2s' }} />
-                </svg>
-            );
-        }
-    }, [stage, garden.currentPlantType]);
+                {/* Harvesting Glow */}
+                {interactionType === 'harvest' && (
+                    <circle cx="50" cy="50" r="50" fill="url(#harvestGlow)" className="animate-[ping_1s_ease-out_forwards]" />
+                )}
+                <defs>
+                    <radialGradient id="harvestGlow">
+                        <stop offset="0%" stopColor="#fef08a" stopOpacity="0.8" />
+                        <stop offset="100%" stopColor="#fef08a" stopOpacity="0" />
+                    </radialGradient>
+                </defs>
+            </svg>
+        );
+    }, [treeAge, garden.currentPlantType, interactionType]);
 
     return (
-        <div style={{ width: width, height: height }} className="relative flex items-center justify-center">
+        <div style={{ width: width, height: height }} className="relative flex flex-col items-center justify-center">
+
             {/* Water Interaction Effect */}
             {interactionType === 'water' && (
                 <div className="absolute inset-0 bg-blue-400/20 mix-blend-overlay animate-pulse rounded-full blur-xl pointer-events-none z-10"></div>
             )}
 
             {/* The SVG Container */}
-            <div className={`w-full h-full relative z-20 transition-transform duration-1000 ${interactionType === 'clip' ? 'scale-90 rotate-2' : 'scale-100 hover:scale-105'}`}>
+            <div className={`w-full h-[90%] relative z-20 transition-transform duration-1000 ${interactionType === 'clip' ? 'scale-90 rotate-2' : 'scale-100 hover:scale-[1.05] cursor-pointer'}`}>
                 {SvgContent}
             </div>
 
-            {/* Stage Indicator (Hidden on small screens) */}
-            <div className="absolute bottom-[-10px] w-full text-center pointer-events-none">
-                <span className="text-[8px] font-black text-white/50 bg-black/40 px-2 py-0.5 rounded-full backdrop-blur-sm">
-                    STAGE {stage}
-                </span>
+            {/* Focus Minutes / Age Indicator */}
+            <div className="absolute bottom-[-10px] w-full max-w-[200px] h-2 bg-gray-900 border border-gray-700/50 rounded-full overflow-hidden shadow-inner">
+                <div
+                    className={`h-full transition-all duration-1000 ${progress >= 1 ? 'bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.8)] animate-pulse' : 'bg-green-500'}`}
+                    style={{ width: `${progress * 100}%` }}
+                />
             </div>
+            <span className="absolute bottom-[-28px] text-[10px] font-mono text-gray-400 font-bold uppercase tracking-widest">
+                {progress >= 1 ? 'READY FOR HARVEST' : `${garden.focusMinutes} / ${maxMinutes} MINS`}
+            </span>
         </div>
     );
 };

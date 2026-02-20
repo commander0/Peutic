@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Droplets, Leaf, Wind, Heart, Info, ChevronLeft, Sparkles, Music } from 'lucide-react';
+import { Droplets, Leaf, Wind, Info, ChevronLeft, Music } from 'lucide-react';
 import GardenCanvas from './GardenCanvas';
 import { UserService } from '../../services/userService';
 import { GardenState, User } from '../../types';
@@ -59,9 +59,15 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
             if (updated) setLocalGarden(updated);
             showToast("Garden Watered", "success");
         } else if (type === 'harvest') {
-            // Mock Harvest Logic
-            showToast("Harvested! (+50 XP)", "success");
-            // In real app, call GardenService.harvest()
+            const result = await GardenService.harvestPlant(garden.userId, UserService);
+            if (result.success) {
+                showToast(result.message, "success");
+                // Immediately fetch fresh state to reset UI
+                const freshData = await GardenService.getGarden(user.id);
+                if (freshData) setLocalGarden(freshData);
+            } else {
+                showToast(result.message, "error");
+            }
         } else {
             // Breath / Sing
             showToast(`Shared ${type} with garden.`, "success");
@@ -155,7 +161,6 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                         width={600}
                         height={500}
                         interactionType={interaction}
-                        streak={localGarden.streakCurrent}
                     />
                 </div>
             </main>
@@ -208,8 +213,8 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                     <ControlBtn
                         icon={Leaf}
                         label="Harvest"
-                        sub="-5m"
-                        active={false}
+                        sub="100m req"
+                        active={localGarden.focusMinutes < 100}
                         onClick={() => handleAction('harvest')}
                         color="emerald"
                     />

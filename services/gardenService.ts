@@ -42,6 +42,19 @@ export class GardenService {
         return true;
     }
 
+    static async harvestPlant(userId: string, userBalanceService: any): Promise<{ success: boolean; message: string }> {
+        // Assume maximum gamification: subtract 100 minutes
+        const success = await this.addFocusMinutes(userId, -100);
+        if (success) {
+            // Give a cool prize (50 XP/Coins)
+            if (userBalanceService && userBalanceService.addBalance) {
+                await userBalanceService.addBalance(50, 'Harvested Garden Bonsai');
+            }
+            return { success: true, message: "Harvested! You earned 50 Balance (XP)." };
+        }
+        return { success: false, message: "Failed to harvest." };
+    }
+
     static async initializeGarden(userId: string): Promise<GardenState> {
         const initialState = {
             user_id: userId,
