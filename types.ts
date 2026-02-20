@@ -33,6 +33,7 @@ export interface User {
   gamificationEnabled?: boolean;
   unlockedRooms?: string[]; // 'observatory', 'dojo', etc.
   unlockedAchievements?: string[]; // codes like 'STREAK_7', 'EXPLORER'
+  unlockedDecor?: string[]; // ids of purchased sanctuary decorations
 }
 
 export interface Companion {
@@ -154,7 +155,7 @@ export interface GiftCard {
 export interface GardenState {
   userId: string;
   level: number; // 1-5
-  currentPlantType: 'Lotus' | 'Rose' | 'Sunflower' | 'Fern' | 'Sakura' | 'Oak' | 'Willow' | 'Bonsai';
+  currentPlantType: 'Lotus' | 'Rose' | 'Sunflower' | 'Fern' | 'Sakura' | 'Oak' | 'Willow' | 'Bonsai' | 'Crystal Lotus' | 'Lunar Fern' | 'Storm Oak' | 'Sunlight Spire';
   waterLevel: number; // 0-100
   lastWateredAt: string;
   streakCurrent: number;

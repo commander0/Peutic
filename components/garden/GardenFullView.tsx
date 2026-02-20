@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Droplets, Wind, Info, ChevronLeft, Music, Scissors, X, Sprout } from 'lucide-react';
+import { Droplets, Wind, Info, ChevronLeft, Music, Scissors, X, Sprout, Sparkles } from 'lucide-react';
 import GardenCanvas from './GardenCanvas';
 import { UserService } from '../../services/userService';
 import { GardenState, User } from '../../types';
@@ -22,7 +22,22 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
     const { showToast } = useToast();
     const COST = intensity;
-    const PLANT_CHOICES = ['Lotus', 'Rose', 'Sunflower', 'Fern', 'Sakura', 'Oak', 'Willow', 'Bonsai'] as const;
+    const [availablePlants, setAvailablePlants] = useState<string[]>(['Lotus', 'Rose', 'Sunflower', 'Fern', 'Sakura', 'Oak', 'Willow', 'Bonsai']);
+
+    // Weather/Day gamification injection
+    useEffect(() => {
+        const basePlants = ['Lotus', 'Rose', 'Sunflower', 'Fern', 'Sakura', 'Oak', 'Willow', 'Bonsai'];
+        const day = new Date().getDay();
+        const rand = Math.random();
+
+        // Inject Rare Phenotypes based on conditions
+        if (day === 0 || rand > 0.8) basePlants.push('Sunlight Spire'); // Sunday or 20% chance
+        if (day === 6 || rand > 0.9) basePlants.push('Storm Oak'); // Saturday or 10% chance
+        if (day === 1 || rand > 0.85) basePlants.push('Lunar Fern'); // Monday or 15% chance
+        if (rand > 0.95) basePlants.push('Crystal Lotus'); // 5% flat chance for the ultra-rare
+
+        setAvailablePlants([...new Set(basePlants)]); // Ensure uniqueness
+    }, [showPlantSelection]); // Re-calculate luck every time the selection screen opens
 
     // Eliminate Cached Ghosts: Always fetch fresh state on mount
     useEffect(() => {
@@ -183,15 +198,27 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                         <p className="text-stone-400 text-sm mb-6">Choose your next journey. Each plant type blossoms differently in your inner sanctuary.</p>
 
                         <div className="grid grid-cols-2 gap-3 mb-6">
-                            {PLANT_CHOICES.map(plant => (
-                                <button
-                                    key={plant}
-                                    onClick={() => setSelectedNewPlant(plant)}
-                                    className={`p-3 rounded-xl border transition-all text-sm font-bold tracking-wider uppercase ${selectedNewPlant === plant ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400' : 'bg-stone-800/50 border-stone-700 text-stone-400 hover:bg-stone-800 hover:border-stone-600'}`}
-                                >
-                                    {plant}
-                                </button>
-                            ))}
+                            {availablePlants.map(plant => {
+                                const isRare = ['Crystal Lotus', 'Lunar Fern', 'Storm Oak', 'Sunlight Spire'].includes(plant);
+                                return (
+                                    <button
+                                        key={plant}
+                                        onClick={() => setSelectedNewPlant(plant)}
+                                        className={`p-3 rounded-xl border transition-all text-sm font-bold tracking-wider uppercase relative overflow-hidden group
+                                            ${selectedNewPlant === plant
+                                                ? (isRare ? 'bg-fuchsia-500/20 border-fuchsia-500/80 text-fuchsia-300' : 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400')
+                                                : (isRare ? 'bg-stone-800/80 border-fuchsia-900/50 text-fuchsia-400/70 hover:bg-stone-800 hover:border-fuchsia-500/50' : 'bg-stone-800/50 border-stone-700 text-stone-400 hover:bg-stone-800 hover:border-stone-600')
+                                            }
+                                        `}
+                                    >
+                                        {isRare && <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-shimmer" />}
+                                        <span className="relative z-10 flex items-center justify-center gap-2">
+                                            {plant}
+                                            {isRare && <Sparkles className="w-3 h-3 text-fuchsia-400" />}
+                                        </span>
+                                    </button>
+                                );
+                            })}
                         </div>
 
                         <button

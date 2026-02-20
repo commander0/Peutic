@@ -5,10 +5,9 @@ import { UserService } from '../services/userService';
 
 interface CloudHopGameProps {
     dashboardUser: User;
-    lumina?: Lumina | null;
 }
 
-const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser, lumina }) => {
+const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const requestRef = useRef<number | undefined>(undefined);
     const [score, setScore] = useState(0);
@@ -173,23 +172,20 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser, lumina }) =>
                 else { drawCloud(pl.x, pl.y, pl.w, pl.h, pl.type); }
             });
             ctx.shadowBlur = 0;
-            const speciesMap: Record<string, string> = {
-                'Holo-Hamu': '🐹',
-                'Digi-Dino': '🦖',
-                'Neo-Shiba': '🐕',
-                'Zen-Sloth': '🦥'
-            };
-            const emoji = lumina ? (speciesMap[lumina.species] || '🐹') : '🐹';
-
-            ctx.font = `${p.width * 1.2}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-
-            // Add a soft glow behind the pet
-            ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
-            ctx.shadowBlur = 10;
-            ctx.fillText(emoji, p.x + p.width / 2, p.y + p.height / 2);
-            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#fde047';
+            ctx.beginPath();
+            ctx.arc(p.x + p.width / 2, p.y + p.height / 2, p.width / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(p.x + p.width / 2 - 5, p.y + p.height / 2 - 2, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(p.x + p.width / 2 + 5, p.y + p.height / 2 - 2, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(p.x + p.width / 2, p.y + p.height / 2 + 3, 4, 0, Math.PI, false);
+            ctx.stroke();
 
             requestRef.current = requestAnimationFrame(update);
         };

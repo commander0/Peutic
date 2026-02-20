@@ -112,7 +112,7 @@ const CollapsibleSection = React.memo(({ title, icon: Icon, children, defaultOpe
         <div className="bg-transparent rounded-3xl border border-[var(--color-primary-border)] overflow-hidden transition-all duration-300" style={{ borderColor: 'var(--color-primary-border)' }}>
             <button onClick={handleToggle} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-[var(--color-primary)]/10 transition-colors group">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10 text-primary dark:bg-gray-800 dark:text-indigo-400 group-hover:bg-primary/20 dark:group-hover:bg-gray-700 transition-colors">
+                    <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
                         <Icon className="w-5 h-5" />
                     </div>
                     <span className="font-bold text-base dark:text-gray-200">{title}</span>
@@ -703,10 +703,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                 <div className="pointer-events-auto">
                     <button
                         onClick={handleVoiceCheckIn}
-                        className="w-14 h-14 bg-primary dark:bg-primary rounded-full border-2 border-primary-light dark:border-primary-border shadow-[0_0_20px_rgba(250,204,21,0.4)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all group"
-                        title="Daily Pulse Check"
+                        className="w-12 h-12 rounded-full bg-transparent border border-white/20 dark:border-white/10 shadow-2xl overflow-hidden backdrop-blur-md flex items-center justify-center hover:scale-110 transition-transform text-primary group"
+                        title="Voice Journal"
                     >
-                        <Sparkles className="w-6 h-6 text-black group-hover:rotate-12 transition-transform" />
+                        <Mic className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                     </button>
                 </div>
             </div>

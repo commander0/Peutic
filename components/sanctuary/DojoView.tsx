@@ -5,6 +5,7 @@ import { useToast } from '../common/Toast';
 import { UserService } from '../../services/userService';
 import { SanctuaryService } from '../../services/SanctuaryService';
 import { GardenService } from '../../services/gardenService';
+import SanctuaryShop, { SANCTUARY_ITEMS } from './SanctuaryShop';
 
 interface DojoViewProps {
     user: User;
@@ -21,6 +22,8 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
     const [totalFocus, setTotalFocus] = useState(0);
     const [koan, setKoan] = useState<string | null>(null);
     const [soundEnabled, setSoundEnabled] = useState(true);
+    const [showShop, setShowShop] = useState(false);
+    const [localUser, setLocalUser] = useState<User>(user);
     const timerRef = useRef<number | null>(null);
     const bellRef = useRef<HTMLAudioElement | null>(null);
 
@@ -209,15 +212,47 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
             <div className="absolute inset-0 bg-gradient-to-t from-stone-900 via-stone-900/80 to-stone-900/30"></div>
 
             {/* Header */}
-            <header className="relative z-10 px-8 py-6 flex justify-between items-center">
+            <header className="relative z-20 px-8 py-6 flex justify-between items-center">
                 <div className="flex items-center gap-3">
                     <Wind className="w-6 h-6 text-stone-400" />
                     <span className="text-xl tracking-widest uppercase opacity-80">Zen Dojo</span>
                 </div>
-                <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                    <X className="w-6 h-6" />
-                </button>
+                <div className="flex items-center gap-4">
+                    <button onClick={() => setShowShop(true)} className="px-4 py-2 bg-amber-500/10 text-amber-200 border border-amber-500/30 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-amber-500/20 transition-all flex items-center gap-2">
+                        Decorate
+                    </button>
+                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                        <X className="w-6 h-6" />
+                    </button>
+                </div>
             </header>
+
+            {/* --- VISUAL DECORATIONS --- */}
+            <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
+                {localUser.unlockedDecor?.map(itemId => {
+                    const itemData = SANCTUARY_ITEMS.find(i => i.id === itemId);
+                    if (!itemData) return null;
+
+                    // Absolute positioning map for items
+                    const getPositionClass = (id: string) => {
+                        switch (id) {
+                            case 'incense': return 'bottom-[10%] left-[15%] text-5xl opacity-80 animate-[sway_4s_ease-in-out_infinite]';
+                            case 'bonsai': return 'bottom-[15%] right-[10%] text-7xl opacity-90 drop-shadow-xl';
+                            case 'lantern': return 'top-[15%] left-[20%] text-6xl opacity-70 animate-pulse-slow drop-shadow-[0_0_15px_rgba(24cd,211,153,0.5)]';
+                            case 'stones': return 'bottom-[5%] left-[40%] text-4xl opacity-70';
+                            case 'scroll': return 'top-[25%] right-[25%] text-6xl opacity-85';
+                            case 'singing_bowl': return 'bottom-[12%] left-[28%] text-5xl opacity-90';
+                            default: return 'hidden';
+                        }
+                    };
+
+                    return (
+                        <div key={itemId} className={`absolute ${getPositionClass(itemId)}`}>
+                            {itemData.icon}
+                        </div>
+                    );
+                })}
+            </div>
 
             {/* Main Content */}
             <main className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
@@ -372,6 +407,15 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                 </div>
 
             </main>
+
+            {/* SHOP MODAL */}
+            {showShop && (
+                <SanctuaryShop
+                    user={localUser}
+                    onClose={() => setShowShop(false)}
+                    onPurchaseUpdate={(u) => setLocalUser(u)}
+                />
+            )}
         </div>
     );
 };

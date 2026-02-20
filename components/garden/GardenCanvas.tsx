@@ -28,6 +28,10 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
             case 'Oak': return { trunk: '#451a03', leaf: '#166534', leafLight: '#22c55e', leafDark: '#14532d', bloom: '#84cc16' };
             case 'Willow': return { trunk: '#292524', leaf: '#65a30d', leafLight: '#a3e635', leafDark: '#3f6212', bloom: '#bef264' };
             case 'Bonsai': return { trunk: '#27272a', leaf: '#065f46', leafLight: '#10b981', leafDark: '#022c22', bloom: '#d1fae5' };
+            case 'Lunar Fern': return { trunk: '#1e1b4b', leaf: '#818cf8', leafLight: '#c7d2fe', leafDark: '#312e81', bloom: '#e0e7ff' };
+            case 'Crystal Lotus': return { trunk: '#0f172a', leaf: '#38bdf8', leafLight: '#bae6fd', leafDark: '#0369a1', bloom: '#f0f9ff' };
+            case 'Storm Oak': return { trunk: '#18181b', leaf: '#52525b', leafLight: '#a1a1aa', leafDark: '#27272a', bloom: '#fef08a' }; // yellow lightning blooms
+            case 'Sunlight Spire': return { trunk: '#422006', leaf: '#fb923c', leafLight: '#fdba74', leafDark: '#9a3412', bloom: '#fef3c7' };
             default: return { trunk: '#45220c', leaf: '#15803d', leafLight: '#4ade80', leafDark: '#064e3b', bloom: '#a7f3d0' };
         }
     };
@@ -38,8 +42,10 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
     const swayClass = interactionType === 'sing' ? 'animate-[sway_1s_ease-in-out_infinite]' : 'animate-[sway_3s_ease-in-out_infinite]';
 
     const SvgContent = useMemo(() => {
+        const isRare = ['Lunar Fern', 'Crystal Lotus', 'Storm Oak', 'Sunlight Spire'].includes(garden.currentPlantType);
+
         return (
-            <svg viewBox="0 0 100 100" className="w-[80%] h-[80%] drop-shadow-lg mx-auto overflow-visible">
+            <svg viewBox="0 0 100 100" className={`w-[80%] h-[80%] drop-shadow-lg mx-auto overflow-visible ${isRare ? 'drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]' : ''}`}>
                 <defs>
                     <filter id="bloom-glow" x="-50%" y="-50%" width="200%" height="200%">
                         <feGaussianBlur stdDeviation="3" result="coloredBlur" />

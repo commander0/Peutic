@@ -608,6 +608,41 @@ export class UserService {
         return updatedUser;
     }
 
+    static async updateUserPartial(userId: string, updates: Partial<User>): Promise<User | null> {
+        try {
+            // Map our frontend keys to DB columns
+            const dbUpdates: any = {};
+            if (updates.name !== undefined) dbUpdates.name = updates.name;
+            if (updates.unlockedRooms !== undefined) dbUpdates.unlocked_rooms = updates.unlockedRooms;
+            if (updates.unlockedDecor !== undefined) dbUpdates.unlocked_decor = updates.unlockedDecor;
+            if (updates.balance !== undefined) dbUpdates.balance = updates.balance;
+            if (updates.themePreference !== undefined) dbUpdates.theme_preference = updates.themePreference;
+
+            const { data, error } = await supabase
+                .from('users')
+                .update(dbUpdates)
+                .eq('id', userId)
+                .select('*')
+                .single();
+
+            if (error) {
+                console.error("Failed to update user", error);
+                return null;
+            }
+
+            const freshUser = this.mapUser(data as UserRow);
+            if (this.currentUser && this.currentUser.id === userId) {
+                this.currentUser = freshUser;
+                this.saveUserToCache(freshUser);
+            }
+            return freshUser;
+
+        } catch (e) {
+            console.error("updateUser exception", e);
+            return null;
+        }
+    }
+
     static async logout() {
         this.clearCache();
         await supabase.auth.signOut();
