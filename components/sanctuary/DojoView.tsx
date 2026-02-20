@@ -323,23 +323,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                     </h3>
 
                     <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-xs font-bold text-gray-500 mb-2 block">AMBIENCE MODE</label>
-                            <div className="flex flex-col gap-2">
-                                {(['rain', 'wind', 'brown'] as const).map((type) => (
-                                    <button
-                                        key={type}
-                                        onClick={(e) => { e.stopPropagation(); setAmbienceType(type); }}
-                                        className={`px-3 py-2 rounded-lg text-sm text-left transition-all ${ambienceType === type
-                                            ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-500/30'
-                                            : 'hover:bg-white/5 text-gray-500'
-                                            }`}
-                                    >
-                                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+
 
                         <div>
                             <label className="text-xs font-bold text-gray-500 mb-2 block">BELL INTERVAL</label>

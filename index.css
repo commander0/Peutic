@@ -62,7 +62,7 @@
     --color-primary-light: rgba(244, 63, 94, 0.1);
     --color-primary-border: rgba(244, 63, 94, 0.3);
     --color-bg-base: #1c0508;
-    --color-bg-gradient: radial-gradient(ellipse at top left, rgba(244 0%, transparent 70%), radial-gradient(ellipse at bottom right, 63 0%, transparent 70%);
+    --color-bg-gradient: radial-gradient(ellipse at top left, rgba(244, 63, 94, 0.1) 0%, transparent 70%), radial-gradient(ellipse at bottom right, #1c0508 0%, transparent 70%);
 }
 
 /* -----------------------------------------------------------------------------
@@ -122,7 +122,7 @@
     --color-primary-light: rgba(251, 146, 60, 0.1);
     --color-primary-border: rgba(251, 146, 60, 0.3);
     --color-bg-base: #1e0901;
-    --color-bg-gradient: radial-gradient(ellipse at top left, rgba(249 0%, transparent 70%), radial-gradient(ellipse at bottom right, 115 0%, transparent 70%);
+    --color-bg-gradient: radial-gradient(ellipse at top left, rgba(249, 115, 22, 0.1) 0%, transparent 70%), radial-gradient(ellipse at bottom right, #1e0901 0%, transparent 70%);
 }
 
 /* -----------------------------------------------------------------------------
@@ -184,7 +184,7 @@
     --color-primary-light: rgba(129, 140, 248, 0.1);
     --color-primary-border: rgba(129, 140, 248, 0.3);
     --color-bg-base: #060614;
-    --color-bg-gradient: radial-gradient(ellipse at top left, rgba(79 0%, transparent 70%), radial-gradient(ellipse at bottom right, 70 0%, transparent 70%);
+    --color-bg-gradient: radial-gradient(ellipse at top left, rgba(79, 70, 229, 0.1) 0%, transparent 70%), radial-gradient(ellipse at bottom right, #060614 0%, transparent 70%);
 }
 
 /* -----------------------------------------------------------------------------
@@ -205,7 +205,7 @@
     --color-primary-border: rgba(212, 163, 115, 0.3);
     --color-bg-base: #140d08;
     --color-text-base: #eaddcf;
-    --color-bg-gradient: radial-gradient(ellipse at top left, rgba(120 0%, transparent 70%), radial-gradient(ellipse at bottom right, 53 0%, transparent 70%);
+    --color-bg-gradient: radial-gradient(ellipse at top left, rgba(133, 77, 14, 0.1) 0%, transparent 70%), radial-gradient(ellipse at bottom right, #140d08 0%, transparent 70%);
 }
 
 /* -----------------------------------------------------------------------------
