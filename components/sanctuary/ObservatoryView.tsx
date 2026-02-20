@@ -132,12 +132,26 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                 {/* THE FORTUNE TELLER'S TABLE */}
                 <div className="relative flex flex-col items-center justify-center">
 
-                    {/* A. FLOATING HANDS (Enhanced Silhouette) */}
-                    <div className={`absolute -left-20 md:-left-32 top-1/4 w-32 h-48 bg-gradient-to-t from-purple-900/0 via-purple-900/40 to-indigo-500/10 blur-xl rounded-full rotate-12 transition-all duration-1000 ${isReading ? 'translate-x-12 opacity-80' : 'opacity-20'}`}></div>
-                    <div className={`absolute -right-20 md:-right-32 top-1/4 w-32 h-48 bg-gradient-to-t from-purple-900/0 via-purple-900/40 to-indigo-500/10 blur-xl rounded-full -rotate-12 transition-all duration-1000 ${isReading ? '-translate-x-12 opacity-80' : 'opacity-20'}`}></div>
+                    {/* FORTUNE TELLER FIGURE */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[120%] md:-translate-y-[130%] flex flex-col items-center">
+                        {/* Hood/Head */}
+                        <div className={`w-36 h-48 md:w-44 md:h-56 bg-gradient-to-b from-stone-900 via-indigo-950 to-purple-900 rounded-[40%_40%_60%_60%] blur-[2px] shadow-[0_0_30px_rgba(0,0,0,0.8)] relative overflow-hidden group transition-all duration-[3000ms] ${isReading ? 'scale-105' : ''}`}>
+                            {/* Glowing Eyes */}
+                            <div className={`absolute top-1/3 left-1/4 w-4 h-2 bg-indigo-400 rounded-full blur-[2px] transition-all duration-1000 ${isReading ? 'opacity-100 animate-pulse scale-110 drop-shadow-[0_0_15px_rgba(129,140,248,1)]' : 'opacity-20'} `}></div>
+                            <div className={`absolute top-1/3 right-1/4 w-4 h-2 bg-indigo-400 rounded-full blur-[2px] transition-all duration-1000 ${isReading ? 'opacity-100 animate-pulse scale-110 drop-shadow-[0_0_15px_rgba(129,140,248,1)]' : 'opacity-20'} `}></div>
+                            {/* Face shadow */}
+                            <div className="absolute inset-x-2 top-[30%] bottom-0 bg-black/90 rounded-[50%_50%_0_0] blur-md"></div>
+                        </div>
+                        {/* Shoulders */}
+                        <div className={`w-72 h-32 md:w-96 md:h-40 bg-gradient-to-b from-purple-950 via-stone-900/80 to-transparent rounded-[50%_50%_0_0] -mt-12 md:-mt-16 blur-md transition-all duration-[3000ms] ${isReading ? 'opacity-80' : 'opacity-50'}`}></div>
+                    </div>
+
+                    {/* A. FLOATING HANDS (Now Fortune Teller Hands) */}
+                    <div className={`absolute -left-16 md:-left-28 top-1/4 w-28 h-40 md:w-32 md:h-48 bg-gradient-to-t from-purple-900/0 via-purple-900/40 to-indigo-500/20 blur-xl rounded-full transition-all duration-[2000ms] ease-in-out ${isReading ? 'translate-x-[40px] md:translate-x-[60px] translate-y-4 rotate-[35deg] opacity-90 animate-pulse' : 'rotate-12 opacity-20'}`}></div>
+                    <div className={`absolute -right-16 md:-right-28 top-1/4 w-28 h-40 md:w-32 md:h-48 bg-gradient-to-t from-purple-900/0 via-purple-900/40 to-indigo-500/20 blur-xl rounded-full transition-all duration-[2000ms] ease-in-out ${isReading ? '-translate-x-[40px] md:-translate-x-[60px] translate-y-4 -rotate-[35deg] opacity-90 animate-pulse' : '-rotate-12 opacity-20'}`}></div>
 
                     {/* B. THE CRYSTAL BALL (High Fidelity) */}
-                    <div className={`relative group w-72 h-72 md:w-96 md:h-96 rounded-full transition-all duration-[2000ms] ${isReading ? 'scale-110' : 'hover:scale-105'}`}>
+                    <div className={`relative group w-72 h-72 md:w-96 md:h-96 rounded-full transition-all duration-[2000ms] ${isReading ? 'scale-110 drop-shadow-[0_0_50px_rgba(79,70,229,0.5)]' : 'hover:scale-105'} z-20`}>
 
                         {/* B1. Outer Glow (Aura) */}
                         <div className={`absolute -inset-10 bg-indigo-600/20 rounded-full blur-3xl transition-opacity duration-1000 ${isReading ? 'opacity-100 animate-pulse-fast' : 'opacity-30'}`}></div>
@@ -208,8 +222,8 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                     </div>
                 </div>
 
-            </main>
-        </div>
+            </main >
+        </div >
     );
 };
 

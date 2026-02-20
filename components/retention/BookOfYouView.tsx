@@ -29,24 +29,6 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
     useEffect(() => {
         const loadData = async () => {
             if (user) {
-                // WEEKLY RESET LOGIC
-                // 1. Calculate Current Cycle
-                const joinDate = new Date(user.joinedAt).getTime();
-                const now = Date.now();
-                const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-
-                // Determine how many weeks have passed since joining (the "Volumes")
-                const weeksSinceJoin = Math.floor((now - joinDate) / msPerWeek);
-                setMaxVolume(weeksSinceJoin);
-
-                // On initial load, start at the most recent volume
-                if (allJournals.length === 0 && allMoods.length === 0) {
-                    setCurrentVolume(weeksSinceJoin);
-                }
-
-                // Unlock logic: Always unlocked for user satisfaction, but content resets weekly.
-                setIsLocked(false);
-
                 // Fetch ALL data once
                 let j = allJournals;
                 let m = allMoods;
@@ -62,9 +44,33 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                     setAllMoods(m);
                 }
 
+                // 1. Calculate Current Cycle
+                let oldestDate = new Date(user.joinedAt).getTime();
+                if (j.length > 0 || m.length > 0) {
+                    const oldestJ = j.length > 0 ? Math.min(...j.map(entry => new Date(entry.date).getTime())) : Infinity;
+                    const oldestM = m.length > 0 ? Math.min(...m.map(entry => new Date(entry.date).getTime())) : Infinity;
+                    const oldestDataDate = Math.min(oldestJ, oldestM);
+                    if (oldestDataDate < oldestDate) oldestDate = oldestDataDate;
+                }
+
+                const now = Date.now();
+                const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+
+                // Determine how many weeks have passed since the first interaction
+                const weeksSinceJoin = Math.floor((now - oldestDate) / msPerWeek);
+                setMaxVolume(weeksSinceJoin);
+
+                // On initial load, start at the most recent volume
+                if (allJournals.length === 0 && allMoods.length === 0) {
+                    setCurrentVolume(weeksSinceJoin);
+                }
+
+                // Unlock logic: Always unlocked for user satisfaction, but content resets weekly.
+                setIsLocked(false);
+
+
                 // Calculate the start and end of the SELECTED volume
-                // currentVolume = weeksSinceJoin is the CURRENT week
-                const volumeWeekStart = joinDate + (currentVolume * msPerWeek);
+                const volumeWeekStart = oldestDate + (currentVolume * msPerWeek);
                 const volumeWeekEnd = volumeWeekStart + msPerWeek;
 
                 // 2. Filter Data for Selected Week Cycle

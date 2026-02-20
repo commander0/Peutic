@@ -27,6 +27,11 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
     const timerRef = useRef<number | null>(null);
     const bellRef = useRef<HTMLAudioElement | null>(null);
 
+    // Sync remote updates
+    useEffect(() => {
+        setLocalUser(prev => ({ ...prev, ...user, unlockedDecor: user.unlockedDecor || prev.unlockedDecor }));
+    }, [user]);
+
     const KOANS = [
         "What is the sound of one hand clapping?",
         "If you meet the Buddha on the road, kill him.",
@@ -228,7 +233,8 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
             </header>
 
             {/* --- VISUAL DECORATIONS --- */}
-            <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
+            {/* Placed at z-0 so it's under main interactive layer but OVER background */}
+            <div className="absolute inset-x-0 bottom-0 top-[20%] pointer-events-none z-0 overflow-hidden">
                 {localUser.unlockedDecor?.map(itemId => {
                     const itemData = SANCTUARY_ITEMS.find(i => i.id === itemId);
                     if (!itemData) return null;
@@ -327,11 +333,19 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                     </div>
                 </div>
 
+                {/* KOAN DISPLAY - MOVED UP FOR VISIBILITY */}
+                {koan && (
+                    <div className="mb-8 w-full max-w-lg p-6 bg-stone-900/80 backdrop-blur border border-amber-900/30 rounded-2xl text-center animate-in zoom-in duration-500 shadow-2xl relative z-20">
+                        <p className="text-xl md:text-2xl font-serif italic text-amber-200/90 leading-relaxed drop-shadow-md">"{koan}"</p>
+                        <button onClick={() => setKoan(null)} className="text-[10px] text-stone-500 hover:text-stone-300 mt-4 uppercase tracking-widest font-bold">Dismiss</button>
+                    </div>
+                )}
+
                 {/* CONTROLS */}
                 <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
                     <button
                         onClick={(e) => { e.stopPropagation(); nextKoan(); }}
-                        className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all bg-stone-900/50 text-stone-400 border border-stone-800 hover:text-amber-200 hover:border-amber-500/30"
+                        className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all bg-stone-900/80 text-amber-500 border border-amber-500/30 hover:bg-amber-500/20 hover:text-amber-200 shadow-lg"
                     >
                         <BookOpen className="w-4 h-4" />
                         Seek Wisdom
@@ -343,7 +357,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                             setSoundEnabled(!soundEnabled);
                             if (!soundEnabled && bellRef.current) bellRef.current.play().catch(() => { });
                         }}
-                        className={`p-2 rounded-full transition-all border ${soundEnabled ? 'bg-amber-500/10 text-amber-500 border-amber-500/30' : 'bg-stone-900/50 text-stone-600 border-stone-800 hover:text-stone-400'}`}
+                        className={`p-2 rounded-full transition-all border ${soundEnabled ? 'bg-amber-500/20 text-amber-400 border-amber-500/50 shadow-lg' : 'bg-stone-900/50 text-stone-600 border-stone-800 hover:text-stone-400'}`}
                     >
                         {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                     </button>
@@ -379,14 +393,6 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                         </div>
                     </div>
                 </div>
-
-                {/* KOAN DISPLAY */}
-                {koan && (
-                    <div className="mb-8 max-w-md text-center animate-in fade-in slide-in-from-bottom-4">
-                        <p className="text-xl font-serif italic text-amber-100/90 leading-relaxed drop-shadow-lg">"{koan}"</p>
-                        <button onClick={() => setKoan(null)} className="text-[9px] text-stone-500 hover:text-stone-300 mt-2 uppercase tracking-widest font-bold">Dismiss</button>
-                    </div>
-                )}
 
                 {/* STATS ROW */}
                 <div className="grid grid-cols-3 gap-4 w-full max-w-2xl border-t border-stone-800/50 pt-6">
