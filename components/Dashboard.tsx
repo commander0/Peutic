@@ -112,7 +112,7 @@ const CollapsibleSection = React.memo(({ title, icon: Icon, children, defaultOpe
         <div className="bg-transparent rounded-3xl border border-[var(--color-primary-border)] overflow-hidden transition-all duration-300" style={{ borderColor: 'var(--color-primary-border)' }}>
             <button onClick={handleToggle} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-[var(--color-primary)]/10 transition-colors group">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+                    <div className="p-2 rounded-lg bg-black/5 text-primary dark:bg-white/10 group-hover:bg-black/10 dark:group-hover:bg-white/20 transition-colors">
                         <Icon className="w-5 h-5" />
                     </div>
                     <span className="font-bold text-base dark:text-gray-200">{title}</span>
@@ -699,16 +699,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         >
             {mood && <WeatherEffect type={mood} />}
             {/* FLOATING CONTROLS: Separated for better ergonomics */}
-            <div className="fixed bottom-6 left-6 z-[80] pointer-events-none">
-                <div className="pointer-events-auto">
-                    <button
-                        onClick={handleVoiceCheckIn}
-                        className="w-12 h-12 rounded-full bg-transparent border border-white/20 dark:border-white/10 shadow-2xl overflow-hidden backdrop-blur-md flex items-center justify-center hover:scale-110 transition-transform text-primary group"
-                        title="Voice Journal"
-                    >
-                        <Mic className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                    </button>
-                </div>
+            <div className={`fixed bottom-6 left-6 z-[80] transition-all duration-500 ease-in-out border border-white/20 dark:border-white/10 shadow-2xl overflow-hidden backdrop-blur-md w-12 h-12 rounded-full bg-transparent`}>
+                <button
+                    onClick={handleVoiceCheckIn}
+                    className="w-full h-full flex items-center justify-center hover:scale-110 transition-transform bg-transparent text-primary group"
+                    title="Voice Journal"
+                >
+                    <Mic className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                </button>
             </div>
 
             <div className="fixed bottom-6 right-6 z-[80] pointer-events-none">

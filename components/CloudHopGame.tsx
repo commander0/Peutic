@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play } from 'lucide-react';
-import { User, Lumina } from '../types';
+import { User } from '../types';
 import { UserService } from '../services/userService';
 
 interface CloudHopGameProps {
@@ -176,16 +176,22 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
             ctx.beginPath();
             ctx.arc(p.x + p.width / 2, p.y + p.height / 2, p.width / 2, 0, Math.PI * 2);
             ctx.fill();
+
             ctx.fillStyle = '#000';
             ctx.beginPath();
             ctx.arc(p.x + p.width / 2 - 5, p.y + p.height / 2 - 2, 2, 0, Math.PI * 2);
             ctx.fill();
+
             ctx.beginPath();
             ctx.arc(p.x + p.width / 2 + 5, p.y + p.height / 2 - 2, 2, 0, Math.PI * 2);
             ctx.fill();
+
             ctx.beginPath();
-            ctx.arc(p.x + p.width / 2, p.y + p.height / 2 + 3, 4, 0, Math.PI, false);
+            ctx.arc(p.x + p.width / 2, p.y + p.height / 2, 8, 0.2, Math.PI - 0.2, false);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#000';
             ctx.stroke();
+            ctx.lineWidth = 1;
 
             requestRef.current = requestAnimationFrame(update);
         };
