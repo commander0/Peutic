@@ -11,8 +11,21 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
     const [text, setText] = useState('');
     const [isShredding, setIsShredding] = useState(false);
     const [shredded, setShredded] = useState(false);
+
+    // Milestone State
+    const [showMilestone, setShowMilestone] = useState(false);
+    const [milestoneNote, setMilestoneNote] = useState('');
+
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+
+    const POSITIVE_WORDS = ['love', 'peace', 'joy', 'happy', 'strong', 'brave', 'light', 'hope', 'growth', 'beautiful', 'calm', 'safe', 'good', 'kind', 'worth', 'healing'];
+    const FALLBACK_AFFIRMATIONS = [
+        "You are stronger than the sum of your fears.",
+        "The very fact that you are trying means you are already succeeding.",
+        "Your potential is endless, even when it feels hidden.",
+        "Every day you survive is a victory worth celebrating."
+    ];
 
     // Clean up animation on unmount
     useEffect(() => {
@@ -91,8 +104,36 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
             } else {
                 setShredded(true);
                 setIsShredding(false);
+
+                // --- Milestone Logic (50 Shreds) ---
+                const words = text.toLowerCase().split(/\W+/);
+                const foundPositives = words.filter(w => POSITIVE_WORDS.includes(w));
+
+                const storedWords = JSON.parse(localStorage.getItem('peutic_shredded_words') || '[]');
+                const newWords = [...storedWords, ...foundPositives].slice(-20); // Keep last 20
+                localStorage.setItem('peutic_shredded_words', JSON.stringify(newWords));
+
+                let count = parseInt(localStorage.getItem('peutic_shred_count') || '0', 10) + 1;
+                localStorage.setItem('peutic_shred_count', count.toString());
+
+                if (count > 0 && count % 50 === 0) {
+                    setShowMilestone(true);
+                    if (newWords.length > 0) {
+                        const uniqueWords = Array.from(new Set(newWords));
+                        setMilestoneNote(`From the ashes of your doubts, remember the light of your own words: ${uniqueWords.join(', ')}. Keep walking forward.`);
+                    } else {
+                        setMilestoneNote(FALLBACK_AFFIRMATIONS[Math.floor(Math.random() * FALLBACK_AFFIRMATIONS.length)]);
+                    }
+
+                    // Note stays visible for 5 minutes
+                    setTimeout(() => {
+                        setShowMilestone(false);
+                    }, 5 * 60 * 1000);
+                } else {
+                    showToast("Thoughts Released into the Void.", "success");
+                }
+
                 setText('');
-                showToast("Thoughts Released into the Void.", "success");
 
                 // Achievement Hook
                 import('../../services/userService').then(({ UserService }) => {
@@ -179,11 +220,21 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
                     {/* Success State */}
                     {shredded && (
                         <div className="flex-1 flex flex-col items-center justify-center text-center py-10 animate-in zoom-in duration-500">
-                            <div className="w-20 h-20 bg-stone-800 rounded-full flex items-center justify-center mb-6 shadow-inner">
-                                <RefreshCw className="w-10 h-10 text-green-500" />
-                            </div>
-                            <h4 className="text-2xl font-black text-white mb-2">Gone.</h4>
-                            <p className="text-stone-500 text-sm mb-8 max-w-[200px]">Your thought has been shredded and released.</p>
+                            {showMilestone ? (
+                                <div className="p-8 bg-amber-500/10 border border-amber-500/30 rounded-2xl shadow-[0_0_50px_rgba(245,158,11,0.2)] animate-pulse-slow max-w-sm mb-8 relative overflow-hidden">
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/20 to-transparent opacity-50"></div>
+                                    <h4 className="text-xl font-serif font-bold text-amber-200 mb-4 drop-shadow-md relative z-10">A Gift From the Void</h4>
+                                    <p className="text-amber-100/90 font-serif leading-relaxed italic text-sm relative z-10">{milestoneNote}</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="w-20 h-20 bg-stone-800 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                                        <RefreshCw className="w-10 h-10 text-green-500" />
+                                    </div>
+                                    <h4 className="text-2xl font-black text-white mb-2">Gone.</h4>
+                                    <p className="text-stone-500 text-sm mb-8 max-w-[200px]">Your thought has been shredded and released.</p>
+                                </>
+                            )}
 
                             <div className="flex gap-4 w-full">
                                 <button

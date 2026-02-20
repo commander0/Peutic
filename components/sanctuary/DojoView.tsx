@@ -41,6 +41,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
     const audioNodesRef = useRef<{
         ambience: { node: AudioBufferSourceNode, gain: GainNode } | null;
         bells: { intervalId: any } | null;
+        drone?: { osc: OscillatorNode, lfo: OscillatorNode, gain: GainNode, lfoGain: GainNode } | null;
     }>({ ambience: null, bells: null });
 
     // Preferences
@@ -171,7 +172,83 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
         }
     };
 
-    // Toggle logic for Timer
+    const startDrone = () => {
+        if (!soundEnabled || audioNodesRef.current.drone) return;
+        const ctx = initAudio();
+        const osc = ctx.createOscillator();
+        const lfo = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const lfoGain = ctx.createGain();
+
+        // Singing Bowl Drone (174 Hz Solfeggio / Healing Frequency)
+        osc.frequency.value = 174;
+        osc.type = 'sine';
+
+        // Tremolo / LFO
+        lfo.frequency.value = 0.1; // Very slow pulse
+        lfo.connect(lfoGain.gain);
+        lfoGain.gain.value = 0.05; // Base volume variance
+
+        osc.connect(lfoGain);
+        lfoGain.connect(gain);
+        gain.connect(ctx.destination);
+
+        gain.gain.setValueAtTime(0, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 5); // Smooth 5-second fade in
+
+        osc.start();
+        lfo.start();
+
+        audioNodesRef.current.drone = { osc, lfo, gain, lfoGain };
+    };
+
+    const stopDrone = () => {
+        if (audioNodesRef.current.drone) {
+            const { osc, lfo, gain } = audioNodesRef.current.drone;
+            try {
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtxRef.current!.currentTime + 3);
+                setTimeout(() => {
+                    try { osc.stop(); lfo.stop(); } catch (e) { }
+                }, 3000);
+            } catch (e) { }
+            audioNodesRef.current.drone = null;
+        }
+    };
+
+    // Global Background Drone based on sound toggle
+    useEffect(() => {
+        if (soundEnabled) {
+            // Need user interaction first in modern browsers. 
+            // Attempt to start, it will safely fail if AudioContext is blocked, 
+            // but succeed if they already clicked into the Dojo view.
+            try { startDrone(); } catch (e) { }
+        } else {
+            stopDrone();
+        }
+        return () => stopDrone();
+    }, [soundEnabled]);
+
+    // Rotating Wisdom Quotes
+    useEffect(() => {
+        let koanInterval: any;
+        if (isActive) {
+            // Pick an initial one if empty
+            if (!koan) setKoan(KOANS[Math.floor(Math.random() * KOANS.length)]);
+
+            koanInterval = setInterval(() => {
+                setKoan(null); // Fade out
+                setTimeout(() => {
+                    // Fade in new quote
+                    setKoan(KOANS[Math.floor(Math.random() * KOANS.length)]);
+                }, 1000); // Wait 1 second while completely faded out
+            }, 12000); // 12 seconds per quote
+        } else {
+            setKoan(null);
+        }
+        return () => clearInterval(koanInterval);
+    }, [isActive]);
+
+    // Toggle logic for Timer Audio Additions
     useEffect(() => {
         if (isActive) {
             playBellSound(); // Start Bell

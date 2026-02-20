@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { UserService } from '../../services/userService';
-import { User, JournalEntry, MoodEntry, ArtEntry, GardenState } from '../../types';
+import { User, JournalEntry, MoodEntry, GardenState } from '../../types';
 import { BookOpen, Lock, Sun, CloudRain, ChevronLeft, Download } from 'lucide-react';
 
 interface BookOfYouViewProps {
@@ -13,7 +13,6 @@ interface BookOfYouViewProps {
 const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
     const [journals, setJournals] = useState<JournalEntry[]>([]);
     const [moods, setMoods] = useState<MoodEntry[]>([]);
-    const [arts, setArts] = useState<ArtEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [isLocked, setIsLocked] = useState(true);
     const [moodRatio, setMoodRatio] = useState({ sun: 0, rain: 0 }); // Percentages
@@ -78,7 +77,6 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
 
                 setJournals(weeklyJournals);
                 setMoods(weeklyMoods);
-                setArts([]); // Art feature removed temporarily for stability
 
                 // Calculate Mood Ratio for this week
                 const total = weeklyMoods.length;
@@ -124,177 +122,163 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
     const isSunny = moodRatio.sun >= moodRatio.rain;
 
     return (
-        <div className="fixed inset-0 z-[120] bg-[#f4f1ea] dark:bg-[#1a1918] text-amber-950 dark:text-stone-200 overflow-y-auto animate-in fade-in duration-1000 font-serif custom-scrollbar relative">
-
-            {/* PAPER TEXTURE OVERLAY */}
-            <div className="fixed inset-0 pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] opacity-[0.8] dark:opacity-30 dark:bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] mix-blend-multiply dark:mix-blend-color-burn"></div>
+        <div className="fixed inset-0 z-[120] bg-zinc-900 dark:bg-black text-amber-950 dark:text-stone-200 overflow-y-auto overflow-x-hidden flex items-center justify-center animate-in zoom-in-95 duration-1000 p-2 md:p-8 lg:p-12 font-serif bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] dark:bg-[url('https://www.transparenttextures.com/patterns/dark-wood.png')] bg-blend-multiply">
 
             {/* FLOATING ACTION BAR */}
-            <div className="fixed top-0 inset-x-0 h-24 bg-gradient-to-b from-[#f4f1ea]/90 dark:from-[#1a1918]/90 to-transparent pointer-events-none z-50"></div>
-
             <button
                 onClick={onClose}
-                className="fixed top-6 left-6 md:top-8 md:left-8 bg-[#fdfaf6] dark:bg-[#2a2826] border border-amber-900/10 dark:border-stone-700 hover:bg-amber-50 dark:hover:bg-stone-800 text-amber-900/70 dark:text-stone-400 hover:text-amber-900 dark:hover:text-stone-200 py-2.5 px-5 rounded-sm flex items-center gap-3 transition-all shadow-sm z-[60] group"
+                className="fixed top-4 left-4 md:top-8 md:left-8 bg-zinc-800/80 backdrop-blur border border-white/10 hover:bg-zinc-700 text-zinc-300 py-2 md:py-2.5 px-4 md:px-5 rounded-md flex items-center gap-2 md:gap-3 transition-all shadow-xl z-[130] group"
             >
                 <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                <span className="font-bold text-xs uppercase tracking-widest font-sans">Close Book</span>
+                <span className="font-bold text-[10px] md:text-xs uppercase tracking-widest font-sans">Close Book</span>
             </button>
 
             <button
                 onClick={() => window.print()}
-                className="fixed top-6 right-6 md:top-8 md:right-8 bg-[#fdfaf6] dark:bg-[#2a2826] border border-amber-900/10 dark:border-stone-700 hover:bg-amber-50 dark:hover:bg-stone-800 text-amber-900/70 dark:text-stone-400 hover:text-amber-900 dark:hover:text-stone-200 w-11 h-11 rounded-sm flex items-center justify-center transition-all shadow-sm z-[60] group print:hidden"
+                className="fixed top-4 right-4 md:top-8 md:right-8 bg-zinc-800/80 backdrop-blur border border-white/10 hover:bg-zinc-700 text-zinc-300 w-9 h-9 md:w-11 md:h-11 rounded-md flex items-center justify-center transition-all shadow-xl z-[130] group print:hidden"
                 title="Print Pages"
             >
-                <Download className="w-4 h-4 group-hover:-translate-y-1 transition-transform" />
+                <Download className="w-3 h-3 md:w-4 md:h-4 group-hover:-translate-y-1 transition-transform" />
             </button>
 
+            {/* THE PHYSICAL BOOK MOCKUP */}
+            <div className="relative w-full max-w-6xl aspect-auto md:aspect-[16/10] min-h-[85vh] md:min-h-0 bg-[#fdfaf6] dark:bg-[#1a1817] shadow-[0_20px_40px_rgba(0,0,0,0.8),_0_0_0_1px_rgba(0,0,0,0.5)] dark:shadow-[0_20px_40px_rgba(0,0,0,1),_0_0_0_1px_rgba(255,255,255,0.05)] rounded-sm flex flex-col md:flex-row after:absolute after:inset-0 after:bg-[url('https://www.transparenttextures.com/patterns/paper.png')] after:opacity-[0.6] dark:after:opacity-[0.15] dark:after:bg-[url('https://www.transparenttextures.com/patterns/black-paper.png')] after:mix-blend-multiply dark:after:mix-blend-color-dodge after:pointer-events-none transition-colors duration-500">
 
-            <div className="max-w-5xl mx-auto pt-32 pb-24 px-4 sm:px-8 relative z-10">
+                {/* PAGE EDGES (Thickness Mockup) */}
+                <div className="absolute -bottom-1 -right-1 w-full h-full border-r-4 border-b-4 border-amber-900/10 dark:border-stone-400/5 rounded-br-md pointer-events-none hidden md:block"></div>
+                <div className="absolute -bottom-2 -right-2 w-full h-full border-r-2 border-b-2 border-amber-900/5 dark:border-stone-400/5 rounded-br-lg pointer-events-none hidden md:block"></div>
 
-                {/* HERO COVER: Book Title Page */}
-                <div className="text-center mb-32 mt-12 relative">
-                    <div className="inline-flex justify-center items-center w-20 h-20 rounded-full border border-amber-900/20 dark:border-stone-600 mb-8 relative group">
-                        <BookOpen className="w-8 h-8 text-amber-900/40 dark:text-stone-400 group-hover:text-amber-900" />
-                    </div>
-                    <div className="w-full h-px bg-gradient-to-r from-transparent via-amber-900/20 dark:via-stone-700 to-transparent mb-12"></div>
-                    <h1 className="text-5xl md:text-7xl font-light text-amber-950 dark:text-stone-100 mb-6 tracking-normal">The Book of You</h1>
-                    <p className="text-xl text-amber-900/60 dark:text-stone-400 font-medium italic">A chronicle of {user.name}'s journey.</p>
-                    <div className="mt-16 flex justify-center items-center gap-8 text-[10px] font-sans font-black uppercase tracking-[0.3em] text-amber-900/40 dark:text-stone-500">
-                        {currentVolume > 0 ? (
-                            <button onClick={() => setCurrentVolume(prev => prev - 1)} className="hover:text-amber-900 dark:hover:text-stone-300 transition-colors p-2" title="Previous Volume">
-                                &lt; Prev
-                            </button>
-                        ) : (
-                            <div className="opacity-0 px-4"></div>
-                        )}
+                {/* LEFT PAGE */}
+                <div className="w-full md:w-1/2 h-full flex flex-col p-6 md:p-12 lg:p-20 relative overflow-y-auto custom-scrollbar overflow-x-hidden border-b-2 md:border-b-0 border-amber-900/10 dark:border-stone-800">
+                    {/* Page Numbers */}
+                    <div className="hidden md:block absolute top-6 left-6 lg:top-8 lg:left-8 text-amber-900/30 font-sans text-[10px] tracking-widest font-bold">1</div>
 
-                        <div className="flex bg-amber-900/5 dark:bg-stone-800/50 px-6 py-2 rounded-sm border border-amber-900/10 dark:border-stone-700">
-                            <span>Volume {currentVolume + 1}</span>
-                            <span className="mx-3">&bull;</span>
-                            <span>{new Date(new Date(user.joinedAt).getTime() + (currentVolume * 7 * 24 * 60 * 60 * 1000)).getFullYear()}</span>
+                    {/* HERO COVER: Book Title Page */}
+                    <div className="text-center mt-6 lg:mt-12 mb-12 lg:mb-20 relative">
+                        <div className="inline-flex justify-center items-center w-16 h-16 lg:w-20 lg:h-20 rounded-full border border-amber-900/20 dark:border-stone-700 mb-6 lg:mb-8 relative group bg-amber-900/5 dark:bg-stone-800/30 shadow-inner">
+                            <BookOpen className="w-6 h-6 lg:w-8 lg:h-8 text-amber-900/50 dark:text-stone-400 group-hover:text-amber-900 dark:group-hover:text-stone-300 transition-colors" />
                         </div>
+                        <div className="w-full h-px bg-gradient-to-r from-transparent via-amber-900/20 dark:via-stone-700 to-transparent mb-8 lg:mb-12"></div>
+                        <h1 className="text-4xl sm:text-5xl lg:text-7xl font-light text-amber-950 dark:text-stone-200 mb-4 lg:mb-6 tracking-normal drop-shadow-sm">The Book<br />of You</h1>
+                        <p className="text-lg lg:text-xl text-amber-900/60 dark:text-stone-400 font-medium italic">A chronicle of {user.name}'s journey.</p>
 
-                        {currentVolume < maxVolume ? (
-                            <button onClick={() => setCurrentVolume(prev => prev + 1)} className="hover:text-amber-900 dark:hover:text-stone-300 transition-colors p-2" title="Next Volume">
-                                Next &gt;
-                            </button>
-                        ) : (
-                            <div className="opacity-0 px-4"></div>
-                        )}
-                    </div>
-                </div>
-
-                {/* CHAPTER 1: REFLECTIONS */}
-                <div className="mb-24 relative break-after-page">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl font-light tracking-wide text-amber-950 dark:text-stone-200 mb-4 inline-block border-b border-amber-900/20 dark:border-stone-700 pb-2">Chapter I: Reflections</h2>
-                    </div>
-
-                    {journals.length === 0 ? (
-                        <div className="p-12 text-center">
-                            <p className="text-amber-900/40 dark:text-stone-500 italic text-lg">The pages are blank, waiting for your thoughts.</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
-                            {journals.map((j) => (
-                                <div key={j.id} className="group relative">
-                                    <h3 className="text-sm font-sans font-bold text-amber-900/60 dark:text-stone-400 mb-3 uppercase tracking-widest">{new Date(j.date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</h3>
-                                    <div className="pl-6 border-l-2 border-amber-900/10 dark:border-stone-700/50">
-                                        <p className="text-amber-950/80 dark:text-stone-300 leading-loose whitespace-pre-wrap text-lg first-letter:text-5xl first-letter:font-bold first-letter:-ml-8 first-letter:mr-2 first-letter:float-left first-letter:text-amber-900/30 dark:first-letter:text-stone-600">{j.content}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                {/* CHAPTER 2: EMOTIONAL CLIMATE */}
-                <div className="mb-24 relative break-after-page">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl font-light tracking-wide text-amber-950 dark:text-stone-200 mb-4 inline-block border-b border-amber-900/20 dark:border-stone-700 pb-2">Chapter II: Emotional Climate</h2>
-                    </div>
-
-                    {/* VISUAL RATIO SCALE - PAPER */}
-                    <div className="p-8 md:p-12 mb-16 flex flex-col items-center border-b border-t border-amber-900/10 dark:border-stone-700/50 relative">
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] opacity-30 mix-blend-multiply pointer-events-none"></div>
-
-                        <h3 className="font-serif italic text-amber-900/50 dark:text-stone-500 mb-8 relative z-10 text-lg">Dominant Weather Pattern</h3>
-
-                        <div className="w-full max-w-xl h-4 bg-amber-900/5 dark:bg-stone-800 rounded-sm flex relative shadow-inner z-10 overflow-hidden border border-amber-900/10 dark:border-stone-700">
-                            <div className="h-full transition-all duration-1000 bg-amber-500 dark:bg-amber-600" style={{ width: `${Math.max(2, moodRatio.sun)}%` }}></div>
-                            <div className="h-full transition-all duration-1000 bg-slate-400 dark:bg-slate-600 blur-[1px]" style={{ width: `${Math.max(2, moodRatio.rain)}%` }}></div>
-                        </div>
-
-                        <div className="flex justify-between w-full max-w-xl mt-4 font-serif text-sm z-10">
-                            <div className={`flex items-center gap-2 ${isSunny ? 'text-amber-700 dark:text-amber-500 font-bold' : 'text-amber-900/40 dark:text-stone-500'} transition-all`}>
-                                <Sun className="w-4 h-4" /> Sunny ({Math.round(moodRatio.sun)}%)
+                        <div className="mt-12 lg:mt-16 flex flex-col items-center justify-center gap-4 lg:gap-6 z-20 relative">
+                            <div className="flex bg-amber-900/5 dark:bg-stone-800/40 px-6 lg:px-8 py-2 lg:py-3 rounded-full border border-amber-900/10 dark:border-stone-700 shadow-inner">
+                                <span className="text-[10px] lg:text-xs font-sans font-black uppercase tracking-[0.3em] text-amber-900/60 dark:text-stone-400">Volume {currentVolume + 1}</span>
                             </div>
-                            <div className={`flex items-center gap-2 ${!isSunny ? 'text-slate-600 dark:text-slate-400 font-bold' : 'text-amber-900/40 dark:text-stone-500'} transition-all`}>
-                                Rainy ({Math.round(moodRatio.rain)}%) <CloudRain className="w-4 h-4" />
+
+                            <div className="flex items-center gap-6 lg:gap-12 mt-2 lg:mt-4 p-1 rounded bg-[#fdfaf6]/50 dark:bg-[#1a1817]/50 backdrop-blur-sm">
+                                <button
+                                    onClick={() => currentVolume > 0 && setCurrentVolume(prev => prev - 1)}
+                                    className={`px-3 lg:px-4 py-2 text-[10px] lg:text-xs font-sans font-black uppercase tracking-widest border-b-2 border-transparent transition-all pointer-events-auto ${currentVolume > 0 ? 'text-amber-900 hover:border-amber-900 dark:text-stone-300 dark:hover:border-stone-300 hover:bg-amber-900/5 dark:hover:bg-stone-800/50 rounded-sm' : 'text-amber-900/20 dark:text-stone-600 cursor-not-allowed'}`} disabled={currentVolume === 0}
+                                >
+                                    &lt; Past
+                                </button>
+
+                                <span className="text-amber-900/30 dark:text-stone-600 text-xs">&bull;&bull;&bull;</span>
+
+                                <button
+                                    onClick={() => currentVolume < maxVolume && setCurrentVolume(prev => prev + 1)}
+                                    className={`px-3 lg:px-4 py-2 text-[10px] lg:text-xs font-sans font-black uppercase tracking-widest border-b-2 border-transparent transition-all pointer-events-auto ${currentVolume < maxVolume ? 'text-amber-900 hover:border-amber-900 dark:text-stone-300 dark:hover:border-stone-300 hover:bg-amber-900/5 dark:hover:bg-stone-800/50 rounded-sm' : 'text-amber-900/20 dark:text-stone-600 cursor-not-allowed'}`} disabled={currentVolume >= maxVolume}
+                                >
+                                    Future &gt;
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-4 md:grid-cols-8 gap-4 px-4">
-                        {moods.slice(0, 8).map((m, i) => {
-                            const isPositive = (m.mood as any) === 'confetti' || (m.mood as any) === 'Happy' || (m.mood as any) === 'Calm' || (m.mood as any) === 'sun';
-                            const isNegative = (m.mood as any) === 'rain' || (m.mood as any) === 'Anxious' || (m.mood as any) === 'Sad';
-                            let emoji = '😐';
-
-                            if (isPositive) {
-                                emoji = ['confetti', 'Happy'].includes(String(m.mood)) ? '🎉' : '☀️';
-                            } else if (isNegative) {
-                                emoji = ['rain', 'Sad'].includes(String(m.mood)) ? '🌧️' : '😰';
-                            }
-
-                            return (
-                                <div key={i} className={`aspect-square p-2 bg-amber-900/5 dark:bg-stone-800/50 rounded-sm border border-amber-900/10 dark:border-stone-700 flex flex-col items-center justify-center relative group`}>
-                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] opacity-10 mix-blend-multiply pointer-events-none"></div>
-                                    <span className="text-3xl md:text-4xl block mb-2 filter sepia-[0.3] group-hover:sepia-0 transition-all">{emoji}</span>
-                                    <div className="text-[9px] font-sans font-bold uppercase text-amber-900/50 dark:text-stone-500 tracking-widest">{new Date(m.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {/* CHAPTER 3: VISIONS (ART) */}
-                <div className="mb-16 relative">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl font-light tracking-wide text-amber-950 dark:text-stone-200 mb-4 inline-block border-b border-amber-900/20 dark:border-stone-700 pb-2">Chapter III: Visions</h2>
-                    </div>
-
-                    {arts.length === 0 ? (
-                        <div className="p-12 text-center">
-                            <p className="text-amber-900/40 dark:text-stone-500 italic text-lg">The canvas awaits your dreams.</p>
+                    {/* CHAPTER 1: REFLECTIONS (Left Page Continued) */}
+                    <div className="mt-8 lg:mt-auto relative z-10 pointer-events-auto">
+                        <div className="text-center mb-8 lg:mb-10">
+                            <h2 className="text-xl lg:text-2xl font-light tracking-wide text-amber-950 dark:text-stone-200 mb-2 inline-block border-b border-amber-900/20 dark:border-stone-700 pb-2 drop-shadow-sm">Chapter I: Reflections</h2>
                         </div>
-                    ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-                            {arts.map(a => (
-                                <div key={a.id} className="group flex flex-col relative">
-                                    <div className="bg-[#fcfaf7] dark:bg-[#201e1c] p-3 shadow-md border border-amber-900/10 dark:border-stone-700 mb-4 relative rotate-1 hover:rotate-0 transition-transform duration-500">
-                                        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-red-400/20 rounded-full blur-[1px]"></div>
-                                        <div className="aspect-square overflow-hidden bg-amber-900/5 dark:bg-black/50 filter sepia-[0.2] dark:sepia-[0.3]">
-                                            <img src={a.imageUrl} alt={a.prompt} className="w-full h-full object-cover transition-transform duration-1000 ease-out" />
+                        {journals.length === 0 ? (
+                            <div className="p-8 text-center text-amber-900/40 dark:text-stone-600 italic">No notes written this week.</div>
+                        ) : (
+                            <div className="space-y-6 lg:space-y-8">
+                                {journals.slice(0, 2).map((j) => (
+                                    <div key={j.id}>
+                                        <h3 className="text-[9px] lg:text-[10px] font-sans font-bold text-amber-900/50 dark:text-stone-500 mb-2 uppercase tracking-widest">{new Date(j.date).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</h3>
+                                        <div className="pl-4 border-l-2 border-amber-900/10 dark:border-stone-700/50">
+                                            <p className="text-amber-950/80 dark:text-stone-300 leading-relaxed text-sm lg:text-base first-letter:text-3xl first-letter:font-bold first-letter:float-left first-letter:mr-1 first-letter:text-amber-900/60 dark:first-letter:text-stone-400">{j.content}</p>
                                         </div>
                                     </div>
-                                    <div className="px-4 text-center">
-                                        <p className="font-serif italic text-lg text-amber-950/80 dark:text-stone-300 leading-relaxed mb-3">"{a.prompt}"</p>
-                                        <p className="text-[10px] font-sans font-bold text-amber-900/40 dark:text-stone-500 uppercase tracking-widest">{new Date(a.createdAt).toLocaleDateString()}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                                ))}
+                            </div>
+                        )}
+                        {journals.length > 2 && (
+                            <p className="text-center text-[10px] lg:text-xs font-sans text-amber-900/40 dark:text-stone-600 italic mt-6 lg:mt-8 tracking-widest">({journals.length - 2} more notes preserved...)</p>
+                        )}
+                    </div>
                 </div>
 
-                {/* FOOTER */}
-                {/* FOOTER */}
-                <div className="mt-40 pt-16 border-t border-amber-900/10 dark:border-stone-700/50 text-center relative z-10 pb-8">
-                    <div className="w-10 h-10 border border-amber-900/20 dark:border-stone-600 bg-transparent mx-auto mb-6 flex items-center justify-center rounded-sm rotate-45">
-                        <div className="-rotate-45"><BookOpen className="w-4 h-4 text-amber-900/40 dark:text-stone-500" /></div>
+                {/* THE SPINE SHADOW - Desktop Only */}
+                <div className="hidden md:block w-12 shrink-0 h-full bg-gradient-to-r from-black/5 via-black/15 to-transparent dark:from-black/20 dark:via-black/50 to-transparent shadow-[inset_10px_0_20px_rgba(0,0,0,0.1)] dark:shadow-[inset_10px_0_20px_rgba(0,0,0,0.5)] z-10 relative pointer-events-none">
+                    <div className="absolute inset-y-0 left-1/2 -ml-px w-px bg-amber-900/20 dark:bg-black w-[2px]"></div>
+                    <div className="absolute inset-y-0 left-[calc(100%-1px)] w-[1px] bg-white/20 dark:bg-white/5"></div>
+                </div>
+
+                {/* RIGHT PAGE */}
+                <div className="w-full md:w-1/2 h-full flex flex-col p-6 md:p-12 lg:p-20 relative overflow-y-auto custom-scrollbar overflow-x-hidden">
+                    {/* Page Numbers */}
+                    <div className="hidden md:block absolute top-6 right-6 lg:top-8 lg:right-8 text-amber-900/30 font-sans text-[10px] tracking-widest font-bold">2</div>
+
+                    {/* CHAPTER 2: EMOTIONAL CLIMATE */}
+                    <div className="mb-12 lg:mb-16 mt-4 md:mt-0 relative z-10 pointer-events-auto">
+                        <div className="text-center mb-8 lg:mb-10">
+                            <h2 className="text-xl lg:text-2xl font-light tracking-wide text-amber-950 dark:text-stone-200 mb-2 inline-block border-b border-amber-900/20 dark:border-stone-700 pb-2 drop-shadow-sm">Chapter II: Climate</h2>
+                        </div>
+
+                        {/* VISUAL RATIO SCALE - PAPER */}
+                        <div className="p-4 lg:p-6 mb-8 lg:mb-12 flex flex-col items-center border border-amber-900/10 dark:border-stone-800 relative bg-amber-900/5 dark:bg-stone-800/20 shadow-sm rounded-sm">
+                            <h3 className="font-serif italic text-amber-900/60 dark:text-stone-400 mb-4 lg:mb-6 text-xs lg:text-sm">Dominant Weather Pattern</h3>
+
+                            <div className="w-full h-2 lg:h-3 bg-amber-900/10 dark:bg-stone-900 rounded-full flex relative shadow-inner overflow-hidden border border-amber-900/5 dark:border-stone-700">
+                                <div className="h-full transition-all duration-1000 bg-amber-500 dark:bg-amber-600 rounded-l-full shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]" style={{ width: `${Math.max(2, moodRatio.sun)}%` }}></div>
+                                <div className="h-full transition-all duration-1000 bg-slate-400 dark:bg-slate-600 rounded-r-full shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)]" style={{ width: `${Math.max(2, moodRatio.rain)}%` }}></div>
+                            </div>
+
+                            <div className="flex justify-between w-full mt-3 font-serif text-[10px] lg:text-xs">
+                                <div className={`flex items-center gap-1 lg:gap-1.5 ${isSunny ? 'text-amber-700 dark:text-amber-500 font-bold' : 'text-amber-900/40 dark:text-stone-600'}`}>
+                                    <Sun className="w-3 h-3 lg:w-3.5 lg:h-3.5" /> Sunny ({Math.round(moodRatio.sun)}%)
+                                </div>
+                                <div className={`flex items-center gap-1 lg:gap-1.5 ${!isSunny ? 'text-slate-600 dark:text-slate-400 font-bold' : 'text-amber-900/40 dark:text-stone-600'}`}>
+                                    Rainy ({Math.round(moodRatio.rain)}%) <CloudRain className="w-3 h-3 lg:w-3.5 lg:h-3.5" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-4 gap-2 lg:gap-4 px-1 lg:px-2">
+                            {moods.slice(0, 8).map((m, i) => {
+                                const isPositive = (m.mood as any) === 'confetti' || (m.mood as any) === 'Happy' || (m.mood as any) === 'Calm' || (m.mood as any) === 'sun';
+                                const isNegative = (m.mood as any) === 'rain' || (m.mood as any) === 'Anxious' || (m.mood as any) === 'Sad';
+                                let emoji = '😐';
+
+                                if (isPositive) {
+                                    emoji = ['confetti', 'Happy'].includes(String(m.mood)) ? '🎉' : '☀️';
+                                } else if (isNegative) {
+                                    emoji = ['rain', 'Sad'].includes(String(m.mood)) ? '🌧️' : '😰';
+                                }
+
+                                return (
+                                    <div key={i} className={`aspect-square p-2 bg-amber-900/5 dark:bg-stone-800/40 rounded-sm flex flex-col items-center justify-center group shadow-sm ring-1 ring-amber-900/10 dark:ring-stone-700 transition-all hover:bg-amber-900/10 dark:hover:bg-stone-700`}>
+                                        <span className="text-xl lg:text-2xl block mb-1 lg:mb-1.5 filter sepia-[0.3] dark:sepia-[0.2] group-hover:scale-110 group-hover:sepia-0 transition-transform">{emoji}</span>
+                                        <div className="text-[7px] lg:text-[8px] font-sans font-bold uppercase text-amber-900/50 dark:text-stone-500 tracking-widest">{new Date(m.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
-                    <p className="font-serif italic text-amber-900/50 dark:text-stone-500 text-sm">Chronicle complete.</p>
+
+                    {/* CHAPTER 3: VISIONS & CONCLUSION */}
+                    <div className="mt-8 md:mt-auto pt-8 border-t border-amber-900/10 dark:border-stone-800 text-center relative z-10 pointer-events-none">
+                        <div className="w-6 h-6 lg:w-8 lg:h-8 border border-amber-900/20 dark:border-stone-700 bg-transparent mx-auto mb-3 lg:mb-4 flex items-center justify-center rounded-sm rotate-45 shadow-sm">
+                            <div className="-rotate-45"><BookOpen className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-amber-900/40 dark:text-stone-500" /></div>
+                        </div>
+                        <p className="font-serif italic text-amber-900/60 dark:text-stone-400 text-xs lg:text-sm drop-shadow-sm">Chronicle complete.</p>
+                        <p className="font-sans text-[7px] lg:text-[8px] uppercase tracking-[0.3em] font-bold text-amber-900/30 dark:text-stone-600 mt-2">Peutic Archives // Vol. {currentVolume + 1}</p>
+                    </div>
+
                 </div>
             </div>
         </div>

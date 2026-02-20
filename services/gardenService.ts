@@ -43,8 +43,8 @@ export class GardenService {
     }
 
     static async harvestPlant(userId: string, userBalanceService: any): Promise<{ success: boolean; message: string }> {
-        // Assume maximum gamification: subtract 25 minutes
-        const success = await this.addFocusMinutes(userId, -25);
+        // Assume maximum gamification: subtract 10 minutes
+        const success = await this.addFocusMinutes(userId, -10);
         if (success) {
             // Give a cool prize (50 XP/Coins)
             if (userBalanceService && userBalanceService.addBalance) {
