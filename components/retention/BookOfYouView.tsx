@@ -155,16 +155,16 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
 
                     {/* HERO COVER: Book Title Page */}
                     <div className="text-center mt-6 lg:mt-12 mb-12 lg:mb-20 relative">
-                        <div className="inline-flex justify-center items-center w-16 h-16 lg:w-20 lg:h-20 rounded-full border border-amber-900/20 dark:border-stone-700 mb-6 lg:mb-8 relative group bg-amber-900/5 dark:bg-stone-800/30 shadow-inner">
-                            <BookOpen className="w-6 h-6 lg:w-8 lg:h-8 text-amber-900/50 dark:text-stone-400 group-hover:text-amber-900 dark:group-hover:text-stone-300 transition-colors" />
+                        <div className="inline-flex justify-center items-center w-16 h-16 lg:w-20 lg:h-20 rounded-full border border-amber-900/30 dark:border-stone-600 mb-6 lg:mb-8 relative group bg-gradient-to-br from-amber-900/10 to-transparent dark:from-stone-700/50 shadow-[rgba(0,0,0,0.1)_0px_4px_12px]">
+                            <BookOpen className="w-6 h-6 lg:w-8 lg:h-8 text-amber-900/70 dark:text-stone-300 group-hover:text-amber-900 dark:group-hover:text-white transition-colors drop-shadow-md" />
                         </div>
-                        <div className="w-full h-px bg-gradient-to-r from-transparent via-amber-900/20 dark:via-stone-700 to-transparent mb-8 lg:mb-12"></div>
-                        <h1 className="text-4xl sm:text-5xl lg:text-7xl font-light text-amber-950 dark:text-stone-200 mb-4 lg:mb-6 tracking-normal drop-shadow-sm">The Book<br />of You</h1>
-                        <p className="text-lg lg:text-xl text-amber-900/60 dark:text-stone-400 font-medium italic">A chronicle of {user.name}'s journey.</p>
+                        <div className="w-full h-px bg-gradient-to-r from-transparent via-amber-900/30 dark:via-stone-600 to-transparent mb-8 lg:mb-12"></div>
+                        <h1 className="text-4xl sm:text-5xl lg:text-7xl font-serif text-amber-950 dark:text-stone-100 mb-4 lg:mb-6 tracking-wide drop-shadow-[0_2px_2px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">The Book<br />of You</h1>
+                        <p className="text-lg lg:text-xl text-amber-900/70 dark:text-stone-400 font-serif italic">A chronicle of {user.name}'s journey.</p>
 
                         <div className="mt-12 lg:mt-16 flex flex-col items-center justify-center gap-4 lg:gap-6 z-20 relative">
-                            <div className="flex bg-amber-900/5 dark:bg-stone-800/40 px-6 lg:px-8 py-2 lg:py-3 rounded-full border border-amber-900/10 dark:border-stone-700 shadow-inner">
-                                <span className="text-[10px] lg:text-xs font-sans font-black uppercase tracking-[0.3em] text-amber-900/60 dark:text-stone-400">Volume {currentVolume + 1}</span>
+                            <div className="flex bg-gradient-to-b from-amber-900/10 to-transparent dark:from-stone-800/60 dark:to-transparent px-6 lg:px-8 py-2 lg:py-3 rounded-full border border-amber-900/20 dark:border-stone-600 shadow-[inset_0_1px_3px_rgba(0,0,0,0.1)]">
+                                <span className="text-[10px] lg:text-xs font-sans font-black uppercase tracking-[0.3em] text-amber-900/80 dark:text-stone-300">Volume {currentVolume + 1}</span>
                             </div>
 
                             <div className="flex items-center gap-6 lg:gap-12 mt-2 lg:mt-4 p-1 rounded bg-[#fdfaf6]/50 dark:bg-[#1a1817]/50 backdrop-blur-sm">
@@ -213,9 +213,10 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                 </div>
 
                 {/* THE SPINE SHADOW - Desktop Only */}
-                <div className="hidden md:block w-12 shrink-0 h-full bg-gradient-to-r from-black/5 via-black/15 to-transparent dark:from-black/20 dark:via-black/50 to-transparent shadow-[inset_10px_0_20px_rgba(0,0,0,0.1)] dark:shadow-[inset_10px_0_20px_rgba(0,0,0,0.5)] z-10 relative pointer-events-none">
-                    <div className="absolute inset-y-0 left-1/2 -ml-px w-px bg-amber-900/20 dark:bg-black w-[2px]"></div>
-                    <div className="absolute inset-y-0 left-[calc(100%-1px)] w-[1px] bg-white/20 dark:bg-white/5"></div>
+                <div className="hidden md:block w-16 shrink-0 h-full bg-gradient-to-r from-transparent via-black/10 to-transparent dark:from-transparent dark:via-black/60 dark:to-transparent shadow-[inset_15px_0_30px_rgba(0,0,0,0.1),inset_-15px_0_30px_rgba(0,0,0,0.1)] dark:shadow-[inset_20px_0_40px_rgba(0,0,0,0.4),inset_-20px_0_40px_rgba(0,0,0,0.4)] z-10 relative pointer-events-none">
+                    <div className="absolute inset-y-0 left-1/2 -ml-px w-px bg-black/20 dark:bg-black/80 w-[2px]"></div>
+                    <div className="absolute inset-y-0 left-[calc(100%-1px)] w-[1px] bg-white/30 dark:bg-white/10 shadow-[0_0_5px_rgba(255,255,255,0.5)]"></div>
+                    <div className="absolute inset-y-0 right-[calc(100%-1px)] w-[1px] bg-white/30 dark:bg-white/10 shadow-[0_0_5px_rgba(255,255,255,0.5)]"></div>
                 </div>
 
                 {/* RIGHT PAGE */}

@@ -19,7 +19,6 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
     const [timerMode, setTimerMode] = useState<'focus' | 'break' | 'candle'>('candle');
     const [streak, setStreak] = useState(0);
     const [totalFocus, setTotalFocus] = useState(0);
-    const [breathMode, setBreathMode] = useState<'none' | '4-7-8' | 'box'>('none');
     const [koan, setKoan] = useState<string | null>(null);
     const [soundEnabled, setSoundEnabled] = useState(true);
     const timerRef = useRef<number | null>(null);
@@ -430,14 +429,6 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                 {/* CONTROLS */}
                 <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
                     <button
-                        onClick={(e) => { e.stopPropagation(); setBreathMode(breathMode === 'none' ? '4-7-8' : (breathMode === '4-7-8' ? 'box' : 'none')); }}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all ${breathMode !== 'none' ? 'bg-amber-900/30 text-amber-400 border border-amber-500/20 shadow-lg' : 'bg-stone-900/50 text-stone-500 border border-stone-800 hover:text-stone-300'}`}
-                    >
-                        <Wind className="w-4 h-4" />
-                        {breathMode === 'none' ? 'Breathing: Off' : `Breathing: ${breathMode}`}
-                    </button>
-
-                    <button
                         onClick={(e) => { e.stopPropagation(); nextKoan(); }}
                         className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all bg-stone-900/50 text-stone-400 border border-stone-800 hover:text-amber-200 hover:border-amber-500/30"
                     >
@@ -509,14 +500,6 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                     <div className="mb-8 max-w-md text-center animate-in fade-in slide-in-from-bottom-4">
                         <p className="text-xl font-serif italic text-amber-100/90 leading-relaxed drop-shadow-lg">"{koan}"</p>
                         <button onClick={() => setKoan(null)} className="text-[9px] text-stone-500 hover:text-stone-300 mt-2 uppercase tracking-widest font-bold">Dismiss</button>
-                    </div>
-                )}
-
-                {/* BREATHING VISUALIZER OVERLAY */}
-                {breathMode !== 'none' && (
-                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-0">
-                        <div className={`rounded-full border border-amber-500/10 transition-all duration-[4000ms] ease-in-out ${isActive ? 'w-[600px] h-[600px] opacity-10' : 'w-20 h-20 opacity-0'}`}></div>
-                        <div className={`absolute rounded-full bg-amber-500/5 transition-all duration-[4000ms] ease-in-out ${isActive ? 'w-[500px] h-[500px]' : 'w-10 h-10'}`}></div>
                     </div>
                 )}
 

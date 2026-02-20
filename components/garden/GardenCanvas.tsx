@@ -21,10 +21,10 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
     // Determine colors
     const getThemeColors = (type: string) => {
         switch (type) {
-            case 'Fern': return { trunk: '#573010', leaf: '#22c55e', leafDark: '#166534', bloom: '#a7f3d0' };
-            case 'Rose': return { trunk: '#573010', leaf: '#10b981', leafDark: '#047857', bloom: '#fb7185' };
-            case 'Sunflower': return { trunk: '#4ade80', leaf: '#4ade80', leafDark: '#22c55e', bloom: '#facc15' };
-            default: return { trunk: '#573010', leaf: '#22c55e', leafDark: '#166534', bloom: '#a7f3d0' };
+            case 'Fern': return { trunk: '#45220c', leaf: '#15803d', leafLight: '#4ade80', leafDark: '#064e3b', bloom: '#a7f3d0' };
+            case 'Rose': return { trunk: '#45220c', leaf: '#059669', leafLight: '#34d399', leafDark: '#065f46', bloom: '#f43f5e' };
+            case 'Sunflower': return { trunk: '#22c55e', leaf: '#22c55e', leafLight: '#86efac', leafDark: '#166534', bloom: '#fbbf24' };
+            default: return { trunk: '#45220c', leaf: '#15803d', leafLight: '#4ade80', leafDark: '#064e3b', bloom: '#a7f3d0' };
         }
     };
 
@@ -36,45 +36,75 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
     const SvgContent = useMemo(() => {
         return (
             <svg viewBox="0 0 100 100" className="w-[80%] h-[80%] drop-shadow-lg mx-auto overflow-visible">
-                {/* Pot / Base */}
-                <path d="M 30 90 L 70 90 L 65 98 L 35 98 Z" fill="#78350f" />
-                <rect x="25" y="85" width="50" height="5" fill="#92400e" rx="1" />
+                <defs>
+                    <filter id="bloom-glow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                        <feMerge>
+                            <feMergeNode in="coloredBlur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                    <linearGradient id="pot-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#451a03" />
+                        <stop offset="50%" stopColor="#78350f" />
+                        <stop offset="100%" stopColor="#451a03" />
+                    </linearGradient>
+                    <linearGradient id="trunk-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#291307" />
+                        <stop offset="50%" stopColor={theme.trunk} />
+                        <stop offset="100%" stopColor="#291307" />
+                    </linearGradient>
+                </defs>
+
+                {/* Aura for fully bloomed tree */}
+                {stage === 3 && (
+                    <circle cx="50" cy="30" r="40" fill={theme.bloom} opacity="0.05" className="animate-[pulse_4s_infinite]" filter="url(#bloom-glow)" />
+                )}
+
+                {/* Pot / Base with gradient */}
+                <path d="M 32 88 L 68 88 L 63 98 L 37 98 Z" fill="url(#pot-grad)" stroke="#291307" strokeWidth="0.5" />
+                <rect x="28" y="85" width="44" height="3" fill="#92400e" rx="1" stroke="#451a03" strokeWidth="0.5" />
+                <path d="M 28 88 L 72 88 L 70 89 L 30 89 Z" fill="#451a03" opacity="0.5" /> {/* pot rim shadow */}
 
                 {/* Soil */}
-                <ellipse cx="50" cy="85" rx="22" ry="3" fill="#451a03" />
+                <ellipse cx="50" cy="85" rx="19" ry="2.5" fill="#291307" />
 
                 {/* Growth Stages */}
                 <g style={{ transformOrigin: '50px 85px' }} className={swayClass}>
                     {/* STAGE 0: SEED */}
                     {stage === 0 && (
-                        <circle cx="50" cy="83" r="3" fill={theme.leafDark} />
+                        <ellipse cx="50" cy="84" rx="2" ry="1.5" fill={theme.leafDark} />
                     )}
 
                     {/* STAGE 1: SPROUT */}
                     {stage === 1 && (
                         <>
-                            <path d="M 50 85 Q 45 75 50 65" fill="none" stroke={theme.trunk} strokeWidth="2" strokeLinecap="round" />
+                            <path d="M 50 85 Q 45 75 50 65" fill="none" stroke="url(#trunk-grad)" strokeWidth="2" strokeLinecap="round" />
                             <circle cx="45" cy="72" r="4" fill={theme.leaf} />
                             <circle cx="54" cy="68" r="3" fill={theme.leafDark} />
+                            <circle cx="50" cy="64" r="2" fill={theme.leafLight} />
                         </>
                     )}
 
                     {/* STAGE 2: SMALL TREE */}
                     {stage === 2 && (
                         <>
-                            <path d="M 50 85 Q 40 60 55 40 Q 60 30 50 20" fill="none" stroke={theme.trunk} strokeWidth="4" strokeLinecap="round" />
-                            <path d="M 47 60 Q 35 50 30 45" fill="none" stroke={theme.trunk} strokeWidth="2" strokeLinecap="round" />
-                            <path d="M 53 50 Q 65 40 70 30" fill="none" stroke={theme.trunk} strokeWidth="2" strokeLinecap="round" />
+                            <path d="M 50 85 Q 40 60 55 40 Q 60 30 50 20" fill="none" stroke="url(#trunk-grad)" strokeWidth="4" strokeLinecap="round" />
+                            <path d="M 47 60 Q 35 50 30 45" fill="none" stroke="url(#trunk-grad)" strokeWidth="2" strokeLinecap="round" />
+                            <path d="M 53 50 Q 65 40 70 30" fill="none" stroke="url(#trunk-grad)" strokeWidth="2" strokeLinecap="round" />
 
                             {/* Leaves */}
-                            <circle cx="30" cy="45" r="8" fill={theme.leaf} />
-                            <circle cx="28" cy="42" r="6" fill={theme.leafDark} />
+                            <g filter="drop-shadow(0px 2px 2px rgba(0,0,0,0.3))">
+                                <circle cx="30" cy="45" r="8" fill={theme.leafDark} />
+                                <circle cx="28" cy="42" r="6" fill={theme.leaf} />
 
-                            <circle cx="70" cy="30" r="9" fill={theme.leaf} />
-                            <circle cx="72" cy="27" r="5" fill={theme.leafDark} />
+                                <circle cx="70" cy="30" r="9" fill={theme.leafDark} />
+                                <circle cx="72" cy="27" r="6" fill={theme.leaf} />
 
-                            <circle cx="50" cy="20" r="12" fill={theme.leaf} />
-                            <circle cx="48" cy="15" r="8" fill={theme.leafDark} />
+                                <circle cx="50" cy="20" r="12" fill={theme.leafDark} />
+                                <circle cx="48" cy="15" r="9" fill={theme.leaf} />
+                                <circle cx="50" cy="12" r="5" fill={theme.leafLight} />
+                            </g>
                         </>
                     )}
 
@@ -82,32 +112,46 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
                     {stage === 3 && (
                         <>
                             {/* Trunk */}
-                            <path d="M 50 85 Q 35 50 50 30 Q 65 15 50 10" fill="none" stroke={theme.trunk} strokeWidth="6" strokeLinecap="round" />
-                            <path d="M 45 60 Q 30 50 20 40" fill="none" stroke={theme.trunk} strokeWidth="3" strokeLinecap="round" />
-                            <path d="M 55 50 Q 80 40 85 20" fill="none" stroke={theme.trunk} strokeWidth="3" strokeLinecap="round" />
-                            <path d="M 48 40 Q 30 30 35 20" fill="none" stroke={theme.trunk} strokeWidth="2" strokeLinecap="round" />
+                            <path d="M 50 85 Q 35 50 50 30 Q 65 15 50 10" fill="none" stroke="url(#trunk-grad)" strokeWidth="6" strokeLinecap="round" />
+                            <path d="M 45 60 Q 30 50 20 40" fill="none" stroke="url(#trunk-grad)" strokeWidth="3" strokeLinecap="round" />
+                            <path d="M 55 50 Q 80 40 85 20" fill="none" stroke="url(#trunk-grad)" strokeWidth="3" strokeLinecap="round" />
+                            <path d="M 48 40 Q 30 30 35 20" fill="none" stroke="url(#trunk-grad)" strokeWidth="2" strokeLinecap="round" />
 
                             {/* Main Canopy */}
-                            <circle cx="50" cy="20" r="18" fill={theme.leaf} />
-                            <circle cx="45" cy="15" r="14" fill={theme.leafDark} />
-                            <circle cx="60" cy="18" r="12" fill={theme.leaf} />
+                            <g filter="drop-shadow(0px 3px 4px rgba(0,0,0,0.4))">
+                                <circle cx="50" cy="20" r="18" fill={theme.leafDark} />
+                                <circle cx="45" cy="15" r="14" fill={theme.leaf} />
+                                <circle cx="48" cy="10" r="10" fill={theme.leafLight} />
 
-                            <circle cx="20" cy="35" r="12" fill={theme.leaf} />
-                            <circle cx="15" cy="30" r="8" fill={theme.leafDark} />
+                                <circle cx="60" cy="18" r="12" fill={theme.leafDark} />
+                                <circle cx="62" cy="14" r="8" fill={theme.leaf} />
 
-                            <circle cx="80" cy="25" r="14" fill={theme.leaf} />
-                            <circle cx="85" cy="20" r="10" fill={theme.leafDark} />
+                                <circle cx="20" cy="35" r="12" fill={theme.leafDark} />
+                                <circle cx="15" cy="30" r="8" fill={theme.leaf} />
+                                <circle cx="12" cy="26" r="4" fill={theme.leafLight} />
 
-                            <circle cx="35" cy="20" r="10" fill={theme.leaf} />
-                            <circle cx="30" cy="15" r="6" fill={theme.leafDark} />
+                                <circle cx="80" cy="25" r="14" fill={theme.leafDark} />
+                                <circle cx="85" cy="20" r="10" fill={theme.leaf} />
 
-                            {/* Blooms/Fruits */}
-                            <circle cx="45" cy="15" r="4" fill={theme.bloom} />
-                            <circle cx="55" cy="25" r="3" fill={theme.bloom} />
-                            <circle cx="65" cy="18" r="4.5" fill={theme.bloom} />
-                            <circle cx="20" cy="35" r="3.5" fill={theme.bloom} />
-                            <circle cx="80" cy="20" r="4" fill={theme.bloom} />
-                            <circle cx="35" cy="18" r="3" fill={theme.bloom} />
+                                <circle cx="35" cy="20" r="10" fill={theme.leafDark} />
+                                <circle cx="30" cy="15" r="6" fill={theme.leaf} />
+                            </g>
+
+                            {/* Glowing Blooms/Fruits */}
+                            <g filter="url(#bloom-glow)">
+                                <circle cx="45" cy="15" r="4" fill={theme.bloom} />
+                                <circle cx="55" cy="25" r="3" fill={theme.bloom} />
+                                <circle cx="68" cy="18" r="4.5" fill={theme.bloom} />
+                                <circle cx="20" cy="35" r="3.5" fill={theme.bloom} />
+                                <circle cx="82" cy="20" r="4" fill={theme.bloom} />
+                                <circle cx="35" cy="18" r="3" fill={theme.bloom} />
+                            </g>
+
+                            {/* Falling leaves/petals animation for full bloom */}
+                            <g className="animate-[fade_4s_ease-in-out_infinite]" opacity="0">
+                                <path d="M 20 40 Q 22 42 20 44 Q 18 42 20 40" fill={theme.bloom} className="animate-[sway-drop_5s_linear_infinite]" />
+                                <path d="M 75 30 Q 77 32 75 34 Q 73 32 75 30" fill={theme.bloom} className="animate-[sway-drop_6s_linear_infinite]" style={{ animationDelay: '2s' }} />
+                            </g>
                         </>
                     )}
                 </g>
