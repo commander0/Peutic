@@ -9,6 +9,8 @@ import { PetService } from '../../services/petService';
 import PetCanvas from './PetCanvas';
 import { useToast } from '../common/Toast';
 import { UserService } from '../../services/userService';
+import CloudHopGame from '../CloudHopGame';
+import MindfulMatchGame from '../MindfulMatchGame';
 
 // --- TYPEWRITER COMPONENT ---
 const Typewriter: React.FC<{ text: string }> = ({ text }) => {
@@ -48,6 +50,8 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     const [canvasSize, setCanvasSize] = useState(500);
     const [isCreating, setIsCreating] = useState(false);
     const [showMissions, setShowMissions] = useState(false);
+    const [showGameMenu, setShowGameMenu] = useState(false);
+    const [activeGame, setActiveGame] = useState<'match' | 'cloud' | null>(null);
 
     // Mission State (Mocked for gamification)
     const [missions, setMissions] = useState([
@@ -483,7 +487,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                 {/* Actions */}
                 <div className="flex justify-center gap-4 flex-wrap">
                     <CyberBtn icon={Pizza} label="FEED" onClick={() => handleAction('feed')} />
-                    <CyberBtn icon={Gamepad2} label="PLAY" onClick={() => handleAction('play')} />
+                    <CyberBtn icon={Gamepad2} label="PLAY" onClick={() => setShowGameMenu(true)} />
                     <CyberBtn icon={Sparkles} label="ORACLE" onClick={handleOracleConsult} color="purple" />
                     <CyberBtn icon={RefreshCw} label="CLEAN" onClick={() => handleAction('clean')} />
                     <CyberBtn icon={Target} label="MISSIONS" onClick={() => setShowMissions(true)} color="yellow" />
@@ -495,6 +499,51 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                     />
                 </div>
             </footer>
+
+            {/* --- GAME MENU OVERLAY --- */}
+            {showGameMenu && !activeGame && (
+                <div className="absolute inset-0 z-[200] bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 animate-in fade-in">
+                    <button onClick={() => setShowGameMenu(false)} className="absolute top-8 right-8 text-cyan-500 hover:text-white"><ChevronLeft className="w-8 h-8 rotate-180" /></button>
+                    <h2 className="text-3xl font-black text-white tracking-[0.2em] mb-8 font-mono">SELECT PROTOCOL</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
+                        <button
+                            onClick={() => { setActiveGame('match'); handleAction('play'); }}
+                            className="bg-violet-900/30 border border-violet-500 hover:bg-violet-800/50 p-8 rounded-3xl flex flex-col items-center gap-4 group transition-all"
+                        >
+                            <div className="w-20 h-20 bg-violet-600 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(139,92,246,0.5)] group-hover:scale-110 transition-transform">
+                                <Gamepad2 className="w-10 h-10 text-white" />
+                            </div>
+                            <span className="text-violet-300 font-bold uppercase tracking-widest">Mindful Match</span>
+                        </button>
+                        <button
+                            onClick={() => { setActiveGame('cloud'); handleAction('play'); }}
+                            className="bg-sky-900/30 border border-sky-500 hover:bg-sky-800/50 p-8 rounded-3xl flex flex-col items-center gap-4 group transition-all"
+                        >
+                            <div className="w-20 h-20 bg-sky-500 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(14,165,233,0.5)] group-hover:scale-110 transition-transform">
+                                <Zap className="w-10 h-10 text-white" />
+                            </div>
+                            <span className="text-sky-300 font-bold uppercase tracking-widest">Cloud Hop</span>
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* --- ACTIVE GAME RENDERER --- */}
+            <div className="relative z-[300]">
+                {activeGame && (
+                    <div className="fixed inset-0 bg-black z-[1000]">
+                        <button
+                            onClick={() => { setActiveGame(null); setShowGameMenu(false); }}
+                            className="absolute top-6 left-6 z-[1020] text-white/50 hover:text-white transition-colors flex items-center gap-2"
+                        >
+                            <ChevronLeft className="w-8 h-8" />
+                            <span className="font-bold tracking-widest text-sm uppercase">Return to Lumina</span>
+                        </button>
+                        {activeGame === 'match' && <MindfulMatchGame dashboardUser={user} />}
+                        {activeGame === 'cloud' && <CloudHopGame dashboardUser={user} />}
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

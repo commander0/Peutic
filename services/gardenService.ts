@@ -133,4 +133,20 @@ export class GardenService {
             return { success: false, message: "Failed to clip." };
         }
     }
+
+    static async resetGarden(userId: string, newPlantType: string): Promise<{ success: boolean; message?: string }> {
+        const { error } = await supabase.from('garden_log').update({
+            focus_minutes: 0,
+            level: 1,
+            current_plant_type: newPlantType,
+            last_watered_at: new Date().toISOString(),
+            water_level: 50
+        }).eq('user_id', userId);
+
+        if (error) {
+            console.error("Failed to reset garden:", error);
+            return { success: false, message: "Couldn't plant the new seed." };
+        }
+        return { success: true };
+    }
 }

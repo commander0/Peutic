@@ -1038,7 +1038,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                                 <CollapsibleSection title="Arcade" icon={Gamepad2}>
                                     {/* Arcade Content */}
-                                    <div className="grid grid-cols-2 gap-3 md:gap-5 w-full">
+                                    <div className="grid grid-cols-2 gap-3 md:gap-4 w-full">
                                         {/* TILE 1: MINDFUL MATCH */}
                                         <div
                                             onClick={() => setShowMatchGame(true)}
@@ -1048,8 +1048,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
                                                 <div className="relative mb-1 md:mb-4">
                                                     <div className="absolute -inset-4 bg-violet-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                    <div className="w-10 h-10 md:w-20 md:h-20 bg-white/10 dark:bg-black/40 border border-violet-500/50 rounded-2xl flex items-center justify-center text-violet-500 dark:text-violet-400 shadow-[0_0_15px_rgba(139,92,246,0.4)] group-hover:scale-110 transition-transform">
-                                                        <Brain className="w-5 h-5 md:w-8 md:h-8" />
+                                                    <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-violet-500 to-purple-700 border border-violet-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(139,92,246,0.4)] group-hover:scale-110 transition-transform">
+                                                        <Brain className="w-5 h-5 md:w-8 md:h-8 text-white" />
                                                     </div>
                                                 </div>
                                                 <h3 className="text-[7px] md:text-sm font-black text-violet-700 dark:text-violet-300 uppercase tracking-[0.2em] mb-1">Mindful Match</h3>
@@ -1066,8 +1066,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
                                                 <div className="relative mb-1 md:mb-4">
                                                     <div className="absolute -inset-4 bg-sky-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                    <div className="w-10 h-10 md:w-20 md:h-20 bg-white/10 dark:bg-black/40 border border-sky-500/50 rounded-2xl flex items-center justify-center text-sky-500 dark:text-sky-400 shadow-[0_0_15px_rgba(14,165,233,0.4)] group-hover:scale-110 transition-transform">
-                                                        <Cloud className="w-5 h-5 md:w-8 md:h-8" />
+                                                    <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-sky-500 to-blue-700 border border-sky-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.4)] group-hover:scale-110 transition-transform">
+                                                        <Cloud className="w-5 h-5 md:w-8 md:h-8 text-white" />
                                                     </div>
                                                 </div>
                                                 <h3 className="text-[7px] md:text-sm font-black text-sky-700 dark:text-sky-300 uppercase tracking-[0.2em] mb-1">Cloud Hop</h3>

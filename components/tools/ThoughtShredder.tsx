@@ -11,6 +11,7 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
     const [text, setText] = useState('');
     const [isShredding, setIsShredding] = useState(false);
     const [shredded, setShredded] = useState(false);
+    const [shredCount, setShredCount] = useState(0);
 
     // Milestone State
     const [showMilestone, setShowMilestone] = useState(false);
@@ -29,6 +30,8 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
 
     // Clean up animation on unmount
     useEffect(() => {
+        setShredCount(parseInt(localStorage.getItem('peutic_shred_count') || '0', 10));
+
         return () => {
             const id = (window as any).shredderAnimId;
             if (id) cancelAnimationFrame(id);
@@ -115,6 +118,7 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
 
                 let count = parseInt(localStorage.getItem('peutic_shred_count') || '0', 10) + 1;
                 localStorage.setItem('peutic_shred_count', count.toString());
+                setShredCount(count);
 
                 if (count > 0 && count % 50 === 0) {
                     setShowMilestone(true);
@@ -207,6 +211,17 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
                                     <Wind className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                                     Shred This Thought
                                 </button>
+                            </div>
+
+                            {/* Milestone Tracker Banner */}
+                            <div className="mt-6 pt-4 border-t border-stone-800 text-center">
+                                <p className="text-[10px] uppercase tracking-widest font-bold text-stone-500 mb-2">Fragments Released: <span className="text-stone-300">{shredCount}</span> / 50</p>
+                                <div className="w-full h-1.5 bg-stone-900 rounded-full overflow-hidden mb-2">
+                                    <div className="h-full bg-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.5)] transition-all duration-500" style={{ width: `${Math.min(100, ((shredCount % 50) / 50) * 100)}%` }} />
+                                </div>
+                                <p className="text-[10px] text-stone-600 italic font-serif">
+                                    Shred 50 thoughts to piece together a custom introspective note from your fragments.
+                                </p>
                             </div>
                         </>
                     )}

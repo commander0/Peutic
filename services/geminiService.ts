@@ -64,6 +64,26 @@ export const generateAffirmation = async (struggle: string = "general", userId?:
     }
 };
 
+export const generateBookOfYouSummary = async (userName: string, contextObj: string, userId?: string): Promise<string> => {
+    try {
+        const { data, error } = await supabase.functions.invoke('api-gateway', {
+            body: {
+                action: 'gemini-generate',
+                payload: {
+                    prompt: `Write a beautifully poetic, highly detailed, and deeply introspective 3-paragraph psychological narrative for a "Book of You" chronicle chapter for ${userName}. Base it on their recent psychological state data: ${contextObj}. Use rich, descriptive, atmospheric language. Analyze their emotional growth, validate their struggles, and provide an inspiring, profound conclusion recognizing their intrinsic worth. Do not be generic; weave the raw data into a compelling mental wellness storyline. Format the narrative with proper paragraph breaks.`,
+                    userId,
+                    type: 'AI_BOOK_SUMMARY'
+                }
+            }
+        });
+
+        if (error || !data?.text) throw error;
+        return data.text;
+    } catch (e) {
+        return `Dear ${userName}, your mind is a vast landscape of thoughts and emotions. While the ink is still drying on these pages, your resilience stands strong. Every feeling you've experienced this week contributes to the masterpiece of your mental growth.\n\nContinue to observe your mind with curiosity and compassion, for even the storms bring rain that nourishes your inner garden. The chronicle of your life is ever-expanding, written not just in words, but in your daily courage.`;
+    }
+};
+
 export const generateSpeech = async (text: string): Promise<Uint8Array | null> => {
     try {
         const { data, error } = await supabase.functions.invoke('api-gateway', {

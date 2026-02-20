@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Droplets, Wind, Info, ChevronLeft, Music, Scissors } from 'lucide-react';
+import { Droplets, Wind, Info, ChevronLeft, Music, Scissors, X, Sprout } from 'lucide-react';
 import GardenCanvas from './GardenCanvas';
 import { UserService } from '../../services/userService';
 import { GardenState, User } from '../../types';
@@ -17,9 +17,12 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     const [localGarden, setLocalGarden] = useState(garden);
     const [interaction, setInteraction] = useState<'water' | 'breath' | 'sing' | 'harvest' | null>(null);
     const [showInfo, setShowInfo] = useState(false);
+    const [showPlantSelection, setShowPlantSelection] = useState(false);
+    const [selectedNewPlant, setSelectedNewPlant] = useState<string | null>(null);
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
     const { showToast } = useToast();
     const COST = intensity;
+    const PLANT_CHOICES = ['Lotus', 'Rose', 'Sunflower', 'Fern', 'Sakura', 'Oak', 'Willow', 'Bonsai'] as const;
 
     // Eliminate Cached Ghosts: Always fetch fresh state on mount
     useEffect(() => {
@@ -62,6 +65,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
             const result = await GardenService.clipPlant(garden.userId);
             if (result.success) {
                 showToast(`Harvested! ${result.reward ? `"${result.reward}"` : ''}`, "success");
+                setShowPlantSelection(true); // Open selection modal
             } else {
                 showToast(result.message || "Failed to harvest.", "error");
             }
@@ -166,6 +170,54 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                     />
                 </div>
             </main>
+
+            {/* --- SEED SELECTION MODAL --- */}
+            {showPlantSelection && (
+                <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md p-6">
+                    <div className="bg-stone-900 border border-stone-800 p-8 rounded-3xl max-w-lg w-full text-center relative shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                        <button onClick={() => setShowPlantSelection(false)} className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 text-stone-500 hover:text-white transition-colors">
+                            <X className="w-5 h-5" />
+                        </button>
+                        <Sprout className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
+                        <h2 className="text-2xl font-serif text-white mb-2">Plant a New Seed</h2>
+                        <p className="text-stone-400 text-sm mb-6">Choose your next journey. Each plant type blossoms differently in your inner sanctuary.</p>
+
+                        <div className="grid grid-cols-2 gap-3 mb-6">
+                            {PLANT_CHOICES.map(plant => (
+                                <button
+                                    key={plant}
+                                    onClick={() => setSelectedNewPlant(plant)}
+                                    className={`p-3 rounded-xl border transition-all text-sm font-bold tracking-wider uppercase ${selectedNewPlant === plant ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400' : 'bg-stone-800/50 border-stone-700 text-stone-400 hover:bg-stone-800 hover:border-stone-600'}`}
+                                >
+                                    {plant}
+                                </button>
+                            ))}
+                        </div>
+
+                        <button
+                            disabled={!selectedNewPlant}
+                            onClick={async () => {
+                                if (selectedNewPlant) {
+                                    const res = await GardenService.resetGarden(user.id, selectedNewPlant);
+                                    if (res.success) {
+                                        showToast(`Planted a new ${selectedNewPlant} seed!`, "success");
+                                        const freshData = await GardenService.getGarden(user.id);
+                                        if (freshData) setLocalGarden(freshData);
+                                        setShowPlantSelection(false);
+                                        setSelectedNewPlant(null);
+                                        onUpdate();
+                                    } else {
+                                        showToast(res.message || "Failed to plant", "error");
+                                    }
+                                }
+                            }}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-8 rounded-2xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full shadow-[0_0_20px_rgba(16,185,129,0.2)]"
+                        >
+                            Confirm Selection
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* --- CONTROLS --- */}
             <footer className="relative z-30 pb-10 px-6 flex flex-col items-center gap-8 bg-gradient-to-t from-black/90 via-black/50 to-transparent">

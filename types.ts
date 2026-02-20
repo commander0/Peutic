@@ -154,7 +154,7 @@ export interface GiftCard {
 export interface GardenState {
   userId: string;
   level: number; // 1-5
-  currentPlantType: 'Lotus' | 'Rose' | 'Sunflower' | 'Fern';
+  currentPlantType: 'Lotus' | 'Rose' | 'Sunflower' | 'Fern' | 'Sakura' | 'Oak' | 'Willow' | 'Bonsai';
   waterLevel: number; // 0-100
   lastWateredAt: string;
   streakCurrent: number;

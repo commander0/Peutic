@@ -24,6 +24,10 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
             case 'Fern': return { trunk: '#45220c', leaf: '#15803d', leafLight: '#4ade80', leafDark: '#064e3b', bloom: '#a7f3d0' };
             case 'Rose': return { trunk: '#45220c', leaf: '#059669', leafLight: '#34d399', leafDark: '#065f46', bloom: '#f43f5e' };
             case 'Sunflower': return { trunk: '#22c55e', leaf: '#22c55e', leafLight: '#86efac', leafDark: '#166534', bloom: '#fbbf24' };
+            case 'Sakura': return { trunk: '#3f2b2b', leaf: '#fda4af', leafLight: '#fecdd3', leafDark: '#e11d48', bloom: '#ffe4e6' };
+            case 'Oak': return { trunk: '#451a03', leaf: '#166534', leafLight: '#22c55e', leafDark: '#14532d', bloom: '#84cc16' };
+            case 'Willow': return { trunk: '#292524', leaf: '#65a30d', leafLight: '#a3e635', leafDark: '#3f6212', bloom: '#bef264' };
+            case 'Bonsai': return { trunk: '#27272a', leaf: '#065f46', leafLight: '#10b981', leafDark: '#022c22', bloom: '#d1fae5' };
             default: return { trunk: '#45220c', leaf: '#15803d', leafLight: '#4ade80', leafDark: '#064e3b', bloom: '#a7f3d0' };
         }
     };

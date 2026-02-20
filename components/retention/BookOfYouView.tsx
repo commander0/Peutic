@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { UserService } from '../../services/userService';
 import { User, JournalEntry, MoodEntry, GardenState } from '../../types';
-import { BookOpen, Lock, Sun, CloudRain, ChevronLeft, Download } from 'lucide-react';
+import { BookOpen, Lock, Sun, CloudRain, ChevronLeft, Download, Sparkles } from 'lucide-react';
+import { generateBookOfYouSummary } from '../../services/geminiService';
 
 interface BookOfYouViewProps {
     user: User;
@@ -18,6 +19,8 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
     const [moodRatio, setMoodRatio] = useState({ sun: 0, rain: 0 }); // Percentages
     const [currentVolume, setCurrentVolume] = useState(0); // 0 is the oldest week, maxVolume is the current week
     const [maxVolume, setMaxVolume] = useState(0);
+    const [narrative, setNarrative] = useState<string | null>(null);
+    const [isGeneratingNarrative, setIsGeneratingNarrative] = useState(false);
 
     // Store ALL data locally to avoid re-fetching when paginating
     const [allJournals, setAllJournals] = useState<JournalEntry[]>([]);
@@ -89,9 +92,27 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                 }
             }
             setLoading(false);
+            setNarrative(null); // Reset narrative when volume changes
         };
         loadData();
     }, [user, currentVolume]); // Re-run filtering when volume changes
+
+    const handleGenerateNarrative = async () => {
+        setIsGeneratingNarrative(true);
+        try {
+            const contextData = JSON.stringify({
+                journals: journals.map(j => j.content),
+                moods: moods.map(m => m.mood)
+            });
+            const text = await generateBookOfYouSummary(user.name, contextData, user.id);
+            setNarrative(text);
+        } catch (e) {
+            console.error("Narrative Gen Error:", e);
+            setNarrative("The ink refuses to dry today. Your reflections are safely stored, but synthesis is currently resting.");
+        } finally {
+            setIsGeneratingNarrative(false);
+        }
+    };
 
     if (loading) return (
         <div className="fixed inset-0 z-[120] bg-black flex items-center justify-center font-serif text-white/50 animate-pulse">
@@ -272,12 +293,34 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                     </div>
 
                     {/* CHAPTER 3: VISIONS & CONCLUSION */}
-                    <div className="mt-8 md:mt-auto pt-8 border-t border-amber-900/10 dark:border-stone-800 text-center relative z-10 pointer-events-none">
-                        <div className="w-6 h-6 lg:w-8 lg:h-8 border border-amber-900/20 dark:border-stone-700 bg-transparent mx-auto mb-3 lg:mb-4 flex items-center justify-center rounded-sm rotate-45 shadow-sm">
+                    <div className="mt-8 md:mt-auto pt-8 border-t border-amber-900/10 dark:border-stone-800 text-center relative z-10 pointer-events-auto">
+                        <div className="w-6 h-6 lg:w-8 lg:h-8 border border-amber-900/20 dark:border-stone-700 bg-transparent mx-auto mb-3 lg:mb-4 flex items-center justify-center rounded-sm rotate-45 shadow-sm pointer-events-none">
                             <div className="-rotate-45"><BookOpen className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-amber-900/40 dark:text-stone-500" /></div>
                         </div>
-                        <p className="font-serif italic text-amber-900/60 dark:text-stone-400 text-xs lg:text-sm drop-shadow-sm">Chronicle complete.</p>
-                        <p className="font-sans text-[7px] lg:text-[8px] uppercase tracking-[0.3em] font-bold text-amber-900/30 dark:text-stone-600 mt-2">Peutic Archives // Vol. {currentVolume + 1}</p>
+
+                        {narrative ? (
+                            <div className="text-left bg-amber-900/5 dark:bg-stone-800/30 p-4 lg:p-6 rounded-sm border border-amber-900/10 dark:border-stone-700 shadow-inner">
+                                {narrative.split('\n\n').map((paragraph, idx) => (
+                                    <p key={idx} className="font-serif text-amber-950/80 dark:text-stone-300 text-xs lg:text-sm leading-relaxed mb-3 last:mb-0">
+                                        {paragraph}
+                                    </p>
+                                ))}
+                            </div>
+                        ) : (
+                            <button
+                                onClick={handleGenerateNarrative}
+                                disabled={isGeneratingNarrative || (journals.length === 0 && moods.length === 0)}
+                                className="group mx-auto px-6 py-3 bg-amber-900/10 hover:bg-amber-900/20 dark:bg-stone-800 dark:hover:bg-stone-700 disabled:opacity-50 disabled:cursor-not-allowed border border-amber-900/20 dark:border-stone-600 rounded-sm font-serif italic text-amber-900 dark:text-stone-300 transition-all flex items-center gap-2 shadow-sm"
+                            >
+                                {isGeneratingNarrative ? (
+                                    <><Sparkles className="w-4 h-4 animate-spin" /> Weaving your tale...</>
+                                ) : (
+                                    <><Sparkles className="w-4 h-4 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" /> Synthesize Chronicle</>
+                                )}
+                            </button>
+                        )}
+
+                        <p className="font-sans text-[7px] lg:text-[8px] uppercase tracking-[0.3em] font-bold text-amber-900/30 dark:text-stone-600 mt-6 pointer-events-none">Peutic Archives // Vol. {currentVolume + 1}</p>
                     </div>
 
                 </div>
