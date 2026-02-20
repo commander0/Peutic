@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play } from 'lucide-react';
-import { User } from '../types';
+import { User, Lumina } from '../types';
 import { UserService } from '../services/userService';
 
 interface CloudHopGameProps {
     dashboardUser: User;
+    lumina?: Lumina | null;
 }
 
-const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
+const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser, lumina }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const requestRef = useRef<number | undefined>(undefined);
     const [score, setScore] = useState(0);
@@ -61,7 +62,8 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
         const basePlatW = isMobile ? 80 : 100;
         platformsRef.current = [{ x: 0, y: H - 30, w: W, h: 30, type: 'ground' }];
         let py = H - 80;
-        while (py > -2000) {
+        const cloudGap = isMobile ? 60 : (W > 800 ? 50 : 70); // denser on desktop
+        while (py > -3000) { // go higher too!
             platformsRef.current.push({
                 x: Math.random() * (W - basePlatW),
                 y: py,
@@ -70,7 +72,19 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
                 type: Math.random() > 0.9 ? 'moving' : 'cloud',
                 vx: Math.random() > 0.5 ? 1 : -1
             });
-            py -= (isMobile ? 60 : 70) + Math.random() * 25;
+
+            // Spawn extra parallel clouds on wide screens for density
+            if (W > 800 && Math.random() > 0.4) {
+                platformsRef.current.push({
+                    x: Math.random() * (W - basePlatW),
+                    y: py + (Math.random() * 30 - 15),
+                    w: basePlatW + Math.random() * 30,
+                    h: 15,
+                    type: Math.random() > 0.8 ? 'moving' : 'cloud',
+                    vx: Math.random() > 0.5 ? 1 : -1
+                });
+            }
+            py -= cloudGap + Math.random() * 25;
         }
         playerRef.current = { x: W / 2 - (pSize / 2), y: H - 80, vx: 0, vy: 0, width: pSize, height: pSize };
         setScore(0);
@@ -158,16 +172,25 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
                 if (pl.type === 'ground') { ctx.fillStyle = '#4ade80'; ctx.fillRect(pl.x, pl.y, pl.w, pl.h); }
                 else { drawCloud(pl.x, pl.y, pl.w, pl.h, pl.type); }
             });
-            ctx.shadowBlur = 10; ctx.shadowColor = 'white';
-            ctx.fillStyle = '#FACC15';
-            ctx.beginPath(); ctx.arc(p.x + p.width / 2, p.y + p.height / 2, p.width / 2, 0, Math.PI * 2); ctx.fill();
-            ctx.shadowBlur = 0; ctx.fillStyle = 'black';
-            const eyeOff = p.width * 0.2;
-            const eyeSize = p.width * 0.1;
-            ctx.beginPath(); ctx.arc(p.x + p.width / 2 - eyeOff, p.y + p.height / 2 - eyeOff, eyeSize, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(p.x + p.width / 2 + eyeOff, p.y + p.height / 2 - eyeOff, eyeSize, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(p.x + p.width / 2, p.y + p.height / 2 + eyeOff / 2, eyeOff * 0.8, 0, Math.PI);
-            ctx.lineWidth = 2; ctx.strokeStyle = 'black'; ctx.stroke();
+            ctx.shadowBlur = 0;
+            const speciesMap: Record<string, string> = {
+                'Holo-Hamu': '🐹',
+                'Digi-Dino': '🦖',
+                'Neo-Shiba': '🐕',
+                'Zen-Sloth': '🦥'
+            };
+            const emoji = lumina ? (speciesMap[lumina.species] || '🐹') : '🐹';
+
+            ctx.font = `${p.width * 1.2}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Add a soft glow behind the pet
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+            ctx.shadowBlur = 10;
+            ctx.fillText(emoji, p.x + p.width / 2, p.y + p.height / 2);
+            ctx.shadowBlur = 0;
+
             requestRef.current = requestAnimationFrame(update);
         };
         update();

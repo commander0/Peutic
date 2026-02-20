@@ -10,7 +10,7 @@
     --color-bg-base: #FFFBEB;
     /* Warm White */
     --color-text-base: #0A0A0A;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #fef3c7 0%, transparent 50vw), radial-gradient(circle at 100% 100%, #fde68a 0%, transparent 50vw);
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #fef3c7 0%, transparent 90vw), radial-gradient(circle at 100% 100%, #fde68a 0%, transparent 50vw);
 }
 
 /* GLOBAL DARK MODE OVERRIDES (Base Layer) */
@@ -31,7 +31,7 @@
     --color-primary-border: #fdee00;
     --color-bg-base: #FFFBEB;
     --color-text-base: #0A0A0A;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #fef3c7 0%, transparent 50vw), radial-gradient(circle at 100% 100%, #fde68a 0%, transparent 50vw);
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #fef3c7 0%, transparent 90vw), radial-gradient(circle at 100% 100%, #fde68a 0%, transparent 50vw);
 }
 
 [data-theme="sunshine"].dark,
@@ -41,7 +41,7 @@
     --color-bg-base: #141005;
     /* Deep Gold Black */
     --color-text-base: #FFFBEB;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #3f3205 0%, transparent 50vw), radial-gradient(circle at 100% 100%, #1a1500 0%, transparent 50vw);
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #3f3205 0%, transparent 90vw), radial-gradient(circle at 100% 100%, #1a1500 0%, transparent 50vw);
 }
 
 /* -----------------------------------------------------------------------------
@@ -53,7 +53,7 @@
     /* Changed from #FFF1F2 to Rose-100 */
     --color-primary-border: #FECDD3;
     --color-bg-base: #FFF1F2;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #fff1f2 0%, transparent 50vw), radial-gradient(circle at 100% 100%, #ffe4e6 0%, transparent 50vw);
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #fff1f2 0%, transparent 90vw), radial-gradient(circle at 100% 100%, #ffe4e6 0%, transparent 50vw);
 }
 
 [data-theme="rose"].dark,
@@ -73,7 +73,7 @@
     --color-primary-light: #e0f2fe;
     --color-primary-border: #7dd3fc;
     --color-bg-base: #f0f9ff;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #e0f2fe 0%, transparent 50vw), radial-gradient(circle at 100% 100%, #bae6fd 0%, transparent 50vw);
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #e0f2fe 0%, transparent 90vw), radial-gradient(circle at 100% 100%, #bae6fd 0%, transparent 50vw);
 }
 
 [data-theme="ocean"].dark,
@@ -82,7 +82,7 @@
     --color-primary-light: rgba(56, 189, 248, 0.2);
     --color-primary-border: rgba(56, 189, 248, 0.4);
     --color-bg-base: #0c4a6e;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #0c4a6e 0%, transparent 50vw), radial-gradient(circle at 100% 100%, #082f49 0%, transparent 50vw);
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #0c4a6e 0%, transparent 90vw), radial-gradient(circle at 100% 100%, #082f49 0%, transparent 50vw);
 }
 
 /* -----------------------------------------------------------------------------
@@ -93,7 +93,7 @@
     --color-primary-light: #d1fae5;
     --color-primary-border: #6ee7b7;
     --color-bg-base: #ecfdf5;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #d1fae5 0%, transparent 50vw), radial-gradient(circle at 100% 100%, #a7f3d0 0%, transparent 50vw);
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #d1fae5 0%, transparent 90vw), radial-gradient(circle at 100% 100%, #a7f3d0 0%, transparent 50vw);
 }
 
 [data-theme="forest"].dark,
@@ -102,7 +102,7 @@
     --color-primary-light: rgba(16, 185, 129, 0.2);
     --color-primary-border: rgba(16, 185, 129, 0.4);
     --color-bg-base: #064e3b;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #064e3b 0%, transparent 50vw), radial-gradient(circle at 100% 100%, #022c22 0%, transparent 50vw);
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #064e3b 0%, transparent 90vw), radial-gradient(circle at 100% 100%, #022c22 0%, transparent 50vw);
 }
 
 /* -----------------------------------------------------------------------------
@@ -113,7 +113,7 @@
     --color-primary-light: #FFF7ED;
     --color-primary-border: #FFEDD5;
     --color-bg-base: #fff8f4;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #fff7ed 0%, transparent 50vw), radial-gradient(circle at 100% 100%, #ffedd5 0%, transparent 50vw);
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #fff7ed 0%, transparent 90vw), radial-gradient(circle at 100% 100%, #ffedd5 0%, transparent 50vw);
 }
 
 [data-theme="sunset"].dark,
@@ -133,7 +133,7 @@
     --color-primary-light: #ede9fe;
     --color-primary-border: #c4b5fd;
     --color-bg-base: #f5f3ff;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #ede9fe 0%, transparent 50vw), radial-gradient(circle at 100% 100%, #ddd6fe 0%, transparent 50vw);
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #ede9fe 0%, transparent 90vw), radial-gradient(circle at 100% 100%, #ddd6fe 0%, transparent 50vw);
 }
 
 [data-theme="lavender"].dark,
@@ -142,7 +142,7 @@
     --color-primary-light: rgba(167, 139, 250, 0.2);
     --color-primary-border: rgba(167, 139, 250, 0.4);
     --color-bg-base: #2e1065;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #2e1065 0%, transparent 50vw), radial-gradient(circle at 100% 100%, #1e1b4b 0%, transparent 50vw);
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #2e1065 0%, transparent 90vw), radial-gradient(circle at 100% 100%, #1e1b4b 0%, transparent 50vw);
 }
 
 /* -----------------------------------------------------------------------------
@@ -154,7 +154,7 @@
     --color-primary-border: #22d3ee;
     --color-bg-base: #ffffff;
     --color-text-base: #080808;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #ecfeff 0%, transparent 50vw), radial-gradient(circle at 100% 100%, #cffafe 0%, transparent 50vw);
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #ecfeff 0%, transparent 90vw), radial-gradient(circle at 100% 100%, #cffafe 0%, transparent 50vw);
 }
 
 [data-theme="cyberpunk"].dark,
@@ -164,7 +164,7 @@
     --color-primary-border: #00f0ff;
     --color-bg-base: #050510;
     --color-text-base: #e0faff;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #050510 0%, transparent 50vw), radial-gradient(circle at 100% 100%, #001e1e 0%, transparent 50vw);
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #050510 0%, transparent 90vw), radial-gradient(circle at 100% 100%, #001e1e 0%, transparent 50vw);
 }
 
 /* -----------------------------------------------------------------------------
@@ -175,7 +175,7 @@
     --color-primary-light: #EEF2FF;
     --color-primary-border: #C7D2FE;
     --color-bg-base: #F5F7FF;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #eef2ff 0%, transparent 50vw), radial-gradient(circle at 100% 100%, #e0e7ff 0%, transparent 50vw);
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #eef2ff 0%, transparent 90vw), radial-gradient(circle at 100% 100%, #e0e7ff 0%, transparent 50vw);
 }
 
 [data-theme="midnight"].dark,
@@ -195,7 +195,7 @@
     --color-primary-light: #fefce8;
     --color-primary-border: #dcb068;
     --color-bg-base: #fffbf0;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #fffbf0 0%, transparent 50vw), radial-gradient(circle at 100% 100%, #aaaa8a 0%, transparent 50vw);
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #fffbf0 0%, transparent 90vw), radial-gradient(circle at 100% 100%, #aaaa8a 0%, transparent 50vw);
 }
 
 [data-theme="coffee"].dark,
@@ -216,7 +216,7 @@
     --color-primary-light: #f3e8ff;
     --color-primary-border: #d8b4fe;
     --color-bg-base: #faf5ff;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #f3e8ff 0%, transparent 50vw), radial-gradient(circle at 100% 100%, #e9d5ff 0%, transparent 50vw);
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #f3e8ff 0%, transparent 90vw), radial-gradient(circle at 100% 100%, #e9d5ff 0%, transparent 50vw);
 }
 
 [data-theme="royal"].dark,
@@ -226,7 +226,7 @@
     --color-primary-border: rgba(255, 215, 0, 0.5);
     --color-bg-base: #3b0764;
     --color-text-base: #fdf4ff;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #3b0764 0%, transparent 50vw), radial-gradient(circle at 100% 100%, #2e1065 0%, transparent 50vw);
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #3b0764 0%, transparent 90vw), radial-gradient(circle at 100% 100%, #2e1065 0%, transparent 50vw);
 }
 
 
