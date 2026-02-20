@@ -848,8 +848,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="space-y-4">
                                     <CollapsibleSection title="Spaces" icon={Zap} defaultOpen={false}>
                                         <div className="space-y-4">
-                                            {/* SPACES GRID (2 Rows of 3) */}
-                                            <div className="grid grid-cols-3 gap-1 md:gap-4">
+                                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
                                                 {/* TILE 1: ZEN BONZAI */}
                                                 {garden && (
                                                     <div
@@ -1124,12 +1123,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         <h3 className="font-black text-lg dark:text-primary">{t('sec_history')}</h3>
                                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Financials & Check-ins</span>
                                     </div>
-                                    <table className="w-full text-left">
-                                        <thead className="bg-gray-50 dark:bg-gray-800 text-xs font-bold text-gray-500 uppercase tracking-wider"><tr><th className="p-4 md:p-5">Date</th><th className="p-4 md:p-5">Description</th><th className="p-4 md:p-5 text-right">Amount</th><th className="p-4 md:p-5 text-right">Status</th></tr></thead>
-                                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                                            {transactions.length === 0 ? (<tr><td colSpan={4} className="p-8 text-center text-gray-400 text-sm italic">No records found.</td></tr>) : (transactions.map((tx) => (<tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"><td className="p-4 md:p-5 text-sm dark:text-gray-300 font-mono">{new Date(tx.date).toLocaleDateString()}</td><td className="p-4 md:p-5 text-sm font-bold dark:text-white">{tx.description}</td><td className={`p-4 md:p-5 text-sm text-right font-mono font-bold ${tx.amount > 0 ? 'text-green-500' : 'text-gray-900 dark:text-white'}`}>{tx.amount > 0 ? '+' : ''}{tx.amount}m</td><td className="p-4 md:p-5 text-right"><span className="px-2 py-1 rounded text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 uppercase tracking-wide">{tx.status}</span></td></tr>)))}
-                                        </tbody>
-                                    </table>
+                                    <div className="overflow-x-auto overflow-y-auto max-h-[400px] custom-scrollbar">
+                                        <table className="w-full text-left">
+                                            <thead className="bg-gray-50 dark:bg-gray-800 text-xs font-bold text-gray-500 uppercase tracking-wider sticky top-0 z-10"><tr><th className="p-4 md:p-5">Date</th><th className="p-4 md:p-5">Description</th><th className="p-4 md:p-5 text-right">Amount</th><th className="p-4 md:p-5 text-right">Status</th></tr></thead>
+                                            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                                {transactions.length === 0 ? (<tr><td colSpan={4} className="p-8 text-center text-gray-400 text-sm italic">No records found.</td></tr>) : (transactions.map((tx) => (<tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"><td className="p-4 md:p-5 text-sm dark:text-gray-300 font-mono">{new Date(tx.date).toLocaleDateString()}</td><td className="p-4 md:p-5 text-sm font-bold dark:text-white">{tx.description}</td><td className={`p-4 md:p-5 text-sm text-right font-mono font-bold ${tx.amount > 0 ? 'text-green-500' : 'text-gray-900 dark:text-white'}`}>{tx.amount > 0 ? '+' : ''}{tx.amount}m</td><td className="p-4 md:p-5 text-right"><span className="px-2 py-1 rounded text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 uppercase tracking-wide">{tx.status}</span></td></tr>)))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
 
                                 <div className="bg-white/70 dark:bg-gray-900/40 rounded-3xl border border-yellow-100/50 dark:border-gray-800/50 overflow-hidden backdrop-blur-md shadow-xl hover:shadow-2xl transition-shadow duration-500">

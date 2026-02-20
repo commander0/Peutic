@@ -90,29 +90,35 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                 } else {
                     setMoodRatio({ sun: 50, rain: 50 }); // Default balanced
                 }
+
+                // --- AUTO GENERATE NARRATIVE ---
+                if (weeklyJournals.length > 0 || weeklyMoods.length > 0) {
+                    setNarrative(null);
+                    setIsGeneratingNarrative(true);
+                    try {
+                        const contextData = JSON.stringify({
+                            journals: weeklyJournals.map(j => j.content),
+                            moods: weeklyMoods.map(m => m.mood)
+                        });
+                        const text = await generateBookOfYouSummary(user.name, contextData, user.id);
+                        setNarrative(text);
+                    } catch (e) {
+                        console.error("Narrative Gen Error:", e);
+                        setNarrative("The ink refuses to dry today. Your reflections are safely stored, but synthesis is currently resting.");
+                    } finally {
+                        setIsGeneratingNarrative(false);
+                    }
+                } else {
+                    setNarrative("This chapter is beautifully blank. The pages wait patiently for your reflections, when you are ready to write them.");
+                }
+
             }
             setLoading(false);
-            setNarrative(null); // Reset narrative when volume changes
         };
         loadData();
     }, [user, currentVolume]); // Re-run filtering when volume changes
 
-    const handleGenerateNarrative = async () => {
-        setIsGeneratingNarrative(true);
-        try {
-            const contextData = JSON.stringify({
-                journals: journals.map(j => j.content),
-                moods: moods.map(m => m.mood)
-            });
-            const text = await generateBookOfYouSummary(user.name, contextData, user.id);
-            setNarrative(text);
-        } catch (e) {
-            console.error("Narrative Gen Error:", e);
-            setNarrative("The ink refuses to dry today. Your reflections are safely stored, but synthesis is currently resting.");
-        } finally {
-            setIsGeneratingNarrative(false);
-        }
-    };
+    // handleGenerateNarrative function removed as it's now auto-generated above
 
     if (loading) return (
         <div className="fixed inset-0 z-[120] bg-black flex items-center justify-center font-serif text-white/50 animate-pulse">
@@ -298,27 +304,22 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                             <div className="-rotate-45"><BookOpen className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-amber-900/40 dark:text-stone-500" /></div>
                         </div>
 
-                        {narrative ? (
-                            <div className="text-left bg-amber-900/5 dark:bg-stone-800/30 p-4 lg:p-6 rounded-sm border border-amber-900/10 dark:border-stone-700 shadow-inner">
+                        {isGeneratingNarrative ? (
+                            <div className="py-12 flex flex-col items-center justify-center space-y-4">
+                                <Sparkles className="w-6 h-6 animate-spin text-amber-700/60 dark:text-stone-400" />
+                                <p className="font-serif italic text-amber-900/60 dark:text-stone-400 text-sm">Weaving your chronicle together...</p>
+                            </div>
+                        ) : narrative ? (
+                            <div className="text-left bg-gradient-to-b from-transparent via-[#fdfaf6]/30 to-transparent dark:via-[#1a1817]/30 p-4 lg:p-8 relative">
+                                <div className="absolute top-0 left-10 w-8 h-px bg-amber-900/20 dark:bg-stone-700"></div>
+                                <div className="absolute top-0 right-10 w-8 h-px bg-amber-900/20 dark:bg-stone-700"></div>
                                 {narrative.split('\n\n').map((paragraph, idx) => (
-                                    <p key={idx} className="font-serif text-amber-950/80 dark:text-stone-300 text-xs lg:text-sm leading-relaxed mb-3 last:mb-0">
+                                    <p key={idx} className={`font-serif text-amber-950 dark:text-stone-200 text-sm lg:text-base leading-loose mb-6 last:mb-0 relative z-10 ${idx === 0 ? 'first-letter:text-4xl first-letter:font-bold first-letter:float-left first-letter:mr-2 tracking-wide' : 'tracking-wide indent-8'}`}>
                                         {paragraph}
                                     </p>
                                 ))}
                             </div>
-                        ) : (
-                            <button
-                                onClick={handleGenerateNarrative}
-                                disabled={isGeneratingNarrative || (journals.length === 0 && moods.length === 0)}
-                                className="group mx-auto px-6 py-3 bg-amber-900/10 hover:bg-amber-900/20 dark:bg-stone-800 dark:hover:bg-stone-700 disabled:opacity-50 disabled:cursor-not-allowed border border-amber-900/20 dark:border-stone-600 rounded-sm font-serif italic text-amber-900 dark:text-stone-300 transition-all flex items-center gap-2 shadow-sm"
-                            >
-                                {isGeneratingNarrative ? (
-                                    <><Sparkles className="w-4 h-4 animate-spin" /> Weaving your tale...</>
-                                ) : (
-                                    <><Sparkles className="w-4 h-4 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" /> Synthesize Chronicle</>
-                                )}
-                            </button>
-                        )}
+                        ) : null}
 
                         <p className="font-sans text-[7px] lg:text-[8px] uppercase tracking-[0.3em] font-bold text-amber-900/30 dark:text-stone-600 mt-6 pointer-events-none">Peutic Archives // Vol. {currentVolume + 1}</p>
                     </div>
