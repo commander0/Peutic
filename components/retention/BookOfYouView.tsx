@@ -26,105 +26,110 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
     const [allJournals, setAllJournals] = useState<JournalEntry[]>([]);
     const [allMoods, setAllMoods] = useState<MoodEntry[]>([]);
 
+    const [dataLoaded, setDataLoaded] = useState(false);
+
+    // 1. Fetch data only once
     useEffect(() => {
-        const loadData = async () => {
-            if (user) {
-                // Fetch ALL data once
-                let j = allJournals;
-                let m = allMoods;
+        const fetchInitialData = async () => {
+            if (!user) return;
+            const [fetchedJ, fetchedM] = await Promise.all([
+                UserService.getJournals(user.id),
+                UserService.getMoods(user.id)
+            ]);
 
-                if (j.length === 0 && m.length === 0) {
-                    const [fetchedJ, fetchedM] = await Promise.all([
-                        UserService.getJournals(user.id),
-                        UserService.getMoods(user.id)
-                    ]);
-                    j = fetchedJ;
-                    m = fetchedM;
-                    setAllJournals(j);
-                    setAllMoods(m);
+            setAllJournals(fetchedJ);
+            setAllMoods(fetchedM);
+
+            // Determine oldest date for Volume 0
+            let oldestDate = new Date(user.joinedAt).getTime();
+            if (fetchedJ.length > 0 || fetchedM.length > 0) {
+                const oldestJ = fetchedJ.length > 0 ? Math.min(...fetchedJ.map(entry => new Date(entry.date).getTime())) : Infinity;
+                const oldestM = fetchedM.length > 0 ? Math.min(...fetchedM.map(entry => new Date(entry.date).getTime())) : Infinity;
+                const oldestDataDate = Math.min(oldestJ, oldestM);
+                if (oldestDataDate < oldestDate) oldestDate = oldestDataDate;
+            }
+
+            const now = Date.now();
+            const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+            const weeksSinceJoin = Math.floor((now - oldestDate) / msPerWeek);
+
+            setMaxVolume(weeksSinceJoin);
+            setCurrentVolume(weeksSinceJoin); // start at latest
+            setIsLocked(false);
+            setDataLoaded(true);
+        };
+        fetchInitialData();
+    }, [user]);
+
+    // 2. Filter data and generate narrative whenever currentVolume changes
+    useEffect(() => {
+        if (!dataLoaded || !user) return;
+
+        setLoading(true);
+
+        const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+
+        let oldestDate = new Date(user.joinedAt).getTime();
+        if (allJournals.length > 0 || allMoods.length > 0) {
+            const oldestJ = allJournals.length > 0 ? Math.min(...allJournals.map(entry => new Date(entry.date).getTime())) : Infinity;
+            const oldestM = allMoods.length > 0 ? Math.min(...allMoods.map(entry => new Date(entry.date).getTime())) : Infinity;
+            const oldestDataDate = Math.min(oldestJ, oldestM);
+            if (oldestDataDate < oldestDate) oldestDate = oldestDataDate;
+        }
+
+        const volumeWeekStart = oldestDate + (currentVolume * msPerWeek);
+        const volumeWeekEnd = volumeWeekStart + msPerWeek;
+
+        const weeklyJournals = allJournals.filter(item => {
+            const d = new Date(item.date).getTime();
+            return d >= volumeWeekStart && d < volumeWeekEnd;
+        });
+
+        const weeklyMoods = allMoods.filter(item => {
+            const d = new Date(item.date).getTime();
+            return d >= volumeWeekStart && d < volumeWeekEnd;
+        });
+
+        setJournals(weeklyJournals);
+        setMoods(weeklyMoods);
+
+        const total = weeklyMoods.length;
+        if (total > 0) {
+            const sunCount = weeklyMoods.filter(x => x.mood && ['Happy', 'Calm', 'confetti', 'sun'].includes(x.mood)).length;
+            const sunPct = (sunCount / total) * 100;
+            setMoodRatio({ sun: sunPct, rain: 100 - sunPct });
+        } else {
+            setMoodRatio({ sun: 50, rain: 50 });
+        }
+
+        const generateNarrative = async () => {
+            if (weeklyJournals.length > 0 || weeklyMoods.length > 0) {
+                setNarrative(null);
+                setIsGeneratingNarrative(true);
+                try {
+                    const contextData = JSON.stringify({
+                        volumeSequence: currentVolume + 1,
+                        entropyToken: Math.random().toString(36).substring(7),
+                        journals: weeklyJournals.map(j => j.content),
+                        moods: weeklyMoods.map(m => m.mood)
+                    });
+                    const text = await generateBookOfYouSummary(user.name, contextData, user.id);
+                    setNarrative(text);
+                } catch (e) {
+                    console.error("Narrative Gen Error:", e);
+                    setNarrative("The ink refuses to dry today. Your reflections are safely stored, but synthesis is currently resting.");
+                } finally {
+                    setIsGeneratingNarrative(false);
                 }
-
-                // 1. Calculate Current Cycle
-                let oldestDate = new Date(user.joinedAt).getTime();
-                if (j.length > 0 || m.length > 0) {
-                    const oldestJ = j.length > 0 ? Math.min(...j.map(entry => new Date(entry.date).getTime())) : Infinity;
-                    const oldestM = m.length > 0 ? Math.min(...m.map(entry => new Date(entry.date).getTime())) : Infinity;
-                    const oldestDataDate = Math.min(oldestJ, oldestM);
-                    if (oldestDataDate < oldestDate) oldestDate = oldestDataDate;
-                }
-
-                const now = Date.now();
-                const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-
-                // Determine how many weeks have passed since the first interaction
-                const weeksSinceJoin = Math.floor((now - oldestDate) / msPerWeek);
-                setMaxVolume(weeksSinceJoin);
-
-                // On initial load, start at the most recent volume
-                if (allJournals.length === 0 && allMoods.length === 0) {
-                    setCurrentVolume(weeksSinceJoin);
-                }
-
-                // Unlock logic: Always unlocked for user satisfaction, but content resets weekly.
-                setIsLocked(false);
-
-
-                // Calculate the start and end of the SELECTED volume
-                const volumeWeekStart = oldestDate + (currentVolume * msPerWeek);
-                const volumeWeekEnd = volumeWeekStart + msPerWeek;
-
-                // 2. Filter Data for Selected Week Cycle
-                const weeklyJournals = j.filter(item => {
-                    const d = new Date(item.date).getTime();
-                    return d >= volumeWeekStart && d < volumeWeekEnd;
-                });
-
-                const weeklyMoods = m.filter(item => {
-                    const d = new Date(item.date).getTime();
-                    return d >= volumeWeekStart && d < volumeWeekEnd;
-                });
-
-                setJournals(weeklyJournals);
-                setMoods(weeklyMoods);
-
-                // Calculate Mood Ratio for this week
-                const total = weeklyMoods.length;
-                if (total > 0) {
-                    const sunCount = weeklyMoods.filter(x => x.mood && ['Happy', 'Calm', 'confetti', 'sun'].includes(x.mood)).length;
-                    const sunPct = (sunCount / total) * 100;
-                    setMoodRatio({ sun: sunPct, rain: 100 - sunPct });
-                } else {
-                    setMoodRatio({ sun: 50, rain: 50 }); // Default balanced
-                }
-
-                // --- AUTO GENERATE NARRATIVE ---
-                if (weeklyJournals.length > 0 || weeklyMoods.length > 0) {
-                    setNarrative(null);
-                    setIsGeneratingNarrative(true);
-                    try {
-                        const contextData = JSON.stringify({
-                            volumeSequence: currentVolume + 1,
-                            entropyToken: Math.random().toString(36).substring(7),
-                            journals: weeklyJournals.map(j => j.content),
-                            moods: weeklyMoods.map(m => m.mood)
-                        });
-                        const text = await generateBookOfYouSummary(user.name, contextData, user.id);
-                        setNarrative(text);
-                    } catch (e) {
-                        console.error("Narrative Gen Error:", e);
-                        setNarrative("The ink refuses to dry today. Your reflections are safely stored, but synthesis is currently resting.");
-                    } finally {
-                        setIsGeneratingNarrative(false);
-                    }
-                } else {
-                    setNarrative("This chapter is beautifully blank. The pages wait patiently for your reflections, when you are ready to write them.");
-                }
-
+            } else {
+                setNarrative("This chapter is beautifully blank. The pages wait patiently for your reflections, when you are ready to write them.");
             }
             setLoading(false);
         };
-        loadData();
-    }, [user, currentVolume]); // Re-run filtering when volume changes
+
+        generateNarrative();
+
+    }, [currentVolume, dataLoaded, allJournals, allMoods, user]);
 
     // handleGenerateNarrative function removed as it's now auto-generated above
 

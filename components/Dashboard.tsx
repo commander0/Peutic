@@ -1522,7 +1522,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             {
                 showDojo && (
                     <Suspense fallback={null}>
-                        <DojoView user={dashboardUser} onClose={() => setShowDojo(false)} />
+                        <DojoView user={dashboardUser} onClose={() => setShowDojo(false)} onUpdate={refreshData} />
                     </Suspense>
                 )
             }

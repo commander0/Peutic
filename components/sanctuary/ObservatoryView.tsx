@@ -146,9 +146,16 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                         <div className={`w-72 h-32 md:w-96 md:h-40 bg-gradient-to-b from-purple-950 via-stone-900/80 to-transparent rounded-[50%_50%_0_0] -mt-12 md:-mt-16 blur-md transition-all duration-[3000ms] ${isReading ? 'opacity-80' : 'opacity-50'}`}></div>
                     </div>
 
-                    {/* A. FLOATING HANDS (Now Fortune Teller Hands) */}
-                    <div className={`absolute -left-16 md:-left-28 top-1/4 w-28 h-40 md:w-32 md:h-48 bg-gradient-to-t from-purple-900/0 via-purple-900/40 to-indigo-500/20 blur-xl rounded-full transition-all duration-[2000ms] ease-in-out ${isReading ? 'translate-x-[40px] md:translate-x-[60px] translate-y-4 rotate-[35deg] opacity-90 animate-pulse' : 'rotate-12 opacity-20'}`}></div>
-                    <div className={`absolute -right-16 md:-right-28 top-1/4 w-28 h-40 md:w-32 md:h-48 bg-gradient-to-t from-purple-900/0 via-purple-900/40 to-indigo-500/20 blur-xl rounded-full transition-all duration-[2000ms] ease-in-out ${isReading ? '-translate-x-[40px] md:-translate-x-[60px] translate-y-4 -rotate-[35deg] opacity-90 animate-pulse' : '-rotate-12 opacity-20'}`}></div>
+                    {/* A. FLOATING HANDS (Visible Silhouettes) */}
+                    <div className={`absolute -left-12 md:-left-24 top-1/3 w-20 h-40 md:w-28 md:h-48 bg-gradient-to-b from-stone-900 via-indigo-950 to-purple-900 rounded-[50%_50%_40%_40%_/_70%_70%_30%_30%] blur-[2px] shadow-[0_0_30px_rgba(0,0,0,0.8)] transition-all duration-[2000ms] ease-in-out z-10 ${isReading ? 'translate-x-[40px] md:translate-x-[70px] -translate-y-8 rotate-[45deg] opacity-100 drop-shadow-[0_0_20px_rgba(79,70,229,0.4)]' : 'rotate-[20deg] opacity-40'}`}>
+                        {/* Finger detail illusion */}
+                        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-indigo-500/10 rounded-full blur-[4px]"></div>
+                    </div>
+
+                    <div className={`absolute -right-12 md:-right-24 top-1/3 w-20 h-40 md:w-28 md:h-48 bg-gradient-to-b from-stone-900 via-indigo-950 to-purple-900 rounded-[50%_50%_40%_40%_/_70%_70%_30%_30%] blur-[2px] shadow-[0_0_30px_rgba(0,0,0,0.8)] transition-all duration-[2000ms] ease-in-out z-10 ${isReading ? '-translate-x-[40px] md:-translate-x-[70px] -translate-y-8 -rotate-[45deg] opacity-100 drop-shadow-[0_0_20px_rgba(79,70,229,0.4)]' : '-rotate-[20deg] opacity-40'}`}>
+                        {/* Finger detail illusion */}
+                        <div className="absolute top-0 left-0 w-1/2 h-1/2 bg-indigo-500/10 rounded-full blur-[4px]"></div>
+                    </div>
 
                     {/* B. THE CRYSTAL BALL (High Fidelity) */}
                     <div className={`relative group w-72 h-72 md:w-96 md:h-96 rounded-full transition-all duration-[2000ms] ${isReading ? 'scale-110 drop-shadow-[0_0_50px_rgba(79,70,229,0.5)]' : 'hover:scale-105'} z-20`}>

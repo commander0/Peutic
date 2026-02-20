@@ -10,9 +10,10 @@ import SanctuaryShop, { SANCTUARY_ITEMS } from './SanctuaryShop';
 interface DojoViewProps {
     user: User;
     onClose: () => void;
+    onUpdate?: () => void;
 }
 
-const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
+const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
     const { showToast } = useToast();
     const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 mins
     const [selectedMins, setSelectedMins] = useState(25);
@@ -99,12 +100,12 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
             osc.stop(now + dur);
         };
 
-        // Create a rich, resonant chord
-        const baseFreq = 160;
-        cast(baseFreq, 0, 8, 0.4);       // Fundamental
-        cast(baseFreq * 1.5, 0.05, 7, 0.2); // Fifth
-        cast(baseFreq * 2, 0.1, 6, 0.1);    // Octave
-        cast(baseFreq * 2.5, 0.15, 5, 0.05); // Major 10th
+        // Create a rich, bright resonant bell (Higher pitch so it's audible)
+        const baseFreq = 523.25; // C5 - Much brighter and chime-like
+        cast(baseFreq, 0, 5, 0.7);       // Fundamental
+        cast(baseFreq * 2.01, 0.05, 4, 0.4); // Overtones
+        cast(baseFreq * 3.02, 0.1, 3, 0.1);  // High sparkle
+        cast(baseFreq * 4.05, 0.15, 2, 0.05);
     };
 
     const stopAudio = () => {
@@ -419,7 +420,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                 <SanctuaryShop
                     user={localUser}
                     onClose={() => setShowShop(false)}
-                    onPurchaseUpdate={(u) => setLocalUser(u)}
+                    onPurchaseUpdate={(u) => { setLocalUser(u); onUpdate?.(); }}
                 />
             )}
         </div>
