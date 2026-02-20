@@ -14,15 +14,15 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
     const getSpeciesColor = (species: string, level: number) => {
         const isApex = level >= 10;
         switch (species) {
-            case 'Neo-Shiba': return isApex ? '#d97706' : '#fbbf24'; // Gold/Orange
-            case 'Digi-Dino': return isApex ? '#166534' : '#4ade80'; // Green
-            case 'Holo-Hamu': return isApex ? '#db2777' : '#f472b6'; // Pink
-            case 'Zen-Sloth': return '#a8a29e';
-            default: return '#fbbf24';
+            case 'Neo-Shiba': return { p: isApex ? '#f59e0b' : '#fbbf24', s: isApex ? '#b45309' : '#d97706', g: '#fcd34d' };
+            case 'Digi-Dino': return { p: isApex ? '#10b981' : '#4ade80', s: isApex ? '#047857' : '#16a34a', g: '#6ee7b7' };
+            case 'Holo-Hamu': return { p: isApex ? '#ec4899' : '#f472b6', s: isApex ? '#be185d' : '#db2777', g: '#fbcfe8' };
+            case 'Zen-Sloth': return { p: '#a8a29e', s: '#78716c', g: '#e7e5e4' };
+            default: return { p: '#fbbf24', s: '#d97706', g: '#fcd34d' };
         }
     };
 
-    const color = getSpeciesColor(pet.species, pet.level);
+    const c = getSpeciesColor(pet.species, pet.level);
 
     // Bouncy animation based on emotion
     const bounceClass = emotion === 'sleeping' ? 'animate-pulse-slow' : 'animate-[bounce_2s_infinite]';
@@ -32,83 +32,88 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
     return (
         <div style={{ width, height, perspective: '1000px' }} className="relative flex items-center justify-center">
 
-            {/* Holographic Base Grid/Scanlines */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.1)_0%,transparent_70%)] rounded-full pointer-events-none" />
+            {/* High Fidelity Holographic Base */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.15)_0%,transparent_60%)] rounded-full pointer-events-none" />
+
+            {/* Ambient Particles */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                {[...Array(5)].map((_, i) => (
+                    <div key={i} className="absolute w-1 h-1 bg-cyan-400 rounded-full animate-particle-float opacity-0" style={{
+                        left: `${20 + Math.random() * 60}%`,
+                        animationDelay: `${Math.random() * 4}s`,
+                        animationDuration: `${3 + Math.random() * 3}s`
+                    }} />
+                ))}
+            </div>
 
             <div className={`relative transition-all duration-700 w-full h-[80%] flex items-center justify-center ${bounceClass} ${trickClass} ${sadClass}`}>
 
                 {/* Pet scalable SVG container */}
-                <svg viewBox="0 0 100 100" className="w-[80%] h-[80%] filter drop-shadow-[0_0_15px_rgba(6,182,212,0.4)] overflow-visible">
+                <svg viewBox="0 0 100 100" className={`w-[85%] h-[85%] filter ${pet.level >= 10 ? 'drop-shadow-[0_0_25px_rgba(6,182,212,0.6)]' : 'drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]'} overflow-visible`}>
 
-                    {/* Level 1-2: EGG */}
+                    <defs>
+                        <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor={c.p} />
+                            <stop offset="100%" stopColor={c.s} />
+                        </linearGradient>
+                        <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stopColor={c.g} stopOpacity="1" />
+                            <stop offset="100%" stopColor={c.p} stopOpacity="0" />
+                        </radialGradient>
+                    </defs>
+
+                    {/* Level 1-2: EGG (Core + Orbital Ring) */}
                     {pet.level < 3 && (
-                        <g className="origin-center" style={{ transform: 'translate(50px, 60px)' }}>
-                            <path d="M -15 -20 Q 0 -50 15 -20 Q 20 20 0 20 Q -20 20 -15 -20" fill="#f1f5f9" />
-                            <circle cx="-5" cy="-5" r="4" fill="#94a3b8" />
-                            <circle cx="8" cy="5" r="3" fill="#38bdf8" />
+                        <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
+                            <ellipse cx="0" cy="0" rx="15" ry="20" fill="url(#bodyGrad)" className="animate-pulse" />
+                            <circle cx="0" cy="0" r="25" fill="none" stroke={c.g} strokeWidth="2" strokeDasharray="10 5" className="animate-[spin_4s_linear_infinite]" />
+                            <circle cx="0" cy="0" r="30" fill="none" stroke={c.s} strokeWidth="1" strokeDasharray="5 15" className="animate-[spin_6s_linear_infinite_reverse]" />
+                            <circle cx="0" cy="0" r="5" fill="#fff" className="animate-ping" />
                         </g>
                     )}
 
-                    {/* Level 3-5: BABY BLOB */}
+                    {/* Level 3-5: BABY BLOB (Soft Droplet) */}
                     {pet.level >= 3 && pet.level < 6 && (
                         <g className="origin-center" style={{ transform: 'translate(50px, 60px)' }}>
-                            <rect x="-20" y="-15" width="40" height="35" rx="15" fill={color} />
-                            {/* Nubs */}
-                            <circle cx="-16" cy="-15" r="6" fill={color} />
-                            <circle cx="16" cy="-15" r="6" fill={color} />
-
+                            <path d="M 0 -25 Q 20 -25 20 0 Q 20 20 0 20 Q -20 20 -20 0 Q -20 -25 0 -25 Z" fill="url(#bodyGrad)" />
+                            {/* Inner Glow */}
+                            <circle cx="0" cy="-5" r="10" fill="url(#coreGlow)" opacity="0.6" />
                             <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} />
                         </g>
                     )}
 
-                    {/* Level 6-9: TEEN */}
+                    {/* Level 6-9: TEEN (Geometric Entity) */}
                     {pet.level >= 6 && pet.level < 10 && (
                         <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
-                            <rect x="-25" y="-20" width="50" height="45" rx="10" fill={color} />
+                            {/* Floating Pods */}
+                            <path d="M -30 -10 L -20 -20 L -15 -5 Z" fill={c.s} className="animate-float" style={{ animationDelay: '0.5s' }} />
+                            <path d="M 30 -10 L 20 -20 L 15 -5 Z" fill={c.s} className="animate-float" style={{ animationDelay: '1s' }} />
 
-                            {pet.species === 'Neo-Shiba' && (
-                                <>
-                                    <polygon points="-25,-10 -15,-30 -5,-20" fill={color} />
-                                    <polygon points="25,-10 15,-30 5,-20" fill={color} />
-                                    {/* Tail */}
-                                    <path d="M 20 15 Q 35 15 35 5" fill="none" stroke="#fbbf24" strokeWidth="6" strokeLinecap="round" className="animate-[pulse_0.5s_infinite]" />
-                                </>
-                            )}
-                            {pet.species === 'Digi-Dino' && (
-                                <>
-                                    <polygon points="0,-20 -10,-35 10,-35" fill="#bef264" />
-                                    <polygon points="10,-10 20,-20 25,-10" fill="#bef264" />
-                                </>
-                            )}
+                            {/* Main Body */}
+                            <rect x="-22" y="-22" width="44" height="44" rx="12" fill="url(#bodyGrad)" />
+                            <rect x="-18" y="-18" width="36" height="36" rx="8" fill="none" stroke={c.g} strokeWidth="2" opacity="0.5" />
 
-                            <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.2} />
+                            <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.1} />
                         </g>
                     )}
 
-                    {/* Level 10+: MASTER */}
+                    {/* Level 10+: MASTER (Sacred Geometry / Apex) */}
                     {pet.level >= 10 && (
                         <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
-                            <rect x="-35" y="-30" width="70" height="60" rx="20" fill={color} className="filter drop-shadow-[0_0_20px_rgba(255,255,255,0.7)]" />
+                            {/* Aura Rings */}
+                            <circle cx="0" cy="0" r="45" fill="none" stroke={c.g} strokeWidth="1" opacity="0.3" className="animate-[spin_10s_linear_infinite]" strokeDasharray="5 20" />
+                            <circle cx="0" cy="0" r="38" fill="none" stroke={c.s} strokeWidth="2" opacity="0.5" className="animate-[spin_7s_linear_infinite_reverse]" strokeDasharray="30 10" />
 
-                            {pet.species === 'Neo-Shiba' && (
-                                <>
-                                    <polygon points="-35,-10 -20,-45 -5,-30" fill={color} />
-                                    <polygon points="35,-10 20,-45 5,-30" fill={color} />
-                                    {/* Scarf */}
-                                    <rect x="-32" y="10" width="60" height="12" rx="4" fill="#ef4444" />
-                                    <path d="M 20 20 L 35 40 L 25 45 Z" fill="#ef4444" className="animate-[bounce_1s_infinite]" />
-                                </>
-                            )}
-                            {pet.species === 'Digi-Dino' && (
-                                <>
-                                    <polygon points="-5,-30 -15,-50 15,-50" fill="#166534" />
-                                    <polygon points="15,-20 30,-30 35,-10" fill="#166534" />
-                                    {/* Aura Spikes */}
-                                    <path d="M -20 -20 Q -40 -40 -10 -40" fill="none" stroke="#4ade80" strokeWidth="5" className="animate-pulse" />
-                                </>
-                            )}
+                            {/* Cy-Wings */}
+                            <path d="M -25 0 Q -45 -30 -20 -45 Q -15 -20 -25 0 Z" fill={c.s} className="animate-[pulse_1.5s_infinite]" style={{ transformOrigin: '0 0' }} />
+                            <path d="M 25 0 Q 45 -30 20 -45 Q 15 -20 25 0 Z" fill={c.s} className="animate-[pulse_1.5s_infinite]" style={{ transformOrigin: '0 0' }} />
 
-                            <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.5} />
+                            {/* Apex Body */}
+                            <path d="M 0 -35 L 30 0 L 0 35 L -30 0 Z" fill="url(#bodyGrad)" className="drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
+                            <circle cx="0" cy="0" r="18" fill={c.p} className="animate-pulse" />
+                            <circle cx="0" cy="0" r="12" fill="url(#coreGlow)" />
+
+                            <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.4} />
                         </g>
                     )}
 
@@ -124,15 +129,15 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                 {/* Happy Hearts */}
                 {emotion === 'happy' && (
                     <>
-                        <div className="absolute top-[20%] right-[20%] text-pink-500 animate-bounce text-2xl">❤️</div>
-                        <div className="absolute top-[30%] left-[20%] text-pink-400 animate-[bounce_1s_infinite] text-lg">❤️</div>
+                        <div className="absolute top-[20%] right-[20%] text-pink-500 animate-bounce text-2xl drop-shadow-[0_0_5px_rgba(236,72,153,0.8)]">❤️</div>
+                        <div className="absolute top-[30%] left-[20%] text-pink-400 animate-[bounce_1s_infinite] text-lg drop-shadow-[0_0_5px_rgba(236,72,153,0.8)]">❤️</div>
                     </>
                 )}
                 {/* Sleep Zzz */}
                 {(pet.isSleeping || emotion === 'sleeping') && (
                     <>
-                        <div className="absolute top-[10%] right-[20%] text-cyan-500 animate-pulse text-2xl font-bold font-mono">Z</div>
-                        <div className="absolute top-[20%] right-[10%] text-cyan-400 animate-[pulse_2s_infinite] text-xl font-bold font-mono">z</div>
+                        <div className="absolute top-[10%] right-[20%] text-cyan-400 animate-pulse text-2xl font-black font-mono drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]">Z</div>
+                        <div className="absolute top-[20%] right-[10%] text-cyan-500 animate-[pulse_2s_infinite] text-xl font-bold font-mono drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]">z</div>
                     </>
                 )}
             </div>
@@ -140,29 +145,30 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
     );
 };
 
-// Subcomponent for the Face
+// Subcomponent for the Face (Upgraded to Digital LED style)
 const Face = ({ emotion, isSleeping, scale = 1 }: { emotion: string, isSleeping?: boolean, scale?: number }) => {
     return (
         <g style={{ transform: `scale(${scale})` }}>
             {isSleeping ? (
                 <>
-                    <path d="M -15 0 Q -10 5 -5 0" fill="none" stroke="#1e293b" strokeWidth="3" strokeLinecap="round" />
-                    <path d="M 5 0 Q 10 5 15 0" fill="none" stroke="#1e293b" strokeWidth="3" strokeLinecap="round" />
+                    <path d="M -15 0 Q -10 5 -5 0" fill="none" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
+                    <path d="M 5 0 Q 10 5 15 0" fill="none" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
                 </>
             ) : (
                 <>
-                    {/* Eyes */}
-                    <circle cx="-10" cy="-5" r="4" fill="#1e293b" className="animate-[pulse_4s_infinite]" />
-                    <circle cx="10" cy="-5" r="4" fill="#1e293b" className="animate-[pulse_4s_infinite]" />
-                    {/* White sparkles in eyes */}
-                    <circle cx="-12" cy="-7" r="1.5" fill="#ffffff" />
-                    <circle cx="8" cy="-7" r="1.5" fill="#ffffff" />
+                    {/* Digital Eyes */}
+                    <rect x="-14" y="-8" width="10" height="6" rx="2" fill="#0f172a" className={emotion === 'happy' ? '' : 'animate-[pulse_3s_infinite]'} />
+                    <rect x="4" y="-8" width="10" height="6" rx="2" fill="#0f172a" className={emotion === 'happy' ? '' : 'animate-[pulse_3s_infinite]'} />
+
+                    {/* Eye Highlights */}
+                    <rect x="-12" y="-6" width="3" height="2" fill="#38bdf8" />
+                    <rect x="6" y="-6" width="3" height="2" fill="#38bdf8" />
 
                     {/* Mouth */}
-                    {emotion === 'happy' && <path d="M -5 5 Q 0 12 5 5" fill="none" stroke="#1e293b" strokeWidth="3" strokeLinecap="round" />}
-                    {emotion === 'eating' && <circle cx="0" cy="8" r="4" fill="#ef4444" className="animate-pulse" />}
-                    {emotion === 'sad' && <path d="M -5 8 Q 0 3 5 8" fill="none" stroke="#1e293b" strokeWidth="3" strokeLinecap="round" />}
-                    {['idle', 'hungry'].includes(emotion) && <line x1="-3" y1="5" x2="3" y2="5" stroke="#1e293b" strokeWidth="3" strokeLinecap="round" />}
+                    {emotion === 'happy' && <path d="M -8 4 Q 0 12 8 4" fill="none" stroke="#0f172a" strokeWidth="3" strokeLinecap="round" />}
+                    {emotion === 'eating' && <ellipse cx="0" cy="6" rx="4" ry="6" fill="#0f172a" className="animate-pulse" />}
+                    {emotion === 'sad' && <path d="M -8 10 Q 0 4 8 10" fill="none" stroke="#0f172a" strokeWidth="3" strokeLinecap="round" />}
+                    {['idle', 'hungry'].includes(emotion) && <line x1="-4" y1="5" x2="4" y2="5" stroke="#0f172a" strokeWidth="3" strokeLinecap="round" />}
                 </>
             )}
         </g>

@@ -15,15 +15,17 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
     const progress = Math.min(garden.focusMinutes / maxMinutes, 1);
     const treeAge = 0.1 + (progress * 0.9); // 0.1 to 1.0
 
-    // Determine colors
-    const trunkColor = garden.currentPlantType === 'Fern' as any ? '#064e3b' : '#451a03';
-    const leafColor = garden.currentPlantType === 'Rose' as any ? '#be123c' :
-        garden.currentPlantType === 'Sunflower' as any ? '#ca8a04' :
-            '#15803d';
+    // Determine colors with high fidelity gradients
+    const getThemeColors = (type: string) => {
+        switch (type) {
+            case 'Fern': return { trunk: 'url(#trunkWood)', leaf: 'url(#leafFern)', bloom: 'url(#bloomFern)', glow: '#34d399' };
+            case 'Rose': return { trunk: 'url(#trunkWood)', leaf: 'url(#leafRose)', bloom: 'url(#bloomRose)', glow: '#fb7185' };
+            case 'Sunflower': return { trunk: 'url(#trunkWood)', leaf: 'url(#leafSun)', bloom: 'url(#bloomSun)', glow: '#facc15' };
+            default: return { trunk: 'url(#trunkWood)', leaf: 'url(#leafFern)', bloom: 'url(#bloomFern)', glow: '#34d399' };
+        }
+    };
 
-    const bloomColor = garden.currentPlantType === 'Rose' as any ? '#f43f5e' :
-        garden.currentPlantType === 'Sunflower' as any ? '#fde047' :
-            '#86efac';
+    const theme = getThemeColors(garden.currentPlantType as string);
 
     const generateDeterministicTree = (
         x: number, y: number, length: number, angle: number,
@@ -40,42 +42,42 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
         const x2 = x + Math.cos(angle) * scaledLength;
         const y2 = y + Math.sin(angle) * scaledLength;
 
-        const branchWidth = Math.max((maxDepth - depth) * 1.5 * treeAge, 0.5);
+        const branchWidth = Math.max((maxDepth - depth) * 1.8 * treeAge, 0.5);
 
         branches.push(
             <line
                 key={`b-${depth}-${index}`}
                 x1={x} y1={y} x2={x2} y2={y2}
-                stroke={trunkColor}
+                stroke={theme.trunk}
                 strokeWidth={branchWidth}
                 strokeLinecap="round"
+                className="transition-all duration-1000"
             />
         );
 
         if (depth === maxDepth - 1 && treeAge > 0.3) {
-            const leafSize = (2 + pseudoRand * 2) * treeAge;
+            const leafSize = (2 + pseudoRand * 2.5) * treeAge;
+
+            // Crystalline/Star Leaves instead of flat circles
             leaves.push(
-                <circle
-                    key={`l-${depth}-${index}`}
-                    cx={x2} cy={y2}
-                    r={leafSize}
-                    fill={leafColor}
-                    opacity={0.8}
-                    className="animate-pulse-slow"
-                />
+                <g key={`l-${depth}-${index}`} style={{ transform: `translate(${x2}px, ${y2}px) rotate(${pseudoRand * 360}deg)` }} className="animate-float">
+                    <path
+                        d={`M 0 -${leafSize} L ${leafSize / 2} 0 L 0 ${leafSize} L -${leafSize / 2} 0 Z`}
+                        fill={theme.leaf}
+                        opacity={0.85}
+                        className="transition-all duration-1000"
+                    />
+                </g>
             );
 
             if (treeAge > 0.8 && pseudoRand > 0.3) {
-                // Bloom Phase
+                // High-Fidelity Bloom Phase
                 leaves.push(
-                    <circle
-                        key={`f-${depth}-${index}`}
-                        cx={x2 + (pseudoRand * 4 - 2)} cy={y2 + (pseudoRand * 4 - 2)}
-                        r={leafSize * 1.4}
-                        fill={bloomColor}
-                        opacity={0.9}
-                        style={{ animation: `pulse ${2 + pseudoRand}s ease-in-out infinite` }}
-                    />
+                    <g key={`f-${depth}-${index}`} style={{ transform: `translate(${x2 + (pseudoRand * 4 - 2)}px, ${y2 + (pseudoRand * 4 - 2)}px)` }}>
+                        <path d={`M 0 -${leafSize * 1.5} Q ${leafSize} -${leafSize * 0.5} 0 0 Q -${leafSize} -${leafSize * 0.5} 0 -${leafSize * 1.5}`} fill={theme.bloom} opacity={0.9} className="animate-[spin_4s_linear_infinite]" style={{ transformOrigin: '0px 0px' }} />
+                        <path d={`M 0 -${leafSize * 1.5} Q ${leafSize} -${leafSize * 0.5} 0 0 Q -${leafSize} -${leafSize * 0.5} 0 -${leafSize * 1.5}`} fill={theme.bloom} opacity={0.9} className="animate-[spin_4s_linear_infinite]" style={{ transformOrigin: '0px 0px', transform: 'rotate(90deg)' }} />
+                        <circle r={leafSize * 0.4} fill="#fff" className="animate-pulse" />
+                    </g>
                 );
             }
         }
@@ -90,8 +92,8 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
         const leaves: React.ReactNode[] = [];
 
         const startX = 50;
-        const startY = 90;
-        const initialLength = 25 * treeAge;
+        const startY = 85;
+        const initialLength = 28 * treeAge;
         const initialAngle = -Math.PI / 2;
 
         // Depth scales from 2 to 7 based on age
@@ -99,28 +101,93 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
 
         generateDeterministicTree(startX, startY, initialLength, initialAngle, 0, maxDepth, branches, leaves, treeAge, 1);
 
+        // Generate glowing fireflies
+        const fireflies = Array.from({ length: 15 * treeAge }).map((_, i) => (
+            <circle
+                key={`ff-${i}`}
+                cx={20 + Math.random() * 60}
+                cy={20 + Math.random() * 60}
+                r={0.5 + Math.random() * 1}
+                fill={theme.glow}
+                className="animate-pulse-slow"
+                style={{
+                    animationDelay: `${Math.random() * 2}s`,
+                    animationDuration: `${2 + Math.random() * 3}s`,
+                    transformOrigin: `${20 + Math.random() * 60}px ${20 + Math.random() * 60}px`,
+                    animation: `spin ${10 + Math.random() * 10}s linear infinite`
+                }}
+            />
+        ));
+
         return (
-            <svg viewBox="0 0 100 100" className="w-full h-full filter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
-                {/* Pot / Ground */}
-                <path d="M 35 90 L 65 90 L 60 98 L 40 98 Z" fill="#1f2937" />
-                <path d="M 30 90 Q 50 85 70 90" fill="none" stroke="#0f172a" strokeWidth="2" />
-
-                {/* Tree */}
-                <g className={interactionType === 'sing' ? 'animate-[spin_3s_ease-in-out_infinite]' : ''} style={{ transformOrigin: '50px 90px' }}>
-                    {branches}
-                    {leaves}
-                </g>
-
-                {/* Harvesting Glow */}
-                {interactionType === 'harvest' && (
-                    <circle cx="50" cy="50" r="50" fill="url(#harvestGlow)" className="animate-[ping_1s_ease-out_forwards]" />
-                )}
+            <svg viewBox="0 0 100 100" className={`w-full h-full filter ${treeAge > 0.5 ? 'drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]' : ''}`}>
                 <defs>
-                    <radialGradient id="harvestGlow">
+                    {/* Gradients */}
+                    <linearGradient id="trunkWood" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#292524" />
+                        <stop offset="50%" stopColor="#44403c" />
+                        <stop offset="100%" stopColor="#1c1917" />
+                    </linearGradient>
+
+                    <radialGradient id="leafFern" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stopColor="#34d399" />
+                        <stop offset="100%" stopColor="#064e3b" />
+                    </radialGradient>
+
+                    <radialGradient id="leafRose" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stopColor="#fb7185" />
+                        <stop offset="100%" stopColor="#881337" />
+                    </radialGradient>
+
+                    <radialGradient id="leafSun" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stopColor="#facc15" />
+                        <stop offset="100%" stopColor="#713f12" />
+                    </radialGradient>
+
+                    <radialGradient id="bloomFern" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stopColor="#a7f3d0" />
+                        <stop offset="100%" stopColor="#10b981" />
+                    </radialGradient>
+
+                    <radialGradient id="bloomRose" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stopColor="#fda4af" />
+                        <stop offset="100%" stopColor="#e11d48" />
+                    </radialGradient>
+
+                    <radialGradient id="bloomSun" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stopColor="#fef08a" />
+                        <stop offset="100%" stopColor="#eab308" />
+                    </radialGradient>
+
+                    <radialGradient id="baseGlow" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stopColor={theme.glow} stopOpacity="0.3" />
+                        <stop offset="100%" stopColor={theme.glow} stopOpacity="0" />
+                    </radialGradient>
+
+                    <radialGradient id="harvestGlow" cx="50%" cy="50%" r="50%">
                         <stop offset="0%" stopColor="#fef08a" stopOpacity="0.8" />
                         <stop offset="100%" stopColor="#fef08a" stopOpacity="0" />
                     </radialGradient>
                 </defs>
+
+                {/* Ethereal Base/Pedestal */}
+                <ellipse cx="50" cy="88" rx="25" ry="6" fill="url(#baseGlow)" className="animate-pulse-slow" />
+                <path d="M 35 85 Q 50 90 65 85 L 60 92 Q 50 95 40 92 Z" fill="url(#trunkWood)" opacity="0.8" />
+                <path d="M 30 85 Q 50 78 70 85" fill="none" stroke={theme.glow} strokeWidth="0.5" opacity="0.5" />
+
+                {/* Fireflies */}
+                {fireflies}
+
+                {/* Ambient Breathing Tree */}
+                <g className={interactionType === 'sing' ? 'animate-[spin_4s_ease-in-out_infinite]' : 'animate-ethereal-breathe'} style={{ transformOrigin: '50px 85px' }}>
+                    {branches}
+                    {leaves}
+                </g>
+
+                {/* Harvesting Explosion Effects */}
+                {interactionType === 'harvest' && (
+                    <circle cx="50" cy="50" r="50" fill="url(#harvestGlow)" className="animate-[ping_1s_ease-out_forwards]" />
+                )}
             </svg>
         );
     }, [treeAge, garden.currentPlantType, interactionType]);
