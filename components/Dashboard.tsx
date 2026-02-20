@@ -814,8 +814,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     <LogOut className="w-5 h-5" />
                                 </button>
 
-                                <button onClick={() => setShowGrounding(true)} className="relative p-2.5 rounded-2xl bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-900 shadow-[0_0_10px_rgba(59,130,246,0.3)] hover:shadow-[0_0_20px_rgba(59,130,246,0.6)] hover:scale-105 transition-all text-blue-500 overflow-hidden" title="Panic Relief / Grounding Mode">
-                                    <div className="absolute inset-0 bg-blue-400/10 blur-md rounded-2xl animate-pulse pointer-events-none"></div>
+                                <button onClick={() => setShowGrounding(true)} className="relative p-2.5 rounded-2xl bg-white dark:bg-gray-800 border-2 border-blue-400 dark:border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] hover:scale-105 transition-all text-blue-500 overflow-hidden" title="Panic Relief / Grounding Mode">
+                                    <div className="absolute inset-0 bg-blue-400/20 blur-md rounded-2xl animate-pulse pointer-events-none"></div>
                                     <LifeBuoy className="w-5 h-5 relative z-10" />
                                 </button>
 
@@ -1102,7 +1102,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     ) : (
                                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
                                             {filteredCompanions.map((companion) => (
-                                                <div key={companion.id} onClick={() => handleStartConnection(companion)} className="group relative bg-primary/10 dark:bg-primary/20 backdrop-blur-sm rounded-[1.8rem] overflow-hidden border border-primary/20 hover:bg-primary/20 dark:hover:bg-primary/30 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 cursor-pointer flex flex-col h-full">
+                                                <div key={companion.id} onClick={() => handleStartConnection(companion)} className="group relative bg-primary/10 dark:bg-primary/20 backdrop-blur-sm rounded-[1.8rem] overflow-hidden border-2 border-primary/40 dark:border-primary/50 hover:border-primary transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 cursor-pointer flex flex-col h-full">
                                                     <div className="aspect-[4/5] relative overflow-hidden bg-gray-100 dark:bg-gray-800">
                                                         <AvatarImage src={companion.imageUrl} alt={companion.name} className="w-full h-full object-cover group-hover:scale-110 group-hover:animate-breathing transition-transform duration-700" />
                                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
