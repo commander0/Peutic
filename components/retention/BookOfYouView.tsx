@@ -17,6 +17,12 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
     const [loading, setLoading] = useState(true);
     const [isLocked, setIsLocked] = useState(true);
     const [moodRatio, setMoodRatio] = useState({ sun: 0, rain: 0 }); // Percentages
+    const [currentVolume, setCurrentVolume] = useState(0); // 0 is the oldest week, maxVolume is the current week
+    const [maxVolume, setMaxVolume] = useState(0);
+
+    // Store ALL data locally to avoid re-fetching when paginating
+    const [allJournals, setAllJournals] = useState<JournalEntry[]>([]);
+    const [allMoods, setAllMoods] = useState<MoodEntry[]>([]);
 
     useEffect(() => {
         const loadData = async () => {
@@ -27,41 +33,52 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                 const now = Date.now();
                 const msPerWeek = 7 * 24 * 60 * 60 * 1000;
 
-                // Determine which week "volume" we are in
+                // Determine how many weeks have passed since joining (the "Volumes")
                 const weeksSinceJoin = Math.floor((now - joinDate) / msPerWeek);
+                setMaxVolume(weeksSinceJoin);
 
-                // Start of the CURRENT 7-day cycle
-                const currentWeekStart = joinDate + (weeksSinceJoin * msPerWeek);
-                const nextWeekStart = currentWeekStart + msPerWeek;
+                // On initial load, start at the most recent volume
+                if (allJournals.length === 0 && allMoods.length === 0) {
+                    setCurrentVolume(weeksSinceJoin);
+                }
 
                 // Unlock logic: Always unlocked for user satisfaction, but content resets weekly.
                 setIsLocked(false);
 
-                const [j, m, a] = await Promise.all([
-                    UserService.getJournals(user.id),
-                    UserService.getMoods(user.id),
-                    UserService.getUserArt(user.id)
-                ]);
+                // Fetch ALL data once
+                let j = allJournals;
+                let m = allMoods;
 
-                // 2. Filter Data for Current Week Cycle
+                if (j.length === 0 && m.length === 0) {
+                    const [fetchedJ, fetchedM] = await Promise.all([
+                        UserService.getJournals(user.id),
+                        UserService.getMoods(user.id)
+                    ]);
+                    j = fetchedJ;
+                    m = fetchedM;
+                    setAllJournals(j);
+                    setAllMoods(m);
+                }
+
+                // Calculate the start and end of the SELECTED volume
+                // currentVolume = weeksSinceJoin is the CURRENT week
+                const volumeWeekStart = joinDate + (currentVolume * msPerWeek);
+                const volumeWeekEnd = volumeWeekStart + msPerWeek;
+
+                // 2. Filter Data for Selected Week Cycle
                 const weeklyJournals = j.filter(item => {
                     const d = new Date(item.date).getTime();
-                    return d >= currentWeekStart && d < nextWeekStart;
+                    return d >= volumeWeekStart && d < volumeWeekEnd;
                 });
 
                 const weeklyMoods = m.filter(item => {
                     const d = new Date(item.date).getTime();
-                    return d >= currentWeekStart && d < nextWeekStart;
-                });
-
-                const weeklyArts = a.filter(item => {
-                    const d = new Date(item.createdAt).getTime();
-                    return d >= currentWeekStart && d < nextWeekStart;
+                    return d >= volumeWeekStart && d < volumeWeekEnd;
                 });
 
                 setJournals(weeklyJournals);
                 setMoods(weeklyMoods);
-                setArts(weeklyArts);
+                setArts([]); // Art feature removed temporarily for stability
 
                 // Calculate Mood Ratio for this week
                 const total = weeklyMoods.length;
@@ -76,7 +93,7 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
             setLoading(false);
         };
         loadData();
-    }, [user]);
+    }, [user, currentVolume]); // Re-run filtering when volume changes
 
     if (loading) return (
         <div className="fixed inset-0 z-[120] bg-black flex items-center justify-center font-serif text-white/50 animate-pulse">
@@ -142,10 +159,28 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                     <div className="w-full h-px bg-gradient-to-r from-transparent via-amber-900/20 dark:via-stone-700 to-transparent mb-12"></div>
                     <h1 className="text-5xl md:text-7xl font-light text-amber-950 dark:text-stone-100 mb-6 tracking-normal">The Book of You</h1>
                     <p className="text-xl text-amber-900/60 dark:text-stone-400 font-medium italic">A chronicle of {user.name}'s journey.</p>
-                    <div className="mt-16 flex justify-center gap-8 text-[10px] font-sans font-black uppercase tracking-[0.3em] text-amber-900/40 dark:text-stone-500">
-                        <span>Volume I</span>
-                        <span>&bull;</span>
-                        <span>{new Date().getFullYear()}</span>
+                    <div className="mt-16 flex justify-center items-center gap-8 text-[10px] font-sans font-black uppercase tracking-[0.3em] text-amber-900/40 dark:text-stone-500">
+                        {currentVolume > 0 ? (
+                            <button onClick={() => setCurrentVolume(prev => prev - 1)} className="hover:text-amber-900 dark:hover:text-stone-300 transition-colors p-2" title="Previous Volume">
+                                &lt; Prev
+                            </button>
+                        ) : (
+                            <div className="opacity-0 px-4"></div>
+                        )}
+
+                        <div className="flex bg-amber-900/5 dark:bg-stone-800/50 px-6 py-2 rounded-sm border border-amber-900/10 dark:border-stone-700">
+                            <span>Volume {currentVolume + 1}</span>
+                            <span className="mx-3">&bull;</span>
+                            <span>{new Date(new Date(user.joinedAt).getTime() + (currentVolume * 7 * 24 * 60 * 60 * 1000)).getFullYear()}</span>
+                        </div>
+
+                        {currentVolume < maxVolume ? (
+                            <button onClick={() => setCurrentVolume(prev => prev + 1)} className="hover:text-amber-900 dark:hover:text-stone-300 transition-colors p-2" title="Next Volume">
+                                Next &gt;
+                            </button>
+                        ) : (
+                            <div className="opacity-0 px-4"></div>
+                        )}
                     </div>
                 </div>
 
