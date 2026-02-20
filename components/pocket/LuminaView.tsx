@@ -67,8 +67,12 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     useEffect(() => {
         const handleResize = () => {
             const width = window.innerWidth;
-            const size = width < 768 ? Math.min(width - 32, 360) : 500;
-            setCanvasSize(size);
+            const height = window.innerHeight;
+            // Ensure canvas fits both width and height bounds on mobile
+            const maxSizeFromWidth = width < 768 ? width - 32 : 500;
+            const maxSizeFromHeight = height < 700 ? height * 0.4 : 500; // Cap at 40% height on short screens
+
+            setCanvasSize(Math.min(maxSizeFromWidth, maxSizeFromHeight, 360));
         };
         handleResize();
         window.addEventListener('resize', handleResize);

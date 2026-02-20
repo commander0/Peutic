@@ -372,6 +372,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             case 'open_garden': setShowGardenFull(true); break;
             case 'check_streak': setShowBookFull(true); break;
             case 'open_community': showToast("Redirecting to Community Hub...", "info"); break;
+            case 'open_dojo': setShowDojo(true); break;
+            case 'open_observatory': setShowObservatory(true); break;
+            case 'open_shredder': setShowShredder(true); break;
+            case 'open_games': setShowMatchGame(true); break; // Or CloudHop
         }
     };
 
@@ -441,6 +445,51 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                 }
             } catch (err) {
                 console.error("Error checking pet for notifs", err);
+            }
+
+            // 3. Check for Gamification & Tools Engagement
+            // (Simulated logic based on probability since we don't track exact tool-last-used timestamps in DB perfectly yet)
+            const rand = Math.random();
+            if (rand > 0.8) {
+                addIfNotCleared({
+                    id: 'explore-dojo',
+                    title: 'Inner Stillness Awaits',
+                    message: 'Take a powerful 1-minute breathing break in the Zen Dojo.',
+                    type: 'success',
+                    read: false,
+                    timestamp: new Date(),
+                    action: 'open_dojo'
+                });
+            } else if (rand > 0.6) {
+                addIfNotCleared({
+                    id: 'consult-oracle',
+                    title: 'The Stars Are Aligning',
+                    message: 'Consult the Oracle in the Observatory for guidance today.',
+                    type: 'info',
+                    read: false,
+                    timestamp: new Date(),
+                    action: 'open_observatory'
+                });
+            } else if (rand > 0.4) {
+                addIfNotCleared({
+                    id: 'play-minigames',
+                    title: 'Mental Agility',
+                    message: 'Keep your mind sharp with Mindful Match or Cloud Hop.',
+                    type: 'warning',
+                    read: false,
+                    timestamp: new Date(),
+                    action: 'open_games'
+                });
+            } else if (rand > 0.2) {
+                addIfNotCleared({
+                    id: 'use-shredder',
+                    title: 'Heavy Thoughts?',
+                    message: 'Use the Thought Shredder to physically let go of anxieties.',
+                    type: 'error',
+                    read: false,
+                    timestamp: new Date(),
+                    action: 'open_shredder'
+                });
             }
 
             // 3. Daily Streak Hint (if nothing else)
@@ -741,8 +790,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             { id: 'history', icon: Clock, label: t('dash_journal') },
                             { id: 'settings', icon: Settings, label: t('dash_settings') }
                         ].map((item) => (
-                            <button key={item.id} onClick={() => setActiveTab(item.id as any)} className={`w-full flex items-center justify-center lg:justify-start gap-3 p-3 lg:p-4 rounded-xl transition-all duration-300 group ${activeTab === item.id ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg' : 'text-gray-500 hover:bg-primary-light dark:hover:bg-gray-800 dark:text-gray-400'}`}>
-                                <item.icon className={`w-5 h-5 lg:w-6 lg:h-6 ${activeTab === item.id ? 'text-primary dark:text-primary' : 'group-hover:text-primary dark:group-hover:text-white'}`} />
+                            <button key={item.id} onClick={() => setActiveTab(item.id as any)} className={`w-full flex items-center justify-center lg:justify-start gap-3 p-3 lg:p-4 rounded-xl transition-all duration-300 group border border-transparent ${activeTab === item.id ? 'bg-primary/20 text-primary dark:bg-yellow-500/20 dark:text-yellow-400 border-primary/30 dark:border-yellow-500/30 shadow-sm' : 'text-gray-500 hover:bg-primary-light dark:hover:bg-gray-800 dark:text-gray-400'}`}>
+                                <item.icon className={`w-5 h-5 lg:w-6 lg:h-6 ${activeTab === item.id ? 'text-primary dark:text-yellow-400' : 'group-hover:text-primary dark:group-hover:text-white'}`} />
                                 <span className="hidden lg:block font-bold text-xs lg:text-sm tracking-wide">{item.label}</span>
                             </button>
                         ))}
@@ -848,7 +897,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="space-y-4">
                                     <CollapsibleSection title="Spaces" icon={Zap} defaultOpen={false}>
                                         <div className="space-y-4">
-                                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
+                                            <div className="grid grid-cols-3 gap-1 md:gap-4">
                                                 {/* TILE 1: ZEN BONZAI */}
                                                 {garden && (
                                                     <div

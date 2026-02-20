@@ -196,13 +196,13 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
                                 Write down what's burdening you. When you're ready, shred it and let it go.
                             </p>
                             <textarea
-                                className="w-full flex-1 min-h-[200px] bg-stone-100 dark:bg-[#1a1c1e] text-stone-900 dark:text-stone-200 p-4 rounded-xl border border-stone-200 dark:border-stone-800 resize-none outline-none focus:border-red-500/50 transition-colors font-handwriting text-lg leading-relaxed shadow-inner"
+                                className="w-full flex-1 min-h-[120px] md:min-h-[200px] bg-stone-100 dark:bg-[#1a1c1e] text-stone-900 dark:text-stone-200 p-4 rounded-xl border border-stone-200 dark:border-stone-800 resize-none outline-none focus:border-red-500/50 transition-colors font-handwriting text-base md:text-lg leading-relaxed shadow-inner"
                                 placeholder="I am feeling anxious about..."
                                 value={text}
                                 onChange={(e) => setText(e.target.value)}
                                 autoFocus
                             />
-                            <div className="mt-6">
+                            <div className="mt-4 md:mt-6">
                                 <button
                                     onClick={handleShred}
                                     disabled={!text.trim()}

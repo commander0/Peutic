@@ -172,11 +172,11 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
             </header>
 
             {/* --- MAIN STAGE --- */}
-            <main className="relative z-10 flex-1 h-[60vh] flex items-center justify-center">
+            <main className="relative z-10 flex-1 h-[60vh] flex items-center justify-center p-4">
                 {/* Aura Ring backing the canvas */}
-                <div className="absolute w-[600px] h-[600px] bg-emerald-900/10 rounded-full blur-[100px] pointer-events-none" />
+                <div className="absolute w-[300px] h-[300px] md:w-[600px] md:h-[600px] bg-emerald-900/10 rounded-full blur-[100px] pointer-events-none" />
 
-                <div className="w-full max-w-4xl h-full flex items-center justify-center p-4">
+                <div className="w-full max-w-4xl h-full flex items-center justify-center">
                     <GardenCanvas
                         garden={localGarden}
                         width={600}

@@ -157,8 +157,8 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                             {/* B5. TEXT REVEAL (The Insight) */}
                             {oracleMessage && !isReading && (
                                 <div className="absolute inset-0 flex items-center justify-center p-10 md:p-16 text-center z-30 bg-black/50 backdrop-blur-[2px] overflow-y-auto rounded-full custom-scrollbar">
-                                    <div className="w-full text-transparent bg-clip-text bg-gradient-to-br from-indigo-100 via-white to-purple-200 font-serif leading-snug md:leading-relaxed drop-shadow-sm italic text-xs md:text-sm">
-                                        <Typewriter text={`"${oracleMessage}"`} speed={30} />
+                                    <div className="w-full text-transparent bg-clip-text bg-gradient-to-br from-indigo-100 via-white to-purple-200 font-serif leading-snug md:leading-relaxed drop-shadow-sm italic text-xs md:text-sm px-1 py-1">
+                                        <Typewriter text={oracleMessage} speed={30} />
                                     </div>
                                 </div>
                             )}

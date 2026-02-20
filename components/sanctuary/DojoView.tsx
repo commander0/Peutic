@@ -206,7 +206,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-[120] bg-stone-900 text-stone-100 flex flex-col font-serif animate-in fade-in duration-700 overflow-hidden">
+        <div className="fixed inset-0 h-[100dvh] z-[120] bg-stone-900 text-stone-100 flex flex-col font-serif animate-in fade-in duration-700 overflow-hidden">
             {/* Real Zen Dojo Background (Unsplash) */}
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1545569341-9eb8b30979d9?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-40"></div>
             <div className="absolute inset-0 bg-gradient-to-t from-stone-900 via-stone-900/80 to-stone-900/30"></div>
@@ -255,7 +255,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
             </div>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
+            <main className="flex-1 flex flex-col items-center justify-start overflow-y-auto custom-scrollbar w-full p-4 md:p-6 relative z-10 pt-4 md:pt-8" style={{ maxHeight: 'calc(100dvh - 80px)' }}>
 
                 {/* Time Selection (Restored - Small) */}
                 {!isActive && (
@@ -281,7 +281,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                     </div>
 
                     {/* The Circle Frame (Candle Container) */}
-                    <div className={`w-72 h-72 md:w-96 md:h-96 rounded-full border border-stone-800 flex flex-col items-center justify-center relative bg-stone-900/30 backdrop-blur-sm shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-all duration-1000 ${isActive ? 'scale-105 border-orange-900/40 animate-ethereal-breathe' : ''}`}>
+                    <div className={`w-64 h-64 md:w-80 md:h-80 rounded-full border border-stone-800 flex flex-col items-center justify-center relative bg-stone-900/30 backdrop-blur-sm shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-all duration-1000 shrink-0 ${isActive ? 'scale-105 border-orange-900/40 animate-ethereal-breathe' : ''}`}>
 
                         {timerMode === 'candle' ? (
                             <div className="flex flex-col items-center justify-center animate-in fade-in duration-1000 scale-125 md:scale-150 relative -mt-8">

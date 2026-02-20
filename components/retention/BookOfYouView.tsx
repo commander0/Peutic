@@ -97,6 +97,8 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                     setIsGeneratingNarrative(true);
                     try {
                         const contextData = JSON.stringify({
+                            volumeSequence: currentVolume + 1,
+                            entropyToken: Math.random().toString(36).substring(7),
                             journals: weeklyJournals.map(j => j.content),
                             moods: weeklyMoods.map(m => m.mood)
                         });
