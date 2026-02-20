@@ -10,9 +10,31 @@ import { debounce } from '../utils/debounce';
 
 type UserRow = Database['public']['Tables']['users']['Row'];
 
+import { OfflineManager } from './OfflineManager';
+
 export class UserService {
     private static currentUser: User | null = null;
     private static CACHE_KEY = 'peutic_user_profile';
+
+    // OFFLINE SYNC HANDLER
+    static {
+        if (typeof window !== 'undefined') {
+            window.addEventListener('peutic-sync-offline', async (e: any) => {
+                const requests = e.detail.requests as any[];
+                for (const req of requests) {
+                    try {
+                        console.log(`[UserService] Syncing ${req.type}...`);
+                        if (req.type === 'JOURNAL') await this.saveJournal(req.payload);
+                        if (req.type === 'MOOD') await this.saveMood(req.payload.userId, req.payload.mood);
+                        // Voice is harder due to blob, assuming base64 or skipped for now
+                    } catch (err) {
+                        console.error(`[UserService] Sync Failed for ${req.id}`, err);
+                        // Re-queue if it's a network error? For now, we assume if it fails here it might be permanent or re-try later manually.
+                    }
+                }
+            });
+        }
+    }
 
     // ... (Cache methods)
     static async saveUserToCache(user: User) {
@@ -325,7 +347,7 @@ export class UserService {
 
         const previousBalance = user.balance;
         user.balance = (user.balance || 0) + amount;
-        this.saveUserToCache(user);
+        await this.saveUserToCache(user);
 
         try {
             await BaseService.invokeGateway('process-topup', {
@@ -338,7 +360,7 @@ export class UserService {
         } catch (e) {
             console.error("Add Balance Failed", e);
             user.balance = previousBalance;
-            this.saveUserToCache(user);
+            await this.saveUserToCache(user);
             return false;
         }
     }
@@ -356,7 +378,7 @@ export class UserService {
 
         const previousBalance = user.balance;
         user.balance = Math.max(0, user.balance - amount);
-        this.saveUserToCache(user);
+        await this.saveUserToCache(user);
 
         try {
             const { error, data } = await BaseService.invokeGateway('process-topup', {
@@ -369,13 +391,13 @@ export class UserService {
             if (error) {
                 console.error("Balance Deduction Failed", error);
                 user.balance = previousBalance;
-                this.saveUserToCache(user);
+                await this.saveUserToCache(user);
                 return false;
             }
 
             if (data?.newBalance !== undefined) {
                 user.balance = data.newBalance;
-                this.saveUserToCache(user);
+                await this.saveUserToCache(user);
 
                 if (user.balance >= 100) {
                     this.unlockAchievement(user.id, 'WEALTHY_100');
@@ -386,7 +408,7 @@ export class UserService {
         } catch (e) {
             console.error("Balance Deduction Exception", e);
             user.balance = previousBalance;
-            this.saveUserToCache(user);
+            await this.saveUserToCache(user);
             return false;
         }
     }
@@ -698,20 +720,23 @@ export class UserService {
     }
 
     static async saveJournal(entry: JournalEntry) {
-        const { error } = await supabase.from('journals').insert({
-            user_id: entry.userId,
-            date: entry.date,
-            content: entry.content
-        });
+        try {
+            const { error } = await supabase.from('journals').insert({
+                user_id: entry.userId,
+                date: entry.date,
+                content: entry.content
+            });
 
-        if (error) {
-            logger.error("Save Journal Failed", entry.userId, error);
-            throw error;
-        }
+            if (error) throw error;
 
-        const count = await supabase.from('journals').select('id', { count: 'exact', head: true }).eq('user_id', entry.userId);
-        if ((count.count || 0) >= 5) {
-            this.unlockAchievement(entry.userId, 'JOURNAL_5');
+            const count = await supabase.from('journals').select('id', { count: 'exact', head: true }).eq('user_id', entry.userId);
+            if ((count.count || 0) >= 5) {
+                this.unlockAchievement(entry.userId, 'JOURNAL_5');
+            }
+        } catch (e) {
+            console.error("Save Journal Failed (Queuing Offline)", e);
+            OfflineManager.queueRequest('JOURNAL', entry);
+            // Optionally notify UI of offline state
         }
     }
 
@@ -733,12 +758,17 @@ export class UserService {
     }
 
     static async saveMood(userId: string, mood: 'confetti' | 'rain' | 'Anxious' | 'Sad') {
-        const { error } = await supabase.from('moods').insert({
-            user_id: userId,
-            date: new Date().toISOString(),
-            mood: mood
-        });
-        if (error) console.error("Save Mood Failed:", error);
+        try {
+            const { error } = await supabase.from('moods').insert({
+                user_id: userId,
+                date: new Date().toISOString(),
+                mood: mood
+            });
+            if (error) throw error;
+        } catch (e) {
+            console.error("Save Mood Failed (Queuing Offline)", e);
+            OfflineManager.queueRequest('MOOD', { userId, mood });
+        }
     }
 
     static async endSession(userId: string) {

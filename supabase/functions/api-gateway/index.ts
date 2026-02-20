@@ -327,15 +327,24 @@ serve(async (req) => {
                 const stripe = await getStripe();
                 if (!stripe) throw new Error("Stripe not configured");
                 const { userId, amount, cost, paymentToken } = payload;
+
+                // CRITICAL SECURITY FIX: Ensure the caller is actually the user getting the balance
+                await requireAuth(userId);
+
                 if (cost > 0) {
                     await stripe.charges.create({
                         amount: Math.round(cost * 100), currency: 'usd', source: paymentToken, description: `Credits: ${userId}`
                     });
+                } else {
+                    // Prevent arbitrary "cost: 0" requests for huge amounts unless carefully whitelisted.
+                    // If your game gives out free credits, you should cap it.
+                    if (amount > 100) throw new Error("Invalid free grant amount");
                 }
+
                 const { data: newBal, error: bErr } = await supabaseClient.rpc('add_user_balance', { p_user_id: userId, p_amount: amount });
                 if (bErr) throw bErr;
                 await supabaseClient.from('transactions').insert({
-                    id: `tx_${Date.now()}`, user_id: userId, amount, cost, description: cost > 0 ? 'Purchase' : 'Grant', status: 'COMPLETED'
+                    id: `tx_${Date.now()}`, user_id: userId, amount, cost, description: cost > 0 ? 'Purchase' : 'Game Reward', status: 'COMPLETED'
                 });
                 return new Response(JSON.stringify({ success: true, newBalance: newBal }), { headers: corsHeaders });
             }

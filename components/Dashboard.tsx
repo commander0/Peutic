@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, lazy, Suspense, useTransition } from 'react';
+﻿import React, { useState, useEffect, useRef, lazy, Suspense, useTransition } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Companion, Transaction, VoiceJournalEntry, GardenState, Lumina, Achievement } from '../types';
 import { LanguageSelector } from './common/LanguageSelector';
@@ -239,6 +239,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [isIdle, setIsIdle] = useState(false);
     const idleTimerRef = useRef<number | null>(null);
+    const logoutTimerRef = useRef<number | null>(null);
 
     const [showTechCheck, setShowTechCheck] = useState(false);
     const [isGhostMode, setIsGhostMode] = useState(() => localStorage.getItem('peutic_ghost_mode') === 'true');
@@ -251,6 +252,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [showShredder, setShowShredder] = useState(false);
     const [showMatchGame, setShowMatchGame] = useState(false);
     const [showCloudHop, setShowCloudHop] = useState(false);
+    const [isUnlockingRoom, setIsUnlockingRoom] = useState(false);
     // Lumina state moved to grouped section
     const [notifications, setNotifications] = useState<Notification[]>([]);
 
@@ -266,7 +268,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const resetIdleTimer = () => {
         setIsIdle(false);
         if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
+        if (logoutTimerRef.current) window.clearTimeout(logoutTimerRef.current);
+
         idleTimerRef.current = window.setTimeout(() => setIsIdle(true), 5 * 60 * 1000); // 5 minutes blur
+        logoutTimerRef.current = window.setTimeout(() => {
+            showToast("Session timed out due to inactivity", "info");
+            onLogout();
+        }, 15 * 60 * 1000); // 15 minutes logout
     };
 
     useEffect(() => {
@@ -617,6 +625,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     };
 
     const handleRoomInteraction = async (roomId: string, cost: number) => {
+        if (isUnlockingRoom) return;
+
         const currentRooms = dashboardUser.unlockedRooms || [];
 
         // If already unlocked, open the view
@@ -626,10 +636,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             return;
         }
 
+        setIsUnlockingRoom(true);
+
         if (dashboardUser.balance < cost) {
             showToast(`You need ${cost}m to unlock this space.`, "error");
             setPaymentError(`Unlock ${roomId}: ${cost}m required`);
             setShowPayment(true);
+            setIsUnlockingRoom(false);
             return;
         }
 
@@ -653,6 +666,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             if (roomId === 'observatory') setShowObservatory(true);
             if (roomId === 'dojo') setShowDojo(true);
         }
+        setIsUnlockingRoom(false);
     };
 
     const filteredCompanions = specialtyFilter === 'All' ? companions : companions.filter(c => c.specialty.includes(specialtyFilter) || c.specialty === specialtyFilter);

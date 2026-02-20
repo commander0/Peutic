@@ -153,6 +153,32 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
                             <div><label className="text-xs font-bold text-gray-500 uppercase block mb-2">Display Name</label><input className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none dark:text-white" value={name} onChange={e => setName(e.target.value)} /></div>
                             <div><label className="text-xs font-bold text-gray-500 uppercase block mb-2">Email</label><input className="w-full p-3 bg-gray-100 dark:bg-gray-800/50 border border-transparent rounded-xl text-gray-500 cursor-not-allowed" value={user.email} disabled /></div>
 
+                            {/* NOTIFICATIONS */}
+                            <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 p-4 rounded-xl flex items-center justify-between">
+                                <div>
+                                    <h4 className="font-bold text-blue-900 dark:text-blue-300 text-xs mb-1">Daily Reminders</h4>
+                                    <p className="text-[10px] text-blue-700/60 dark:text-blue-400/50">Get notified to journal or check on Lumina.</p>
+                                </div>
+                                {Notification.permission === 'granted' ? (
+                                    <div className="flex items-center gap-2">
+                                        <div className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded text-[10px] font-bold uppercase tracking-wider">Active</div>
+                                        <button
+                                            onClick={() => new Notification("Peutic Test", { body: "Your sanctuary awaits.", icon: "/pwa-192x192.png" })}
+                                            className="text-[10px] font-bold text-blue-500 hover:underline"
+                                        >
+                                            Test
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => Notification.requestPermission().then(p => { if (p === 'granted') new Notification("Welcome Back", { body: "Notifications enabled!", icon: "/pwa-192x192.png" }); onUpdate(); })}
+                                        className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors shadow-lg"
+                                    >
+                                        Enable
+                                    </button>
+                                )}
+                            </div>
+
                             <button onClick={handleSave} disabled={loading} className="w-full py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:opacity-80 transition-opacity flex items-center justify-center gap-2">
                                 {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                                 {loading ? 'Saving...' : 'Save Changes'}

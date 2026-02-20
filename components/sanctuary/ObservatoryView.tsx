@@ -13,6 +13,7 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
     const { showToast } = useToast();
     const [oracleMessage, setOracleMessage] = useState<string | null>(null);
     const [isReading, setIsReading] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     // Audio Refs for Sound Synthesis
     const audioCtxRef = useRef<AudioContext | null>(null);
@@ -65,14 +66,18 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
     };
 
     const divineInsight = async () => {
+        if (isProcessing || isReading) return;
+        setIsProcessing(true);
         const COST = 1;
         if (user.balance < COST) {
             showToast(`The spirits require an offering of ${COST} minutes.`, "error");
+            setIsProcessing(false);
             return;
         }
 
         if (await UserService.deductBalance(COST, 'Consulted the Oracle')) {
             setIsReading(true);
+            setIsProcessing(false);
             setOracleMessage(null);
             playMysticSound('start');
 
@@ -101,6 +106,8 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                 setIsReading(false);
                 playMysticSound('reveal');
             }, 3000);
+        } else {
+            setIsProcessing(false);
         }
     };
 
@@ -179,12 +186,13 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                         {!isReading && !oracleMessage && (
                             <button
                                 onClick={divineInsight}
-                                className="group relative px-10 py-4 bg-transparent overflow-hidden transition-all"
+                                disabled={isProcessing}
+                                className={`group relative px-10 py-4 bg-transparent overflow-hidden transition-all ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 <div className="absolute inset-0 border border-indigo-500/30 group-hover:border-indigo-400 rounded-full transition-colors"></div>
                                 <div className="absolute inset-0 bg-indigo-500/10 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left rounded-full"></div>
                                 <span className="relative flex items-center gap-3 font-black text-sm uppercase tracking-[0.3em] text-indigo-300 group-hover:text-white transition-colors">
-                                    <Eye className="w-4 h-4" /> Consult Fate <span className="opacity-50">(-1m)</span>
+                                    <Eye className="w-4 h-4" /> {isProcessing ? 'Channeling...' : 'Consult Fate'} <span className="opacity-50">(-1m)</span>
                                 </span>
                             </button>
                         )}

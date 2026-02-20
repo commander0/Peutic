@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { connect } from "https://deno.land/x/redis@v0.29.0/mod.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -12,6 +13,19 @@ serve(async (req) => {
     }
 
     try {
+        // CRITICAL SECURITY FIX: Enforce Auth
+        const supUrl = Deno.env.get('SUPABASE_URL');
+        const supKey = Deno.env.get('SUPABASE_ANON_KEY');
+        if (!supUrl || !supKey) throw new Error("Supabase config missing");
+
+        const supabaseClient = createClient(supUrl, supKey);
+        const authHeader = req.headers.get('Authorization');
+        const token = authHeader ? authHeader.replace('Bearer ', '') : null;
+        if (!token) throw new Error("Unauthorized request");
+
+        const { data: { user }, error: authErr } = await supabaseClient.auth.getUser(token);
+        if (authErr || !user) throw new Error("Unauthorized request");
+
         const { action, key, value, ttl } = await req.json()
 
         // Environment Variables (Set in Supabase Secrets)
