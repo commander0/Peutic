@@ -38,13 +38,9 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
     // Audio Context Ref
     const audioCtxRef = useRef<AudioContext | null>(null);
     const audioNodesRef = useRef<{
-        ambience: { node: AudioBufferSourceNode, gain: GainNode } | null;
         bells: { intervalId: any } | null;
-        drone?: { osc: OscillatorNode, lfo: OscillatorNode, gain: GainNode, lfoGain: GainNode } | null;
-    }>({ ambience: null, bells: null });
+    }>({ bells: null });
 
-    // Preferences
-    const [ambienceType, setAmbienceType] = useState<'rain' | 'wind' | 'brown'>('rain');
     const [bellInterval, setBellInterval] = useState<number>(0); // 0 = start/end only, >0 = every X seconds
 
     // Initial Load
@@ -103,129 +99,13 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
         cast(baseFreq * 2.5, 0.15, 5, 0.05); // Major 10th
     };
 
-    // Procedural Nature Sounds
-    let lastOut = 0;
-    const startAmbience = () => {
-        if (audioNodesRef.current.ambience || !soundEnabled) return;
-        const ctx = initAudio();
-        const bufferSize = 2 * ctx.sampleRate;
-        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-
-        // Pink Noise Generator (Better for Rain/Wind)
-        for (let i = 0; i < bufferSize; i++) {
-            const white = Math.random() * 2 - 1;
-            data[i] = (lastOut + (0.02 * white)) / 1.02;
-            lastOut = data[i];
-            data[i] *= 3.5; // Compensate for gain loss
-        }
-
-        const noise = ctx.createBufferSource();
-        noise.buffer = buffer;
-        noise.loop = true;
-
-        const gain = ctx.createGain();
-        // Adjust volume based on type
-        // Rain needs higher frequencies, Wind needs low pass
-        gain.gain.value = 0.05;
-
-        const filter = ctx.createBiquadFilter();
-        if (ambienceType === 'wind') {
-            filter.type = 'lowpass';
-            filter.frequency.value = 400;
-        } else if (ambienceType === 'rain') {
-            filter.type = 'lowpass';
-            filter.frequency.value = 1200; // Rain has more sizzle
-        } else {
-            filter.type = 'lowpass';
-            filter.frequency.value = 100; // Brown-ish
-        }
-
-        noise.connect(filter);
-        filter.connect(gain);
-        gain.connect(ctx.destination);
-        noise.start();
-
-        // Fade In
-        gain.gain.setValueAtTime(0, ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 2);
-
-        audioNodesRef.current.ambience = { node: noise, gain };
-    };
-
     const stopAudio = () => {
-        // Stop Ambience
-        if (audioNodesRef.current.ambience) {
-            const { node, gain } = audioNodesRef.current.ambience;
-            try {
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtxRef.current!.currentTime + 1);
-                setTimeout(() => { try { node.stop(); } catch (e) { } }, 1000);
-            } catch (e) { }
-            audioNodesRef.current.ambience = null;
-        }
-
         // Stop Interval Bells
         if (audioNodesRef.current.bells) {
             clearInterval(audioNodesRef.current.bells.intervalId);
             audioNodesRef.current.bells = null;
         }
     };
-
-    const startDrone = () => {
-        if (!soundEnabled || audioNodesRef.current.drone) return;
-        const ctx = initAudio();
-        const osc = ctx.createOscillator();
-        const lfo = ctx.createOscillator();
-        const gain = ctx.createGain();
-        const lfoGain = ctx.createGain();
-
-        // Singing Bowl Drone (174 Hz Solfeggio / Healing Frequency)
-        osc.frequency.value = 174;
-        osc.type = 'sine';
-
-        // Tremolo / LFO
-        lfo.frequency.value = 0.1; // Very slow pulse
-        lfo.connect(lfoGain.gain);
-        lfoGain.gain.value = 0.05; // Base volume variance
-
-        osc.connect(lfoGain);
-        lfoGain.connect(gain);
-        gain.connect(ctx.destination);
-
-        gain.gain.setValueAtTime(0, ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 5); // Smooth 5-second fade in
-
-        osc.start();
-        lfo.start();
-
-        audioNodesRef.current.drone = { osc, lfo, gain, lfoGain };
-    };
-
-    const stopDrone = () => {
-        if (audioNodesRef.current.drone) {
-            const { osc, lfo, gain } = audioNodesRef.current.drone;
-            try {
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtxRef.current!.currentTime + 3);
-                setTimeout(() => {
-                    try { osc.stop(); lfo.stop(); } catch (e) { }
-                }, 3000);
-            } catch (e) { }
-            audioNodesRef.current.drone = null;
-        }
-    };
-
-    // Global Background Drone based on sound toggle
-    useEffect(() => {
-        if (soundEnabled) {
-            // Need user interaction first in modern browsers. 
-            // Attempt to start, it will safely fail if AudioContext is blocked, 
-            // but succeed if they already clicked into the Dojo view.
-            try { startDrone(); } catch (e) { }
-        } else {
-            stopDrone();
-        }
-        return () => stopDrone();
-    }, [soundEnabled]);
 
     // Rotating Wisdom Quotes
     useEffect(() => {
@@ -251,7 +131,6 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
     useEffect(() => {
         if (isActive) {
             playBellSound(); // Start Bell
-            startAmbience();
 
             // Loop bells if requested
             if (bellInterval > 0) {
@@ -263,19 +142,6 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
             if (timeLeft === 0) playBellSound(); // End Bell
         }
     }, [isActive]); // Re-run if active state changes
-
-    // Watch for ambience type changes while active
-    useEffect(() => {
-        if (isActive) {
-            stopAudio();
-            startAmbience();
-            // Re-trigger interval if needed
-            if (bellInterval > 0) {
-                const id = setInterval(playBellSound, bellInterval * 1000);
-                audioNodesRef.current.bells = { intervalId: id };
-            }
-        }
-    }, [ambienceType, bellInterval]);
 
     const toggleTimer = () => {
         setIsActive(!isActive);

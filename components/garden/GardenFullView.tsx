@@ -55,23 +55,25 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
 
         // Perform Service Action
         if (type === 'water') {
-            const updated = await GardenService.waterPlant(garden.userId, intensity);
-            if (updated) setLocalGarden(updated);
+            await GardenService.waterPlant(garden.userId, intensity);
+            await GardenService.addFocusMinutes(garden.userId, actionCost);
             showToast("Garden Watered", "success");
         } else if (type === 'harvest') {
             const result = await GardenService.harvestPlant(garden.userId, UserService);
             if (result.success) {
                 showToast(result.message, "success");
-                // Immediately fetch fresh state to reset UI
-                const freshData = await GardenService.getGarden(user.id);
-                if (freshData) setLocalGarden(freshData);
             } else {
                 showToast(result.message, "error");
             }
         } else {
             // Breath / Sing
+            await GardenService.addFocusMinutes(garden.userId, actionCost);
             showToast(`Shared ${type} with garden.`, "success");
         }
+
+        // Fetch fresh state to reflect growth
+        const freshData = await GardenService.getGarden(user.id);
+        if (freshData) setLocalGarden(freshData);
 
         onUpdate();
     };
