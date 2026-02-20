@@ -933,8 +933,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
                                                         <div className="relative mb-1 md:mb-4">
                                                             <div className="absolute -inset-4 bg-cyan-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                            <div className="w-10 h-10 md:w-20 md:h-20 bg-white/10 dark:bg-black/40 border border-cyan-500/50 rounded-2xl flex items-center justify-center text-cyan-500 dark:text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform">
-                                                                <Sparkles className="w-5 h-5 md:w-10 md:h-10 animate-bounce" />
+                                                            <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-cyan-500 to-blue-700 border border-cyan-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform">
+                                                                <Sparkles className="w-5 h-5 md:w-10 md:h-10 text-white animate-bounce" />
                                                             </div>
                                                         </div>
                                                         <h3 className="text-[7px] md:text-sm font-black text-cyan-700 dark:text-cyan-50 uppercase tracking-[0.2em] mb-1">Lumina</h3>
@@ -952,8 +952,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
                                                         <div className="relative mb-1 md:mb-4">
                                                             <div className="absolute -inset-4 bg-indigo-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                            <div className={`w-10 h-10 md:w-20 md:h-20 bg-white/10 dark:bg-black/40 border ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'border-indigo-500/50' : 'border-gray-400/50'} rounded-2xl flex items-center justify-center text-indigo-500 dark:text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.4)] group-hover:scale-110 transition-transform`}>
-                                                                {dashboardUser?.unlockedRooms?.includes('observatory') ? <Moon className="w-5 h-5 md:w-8 md:h-8" /> : <Lock className="w-4 h-4 md:w-6 md:h-6" />}
+                                                            <div className={`w-10 h-10 md:w-20 md:h-20 ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'bg-gradient-to-br from-indigo-500 to-purple-700 border-indigo-400/50 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]' : 'bg-gray-400 dark:bg-gray-600 border-gray-400/50 text-gray-200'} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                                                                {dashboardUser?.unlockedRooms?.includes('observatory') ? <Moon className="w-5 h-5 md:w-8 md:h-8 text-white" /> : <Lock className="w-4 h-4 md:w-6 md:h-6 text-gray-200" />}
                                                             </div>
                                                             {!dashboardUser?.unlockedRooms?.includes('observatory') && (
                                                                 <div className="absolute -top-3 -right-3 md:-top-2 md:-right-2 bg-indigo-500 text-white text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg border border-white/20">
@@ -978,8 +978,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
                                                         <div className="relative mb-1 md:mb-4">
                                                             <div className="absolute -inset-4 bg-amber-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                            <div className={`w-10 h-10 md:w-20 md:h-20 bg-white/10 dark:bg-black/40 border ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'border-amber-500/50' : 'border-gray-400/50'} rounded-2xl flex items-center justify-center text-amber-500 dark:text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)] group-hover:scale-110 transition-transform`}>
-                                                                {dashboardUser?.unlockedRooms?.includes('dojo') ? <Zap className="w-5 h-5 md:w-8 md:h-8" /> : <Lock className="w-4 h-4 md:w-6 md:h-6" />}
+                                                            <div className={`w-10 h-10 md:w-20 md:h-20 ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'bg-gradient-to-br from-amber-500 to-orange-700 border-amber-400/50 text-white shadow-[0_0_15px_rgba(245,158,11,0.4)]' : 'bg-gray-400 dark:bg-gray-600 border-gray-400/50 text-gray-200'} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                                                                {dashboardUser?.unlockedRooms?.includes('dojo') ? <Zap className="w-5 h-5 md:w-8 md:h-8 text-white" /> : <Lock className="w-4 h-4 md:w-6 md:h-6 text-gray-200" />}
                                                             </div>
                                                             {!dashboardUser?.unlockedRooms?.includes('dojo') && (
                                                                 <div className="absolute -top-3 -right-3 md:-top-2 md:-right-2 bg-amber-500 text-white text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg border border-white/20">
@@ -1005,8 +1005,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
                                                         <div className="relative mb-1 md:mb-4">
                                                             <div className="absolute -inset-4 bg-red-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                            <div className="w-10 h-10 md:w-20 md:h-20 bg-white/10 dark:bg-black/40 border border-red-500/50 rounded-2xl flex items-center justify-center text-red-500 dark:text-red-400 shadow-[0_0_15px_rgba(244,63,94,0.4)] group-hover:scale-110 transition-transform">
-                                                                <Scissors className="w-5 h-5 md:w-8 md:h-8" />
+                                                            <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-red-500 to-rose-700 border border-red-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(244,63,94,0.4)] group-hover:scale-110 transition-transform">
+                                                                <Scissors className="w-5 h-5 md:w-8 md:h-8 text-white" />
                                                             </div>
                                                         </div>
                                                         <h3 className="text-[7px] md:text-sm font-black text-red-700 dark:text-red-300 uppercase tracking-[0.2em] mb-1">Shredder</h3>
@@ -1102,7 +1102,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     ) : (
                                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
                                             {filteredCompanions.map((companion) => (
-                                                <div key={companion.id} onClick={() => handleStartConnection(companion)} className="group relative bg-primary/10 dark:bg-primary/20 backdrop-blur-sm rounded-[1.8rem] overflow-hidden border-2 border-primary/40 dark:border-primary/50 hover:border-primary transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 cursor-pointer flex flex-col h-full">
+                                                <div key={companion.id} onClick={() => handleStartConnection(companion)} className="group relative bg-primary/10 dark:bg-primary/20 backdrop-blur-sm rounded-[1.8rem] overflow-hidden border border-[var(--color-primary-border)] transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 cursor-pointer flex flex-col h-full" style={{ borderColor: 'var(--color-primary-border)' }}>
                                                     <div className="aspect-[4/5] relative overflow-hidden bg-gray-100 dark:bg-gray-800">
                                                         <AvatarImage src={companion.imageUrl} alt={companion.name} className="w-full h-full object-cover group-hover:scale-110 group-hover:animate-breathing transition-transform duration-700" />
                                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
