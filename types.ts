@@ -159,6 +159,7 @@ export interface GardenState {
   lastWateredAt: string;
   streakCurrent: number;
   streakBest: number;
+  focusMinutes: number; // For Ethereal Zen-Tech Growth
 }
 
 export interface WisdomEntry {

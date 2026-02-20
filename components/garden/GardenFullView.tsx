@@ -21,6 +21,19 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     const { showToast } = useToast();
     const COST = intensity;
 
+    // Eliminate Cached Ghosts: Always fetch fresh state on mount
+    useEffect(() => {
+        let mounted = true;
+        const fetchFreshState = async () => {
+            const freshData = await GardenService.getGarden(user.id);
+            if (freshData && mounted) {
+                setLocalGarden(freshData);
+            }
+        };
+        fetchFreshState();
+        return () => { mounted = false; };
+    }, [user.id]);
+
     const handleAction = async (type: 'water' | 'breath' | 'sing' | 'harvest') => {
         // Cost Logic
         const actionCost = type === 'harvest' ? 5 : COST;
@@ -204,6 +217,9 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
 
                 {/* Stats Minimal */}
                 <div className="flex gap-8 text-[10px] font-bold tracking-widest text-white/40 uppercase">
+                    <div className="flex items-center gap-2">
+                        <span className="text-pink-400">{localGarden.focusMinutes} Focus Mins</span>
+                    </div>
                     <div className="flex items-center gap-2">
                         <span className="text-emerald-500">{localGarden.streakCurrent} Day Streak</span>
                     </div>

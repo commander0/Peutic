@@ -4,6 +4,7 @@ import { User } from '../../types';
 import { useToast } from '../common/Toast';
 import { UserService } from '../../services/userService';
 import { SanctuaryService } from '../../services/SanctuaryService';
+import { GardenService } from '../../services/gardenService';
 
 interface DojoViewProps {
     user: User;
@@ -13,6 +14,7 @@ interface DojoViewProps {
 const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
     const { showToast } = useToast();
     const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 mins
+    const [selectedMins, setSelectedMins] = useState(25);
     const [isActive, setIsActive] = useState(false);
     const [timerMode, setTimerMode] = useState<'focus' | 'break' | 'candle'>('candle');
     const [streak, setStreak] = useState(0);
@@ -228,12 +230,14 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
         playBellSound();
 
         if (timerMode === 'focus' || timerMode === 'candle') {
-            const success = await SanctuaryService.saveFocusSession(user.id, 25 * 60, 'FOCUS');
+            const success = await SanctuaryService.saveFocusSession(user.id, selectedMins * 60, 'FOCUS');
             if (success) {
+                // Link directly to Inner Garden gamification
+                await GardenService.addFocusMinutes(user.id, selectedMins);
                 await UserService.deductBalance(0, 'Focus Session Complete'); // XP Trigger
-                showToast("Focus Session Recorded! (+50 XP)", "success");
-                setStreak(s => s + 1);
-                setTotalFocus(t => t + 25);
+                showToast(`Focus Session Recorded! +${selectedMins} Garden Mins (+50 XP)`, "success");
+                setStreak((s: number) => s + 1);
+                setTotalFocus((t: number) => t + selectedMins);
             } else {
                 showToast("Failed to save session", "error");
             }
@@ -242,13 +246,18 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
             setTimeLeft(5 * 60);
         } else {
             showToast("Break over. Back to the Dojo.", "info");
+            setTimerMode('candle');
+            setTimeLeft(selectedMins * 60);
             setIsActive(false);
             playBellSound(); // End bell
         }
     };
 
     const setTime = (mins: number) => {
-        if (!isActive) setTimeLeft(mins * 60);
+        if (!isActive) {
+            setTimeLeft(mins * 60);
+            setSelectedMins(mins);
+        }
     };
 
     return (
@@ -295,7 +304,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose }) => {
                     </div>
 
                     {/* The Circle Frame (Candle Container) */}
-                    <div className={`w-72 h-72 md:w-96 md:h-96 rounded-full border border-stone-800 flex flex-col items-center justify-center relative bg-stone-900/30 backdrop-blur-sm shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-all duration-1000 ${isActive ? 'scale-105 border-orange-900/40' : ''}`}>
+                    <div className={`w-72 h-72 md:w-96 md:h-96 rounded-full border border-stone-800 flex flex-col items-center justify-center relative bg-stone-900/30 backdrop-blur-sm shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-all duration-1000 ${isActive ? 'scale-105 border-orange-900/40 animate-ethereal-breathe' : ''}`}>
 
                         {timerMode === 'candle' ? (
                             <div className="flex flex-col items-center justify-center animate-in fade-in duration-1000 scale-125 md:scale-150 relative -mt-8">

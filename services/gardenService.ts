@@ -25,8 +25,21 @@ export class GardenService {
             waterLevel: data.water_level || 50,
             lastWateredAt: data.last_watered_at,
             streakCurrent: data.streak_current,
-            streakBest: data.streak_best
+            streakBest: data.streak_best,
+            focusMinutes: data.focus_minutes || 0
         };
+    }
+
+    static async addFocusMinutes(userId: string, minutes: number): Promise<boolean> {
+        const { error } = await supabase.rpc('add_garden_focus_minutes', {
+            p_user_id: userId,
+            p_minutes: minutes
+        });
+        if (error) {
+            console.error("Failed to add focus minutes", error);
+            return false;
+        }
+        return true;
     }
 
     static async initializeGarden(userId: string): Promise<GardenState> {
@@ -37,7 +50,8 @@ export class GardenService {
             last_watered_at: new Date().toISOString(),
             water_level: 50,
             streak_current: 0,
-            streak_best: 0
+            streak_best: 0,
+            focus_minutes: 0
         };
 
         const { error } = await supabase.from('garden_log').insert(initialState);
@@ -53,7 +67,8 @@ export class GardenService {
             waterLevel: 50,
             lastWateredAt: initialState.last_watered_at,
             streakCurrent: 0,
-            streakBest: 0
+            streakBest: 0,
+            focusMinutes: 0
         };
     }
 
@@ -78,7 +93,8 @@ export class GardenService {
             waterLevel: g.water_level || 50,
             lastWateredAt: g.last_watered_at,
             streakCurrent: g.streak_current,
-            streakBest: g.streak_best
+            streakBest: g.streak_best,
+            focusMinutes: g.focus_minutes || 0
         };
     }
 

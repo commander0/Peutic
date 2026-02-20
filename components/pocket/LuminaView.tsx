@@ -10,6 +10,27 @@ import PetCanvas from './PetCanvas';
 import { useToast } from '../common/Toast';
 import { UserService } from '../../services/userService';
 
+// --- TYPEWRITER COMPONENT ---
+const Typewriter: React.FC<{ text: string }> = ({ text }) => {
+    const [displayedText, setDisplayedText] = useState('');
+
+    useEffect(() => {
+        let i = 0;
+        setDisplayedText('');
+        const timer = setInterval(() => {
+            if (i < text.length) {
+                setDisplayedText(prev => prev + text.charAt(i));
+                i++;
+            } else {
+                clearInterval(timer);
+            }
+        }, 40); // 40ms per char
+        return () => clearInterval(timer);
+    }, [text]);
+
+    return <span>{displayedText}<span className="animate-blink-cursor">_</span></span>;
+};
+
 interface LuminaViewProps {
     user: User;
     onClose: () => void;
@@ -279,7 +300,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                         <div className="absolute top-0 left-0 w-full h-1 bg-purple-500 animate-[loading_2s_ease-in-out_infinite]" />
                         <Cpu className="w-16 h-16 text-purple-400 mx-auto mb-6 animate-pulse" />
                         <h3 className="text-3xl font-black text-purple-400 mb-6 font-mono">ORACLE_OUTPUT</h3>
-                        <p className="text-xl text-white/90 leading-relaxed type-writer-effect">"{oracleMessage}"</p>
+                        <p className="text-xl text-white/90 leading-relaxed"><Typewriter text={oracleMessage} /></p>
                         <p className="mt-8 text-xs text-purple-500/50 blink">TAP_TO_DISMISS</p>
                     </div>
                 </div>
@@ -310,8 +331,29 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
             {/* --- MAIN PORTAL --- */}
             <main className="flex-1 relative flex flex-col items-center justify-center p-4">
 
+                {/* --- ORACLE SUMMONING OVERLAY (THINKING STATE) --- */}
+                {isSummoning && (
+                    <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none overflow-hidden">
+                        {/* Shimmering Aura */}
+                        <div className="absolute w-[800px] h-[800px] bg-gradient-to-r from-purple-900/0 via-fuchsia-600/10 to-purple-900/0 rounded-full blur-[100px] animate-[spin_6s_linear_infinite]" />
+
+                        {/* Particles */}
+                        {[...Array(20)].map((_, i) => (
+                            <div
+                                key={i}
+                                className="absolute w-1 h-1 bg-purple-400 rounded-full animate-particle-float blur-[1px]"
+                                style={{
+                                    left: `${Math.random() * 100}%`,
+                                    top: `${Math.random() * 100}%`,
+                                    animationDelay: `${Math.random() * 2}s`
+                                }}
+                            />
+                        ))}
+                    </div>
+                )}
+
                 {/* CONTAINER */}
-                <div className="relative group perspective-1000">
+                <div className="relative group perspective-1000 z-10 w-full max-w-[500px] mx-auto">
 
                     {/* Ring System */}
                     <div className={`absolute inset-0 -m-12 border border-cyan-500/20 rounded-full animate-[spin_20s_linear_infinite] ${isSummoning ? 'border-purple-500/40 speed-up' : ''}`} />

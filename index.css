@@ -428,3 +428,73 @@ body {
 .preserve-3d {
     transform-style: preserve-3d;
 }
+
+/* 7. Ethereal Breathe (Zen Dojo) */
+@keyframes ethereal-breathe {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+        filter: brightness(1.1);
+    }
+}
+
+.animate-ethereal-breathe {
+    animation: ethereal-breathe 8s ease-in-out infinite;
+}
+
+/* 8. Mystical Shimmer (Oracle) */
+@keyframes shimmer {
+    0% {
+        background-position: -200% center;
+    }
+    100% {
+        background-position: 200% center;
+    }
+}
+
+.animate-shimmer {
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.1) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 200% auto;
+    animation: shimmer 3s linear infinite;
+}
+
+/* 9. Particle Float (Oracle/Lumina) */
+@keyframes particle-float-up {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.8;
+    }
+    90% {
+        opacity: 0.2;
+    }
+    100% {
+        transform: translateY(-100px) scale(0.5);
+        opacity: 0;
+    }
+}
+
+.animate-particle-float {
+    animation: particle-float-up 4s ease-in infinite;
+}
+
+/* 10. Typewriter Cursor */
+@keyframes blink-cursor {
+    0%, 100% { border-color: transparent }
+    50% { border-color: currentColor }
+}
+.typewriter-cursor {
+    border-right: 2px solid;
+    animation: blink-cursor 0.75s step-end infinite;
+}

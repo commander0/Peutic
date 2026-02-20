@@ -855,7 +855,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {garden && (
                                                     <div
                                                         onClick={() => setShowGardenFull(true)}
-                                                        className="group relative bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-black dark:to-emerald-950 rounded-xl md:rounded-3xl border border-green-400/30 dark:border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.15)] hover:shadow-[0_0_25px_rgba(34,197,94,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                        className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(34,197,94,0.15)] hover:shadow-[0_8px_32px_rgba(34,197,94,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                                     >
                                                         <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 pointer-events-none"></div>
                                                         <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
@@ -904,7 +904,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                                     showToast(`Locked for ${daysRemaining} more days.`, "info");
                                                                 }
                                                             }}
-                                                            className="group relative bg-gradient-to-br from-fuchsia-50 via-purple-50 to-indigo-50 dark:from-purple-950 dark:via-black dark:to-indigo-950 rounded-xl md:rounded-3xl border border-purple-400/30 dark:border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] transition-all overflow-hidden cursor-pointer h-[100px] md:h-[220px]"
+                                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(168,85,247,0.15)] hover:shadow-[0_8px_32px_rgba(168,85,247,0.4)] hover:-translate-y-1 transition-all overflow-hidden h-[100px] md:h-[220px] cursor-pointer"
                                                         >
                                                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_3s_infinite] pointer-events-none"></div>
                                                             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')] opacity-[0.15] pointer-events-none"></div>
@@ -929,7 +929,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 3: LUMINA */}
                                                 <div
                                                     onClick={() => setShowPocketPet(true)}
-                                                    className="group relative bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50 dark:from-cyan-950 dark:via-black dark:to-blue-950 rounded-xl md:rounded-3xl border border-cyan-400/30 dark:border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)] hover:shadow-[0_0_25px_rgba(6,182,212,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(6,182,212,0.15)] hover:shadow-[0_8px_32px_rgba(6,182,212,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                                 >
                                                     <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-600/5 pointer-events-none data-[mode=dark]:mix-blend-overlay"></div>
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
@@ -949,7 +949,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 4: ORACLE */}
                                                 <div
                                                     onClick={() => handleRoomInteraction('observatory', 25)}
-                                                    className={`group relative bg-gradient-to-br from-indigo-50 via-violet-50 to-purple-50 dark:from-indigo-950 dark:via-black dark:to-violet-950 rounded-xl md:rounded-3xl border ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'border-indigo-400/30 dark:border-indigo-500/30' : 'border-gray-300 dark:border-gray-700 grayscale opacity-80'} shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:shadow-[0_0_25px_rgba(99,102,241,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
+                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(99,102,241,0.15)] hover:shadow-[0_8px_32px_rgba(99,102,241,0.4)] hover:-translate-y-1' : 'border-gray-300 dark:border-gray-700 grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
                                                 >
                                                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-600/5 pointer-events-none"></div>
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
@@ -976,7 +976,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 5: ZEN DOJO */}
                                                 <div
                                                     onClick={() => handleRoomInteraction('dojo', 15)}
-                                                    className={`group relative bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-amber-950 dark:via-black dark:to-orange-950 rounded-xl md:rounded-3xl border ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'border-amber-400/30 dark:border-amber-500/30' : 'border-gray-300 dark:border-gray-700 grayscale opacity-80'} shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:shadow-[0_0_25px_rgba(245,158,11,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
+                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(245,158,11,0.15)] hover:shadow-[0_8px_32px_rgba(245,158,11,0.4)] hover:-translate-y-1' : 'border-gray-300 dark:border-gray-700 grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
                                                 >
                                                     <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-600/5 pointer-events-none"></div>
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
@@ -1003,7 +1003,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 6: THOUGHT SHREDDER */}
                                                 <div
                                                     onClick={() => setShowShredder(true)}
-                                                    className="group relative bg-gradient-to-br from-red-50 via-rose-50 to-pink-50 dark:from-red-950 dark:via-black dark:to-rose-950 rounded-xl md:rounded-3xl border border-red-400/30 dark:border-red-500/30 shadow-[0_0_15px_rgba(244,63,94,0.2)] hover:shadow-[0_0_25px_rgba(244,63,94,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(244,63,94,0.15)] hover:shadow-[0_8px_32px_rgba(244,63,94,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                                 >
                                                     <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-600/5 pointer-events-none"></div>
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
@@ -1039,7 +1039,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         {/* TILE 1: MINDFUL MATCH */}
                                         <div
                                             onClick={() => setShowMatchGame(true)}
-                                            className="group relative bg-gradient-to-br from-violet-50 via-fuchsia-50 to-pink-50 dark:from-violet-950 dark:via-black dark:to-pink-950 rounded-xl md:rounded-3xl border border-violet-400/30 dark:border-violet-500/30 shadow-[0_0_15px_rgba(139,92,246,0.2)] hover:shadow-[0_0_25px_rgba(139,92,246,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(139,92,246,0.15)] hover:shadow-[0_8px_32px_rgba(139,92,246,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                         >
                                             <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-pink-600/5 pointer-events-none"></div>
                                             <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
@@ -1057,7 +1057,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         {/* TILE 2: CLOUD HOP */}
                                         <div
                                             onClick={() => setShowCloudHop(true)}
-                                            className="group relative bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-50 dark:from-sky-950 dark:via-black dark:to-cyan-950 rounded-xl md:rounded-3xl border border-sky-400/30 dark:border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.2)] hover:shadow-[0_0_25px_rgba(14,165,233,0.4)] transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(14,165,233,0.15)] hover:shadow-[0_8px_32px_rgba(14,165,233,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                         >
                                             <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-cyan-600/5 pointer-events-none"></div>
                                             <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
