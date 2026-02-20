@@ -100,12 +100,12 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
             osc.stop(now + dur);
         };
 
-        // Create a rich, bright resonant bell (Higher pitch so it's audible)
-        const baseFreq = 523.25; // C5 - Much brighter and chime-like
-        cast(baseFreq, 0, 5, 0.7);       // Fundamental
-        cast(baseFreq * 2.01, 0.05, 4, 0.4); // Overtones
-        cast(baseFreq * 3.02, 0.1, 3, 0.1);  // High sparkle
-        cast(baseFreq * 4.05, 0.15, 2, 0.05);
+        // Create a rich, resonant chord
+        const baseFreq = 160;
+        cast(baseFreq, 0, 8, 0.4);       // Fundamental
+        cast(baseFreq * 1.5, 0.05, 7, 0.2); // Fifth
+        cast(baseFreq * 2, 0.1, 6, 0.1);    // Octave
+        cast(baseFreq * 2.5, 0.15, 5, 0.05); // Major 10th
     };
 
     const stopAudio = () => {
@@ -154,6 +154,12 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
 
     const toggleTimer = () => {
         setIsActive(!isActive);
+        if (!isActive && soundEnabled) {
+            // Play ambient chimes when starting the timer
+            const chimeAudio = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_2491a6d4ee.mp3");
+            chimeAudio.volume = 0.3;
+            chimeAudio.play().catch(e => console.error("Chime play error:", e));
+        }
     };
 
     const nextKoan = () => {

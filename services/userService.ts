@@ -201,6 +201,7 @@ export class UserService {
             languagePreference: data.language_preference || 'en',
             gameScores: scores || { match: 0, cloud: 0 },
             unlockedRooms: data.unlocked_rooms || [],
+            unlockedDecor: data.unlocked_decor || [],
             unlockedAchievements: []
         };
     }

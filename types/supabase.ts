@@ -28,6 +28,7 @@ export interface Database {
                     language_preference: string
                     game_scores: Json
                     unlocked_rooms: string[]
+                    unlocked_decor: string[] | null
                     birthday: string | null
                     metadata: Json
                 }
@@ -49,6 +50,7 @@ export interface Database {
                     language_preference?: string
                     game_scores?: Json
                     unlocked_rooms?: string[]
+                    unlocked_decor?: string[] | null
                     birthday?: string | null
                     metadata?: Json
                 }
@@ -70,6 +72,7 @@ export interface Database {
                     language_preference?: string
                     game_scores?: Json
                     unlocked_rooms?: string[]
+                    unlocked_decor?: string[] | null
                     birthday?: string | null
                     metadata?: Json
                 }
