@@ -9,7 +9,7 @@ import {
     LayoutDashboard, Plus, X, Mic, Lock, AlertTriangle, ShieldCheck, Heart,
     BookOpen, Flame, Trophy,
     Sun, Feather, LifeBuoy, RefreshCw, Star, Edit2, Zap, Gamepad2,
-    ChevronDown, ChevronUp, User as UserIcon, Moon, Scissors,
+    ChevronDown, ChevronUp, User as UserIcon, Moon, Scissors, Leaf,
     Twitter, Instagram, Linkedin,
     Mail, Eye, EyeOff, Megaphone, Sparkles, Save, Video, Brain, Cloud
 } from 'lucide-react';
@@ -37,7 +37,7 @@ import { SoundscapePlayer } from './dashboard/SoundscapePlayer';
 import { WeatherEffect } from './dashboard/WeatherEffect';
 
 // LAZY LOAD HEAVY COMPONENTS
-const GardenCanvas = lazy(() => import('./garden/GardenCanvas'));
+
 const MindfulMatchGame = lazy(() => import('./MindfulMatchGame').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Game Engine...</div> })));
 const CloudHopGame = lazy(() => import('./CloudHopGame').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Cloud Engine...</div> })));
 const PaymentModal = lazy(() => import('./PaymentModal').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Payment Secure Node...</div> })));
@@ -822,6 +822,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     {isDark ? <Sun className="w-5 h-5 text-primary" /> : <Moon className="w-5 h-5 text-gray-400" />}
                                 </button>
 
+                                <button onClick={() => setShowProfile(true)} className="w-10 h-10 md:w-11 md:h-11 rounded-2xl overflow-hidden border-2 border-primary shadow-premium transition-all hover:rotate-3 active:scale-90 flex-shrink-0">
+                                    <AvatarImage src={isGhostMode ? '' : (dashboardUser?.avatar || '')} alt={isGhostMode ? 'Member' : (dashboardUser?.name || 'User')} className="w-full h-full object-cover" isUser={true} />
+                                </button>
+
                                 <button
                                     onClick={() => setShowPayment(true)}
                                     className={`h-[42px] px-4 rounded-2xl font-black shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 text-[10px] md:text-xs border border-transparent ${balance === 0
@@ -831,10 +835,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 >
                                     <span className="md:inline">{balance}m</span>
                                     <Plus className="hidden md:block w-3.5 h-3.5 opacity-70" />
-                                </button>
-
-                                <button onClick={() => setShowProfile(true)} className="w-10 h-10 md:w-11 md:h-11 rounded-2xl overflow-hidden border-2 border-primary shadow-premium transition-all hover:rotate-3 active:scale-90 flex-shrink-0">
-                                    <AvatarImage src={isGhostMode ? '' : (dashboardUser?.avatar || '')} alt={isGhostMode ? 'Member' : (dashboardUser?.name || 'User')} className="w-full h-full object-cover" isUser={true} />
                                 </button>
 
                                 {/* Mobile-only Logout Button */}
@@ -861,10 +861,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                         <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
                                                             <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
                                                             <div className="relative z-10 w-full h-full flex flex-col items-center justify-center pointer-events-none">
-                                                                <div className="w-full h-24 md:h-32 mb-1 pointer-events-auto transition-transform group-hover:scale-105 duration-700">
-                                                                    <Suspense fallback={<div className="w-full h-full flex items-center justify-center"><div className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div></div>}>
-                                                                        <GardenCanvas garden={garden} width={200} height={180} interactionType={isClipping ? 'clip' : null} />
-                                                                    </Suspense>
+                                                                <div className="relative mb-1 md:mb-4 pointer-events-auto">
+                                                                    <div className="absolute -inset-4 bg-green-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                                    <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-green-500 to-emerald-700 border border-green-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,197,94,0.4)] group-hover:scale-110 transition-transform">
+                                                                        <Leaf className="w-5 h-5 md:w-10 md:h-10 text-white animate-ethereal-breathe" />
+                                                                    </div>
                                                                 </div>
                                                                 {/* Overlay Controls */}
                                                                 <div className="absolute top-2 right-2 pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1118,7 +1119,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                             <div className="grid grid-cols-2 gap-2 text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-3"><div className="bg-white/10 p-1.5 rounded-lg">{companion.yearsExperience} Yrs Exp</div><div className="bg-white/10 p-1.5 rounded-lg">{companion.degree}</div></div>
                                                             <button className="bg-white text-black px-4 py-2 rounded-full font-bold text-[10px] flex items-center justify-center gap-2 hover:bg-primary transition-colors"><Video className="w-3 h-3" /> Connect Now</button>
                                                         </div>
-                                                        <div className="absolute top-3 left-3 flex gap-2"><div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md ${companion.status === 'AVAILABLE' ? 'bg-green-500/90 text-white shadow-lg shadow-green-500/20' : 'bg-gray-500/90 text-white'}`}>{companion.status === 'AVAILABLE' ? 'Online' : 'Busy'}</div></div><div className="absolute bottom-3 left-3 right-3 group-hover:opacity-0 transition-opacity"><h3 className="text-white font-black text-lg leading-tight mb-0.5 shadow-sm drop-shadow-md">{companion.name}</h3><p className="text-white/90 dark:text-gray-200 text-[10px] font-bold uppercase tracking-wider truncate drop-shadow-md">{companion.specialty}</p></div></div><div className="p-3 bg-primary-light dark:bg-blue-950 flex justify-between items-center border-t border-primary-border dark:border-blue-900"><div className="flex items-center gap-1"><Star className="w-3 h-3 text-primary fill-primary" /><span className="text-gray-700 dark:text-gray-300 text-xs font-bold">{companion.rating}</span></div><button className="bg-white/50 dark:bg-blue-900 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black rounded-lg p-2 transition-colors"><Eye className="w-3.5 h-3.5" /></button></div></div>))}</div>)}
+                                                        <div className="absolute top-3 left-3 flex gap-2"><div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md ${companion.status === 'AVAILABLE' ? 'bg-green-500/90 text-white shadow-lg shadow-green-500/20' : 'bg-gray-500/90 text-white'}`}>{companion.status === 'AVAILABLE' ? 'Online' : 'Busy'}</div></div><div className="absolute bottom-3 left-3 right-3 group-hover:opacity-0 transition-opacity"><h3 className="text-white font-black text-lg leading-tight mb-0.5 shadow-sm drop-shadow-md">{companion.name}</h3><p className="text-white/90 dark:text-gray-200 text-[10px] font-bold uppercase tracking-wider truncate drop-shadow-md">{companion.specialty}</p></div></div><div className="p-3 bg-primary/15 dark:bg-blue-950 flex justify-between items-center border-t border-primary/20 dark:border-blue-900"><div className="flex items-center gap-1"><Star className="w-3 h-3 text-primary fill-primary" /><span className="text-gray-700 dark:text-gray-300 text-xs font-bold">{companion.rating}</span></div><button className="bg-white/50 dark:bg-blue-900 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black rounded-lg p-2 transition-colors"><Eye className="w-3.5 h-3.5" /></button></div></div>))}</div>)}
                                     {filteredCompanions.length === 0 && (<div className="text-center py-16 bg-gray-50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800"><p className="text-gray-500 font-bold text-sm">No specialists found in this category.</p><button onClick={() => setSpecialtyFilter('All')} className="text-primary text-xs font-bold mt-2 hover:underline">View All</button></div>)}
                                 </div>
                             </div>

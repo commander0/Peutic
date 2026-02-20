@@ -11,8 +11,8 @@ interface GardenCanvasProps {
 const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, interactionType }) => {
 
     // Scale focus minutes to a "Tree Age" from 0 to 1
-    const maxMinutes = 100; // 100 minutes to fully grow
-    const progress = Math.min(garden.focusMinutes / maxMinutes, 1);
+    const maxMinutes = 25; // Decreased from 100 to 25 for faster gamification
+    const progress = Math.min((garden.focusMinutes || 0) / maxMinutes, 1);
     const treeAge = 0.1 + (progress * 0.9); // 0.1 to 1.0
 
     // Determine colors with high fidelity gradients
@@ -96,8 +96,33 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
         const initialLength = 28 * treeAge;
         const initialAngle = -Math.PI / 2;
 
-        // Depth scales from 2 to 7 based on age
         const maxDepth = Math.max(2, Math.floor(treeAge * 7));
+
+        if (treeAge < 0.25) {
+            // Early Stage: Magical Seed / Sprout
+            return (
+                <svg viewBox="0 0 100 100" className={`w-full h-full filter ${treeAge > 0.15 ? 'drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]' : ''}`}>
+                    <defs>
+                        <radialGradient id="baseGlow" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stopColor={theme.glow} stopOpacity="0.4" />
+                            <stop offset="100%" stopColor={theme.glow} stopOpacity="0" />
+                        </radialGradient>
+                    </defs>
+                    {/* Ethereal Base */}
+                    <ellipse cx="50" cy="88" rx="25" ry="6" fill="url(#baseGlow)" className="animate-pulse-slow" />
+                    {/* Seed Core */}
+                    <circle cx="50" cy="80" r={4 + (treeAge * 10)} fill={theme.leaf} className="animate-[pulse_2s_infinite]" />
+                    <circle cx="50" cy="80" r={(4 + (treeAge * 10)) / 2} fill="#fff" className="animate-pulse" opacity="0.8" />
+                    {/* Tiny Sprout */}
+                    {treeAge > 0.15 && (
+                        <path d={`M 50 75 Q ${45 - treeAge * 20} ${70 - treeAge * 30} 50 ${65 - treeAge * 40}`} fill="none" stroke="#292524" strokeWidth="2" strokeLinecap="round" className="animate-[bounce_3s_infinite]" />
+                    )}
+                    {/* Sparkling Energy */}
+                    <circle cx="45" cy="70" r="1.5" fill={theme.glow} className="animate-ping" />
+                    <circle cx="55" cy="65" r="1" fill={theme.glow} className="animate-ping" style={{ animationDelay: '0.5s' }} />
+                </svg>
+            );
+        }
 
         generateDeterministicTree(startX, startY, initialLength, initialAngle, 0, maxDepth, branches, leaves, treeAge, 1);
 

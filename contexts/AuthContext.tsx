@@ -15,7 +15,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(UserService.getCachedUser());
+    const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     // 1. UNIFIED AUTHENTICATION FLOW
@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     } else if (mounted) {
                         // Fallback: If DB sync fails (e.g. network), try cache but warn
                         console.warn("AuthContext: Using cached user due to sync failure");
-                        const cached = UserService.getCachedUser();
+                        const cached = await UserService.getCachedUser();
                         if (cached && cached.id === session.user.id) setUser(cached);
                     }
                 } catch (error) {
@@ -50,7 +50,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
 
         // Initialize
-        supabase.auth.getSession().then(({ data: { session } }) => handleSession(session as any));
+        supabase.auth.getSession().then(({ data: { session } }: any) => handleSession(session));
 
         // Listen for changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: string, session: any) => {

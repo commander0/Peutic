@@ -92,14 +92,14 @@ class SupabaseRedisProvider implements CacheProvider {
 
 export class CacheService {
     private static provider: CacheProvider = new LocalStorageProvider();
-    private static useRedis = false;
+
 
     static init(config?: { redisUrl: string, redisToken: string }) {
         // Even if config is passed, we use the Proxy provider which uses Supabase Auth + Env vars on server
         // We check if the Env vars exist in Client just as a signal to enable it
         if (config?.redisUrl) {
             this.provider = new SupabaseRedisProvider();
-            this.useRedis = true;
+
             logger.info("CacheService", "Switched to Redis (Edge Proxy) Provider");
         } else {
             logger.info("CacheService", "Using LocalStorage Provider");

@@ -12,7 +12,7 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
     const [flipped, setFlipped] = useState<number[]>([]);
     const [solved, setSolved] = useState<number[]>([]);
     const [won, setWon] = useState(false);
-    const [moves, setMoves] = useState(0);
+
     const [time, setTime] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
 
@@ -55,7 +55,7 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
         setFlipped([]);
         setSolved([]);
         setWon(false);
-        setMoves(0);
+
         setTime(0);
         setIsPlaying(true);
     };
@@ -67,7 +67,7 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
         setFlipped(newFlipped);
 
         if (newFlipped.length === 2) {
-            setMoves(m => m + 1);
+
             const card1 = cards[newFlipped[0]];
             const card2 = cards[newFlipped[1]];
 
