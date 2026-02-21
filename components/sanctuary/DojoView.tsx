@@ -241,20 +241,20 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
 
             {/* --- VISUAL DECORATIONS --- */}
             {/* Placed at z-0 so it's under main interactive layer but OVER background */}
-            <div className="absolute inset-x-0 bottom-0 top-[20%] pointer-events-none z-0 overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
                 {localUser.unlockedDecor?.map(itemId => {
                     const itemData = SANCTUARY_ITEMS.find(i => i.id === itemId);
                     if (!itemData) return null;
 
-                    // Absolute positioning map for items
+                    // Absolute positioning map for items relative to the full screen
                     const getPositionClass = (id: string) => {
                         switch (id) {
-                            case 'incense': return 'bottom-[10%] left-[15%] text-5xl opacity-80 animate-[sway_4s_ease-in-out_infinite]';
-                            case 'bonsai': return 'bottom-[15%] right-[10%] text-7xl opacity-90 drop-shadow-xl';
-                            case 'lantern': return 'top-[15%] left-[20%] text-6xl opacity-70 animate-pulse-slow drop-shadow-[0_0_15px_rgba(24cd,211,153,0.5)]';
-                            case 'stones': return 'bottom-[5%] left-[40%] text-4xl opacity-70';
-                            case 'scroll': return 'top-[25%] right-[25%] text-6xl opacity-85';
-                            case 'singing_bowl': return 'bottom-[12%] left-[28%] text-5xl opacity-90';
+                            case 'incense': return 'bottom-[15%] left-[20%] md:left-[25%] text-4xl md:text-5xl opacity-80 animate-[sway_4s_ease-in-out_infinite]';
+                            case 'bonsai': return 'bottom-[20%] right-[15%] md:right-[20%] text-6xl md:text-7xl opacity-90 drop-shadow-xl';
+                            case 'lantern': return 'top-[15%] left-[15%] md:left-[20%] text-5xl md:text-6xl opacity-70 animate-pulse-slow drop-shadow-[0_0_15px_rgba(24cd,211,153,0.5)]';
+                            case 'stones': return 'bottom-[10%] left-[45%] md:left-[40%] text-3xl md:text-4xl opacity-70';
+                            case 'scroll': return 'top-[20%] right-[20%] md:right-[25%] text-5xl md:text-6xl opacity-85';
+                            case 'singing_bowl': return 'bottom-[12%] left-[35%] md:left-[28%] text-4xl md:text-5xl opacity-90';
                             default: return 'hidden';
                         }
                     };

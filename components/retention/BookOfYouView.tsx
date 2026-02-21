@@ -182,7 +182,7 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
             </button>
 
             {/* THE PHYSICAL BOOK MOCKUP */}
-            <div className="relative w-full max-w-6xl aspect-auto md:aspect-[16/10] min-h-[85vh] md:min-h-0 bg-[#fdfaf6] dark:bg-[#1a1817] shadow-[0_20px_40px_rgba(0,0,0,0.8),_0_0_0_1px_rgba(0,0,0,0.5)] dark:shadow-[0_20px_40px_rgba(0,0,0,1),_0_0_0_1px_rgba(255,255,255,0.05)] rounded-sm flex flex-col md:flex-row after:absolute after:inset-0 after:bg-[url('https://www.transparenttextures.com/patterns/paper.png')] after:opacity-[0.6] dark:after:opacity-[0.15] dark:after:bg-[url('https://www.transparenttextures.com/patterns/black-paper.png')] after:mix-blend-multiply dark:after:mix-blend-color-dodge after:pointer-events-none transition-colors duration-500">
+            <div className="relative w-full max-w-6xl aspect-auto md:aspect-[16/10] min-h-[85vh] md:min-h-0 bg-[#fdfaf6] dark:bg-[#1a1817] shadow-[0_20px_40px_rgba(0,0,0,0.8),_0_0_0_1px_rgba(0,0,0,0.5)] dark:shadow-[0_20px_40px_rgba(0,0,0,1),_0_0_0_1px_rgba(255,255,255,0.05)] rounded-sm flex flex-col md:flex-row print:flex-col print:h-auto print:min-h-0 print:gap-8 print:shadow-none after:absolute after:inset-0 after:bg-[url('https://www.transparenttextures.com/patterns/paper.png')] after:opacity-[0.6] dark:after:opacity-[0.15] dark:after:bg-[url('https://www.transparenttextures.com/patterns/black-paper.png')] after:mix-blend-multiply dark:after:mix-blend-color-dodge after:pointer-events-none transition-colors duration-500">
 
                 {/* PAGE EDGES (Thickness Mockup) */}
                 <div className="absolute -bottom-1 -right-1 w-full h-full border-r-4 border-b-4 border-amber-900/10 dark:border-stone-400/5 rounded-br-md pointer-events-none hidden md:block"></div>
@@ -207,21 +207,24 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                                 <span className="text-[10px] lg:text-xs font-sans font-black uppercase tracking-[0.3em] text-amber-900/80 dark:text-stone-300">Volume {currentVolume + 1}</span>
                             </div>
 
-                            <div className="flex items-center gap-6 lg:gap-12 mt-2 lg:mt-4 p-1 rounded bg-[#fdfaf6]/50 dark:bg-[#1a1817]/50 backdrop-blur-sm">
+                            <div className="flex items-center gap-6 lg:gap-12 mt-2 lg:mt-4 p-2 md:p-4 rounded-xl bg-white/50 dark:bg-black/20 backdrop-blur-md border border-amber-900/10 dark:border-white/10 shadow-lg print:hidden">
                                 <button
                                     onClick={() => currentVolume > 0 && setCurrentVolume(prev => prev - 1)}
-                                    className={`px-3 lg:px-4 py-2 text-[10px] lg:text-xs font-sans font-black uppercase tracking-widest border-b-2 border-transparent transition-all pointer-events-auto ${currentVolume > 0 ? 'text-amber-900 hover:border-amber-900 dark:text-stone-300 dark:hover:border-stone-300 hover:bg-amber-900/5 dark:hover:bg-stone-800/50 rounded-sm' : 'text-amber-900/20 dark:text-stone-600 cursor-not-allowed'}`} disabled={currentVolume === 0}
+                                    className={`flex items-center gap-2 px-4 lg:px-6 py-3 text-xs lg:text-sm font-sans font-black uppercase tracking-widest transition-all pointer-events-auto shadow-sm ${currentVolume > 0 ? 'text-amber-900 bg-amber-100 hover:bg-amber-200 dark:text-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700 rounded-lg hover:scale-105 active:scale-95' : 'text-amber-900/20 bg-amber-100/30 dark:text-stone-600 dark:bg-stone-800/30 rounded-lg cursor-not-allowed'}`} disabled={currentVolume === 0}
                                 >
-                                    &lt; Past
+                                    <ChevronLeft className="w-4 h-4" /> Past
                                 </button>
 
-                                <span className="text-amber-900/30 dark:text-stone-600 text-xs">&bull;&bull;&bull;</span>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-amber-900 dark:text-stone-300 font-bold text-sm">Volume {currentVolume + 1}</span>
+                                    <span className="text-amber-900/50 dark:text-stone-500 text-[10px] uppercase font-bold tracking-widest">of {maxVolume + 1}</span>
+                                </div>
 
                                 <button
                                     onClick={() => currentVolume < maxVolume && setCurrentVolume(prev => prev + 1)}
-                                    className={`px-3 lg:px-4 py-2 text-[10px] lg:text-xs font-sans font-black uppercase tracking-widest border-b-2 border-transparent transition-all pointer-events-auto ${currentVolume < maxVolume ? 'text-amber-900 hover:border-amber-900 dark:text-stone-300 dark:hover:border-stone-300 hover:bg-amber-900/5 dark:hover:bg-stone-800/50 rounded-sm' : 'text-amber-900/20 dark:text-stone-600 cursor-not-allowed'}`} disabled={currentVolume >= maxVolume}
+                                    className={`flex items-center gap-2 px-4 lg:px-6 py-3 text-xs lg:text-sm font-sans font-black uppercase tracking-widest transition-all pointer-events-auto shadow-sm ${currentVolume < maxVolume ? 'text-amber-900 bg-amber-100 hover:bg-amber-200 dark:text-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700 rounded-lg hover:scale-105 active:scale-95' : 'text-amber-900/20 bg-amber-100/30 dark:text-stone-600 dark:bg-stone-800/30 rounded-lg cursor-not-allowed'}`} disabled={currentVolume >= maxVolume}
                                 >
-                                    Future &gt;
+                                    Future <ChevronLeft className="w-4 h-4 rotate-180" />
                                 </button>
                             </div>
                         </div>
@@ -253,7 +256,7 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                 </div>
 
                 {/* THE SPINE SHADOW - Desktop Only */}
-                <div className="hidden md:block w-16 shrink-0 h-full bg-gradient-to-r from-transparent via-black/10 to-transparent dark:from-transparent dark:via-black/60 dark:to-transparent shadow-[inset_15px_0_30px_rgba(0,0,0,0.1),inset_-15px_0_30px_rgba(0,0,0,0.1)] dark:shadow-[inset_20px_0_40px_rgba(0,0,0,0.4),inset_-20px_0_40px_rgba(0,0,0,0.4)] z-10 relative pointer-events-none">
+                <div className="hidden md:block w-16 shrink-0 h-full bg-gradient-to-r from-transparent via-black/10 to-transparent dark:from-transparent dark:via-black/60 dark:to-transparent shadow-[inset_15px_0_30px_rgba(0,0,0,0.1),inset_-15px_0_30px_rgba(0,0,0,0.1)] dark:shadow-[inset_20px_0_40px_rgba(0,0,0,0.4),inset_-20px_0_40px_rgba(0,0,0,0.4)] z-10 relative pointer-events-none print:hidden">
                     <div className="absolute inset-y-0 left-1/2 -ml-px w-px bg-black/20 dark:bg-black/80 w-[2px]"></div>
                     <div className="absolute inset-y-0 left-[calc(100%-1px)] w-[1px] bg-white/30 dark:bg-white/10 shadow-[0_0_5px_rgba(255,255,255,0.5)]"></div>
                     <div className="absolute inset-y-0 right-[calc(100%-1px)] w-[1px] bg-white/30 dark:bg-white/10 shadow-[0_0_5px_rgba(255,255,255,0.5)]"></div>
@@ -323,7 +326,7 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                                 <p className="font-serif italic text-amber-900/60 dark:text-stone-400 text-sm">Weaving your chronicle together...</p>
                             </div>
                         ) : narrative ? (
-                            <div className="text-left bg-gradient-to-b from-transparent via-[#fdfaf6]/30 to-transparent dark:via-[#1a1817]/30 p-4 lg:p-8 relative">
+                            <div className="text-left bg-gradient-to-b from-transparent via-[#fdfaf6]/30 to-transparent dark:via-[#1a1817]/30 p-4 lg:p-8 relative print:break-inside-avoid">
                                 <div className="absolute top-0 left-10 w-8 h-px bg-amber-900/20 dark:bg-stone-700"></div>
                                 <div className="absolute top-0 right-10 w-8 h-px bg-amber-900/20 dark:bg-stone-700"></div>
                                 {narrative.split('\n\n').map((paragraph, idx) => (
