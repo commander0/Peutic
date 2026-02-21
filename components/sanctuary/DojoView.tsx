@@ -172,8 +172,8 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
             timerRef.current = window.setTimeout(() => {
                 setTimeLeft(timeLeft - 1);
             }, 1000);
-        } else if (timeLeft === 0) {
-            // Timer Finished
+        } else if (timeLeft === 0 && isActive) {
+            // Timer Finished - Added isActive check to prevent infinite loop
             handleComplete();
         }
         return () => {
@@ -372,28 +372,29 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                 </div>
 
                 {/* --- NEW SOUNDSCAPE CONTROLS --- */}
-                <div className="bg-white/5 dark:bg-black/20 rounded-2xl p-6 backdrop-blur-sm border border-white/10 w-full max-w-lg mb-8">
-                    <h3 className="text-lg font-serif text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
-                        <Volume2 className="w-4 h-4" />
-                        Soundscape Layering
+                <div className="bg-stone-900/60 rounded-3xl p-6 backdrop-blur-md border border-amber-900/20 w-full max-w-lg mb-8 shadow-2xl relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+
+                    <h3 className="text-lg font-serif text-amber-200/80 mb-6 flex items-center justify-center gap-3 tracking-widest uppercase text-sm">
+                        <Volume2 className="w-5 h-5 text-amber-500" />
+                        Acoustic Atmosphere
+                        <VolumeX className="w-5 h-5 text-amber-500/30" />
                     </h3>
 
-                    <div className="grid grid-cols-2 gap-4">
-
-
-                        <div>
-                            <label className="text-xs font-bold text-gray-500 mb-2 block">BELL INTERVAL</label>
-                            <div className="flex flex-col gap-2">
+                    <div className="flex flex-col items-center gap-6 relative z-10 w-full">
+                        <div className="w-full">
+                            <label className="text-[10px] uppercase font-black tracking-widest text-stone-500 mb-3 block text-center">Singing Bowl Interval</label>
+                            <div className="grid grid-cols-3 gap-3 w-full">
                                 {[0, 60, 300].map((sec) => (
                                     <button
                                         key={sec}
                                         onClick={(e) => { e.stopPropagation(); setBellInterval(sec); }}
-                                        className={`px-3 py-2 rounded-lg text-sm text-left transition-all ${bellInterval === sec
-                                            ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-500/30'
-                                            : 'hover:bg-white/5 text-gray-500'
+                                        className={`px-2 py-3 rounded-xl text-xs font-bold tracking-wider text-center transition-all ${bellInterval === sec
+                                            ? 'bg-amber-500/20 text-amber-200 border border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
+                                            : 'hover:bg-white/5 text-stone-500 border border-white/5'
                                             }`}
                                     >
-                                        {sec === 0 ? 'Start/End Only' : `Every ${sec / 60 >= 1 ? sec / 60 + ' min' : sec + ' sec'}`}
+                                        {sec === 0 ? 'START/END' : sec === 60 ? '1 MIN' : '5 MIN'}
                                     </button>
                                 ))}
                             </div>

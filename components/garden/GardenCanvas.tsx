@@ -11,12 +11,18 @@ interface GardenCanvasProps {
 
 const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, interactionType }) => {
 
-    // Scale focus minutes to a "Tree Age"
-    const maxMinutes = 20; // Doubled difficulty
+    // Expanded Gamification: Scale up to Ethereal Entity (120 minutes)
+    const maxMinutes = 120;
     const progress = Math.min((garden.focusMinutes || 0) / maxMinutes, 1);
 
-    // The previous design had defined stages: 0 (seed), 1 (sprout), 2 (small tree), 3 (full bloom)
-    const stage = progress < 0.25 ? 0 : progress < 0.6 ? 1 : progress < 1 ? 2 : 3;
+    let stage = 0;
+    const fm = garden.focusMinutes || 0;
+    if (fm >= 120) stage = 6; // Ethereal Entity
+    else if (fm >= 90) stage = 5; // Mystic Guardian
+    else if (fm >= 60) stage = 4; // Ancient Tree
+    else if (fm >= 40) stage = 3; // Mature Tree
+    else if (fm >= 20) stage = 2; // Sapling
+    else if (fm >= 10) stage = 1; // Sprout
 
     // Determine colors
     const getThemeColors = (type: string) => {
@@ -118,52 +124,117 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
                         </>
                     )}
 
-                    {/* STAGE 3: FULL BLOOM */}
+                    {/* STAGE 3: MATURE TREE (Old Full Bloom) */}
                     {stage === 3 && (
                         <>
-                            {/* Trunk */}
                             <path d="M 50 85 Q 35 50 50 30 Q 65 15 50 10" fill="none" stroke="url(#trunk-grad)" strokeWidth="6" strokeLinecap="round" />
                             <path d="M 45 60 Q 30 50 20 40" fill="none" stroke="url(#trunk-grad)" strokeWidth="3" strokeLinecap="round" />
                             <path d="M 55 50 Q 80 40 85 20" fill="none" stroke="url(#trunk-grad)" strokeWidth="3" strokeLinecap="round" />
                             <path d="M 48 40 Q 30 30 35 20" fill="none" stroke="url(#trunk-grad)" strokeWidth="2" strokeLinecap="round" />
 
-                            {/* Main Canopy */}
                             <g filter="drop-shadow(0px 3px 4px rgba(0,0,0,0.4))">
                                 <circle cx="50" cy="20" r="18" fill={theme.leafDark} />
                                 <circle cx="45" cy="15" r="14" fill={theme.leaf} />
-                                <circle cx="48" cy="10" r="10" fill={theme.leafLight} />
-
-                                <circle cx="60" cy="18" r="12" fill={theme.leafDark} />
-                                <circle cx="62" cy="14" r="8" fill={theme.leaf} />
-
-                                <circle cx="20" cy="35" r="12" fill={theme.leafDark} />
-                                <circle cx="15" cy="30" r="8" fill={theme.leaf} />
-                                <circle cx="12" cy="26" r="4" fill={theme.leafLight} />
-
-                                <circle cx="80" cy="25" r="14" fill={theme.leafDark} />
-                                <circle cx="85" cy="20" r="10" fill={theme.leaf} />
-
-                                <circle cx="35" cy="20" r="10" fill={theme.leafDark} />
-                                <circle cx="30" cy="15" r="6" fill={theme.leaf} />
+                                <circle cx="48" cy="10" r="10" fill={theme.leafLight} /><circle cx="60" cy="18" r="12" fill={theme.leafDark} />
+                                <circle cx="62" cy="14" r="8" fill={theme.leaf} /><circle cx="20" cy="35" r="12" fill={theme.leafDark} />
+                                <circle cx="15" cy="30" r="8" fill={theme.leaf} /><circle cx="12" cy="26" r="4" fill={theme.leafLight} />
+                                <circle cx="80" cy="25" r="14" fill={theme.leafDark} /><circle cx="85" cy="20" r="10" fill={theme.leaf} />
+                                <circle cx="35" cy="20" r="10" fill={theme.leafDark} /><circle cx="30" cy="15" r="6" fill={theme.leaf} />
                             </g>
-
-                            {/* Glowing Blooms/Fruits */}
                             <g filter="url(#bloom-glow)">
-                                <circle cx="45" cy="15" r="4" fill={theme.bloom} />
-                                <circle cx="55" cy="25" r="3" fill={theme.bloom} />
-                                <circle cx="68" cy="18" r="4.5" fill={theme.bloom} />
-                                <circle cx="20" cy="35" r="3.5" fill={theme.bloom} />
-                                <circle cx="82" cy="20" r="4" fill={theme.bloom} />
-                                <circle cx="35" cy="18" r="3" fill={theme.bloom} />
+                                <circle cx="45" cy="15" r="4" fill={theme.bloom} /><circle cx="55" cy="25" r="3" fill={theme.bloom} /><circle cx="68" cy="18" r="4.5" fill={theme.bloom} />
+                                <circle cx="20" cy="35" r="3.5" fill={theme.bloom} /><circle cx="82" cy="20" r="4" fill={theme.bloom} /><circle cx="35" cy="18" r="3" fill={theme.bloom} />
                             </g>
-
-                            {/* Falling leaves/petals animation for full bloom */}
                             <g className="animate-[fade_4s_ease-in-out_infinite]" opacity="0">
                                 <path d="M 20 40 Q 22 42 20 44 Q 18 42 20 40" fill={theme.bloom} className="animate-[sway-drop_5s_linear_infinite]" />
-                                <path d="M 75 30 Q 77 32 75 34 Q 73 32 75 30" fill={theme.bloom} className="animate-[sway-drop_6s_linear_infinite]" style={{ animationDelay: '2s' }} />
                             </g>
                         </>
                     )}
+
+                    {/* STAGE 4: ANCIENT TREE - Thicker, wider base, glowing roots */}
+                    {stage === 4 && (
+                        <>
+                            {/* Glowing Roots */}
+                            <path d="M 50 85 Q 30 88 20 95 M 50 85 Q 70 88 80 95 M 50 85 Q 40 90 35 98 M 50 85 Q 60 90 65 98" fill="none" stroke={theme.leafLight} strokeWidth="1" strokeLinecap="round" className="animate-[pulse_3s_infinite]" opacity="0.6" />
+                            <path d="M 50 85 Q 25 40 50 15 Q 75 0 50 -5" fill="none" stroke="url(#trunk-grad)" strokeWidth="10" strokeLinecap="round" />
+                            <path d="M 40 50 Q 15 40 5 30" fill="none" stroke="url(#trunk-grad)" strokeWidth="5" strokeLinecap="round" />
+                            <path d="M 60 50 Q 85 40 95 30" fill="none" stroke="url(#trunk-grad)" strokeWidth="5" strokeLinecap="round" />
+                            <path d="M 45 30 Q 20 20 25 5" fill="none" stroke="url(#trunk-grad)" strokeWidth="4" strokeLinecap="round" />
+
+                            <g filter="drop-shadow(0px 5px 6px rgba(0,0,0,0.6))">
+                                <circle cx="50" cy="5" r="22" fill={theme.leafDark} /><circle cx="45" cy="0" r="18" fill={theme.leaf} /><circle cx="50" cy="-5" r="12" fill={theme.leafLight} />
+                                <circle cx="15" cy="25" r="18" fill={theme.leafDark} /><circle cx="10" cy="20" r="14" fill={theme.leaf} /><circle cx="5" cy="15" r="8" fill={theme.leafLight} />
+                                <circle cx="85" cy="25" r="18" fill={theme.leafDark} /><circle cx="90" cy="20" r="14" fill={theme.leaf} /><circle cx="95" cy="15" r="8" fill={theme.leafLight} />
+                                <circle cx="30" cy="10" r="15" fill={theme.leafDark} /><circle cx="25" cy="5" r="10" fill={theme.leaf} />
+                                <circle cx="70" cy="10" r="15" fill={theme.leafDark} /><circle cx="75" cy="5" r="10" fill={theme.leaf} />
+                            </g>
+                            <g filter="url(#bloom-glow)">
+                                <circle cx="45" cy="0" r="5" fill={theme.bloom} /><circle cx="10" cy="20" r="5" fill={theme.bloom} /><circle cx="90" cy="20" r="6" fill={theme.bloom} />
+                                <circle cx="30" cy="10" r="4" fill={theme.bloom} /><circle cx="70" cy="10" r="4" fill={theme.bloom} /><circle cx="50" cy="-5" r="6" fill={theme.bloom} />
+                            </g>
+                        </>
+                    )}
+
+                    {/* STAGE 5: MYSTIC GUARDIAN - Floating Orbs, Majestic Canopy */}
+                    {stage === 5 && (
+                        <>
+                            <circle cx="50" cy="10" r="70" fill={theme.bloom} opacity="0.08" filter="url(#bloom-glow)" className="animate-[pulse_5s_infinite]" />
+                            <path d="M 50 85 Q 25 40 50 15 Q 75 0 50 -5" fill="none" stroke="url(#trunk-grad)" strokeWidth="12" strokeLinecap="round" />
+                            <path d="M 38 50 Q 10 35 0 20" fill="none" stroke="url(#trunk-grad)" strokeWidth="6" strokeLinecap="round" />
+                            <path d="M 62 50 Q 90 35 100 20" fill="none" stroke="url(#trunk-grad)" strokeWidth="6" strokeLinecap="round" />
+
+                            <g filter="drop-shadow(0px 8px 10px rgba(0,0,0,0.7))">
+                                <circle cx="50" cy="0" r="28" fill={theme.leafDark} /><circle cx="45" cy="-5" r="22" fill={theme.leaf} /><circle cx="50" cy="-10" r="15" fill={theme.leafLight} />
+                                <circle cx="10" cy="20" r="22" fill={theme.leafDark} /><circle cx="5" cy="15" r="18" fill={theme.leaf} /><circle cx="0" cy="10" r="10" fill={theme.leafLight} />
+                                <circle cx="90" cy="20" r="22" fill={theme.leafDark} /><circle cx="95" cy="15" r="18" fill={theme.leaf} /><circle cx="100" cy="10" r="10" fill={theme.leafLight} />
+                            </g>
+                            <g filter="url(#bloom-glow)" className="animate-[bounce_3s_infinite]">
+                                <circle cx="25" cy="-15" r="4" fill={theme.bloom} /><circle cx="75" cy="-15" r="4" fill={theme.bloom} />
+                                <circle cx="15" cy="5" r="5" fill={theme.bloom} /><circle cx="85" cy="5" r="5" fill={theme.bloom} />
+                                <circle cx="50" cy="-25" r="6" fill={theme.bloom} />
+                            </g>
+                        </>
+                    )}
+
+                    {/* STAGE 6: ETHEREAL ENTITY - Sacred Geometry, Ascension */}
+                    {stage === 6 && (
+                        <>
+                            {/* Massive Aura */}
+                            <circle cx="50" cy="0" r="90" fill={theme.leafLight} opacity="0.1" filter="url(#bloom-glow)" className="animate-[pulse_4s_infinite]" />
+                            <circle cx="50" cy="0" r="60" fill={theme.bloom} opacity="0.15" filter="url(#bloom-glow)" className="animate-[spin_20s_linear_infinite]" strokeWidth="1" strokeDasharray="4 4" stroke={theme.bloom} />
+
+                            <path d="M 50 85 Q 20 40 50 10 Q 80 -10 50 -20" fill="none" stroke="url(#trunk-grad)" strokeWidth="14" strokeLinecap="round" />
+                            <path d="M 35 50 Q -5 30 -10 10" fill="none" stroke="url(#trunk-grad)" strokeWidth="7" strokeLinecap="round" />
+                            <path d="M 65 50 Q 105 30 110 10" fill="none" stroke="url(#trunk-grad)" strokeWidth="7" strokeLinecap="round" />
+
+                            {/* Crystal Canopy */}
+                            <g filter="drop-shadow(0px 0px 15px rgba(255,255,255,0.5))">
+                                <circle cx="50" cy="-10" r="32" fill={theme.leafDark} opacity="0.8" />
+                                <circle cx="45" cy="-15" r="26" fill={theme.leaf} opacity="0.9" />
+                                <circle cx="50" cy="-20" r="18" fill={theme.leafLight} />
+
+                                <circle cx="-5" cy="10" r="26" fill={theme.leafDark} opacity="0.8" />
+                                <circle cx="-10" cy="5" r="20" fill={theme.leaf} opacity="0.9" />
+                                <circle cx="-15" cy="0" r="12" fill={theme.leafLight} />
+
+                                <circle cx="105" cy="10" r="26" fill={theme.leafDark} opacity="0.8" />
+                                <circle cx="110" cy="5" r="20" fill={theme.leaf} opacity="0.9" />
+                                <circle cx="115" cy="0" r="12" fill={theme.leafLight} />
+                            </g>
+
+                            {/* Floating Sacred Geometry */}
+                            <g filter="url(#bloom-glow)" className="animate-[spin_10s_linear_infinite_reverse]" style={{ transformOrigin: '50px -10px' }}>
+                                <polygon points="50,-35 40,-15 60,-15" fill="none" stroke={theme.bloom} strokeWidth="2" />
+                                <polygon points="50,15 40,-5 60,-5" fill="none" stroke={theme.bloom} strokeWidth="2" />
+                            </g>
+                            <g filter="url(#bloom-glow)" className="animate-[bounce_2s_infinite]">
+                                <circle cx="-10" cy="-10" r="6" fill={theme.bloom} />
+                                <circle cx="110" cy="-10" r="6" fill={theme.bloom} />
+                                <circle cx="50" cy="-35" r="8" fill={theme.bloom} />
+                            </g>
+                        </>
+                    )}
+
                 </g>
 
                 {/* Harvesting/Water Effects Overlay */}
@@ -193,15 +264,20 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
             </div>
 
             {/* Focus Minutes / Age Indicator */}
-            <div className="absolute bottom-[-15px] md:bottom-[-20px] w-full max-w-[150px] h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden shadow-inner">
+            <div className="absolute bottom-[-15px] md:bottom-[-20px] w-full max-w-[150px] h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden shadow-inner flex relative">
                 <div
-                    className={`h-full transition-all duration-1000 ${progress >= 1 ? 'bg-yellow-400 animate-pulse' : 'bg-green-500'}`}
+                    className={`absolute left-0 top-0 h-full transition-all duration-1000 ${progress >= 1 ? 'bg-fuchsia-500 animate-pulse shadow-[0_0_15px_rgba(217,70,239,0.8)]' : 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]'}`}
                     style={{ width: `${progress * 100}%` }}
                 />
             </div>
-            <span className="absolute bottom-[-32px] md:bottom-[-40px] text-[9px] md:text-[10px] font-sans text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">
-                {progress >= 1 ? 'READY FOR HARVEST' : `${garden.focusMinutes} / ${maxMinutes} MINS`}
-            </span>
+            <div className="absolute bottom-[-32px] md:bottom-[-40px] flex flex-col items-center">
+                <span className="text-[9px] md:text-[10px] font-sans text-emerald-400 font-black uppercase tracking-[0.2em] mb-0.5">
+                    {stage === 6 ? 'ETHEREAL ENTITY' : stage === 5 ? 'MYSTIC GUARDIAN' : stage === 4 ? 'ANCIENT TREE' : stage === 3 ? 'MATURE TREE' : stage === 2 ? 'SAPLING' : stage === 1 ? 'SPROUT' : 'SEED'}
+                </span>
+                <span className="text-[8px] md:text-[9px] font-sans text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">
+                    {progress >= 1 ? 'ASCENDED' : `${garden.focusMinutes} / ${maxMinutes} MINS`}
+                </span>
+            </div>
         </div>
     );
 };

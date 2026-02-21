@@ -544,7 +544,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                             <span className="font-bold tracking-widest text-sm uppercase">Return to Lumina</span>
                         </button>
                         {activeGame === 'match' && <MindfulMatchGame dashboardUser={user} />}
-                        {activeGame === 'cloud' && <CloudHopGame dashboardUser={user} lumina={pet} />}
+                        {activeGame === 'cloud' && pet && <CloudHopGame dashboardUser={user} />}
                     </div>
                 )}
             </div>

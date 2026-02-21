@@ -115,8 +115,20 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
         <div className="fixed inset-0 z-[120] bg-black text-indigo-50 flex flex-col animate-in fade-in duration-1000 overflow-hidden font-serif selection:bg-purple-500 selection:text-white">
             {/* 1. CINEMATIC BACKGROUND */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#1e1b4b_0%,_#000000_80%)]"></div>
+
+            {/* Sacred Geometry Mandala Background */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none overflow-hidden">
+                <svg viewBox="0 0 100 100" className="w-[150vw] h-[150vw] md:w-[100vw] md:h-[100vw] animate-[spin_120s_linear_infinite]">
+                    <circle cx="50" cy="50" r="48" fill="none" stroke="#eab308" strokeWidth="0.5" strokeDasharray="4 8" />
+                    <circle cx="50" cy="50" r="38" fill="none" stroke="#eab308" strokeWidth="0.2" />
+                    <polygon points="50,2 98,75 2,75" fill="none" stroke="#eab308" strokeWidth="0.3" />
+                    <polygon points="50,98 98,25 2,25" fill="none" stroke="#eab308" strokeWidth="0.3" />
+                    <rect x="15" y="15" width="70" height="70" fill="none" stroke="#eab308" strokeWidth="0.2" transform="rotate(45 50 50)" />
+                </svg>
+            </div>
+
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2094&auto=format&fit=crop')] bg-cover bg-center opacity-30 animate-pulse-slow mix-blend-screen"></div>
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 animate-pulse-slow"></div>
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-40 animate-pulse-slow mix-blend-color-dodge"></div>
 
             {/* 2. HEADER */}
             <button
@@ -177,8 +189,8 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
 
                             {/* B5. TEXT REVEAL (The Insight) */}
                             {oracleMessage && !isReading && (
-                                <div className="absolute inset-0 flex items-center justify-center p-10 md:p-16 text-center z-30 bg-black/50 backdrop-blur-[2px] overflow-y-auto rounded-full custom-scrollbar">
-                                    <div className="w-full text-transparent bg-clip-text bg-gradient-to-br from-indigo-100 via-white to-purple-200 font-serif leading-snug md:leading-relaxed drop-shadow-sm italic text-xs md:text-sm px-1 py-1">
+                                <div className="absolute inset-0 flex items-center justify-center p-8 md:p-14 text-center z-30 bg-black/60 backdrop-blur-[4px] overflow-y-auto rounded-full custom-scrollbar shadow-[inset_0_0_50px_rgba(0,0,0,0.9)]">
+                                    <div className="w-full text-transparent bg-clip-text bg-gradient-to-br from-amber-100 via-amber-300 to-yellow-600 font-serif leading-snug md:leading-relaxed drop-shadow-[0_0_15px_rgba(251,191,36,0.5)] italic text-sm md:text-base px-2 py-2">
                                         <Typewriter text={oracleMessage} speed={30} />
                                     </div>
                                 </div>
@@ -208,12 +220,12 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                             <button
                                 onClick={divineInsight}
                                 disabled={isProcessing}
-                                className={`group relative px-10 py-4 bg-transparent overflow-hidden transition-all ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`group relative px-10 py-4 bg-transparent overflow-hidden transition-all shadow-[0_0_30px_rgba(79,70,229,0.2)] hover:shadow-[0_0_50px_rgba(79,70,229,0.5)] rounded-full ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                                <div className="absolute inset-0 border border-indigo-500/30 group-hover:border-indigo-400 rounded-full transition-colors"></div>
-                                <div className="absolute inset-0 bg-indigo-500/10 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left rounded-full"></div>
-                                <span className="relative flex items-center gap-3 font-black text-sm uppercase tracking-[0.3em] text-indigo-300 group-hover:text-white transition-colors">
-                                    <Eye className="w-4 h-4" /> {isProcessing ? 'Channeling...' : 'Consult Fate'} <span className="opacity-50">(-1m)</span>
+                                <div className="absolute inset-0 bg-gradient-to-r from-indigo-900 via-purple-900 to-indigo-900 opacity-50 group-hover:opacity-80 transition-opacity"></div>
+                                <div className="absolute inset-0 border border-indigo-400/50 group-hover:border-indigo-300 rounded-full transition-colors"></div>
+                                <span className="relative flex items-center justify-center gap-3 font-black text-sm uppercase tracking-[0.3em] text-indigo-200 group-hover:text-white transition-colors">
+                                    <Eye className="w-5 h-5 text-indigo-400 group-hover:text-indigo-200" /> {isProcessing ? 'Channeling...' : 'Consult Fate'} <span className="opacity-50 font-mono">(-1m)</span>
                                 </span>
                             </button>
                         )}

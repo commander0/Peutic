@@ -15,6 +15,7 @@ import { OfflineManager } from './OfflineManager';
 export class UserService {
     private static currentUser: User | null = null;
     private static CACHE_KEY = 'peutic_user_profile';
+    private static isProcessingTransaction = false;
 
     // OFFLINE SYNC HANDLER
     static {
@@ -367,6 +368,11 @@ export class UserService {
     }
 
     static async deductBalance(amount: number, reason: string = "Game Action"): Promise<boolean> {
+        if (this.isProcessingTransaction) {
+            console.warn("[Balance] Locked: Transaction in progress. Ignoring rapid click.");
+            return false;
+        }
+
         const user = this.getUser();
         if (!user) return false;
 
@@ -377,6 +383,7 @@ export class UserService {
             return false;
         }
 
+        this.isProcessingTransaction = true;
         const previousBalance = user.balance;
         user.balance = Math.max(0, user.balance - amount);
         await this.saveUserToCache(user);
@@ -393,23 +400,26 @@ export class UserService {
                 console.error("Balance Deduction Failed", error);
                 user.balance = previousBalance;
                 await this.saveUserToCache(user);
+                this.isProcessingTransaction = false;
                 return false;
             }
 
             if (data?.newBalance !== undefined) {
-                user.balance = data.newBalance;
+                user.balance = Math.max(0, data.newBalance); // Enforce floor 0
                 await this.saveUserToCache(user);
 
                 if (user.balance >= 100) {
                     this.unlockAchievement(user.id, 'WEALTHY_100');
                 }
             }
+            this.isProcessingTransaction = false;
             return true;
 
         } catch (e) {
             console.error("Balance Deduction Exception", e);
             user.balance = previousBalance;
             await this.saveUserToCache(user);
+            this.isProcessingTransaction = false;
             return false;
         }
     }

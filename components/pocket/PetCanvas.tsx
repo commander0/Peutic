@@ -13,12 +13,13 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
 
     const getSpeciesColor = (species: string, level: number) => {
         const isApex = level >= 10;
+        const isAscendant = level >= 30;
         switch (species) {
-            case 'Neo-Shiba': return { p: isApex ? '#f59e0b' : '#fbbf24', s: isApex ? '#b45309' : '#d97706', g: '#fcd34d' };
-            case 'Digi-Dino': return { p: isApex ? '#10b981' : '#4ade80', s: isApex ? '#047857' : '#16a34a', g: '#6ee7b7' };
-            case 'Holo-Hamu': return { p: isApex ? '#ec4899' : '#f472b6', s: isApex ? '#be185d' : '#db2777', g: '#fbcfe8' };
-            case 'Zen-Sloth': return { p: '#a8a29e', s: '#78716c', g: '#e7e5e4' };
-            default: return { p: '#fbbf24', s: '#d97706', g: '#fcd34d' };
+            case 'Neo-Shiba': return { p: isAscendant ? '#fcd34d' : isApex ? '#f59e0b' : '#fbbf24', s: isAscendant ? '#fffbeb' : isApex ? '#b45309' : '#d97706', g: isAscendant ? '#ffffff' : '#fcd34d' };
+            case 'Digi-Dino': return { p: isAscendant ? '#6ee7b7' : isApex ? '#10b981' : '#4ade80', s: isAscendant ? '#ecfdf5' : isApex ? '#047857' : '#16a34a', g: isAscendant ? '#ffffff' : '#6ee7b7' };
+            case 'Holo-Hamu': return { p: isAscendant ? '#fbcfe8' : isApex ? '#ec4899' : '#f472b6', s: isAscendant ? '#fdf2f8' : isApex ? '#be185d' : '#db2777', g: isAscendant ? '#ffffff' : '#fbcfe8' };
+            case 'Zen-Sloth': return { p: isAscendant ? '#e7e5e4' : '#a8a29e', s: isAscendant ? '#fafaf9' : '#78716c', g: isAscendant ? '#ffffff' : '#e7e5e4' };
+            default: return { p: isAscendant ? '#fcd34d' : '#fbbf24', s: isAscendant ? '#fffbeb' : '#d97706', g: isAscendant ? '#ffffff' : '#fcd34d' };
         }
     };
 
@@ -72,8 +73,8 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                         </g>
                     )}
 
-                    {/* Level 3-5: BABY BLOB (Soft Droplet) */}
-                    {pet.level >= 3 && pet.level < 6 && (
+                    {/* Level 3-9: BABY BLOB (Soft Droplet) */}
+                    {pet.level >= 3 && pet.level < 10 && (
                         <g className="origin-center" style={{ transform: 'translate(50px, 60px)' }}>
                             <path d="M 0 -25 Q 20 -25 20 0 Q 20 20 0 20 Q -20 20 -20 0 Q -20 -25 0 -25 Z" fill="url(#bodyGrad)" />
                             {/* Inner Glow */}
@@ -82,8 +83,8 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                         </g>
                     )}
 
-                    {/* Level 6-9: TEEN (Geometric Entity) */}
-                    {pet.level >= 6 && pet.level < 10 && (
+                    {/* Level 10-19: TEEN (Geometric Entity) */}
+                    {pet.level >= 10 && pet.level < 20 && (
                         <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
                             {/* Floating Pods */}
                             <path d="M -30 -10 L -20 -20 L -15 -5 Z" fill={c.s} className="animate-float" style={{ animationDelay: '0.5s' }} />
@@ -97,8 +98,8 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                         </g>
                     )}
 
-                    {/* Level 10+: MASTER (Sacred Geometry / Apex) */}
-                    {pet.level >= 10 && (
+                    {/* Level 20-29: MASTER (Sacred Geometry / Apex) */}
+                    {pet.level >= 20 && pet.level < 30 && (
                         <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
                             {/* Aura Rings */}
                             <circle cx="0" cy="0" r="45" fill="none" stroke={c.g} strokeWidth="1" opacity="0.3" className="animate-[spin_10s_linear_infinite]" strokeDasharray="5 20" />
@@ -114,6 +115,31 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                             <circle cx="0" cy="0" r="12" fill="url(#coreGlow)" />
 
                             <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.4} />
+                        </g>
+                    )}
+
+                    {/* Level 30+: ASCENDANT (Pure Energy / Starform) */}
+                    {pet.level >= 30 && (
+                        <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
+                            {/* Starburst Aura */}
+                            <circle cx="0" cy="0" r="50" fill="url(#coreGlow)" opacity="0.4" className="animate-[ping_3s_ease-in-out_infinite]" />
+                            <path d="M 0 -50 L 5 -10 L 50 0 L 5 10 L 0 50 L -5 10 L -50 0 L -5 -10 Z" fill="url(#bodyGrad)" className="animate-[spin_15s_linear_infinite] opacity-30" />
+                            <path d="M 0 -50 L 5 -10 L 50 0 L 5 10 L 0 50 L -5 10 L -50 0 L -5 -10 Z" fill={c.s} className="animate-[spin_20s_linear_infinite_reverse] opacity-50 scale-75" />
+
+                            {/* Orbiting Orbs */}
+                            <g className="animate-[spin_4s_linear_infinite]">
+                                <circle cx="35" cy="0" r="3" fill="#fff" className="animate-pulse" />
+                                <circle cx="-35" cy="0" r="3" fill="#fff" className="animate-pulse" />
+                                <circle cx="0" cy="35" r="3" fill="#fff" className="animate-pulse" />
+                                <circle cx="0" cy="-35" r="3" fill="#fff" className="animate-pulse" />
+                            </g>
+
+                            {/* Central Diamond Core */}
+                            <path d="M 0 -25 L 20 0 L 0 25 L -20 0 Z" fill="url(#bodyGrad)" stroke="#fff" strokeWidth="1" className="drop-shadow-[0_0_20px_rgba(255,255,255,1)] animate-bounce" />
+
+                            <circle cx="0" cy="0" r="6" fill="#ffffff" className="animate-pulse shadow-[0_0_10px_#fff]" />
+
+                            <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.6} />
                         </g>
                     )}
 
