@@ -230,7 +230,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
 
         // XP & Level Up
         if (action !== 'sleep') updated.experience += intensity * 5;
-        if (updated.experience >= updated.level * 2.5) {
+        if (updated.experience >= updated.level * 6.25) {
             updated.level++;
             updated.experience = 0;
             showToast(`SYSTEM UPGRADE: LEVEL ${updated.level}`, "success");
@@ -255,7 +255,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
         let updated = { ...pet };
         updated.experience += mission.reward;
 
-        if (updated.experience >= updated.level * 2.5) {
+        if (updated.experience >= updated.level * 6.25) {
             updated.level++;
             updated.experience = 0;
             showToast(`SYSTEM UPGRADE: LEVEL ${updated.level}`, "success");
@@ -371,7 +371,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                             <span>//</span>
                             <span>{pet.species.toUpperCase()}</span>
                             <span>//</span>
-                            <span>XP: {pet.experience}/{pet.level * 2.5}</span>
+                            <span>XP: {pet.experience}/{pet.level * 6.25}</span>
                         </div>
                     </div>
                 </div>
@@ -380,7 +380,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                 <div className="flex flex-col items-end w-32 md:w-48">
                     <div className="text-[10px] text-cyan-500/60 mb-1">XP PROGRESS</div>
                     <div className="w-full h-1.5 bg-gray-900 rounded-full overflow-hidden">
-                        <div className="h-full bg-cyan-400" style={{ width: `${(pet.experience / (pet.level * 2.5)) * 100}%` }} />
+                        <div className="h-full bg-cyan-400" style={{ width: `${(pet.experience / (pet.level * 6.25)) * 100}%` }} />
                     </div>
                 </div>
             </header>

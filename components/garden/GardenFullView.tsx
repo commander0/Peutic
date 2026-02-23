@@ -42,12 +42,12 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     // Map the current garden minutes to a Gamification Stage
     const stage = useMemo(() => {
         const fm = localGarden.focusMinutes || 0;
-        if (fm >= 60) return 6; // Ethereal Entity
-        if (fm >= 45) return 5;  // Mystic Guardian
-        if (fm >= 30) return 4;  // Ancient Tree
-        if (fm >= 20) return 3;  // Mature Tree
-        if (fm >= 10) return 2;  // Sapling
-        if (fm >= 5) return 1;  // Sprout
+        if (fm >= 12) return 6; // Ethereal Entity
+        if (fm >= 10) return 5;  // Mystic Guardian
+        if (fm >= 8) return 4;  // Ancient Tree
+        if (fm >= 6) return 3;  // Mature Tree
+        if (fm >= 4) return 2;  // Sapling
+        if (fm >= 2) return 1;  // Sprout
         return 0; // Seed
     }, [localGarden.focusMinutes]);
 

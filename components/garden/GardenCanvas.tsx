@@ -196,10 +196,123 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
                         </>
                     )}
 
-                    {/* STAGE 6: ETHEREAL ENTITY - Sacred Geometry, Ascension */}
-                    {stage === 6 && (
+                    {/* STAGE 6: ETHEREAL ENTITY - Bespoke Mighty Trees */}
+                    {stage === 6 && garden.currentPlantType === 'Willow' && (
                         <>
-                            {/* Massive Aura */}
+                            {/* Ethereal Willow */}
+                            <circle cx="50" cy="10" r="80" fill={theme.leafLight} opacity="0.1" filter="url(#bloom-glow)" className="animate-[pulse_6s_infinite]" />
+
+                            {/* Sweeping Draping Trunk */}
+                            <path d="M 50 85 Q 30 50 60 20 Q 80 0 40 -10" fill="none" stroke="url(#trunk-grad)" strokeWidth="12" strokeLinecap="round" />
+                            <path d="M 45 50 Q 20 40 10 20" fill="none" stroke="url(#trunk-grad)" strokeWidth="6" strokeLinecap="round" />
+                            <path d="M 55 35 Q 90 20 80 0" fill="none" stroke="url(#trunk-grad)" strokeWidth="6" strokeLinecap="round" />
+
+                            {/* Draping Leaves (Weeping) */}
+                            <g filter="drop-shadow(0px 5px 10px rgba(0,0,0,0.5))" className="animate-[sway_2s_ease-in-out_infinite]">
+                                <path d="M 40 -10 Q 30 10 35 40" fill="none" stroke={theme.leaf} strokeWidth="15" strokeLinecap="round" opacity="0.9" />
+                                <path d="M 10 20 Q 5 40 15 60" fill="none" stroke={theme.leafDark} strokeWidth="12" strokeLinecap="round" opacity="0.8" />
+                                <path d="M 80 0 Q 75 25 85 55" fill="none" stroke={theme.leafLight} strokeWidth="12" strokeLinecap="round" />
+                                <path d="M 50 0 Q 45 30 55 65" fill="none" stroke={theme.leaf} strokeWidth="10" strokeLinecap="round" opacity="0.9" />
+                            </g>
+                            <g filter="url(#bloom-glow)">
+                                <circle cx="35" cy="30" r="3" fill={theme.bloom} className="animate-[ping_3s_infinite]" />
+                                <circle cx="15" cy="50" r="4" fill={theme.bloom} className="animate-[ping_4s_infinite]" />
+                                <circle cx="85" cy="45" r="3" fill={theme.bloom} className="animate-[ping_2s_infinite]" />
+                            </g>
+                        </>
+                    )}
+
+                    {stage === 6 && garden.currentPlantType === 'Oak' && (
+                        <>
+                            {/* Mighty Oak */}
+                            <circle cx="50" cy="-10" r="100" fill={theme.leafDark} opacity="0.05" filter="url(#bloom-glow)" />
+
+                            {/* Massively Thick Trunk */}
+                            <path d="M 35 85 Q 40 40 20 10 M 65 85 Q 60 40 80 10 M 40 85 L 60 85 L 55 20 L 45 20 Z" fill="url(#trunk-grad)" />
+                            <path d="M 45 30 Q 10 20 -10 -10 M 55 30 Q 90 20 110 -10 M 50 20 Q 50 -20 50 -40" fill="none" stroke="url(#trunk-grad)" strokeWidth="15" strokeLinecap="round" />
+
+                            {/* Huge dense canopy */}
+                            <g filter="drop-shadow(0px 10px 20px rgba(0,0,0,0.6))">
+                                <circle cx="50" cy="-40" r="45" fill={theme.leafDark} opacity="0.9" />
+                                <circle cx="-10" cy="-10" r="35" fill={theme.leaf} opacity="0.9" />
+                                <circle cx="110" cy="-10" r="35" fill={theme.leafLight} />
+                                <circle cx="20" cy="-30" r="30" fill={theme.leafLight} />
+                                <circle cx="80" cy="-30" r="30" fill={theme.leafDark} opacity="0.9" />
+                            </g>
+                            <g filter="url(#bloom-glow)" className="animate-[pulse_5s_infinite]">
+                                <circle cx="50" cy="-40" r="10" fill={theme.bloom} />
+                                <circle cx="-10" cy="-10" r="8" fill={theme.bloom} />
+                                <circle cx="110" cy="-10" r="8" fill={theme.bloom} />
+                            </g>
+                        </>
+                    )}
+
+                    {stage === 6 && garden.currentPlantType === 'Sakura' && (
+                        <>
+                            {/* Ethereal Sakura */}
+                            <circle cx="50" cy="0" r="90" fill={theme.bloom} opacity="0.15" filter="url(#bloom-glow)" className="animate-[pulse_3s_infinite]" />
+
+                            <path d="M 50 85 Q 40 50 60 10" fill="none" stroke="url(#trunk-grad)" strokeWidth="12" strokeLinecap="round" />
+                            <path d="M 45 60 Q 10 40 -5 10" fill="none" stroke="url(#trunk-grad)" strokeWidth="8" strokeLinecap="round" />
+                            <path d="M 55 40 Q 90 20 105 0" fill="none" stroke="url(#trunk-grad)" strokeWidth="8" strokeLinecap="round" />
+
+                            {/* Bursting Pink Canopy */}
+                            <g filter="drop-shadow(0px 5px 15px rgba(255,192,203,0.5))">
+                                <circle cx="60" cy="10" r="35" fill={theme.leafDark} opacity="0.8" />
+                                <circle cx="-5" cy="10" r="25" fill={theme.leaf} opacity="0.8" />
+                                <circle cx="105" cy="0" r="25" fill={theme.leafLight} opacity="0.8" />
+                                <circle cx="25" cy="-5" r="20" fill={theme.bloom} opacity="0.9" />
+                                <circle cx="85" cy="-10" r="20" fill={theme.bloom} opacity="0.9" />
+                                <circle cx="50" cy="25" r="20" fill={theme.leaf} opacity="0.8" />
+                            </g>
+
+                            {/* Falling Petals Particle Emulators */}
+                            <g className="animate-[sway-drop_4s_linear_infinite]" opacity="0.8" fill={theme.bloom}>
+                                <path d="M 10 30 Q 12 32 10 34 Q 8 32 10 30" />
+                                <path d="M 80 20 Q 82 22 80 24 Q 78 22 80 20" />
+                                <path d="M 40 50 Q 42 52 40 54 Q 38 52 40 50" />
+                            </g>
+                            <g className="animate-[sway-drop_5s_linear_infinite]" opacity="0.6" fill={theme.leafLight} style={{ animationDelay: '1s' }}>
+                                <path d="M 0 50 Q 2 52 0 54 Q -2 52 0 50" />
+                                <path d="M 100 40 Q 102 42 100 44 Q 98 42 100 40" />
+                                <path d="M 60 70 Q 62 72 60 74 Q 58 72 60 70" />
+                            </g>
+                        </>
+                    )}
+
+                    {stage === 6 && garden.currentPlantType === 'Bonsai' && (
+                        <>
+                            {/* Ancient Master Bonsai */}
+                            <circle cx="50" cy="10" r="60" fill={theme.bloom} opacity="0.1" filter="url(#bloom-glow)" />
+
+                            {/* Twisted thick trunk */}
+                            <path d="M 50 85 Q 20 60 70 40 Q 90 20 60 10 Q 30 0 50 -10" fill="none" stroke="url(#trunk-grad)" strokeWidth="14" strokeLinecap="round" />
+                            <path d="M 60 50 Q 100 40 90 20" fill="none" stroke="url(#trunk-grad)" strokeWidth="8" strokeLinecap="round" />
+                            <path d="M 40 30 Q 10 20 0 -5" fill="none" stroke="url(#trunk-grad)" strokeWidth="8" strokeLinecap="round" />
+
+                            {/* Tiered flat canopies (Bonsai style) */}
+                            <g filter="drop-shadow(0px 8px 5px rgba(0,0,0,0.6))">
+                                <ellipse cx="50" cy="-10" rx="35" ry="10" fill={theme.leafDark} />
+                                <ellipse cx="50" cy="-13" rx="25" ry="8" fill={theme.leaf} />
+
+                                <ellipse cx="90" cy="20" rx="25" ry="8" fill={theme.leafDark} />
+                                <ellipse cx="90" cy="17" rx="18" ry="6" fill={theme.leafLight} />
+
+                                <ellipse cx="0" cy="-5" rx="25" ry="8" fill={theme.leafDark} />
+                                <ellipse cx="0" cy="-8" rx="18" ry="6" fill={theme.leafLight} />
+                            </g>
+
+                            <g filter="url(#bloom-glow)">
+                                <circle cx="50" cy="-10" r="4" fill={theme.bloom} />
+                                <circle cx="90" cy="20" r="3" fill={theme.bloom} />
+                                <circle cx="0" cy="-5" r="3" fill={theme.bloom} />
+                            </g>
+                        </>
+                    )}
+
+                    {stage === 6 && !['Willow', 'Oak', 'Sakura', 'Bonsai'].includes(garden.currentPlantType) && (
+                        <>
+                            {/* Massive Aura (Default / Rare Plants) */}
                             <circle cx="50" cy="0" r="90" fill={theme.leafLight} opacity="0.1" filter="url(#bloom-glow)" className="animate-[pulse_4s_infinite]" />
                             <circle cx="50" cy="0" r="60" fill={theme.bloom} opacity="0.15" filter="url(#bloom-glow)" className="animate-[spin_20s_linear_infinite]" strokeWidth="1" strokeDasharray="4 4" stroke={theme.bloom} />
 

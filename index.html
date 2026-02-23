@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="referrer" content="origin-when-cross-origin" />
 
   <!-- SEO & Social Media Metadata -->
@@ -164,6 +164,10 @@
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
       transition: background-color 0.5s ease, color 0.5s ease;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
     }
 
     /* Override global selection color based on theme */
