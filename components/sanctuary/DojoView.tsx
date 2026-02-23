@@ -148,9 +148,11 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
             }
         } else {
             stopAudio();
-            if (timeLeft === 0) playBellSound(); // End Bell
         }
-    }, [isActive]); // Re-run if active state changes
+
+        // CRITICAL PATCH: Memory cleanup to prevent overlapping audio oscillators
+        return () => stopAudio();
+    }, [isActive, bellInterval]); // Added bellInterval to dependency array
 
     const toggleTimer = () => {
         setIsActive(!isActive);
@@ -219,9 +221,28 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
 
     return (
         <div className="fixed inset-0 h-[100dvh] z-[120] bg-stone-900 text-stone-100 flex flex-col font-serif animate-in fade-in duration-700 overflow-hidden">
-            {/* Real Zen Dojo Background (Unsplash) */}
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1545569341-9eb8b30979d9?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-40"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-stone-900 via-stone-900/80 to-stone-900/30"></div>
+            {/* Real Zen Dojo Background (Unsplash) - Deepened Atmosphere */}
+            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1545569341-9eb8b30979d9?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-luminosity"></div>
+
+            {/* Parallax / Dynamic Lighting Layers */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-stone-950/90 to-stone-900/60 mix-blend-multiply"></div>
+
+            {/* Ambient Sunbeams / Dust Motes */}
+            <div className="absolute top-0 left-1/4 w-1/2 h-[150%] bg-gradient-to-b from-amber-100/10 via-amber-600/5 to-transparent origin-top -skew-x-[25deg] pointer-events-none animate-[pulse_8s_ease-in-out_infinite]" />
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                {[...Array(12)].map((_, i) => (
+                    <div
+                        key={i}
+                        className="absolute w-1 h-1 bg-amber-100/40 rounded-full blur-[1px] animate-[sway-drop_15s_linear_infinite]"
+                        style={{
+                            left: `${Math.random() * 100}%`,
+                            top: `${Math.random() * 100}%`,
+                            animationDelay: `${Math.random() * 5}s`,
+                            opacity: Math.random() * 0.5 + 0.1
+                        }}
+                    />
+                ))}
+            </div>
 
             {/* Header */}
             <header className="relative z-20 px-8 py-6 flex justify-between items-center">

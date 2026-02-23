@@ -230,7 +230,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
 
         // XP & Level Up
         if (action !== 'sleep') updated.experience += intensity * 5;
-        if (updated.experience >= updated.level * 25) {
+        if (updated.experience >= updated.level * 2.5) {
             updated.level++;
             updated.experience = 0;
             showToast(`SYSTEM UPGRADE: LEVEL ${updated.level}`, "success");
@@ -255,7 +255,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
         let updated = { ...pet };
         updated.experience += mission.reward;
 
-        if (updated.experience >= updated.level * 25) {
+        if (updated.experience >= updated.level * 2.5) {
             updated.level++;
             updated.experience = 0;
             showToast(`SYSTEM UPGRADE: LEVEL ${updated.level}`, "success");
@@ -331,8 +331,20 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     return (
         <div className="fixed inset-0 z-[120] bg-[#050505] text-cyan-500 font-mono tracking-wider overflow-hidden">
 
-            {/* --- CYBER BACKGROUND --- */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(34,211,238,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+            {/* --- CYBER / PROGRESSIVE BACKGROUNDS --- */}
+            {pet.level < 30 && (
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(34,211,238,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+            )}
+            {pet.level >= 30 && pet.level < 50 && (
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(250,204,21,0.05),transparent_70%)] animate-[pulse_10s_ease-in-out_infinite] pointer-events-none" />
+            )}
+            {pet.level >= 50 && (
+                <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
+                    <div className="absolute inset-x-0 h-[200%] w-[200%] -left-[50%] -top-[50%] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] animate-[spin_120s_linear_infinite]" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-fuchsia-900/20 via-transparent to-black mix-blend-color-dodge" />
+                </div>
+            )}
+
             <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/10 via-transparent to-transparent pointer-events-none" />
 
             {/* --- ORACLE OVERLAY --- */}
@@ -359,7 +371,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                             <span>//</span>
                             <span>{pet.species.toUpperCase()}</span>
                             <span>//</span>
-                            <span>XP: {pet.experience}/{pet.level * 25}</span>
+                            <span>XP: {pet.experience}/{pet.level * 2.5}</span>
                         </div>
                     </div>
                 </div>
@@ -368,7 +380,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                 <div className="flex flex-col items-end w-32 md:w-48">
                     <div className="text-[10px] text-cyan-500/60 mb-1">XP PROGRESS</div>
                     <div className="w-full h-1.5 bg-gray-900 rounded-full overflow-hidden">
-                        <div className="h-full bg-cyan-400" style={{ width: `${(pet.experience / (pet.level * 25)) * 100}%` }} />
+                        <div className="h-full bg-cyan-400" style={{ width: `${(pet.experience / (pet.level * 2.5)) * 100}%` }} />
                     </div>
                 </div>
             </header>
@@ -403,6 +415,11 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                     {/* Ring System */}
                     <div className={`absolute inset-0 -m-12 border border-cyan-500/20 rounded-full animate-[spin_20s_linear_infinite] ${isSummoning ? 'border-purple-500/40 speed-up' : ''}`} />
                     <div className="absolute inset-0 -m-6 border-t border-b border-cyan-400/40 rounded-full animate-[spin_5s_linear_infinite_reverse]" />
+
+                    {/* Advanced CELESTIAL Gravity Rings */}
+                    {pet.level >= 50 && (
+                        <div className="absolute inset-0 -m-20 border border-fuchsia-500/20 rounded-full animate-[spin_10s_linear_infinite_reverse] drop-shadow-[0_0_20px_rgba(217,70,239,0.3)] opacity-60 pointer-events-none" />
+                    )}
 
                     {/* Character Canvas */}
                     <div className={`relative transition-all duration-1000 ${isSummoning ? 'scale-110 -translate-y-10 brightness-150' : ''}`}>

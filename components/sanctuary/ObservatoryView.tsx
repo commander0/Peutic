@@ -187,10 +187,15 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                             {/* B4. Core Energy */}
                             <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-indigo-500 rounded-full blur-[50px] mix-blend-screen transition-all duration-500 ${isReading ? 'scale-150 opacity-80' : 'scale-100 opacity-30 animate-pulse-slow'}`}></div>
 
-                            {/* B5. TEXT REVEAL (The Insight) */}
+                            {/* B4.1. Shockwave Reveal Effect */}
                             {oracleMessage && !isReading && (
-                                <div className="absolute inset-0 flex items-center justify-center p-8 md:p-14 text-center z-30 bg-black/60 backdrop-blur-[4px] overflow-y-auto rounded-full custom-scrollbar shadow-[inset_0_0_50px_rgba(0,0,0,0.9)]">
-                                    <div className="w-full text-transparent bg-clip-text bg-gradient-to-br from-amber-100 via-amber-300 to-yellow-600 font-serif leading-snug md:leading-relaxed drop-shadow-[0_0_15px_rgba(251,191,36,0.5)] italic text-sm md:text-base px-2 py-2">
+                                <div className="absolute inset-0 rounded-full border-[3px] border-indigo-400 animate-[ping_1.5s_ease-out_forwards] opacity-0 mix-blend-screen z-20"></div>
+                            )}
+
+                            {/* B5. TEXT REVEAL (The Insight) - Premium Glassmorphism */}
+                            {oracleMessage && !isReading && (
+                                <div className="absolute inset-0 flex items-center justify-center p-6 md:p-12 text-center z-30 bg-indigo-950/50 backdrop-blur-xl overflow-y-auto rounded-full custom-scrollbar shadow-[inset_0_0_60px_rgba(30,27,75,0.9),0_0_30px_rgba(99,102,241,0.5)] border-2 border-indigo-500/30 animate-in zoom-in-90 duration-700">
+                                    <div className="w-full text-transparent bg-clip-text bg-gradient-to-br from-amber-50 via-yellow-200 to-amber-600 font-serif leading-relaxed drop-shadow-[0_0_12px_rgba(251,191,36,0.8)] tracking-wide italic text-sm md:text-base px-4 py-4">
                                         <Typewriter text={oracleMessage} speed={30} />
                                     </div>
                                 </div>
@@ -220,12 +225,12 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                             <button
                                 onClick={divineInsight}
                                 disabled={isProcessing}
-                                className={`group relative px-10 py-4 bg-transparent overflow-hidden transition-all shadow-[0_0_30px_rgba(79,70,229,0.2)] hover:shadow-[0_0_50px_rgba(79,70,229,0.5)] rounded-full ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`group relative px-10 py-5 bg-black/40 backdrop-blur-md overflow-hidden transition-all shadow-[0_0_30px_rgba(79,70,229,0.3)] hover:shadow-[0_0_60px_rgba(139,92,246,0.6)] hover:scale-105 rounded-full border border-indigo-500/40 hover:border-fuchsia-400 ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                                <div className="absolute inset-0 bg-gradient-to-r from-indigo-900 via-purple-900 to-indigo-900 opacity-50 group-hover:opacity-80 transition-opacity"></div>
-                                <div className="absolute inset-0 border border-indigo-400/50 group-hover:border-indigo-300 rounded-full transition-colors"></div>
-                                <span className="relative flex items-center justify-center gap-3 font-black text-sm uppercase tracking-[0.3em] text-indigo-200 group-hover:text-white transition-colors">
-                                    <Eye className="w-5 h-5 text-indigo-400 group-hover:text-indigo-200" /> {isProcessing ? 'Channeling...' : 'Consult Fate'} <span className="opacity-50 font-mono">(-1m)</span>
+                                <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/50 via-purple-600/30 to-indigo-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.8)_100%)] pointer-events-none"></div>
+                                <span className="relative flex items-center justify-center gap-3 font-black text-sm uppercase tracking-[0.4em] text-indigo-100 group-hover:text-white transition-colors drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+                                    <Eye className="w-5 h-5 text-indigo-300 group-hover:text-fuchsia-300 animate-pulse" /> {isProcessing ? 'Channeling...' : 'Consult Fate'} <span className="opacity-50 font-mono tracking-tight">(-1m)</span>
                                 </span>
                             </button>
                         )}

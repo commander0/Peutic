@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Droplets, Wind, Info, ChevronLeft, Music, Scissors, X, Sprout, Sparkles } from 'lucide-react';
 import GardenCanvas from './GardenCanvas';
 import { UserService } from '../../services/userService';
@@ -38,6 +38,35 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
 
         setAvailablePlants([...new Set(basePlants)]); // Ensure uniqueness
     }, [showPlantSelection]); // Re-calculate luck every time the selection screen opens
+
+    // Map the current garden minutes to a Gamification Stage
+    const stage = useMemo(() => {
+        const fm = localGarden.focusMinutes || 0;
+        if (fm >= 60) return 6; // Ethereal Entity
+        if (fm >= 45) return 5;  // Mystic Guardian
+        if (fm >= 30) return 4;  // Ancient Tree
+        if (fm >= 20) return 3;  // Mature Tree
+        if (fm >= 10) return 2;  // Sapling
+        if (fm >= 5) return 1;  // Sprout
+        return 0; // Seed
+    }, [localGarden.focusMinutes]);
+
+    const isRare = useMemo(() => ['Crystal Lotus', 'Lunar Fern', 'Storm Oak', 'Sunlight Spire'].includes(localGarden.currentPlantType), [localGarden.currentPlantType]);
+
+    // Generate stable random particle positions to prevent DOM jitter during re-renders
+    const particles = useMemo(() => {
+        const count = stage >= 5 ? 30 : stage >= 3 ? 20 : 10;
+        return Array.from({ length: count }).map((_, i) => ({
+            id: i,
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            delay: `${Math.random() * 5}s`,
+            duration: `${Math.random() * 3 + 2}s`,
+            opacity: Math.random() * 0.5 + 0.2,
+            scale: Math.random() * 0.5 + 0.5,
+            isLeaf: Math.random() > 0.7 && stage >= 3
+        }));
+    }, [stage]);
 
     // Eliminate Cached Ghosts: Always fetch fresh state on mount
     useEffect(() => {
@@ -108,20 +137,32 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
             {/* 2. Moving Fog / Mist */}
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/foggy-birds.png')] opacity-30 animate-[pulse_10s_ease-in-out_infinite] pointer-events-none mix-blend-overlay" />
 
-            {/* 3. Ambient Particles (CSS Fireflies) */}
+            {/* 3. Dynamic Ambient Particles (CSS Fireflies & Leaves) */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                {[...Array(15)].map((_, i) => (
+                {particles.map((p) => (
                     <div
-                        key={i}
-                        className="absolute w-1 h-1 bg-yellow-100 rounded-full blur-[1px] animate-[ping_4s_ease-in-out_infinite]"
+                        key={p.id}
+                        className={`absolute ${p.isLeaf ? 'w-2 h-2 rounded-[50%_0_50%_50%] rotate-45 animate-[bounce_5s_infinite]' : 'w-1.5 h-1.5 rounded-full blur-[1px] animate-[ping_4s_ease-in-out_infinite]'} ${isRare ? 'bg-fuchsia-200 shadow-[0_0_8px_rgba(250,204,21,0.8)]' : 'bg-emerald-200 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`}
                         style={{
-                            left: `${Math.random() * 100}%`,
-                            top: `${Math.random() * 100}%`,
-                            animationDelay: `${Math.random() * 5}s`,
-                            opacity: Math.random() * 0.5 + 0.2
+                            left: p.left,
+                            top: p.top,
+                            animationDelay: p.delay,
+                            opacity: p.opacity,
+                            transform: `scale(${p.scale})`
                         }}
                     />
                 ))}
+
+                {/* Advanced Stage Atmospheric Overlays */}
+                {stage >= 4 && (
+                    <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/30 to-transparent mix-blend-overlay pointer-events-none animate-[pulse_6s_ease-in-out_infinite]" />
+                )}
+                {stage >= 5 && (
+                    <div className="absolute inset-0 bg-gradient-to-b from-fuchsia-900/20 via-transparent to-transparent mix-blend-color-dodge pointer-events-none animate-[pulse_8s_ease-in-out_infinite]" />
+                )}
+                {stage === 6 && (
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent pointer-events-none animate-[spin_30s_linear_infinite]" />
+                )}
             </div>
 
             {/* --- INTERACTION OVERLAYS --- */}

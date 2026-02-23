@@ -14,12 +14,13 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
     const getSpeciesColor = (species: string, level: number) => {
         const isApex = level >= 10;
         const isAscendant = level >= 30;
+        const isCelestial = level >= 50;
         switch (species) {
-            case 'Neo-Shiba': return { p: isAscendant ? '#fcd34d' : isApex ? '#f59e0b' : '#fbbf24', s: isAscendant ? '#fffbeb' : isApex ? '#b45309' : '#d97706', g: isAscendant ? '#ffffff' : '#fcd34d' };
-            case 'Digi-Dino': return { p: isAscendant ? '#6ee7b7' : isApex ? '#10b981' : '#4ade80', s: isAscendant ? '#ecfdf5' : isApex ? '#047857' : '#16a34a', g: isAscendant ? '#ffffff' : '#6ee7b7' };
-            case 'Holo-Hamu': return { p: isAscendant ? '#fbcfe8' : isApex ? '#ec4899' : '#f472b6', s: isAscendant ? '#fdf2f8' : isApex ? '#be185d' : '#db2777', g: isAscendant ? '#ffffff' : '#fbcfe8' };
-            case 'Zen-Sloth': return { p: isAscendant ? '#e7e5e4' : '#a8a29e', s: isAscendant ? '#fafaf9' : '#78716c', g: isAscendant ? '#ffffff' : '#e7e5e4' };
-            default: return { p: isAscendant ? '#fcd34d' : '#fbbf24', s: isAscendant ? '#fffbeb' : '#d97706', g: isAscendant ? '#ffffff' : '#fcd34d' };
+            case 'Neo-Shiba': return { p: isCelestial ? '#ffffff' : isAscendant ? '#fcd34d' : isApex ? '#f59e0b' : '#fbbf24', s: isCelestial ? '#fef3c7' : isAscendant ? '#fffbeb' : isApex ? '#b45309' : '#d97706', g: isCelestial ? '#fde68a' : isAscendant ? '#ffffff' : '#fcd34d' };
+            case 'Digi-Dino': return { p: isCelestial ? '#ffffff' : isAscendant ? '#6ee7b7' : isApex ? '#10b981' : '#4ade80', s: isCelestial ? '#ecfdf5' : isAscendant ? '#ecfdf5' : isApex ? '#047857' : '#16a34a', g: isCelestial ? '#a7f3d0' : isAscendant ? '#ffffff' : '#6ee7b7' };
+            case 'Holo-Hamu': return { p: isCelestial ? '#ffffff' : isAscendant ? '#fbcfe8' : isApex ? '#ec4899' : '#f472b6', s: isCelestial ? '#fdf2f8' : isAscendant ? '#fdf2f8' : isApex ? '#be185d' : '#db2777', g: isCelestial ? '#fbcfe8' : isAscendant ? '#ffffff' : '#fbcfe8' };
+            case 'Zen-Sloth': return { p: isCelestial ? '#ffffff' : isAscendant ? '#e7e5e4' : '#a8a29e', s: isCelestial ? '#fafaf9' : isAscendant ? '#fafaf9' : '#78716c', g: isCelestial ? '#e7e5e4' : isAscendant ? '#ffffff' : '#e7e5e4' };
+            default: return { p: isCelestial ? '#ffffff' : isAscendant ? '#fcd34d' : '#fbbf24', s: isCelestial ? '#fafaf9' : isAscendant ? '#fffbeb' : '#d97706', g: isCelestial ? '#fef08a' : isAscendant ? '#ffffff' : '#fcd34d' };
         }
     };
 
@@ -118,8 +119,8 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                         </g>
                     )}
 
-                    {/* Level 30+: ASCENDANT (Pure Energy / Starform) */}
-                    {pet.level >= 30 && (
+                    {/* Level 30-49: ASCENDANT (Pure Energy / Starform) */}
+                    {pet.level >= 30 && pet.level < 50 && (
                         <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
                             {/* Starburst Aura */}
                             <circle cx="0" cy="0" r="50" fill="url(#coreGlow)" opacity="0.4" className="animate-[ping_3s_ease-in-out_infinite]" />
@@ -140,6 +141,32 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                             <circle cx="0" cy="0" r="6" fill="#ffffff" className="animate-pulse shadow-[0_0_10px_#fff]" />
 
                             <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.6} />
+                        </g>
+                    )}
+
+                    {/* Level 50+: CELESTIAL (Galactic Entity / Singularity) */}
+                    {pet.level >= 50 && (
+                        <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
+                            {/* Cosmic Singularity Aura */}
+                            <circle cx="0" cy="0" r="80" fill="url(#coreGlow)" opacity="0.2" className="animate-[pulse_4s_infinite]" />
+                            <circle cx="0" cy="0" r="60" fill="none" stroke={c.g} strokeWidth="1" strokeDasharray="2 6" className="animate-[spin_20s_linear_infinite]" opacity="0.6" />
+                            <circle cx="0" cy="0" r="50" fill="none" stroke={c.s} strokeWidth="2" strokeDasharray="10 30" className="animate-[spin_15s_linear_infinite_reverse]" opacity="0.8" />
+
+                            {/* Hyper-Geometric Frame */}
+                            <g className="animate-[spin_10s_linear_infinite] drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]">
+                                <polygon points="0,-45 40,-15 40,30 0,60 -40,30 -40,-15" fill="none" stroke="url(#bodyGrad)" strokeWidth="3" opacity="0.5" />
+                                <polygon points="0,-35 30,-10 30,20 0,45 -30,20 -30,-10" fill="none" stroke={c.g} strokeWidth="2" opacity="0.8" className="animate-pulse" />
+                            </g>
+
+                            {/* Event Horizon Core */}
+                            <circle cx="0" cy="0" r="25" fill="#0f172a" className="drop-shadow-[0_0_30px_rgba(255,255,255,1)]" stroke={c.p} strokeWidth="4" />
+                            <circle cx="0" cy="0" r="15" fill="url(#coreGlow)" className="animate-[ping_2s_ease-out_infinite]" />
+
+                            {/* Celestial Dust Rings */}
+                            <ellipse cx="0" cy="0" rx="60" ry="10" fill="none" stroke={c.s} strokeWidth="2" className="animate-[spin_5s_linear_infinite]" style={{ transform: 'rotate(30deg)' }} opacity="0.7" />
+                            <ellipse cx="0" cy="0" rx="60" ry="10" fill="none" stroke={c.p} strokeWidth="2" className="animate-[spin_6s_linear_infinite_reverse]" style={{ transform: 'rotate(-30deg)' }} opacity="0.7" />
+
+                            <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.8} />
                         </g>
                     )}
 
