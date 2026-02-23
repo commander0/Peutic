@@ -117,10 +117,8 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
                 localStorage.setItem('peutic_shredded_words', JSON.stringify(newWords));
 
                 let count = parseInt(localStorage.getItem('peutic_shred_count') || '0', 10) + 1;
-                localStorage.setItem('peutic_shred_count', count.toString());
-                setShredCount(count);
 
-                if (count > 0 && count % 25 === 0) {
+                if (count >= 25) {
                     setShowMilestone(true);
                     if (newWords.length > 0) {
                         const uniqueWords = Array.from(new Set(newWords));
@@ -129,11 +127,17 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
                         setMilestoneNote(FALLBACK_AFFIRMATIONS[Math.floor(Math.random() * FALLBACK_AFFIRMATIONS.length)]);
                     }
 
+                    // Force reset to 0
+                    localStorage.setItem('peutic_shred_count', '0');
+                    setShredCount(0);
+
                     // Note stays visible for 5 minutes
                     setTimeout(() => {
                         setShowMilestone(false);
                     }, 5 * 60 * 1000);
                 } else {
+                    localStorage.setItem('peutic_shred_count', count.toString());
+                    setShredCount(count);
                     showToast("Thoughts Released into the Void.", "success");
                 }
 
@@ -215,12 +219,12 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
 
                             {/* Milestone Tracker Banner */}
                             <div className="mt-6 pt-4 border-t border-stone-800 text-center">
-                                <p className="text-[10px] uppercase tracking-widest font-bold text-stone-500 mb-2">Fragments Released: <span className="text-stone-300">{shredCount}</span> / 50</p>
+                                <p className="text-[10px] uppercase tracking-widest font-bold text-stone-500 mb-2">Fragments Released: <span className="text-stone-300">{shredCount}</span> / 25</p>
                                 <div className="w-full h-1.5 bg-stone-900 rounded-full overflow-hidden mb-2">
-                                    <div className="h-full bg-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.5)] transition-all duration-500" style={{ width: `${Math.min(100, ((shredCount % 50) / 50) * 100)}%` }} />
+                                    <div className="h-full bg-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.5)] transition-all duration-500" style={{ width: `${Math.min(100, ((shredCount % 25) / 25) * 100)}%` }} />
                                 </div>
                                 <p className="text-[10px] text-stone-600 italic font-serif">
-                                    Shred 50 thoughts to piece together a custom introspective note from your fragments.
+                                    Shred 25 thoughts to piece together a custom introspective note from your fragments.
                                 </p>
                             </div>
                         </>

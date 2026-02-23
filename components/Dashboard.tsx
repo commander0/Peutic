@@ -612,39 +612,39 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         <div className="space-y-4">
                                             <div className="grid grid-cols-3 gap-1 md:gap-4">
                                                 {/* TILE 1: ZEN BONZAI */}
-                                                {garden && (
-                                                    <div
-                                                        onClick={() => setShowGardenFull(true)}
-                                                        className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(34,197,94,0.15)] hover:shadow-[0_8px_32px_rgba(34,197,94,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
-                                                    >
-                                                        <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
-                                                            <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
-                                                            <div className="relative z-10 w-full h-full flex flex-col items-center justify-center pointer-events-none">
-                                                                <div className="relative mb-1 md:mb-4 pointer-events-auto">
-                                                                    <div className="absolute -inset-4 bg-green-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                                    <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-green-500 to-emerald-700 border border-green-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,197,94,0.4)] group-hover:scale-110 transition-transform">
-                                                                        <Leaf className="w-5 h-5 md:w-10 md:h-10 text-white animate-ethereal-breathe" />
-                                                                    </div>
-                                                                </div>
-                                                                {/* Overlay Controls */}
-                                                                <div className="absolute top-2 right-2 pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handleClipPlant();
-                                                                        }}
-                                                                        className="p-2 bg-white/90 dark:bg-black/80 rounded-full shadow-lg hover:scale-110 active:scale-95 text-pink-500 transition-all"
-                                                                        title="Clip for Inspiration"
-                                                                    >
-                                                                        <Scissors className="w-4 h-4" />
-                                                                    </button>
+                                                <div
+                                                    onClick={() => setShowGardenFull(true)}
+                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(34,197,94,0.15)] hover:shadow-[0_8px_32px_rgba(34,197,94,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                >
+                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
+                                                        <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
+                                                        <div className="relative z-10 w-full h-full flex flex-col items-center justify-center pointer-events-none">
+                                                            <div className="relative mb-1 md:mb-4 pointer-events-auto">
+                                                                <div className="absolute -inset-4 bg-green-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                                <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-green-500 to-emerald-700 border border-green-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,197,94,0.4)] group-hover:scale-110 transition-transform">
+                                                                    <Leaf className="w-5 h-5 md:w-10 md:h-10 text-white animate-ethereal-breathe" />
                                                                 </div>
                                                             </div>
-                                                            <h3 className="text-[7px] md:text-sm font-black text-green-700 dark:text-green-300 uppercase tracking-widest drop-shadow-sm text-center mt-[-10px] relative z-20">Zen Bonzai</h3>
-                                                            <p className="hidden md:block text-[9px] font-bold text-green-600/70 dark:text-green-400/60 uppercase tracking-tighter">Lvl {garden.level} &bull; {garden.currentPlantType}</p>
+                                                            {/* Overlay Controls */}
+                                                            <div className="absolute top-2 right-2 pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleClipPlant();
+                                                                    }}
+                                                                    className="p-2 bg-white/90 dark:bg-black/80 rounded-full shadow-lg hover:scale-110 active:scale-95 text-pink-500 transition-all"
+                                                                    title="Clip for Inspiration"
+                                                                >
+                                                                    <Scissors className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
                                                         </div>
+                                                        <h3 className="text-[7px] md:text-sm font-black text-green-700 dark:text-green-300 uppercase tracking-widest drop-shadow-sm text-center mt-[-10px] relative z-20">Zen Bonzai</h3>
+                                                        <p className="hidden md:block text-[9px] font-bold text-green-600/70 dark:text-green-400/60 uppercase tracking-tighter">
+                                                            {garden ? `Lvl ${garden.level} • ${garden.currentPlantType}` : 'Plant Seed'}
+                                                        </p>
                                                     </div>
-                                                )}
+                                                </div>
 
                                                 {/* TILE 2: BOOK OF YOU */}
                                                 {(() => {
