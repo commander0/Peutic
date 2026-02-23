@@ -19,7 +19,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     const [showInfo, setShowInfo] = useState(false);
     const [showPlantSelection, setShowPlantSelection] = useState(false);
     const [selectedNewPlant, setSelectedNewPlant] = useState<string | null>(null);
-    const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
+    const [intensity, setIntensity] = useState<5 | 10 | 15>(5); // 5m, 10m, 15m
     const { showToast } = useToast();
     const [availablePlants, setAvailablePlants] = useState<string[]>(['Lotus', 'Rose', 'Sunflower', 'Fern', 'Sakura', 'Oak', 'Willow', 'Bonsai']);
 
@@ -89,14 +89,16 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
 
         // Perform Service Action
         if (type === 'water') {
-            await GardenService.waterPlant(garden.userId, intensity);
-            showToast("Garden Watered", "success");
+            // Watering is now a free, loving interaction (Growth happens automatically from app focus time)
+            await GardenService.waterPlant(garden.userId, 0); // Just updates timestamp & visual state
+            showToast(`You watered your sanctuary.`, "success");
         } else if (type === 'harvest') {
             const isMighty = stage === 6; // Stage 6 is Ethereal Entity (12+ minutes)
             const result = await GardenService.clipPlant(garden.userId);
             if (result.success) {
                 if (isMighty) {
-                    await UserService.updateUserPartial(user.id, { oracleTokens: (user.oracleTokens || 0) + 1 });
+                    const updatedUser = { ...user, oracleTokens: (user.oracleTokens || 0) + 1 };
+                    await UserService.updateUser(updatedUser);
                     showToast(`Harvested! You received an Oracle Token!`, "success");
                     setShowPlantSelection(true);
                 } else {
@@ -284,10 +286,10 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
 
                 {/* Intensity Slider (Abstracted) */}
                 <div className="flex items-center gap-4 p-1.5 rounded-full bg-black/40 border border-white/10 backdrop-blur-md">
-                    {[1, 2, 3].map((lvl) => (
+                    {[5, 10, 15].map((lvl) => (
                         <button
                             key={lvl}
-                            onClick={() => setIntensity(lvl as 1 | 2 | 3)}
+                            onClick={() => setIntensity(lvl as 5 | 10 | 15)}
                             className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${intensity === lvl
                                 ? 'bg-emerald-500 text-black shadow-[0_0_15px_rgba(16,185,129,0.5)]'
                                 : 'text-white/30 hover:bg-white/5'

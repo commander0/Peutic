@@ -59,7 +59,7 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
             setDataLoaded(true);
         };
         fetchInitialData();
-    }, [user]);
+    }, [user?.id]);
 
     // 2. Filter data and generate narrative whenever currentVolume changes
     useEffect(() => {
@@ -129,7 +129,7 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
 
         generateNarrative();
 
-    }, [currentVolume, dataLoaded, allJournals, allMoods, user]);
+    }, [currentVolume, dataLoaded, allJournals, allMoods, user?.id]);
 
     // handleGenerateNarrative function removed as it's now auto-generated above
 
@@ -162,8 +162,13 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
     const isSunny = moodRatio.sun >= moodRatio.rain;
 
     return (
-        <div className="fixed inset-0 z-[120] bg-zinc-900 dark:bg-black text-amber-950 dark:text-stone-200 overflow-y-auto overflow-x-hidden flex items-center justify-center animate-in zoom-in-95 duration-1000 p-2 md:p-8 lg:p-12 font-serif bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] dark:bg-[url('https://www.transparenttextures.com/patterns/dark-wood.png')] bg-blend-multiply">
-
+        <div className="fixed inset-0 z-[120] bg-zinc-950 dark:bg-black text-amber-950 dark:text-stone-200 overflow-y-auto overflow-x-hidden flex items-center justify-center animate-in zoom-in-95 duration-1000 p-2 md:p-8 lg:p-12 font-serif bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] dark:bg-[url('https://www.transparenttextures.com/patterns/dark-wood.png')] bg-blend-multiply shadow-[inset_0_0_150px_rgba(0,0,0,0.9)]">
+            <style type="text/css">{`
+                @media print {
+                    @page { size: landscape; margin: 0; }
+                    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                }
+            `}</style>
             {/* FLOATING ACTION BAR */}
             <button
                 onClick={onClose}
@@ -182,76 +187,81 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
             </button>
 
             {/* THE PHYSICAL BOOK MOCKUP */}
-            <div className="relative w-full max-w-6xl aspect-auto md:aspect-[16/10] min-h-[85vh] md:min-h-0 bg-[#fdfaf6] dark:bg-[#1a1817] shadow-[0_20px_40px_rgba(0,0,0,0.8),_0_0_0_1px_rgba(0,0,0,0.5)] dark:shadow-[0_20px_40px_rgba(0,0,0,1),_0_0_0_1px_rgba(255,255,255,0.05)] rounded-sm flex flex-col md:flex-row print:flex-col print:h-auto print:min-h-0 print:gap-8 print:shadow-none after:absolute after:inset-0 after:bg-[url('https://www.transparenttextures.com/patterns/paper.png')] after:opacity-[0.6] dark:after:opacity-[0.15] dark:after:bg-[url('https://www.transparenttextures.com/patterns/black-paper.png')] after:mix-blend-multiply dark:after:mix-blend-color-dodge after:pointer-events-none transition-colors duration-500">
+            <div className="relative w-full max-w-6xl aspect-auto md:aspect-[16/10] min-h-[85vh] md:min-h-0 bg-[#f5ebd8] dark:bg-[#1f1a18] shadow-[0_30px_60px_rgba(0,0,0,0.9),0_0_0_2px_rgba(89,61,43,0.8)] dark:shadow-[0_20px_40px_rgba(0,0,0,1),_0_0_0_2px_rgba(255,255,255,0.05)] rounded-sm flex flex-col md:flex-row print:flex-col print:h-auto print:min-h-0 print:gap-8 print:shadow-none after:absolute after:inset-0 after:bg-[url('https://www.transparenttextures.com/patterns/aged-paper.png')] after:opacity-[0.8] dark:after:opacity-[0.4] dark:after:bg-[url('https://www.transparenttextures.com/patterns/black-paper.png')] after:mix-blend-multiply dark:after:mix-blend-hard-light after:pointer-events-none transition-colors duration-500 overflow-hidden ring-4 ring-black/40 dark:ring-black">
+                {/* Vintage Burn Edges */}
+                <div className="absolute inset-0 shadow-[inset_0_0_120px_rgba(139,69,19,0.3)] dark:shadow-[inset_0_0_150px_rgba(0,0,0,0.9)] pointer-events-none z-[5]"></div>
 
                 {/* PAGE EDGES (Thickness Mockup) */}
-                <div className="absolute -bottom-1 -right-1 w-full h-full border-r-4 border-b-4 border-amber-900/10 dark:border-stone-400/5 rounded-br-md pointer-events-none hidden md:block"></div>
-                <div className="absolute -bottom-2 -right-2 w-full h-full border-r-2 border-b-2 border-amber-900/5 dark:border-stone-400/5 rounded-br-lg pointer-events-none hidden md:block"></div>
+                <div className="absolute -bottom-1 -right-1 w-full h-full border-r-4 border-b-4 border-amber-950/20 dark:border-stone-300/5 rounded-br-md pointer-events-none hidden md:block z-0"></div>
+                <div className="absolute -bottom-2 -right-2 w-full h-full border-r-2 border-b-2 border-amber-950/10 dark:border-stone-300/5 rounded-br-lg pointer-events-none hidden md:block z-0"></div>
 
                 {/* LEFT PAGE */}
-                <div className="w-full md:w-1/2 h-full flex flex-col p-6 md:p-12 lg:p-20 relative overflow-y-auto custom-scrollbar overflow-x-hidden border-b-2 md:border-b-0 border-amber-900/10 dark:border-stone-800">
-                    {/* Page Numbers */}
-                    <div className="hidden md:block absolute top-6 left-6 lg:top-8 lg:left-8 text-amber-900/30 font-sans text-[10px] tracking-widest font-bold">1</div>
+                <div className="w-full md:w-1/2 h-full flex flex-col relative overflow-y-auto custom-scrollbar overflow-x-hidden border-b-2 md:border-b-0 border-amber-900/30 dark:border-stone-800 z-10">
+                    <div className="absolute inset-2 md:inset-4 lg:inset-6 border-[3px] border-double border-amber-900/20 dark:border-stone-500/10 pointer-events-none rounded-sm"></div>
+                    <div key={currentVolume} className="w-full h-full flex flex-col p-6 md:p-12 lg:p-20 absolute inset-0 animate-in slide-in-from-right-8 fade-in duration-700">
+                        {/* Page Numbers */}
+                        <div className="hidden md:block absolute top-6 left-6 lg:top-8 lg:left-8 text-amber-900/30 font-sans text-[10px] tracking-widest font-bold">1</div>
 
-                    {/* HERO COVER: Book Title Page */}
-                    <div className="text-center mt-6 lg:mt-12 mb-12 lg:mb-20 relative">
-                        <div className="inline-flex justify-center items-center w-16 h-16 lg:w-20 lg:h-20 rounded-full border border-amber-900/30 dark:border-stone-600 mb-6 lg:mb-8 relative group bg-gradient-to-br from-amber-900/10 to-transparent dark:from-stone-700/50 shadow-[rgba(0,0,0,0.1)_0px_4px_12px]">
-                            <BookOpen className="w-6 h-6 lg:w-8 lg:h-8 text-amber-900/70 dark:text-stone-300 group-hover:text-amber-900 dark:group-hover:text-white transition-colors drop-shadow-md" />
-                        </div>
-                        <div className="w-full h-px bg-gradient-to-r from-transparent via-amber-900/30 dark:via-stone-600 to-transparent mb-8 lg:mb-12"></div>
-                        <h1 className="text-4xl sm:text-5xl lg:text-7xl font-serif text-amber-950 dark:text-stone-100 mb-4 lg:mb-6 tracking-wide drop-shadow-[0_2px_2px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">The Book<br />of You</h1>
-                        <p className="text-lg lg:text-xl text-amber-900/70 dark:text-stone-400 font-serif italic">A chronicle of {user.name}'s journey.</p>
-
-                        <div className="mt-12 lg:mt-16 flex flex-col items-center justify-center gap-4 lg:gap-6 z-20 relative">
-                            <div className="flex bg-gradient-to-b from-amber-900/10 to-transparent dark:from-stone-800/60 dark:to-transparent px-6 lg:px-8 py-2 lg:py-3 rounded-full border border-amber-900/20 dark:border-stone-600 shadow-[inset_0_1px_3px_rgba(0,0,0,0.1)]">
-                                <span className="text-[10px] lg:text-xs font-sans font-black uppercase tracking-[0.3em] text-amber-900/80 dark:text-stone-300">Volume {currentVolume + 1}</span>
+                        {/* HERO COVER: Book Title Page */}
+                        <div className="text-center mt-6 lg:mt-12 mb-12 lg:mb-20 relative">
+                            <div className="inline-flex justify-center items-center w-16 h-16 lg:w-20 lg:h-20 rounded-full border border-amber-900/30 dark:border-stone-600 mb-6 lg:mb-8 relative group bg-gradient-to-br from-amber-900/10 to-transparent dark:from-stone-700/50 shadow-[rgba(0,0,0,0.1)_0px_4px_12px]">
+                                <BookOpen className="w-6 h-6 lg:w-8 lg:h-8 text-amber-900/70 dark:text-stone-300 group-hover:text-amber-900 dark:group-hover:text-white transition-colors drop-shadow-md" />
                             </div>
+                            <div className="w-full h-px bg-gradient-to-r from-transparent via-amber-900/30 dark:via-stone-600 to-transparent mb-8 lg:mb-12"></div>
+                            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-serif text-amber-950 dark:text-stone-100 mb-4 lg:mb-6 tracking-wide drop-shadow-[0_0_15px_rgba(217,119,6,0.3)] dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">The Book<br />of You</h1>
+                            <p className="text-lg lg:text-xl text-amber-900/70 dark:text-stone-400 font-serif italic">A chronicle of {user.name}'s journey.</p>
 
-                            <div className="flex items-center gap-6 lg:gap-12 mt-2 lg:mt-4 p-2 md:p-4 rounded-xl bg-white/50 dark:bg-black/20 backdrop-blur-md border border-amber-900/10 dark:border-white/10 shadow-lg print:hidden">
-                                <button
-                                    onClick={() => currentVolume > 0 && setCurrentVolume(prev => prev - 1)}
-                                    className={`flex items-center gap-2 px-4 lg:px-6 py-3 text-xs lg:text-sm font-sans font-black uppercase tracking-widest transition-all pointer-events-auto shadow-sm ${currentVolume > 0 ? 'text-amber-900 bg-amber-100 hover:bg-amber-200 dark:text-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700 rounded-lg hover:scale-105 active:scale-95' : 'text-amber-900/20 bg-amber-100/30 dark:text-stone-600 dark:bg-stone-800/30 rounded-lg cursor-not-allowed'}`} disabled={currentVolume === 0}
-                                >
-                                    <ChevronLeft className="w-4 h-4" /> Past
-                                </button>
-
-                                <div className="flex flex-col items-center">
-                                    <span className="text-amber-900 dark:text-stone-300 font-bold text-sm">Volume {currentVolume + 1}</span>
-                                    <span className="text-amber-900/50 dark:text-stone-500 text-[10px] uppercase font-bold tracking-widest">of {maxVolume + 1}</span>
+                            <div className="mt-12 lg:mt-16 flex flex-col items-center justify-center gap-4 lg:gap-6 z-20 relative">
+                                <div className="flex bg-gradient-to-b from-amber-900/10 to-transparent dark:from-stone-800/60 dark:to-transparent px-6 lg:px-8 py-2 lg:py-3 rounded-full border border-amber-900/20 dark:border-stone-600 shadow-[inset_0_1px_3px_rgba(0,0,0,0.1)]">
+                                    <span className="text-[10px] lg:text-xs font-sans font-black uppercase tracking-[0.3em] text-amber-900/80 dark:text-stone-300">Volume {currentVolume + 1}</span>
                                 </div>
 
-                                <button
-                                    onClick={() => currentVolume < maxVolume && setCurrentVolume(prev => prev + 1)}
-                                    className={`flex items-center gap-2 px-4 lg:px-6 py-3 text-xs lg:text-sm font-sans font-black uppercase tracking-widest transition-all pointer-events-auto shadow-sm ${currentVolume < maxVolume ? 'text-amber-900 bg-amber-100 hover:bg-amber-200 dark:text-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700 rounded-lg hover:scale-105 active:scale-95' : 'text-amber-900/20 bg-amber-100/30 dark:text-stone-600 dark:bg-stone-800/30 rounded-lg cursor-not-allowed'}`} disabled={currentVolume >= maxVolume}
-                                >
-                                    Future <ChevronLeft className="w-4 h-4 rotate-180" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                                <div className="flex items-center gap-6 lg:gap-12 mt-2 lg:mt-4 p-2 md:p-4 rounded-xl bg-white/50 dark:bg-black/20 backdrop-blur-md border border-amber-900/10 dark:border-white/10 shadow-lg print:hidden">
+                                    <button
+                                        onClick={() => currentVolume > 0 && setCurrentVolume(prev => prev - 1)}
+                                        className={`flex items-center gap-2 px-4 lg:px-6 py-3 text-xs lg:text-sm font-sans font-black uppercase tracking-widest transition-all pointer-events-auto shadow-sm ${currentVolume > 0 ? 'text-amber-900 bg-amber-100 hover:bg-amber-200 dark:text-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700 rounded-lg hover:scale-105 active:scale-95' : 'text-amber-900/20 bg-amber-100/30 dark:text-stone-600 dark:bg-stone-800/30 rounded-lg cursor-not-allowed'}`} disabled={currentVolume === 0}
+                                    >
+                                        <ChevronLeft className="w-4 h-4" /> Past
+                                    </button>
 
-                    {/* CHAPTER 1: REFLECTIONS (Left Page Continued) */}
-                    <div className="mt-8 lg:mt-auto relative z-10 pointer-events-auto">
-                        <div className="text-center mb-8 lg:mb-10">
-                            <h2 className="text-xl lg:text-2xl font-light tracking-wide text-amber-950 dark:text-stone-200 mb-2 inline-block border-b border-amber-900/20 dark:border-stone-700 pb-2 drop-shadow-sm">Chapter I: Reflections</h2>
-                        </div>
-                        {journals.length === 0 ? (
-                            <div className="p-8 text-center text-amber-900/40 dark:text-stone-600 italic">No notes written this week.</div>
-                        ) : (
-                            <div className="space-y-6 lg:space-y-8">
-                                {journals.slice(0, 2).map((j) => (
-                                    <div key={j.id}>
-                                        <h3 className="text-[9px] lg:text-[10px] font-sans font-bold text-amber-900/50 dark:text-stone-500 mb-2 uppercase tracking-widest">{new Date(j.date).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</h3>
-                                        <div className="pl-4 border-l-2 border-amber-900/10 dark:border-stone-700/50">
-                                            <p className="text-amber-950/80 dark:text-stone-300 leading-relaxed text-sm lg:text-base first-letter:text-3xl first-letter:font-bold first-letter:float-left first-letter:mr-1 first-letter:text-amber-900/60 dark:first-letter:text-stone-400">{j.content}</p>
-                                        </div>
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-amber-900 dark:text-stone-300 font-bold text-sm">Volume {currentVolume + 1}</span>
+                                        <span className="text-amber-900/50 dark:text-stone-500 text-[10px] uppercase font-bold tracking-widest">of {maxVolume + 1}</span>
                                     </div>
-                                ))}
+
+                                    <button
+                                        onClick={() => currentVolume < maxVolume && setCurrentVolume(prev => prev + 1)}
+                                        className={`flex items-center gap-2 px-4 lg:px-6 py-3 text-xs lg:text-sm font-sans font-black uppercase tracking-widest transition-all pointer-events-auto shadow-sm ${currentVolume < maxVolume ? 'text-amber-900 bg-amber-100 hover:bg-amber-200 dark:text-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700 rounded-lg hover:scale-105 active:scale-95' : 'text-amber-900/20 bg-amber-100/30 dark:text-stone-600 dark:bg-stone-800/30 rounded-lg cursor-not-allowed'}`} disabled={currentVolume >= maxVolume}
+                                    >
+                                        Future <ChevronLeft className="w-4 h-4 rotate-180" />
+                                    </button>
+                                </div>
                             </div>
-                        )}
-                        {journals.length > 2 && (
-                            <p className="text-center text-[10px] lg:text-xs font-sans text-amber-900/40 dark:text-stone-600 italic mt-6 lg:mt-8 tracking-widest">({journals.length - 2} more notes preserved...)</p>
-                        )}
+                        </div>
+
+                        {/* CHAPTER 1: REFLECTIONS (Left Page Continued) */}
+                        <div className="mt-8 lg:mt-auto relative z-10 pointer-events-auto">
+                            <div className="text-center mb-8 lg:mb-10">
+                                <h2 className="text-xl lg:text-2xl font-light tracking-wide text-amber-950 dark:text-stone-200 mb-2 inline-block border-b border-amber-900/20 dark:border-stone-700 pb-2 drop-shadow-sm">Chapter I: Reflections</h2>
+                            </div>
+                            {journals.length === 0 ? (
+                                <div className="p-8 text-center text-amber-900/40 dark:text-stone-600 italic">No notes written this week.</div>
+                            ) : (
+                                <div className="space-y-6 lg:space-y-8">
+                                    {journals.slice(0, 2).map((j) => (
+                                        <div key={j.id}>
+                                            <h3 className="text-[9px] lg:text-[10px] font-sans font-bold text-amber-900/50 dark:text-stone-500 mb-2 uppercase tracking-widest">{new Date(j.date).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</h3>
+                                            <div className="pl-4 border-l-2 border-amber-900/10 dark:border-stone-700/50">
+                                                <p className="text-amber-950/80 dark:text-stone-300 leading-relaxed text-sm lg:text-base first-letter:text-3xl first-letter:font-bold first-letter:float-left first-letter:mr-1 first-letter:text-amber-900/60 dark:first-letter:text-stone-400">{j.content}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {journals.length > 2 && (
+                                <p className="text-center text-[10px] lg:text-xs font-sans text-amber-900/40 dark:text-stone-600 italic mt-6 lg:mt-8 tracking-widest">({journals.length - 2} more notes preserved...)</p>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -263,83 +273,86 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                 </div>
 
                 {/* RIGHT PAGE */}
-                <div className="w-full md:w-1/2 h-full flex flex-col p-6 md:p-12 lg:p-20 relative overflow-y-auto custom-scrollbar overflow-x-hidden">
-                    {/* Page Numbers */}
-                    <div className="hidden md:block absolute top-6 right-6 lg:top-8 lg:right-8 text-amber-900/30 font-sans text-[10px] tracking-widest font-bold">2</div>
+                <div className="w-full md:w-1/2 h-full flex flex-col relative overflow-y-auto custom-scrollbar overflow-x-hidden z-10">
+                    <div className="absolute inset-2 md:inset-4 lg:inset-6 border-[3px] border-double border-amber-900/20 dark:border-stone-500/10 pointer-events-none rounded-sm"></div>
+                    <div key={currentVolume + "-right"} className="w-full h-full flex flex-col p-6 md:p-12 lg:p-20 absolute inset-0 animate-in slide-in-from-right-16 fade-in duration-1000">
+                        {/* Page Numbers */}
+                        <div className="hidden md:block absolute top-6 right-6 lg:top-8 lg:right-8 text-amber-900/30 font-sans text-[10px] tracking-widest font-bold">2</div>
 
-                    {/* CHAPTER 2: EMOTIONAL CLIMATE */}
-                    <div className="mb-12 lg:mb-16 mt-4 md:mt-0 relative z-10 pointer-events-auto">
-                        <div className="text-center mb-8 lg:mb-10">
-                            <h2 className="text-xl lg:text-2xl font-light tracking-wide text-amber-950 dark:text-stone-200 mb-2 inline-block border-b border-amber-900/20 dark:border-stone-700 pb-2 drop-shadow-sm">Chapter II: Climate</h2>
-                        </div>
-
-                        {/* VISUAL RATIO SCALE - PAPER */}
-                        <div className="p-4 lg:p-6 mb-8 lg:mb-12 flex flex-col items-center border border-amber-900/10 dark:border-stone-800 relative bg-amber-900/5 dark:bg-stone-800/20 shadow-sm rounded-sm">
-                            <h3 className="font-serif italic text-amber-900/60 dark:text-stone-400 mb-4 lg:mb-6 text-xs lg:text-sm">Dominant Weather Pattern</h3>
-
-                            <div className="w-full h-2 lg:h-3 bg-amber-900/10 dark:bg-stone-900 rounded-full flex relative shadow-inner overflow-hidden border border-amber-900/5 dark:border-stone-700">
-                                <div className="h-full transition-all duration-1000 bg-amber-500 dark:bg-amber-600 rounded-l-full shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]" style={{ width: `${Math.max(2, moodRatio.sun)}%` }}></div>
-                                <div className="h-full transition-all duration-1000 bg-slate-400 dark:bg-slate-600 rounded-r-full shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)]" style={{ width: `${Math.max(2, moodRatio.rain)}%` }}></div>
+                        {/* CHAPTER 2: EMOTIONAL CLIMATE */}
+                        <div className="mb-12 lg:mb-16 mt-4 md:mt-0 relative z-10 pointer-events-auto">
+                            <div className="text-center mb-8 lg:mb-10">
+                                <h2 className="text-xl lg:text-2xl font-light tracking-wide text-amber-950 dark:text-stone-200 mb-2 inline-block border-b border-amber-900/20 dark:border-stone-700 pb-2 drop-shadow-sm">Chapter II: Climate</h2>
                             </div>
 
-                            <div className="flex justify-between w-full mt-3 font-serif text-[10px] lg:text-xs">
-                                <div className={`flex items-center gap-1 lg:gap-1.5 ${isSunny ? 'text-amber-700 dark:text-amber-500 font-bold' : 'text-amber-900/40 dark:text-stone-600'}`}>
-                                    <Sun className="w-3 h-3 lg:w-3.5 lg:h-3.5" /> Sunny ({Math.round(moodRatio.sun)}%)
+                            {/* VISUAL RATIO SCALE - PAPER */}
+                            <div className="p-4 lg:p-6 mb-8 lg:mb-12 flex flex-col items-center border border-amber-900/10 dark:border-stone-800 relative bg-amber-900/5 dark:bg-stone-800/20 shadow-sm rounded-sm">
+                                <h3 className="font-serif italic text-amber-900/60 dark:text-stone-400 mb-4 lg:mb-6 text-xs lg:text-sm">Dominant Weather Pattern</h3>
+
+                                <div className="w-full h-2 lg:h-3 bg-amber-900/10 dark:bg-stone-900 rounded-full flex relative shadow-inner overflow-hidden border border-amber-900/5 dark:border-stone-700">
+                                    <div className="h-full transition-all duration-1000 bg-amber-500 dark:bg-amber-600 rounded-l-full shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]" style={{ width: `${Math.max(2, moodRatio.sun)}%` }}></div>
+                                    <div className="h-full transition-all duration-1000 bg-slate-400 dark:bg-slate-600 rounded-r-full shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)]" style={{ width: `${Math.max(2, moodRatio.rain)}%` }}></div>
                                 </div>
-                                <div className={`flex items-center gap-1 lg:gap-1.5 ${!isSunny ? 'text-slate-600 dark:text-slate-400 font-bold' : 'text-amber-900/40 dark:text-stone-600'}`}>
-                                    Rainy ({Math.round(moodRatio.rain)}%) <CloudRain className="w-3 h-3 lg:w-3.5 lg:h-3.5" />
-                                </div>
-                            </div>
-                        </div>
 
-                        <div className="grid grid-cols-4 gap-2 lg:gap-4 px-1 lg:px-2">
-                            {moods.slice(0, 8).map((m, i) => {
-                                const isPositive = (m.mood as any) === 'confetti' || (m.mood as any) === 'Happy' || (m.mood as any) === 'Calm' || (m.mood as any) === 'sun';
-                                const isNegative = (m.mood as any) === 'rain' || (m.mood as any) === 'Anxious' || (m.mood as any) === 'Sad';
-                                let emoji = '😐';
-
-                                if (isPositive) {
-                                    emoji = ['confetti', 'Happy'].includes(String(m.mood)) ? '🎉' : '☀️';
-                                } else if (isNegative) {
-                                    emoji = ['rain', 'Sad'].includes(String(m.mood)) ? '🌧️' : '😰';
-                                }
-
-                                return (
-                                    <div key={i} className={`aspect-square p-2 bg-amber-900/5 dark:bg-stone-800/40 rounded-sm flex flex-col items-center justify-center group shadow-sm ring-1 ring-amber-900/10 dark:ring-stone-700 transition-all hover:bg-amber-900/10 dark:hover:bg-stone-700`}>
-                                        <span className="text-xl lg:text-2xl block mb-1 lg:mb-1.5 filter sepia-[0.3] dark:sepia-[0.2] group-hover:scale-110 group-hover:sepia-0 transition-transform">{emoji}</span>
-                                        <div className="text-[7px] lg:text-[8px] font-sans font-bold uppercase text-amber-900/50 dark:text-stone-500 tracking-widest">{new Date(m.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+                                <div className="flex justify-between w-full mt-3 font-serif text-[10px] lg:text-xs">
+                                    <div className={`flex items-center gap-1 lg:gap-1.5 ${isSunny ? 'text-amber-700 dark:text-amber-500 font-bold' : 'text-amber-900/40 dark:text-stone-600'}`}>
+                                        <Sun className="w-3 h-3 lg:w-3.5 lg:h-3.5" /> Sunny ({Math.round(moodRatio.sun)}%)
                                     </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* CHAPTER 3: VISIONS & CONCLUSION */}
-                    <div className="mt-8 md:mt-auto pt-8 border-t border-amber-900/10 dark:border-stone-800 text-center relative z-10 pointer-events-auto">
-                        <div className="w-6 h-6 lg:w-8 lg:h-8 border border-amber-900/20 dark:border-stone-700 bg-transparent mx-auto mb-3 lg:mb-4 flex items-center justify-center rounded-sm rotate-45 shadow-sm pointer-events-none">
-                            <div className="-rotate-45"><BookOpen className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-amber-900/40 dark:text-stone-500" /></div>
-                        </div>
-
-                        {isGeneratingNarrative ? (
-                            <div className="py-12 flex flex-col items-center justify-center space-y-4">
-                                <Sparkles className="w-6 h-6 animate-spin text-amber-700/60 dark:text-stone-400" />
-                                <p className="font-serif italic text-amber-900/60 dark:text-stone-400 text-sm">Weaving your chronicle together...</p>
+                                    <div className={`flex items-center gap-1 lg:gap-1.5 ${!isSunny ? 'text-slate-600 dark:text-slate-400 font-bold' : 'text-amber-900/40 dark:text-stone-600'}`}>
+                                        Rainy ({Math.round(moodRatio.rain)}%) <CloudRain className="w-3 h-3 lg:w-3.5 lg:h-3.5" />
+                                    </div>
+                                </div>
                             </div>
-                        ) : narrative ? (
-                            <div className="text-left bg-gradient-to-b from-transparent via-[#fdfaf6]/30 to-transparent dark:via-[#1a1817]/30 p-4 lg:p-8 relative print:break-inside-avoid">
-                                <div className="absolute top-0 left-10 w-8 h-px bg-amber-900/20 dark:bg-stone-700"></div>
-                                <div className="absolute top-0 right-10 w-8 h-px bg-amber-900/20 dark:bg-stone-700"></div>
-                                {narrative.split('\n\n').map((paragraph, idx) => (
-                                    <p key={idx} className={`font-serif text-amber-950 dark:text-stone-200 text-sm lg:text-base leading-loose mb-6 last:mb-0 relative z-10 ${idx === 0 ? 'first-letter:text-4xl first-letter:font-bold first-letter:float-left first-letter:mr-2 tracking-wide' : 'tracking-wide indent-8'}`}>
-                                        {paragraph}
-                                    </p>
-                                ))}
+
+                            <div className="grid grid-cols-4 gap-2 lg:gap-4 px-1 lg:px-2">
+                                {moods.slice(0, 8).map((m, i) => {
+                                    const isPositive = (m.mood as any) === 'confetti' || (m.mood as any) === 'Happy' || (m.mood as any) === 'Calm' || (m.mood as any) === 'sun';
+                                    const isNegative = (m.mood as any) === 'rain' || (m.mood as any) === 'Anxious' || (m.mood as any) === 'Sad';
+                                    let emoji = '😐';
+
+                                    if (isPositive) {
+                                        emoji = ['confetti', 'Happy'].includes(String(m.mood)) ? '🎉' : '☀️';
+                                    } else if (isNegative) {
+                                        emoji = ['rain', 'Sad'].includes(String(m.mood)) ? '🌧️' : '😰';
+                                    }
+
+                                    return (
+                                        <div key={i} className={`aspect-square p-2 bg-amber-900/5 dark:bg-stone-800/40 rounded-sm flex flex-col items-center justify-center group shadow-sm ring-1 ring-amber-900/10 dark:ring-stone-700 transition-all hover:bg-amber-900/10 dark:hover:bg-stone-700`}>
+                                            <span className="text-xl lg:text-2xl block mb-1 lg:mb-1.5 filter sepia-[0.3] dark:sepia-[0.2] group-hover:scale-110 group-hover:sepia-0 transition-transform">{emoji}</span>
+                                            <div className="text-[7px] lg:text-[8px] font-sans font-bold uppercase text-amber-900/50 dark:text-stone-500 tracking-widest">{new Date(m.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+                                        </div>
+                                    );
+                                })}
                             </div>
-                        ) : null}
+                        </div>
 
-                        <p className="font-sans text-[7px] lg:text-[8px] uppercase tracking-[0.3em] font-bold text-amber-900/30 dark:text-stone-600 mt-6 pointer-events-none">Peutic Archives // Vol. {currentVolume + 1}</p>
+                        {/* CHAPTER 3: VISIONS & CONCLUSION */}
+                        <div className="mt-8 md:mt-auto pt-8 border-t border-amber-900/10 dark:border-stone-800 text-center relative z-10 pointer-events-auto">
+                            <div className="w-6 h-6 lg:w-8 lg:h-8 border border-amber-900/20 dark:border-stone-700 bg-transparent mx-auto mb-3 lg:mb-4 flex items-center justify-center rounded-sm rotate-45 shadow-sm pointer-events-none">
+                                <div className="-rotate-45"><BookOpen className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-amber-900/40 dark:text-stone-500" /></div>
+                            </div>
+
+                            {isGeneratingNarrative ? (
+                                <div className="py-12 flex flex-col items-center justify-center space-y-4">
+                                    <Sparkles className="w-6 h-6 animate-spin text-amber-700/60 dark:text-stone-400" />
+                                    <p className="font-serif italic text-amber-900/60 dark:text-stone-400 text-sm">Weaving your chronicle together...</p>
+                                </div>
+                            ) : narrative ? (
+                                <div className="text-left bg-gradient-to-b from-transparent via-[#fdfaf6]/30 to-transparent dark:via-[#1a1817]/30 p-4 lg:p-8 relative print:break-inside-avoid">
+                                    <div className="absolute top-0 left-10 w-8 h-px bg-amber-900/20 dark:bg-stone-700"></div>
+                                    <div className="absolute top-0 right-10 w-8 h-px bg-amber-900/20 dark:bg-stone-700"></div>
+                                    {narrative.split('\n\n').map((paragraph, idx) => (
+                                        <p key={idx} className={`font-serif text-amber-950 dark:text-stone-200 text-sm lg:text-base leading-loose mb-6 last:mb-0 relative z-10 ${idx === 0 ? 'first-letter:text-4xl first-letter:font-bold first-letter:float-left first-letter:mr-2 tracking-wide' : 'tracking-wide indent-8'}`}>
+                                            {paragraph}
+                                        </p>
+                                    ))}
+                                </div>
+                            ) : null}
+
+                            <p className="font-sans text-[7px] lg:text-[8px] uppercase tracking-[0.3em] font-bold text-amber-900/30 dark:text-stone-600 mt-6 pointer-events-none">Peutic Archives // Vol. {currentVolume + 1}</p>
+                        </div>
+
                     </div>
-
                 </div>
             </div>
         </div>

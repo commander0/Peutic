@@ -41,15 +41,11 @@ const SanctuaryShop: React.FC<SanctuaryShopProps> = ({ user, onClose, onPurchase
             if (success) {
                 // Update user decor array
                 const newDecor = [...unlockedDecor, item.id];
-                const updatedUser = await UserService.updateUserPartial(user.id, {
-                    unlockedDecor: newDecor,
-                    balance: user.balance - item.price // local optimistic update
-                });
+                const updatedUserObj = { ...user, unlockedDecor: newDecor, balance: user.balance - item.price };
+                await UserService.updateUser(updatedUserObj);
 
-                if (updatedUser) {
-                    onPurchaseUpdate(updatedUser);
-                    showToast(`Acquired ${item.name}!`, "success");
-                }
+                onPurchaseUpdate(updatedUserObj);
+                showToast(`Acquired ${item.name}!`, "success");
             } else {
                 showToast("Transaction failed.", "error");
             }

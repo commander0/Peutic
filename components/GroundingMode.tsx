@@ -267,12 +267,13 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
     return (
         <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center text-white overflow-hidden bg-black">
             {/* DYNAMIC BACKGROUND */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${currentStep.gradient} transition-all duration-1000 ease-in-out`}></div>
-            <div className="absolute inset-0 opacity-30 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] brightness-100 contrast-150 mix-blend-overlay"></div>
+            <div className={`absolute inset-0 bg-gradient-to-br ${currentStep.gradient} transition-all duration-[2000ms] ease-in-out`}></div>
+            <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] brightness-100 contrast-150 mix-blend-overlay"></div>
 
-            {/* AMBIENT ORBS */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-white/5 rounded-full blur-[120px] animate-pulse-slow pointer-events-none"></div>
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px] animate-float pointer-events-none"></div>
+            {/* CINEMATIC AMBIENT ORBS & LIQUID BLOBS */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-white/5 rounded-full blur-[120px] animate-[pulse_6s_ease-in-out_infinite] pointer-events-none mix-blend-screen"></div>
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-400/15 rounded-[40%_60%_70%_30%/40%_50%_60%_50%] blur-[80px] animate-[spin_15s_linear_infinite] pointer-events-none mix-blend-screen"></div>
+            <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-fuchsia-400/15 rounded-[60%_40%_30%_70%/50%_60%_40%_50%] blur-[90px] animate-[spin_20s_linear_infinite_reverse] pointer-events-none mix-blend-screen"></div>
 
             {/* Blocked Audio Overlay */}
             {audioBlocked && (
@@ -299,57 +300,57 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
             </div>
 
             {/* CONTENT */}
-            <div className={`relative z-10 max-w-lg w-full px-8 text-center transition-all duration-500 transform ${isTransitioning ? 'opacity-0 scale-95 blur-sm' : 'opacity-100 scale-100 blur-0'}`}>
+            <div className={`relative z-10 max-w-2xl w-full px-8 md:px-16 py-12 md:py-20 text-center transition-all duration-[800ms] transform ${isTransitioning ? 'opacity-0 scale-95 blur-xl translate-y-10' : 'opacity-100 scale-100 blur-0 translate-y-0'} bg-white/5 backdrop-blur-3xl rounded-[3rem] border border-white/10 shadow-[0_0_80px_rgba(255,255,255,0.05),inset_0_0_40px_rgba(255,255,255,0.05)]`}>
 
                 {/* ICON GLOW */}
                 <div className="mb-10 flex justify-center relative">
-                    <div className="absolute inset-0 bg-white/20 blur-[50px] animate-pulse-slow"></div>
-                    <div className="relative w-28 h-28 bg-gradient-to-b from-white/10 to-transparent rounded-full flex items-center justify-center backdrop-blur-xl border border-white/20 shadow-2xl animate-float">
-                        <currentStep.icon className="w-12 h-12 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]" />
+                    <div className="absolute inset-0 bg-white/20 blur-[60px] animate-[pulse_4s_ease-in-out_infinite]"></div>
+                    <div className="relative w-28 h-28 bg-gradient-to-br from-white/20 to-transparent rounded-full flex items-center justify-center backdrop-blur-2xl border border-white/30 shadow-[0_20px_40px_rgba(0,0,0,0.5)] animate-[bounce_6s_infinite]">
+                        <currentStep.icon className="w-12 h-12 text-white drop-shadow-[0_0_20px_rgba(255,255,255,1)]" />
                     </div>
                 </div>
 
-                <h2 className="text-5xl md:text-6xl font-black mb-4 tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 drop-shadow-sm">{currentStep.title}</h2>
-                <p className="text-xl md:text-2xl text-blue-200/80 font-medium mb-12 leading-relaxed tracking-wide">{currentStep.subtitle}</p>
+                <h2 className="text-5xl md:text-6xl font-serif font-black mb-4 tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-white/70 drop-shadow-md">{currentStep.title}</h2>
+                <p className="text-xl md:text-2xl text-blue-100 font-light mb-12 leading-relaxed tracking-wide opacity-90">{currentStep.subtitle}</p>
 
                 {/* BREATHE VISUALIZER */}
                 {currentStep.id === 'breathe' && (
                     <div className="relative w-64 h-64 mx-auto mb-16 flex items-center justify-center">
                         {/* Rings */}
-                        <div className="absolute inset-0 border border-white/20 rounded-full animate-ping opacity-20" style={{ animationDuration: '4s' }}></div>
-                        <div className="absolute inset-8 border border-white/30 rounded-full animate-ping opacity-20" style={{ animationDuration: '4s', animationDelay: '1s' }}></div>
+                        <div className="absolute inset-0 border border-white/30 rounded-full animate-ping opacity-30" style={{ animationDuration: '4s' }}></div>
+                        <div className="absolute inset-8 border border-white/40 rounded-full animate-ping opacity-30" style={{ animationDuration: '4s', animationDelay: '1s' }}></div>
 
-                        {/* Core */}
-                        <div className="absolute inset-0 bg-white/5 rounded-full animate-breathing blur-xl"></div>
-                        <div className="absolute inset-10 bg-gradient-to-br from-white/20 to-transparent rounded-full backdrop-blur-md border border-white/30 shadow-[0_0_50px_rgba(255,255,255,0.1)] flex items-center justify-center transition-all duration-[4000ms] ease-in-out breathing-text-container">
-                            <span className="font-bold tracking-[0.2em] text-xl uppercase drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">{breathText}</span>
+                        {/* Core Liquid */}
+                        <div className="absolute inset-0 bg-white/10 rounded-[40%_60%_70%_30%/40%_50%_60%_50%] animate-[spin_8s_linear_infinite] blur-xl"></div>
+                        <div className="absolute inset-10 bg-gradient-to-br from-white/30 to-transparent rounded-full backdrop-blur-xl border border-white/40 shadow-[0_0_60px_rgba(255,255,255,0.2)] flex items-center justify-center transition-all duration-[4000ms] ease-in-out breathing-text-container">
+                            <span className="font-sans font-black tracking-[0.3em] text-xl uppercase text-white drop-shadow-[0_2px_15px_rgba(0,0,0,0.8)]">{breathText}</span>
                         </div>
                     </div>
                 )}
 
                 {/* INTERACTIVE COUNTER */}
                 {currentStep.count && (
-                    <div className="space-y-8">
-                        <div className="flex justify-center gap-4 mb-8">
+                    <div className="space-y-10">
+                        <div className="flex justify-center gap-5 mb-8">
                             {Array.from({ length: currentStep.count }).map((_, i) => (
-                                <div key={i} className={`w-4 h-4 rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(255,255,255,0.5)] ${i < counter ? 'bg-white scale-125 shadow-[0_0_20px_rgba(255,255,255,0.9)]' : 'bg-white/10'}`}></div>
+                                <div key={i} className={`w-5 h-5 rounded-full transition-all duration-500 shadow-[0_0_15px_rgba(255,255,255,0.3)] ${i < counter ? 'bg-white scale-150 shadow-[0_0_30px_rgba(255,255,255,1)]' : 'bg-white/10'}`}></div>
                             ))}
                         </div>
                         <button
                             onClick={handleTap}
-                            className="w-full py-6 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-3xl font-bold text-xl hover:scale-105 active:scale-95 transition-all shadow-xl backdrop-blur-md flex items-center justify-center gap-3 group"
+                            className="w-full py-6 bg-white/10 hover:bg-white/20 border-t border-white/30 text-white rounded-[2rem] font-bold text-2xl tracking-wide hover:scale-105 active:scale-95 transition-all shadow-2xl backdrop-blur-xl flex items-center justify-center gap-4 group"
                         >
                             {counter + 1 >= currentStep.count ? (
-                                <span className="flex items-center gap-2 group-hover:translate-x-1 transition-transform">Complete <ArrowRight className="w-6 h-6" /></span>
+                                <span className="flex items-center gap-3 group-hover:translate-x-2 transition-transform drop-shadow-md">Complete <ArrowRight className="w-7 h-7" /></span>
                             ) : (
-                                <span className="flex items-center gap-2"><Sparkles className="w-5 h-5 animate-pulse" /> Found It</span>
+                                <span className="flex items-center gap-3 drop-shadow-md"><Sparkles className="w-6 h-6 animate-pulse" /> Found It</span>
                             )}
                         </button>
                     </div>
                 )}
 
                 {currentStep.id === 'complete' && (
-                    <button onClick={onClose} className="px-12 py-5 bg-white text-black rounded-full font-black text-xl hover:bg-blue-50 transition-all shadow-[0_0_40px_rgba(255,255,255,0.4)] hover:scale-105 hover:shadow-[0_0_60px_rgba(255,255,255,0.6)]">
+                    <button onClick={onClose} className="px-14 py-6 bg-white text-black rounded-full font-black text-2xl tracking-wide hover:bg-blue-50 transition-all shadow-[0_0_60px_rgba(255,255,255,0.6)] hover:scale-105 hover:shadow-[0_0_80px_rgba(255,255,255,0.8)] mt-4">
                         Return to Sanctuary
                     </button>
                 )}

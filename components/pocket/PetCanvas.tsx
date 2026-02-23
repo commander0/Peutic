@@ -120,7 +120,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                     )}
 
                     {/* Level 30-49: ASCENDANT */}
-                    {pet.level >= 30 && pet.level < 50 && pet.species === 'Neo-Shiba' && (
+                    {pet.level >= 30 && pet.level < 50 && pet.species?.toLowerCase().includes('shiba') && (
                         <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
                             <circle cx="0" cy="0" r="50" fill="url(#coreGlow)" opacity="0.4" className="animate-[ping_2s_ease-in-out_infinite]" />
                             <path d="M 0 -45 L 15 -15 L 45 0 L 15 15 L 0 45 L -15 15 L -45 0 L -15 -15 Z" fill={c.s} className="animate-[spin_10s_linear_infinite]" opacity="0.6" />
@@ -129,7 +129,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                             <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.5} />
                         </g>
                     )}
-                    {pet.level >= 30 && pet.level < 50 && pet.species === 'Digi-Dino' && (
+                    {pet.level >= 30 && pet.level < 50 && pet.species?.toLowerCase().includes('dino') && (
                         <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
                             <polygon points="0,-45 40,25 -40,25" fill={c.s} opacity="0.5" className="animate-pulse" />
                             <polygon points="0,-35 30,15 -30,15" fill={c.g} opacity="0.8" className="animate-[sway_3s_ease-in-out_infinite]" />
@@ -141,7 +141,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                             <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.4} />
                         </g>
                     )}
-                    {pet.level >= 30 && pet.level < 50 && pet.species === 'Holo-Hamu' && (
+                    {pet.level >= 30 && pet.level < 50 && pet.species?.toLowerCase().includes('hamu') && (
                         <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
                             <circle cx="0" cy="0" r="45" fill="none" stroke={c.s} strokeWidth="2" strokeDasharray="10 10" className="animate-[spin_6s_linear_infinite]" />
                             <path d="M 0 -30 C 20 -30 30 -10 0 20 C -30 -10 -20 -30 0 -30 Z" fill={c.g} opacity="0.5" className="animate-pulse scale-150" />
@@ -151,7 +151,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                             <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.6} />
                         </g>
                     )}
-                    {pet.level >= 30 && pet.level < 50 && pet.species === 'Zen-Sloth' && (
+                    {pet.level >= 30 && pet.level < 50 && pet.species?.toLowerCase().includes('sloth') && (
                         <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
                             <circle cx="0" cy="0" r="50" fill="url(#coreGlow)" opacity="0.3" className="animate-[pulse_5s_infinite]" />
                             <g className="animate-[spin_12s_linear_infinite]">
@@ -163,9 +163,17 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                             <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.5} />
                         </g>
                     )}
+                    {/* Fallback for ASCENDANT */}
+                    {pet.level >= 30 && pet.level < 50 && !pet.species?.toLowerCase().includes('shiba') && !pet.species?.toLowerCase().includes('dino') && !pet.species?.toLowerCase().includes('hamu') && !pet.species?.toLowerCase().includes('sloth') && (
+                        <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
+                            <circle cx="0" cy="0" r="45" fill="url(#coreGlow)" opacity="0.4" className="animate-[pulse_2s_infinite]" />
+                            <rect x="-25" y="-25" width="50" height="50" rx="10" fill="url(#bodyGrad)" className="animate-[spin_8s_linear_infinite]" />
+                            <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.5} />
+                        </g>
+                    )}
 
                     {/* Level 50+: CELESTIAL */}
-                    {pet.level >= 50 && pet.species === 'Neo-Shiba' && (
+                    {pet.level >= 50 && pet.species?.toLowerCase().includes('shiba') && (
                         <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
                             {/* Solar Flare Halo */}
                             <circle cx="0" cy="0" r="80" fill="url(#coreGlow)" opacity="0.4" className="animate-[pulse_2s_infinite]" />
@@ -175,7 +183,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                             <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={2.0} />
                         </g>
                     )}
-                    {pet.level >= 50 && pet.species === 'Digi-Dino' && (
+                    {pet.level >= 50 && pet.species?.toLowerCase().includes('dino') && (
                         <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
                             {/* Crystal Behemoth */}
                             <polygon points="0,-75 60,35 -60,35" fill="url(#coreGlow)" opacity="0.3" className="animate-pulse" />
@@ -186,7 +194,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                             <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.8} />
                         </g>
                     )}
-                    {pet.level >= 50 && pet.species === 'Holo-Hamu' && (
+                    {pet.level >= 50 && pet.species?.toLowerCase().includes('hamu') && (
                         <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
                             {/* Heart of the Cosmos */}
                             <circle cx="0" cy="0" r="90" fill="url(#coreGlow)" opacity="0.2" className="animate-[pulse_3s_infinite]" />
@@ -200,7 +208,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                             <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.8} />
                         </g>
                     )}
-                    {pet.level >= 50 && pet.species === 'Zen-Sloth' && (
+                    {pet.level >= 50 && pet.species?.toLowerCase().includes('sloth') && (
                         <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
                             {/* Nirvana Entity */}
                             <circle cx="0" cy="0" r="80" fill="url(#coreGlow)" opacity="0.4" className="animate-[pulse_6s_infinite]" />
@@ -216,6 +224,15 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                             </g>
                             <ellipse cx="0" cy="0" rx="35" ry="25" fill="#fff" className="drop-shadow-[0_0_30px_#e7e5e4] animate-float" />
                             <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.8} />
+                        </g>
+                    )}
+                    {/* Fallback for CELESTIAL */}
+                    {pet.level >= 50 && !pet.species?.toLowerCase().includes('shiba') && !pet.species?.toLowerCase().includes('dino') && !pet.species?.toLowerCase().includes('hamu') && !pet.species?.toLowerCase().includes('sloth') && (
+                        <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
+                            <circle cx="0" cy="0" r="70" fill="url(#coreGlow)" opacity="0.4" className="animate-[pulse_3s_infinite]" />
+                            <path d="M 0 -60 L 60 0 L 0 60 L -60 0 Z" fill="url(#bodyGrad)" className="animate-[spin_10s_linear_infinite]" />
+                            <circle cx="0" cy="0" r="25" fill="#fff" className="drop-shadow-[0_0_20px_#fff] animate-bounce" />
+                            <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={2.0} />
                         </g>
                     )}
 

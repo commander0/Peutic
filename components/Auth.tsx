@@ -157,8 +157,6 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             const fullName = `${firstName.trim()} ${lastName.trim()}`;
             const formattedName = fullName.length > 1 ? (fullName.charAt(0).toUpperCase() + fullName.slice(1)) : "Buddy";
 
-            console.log("Finishing onboarding for:", formattedName);
-
             // SAFETY: Force timeout after 15 seconds to unblock UI if network/DB hangs
             const loginPromise = onLogin(UserRole.USER, formattedName, undefined, email, birthday, 'email', password, true);
             const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Setup taking too long. Please refresh and try logging in.")), 15000));

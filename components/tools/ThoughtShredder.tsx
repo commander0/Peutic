@@ -108,7 +108,7 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
                 setShredded(true);
                 setIsShredding(false);
 
-                // --- Milestone Logic (50 Shreds) ---
+                // --- Milestone Logic (25 Shreds) ---
                 const words = text.toLowerCase().split(/\W+/);
                 const foundPositives = words.filter(w => POSITIVE_WORDS.includes(w));
 
@@ -120,7 +120,7 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
                 localStorage.setItem('peutic_shred_count', count.toString());
                 setShredCount(count);
 
-                if (count > 0 && count % 50 === 0) {
+                if (count > 0 && count % 25 === 0) {
                     setShowMilestone(true);
                     if (newWords.length > 0) {
                         const uniqueWords = Array.from(new Set(newWords));

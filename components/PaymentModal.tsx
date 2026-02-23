@@ -46,7 +46,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, onSuccess, initial
             try {
                 // Only init Stripe if the key is valid
                 if (STRIPE_PUBLISHABLE_KEY && !STRIPE_PUBLISHABLE_KEY.startsWith('sk_')) {
-                    console.log("Initializing Stripe with key:", STRIPE_PUBLISHABLE_KEY.substring(0, 8) + "...");
                     stripeRef.current = window.Stripe(STRIPE_PUBLISHABLE_KEY);
                     elementsRef.current = stripeRef.current.elements();
                     const style = { base: { color: "#32325d", fontFamily: '"Manrope", sans-serif', fontSmoothing: "antialiased", fontSize: "16px", "::placeholder": { color: "#aab7c4" } } };
@@ -77,7 +76,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, onSuccess, initial
 
         // --- SANDBOX FALLBACK ---
         if (!STRIPE_PUBLISHABLE_KEY || STRIPE_PUBLISHABLE_KEY.startsWith('sk_')) {
-            console.log("Processing Simulated Sandbox Payment...");
             setTimeout(() => {
                 setProcessing(false);
                 const minutesAdded = Math.floor(amount / pricePerMin);
@@ -131,8 +129,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, onSuccess, initial
                     </div>
                     {error && (
                         <div className={`mb-4 p-3 border text-sm rounded-lg flex items-center gap-2 ${error.includes("Sandbox Mode")
-                                ? 'bg-blue-50/50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400'
-                                : 'bg-red-50 dark:bg-red-900/30 border-red-100 dark:border-red-900 text-red-600 dark:text-red-400'
+                            ? 'bg-blue-50/50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400'
+                            : 'bg-red-50 dark:bg-red-900/30 border-red-100 dark:border-red-900 text-red-600 dark:text-red-400'
                             }`}>
                             <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                             <span>{error}</span>

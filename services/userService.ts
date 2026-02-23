@@ -202,8 +202,8 @@ export class UserService {
             themePreference: data.theme_preference || 'amber-light',
             languagePreference: data.language_preference || 'en',
             gameScores: scores || { match: 0, cloud: 0 },
-            unlockedRooms: data.unlocked_rooms || [],
-            unlockedDecor: data.unlocked_decor || [],
+            unlockedRooms: metadata.unlockedRooms || data.unlocked_rooms || [],
+            unlockedDecor: metadata.unlockedDecor || data.unlocked_decor || [],
             unlockedAchievements: [],
             oracleTokens: metadata.oracleTokens || 0
         };
@@ -352,6 +352,15 @@ export class UserService {
         const previousBalance = user.balance;
         user.balance = (user.balance || 0) + amount;
         await this.saveUserToCache(user);
+
+        // SYNC GAMIFICATION: Grow the Inner Garden automatically based on raw focus time tracked by the app.
+        try {
+            import('./gardenService').then(({ GardenService }) => {
+                GardenService.addFocusMinutes(user.id, amount).catch(console.error);
+            });
+        } catch (e) {
+            console.error("Failed to sync garden focus minutes", e);
+        }
 
         try {
             await BaseService.invokeGateway('process-topup', {
@@ -626,15 +635,28 @@ export class UserService {
             // Map our frontend keys to DB columns
             const dbUpdates: any = {};
             if (updates.name !== undefined) dbUpdates.name = updates.name;
-            if (updates.unlockedRooms !== undefined) dbUpdates.unlocked_rooms = updates.unlockedRooms;
-            if (updates.unlockedDecor !== undefined) dbUpdates.unlocked_decor = updates.unlockedDecor;
             if (updates.balance !== undefined) dbUpdates.balance = updates.balance;
             if (updates.themePreference !== undefined) dbUpdates.theme_preference = updates.themePreference;
 
+            const existingMeta = (this.currentUser as any)?.metadata || {};
+            let metaUpdated = false;
+            let newMeta = { ...existingMeta };
+
             if (updates.oracleTokens !== undefined) {
-                // Ensure we don't overwrite other metadata keys
-                const existingMeta = (this.currentUser as any)?.metadata || {};
-                dbUpdates.metadata = { ...existingMeta, oracleTokens: updates.oracleTokens };
+                newMeta.oracleTokens = updates.oracleTokens;
+                metaUpdated = true;
+            }
+            if (updates.unlockedRooms !== undefined) {
+                newMeta.unlockedRooms = updates.unlockedRooms;
+                metaUpdated = true;
+            }
+            if (updates.unlockedDecor !== undefined) {
+                newMeta.unlockedDecor = updates.unlockedDecor;
+                metaUpdated = true;
+            }
+
+            if (metaUpdated) {
+                dbUpdates.metadata = newMeta;
             }
 
             const { data, error } = await supabase
@@ -912,18 +934,31 @@ export class UserService {
     static saveUserSession(user: User) { this.currentUser = user; }
 
     static async getWeeklyProgress(userId: string): Promise<{ current: number, message: string }> {
-        const { data, error } = await supabase.rpc('get_weekly_activity_count', { p_user_id: userId });
-        if (error) {
-            console.warn("Failed to fetch weekly progress", error);
-            return { current: 0, message: "Start your journey." };
-        }
-        const count = (data || 0) * 0.5;
+        const user = this.getUser();
+        if (!user) return { current: 0, message: "Start your journey." };
+
+        const joinedAt = new Date(user.joinedAt).getTime();
+        const now = Date.now();
+        const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+        const weeksSinceJoin = Math.floor((now - joinedAt) / msPerWeek);
+        const startOfCurrentWeek = new Date(joinedAt + weeksSinceJoin * msPerWeek).toISOString();
+
+        // Query the database for counts since startOfCurrentWeek instead of relying on the SQL RPC
+        const [jRes, mRes, vRes] = await Promise.all([
+            supabase.from('journals').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('date', startOfCurrentWeek),
+            supabase.from('moods').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('date', startOfCurrentWeek),
+            supabase.from('voice_journals').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', startOfCurrentWeek)
+        ]);
+
+        const count = (jRes.count || 0) + (mRes.count || 0) + (vRes.count || 0);
+
         let message = "Start your journey.";
         if (count > 0) message = "Good start!";
-        if (count >= 3) message = "Building momentum!";
-        if (count >= 5) message = "Halfway there!";
-        if (count >= 8) message = "So close!";
-        if (count >= 10) message = "🔥 You are on a hot streak!";
+        if (count >= 10) message = "Building momentum!";
+        if (count >= 30) message = "Working hard!";
+        if (count >= 50) message = "Halfway there!";
+        if (count >= 80) message = "So close!";
+        if (count >= 100) message = "🔥 You are on a hot streak!";
 
         return { current: count, message };
     }

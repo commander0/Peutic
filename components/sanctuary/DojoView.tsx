@@ -49,7 +49,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
     // Audio Context Ref
     const audioCtxRef = useRef<AudioContext | null>(null);
     const audioNodesRef = useRef<{
-        bells: { intervalId: any } | null;
+        bells: { intervalId: any; audio?: HTMLAudioElement } | null;
     }>({ bells: null });
 
     const [bellInterval, setBellInterval] = useState<number>(0); // 0 = start/end only, >0 = every X seconds
@@ -175,6 +175,10 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
         // Stop Interval Bells
         if (audioNodesRef.current.bells) {
             clearInterval(audioNodesRef.current.bells.intervalId);
+            if (audioNodesRef.current.bells.audio) {
+                audioNodesRef.current.bells.audio.pause();
+                audioNodesRef.current.bells.audio.currentTime = 0;
+            }
             audioNodesRef.current.bells = null;
         }
     };
@@ -204,8 +208,15 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
         if (isActive) {
             triggerAmbientSound(); // Start Sound
 
+            if (timerMode === 'candle') {
+                const windChime = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_2491a6d4ee.mp3");
+                windChime.loop = true;
+                windChime.volume = 0.2;
+                windChime.play().catch(e => console.error(e));
+                audioNodesRef.current.bells = { intervalId: setInterval(() => { }, 1000), audio: windChime };
+            }
             // Loop sounds if requested
-            if (bellInterval > 0) {
+            else if (bellInterval > 0) {
                 const id = setInterval(triggerAmbientSound, bellInterval * 1000);
                 audioNodesRef.current.bells = { intervalId: id };
             }

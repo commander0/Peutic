@@ -1,6 +1,9 @@
 ﻿import React, { useState, useEffect, useRef, lazy, Suspense, useTransition } from 'react';
+import { useNotifications } from '../hooks/useNotifications';
+import { useGamification } from '../hooks/useGamification';
+import { useDashboardState } from '../hooks/useDashboardState';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Companion, Transaction, VoiceJournalEntry, GardenState, Lumina, Achievement } from '../types';
+import { User, Companion, VoiceJournalEntry, Achievement } from '../types';
 import { LanguageSelector } from './common/LanguageSelector';
 import { useLanguage } from './common/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -11,11 +14,10 @@ import {
     Sun, Feather, LifeBuoy, RefreshCw, Star, Edit2, Zap, Gamepad2,
     ChevronDown, ChevronUp, User as UserIcon, Moon, Scissors, Leaf,
     Twitter, Instagram, Linkedin,
-    Mail, Eye, EyeOff, Megaphone, Sparkles, Save, Video, Brain, Cloud
+    Mail, Eye, EyeOff, Megaphone, Sparkles, Save, Video, Brain, Cloud, Flame
 } from 'lucide-react';
-import { NotificationBell, Notification } from './common/NotificationBell';
+import { NotificationBell } from './common/NotificationBell';
 import { UserService } from '../services/userService';
-import { AdminService } from '../services/adminService';
 import { useToast } from './common/Toast';
 import { CompanionSkeleton, StatSkeleton } from './common/SkeletonLoader';
 import { InspirationQuote } from './common/InspirationQuote';
@@ -27,7 +29,6 @@ import { generateDailyInsight } from '../services/geminiService';
 import TechCheck from './TechCheck';
 import GroundingMode from './GroundingMode';
 import { GardenService } from '../services/gardenService';
-import { PetService } from '../services/petService';
 
 // Extracted Components
 import { JournalSection } from './dashboard/JournalSection';
@@ -176,61 +177,31 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                     showToast(`Achievement Unlocked: ${title}`, "success");
 
-                    setNotifications(prev => [{
+                    addNotification({
                         id: Date.now().toString(),
                         title: "New Achievement!",
                         message: `You unlocked: ${title}`,
                         type: 'success',
                         read: false,
                         timestamp: new Date()
-                    }, ...prev]);
+                    });
                 });
             }
             prevAchievementsRef.current = currentIds;
         }
     }, [user?.unlockedAchievements, allAchievements]);
 
-    const [balance, setBalance] = useState(user.balance);
-    // CRITICAL FIX: Initialize with empty array to prevent map crashes
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [companions, setCompanions] = useState<Companion[]>([]);
-    const [loadingCompanions, setLoadingCompanions] = useState(true);
-    const [weeklyGoal, setWeeklyGoal] = useState(0);
-    const weeklyTarget = 100; // Updated from 10
-    const [weeklyMessage, setWeeklyMessage] = useState("Start your journey.");
-    const [dashboardUser, setDashboardUser] = useState(user);
-    const [settings, setSettings] = useState(AdminService.getSettings());
+    const {
+        dashboardUser, setDashboardUser,
+        balance,
+        transactions, companions, loadingCompanions,
+        weeklyGoal, weeklyMessage, settings, refreshData
+    } = useDashboardState(user);
 
-    // BROADCAST FIX: Poll for global settings updates
-    useEffect(() => {
-        const pollSettings = async () => {
-            const s = await AdminService.syncGlobalSettings();
-            setSettings(s);
-        };
-
-        const loadWeeklyGoal = async () => {
-            if (user.id) {
-                const progress = await UserService.getWeeklyProgress(user.id);
-                setWeeklyGoal(progress.current);
-                setWeeklyMessage(progress.message);
-            }
-        };
-
-        pollSettings(); // Initial sync
-        loadWeeklyGoal();
-
-        const interval = setInterval(() => {
-            pollSettings();
-            loadWeeklyGoal();
-        }, 10000); // 10s poll
-
-        return () => clearInterval(interval);
-    }, [user.id]);
     const [showPayment, setShowPayment] = useState(false);
     const [paymentError, setPaymentError] = useState<string | undefined>(undefined);
     const [showBreathing, setShowBreathing] = useState(false);
     const [showProfile, setShowProfile] = useState(false);
-
     const [showGrounding, setShowGrounding] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [mood, setMood] = useState<'confetti' | 'rain' | null>(null);
@@ -253,8 +224,30 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [showMatchGame, setShowMatchGame] = useState(false);
     const [showCloudHop, setShowCloudHop] = useState(false);
     const [isUnlockingRoom, setIsUnlockingRoom] = useState(false);
-    // Lumina state moved to grouped section
-    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const weeklyTarget = 100; // Updated from 10
+
+    // Gamification Hook
+    const { garden, lumina, refreshGarden, handleClipPlant, refreshPet } = useGamification(user);
+
+    // Notifications Hook
+    const { notifications, addNotification, handleClearNotification, handleClearAllNotifications } = useNotifications(user);
+
+    const handleNotificationAction = (action: string) => {
+        switch (action) {
+            case 'open_pet': setShowPocketPet(true); break;
+            case 'open_garden': setShowGardenFull(true); break;
+            case 'check_streak': setShowBookFull(true); break;
+            case 'open_community': showToast("Redirecting to Community Hub...", "info"); break;
+            case 'open_dojo': setShowDojo(true); break;
+            case 'open_observatory': setShowObservatory(true); break;
+            case 'open_shredder': setShowShredder(true); break;
+            case 'open_games': setShowMatchGame(true); break;
+        }
+    };
+
+    useEffect(() => {
+        generateDailyInsight(user.name, user.id);
+    }, [user.id, user.name]);
 
     const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
     const [specialtyFilter, setSpecialtyFilter] = useState<string>('All');
@@ -293,14 +286,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     }, []);
 
     const checkMoodPulse = async () => {
-        if (!user) return;
-        const risk = await UserService.predictMoodRisk(user.id);
+        if (!dashboardUser) return;
+        const risk = await UserService.predictMoodRisk(dashboardUser.id);
         if (risk) setMoodRiskAlert(true);
     };
 
     const loadVoiceJournals = async () => {
-        if (!user) return;
-        const entries = await UserService.getVoiceJournals(user.id);
+        if (!dashboardUser) return;
+        const entries = await UserService.getVoiceJournals(dashboardUser.id);
         setVoiceEntries(entries);
     };
 
@@ -319,269 +312,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         }
     };
     // -----------------------------------------------
-
-    // Garden State
-    const [garden, setGarden] = useState<GardenState | null>(null);
-    // Lumina State
-    const [lumina, setLumina] = useState<Lumina | null>(null);
-    const [isClipping, setIsClipping] = useState(false);
-
-    const refreshGarden = async () => {
-        if (!user.id) return;
-        const g = await GardenService.getGarden(user.id);
-        setGarden(g);
-    };
-
-    const handleClipPlant = async () => {
-        if (!user || isClipping) return;
-        setIsClipping(true);
-        const result = await GardenService.clipPlant(user.id);
-
-        if (result.success) {
-            showToast(result.message || "Clipped!", "success");
-            if (result.reward) {
-                // Show Quote Toast
-                showToast(`"${result.reward}"`, "info");
-            }
-            /* Prize Logic Removed per User Request (Stripe Only)
-            if (result.prize && result.prize > 0) {
-                await UserService.addBalance(result.prize, "Garden Prize");
-                setBalance(prev => prev + (result.prize || 0));
-                showToast(`Found ${result.prize}m hidden in the leaves!`, "success");
-            }
-            */
-            setTimeout(() => {
-                setIsClipping(false);
-                refreshGarden(); // Refresh stats if needed
-            }, 2000);
-        } else {
-            showToast(result.message || "Cannot clip right now", "error");
-            setIsClipping(false);
-        }
-    };
-
-    const refreshPet = async () => {
-        if (!user.id) return;
-        const p = await PetService.getPet(user.id);
-        setLumina(p);
-    };
-
-    const handleNotificationAction = (action: string) => {
-        switch (action) {
-            case 'open_pet': setShowPocketPet(true); break;
-            case 'open_garden': setShowGardenFull(true); break;
-            case 'check_streak': setShowBookFull(true); break;
-            case 'open_community': showToast("Redirecting to Community Hub...", "info"); break;
-            case 'open_dojo': setShowDojo(true); break;
-            case 'open_observatory': setShowObservatory(true); break;
-            case 'open_shredder': setShowShredder(true); break;
-            case 'open_games': setShowMatchGame(true); break; // Or CloudHop
-        }
-    };
-
-    useEffect(() => {
-        refreshGarden();
-        refreshPet();
-
-        // Smart Engagement Notifications (On Load)
-        const checkNotifications = async () => {
-            // Delay slightly to let data load references if needed, though we await below
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            if (!user?.id) return;
-
-            const clearedIds = JSON.parse(localStorage.getItem('peutic_cleared_notifs') || '[]');
-            const newNotifs: Notification[] = [];
-
-            const addIfNotCleared = (n: Notification) => {
-                if (!clearedIds.includes(n.id)) {
-                    newNotifs.push(n);
-                }
-            };
-
-            // 1. Check Garden
-            try {
-                const g = await GardenService.getGarden(user.id);
-                if (g && g.waterLevel < 30) {
-                    addIfNotCleared({
-                        id: 'garden-water-low',
-                        title: 'Garden Needs Water',
-                        message: 'Your plants are thirsty! Water them to keep your streak.',
-                        type: 'warning',
-                        read: false,
-                        timestamp: new Date(),
-                        action: 'open_garden'
-                    });
-                }
-            } catch (err) {
-                console.error("Error checking garden for notifs", err);
-            }
-
-            // 2. Check Pet
-            try {
-                const p = await PetService.getPet(user.id);
-                if (p) {
-                    if (p.hunger < 40) {
-                        addIfNotCleared({
-                            id: 'pet-hunger-low',
-                            title: `${p.name} is Hungry`,
-                            message: 'Time to feed your companion!',
-                            type: 'info',
-                            read: false,
-                            timestamp: new Date(),
-                            action: 'open_pet'
-                        });
-                    } else if (p.energy < 30 && !p.isSleeping) {
-                        addIfNotCleared({
-                            id: 'pet-energy-low',
-                            title: `${p.name} is Tired`,
-                            message: 'Maybe it is time for a nap?',
-                            type: 'info',
-                            read: false,
-                            timestamp: new Date(),
-                            action: 'open_pet'
-                        });
-                    }
-                }
-            } catch (err) {
-                console.error("Error checking pet for notifs", err);
-            }
-
-            // 3. Check for Gamification & Tools Engagement
-            // (Simulated logic based on probability since we don't track exact tool-last-used timestamps in DB perfectly yet)
-            const rand = Math.random();
-            if (rand > 0.8) {
-                addIfNotCleared({
-                    id: 'explore-dojo',
-                    title: 'Inner Stillness Awaits',
-                    message: 'Take a powerful 1-minute breathing break in the Zen Dojo.',
-                    type: 'success',
-                    read: false,
-                    timestamp: new Date(),
-                    action: 'open_dojo'
-                });
-            } else if (rand > 0.6) {
-                addIfNotCleared({
-                    id: 'consult-oracle',
-                    title: 'The Stars Are Aligning',
-                    message: 'Consult the Oracle in the Observatory for guidance today.',
-                    type: 'info',
-                    read: false,
-                    timestamp: new Date(),
-                    action: 'open_observatory'
-                });
-            } else if (rand > 0.4) {
-                addIfNotCleared({
-                    id: 'play-minigames',
-                    title: 'Mental Agility',
-                    message: 'Keep your mind sharp with Mindful Match or Cloud Hop.',
-                    type: 'warning',
-                    read: false,
-                    timestamp: new Date(),
-                    action: 'open_games'
-                });
-            } else if (rand > 0.2) {
-                addIfNotCleared({
-                    id: 'use-shredder',
-                    title: 'Heavy Thoughts?',
-                    message: 'Use the Thought Shredder to physically let go of anxieties.',
-                    type: 'error',
-                    read: false,
-                    timestamp: new Date(),
-                    action: 'open_shredder'
-                });
-            }
-
-            // 3. Daily Streak Hint (if nothing else)
-            if (newNotifs.length === 0) {
-                addIfNotCleared({
-                    id: 'daily-streak-hint',
-                    title: 'Daily Streak',
-                    message: 'Complete 1 more activity to keep your streak alive!',
-                    type: 'success',
-                    read: false,
-                    timestamp: new Date(),
-                    action: 'check_streak'
-                });
-            }
-
-            if (newNotifs.length > 0) {
-                setNotifications(prev => {
-                    // Avoid duplicates if React.StrictMode runs twice
-                    const existingIds = new Set(prev.map(n => n.id));
-                    const uniqueNew = newNotifs.filter(n => !existingIds.has(n.id));
-                    return [...prev, ...uniqueNew];
-                });
-            }
-        };
-
-        checkNotifications();
-    }, [user.id]);
-
-    useEffect(() => {
-        // Kick off all data fetching in parallel
-        refreshData();
-
-        generateDailyInsight(user.name, user.id);
-
-        // Get companions immediately without delay
-        AdminService.getCompanions().then((comps) => {
-            setCompanions(comps);
-            setLoadingCompanions(false);
-
-            // PRE-FETCH: Smooth loading for specialist avatars
-            comps.slice(0, 10).forEach(c => {
-                if (c.imageUrl) (new Image()).src = c.imageUrl;
-            });
-        });
-
-        // REALTIME: Subscribe to changes instantly instead of polling
-        const subscription = UserService.subscribeToUserChanges(user.id, (updatedUser) => {
-            setDashboardUser(updatedUser);
-            setBalance(updatedUser.balance);
-            if (updatedUser.name !== user.name) setEditName(updatedUser.name);
-            // Refresh dependent data if needed
-            UserService.getWeeklyProgress(updatedUser.id).then(prog => {
-                setWeeklyGoal(prog.current);
-                setWeeklyMessage(prog.message);
-            });
-        });
-
-        // Backup slow poll (every 60s) just for drift correction
-        const interval = setInterval(async () => {
-            await UserService.syncUser(user.id);
-            refreshData();
-        }, 60000);
-
-        return () => {
-            clearInterval(interval);
-            subscription.unsubscribe();
-        };
-    }, []);
-
-
-    const refreshData = async () => {
-        AdminService.syncGlobalSettings().then(setSettings);
-        const u = UserService.getUser();
-        if (u) {
-            setDashboardUser(u);
-            setBalance(u.balance);
-            setEditName(u.name);
-            setEditEmail(u.email);
-
-
-            // Fetch secondary data in background without blocking
-            UserService.getUserTransactions(u.id).then(setTransactions);
-            UserService.getWeeklyProgress(u.id).then(prog => {
-                setWeeklyGoal(prog.current);
-                setWeeklyMessage(prog.message);
-            });
-        }
-        AdminService.getCompanions().then(setCompanions);
-    };
-
-
-
     const toggleDarkMode = () => {
         toggleMode();
     };
@@ -721,23 +451,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const filteredCompanions = specialtyFilter === 'All' ? companions : companions.filter(c => c.specialty.includes(specialtyFilter) || c.specialty === specialtyFilter);
     const uniqueSpecialties = Array.from(new Set(companions.map(c => c.specialty))).sort();
 
-    // --- NOTIFICATION HANDLERS ---
-    const handleClearNotification = (id: string) => {
-        setNotifications(prev => prev.filter(n => n.id !== id));
-        const cleared = JSON.parse(localStorage.getItem('peutic_cleared_notifs') || '[]');
-        if (!cleared.includes(id)) {
-            localStorage.setItem('peutic_cleared_notifs', JSON.stringify([...cleared, id]));
-        }
-    };
-
-    const handleClearAllNotifications = () => {
-        const ids = notifications.map(n => n.id);
-        const cleared = JSON.parse(localStorage.getItem('peutic_cleared_notifs') || '[]');
-        const newCleared = [...new Set([...cleared, ...ids])];
-        localStorage.setItem('peutic_cleared_notifs', JSON.stringify(newCleared));
-        setNotifications([]);
-    };
-
     return (
         <div
             className="min-h-screen transition-all duration-1000 font-sans text-[var(--color-text-base)]"
@@ -765,12 +478,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             </div>
 
             {/* BROADCAST BANNER */}
-            {settings.dashboardBroadcastMessage && (
+            {settings?.dashboardBroadcastMessage && (
                 <div className="bg-primary text-black py-2 px-4 shadow-lg animate-in slide-in-from-top duration-500 relative z-50 overflow-hidden group">
                     <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-[-20deg]"></div>
                     <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
                         <Megaphone className="w-4 h-4 text-black/80 animate-bounce" />
-                        <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-center shadow-sm">{settings.dashboardBroadcastMessage}</span>
+                        <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-center shadow-sm">{settings?.dashboardBroadcastMessage}</span>
                     </div>
                 </div>
             )}
@@ -1068,12 +781,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                                     {dashboardUser ? (
                                         <div className="bg-transparent dark:bg-transparent p-4 md:p-5 rounded-3xl border border-transparent shadow-none col-span-1 md:col-span-2 relative overflow-hidden group min-h-[120px] md:min-h-[140px]">
-                                            {weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-3 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-12 h-12 border-2 border-yellow-500/40 border-t-yellow-400 rounded-full animate-spin"></div><div className="absolute w-10 h-10 bg-yellow-400/50 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-yellow-300/20 rounded-full animate-ping"></div><div className="absolute w-6 h-6 bg-yellow-300/80 rounded-full blur-lg animate-pulse"></div><Trophy className="w-10 h-10 text-yellow-400 fill-yellow-500 drop-shadow-[0_0_20px_rgba(250,204,21,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-40 group-hover:opacity-100 transition-opacity duration-300"><Trophy className="w-20 h-20 text-gray-200 dark:text-gray-800/50 group-hover:text-primary dark:group-hover:text-yellow-500 transition-colors" /></div>)}
-                                            <div className="relative z-10"><h3 className="font-bold text-gray-500 dark:text-gray-400 text-[10px] md:text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3><div className="flex items-end gap-2 mb-2 md:mb-3"><span className="text-2xl md:text-4xl font-black text-primary dark:text-yellow-400">{weeklyGoal}</span><span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span></div><div className="w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-2 md:mb-3">
+                                            {weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-3 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-12 h-12 border-2 border-blue-500/40 border-t-blue-400 rounded-full animate-spin"></div><div className="absolute w-10 h-10 bg-blue-400/50 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-blue-300/20 rounded-full animate-ping"></div><Flame className="absolute -top-4 w-6 h-6 text-blue-400 fill-blue-500 animate-[flicker_2s_ease-in-out_infinite] z-20 drop-shadow-[0_0_10px_rgba(59,130,246,1)]" /><Trophy className="w-10 h-10 text-blue-400 fill-blue-500 drop-shadow-[0_0_20px_rgba(59,130,246,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-40 group-hover:opacity-100 transition-opacity duration-300"><Trophy className="w-20 h-20 text-gray-200 dark:text-gray-800/50 group-hover:text-primary dark:group-hover:text-blue-500 transition-colors" /></div>)}
+                                            <div className="relative z-10"><h3 className="font-bold text-gray-500 dark:text-gray-400 text-[10px] md:text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3><div className="flex items-end gap-2 mb-2 md:mb-3"><span className="text-2xl md:text-4xl font-black text-primary dark:text-blue-400">{weeklyGoal}</span><span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span></div><div className="w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-2 md:mb-3">
                                                 <div
                                                     className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= weeklyTarget
-                                                        ? 'bg-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.9)] animate-pulse'
-                                                        : 'bg-primary dark:bg-yellow-500'
+                                                        ? 'bg-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.9)] animate-pulse'
+                                                        : 'bg-primary dark:bg-blue-500'
                                                         }`}
                                                     style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}
                                                 ></div></div><p className="text-[10px] md:text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}</p></div>
