@@ -3,10 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 
 // Robust Environment Variable Retrieval
 const getEnv = (key: string) => {
-    // @ts-ignore
-    if (typeof process !== 'undefined' && process.env?.[key]) return process.env[key];
-    // @ts-ignore
-    if (typeof import.meta !== 'undefined' && import.meta.env?.[key]) return import.meta.env[key];
+    if (typeof process !== 'undefined' && (process as any).env?.[key]) return (process as any).env[key];
+    if (typeof import.meta !== 'undefined' && (import.meta as any).env?.[key]) return (import.meta as any).env[key];
     return '';
 };
 

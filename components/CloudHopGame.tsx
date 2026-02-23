@@ -16,8 +16,10 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
     const [highScore, setHighScore] = useState(() => {
         return dashboardUser?.gameScores?.cloud || 0;
     });
+    const currentScoreRef = useRef(0);
     const playerRef = useRef({ x: 150, y: 300, vx: 0, vy: 0, width: 30, height: 30 });
     const platformsRef = useRef<any[]>([]);
+    const particlesRef = useRef<any[]>([]);
 
     useEffect(() => {
         const resizeCanvas = () => {
@@ -68,8 +70,10 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
                 y: py,
                 w: basePlatW + Math.random() * (isMobile ? 20 : 30),
                 h: isMobile ? 12 : 15,
-                type: Math.random() > 0.9 ? 'moving' : 'cloud',
-                vx: Math.random() > 0.5 ? 1 : -1
+                type: Math.random() > 0.95 ? 'spring' : (Math.random() > 0.8 ? 'moving' : 'cloud'),
+                vx: Math.random() > 0.5 ? 1 : -1,
+                hasStar: Math.random() > 0.8,
+                starCollected: false
             });
 
             // Spawn extra parallel clouds on wide screens for density
@@ -79,13 +83,17 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
                     y: py + (Math.random() * 30 - 15),
                     w: basePlatW + Math.random() * 30,
                     h: 15,
-                    type: Math.random() > 0.8 ? 'moving' : 'cloud',
-                    vx: Math.random() > 0.5 ? 1 : -1
+                    type: Math.random() > 0.95 ? 'spring' : (Math.random() > 0.8 ? 'moving' : 'cloud'),
+                    vx: Math.random() > 0.5 ? 1 : -1,
+                    hasStar: Math.random() > 0.8,
+                    starCollected: false
                 });
             }
             py -= cloudGap + Math.random() * 25;
         }
         playerRef.current = { x: W / 2 - (pSize / 2), y: H - 80, vx: 0, vy: 0, width: pSize, height: pSize };
+        particlesRef.current = [];
+        currentScoreRef.current = 0;
         setScore(0);
         setGameOver(false);
         setGameStarted(true);
@@ -112,8 +120,12 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
         const drawCloud = (x: number, y: number, w: number, h: number, type: string) => {
-            ctx.fillStyle = type === 'moving' ? '#E0F2FE' : 'white';
+            if (type === 'spring') ctx.fillStyle = '#84cc16';
+            else if (type === 'moving') ctx.fillStyle = '#E0F2FE';
+            else ctx.fillStyle = 'white';
+
             if (type === 'moving') ctx.shadowColor = '#38BDF8';
+            if (type === 'spring') ctx.shadowColor = '#bef264';
             ctx.fillRect(x, y, w, h);
             const bumpSize = h * 0.8;
             ctx.beginPath(); ctx.arc(x + 10, y, bumpSize, 0, Math.PI * 2); ctx.fill();
@@ -131,20 +143,55 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
             if (p.y < H / 2) {
                 const diff = (H / 2) - p.y;
                 p.y = H / 2;
-                setScore(s => s + Math.floor(diff));
+                currentScoreRef.current += diff;
+                setScore(Math.floor(currentScoreRef.current));
                 platformsRef.current.forEach(pl => {
                     pl.y += diff;
                     if (pl.y > H + 50) {
                         pl.y = -20;
                         pl.x = Math.random() * (W - (isMobile ? 50 : 70));
-                        pl.type = Math.random() > 0.85 ? 'moving' : 'cloud';
+                        pl.type = Math.random() > 0.95 ? 'spring' : (Math.random() > 0.85 ? 'moving' : 'cloud');
+                        pl.hasStar = Math.random() > 0.8;
+                        pl.starCollected = false;
                     }
                 });
             }
+
+            // Star Collection Logic
+            platformsRef.current.forEach(pl => {
+                if (pl.hasStar && !pl.starCollected) {
+                    const sx = pl.x + pl.w / 2;
+                    const sy = pl.y - 25;
+                    const dist = Math.hypot(p.x + p.width / 2 - sx, p.y + p.height / 2 - sy);
+                    if (dist < 35) { // Collect radius
+                        pl.starCollected = true;
+                        currentScoreRef.current += 500;
+                        setScore(Math.floor(currentScoreRef.current));
+                        for (let k = 0; k < 12; k++) {
+                            particlesRef.current.push({
+                                x: sx, y: sy,
+                                vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10,
+                                life: 1, color: '#fcd34d'
+                            });
+                        }
+                    }
+                }
+            });
+
             if (p.vy > 0) {
                 platformsRef.current.forEach(pl => {
                     if (p.y + p.height > pl.y && p.y + p.height < pl.y + 40 && p.x + p.width > pl.x && p.x < pl.x + pl.w) {
-                        p.vy = JUMP_FORCE;
+                        p.vy = pl.type === 'spring' ? JUMP_FORCE * 1.5 : JUMP_FORCE;
+                        // Spawn bounce particles
+                        for (let k = 0; k < 6; k++) {
+                            particlesRef.current.push({
+                                x: p.x + p.width / 2,
+                                y: p.y + p.height,
+                                vx: (Math.random() - 0.5) * 6,
+                                vy: Math.random() * -3,
+                                life: 1, color: '#ffffff'
+                            });
+                        }
                     }
                 });
             }
@@ -160,9 +207,18 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
                 if (requestRef.current !== undefined) cancelAnimationFrame(requestRef.current);
                 return;
             }
+
+            const currentScore = currentScoreRef.current;
+            let cTop = '#0EA5E9', cBot = '#BAE6FD'; // Default Sky Blue
+            if (currentScore > 5000) {
+                cTop = '#0f172a'; cBot = '#312e81'; // Deep Space
+            } else if (currentScore > 2000) {
+                cTop = '#db2777'; cBot = '#fcd34d'; // Sunset Pink/Amber
+            }
+
             const grad = ctx.createLinearGradient(0, 0, 0, H);
-            grad.addColorStop(0, '#0EA5E9');
-            grad.addColorStop(1, '#BAE6FD');
+            grad.addColorStop(0, cTop);
+            grad.addColorStop(1, cBot);
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, W, H);
             ctx.fillStyle = 'rgba(255,255,255,0.3)';
@@ -170,8 +226,35 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
             platformsRef.current.forEach(pl => {
                 if (pl.type === 'ground') { ctx.fillStyle = '#4ade80'; ctx.fillRect(pl.x, pl.y, pl.w, pl.h); }
                 else { drawCloud(pl.x, pl.y, pl.w, pl.h, pl.type); }
+
+                if (pl.hasStar && !pl.starCollected && pl.type !== 'ground') {
+                    ctx.fillStyle = '#fde047'; // Star color
+                    ctx.shadowColor = '#fcd34d';
+                    ctx.shadowBlur = 15;
+                    ctx.beginPath();
+                    ctx.arc(pl.x + pl.w / 2, pl.y - 25, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
             });
             ctx.shadowBlur = 0;
+
+            // Draw particles
+            for (let i = particlesRef.current.length - 1; i >= 0; i--) {
+                const part = particlesRef.current[i];
+                part.x += part.vx;
+                part.y += part.vy;
+                part.life -= 0.05;
+                if (part.life <= 0) {
+                    particlesRef.current.splice(i, 1);
+                } else {
+                    ctx.fillStyle = part.color || `rgba(255, 255, 255, ${part.life})`;
+                    ctx.beginPath();
+                    ctx.arc(part.x, part.y, 4 * part.life, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
             ctx.fillStyle = '#fde047';
             ctx.beginPath();
             ctx.arc(p.x + p.width / 2, p.y + p.height / 2, p.width / 2, 0, Math.PI * 2);
@@ -207,7 +290,7 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
         if (!canvasRef.current) return;
         const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
         const rect = canvasRef.current.getBoundingClientRect();
-        if (clientX - rect.left < rect.width / 2) playerRef.current.vx = -3; else playerRef.current.vx = 3;
+        if (clientX - rect.left < rect.width / 2) playerRef.current.vx = -4.5; else playerRef.current.vx = 4.5;
     };
     const handleRelease = () => { playerRef.current.vx = 0; };
 

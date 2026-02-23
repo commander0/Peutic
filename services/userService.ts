@@ -182,6 +182,7 @@ export class UserService {
     static mapUser(data: UserRow): User {
         const scores = data.game_scores as { match: number; cloud: number } | null;
         const emailPrefs = data.email_preferences as { marketing: boolean; updates: boolean } | null;
+        const metadata = (data.metadata || {}) as any;
 
         return {
             id: data.id,
@@ -203,7 +204,8 @@ export class UserService {
             gameScores: scores || { match: 0, cloud: 0 },
             unlockedRooms: data.unlocked_rooms || [],
             unlockedDecor: data.unlocked_decor || [],
-            unlockedAchievements: []
+            unlockedAchievements: [],
+            oracleTokens: metadata.oracleTokens || 0
         };
     }
 
@@ -629,6 +631,12 @@ export class UserService {
             if (updates.balance !== undefined) dbUpdates.balance = updates.balance;
             if (updates.themePreference !== undefined) dbUpdates.theme_preference = updates.themePreference;
 
+            if (updates.oracleTokens !== undefined) {
+                // Ensure we don't overwrite other metadata keys
+                const existingMeta = (this.currentUser as any)?.metadata || {};
+                dbUpdates.metadata = { ...existingMeta, oracleTokens: updates.oracleTokens };
+            }
+
             const { data, error } = await supabase
                 .from('users')
                 .update(dbUpdates)
@@ -740,6 +748,27 @@ export class UserService {
             };
         }
         return data;
+    }
+
+    static async addLuminaXP(userId: string, amount: number): Promise<boolean> {
+        try {
+            const { data, error } = await supabase.from('users').select('metadata').eq('id', userId).single();
+            if (error || !data) return false;
+
+            const metadata = data.metadata || {};
+            const currentXp = (metadata as any).luminaXp || 0;
+            const newXp = currentXp + amount;
+
+            const { error: updateError } = await supabase
+                .from('users')
+                .update({ metadata: { ...metadata, luminaXp: newXp } })
+                .eq('id', userId);
+
+            return !updateError;
+        } catch (e) {
+            console.error("Failed to add Lumina XP", e);
+            return false;
+        }
     }
 
     static async getJournals(userId: string): Promise<JournalEntry[]> {

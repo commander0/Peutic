@@ -105,6 +105,14 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                 setOracleMessage(msg);
                 setIsReading(false);
                 playMysticSound('reveal');
+
+                // Grant Lumina XP directly through the service to propagate up to Dashboard
+                UserService.addLuminaXP(user.id, 50).then(() => {
+                    setTimeout(() => {
+                        showToast("Your Lumina absorbed 50 Wisdom XP from the Oracle's energy!", "success");
+                    }, 1000);
+                });
+
             }, 3000);
         } else {
             setIsProcessing(false);
@@ -139,7 +147,7 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
             </button>
 
             {/* 3. MAIN STAGE */}
-            <main className="flex-1 flex flex-col items-center justify-center relative z-10 perspective-[1200px] w-full h-full">
+            <main className="flex-1 flex flex-col items-center justify-center relative z-10 perspective-[1200px] w-full max-w-md mx-auto h-full">
 
                 {/* THE FORTUNE TELLER'S TABLE */}
                 <div className="relative flex flex-col items-center justify-center">

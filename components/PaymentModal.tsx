@@ -30,25 +30,30 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, onSuccess, initial
     const mountNodeRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
+        // Feature Flag: Graceful Fallback Mode for Local Dev without Stripe Keys 
         if (!STRIPE_PUBLISHABLE_KEY || STRIPE_PUBLISHABLE_KEY.startsWith('sk_')) {
-            console.error("CRITICAL: VITE_STRIPE_PUBLISHABLE_KEY is missing or invalid. Must start with pk_");
-            setError("Payment system not configured. Add VITE_STRIPE_PUBLISHABLE_KEY (starts with pk_) to .env file.");
-            return;
-        }
-        if (!window.Stripe) {
-            console.error("CRITICAL: Stripe.js script not loaded in window.");
-            setError("Stripe failed to load. Please check your internet connection and refresh.");
-            return;
+            console.warn("DEV MODE: VITE_STRIPE_PUBLISHABLE_KEY is missing. Stripe UI will fallback to Sandbox Mode.");
+            setError("Sandbox Mode Active: Stripe key missing. Simulated payments allowed for testing.");
+            // Do NOT return here, we allow the UI to render the Sandbox fallback buttons
+        } else {
+            if (!window.Stripe) {
+                console.error("CRITICAL: Stripe.js script not loaded in window.");
+                setError("Stripe failed to load. Please check your internet connection and refresh.");
+                return;
+            }
         }
         if (!stripeRef.current) {
             try {
-                console.log("Initializing Stripe with key:", STRIPE_PUBLISHABLE_KEY.substring(0, 8) + "...");
-                stripeRef.current = window.Stripe(STRIPE_PUBLISHABLE_KEY);
-                elementsRef.current = stripeRef.current.elements();
-                const style = { base: { color: "#32325d", fontFamily: '"Manrope", sans-serif', fontSmoothing: "antialiased", fontSize: "16px", "::placeholder": { color: "#aab7c4" } } };
-                if (!cardElementRef.current) {
-                    cardElementRef.current = elementsRef.current.create("card", { style: style, hidePostalCode: true });
-                    if (mountNodeRef.current) cardElementRef.current.mount(mountNodeRef.current);
+                // Only init Stripe if the key is valid
+                if (STRIPE_PUBLISHABLE_KEY && !STRIPE_PUBLISHABLE_KEY.startsWith('sk_')) {
+                    console.log("Initializing Stripe with key:", STRIPE_PUBLISHABLE_KEY.substring(0, 8) + "...");
+                    stripeRef.current = window.Stripe(STRIPE_PUBLISHABLE_KEY);
+                    elementsRef.current = stripeRef.current.elements();
+                    const style = { base: { color: "#32325d", fontFamily: '"Manrope", sans-serif', fontSmoothing: "antialiased", fontSize: "16px", "::placeholder": { color: "#aab7c4" } } };
+                    if (!cardElementRef.current) {
+                        cardElementRef.current = elementsRef.current.create("card", { style: style, hidePostalCode: true });
+                        if (mountNodeRef.current) cardElementRef.current.mount(mountNodeRef.current);
+                    }
                 }
             } catch (e: any) {
                 console.error("Stripe Initialization Failed:", e);
@@ -69,6 +74,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, onSuccess, initial
         setProcessing(true);
         setError('');
         if (!amount || amount <= 0) { setError("Please enter a valid amount."); setProcessing(false); return; }
+
+        // --- SANDBOX FALLBACK ---
+        if (!STRIPE_PUBLISHABLE_KEY || STRIPE_PUBLISHABLE_KEY.startsWith('sk_')) {
+            console.log("Processing Simulated Sandbox Payment...");
+            setTimeout(() => {
+                setProcessing(false);
+                const minutesAdded = Math.floor(amount / pricePerMin);
+                onSuccess(minutesAdded, amount, "tok_sandbox_simulated");
+            }, 1000);
+            return;
+        }
+
+        // --- PRODUCTION FLOW ---
         if (!stripeRef.current || !cardElementRef.current) { setError("Payment system not initialized. Please try again later."); setProcessing(false); return; }
         try {
             const result = await stripeRef.current.createToken(cardElementRef.current);
@@ -111,14 +129,22 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, onSuccess, initial
                         </div>
                         <p className="text-xs text-gray-400 mt-2">Adds approx. <span className="font-bold text-black dark:text-white">{Math.floor((amount || 0) / pricePerMin)} mins</span> of talk time.</p>
                     </div>
-                    {error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 text-sm rounded-lg flex items-center gap-2"><AlertTriangle className="w-4 h-4 flex-shrink-0" /><span>{error}</span></div>}
+                    {error && (
+                        <div className={`mb-4 p-3 border text-sm rounded-lg flex items-center gap-2 ${error.includes("Sandbox Mode")
+                                ? 'bg-blue-50/50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400'
+                                : 'bg-red-50 dark:bg-red-900/30 border-red-100 dark:border-red-900 text-red-600 dark:text-red-400'
+                            }`}>
+                            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                            <span>{error}</span>
+                        </div>
+                    )}
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 relative group transition-all focus-within:ring-2 focus-within:ring-yellow-400">
                             <div className="absolute top-0 right-0 p-2 opacity-50"><Lock className="w-3 h-3 text-gray-400" /></div>
                             <div ref={setMountNode} className="p-2" />
                         </div>
-                        <button type="submit" disabled={processing || !window.Stripe || (amount <= 0) || !!error} className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2 ${processing || (amount <= 0) || !!error ? 'bg-gray-800 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-yellow-500 text-black hover:bg-yellow-400 hover:scale-[1.02]'}`}>
-                            {processing ? <span className="animate-pulse">Establishing Secure Tunnel...</span> : <><ShieldCheck className="w-5 h-5" /> Pay ${(amount || 0).toFixed(2)}</>}
+                        <button type="submit" disabled={processing || (amount <= 0) || (!!error && !error.includes("Sandbox Mode"))} className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2 ${processing || (amount <= 0) || (!!error && !error.includes("Sandbox Mode")) ? 'bg-gray-800 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-yellow-500 text-black hover:bg-yellow-400 hover:scale-[1.02]'}`}>
+                            {processing ? <span className="animate-pulse">Processing...</span> : <><ShieldCheck className="w-5 h-5" /> Pay ${(amount || 0).toFixed(2)}</>}
                         </button>
                         <div className="flex justify-center items-center gap-2 opacity-60 grayscale hover:grayscale-0 transition-all">
                             <span className="text-[10px] font-bold uppercase text-gray-400 flex items-center gap-1"><Lock className="w-3 h-3" /> Ends-to-End Encrypted via Stripe</span>

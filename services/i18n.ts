@@ -610,6 +610,6 @@ export const TRANSLATIONS = {
 };
 
 export const getTranslation = (lang: LanguageCode, key: keyof typeof TRANSLATIONS['en']) => {
-  // @ts-ignore
-  return TRANSLATIONS[lang]?.[key] || TRANSLATIONS['en'][key] || key;
+  const translationsForLang = TRANSLATIONS[lang] as Record<string, string>;
+  return translationsForLang?.[key] || TRANSLATIONS['en'][key] || key;
 };

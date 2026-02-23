@@ -386,7 +386,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
             </header>
 
             {/* --- MAIN PORTAL --- */}
-            <main className="flex-1 relative flex flex-col items-center justify-center p-4">
+            <main className="flex-1 relative flex flex-col items-center justify-center p-4 w-full max-w-md mx-auto">
 
                 {/* --- ORACLE SUMMONING OVERLAY (THINKING STATE) --- */}
                 {isSummoning && (

@@ -53,7 +53,7 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
 
         // Create strips
         const strips: { x: number; y: number; w: number; h: number; vy: number; vx: number; rot: number; vRot: number; color: string }[] = [];
-        const stripCount = 40;
+        const stripCount = 25; // User requested reduction from 40 to 25
         const stripWidth = canvas.width / stripCount;
 
         for (let i = 0; i < stripCount; i++) {

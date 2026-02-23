@@ -1,68 +1,77 @@
-import React, { ReactNode, ErrorInfo } from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { Component, ErrorInfo, ReactNode } from 'react';
+import { AlertOctagon, RefreshCw } from 'lucide-react';
 import { AdminService } from '../../services/adminService';
 
-interface ErrorBoundaryProps {
+interface Props {
     children?: ReactNode;
     fallback?: ReactNode;
 }
 
-interface ErrorBoundaryState {
+interface State {
     hasError: boolean;
-    error?: Error;
+    error: Error | null;
 }
 
-export class GlobalErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-    public state: ErrorBoundaryState = { hasError: false };
+export class GlobalErrorBoundary extends Component<Props, State> {
+    public state: State = {
+        hasError: false,
+        error: null,
+    };
 
-    static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    public static getDerivedStateFromError(error: Error): State {
+        // Update state so the next render will show the fallback UI.
         return { hasError: true, error };
     }
 
-    componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-        console.error("Critical Application Error:", error, errorInfo);
-        // Log to Admin Service if possible
-        try {
-            AdminService.logSystemEvent('ERROR', 'Global Crash', error.message);
-        } catch (e) {
-            console.error("Failed to log crash to AdminService", e);
-        }
+    public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+        console.error("Uncaught runtime error intercepted:", error, errorInfo);
+
+        // Push the error to the Admin Service for central monitoring
+        AdminService.logSystemEvent(
+            'CRITICAL_ERROR',
+            'Global Boundary Intercept',
+            `${error.message}\nStack: ${errorInfo.componentStack}`
+        );
     }
 
-    render() {
+    private handleReset = () => {
+        this.setState({ hasError: false, error: null });
+        window.location.reload();
+    };
+
+    public render() {
         if (this.state.hasError) {
+            // Render specific fallback if provided by the component instantiator
             if (this.props.fallback) {
-                return this.props.fallback;
+                return <>{this.props.fallback}</>;
             }
 
             return (
-                <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center text-white font-sans">
-                    <div className="bg-zinc-900/50 p-8 rounded-2xl border border-zinc-800 backdrop-blur-sm max-w-lg w-full flex flex-col items-center shadow-2xl">
-                        <div className="bg-red-500/10 p-4 rounded-full mb-6">
-                            <AlertTriangle className="w-12 h-12 text-red-500" />
+                <div className="min-h-[100dvh] w-full bg-[#050505] text-stone-300 flex flex-col items-center justify-center p-8 font-sans animate-in fade-in duration-500">
+                    <div className="max-w-md w-full text-center space-y-6 bg-stone-900/50 p-8 rounded-3xl border border-red-900/30 shadow-[0_0_50px_rgba(220,38,38,0.05)]">
+                        <div className="w-20 h-20 bg-red-950/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-900/50">
+                            <AlertOctagon className="w-10 h-10 text-red-500 animate-pulse" />
                         </div>
-                        <h1 className="text-2xl font-bold mb-2 text-zinc-100">System Malfunction</h1>
-                        <p className="text-zinc-400 mb-8 leading-relaxed">
-                            An unexpected error has occurred. We have logged this event and notified the engineering team.
+
+                        <h1 className="text-3xl font-black text-white tracking-tight">System Fault</h1>
+
+                        <p className="text-stone-400 text-sm leading-relaxed">
+                            A critical anomaly occurred within the application interface.
+                            The incident has been securely logged to Mission Control.
                         </p>
 
-                        {this.state.error && (
-                            <div className="w-full bg-black/50 p-4 rounded-lg mb-6 overflow-hidden text-left">
-                                <code className="text-xs text-red-400 font-mono break-all line-clamp-4">
-                                    {this.state.error.toString()}
-                                </code>
-                            </div>
-                        )}
+                        <div className="bg-black/50 p-4 rounded-xl border border-stone-800 text-left overflow-hidden">
+                            <p className="font-mono text-[10px] text-red-400/80 truncate">
+                                {this.state.error?.message || "Unknown Runtime Exception"}
+                            </p>
+                        </div>
 
                         <button
-                            onClick={() => {
-                                this.setState({ hasError: false });
-                                window.location.href = '/';
-                            }}
-                            className="w-full bg-white text-black px-6 py-3 rounded-lg font-bold hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"
+                            onClick={this.handleReset}
+                            className="mt-8 px-8 py-4 bg-stone-100 text-stone-900 font-bold rounded-xl w-full flex items-center justify-center gap-3 hover:bg-white hover:scale-[1.02] transition-all shadow-xl"
                         >
-                            <RefreshCw className="w-4 h-4" />
-                            Reboot System
+                            <RefreshCw className="w-5 h-5" />
+                            Reinitialize Application
                         </button>
                     </div>
                 </div>

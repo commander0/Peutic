@@ -34,6 +34,7 @@ export interface User {
   unlockedRooms?: string[]; // 'observatory', 'dojo', etc.
   unlockedAchievements?: string[]; // codes like 'STREAK_7', 'EXPLORER'
   unlockedDecor?: string[]; // ids of purchased sanctuary decorations
+  oracleTokens?: number; // Used for free Oracle consultations
 }
 
 export interface Companion {

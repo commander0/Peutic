@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Flame, Target, Trophy, Wind, BookOpen, Volume2, VolumeX } from 'lucide-react';
+import { X, Flame, Target, Trophy, Wind, BookOpen, Volume2, VolumeX, Sparkles } from 'lucide-react';
 import { User } from '../../types';
 import { useToast } from '../common/Toast';
 import { UserService } from '../../services/userService';
 import { SanctuaryService } from '../../services/SanctuaryService';
 import { GardenService } from '../../services/gardenService';
+import { PetService } from '../../services/petService';
 import SanctuaryShop, { SANCTUARY_ITEMS } from './SanctuaryShop';
 
 interface DojoViewProps {
@@ -25,6 +26,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
     const [soundEnabled, setSoundEnabled] = useState(true);
     const [showShop, setShowShop] = useState(false);
     const [localUser, setLocalUser] = useState<User>(user);
+    const [luminaLevel, setLuminaLevel] = useState(1);
     const timerRef = useRef<number | null>(null);
     const bellRef = useRef<HTMLAudioElement | null>(null);
 
@@ -59,6 +61,12 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
             setStreak(history.length);
             const minutes = history.reduce((acc, curr) => acc + (curr.durationSeconds / 60), 0);
             setTotalFocus(Math.floor(minutes));
+
+            // Link to Lumina Gamification
+            const pet = await PetService.getPet(user.id);
+            if (pet) {
+                setLuminaLevel(pet.level);
+            }
         };
         loadHistory();
 
@@ -108,6 +116,61 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
         cast(baseFreq * 2.5, 0.15, 5, 0.05); // Major 10th
     };
 
+    // Advanced Gamification Sounds
+    const playAscendantChime = () => {
+        if (!soundEnabled) return;
+        const ctx = initAudio();
+        const cast = (freq: number, delay: number, dur: number, type: OscillatorType) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.frequency.value = freq;
+            osc.type = type;
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            const now = ctx.currentTime + delay;
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.15, now + 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+            osc.start(now);
+            osc.stop(now + dur);
+        };
+        cast(528, 0, 4, 'sine'); // Solfeggio 528Hz DNA Repair
+        cast(852, 0.2, 5, 'triangle');
+        cast(1056, 0.5, 3, 'sine');
+    };
+
+    const playCelestialVoid = () => {
+        if (!soundEnabled) return;
+        const ctx = initAudio();
+        const cast = (freq: number) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.frequency.value = freq;
+            osc.type = 'sine';
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            const now = ctx.currentTime;
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.3, now + 4); // Slow attack
+            gain.gain.linearRampToValueAtTime(0, now + 12); // Slow release
+            osc.start(now);
+            osc.stop(now + 12);
+        };
+        cast(136.1); // OM Frequency
+        cast(136.1 * 1.01); // Binaural beat effect
+    };
+
+    // Choose which sound to play
+    const triggerAmbientSound = () => {
+        if (luminaLevel >= 50 && bellInterval === 300) {
+            playCelestialVoid();
+        } else if (luminaLevel >= 30 && bellInterval === 120) {
+            playAscendantChime();
+        } else {
+            playBellSound();
+        }
+    };
+
     const stopAudio = () => {
         // Stop Interval Bells
         if (audioNodesRef.current.bells) {
@@ -139,11 +202,11 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
     // Toggle logic for Timer Audio Additions
     useEffect(() => {
         if (isActive) {
-            playBellSound(); // Start Bell
+            triggerAmbientSound(); // Start Sound
 
-            // Loop bells if requested
+            // Loop sounds if requested
             if (bellInterval > 0) {
-                const id = setInterval(playBellSound, bellInterval * 1000);
+                const id = setInterval(triggerAmbientSound, bellInterval * 1000);
                 audioNodesRef.current.bells = { intervalId: id };
             }
         } else {
@@ -186,7 +249,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
     const handleComplete = async () => {
         setIsActive(false);
         stopAudio();
-        playBellSound();
+        triggerAmbientSound();
 
         if (timerMode === 'focus' || timerMode === 'candle') {
             const success = await SanctuaryService.saveFocusSession(user.id, selectedMins * 60, 'FOCUS');
@@ -208,7 +271,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
             setTimerMode('candle');
             setTimeLeft(selectedMins * 60);
             setIsActive(false);
-            playBellSound(); // End bell
+            triggerAmbientSound(); // End bell
         }
     };
 
@@ -289,7 +352,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
             </div>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col items-center justify-start overflow-y-auto custom-scrollbar w-full p-4 md:p-6 relative z-10 pt-4 md:pt-8" style={{ maxHeight: 'calc(100dvh - 80px)' }}>
+            <main className="flex-1 flex flex-col items-center justify-start overflow-y-auto custom-scrollbar w-full max-w-md mx-auto p-4 md:p-6 relative z-10 pt-4 md:pt-8" style={{ maxHeight: 'calc(100dvh - 80px)' }}>
 
                 {/* Time Selection (Restored - Small) */}
                 {!isActive && (
@@ -405,7 +468,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                     <div className="flex flex-col items-center gap-6 relative z-10 w-full">
                         <div className="w-full">
                             <label className="text-[10px] uppercase font-black tracking-widest text-stone-500 mb-3 block text-center">Singing Bowl Interval</label>
-                            <div className="grid grid-cols-3 gap-3 w-full">
+                            <div className="grid grid-cols-3 gap-3 w-full mb-4">
                                 {[0, 60, 300].map((sec) => (
                                     <button
                                         key={sec}
@@ -419,6 +482,39 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                                     </button>
                                 ))}
                             </div>
+
+                            {(luminaLevel >= 30 || luminaLevel >= 50) && (
+                                <>
+                                    <div className="w-full h-px bg-stone-800/50 my-4"></div>
+                                    <label className="text-[10px] uppercase font-black tracking-widest text-emerald-500/70 mb-3 block text-center flex items-center justify-center gap-2">
+                                        <Sparkles className="w-3 h-3" /> Lumina Unlocks
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-3 w-full">
+                                        {luminaLevel >= 30 && (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setBellInterval(120); }} // 2 mins special
+                                                className={`px-2 py-3 rounded-xl text-xs font-bold tracking-wider text-center transition-all ${bellInterval === 120
+                                                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                                                    : 'bg-emerald-900/10 text-emerald-600/60 border border-emerald-900/30 hover:border-emerald-700/50'
+                                                    }`}
+                                            >
+                                                ASCENDANT CHIMES
+                                            </button>
+                                        )}
+                                        {luminaLevel >= 50 && (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setBellInterval(300); }} // Overrides 5 min logic dynamically
+                                                className={`px-2 py-3 rounded-xl text-xs font-bold tracking-wider text-center transition-all ${bellInterval === 300 && luminaLevel >= 50
+                                                    ? 'bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/50 shadow-[0_0_15px_rgba(217,70,239,0.2)]'
+                                                    : 'bg-fuchsia-900/10 text-fuchsia-600/60 border border-fuchsia-900/30 hover:border-fuchsia-700/50'
+                                                    }`}
+                                            >
+                                                CELESTIAL VOID
+                                            </button>
+                                        )}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

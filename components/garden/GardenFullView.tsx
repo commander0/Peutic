@@ -21,7 +21,6 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     const [selectedNewPlant, setSelectedNewPlant] = useState<string | null>(null);
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
     const { showToast } = useToast();
-    const COST = intensity;
     const [availablePlants, setAvailablePlants] = useState<string[]>(['Lotus', 'Rose', 'Sunflower', 'Fern', 'Sakura', 'Oak', 'Willow', 'Bonsai']);
 
     // Weather/Day gamification injection
@@ -82,40 +81,33 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     }, [user.id]);
 
     const handleAction = async (type: 'water' | 'breath' | 'sing' | 'harvest') => {
-        // Cost Logic
-        const actionCost = type === 'harvest' ? 1 : COST;
-
-        if (user.balance < actionCost) {
-            showToast(`Need ${actionCost}m to ${type}.`, "error");
-            return;
-        }
-
         // Trigger Visuals
         if (type !== 'harvest') {
             setInteraction(type);
             setTimeout(() => setInteraction(null), 4000); // Effect duration
         }
 
-        // Deduct Balance
-        const success = await UserService.deductBalance(actionCost, `Garden ${type}`);
-        if (!success) return;
-
         // Perform Service Action
         if (type === 'water') {
             await GardenService.waterPlant(garden.userId, intensity);
-            await GardenService.addFocusMinutes(garden.userId, actionCost);
             showToast("Garden Watered", "success");
         } else if (type === 'harvest') {
+            const isMighty = stage === 6; // Stage 6 is Ethereal Entity (12+ minutes)
             const result = await GardenService.clipPlant(garden.userId);
             if (result.success) {
-                showToast(`Harvested! ${result.reward ? `"${result.reward}"` : ''}`, "success");
-                setShowPlantSelection(true); // Open selection modal
+                if (isMighty) {
+                    await UserService.updateUserPartial(user.id, { oracleTokens: (user.oracleTokens || 0) + 1 });
+                    showToast(`Harvested! You received an Oracle Token!`, "success");
+                    setShowPlantSelection(true);
+                } else {
+                    showToast(`Harvested! The seed returns to the earth.`, "success");
+                    setShowPlantSelection(true);
+                }
             } else {
                 showToast(result.message || "Failed to harvest.", "error");
             }
         } else {
-            // Breath / Sing
-            await GardenService.addFocusMinutes(garden.userId, actionCost);
+            // Breath / Sing are now free ambient interactions
             showToast(`Shared ${type} with garden.`, "success");
         }
 
@@ -311,7 +303,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                     <ControlBtn
                         icon={Droplets}
                         label="Nourish"
-                        sub={`-${COST}m`}
+                        sub={`Free`}
                         active={interaction === 'water'}
                         onClick={() => handleAction('water')}
                         color="cyan"
@@ -319,7 +311,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                     <ControlBtn
                         icon={Wind}
                         label="Breathe"
-                        sub={`-${COST}m`}
+                        sub={`Free`}
                         active={interaction === 'breath'}
                         onClick={() => handleAction('breath')}
                         color="teal"
@@ -327,7 +319,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                     <ControlBtn
                         icon={Music}
                         label="Sing"
-                        sub={`-${COST}m`}
+                        sub={`Free`}
                         active={interaction === 'sing'}
                         onClick={() => handleAction('sing')}
                         color="purple"
@@ -335,7 +327,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                     <ControlBtn
                         icon={Scissors}
                         label="Harvest"
-                        sub="-1m"
+                        sub={stage === 6 ? "+1 Token" : "Reset"}
                         active={interaction === 'harvest'}
                         onClick={() => handleAction('harvest')}
                         color="amber"

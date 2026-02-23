@@ -41,7 +41,7 @@
     --color-bg-base: #141005;
     /* Deep Gold Black */
     --color-text-base: #FFFBEB;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #3f3205 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #3f3205 0%, transparent 80vw);
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #141005 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #141005 0%, transparent 80vw);
 }
 
 /* -----------------------------------------------------------------------------
