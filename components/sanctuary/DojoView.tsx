@@ -206,18 +206,28 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
     // Toggle logic for Timer Audio Additions
     useEffect(() => {
         if (isActive) {
-            triggerAmbientSound(); // Start Sound
+            if (soundEnabled) triggerAmbientSound(); // Start Sound
 
             if (timerMode === 'candle') {
-                const windChime = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_2491a6d4ee.mp3");
-                windChime.loop = true;
-                windChime.volume = 0.2;
-                windChime.play().catch(e => console.error(e));
-                audioNodesRef.current.bells = { intervalId: setInterval(() => { }, 1000), audio: windChime };
+                let windChime: HTMLAudioElement | undefined;
+                if (soundEnabled) {
+                    windChime = new Audio("https://upload.wikimedia.org/wikipedia/commons/e/e0/Wind_chimes.ogg");
+                    windChime.loop = true;
+                    windChime.volume = 0.15;
+                    windChime.play().catch(e => console.error("Chime error:", e));
+                }
+
+                const bellId = window.setInterval(() => {
+                    if (soundEnabled) triggerAmbientSound();
+                }, 45000); // Strike bowl every 45s
+
+                audioNodesRef.current.bells = { intervalId: bellId, audio: windChime };
             }
             // Loop sounds if requested
             else if (bellInterval > 0) {
-                const id = setInterval(triggerAmbientSound, bellInterval * 1000);
+                const id = window.setInterval(() => {
+                    if (soundEnabled) triggerAmbientSound();
+                }, bellInterval * 1000);
                 audioNodesRef.current.bells = { intervalId: id };
             }
         } else {
@@ -226,16 +236,10 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
 
         // CRITICAL PATCH: Memory cleanup to prevent overlapping audio oscillators
         return () => stopAudio();
-    }, [isActive, bellInterval]); // Added bellInterval to dependency array
+    }, [isActive, bellInterval, soundEnabled]);
 
     const toggleTimer = () => {
         setIsActive(!isActive);
-        if (!isActive && soundEnabled) {
-            // Play ambient chimes when starting the timer
-            const chimeAudio = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_2491a6d4ee.mp3");
-            chimeAudio.volume = 0.3;
-            chimeAudio.play().catch(e => console.error("Chime play error:", e));
-        }
     };
 
     const nextKoan = () => {

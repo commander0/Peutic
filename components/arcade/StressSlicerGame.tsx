@@ -21,9 +21,11 @@ const StressSlicerGame: React.FC<StressSlicerProps> = ({ dashboardUser }) => {
     const trailsRef = useRef<{ x: number, y: number, life: number }[]>([]);
     const isDrawingRef = useRef(false);
     const lastMouseRef = useRef({ x: 0, y: 0 });
+    const slowModeRef = useRef(false);
 
     const NEGATIVE_WORDS = ["ANXIETY", "DOUBT", "FEAR", "STRESS", "OVERWHELM", "PANIC", "WORRY", "FATIGUE"];
     const POSITIVE_WORDS = ["CALM", "PEACE", "HOPE", "REST", "BREATHE", "CLARITY"];
+    const POWERUP_WORDS = ["SLOW-MO", "FREEZE", "ZEN"];
 
     const initGame = () => {
         setScore(0);
@@ -75,10 +77,15 @@ const StressSlicerGame: React.FC<StressSlicerProps> = ({ dashboardUser }) => {
         const spawnTarget = () => {
             const W = getDprWidth();
             const H = getDprHeight();
-            const isPositive = Math.random() > 0.8;
-            const word = isPositive
-                ? POSITIVE_WORDS[Math.floor(Math.random() * POSITIVE_WORDS.length)]
-                : NEGATIVE_WORDS[Math.floor(Math.random() * NEGATIVE_WORDS.length)];
+            const rand = Math.random();
+            let type: 'negative' | 'positive' | 'powerup' = 'negative';
+            if (rand > 0.9) type = 'powerup';
+            else if (rand > 0.45) type = 'positive';
+
+            let word = "";
+            if (type === 'negative') word = NEGATIVE_WORDS[Math.floor(Math.random() * NEGATIVE_WORDS.length)];
+            else if (type === 'positive') word = POSITIVE_WORDS[Math.floor(Math.random() * POSITIVE_WORDS.length)];
+            else word = POWERUP_WORDS[Math.floor(Math.random() * POWERUP_WORDS.length)];
 
             targetsRef.current.push({
                 x: W * 0.2 + Math.random() * (W * 0.6),
@@ -86,8 +93,8 @@ const StressSlicerGame: React.FC<StressSlicerProps> = ({ dashboardUser }) => {
                 vx: (Math.random() - 0.5) * 4,
                 vy: -(Math.random() * 4 + 10), // Jump force
                 word,
-                isPositive,
-                radius: 40,
+                type,
+                radius: type === 'powerup' ? 30 : 40,
                 rotation: Math.random() * Math.PI,
                 vrot: (Math.random() - 0.5) * 0.1,
                 sliced: false
@@ -124,12 +131,17 @@ const StressSlicerGame: React.FC<StressSlicerProps> = ({ dashboardUser }) => {
 
                 if (dt < t.radius) {
                     t.sliced = true;
-                    if (t.isPositive) {
+                    if (t.type === 'positive') {
                         setLives(l => {
                             if (l <= 1) setGameOver(true);
                             return l - 1;
                         });
                         createParticles(t.x, t.y, '#fcd34d');
+                    } else if (t.type === 'powerup') {
+                        slowModeRef.current = true;
+                        setTimeout(() => slowModeRef.current = false, 5000);
+                        setScore(s => s + 100);
+                        createParticles(t.x, t.y, '#a855f7');
                     } else {
                         setScore(s => s + 50);
                         createParticles(t.x, t.y, '#ef4444');
@@ -171,7 +183,8 @@ const StressSlicerGame: React.FC<StressSlicerProps> = ({ dashboardUser }) => {
             ctx.fillRect(0, 0, W, H);
 
             frames++;
-            if (frames % (Math.max(30, 80 - Math.floor(score / 200))) === 0) {
+            const spawnRate = Math.max(30, 80 - Math.floor(score / 200));
+            if (frames % (slowModeRef.current ? Math.floor(spawnRate * 1.5) : spawnRate) === 0) {
                 spawnTarget();
             }
 
@@ -206,18 +219,29 @@ const StressSlicerGame: React.FC<StressSlicerProps> = ({ dashboardUser }) => {
                     continue;
                 }
 
-                t.x += t.vx;
-                t.vy += 0.2; // Gravity
-                t.y += t.vy;
-                t.rotation += t.vrot;
+                const speedMult = slowModeRef.current ? 0.4 : 1;
+                t.x += t.vx * speedMult;
+                t.vy += 0.2 * speedMult; // Gravity
+                t.y += t.vy * speedMult;
+                t.rotation += t.vrot * speedMult;
 
                 ctx.save();
                 ctx.translate(t.x, t.y);
                 ctx.rotate(t.rotation);
 
-                // Body
-                ctx.fillStyle = t.isPositive ? 'rgba(252,211,77,0.2)' : 'rgba(239,68,68,0.2)';
-                ctx.strokeStyle = t.isPositive ? '#fcd34d' : '#ef4444';
+                // Body colors based on type
+                let fillStyle = 'rgba(239,68,68,0.2)';
+                let strokeStyle = '#ef4444';
+                if (t.type === 'positive') {
+                    fillStyle = 'rgba(252,211,77,0.2)';
+                    strokeStyle = '#fcd34d';
+                } else if (t.type === 'powerup') {
+                    fillStyle = 'rgba(168,85,247,0.2)';
+                    strokeStyle = '#a855f7';
+                }
+
+                ctx.fillStyle = fillStyle;
+                ctx.strokeStyle = strokeStyle;
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.arc(0, 0, t.radius, 0, Math.PI * 2);
@@ -225,7 +249,7 @@ const StressSlicerGame: React.FC<StressSlicerProps> = ({ dashboardUser }) => {
                 ctx.stroke();
 
                 // Text
-                ctx.fillStyle = t.isPositive ? '#fcd34d' : '#ef4444';
+                ctx.fillStyle = strokeStyle;
                 ctx.font = 'bold 16px monospace';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
@@ -234,7 +258,7 @@ const StressSlicerGame: React.FC<StressSlicerProps> = ({ dashboardUser }) => {
                 ctx.restore();
 
                 // Miss penalty
-                if (t.y > H + 100 && !t.isPositive && !t.sliced) {
+                if (t.y > H + 100 && t.type === 'negative' && !t.sliced) {
                     setLives(l => {
                         if (l <= 1) setGameOver(true);
                         return l - 1;

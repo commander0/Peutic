@@ -162,7 +162,7 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
     const isSunny = moodRatio.sun >= moodRatio.rain;
 
     return (
-        <div className="fixed inset-0 z-[120] bg-zinc-950 dark:bg-black text-amber-950 dark:text-stone-200 overflow-y-auto overflow-x-hidden flex items-center justify-center animate-in zoom-in-95 duration-1000 p-2 md:p-8 lg:p-12 font-serif bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] dark:bg-[url('https://www.transparenttextures.com/patterns/dark-wood.png')] bg-blend-multiply shadow-[inset_0_0_150px_rgba(0,0,0,0.9)]">
+        <div className="fixed inset-0 z-[120] bg-zinc-950 dark:bg-black text-amber-950 dark:text-stone-200 overflow-y-auto overflow-x-hidden flex items-center justify-center animate-in zoom-in-95 duration-1000 p-2 md:p-8 lg:p-12 font-serif bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] dark:bg-[url('https://www.transparenttextures.com/patterns/dark-wood.png')] bg-blend-multiply shadow-[inset_0_0_150px_rgba(0,0,0,0.9)] print:static print:h-auto print:w-full print:bg-white print:text-black print:overflow-visible print:block print:p-0 print:shadow-none print:bg-none">
             <style type="text/css">{`
                 @media print {
                     @page { size: landscape; margin: 0; }
@@ -187,7 +187,7 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
             </button>
 
             {/* THE PHYSICAL BOOK MOCKUP */}
-            <div className="relative w-full max-w-6xl aspect-auto md:aspect-[16/10] min-h-[85vh] md:min-h-0 bg-[#f5ebd8] dark:bg-[#1f1a18] shadow-[0_30px_60px_rgba(0,0,0,0.9),0_0_0_2px_rgba(89,61,43,0.8)] dark:shadow-[0_20px_40px_rgba(0,0,0,1),_0_0_0_2px_rgba(255,255,255,0.05)] rounded-sm flex flex-col md:flex-row print:flex-col print:h-auto print:min-h-0 print:gap-8 print:shadow-none after:absolute after:inset-0 after:bg-[url('https://www.transparenttextures.com/patterns/aged-paper.png')] after:opacity-[0.8] dark:after:opacity-[0.4] dark:after:bg-[url('https://www.transparenttextures.com/patterns/black-paper.png')] after:mix-blend-multiply dark:after:mix-blend-hard-light after:pointer-events-none transition-colors duration-500 overflow-hidden ring-4 ring-black/40 dark:ring-black">
+            <div className="relative w-full max-w-6xl aspect-auto md:aspect-[16/10] min-h-[85vh] md:min-h-0 bg-[#f5ebd8] dark:bg-[#1f1a18] shadow-[0_30px_60px_rgba(0,0,0,0.9),0_0_0_2px_rgba(89,61,43,0.8)] dark:shadow-[0_20px_40px_rgba(0,0,0,1),_0_0_0_2px_rgba(255,255,255,0.05)] rounded-sm flex flex-col md:flex-row print:flex print:flex-row print:h-auto print:min-h-0 print:gap-4 print:shadow-none print:max-w-none print:w-full print:bg-white after:absolute after:inset-0 after:bg-[url('https://www.transparenttextures.com/patterns/aged-paper.png')] after:opacity-[0.8] dark:after:opacity-[0.4] dark:after:bg-[url('https://www.transparenttextures.com/patterns/black-paper.png')] after:mix-blend-multiply dark:after:mix-blend-hard-light after:pointer-events-none transition-colors duration-500 overflow-hidden ring-4 ring-black/40 dark:ring-black print:overflow-visible print:ring-0 text-amber-950 dark:print:text-black">
                 {/* Vintage Burn Edges */}
                 <div className="absolute inset-0 shadow-[inset_0_0_120px_rgba(139,69,19,0.3)] dark:shadow-[inset_0_0_150px_rgba(0,0,0,0.9)] pointer-events-none z-[5]"></div>
 
@@ -196,9 +196,9 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                 <div className="absolute -bottom-2 -right-2 w-full h-full border-r-2 border-b-2 border-amber-950/10 dark:border-stone-300/5 rounded-br-lg pointer-events-none hidden md:block z-0"></div>
 
                 {/* LEFT PAGE */}
-                <div className="w-full md:w-1/2 h-auto min-h-[80vh] md:min-h-0 md:h-full flex flex-col relative overflow-y-auto custom-scrollbar overflow-x-hidden border-b-2 md:border-b-0 border-amber-900/30 dark:border-stone-800 z-10 print:min-h-0 print:h-auto print:overflow-visible">
+                <div className="w-full md:w-1/2 h-auto min-h-[80vh] md:min-h-0 md:h-full flex flex-col relative overflow-y-auto custom-scrollbar overflow-x-hidden border-b-2 md:border-b-0 border-amber-900/30 dark:border-stone-800 z-10 print:w-1/2 print:min-h-0 print:h-auto print:overflow-visible print:border-none print:break-inside-avoid print:m-0">
                     <div className="absolute inset-2 md:inset-4 lg:inset-6 border-[3px] border-double border-amber-900/20 dark:border-stone-500/10 pointer-events-none rounded-sm"></div>
-                    <div key={currentVolume} className="w-full h-full flex flex-col p-6 md:p-12 lg:p-20 absolute inset-0 animate-in slide-in-from-right-8 fade-in duration-700">
+                    <div key={currentVolume} className="w-full h-full flex flex-col p-6 md:p-12 lg:p-20 absolute inset-0 animate-in slide-in-from-right-8 fade-in duration-700 print:relative print:inset-auto print:h-auto print:overflow-visible print:p-4">
                         {/* Page Numbers */}
                         <div className="hidden md:block absolute top-6 left-6 lg:top-8 lg:left-8 text-amber-900/30 font-sans text-[10px] tracking-widest font-bold">1</div>
 
@@ -273,9 +273,9 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                 </div>
 
                 {/* RIGHT PAGE */}
-                <div className="w-full md:w-1/2 h-auto min-h-[80vh] md:min-h-0 md:h-full flex flex-col relative overflow-y-auto custom-scrollbar overflow-x-hidden z-10 print:min-h-0 print:h-auto print:overflow-visible print:mt-8">
+                <div className="w-full md:w-1/2 h-auto min-h-[80vh] md:min-h-0 md:h-full flex flex-col relative overflow-y-auto custom-scrollbar overflow-x-hidden z-10 print:w-1/2 print:min-h-0 print:h-auto print:overflow-visible print:m-0 print:break-inside-avoid print:border-none">
                     <div className="absolute inset-2 md:inset-4 lg:inset-6 border-[3px] border-double border-amber-900/20 dark:border-stone-500/10 pointer-events-none rounded-sm"></div>
-                    <div key={currentVolume + "-right"} className="w-full h-full flex flex-col p-6 md:p-12 lg:p-20 absolute inset-0 animate-in slide-in-from-right-16 fade-in duration-1000">
+                    <div key={currentVolume + "-right"} className="w-full h-full flex flex-col p-6 md:p-12 lg:p-20 absolute inset-0 animate-in slide-in-from-right-16 fade-in duration-1000 print:relative print:inset-auto print:h-auto print:overflow-visible print:p-4">
                         {/* Page Numbers */}
                         <div className="hidden md:block absolute top-6 right-6 lg:top-8 lg:right-8 text-amber-900/30 font-sans text-[10px] tracking-widest font-bold">2</div>
 

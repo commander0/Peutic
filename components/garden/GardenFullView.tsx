@@ -96,6 +96,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                 return;
             }
             await GardenService.waterPlant(garden.userId, intensity);
+            await GardenService.addFocusMinutes(garden.userId, intensity);
             showToast(`You watered your sanctuary (-${intensity}m).`, "success");
         } else if (type === 'harvest') {
             const isMighty = stage === 6; // Stage 6 is Ethereal Entity (12+ minutes)
@@ -310,7 +311,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                     <ControlBtn
                         icon={Droplets}
                         label="Nourish"
-                        sub={`Free`}
+                        sub={`-${intensity}m`}
                         active={interaction === 'water'}
                         onClick={() => handleAction('water')}
                         color="cyan"
