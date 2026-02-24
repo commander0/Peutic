@@ -78,9 +78,13 @@ const StressSlicerGame: React.FC<StressSlicerProps> = ({ dashboardUser }) => {
             const W = getDprWidth();
             const H = getDprHeight();
             const rand = Math.random();
-            let type: 'negative' | 'positive' | 'powerup' = 'negative';
-            if (rand > 0.9) type = 'powerup';
-            else if (rand > 0.45) type = 'positive';
+            let type: 'negative' | 'positive' | 'powerup';
+            const typeRoll = Math.random();
+            if (rand > 0.9) {
+                type = 'powerup';
+            } else {
+                type = typeRoll > 0.5 ? 'positive' : 'negative';
+            }
 
             let word = "";
             if (type === 'negative') word = NEGATIVE_WORDS[Math.floor(Math.random() * NEGATIVE_WORDS.length)];

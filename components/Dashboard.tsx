@@ -826,7 +826,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     ></div>
                                                 </div>
                                                 <p className="text-[10px] md:text-sm font-bold text-gray-700 dark:text-gray-300">
-                                                    {weeklyGoal >= 300 ? "☢️ NUCLEAR WELLNESS ACHIEVED! 🔥" : weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}
+                                                    {weeklyGoal >= 300 ? "🌿 ULTIMATE WELLNESS ACHIEVED! 🔥" : weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}
                                                 </p>
                                             </div>
                                         </div>

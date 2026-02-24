@@ -15,6 +15,7 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
 
     // Milestone State
     const [showMilestone, setShowMilestone] = useState(false);
+    const [isReconstructing, setIsReconstructing] = useState(false);
     const [milestoneNote, setMilestoneNote] = useState('');
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -119,7 +120,6 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
                 let count = parseInt(localStorage.getItem('peutic_shred_count') || '0', 10) + 1;
 
                 if (count >= 25) {
-                    setShowMilestone(true);
                     if (newWords.length > 0) {
                         const uniqueWords = Array.from(new Set(newWords));
                         setMilestoneNote(`From the ashes of your doubts, remember the light of your own words: ${uniqueWords.join(', ')}. Keep walking forward.`);
@@ -127,20 +127,27 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
                         setMilestoneNote(FALLBACK_AFFIRMATIONS[Math.floor(Math.random() * FALLBACK_AFFIRMATIONS.length)]);
                     }
 
-                    // Leave shred count at 25 for UI visuals until they click continue
+                    // Leave shred count at 25 for UI visuals
                     localStorage.setItem('peutic_shred_count', '25');
                     setShredCount(25);
                     localStorage.setItem('peutic_shredded_words', '[]'); // Wipe the history for the next round
 
-                    // Note stays visible for 5 minutes
+                    setIsReconstructing(true);
+
+                    // Note stays visible for 5 minutes after reconstruction
                     setTimeout(() => {
-                        setShowMilestone(false);
-                        // Make sure we auto-reset if they just let it time out
-                        if (parseInt(localStorage.getItem('peutic_shred_count') || '0', 10) >= 25) {
-                            localStorage.setItem('peutic_shred_count', '0');
-                            setShredCount(0);
-                        }
-                    }, 5 * 60 * 1000);
+                        setIsReconstructing(false);
+                        setShowMilestone(true);
+
+                        setTimeout(() => {
+                            setShowMilestone(false);
+                            // Make sure we auto-reset if they just let it time out
+                            if (parseInt(localStorage.getItem('peutic_shred_count') || '0', 10) >= 25) {
+                                localStorage.setItem('peutic_shred_count', '0');
+                                setShredCount(0);
+                            }
+                        }, 5 * 60 * 1000);
+                    }, 3500); // 3.5 seconds of dramatic reconstruction
                 } else {
                     localStorage.setItem('peutic_shred_count', count.toString());
                     setShredCount(count);
@@ -167,7 +174,7 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
     const reset = () => {
         setShredded(false);
         setText('');
-        if (shredCount >= 25) {
+        if (shredCount >= 25 && !isReconstructing) {
             localStorage.setItem('peutic_shred_count', '0');
             setShredCount(0);
         }
@@ -249,8 +256,45 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
                     {/* Success State */}
                     {shredded && (
                         <div className="flex-1 flex flex-col items-center justify-center text-center py-10 animate-in zoom-in duration-500">
-                            {showMilestone ? (
-                                <div className="p-8 bg-amber-500/10 border border-amber-500/30 rounded-2xl shadow-[0_0_50px_rgba(245,158,11,0.2)] animate-pulse-slow max-w-sm mb-8 relative overflow-hidden">
+                            {isReconstructing ? (
+                                <div className="relative w-full h-[250px] flex items-center justify-center overflow-visible">
+                                    <h4 className="absolute z-0 text-stone-700 animate-pulse text-sm font-bold uppercase tracking-widest mt-20">Reconstructing...</h4>
+                                    {[...Array(25)].map((_, i) => (
+                                        <div
+                                            key={i}
+                                            className="absolute bg-[#fef3c7] opacity-90 shadow-sm border-t border-l border-white/50"
+                                            style={{
+                                                width: `${20 + (i % 3) * 15}px`,
+                                                height: `${15 + (i % 4) * 10}px`,
+                                                clipPath: `polygon(${i % 2 === 0 ? '5%' : '0%'} ${i % 3 === 0 ? '10%' : '0%'}, ${i % 2 !== 0 ? '95%' : '100%'} ${i % 4 === 0 ? '5%' : '0%'}, 100% 100%, 0% 100%)`,
+                                                animation: `reconstruct-${i} 3.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards`,
+                                                animationDelay: `${(i % 5) * 0.1}s`,
+                                            }}
+                                        />
+                                    ))}
+                                    <style>{`
+                                        ${[...Array(25)].map((_, i) => `
+                                            @keyframes reconstruct-${i} {
+                                                0% { 
+                                                    transform: translate(${(i % 2 === 0 ? 1 : -1) * (150 + (i * 7))}px, ${(i % 3 === 0 ? 1 : -1) * (150 + (i * 5))}px) rotate(${(i * 45)}deg) scale(0.5); 
+                                                    opacity: 0; 
+                                                }
+                                                15% { opacity: 1; }
+                                                70% { 
+                                                    transform: translate(${(i % 2 === 0 ? 1 : -1) * (i * 2)}px, ${(i % 3 === 0 ? 1 : -1) * (i * 2)}px) rotate(${(i % 4) * 5}deg) scale(1.2); 
+                                                    opacity: 1; 
+                                                }
+                                                100% { 
+                                                    transform: translate(0,0) scale(2); 
+                                                    opacity: 0; 
+                                                    filter: blur(8px); 
+                                                }
+                                            }
+                                        `).join('\n')}
+                                    `}</style>
+                                </div>
+                            ) : showMilestone ? (
+                                <div className="p-8 bg-amber-500/10 border border-amber-500/30 rounded-2xl shadow-[0_0_50px_rgba(245,158,11,0.2)] animate-in fade-in duration-1000 zoom-in-90 max-w-sm mb-8 relative overflow-hidden">
                                     <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/20 to-transparent opacity-50"></div>
                                     <h4 className="text-xl font-serif font-bold text-amber-200 mb-4 drop-shadow-md relative z-10">A Gift From the Void</h4>
                                     <p className="text-amber-100/90 font-serif leading-relaxed italic text-sm relative z-10">{milestoneNote}</p>

@@ -11,18 +11,18 @@ interface GardenCanvasProps {
 
 const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, interactionType }) => {
 
-    // Expanded Gamification: Scale up to Ethereal Entity (120 minutes)
-    const maxMinutes = 120;
+    // Gamification Logic: Max 12 Minutes (1/10th speed)
+    const maxMinutes = 12;
     const progress = Math.min((garden.focusMinutes || 0) / maxMinutes, 1);
 
     let stage = 0;
     const fm = garden.focusMinutes || 0;
-    if (fm >= 120) stage = 6; // Ethereal Entity
-    else if (fm >= 90) stage = 5; // Mystic Guardian
-    else if (fm >= 60) stage = 4; // Ancient Tree
-    else if (fm >= 40) stage = 3; // Mature Tree
-    else if (fm >= 20) stage = 2; // Sapling
-    else if (fm >= 10) stage = 1; // Sprout
+    if (fm >= 12) stage = 6; // Ethereal Entity
+    else if (fm >= 10) stage = 5; // Mystic Guardian
+    else if (fm >= 8) stage = 4; // Ancient Tree
+    else if (fm >= 6) stage = 3; // Mature Tree
+    else if (fm >= 4) stage = 2; // Sapling
+    else if (fm >= 2) stage = 1; // Sprout
 
     // Determine colors
     const getThemeColors = (type: string) => {

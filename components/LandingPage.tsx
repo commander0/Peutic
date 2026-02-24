@@ -166,7 +166,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                             {t('hero_title_1')} <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-orange-400">{t('hero_title_2')}</span>
                         </h1>
-                        <p className="text-base sm:text-lg md:text-xl text-gray-500 dark:text-gray-400 font-medium max-w-xl mx-auto leading-relaxed px-2">
+                        <p className="text-base sm:text-lg md:text-xl text-black dark:text-white font-medium max-w-xl mx-auto leading-relaxed px-2">
                             {t('hero_subtitle')}
                         </p>
                         <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center pt-2 md:pt-3">

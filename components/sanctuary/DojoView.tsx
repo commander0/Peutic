@@ -28,7 +28,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
     const [localUser, setLocalUser] = useState<User>(user);
     const [luminaLevel, setLuminaLevel] = useState(1);
     const timerRef = useRef<number | null>(null);
-    const bellRef = useRef<HTMLAudioElement | null>(null);
+    const windChimeRef = useRef<HTMLAudioElement | null>(null);
 
     // Sync remote updates
     useEffect(() => {
@@ -209,19 +209,16 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
             if (soundEnabled) triggerAmbientSound(); // Start Sound
 
             if (timerMode === 'candle') {
-                let windChime: HTMLAudioElement | undefined;
-                if (soundEnabled) {
-                    windChime = new Audio("https://upload.wikimedia.org/wikipedia/commons/e/e0/Wind_chimes.ogg");
-                    windChime.loop = true;
-                    windChime.volume = 0.15;
-                    windChime.play().catch(e => console.error("Chime error:", e));
+                if (soundEnabled && windChimeRef.current) {
+                    windChimeRef.current.volume = 0.2;
+                    windChimeRef.current.play().catch(e => console.error("Chime error:", e));
                 }
 
                 const bellId = window.setInterval(() => {
                     if (soundEnabled) triggerAmbientSound();
                 }, 45000); // Strike bowl every 45s
 
-                audioNodesRef.current.bells = { intervalId: bellId, audio: windChime };
+                audioNodesRef.current.bells = { intervalId: bellId };
             }
             // Loop sounds if requested
             else if (bellInterval > 0) {
@@ -232,10 +229,17 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
             }
         } else {
             stopAudio();
+            if (windChimeRef.current) {
+                windChimeRef.current.pause();
+                windChimeRef.current.currentTime = 0;
+            }
         }
 
         // CRITICAL PATCH: Memory cleanup to prevent overlapping audio oscillators
-        return () => stopAudio();
+        return () => {
+            stopAudio();
+            if (windChimeRef.current) windChimeRef.current.pause();
+        };
     }, [isActive, bellInterval, soundEnabled]);
 
     const toggleTimer = () => {
@@ -299,6 +303,9 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
 
     return (
         <div className="fixed inset-0 h-[100dvh] z-[120] bg-stone-900 text-stone-100 flex flex-col font-serif animate-in fade-in duration-700 overflow-hidden">
+            {/* Audio Elements bound to DOM for Autoplay Bypass */}
+            <audio ref={windChimeRef} src="https://cdn.freesound.org/previews/411/411088_5121236-lq.mp3" loop preload="auto" />
+
             {/* Real Zen Dojo Background (Unsplash) - Deepened Atmosphere */}
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1545569341-9eb8b30979d9?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-luminosity"></div>
 
@@ -461,7 +468,9 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                         onClick={(e) => {
                             e.stopPropagation();
                             setSoundEnabled(!soundEnabled);
-                            if (!soundEnabled && bellRef.current) bellRef.current.play().catch(() => { });
+                            if (!soundEnabled && windChimeRef.current && timerMode === 'candle' && isActive) {
+                                windChimeRef.current.play().catch(() => { });
+                            }
                         }}
                         className={`p-2 rounded-full transition-all border ${soundEnabled ? 'bg-amber-500/20 text-amber-400 border-amber-500/50 shadow-lg' : 'bg-stone-900/50 text-stone-600 border-stone-800 hover:text-stone-400'}`}
                     >
