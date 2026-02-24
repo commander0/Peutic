@@ -32,7 +32,7 @@ const AvatarImage: React.FC<{ src: string; alt: string; className?: string }> = 
         const index = Math.abs(hash) % STABLE_AVATAR_POOL.length;
         return <img src={STABLE_AVATAR_POOL[index]} alt={alt} className={className} />;
     }
-    return <img src={imgSrc} alt={alt} className={className} onError={() => setHasError(true)} />;
+    return <img src={imgSrc} alt={alt} className={`${className} ${imgSrc?.includes('dicebear') ? 'bg-yellow-200 dark:bg-yellow-900/50' : ''}`} onError={() => setHasError(true)} />;
 };
 
 const ConfirmModal: React.FC<{

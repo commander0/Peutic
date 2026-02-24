@@ -99,6 +99,21 @@ export class PetService {
         }
     }
 
+    static async deletePet(userId: string): Promise<void> {
+        try {
+            const { error } = await supabase
+                .from('pocket_pets')
+                .delete()
+                .eq('user_id', userId);
+
+            if (error) throw error;
+            localStorage.removeItem(`${this.CACHE_KEY}_${userId}`);
+        } catch (error) {
+            logger.error("Failed to delete pet", userId, error);
+            throw error;
+        }
+    }
+
     private static calculateDecay(anima: Lumina): Lumina {
         const now = new Date();
         const last = new Date(anima.lastInteractionAt);

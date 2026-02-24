@@ -127,13 +127,19 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
                         setMilestoneNote(FALLBACK_AFFIRMATIONS[Math.floor(Math.random() * FALLBACK_AFFIRMATIONS.length)]);
                     }
 
-                    // Force reset to 0
-                    localStorage.setItem('peutic_shred_count', '0');
-                    setShredCount(0);
+                    // Leave shred count at 25 for UI visuals until they click continue
+                    localStorage.setItem('peutic_shred_count', '25');
+                    setShredCount(25);
+                    localStorage.setItem('peutic_shredded_words', '[]'); // Wipe the history for the next round
 
                     // Note stays visible for 5 minutes
                     setTimeout(() => {
                         setShowMilestone(false);
+                        // Make sure we auto-reset if they just let it time out
+                        if (parseInt(localStorage.getItem('peutic_shred_count') || '0', 10) >= 25) {
+                            localStorage.setItem('peutic_shred_count', '0');
+                            setShredCount(0);
+                        }
                     }, 5 * 60 * 1000);
                 } else {
                     localStorage.setItem('peutic_shred_count', count.toString());
@@ -161,6 +167,10 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
     const reset = () => {
         setShredded(false);
         setText('');
+        if (shredCount >= 25) {
+            localStorage.setItem('peutic_shred_count', '0');
+            setShredCount(0);
+        }
         const canvas = canvasRef.current;
         if (canvas) {
             const ctx = canvas.getContext('2d');

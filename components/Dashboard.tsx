@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect, useRef, lazy, Suspense, useTransition } from 'react';
 import { useNotifications } from '../hooks/useNotifications';
+import { useDashboardUI } from '../hooks/useDashboardUI';
 import { useGamification } from '../hooks/useGamification';
 import { useDashboardState } from '../hooks/useDashboardState';
 import { Link, useNavigate } from 'react-router-dom';
@@ -7,17 +8,10 @@ import { User, Companion, VoiceJournalEntry, Achievement } from '../types';
 import { LanguageSelector } from './common/LanguageSelector';
 import { useLanguage } from './common/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
-import {
-    Clock, Settings, LogOut,
-    LayoutDashboard, Plus, X, Mic, Lock, AlertTriangle, ShieldCheck, Heart,
-    BookOpen, Trophy,
-    Sun, Feather, LifeBuoy, RefreshCw, Star, Edit2, Zap, Gamepad2,
-    ChevronDown, ChevronUp, User as UserIcon, Moon, Scissors, Leaf,
-    Twitter, Instagram, Linkedin,
-    Mail, Eye, EyeOff, Megaphone, Sparkles, Save, Video, Brain, Cloud, Flame
-} from 'lucide-react';
+import { Clock, Home, LayoutDashboard, Brain, BookOpen, User as UserIcon, Settings, Calendar, Menu, Plus, Lock, Sun, Moon, Sparkles, Star, MessageCircle, Mic, Award, PenTool, Image as ImageIcon, Flame, CheckCircle2, Trophy, ArrowRight, TrendingUp, Music, TreePine, Anchor, Wind, Battery, Heart, ShieldCheck, Leaf, CloudRain, LogOut, LifeBuoy, ChevronUp, ChevronDown, Megaphone, Zap, Scissors, Gamepad2, Cloud, Feather, AlertTriangle, Video, Eye, EyeOff, Edit2, Mail, RefreshCw, Save, Twitter, Instagram, Linkedin, X } from 'lucide-react';
 import { NotificationBell } from './common/NotificationBell';
 import { UserService } from '../services/userService';
+import PetCanvas from './pocket/PetCanvas';
 import { useToast } from './common/Toast';
 import { CompanionSkeleton, StatSkeleton } from './common/SkeletonLoader';
 import { InspirationQuote } from './common/InspirationQuote';
@@ -41,6 +35,7 @@ import { WeatherEffect } from './dashboard/WeatherEffect';
 
 const MindfulMatchGame = lazy(() => import('./MindfulMatchGame').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Game Engine...</div> })));
 const CloudHopGame = lazy(() => import('./CloudHopGame').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Cloud Engine...</div> })));
+const StressSlicerGame = lazy(() => import('./arcade/StressSlicerGame').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Slicer Engine...</div> })));
 const PaymentModal = lazy(() => import('./PaymentModal').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Payment Secure Node...</div> })));
 const ProfileModal = lazy(() => import('./ProfileModal').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Profile Experience...</div> })));
 const GardenFullView = lazy(() => import('./garden/GardenFullView'));
@@ -77,7 +72,7 @@ const AvatarImage = React.memo(({ src, alt, className, isUser = false }: { src?:
                 <img
                     src={src}
                     alt={alt || 'Avatar'}
-                    className="w-full h-full object-cover"
+                    className={`w-full h-full object-cover ${src?.includes('dicebear') ? 'bg-yellow-200 dark:bg-yellow-900/50' : ''}`}
                     onError={() => setImgError(true)}
                 />
             ) : (
@@ -198,33 +193,37 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         weeklyGoal, weeklyMessage, settings, refreshData
     } = useDashboardState(user);
 
-    const [showPayment, setShowPayment] = useState(false);
-    const [paymentError, setPaymentError] = useState<string | undefined>(undefined);
-    const [showBreathing, setShowBreathing] = useState(false);
-    const [showProfile, setShowProfile] = useState(false);
-    const [showGrounding, setShowGrounding] = useState(false);
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [mood, setMood] = useState<'confetti' | 'rain' | null>(null);
-    const [editName, setEditName] = useState(user.name);
-    const [editEmail, setEditEmail] = useState(user.email);
-    const [isSavingProfile, setIsSavingProfile] = useState(false);
-    const [isIdle, setIsIdle] = useState(false);
     const idleTimerRef = useRef<number | null>(null);
     const logoutTimerRef = useRef<number | null>(null);
-
-    const [showTechCheck, setShowTechCheck] = useState(false);
-    const [isGhostMode, setIsGhostMode] = useState(() => localStorage.getItem('peutic_ghost_mode') === 'true');
-    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-    const [showBookFull, setShowBookFull] = useState(false);
-    const [showGardenFull, setShowGardenFull] = useState(false);
-    const [showPocketPet, setShowPocketPet] = useState(false);
-    const [showObservatory, setShowObservatory] = useState(false);
-    const [showDojo, setShowDojo] = useState(false);
-    const [showShredder, setShowShredder] = useState(false);
-    const [showMatchGame, setShowMatchGame] = useState(false);
-    const [showCloudHop, setShowCloudHop] = useState(false);
-    const [isUnlockingRoom, setIsUnlockingRoom] = useState(false);
     const weeklyTarget = 100; // Updated from 10
+
+    const {
+        showPayment, setShowPayment,
+        paymentError, setPaymentError,
+        showBreathing, setShowBreathing,
+        showProfile, setShowProfile,
+        showGrounding, setShowGrounding,
+        showDeleteConfirm, setShowDeleteConfirm,
+        mood, setMood,
+        editName, setEditName,
+        editEmail, setEditEmail,
+        isSavingProfile, setIsSavingProfile,
+        isIdle, setIsIdle,
+        showTechCheck, setShowTechCheck,
+        isGhostMode, setIsGhostMode,
+        isDeletingAccount, setIsDeletingAccount,
+        showBookFull, setShowBookFull,
+        showGardenFull, setShowGardenFull,
+        showPocketPet, setShowPocketPet,
+        showObservatory, setShowObservatory,
+        showDojo, setShowDojo,
+        showShredder, setShowShredder,
+        showMatchGame, setShowMatchGame,
+        showCloudHop, setShowCloudHop,
+        showSlicerGame, setShowSlicerGame,
+        isUnlockingRoom, setIsUnlockingRoom,
+        showVoiceJournal, setShowVoiceJournal
+    } = useDashboardUI(user);
 
     // Gamification Hook
     const { garden, lumina, refreshGarden, handleClipPlant, refreshPet } = useGamification(user);
@@ -254,7 +253,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const { showToast } = useToast();
 
     // --- NEW FEATURE: VOICE JOURNAL & MOOD PULSE ---
-    const [showVoiceJournal, setShowVoiceJournal] = useState(false);
     const [voiceEntries, setVoiceEntries] = useState<VoiceJournalEntry[]>([]);
     const [moodRiskAlert, setMoodRiskAlert] = useState(false);
 
@@ -692,8 +690,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
                                                         <div className="relative mb-1 md:mb-4">
                                                             <div className="absolute -inset-4 bg-cyan-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                            <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-cyan-500 to-blue-700 border border-cyan-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform">
-                                                                <Sparkles className="w-5 h-5 md:w-10 md:h-10 text-white animate-bounce" />
+                                                            <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-cyan-500 to-blue-700 border border-cyan-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform overflow-hidden">
+                                                                {lumina ? (
+                                                                    <div className="w-[120%] h-[120%] flex items-center justify-center">
+                                                                        <PetCanvas pet={lumina} width={60} height={60} emotion="happy" />
+                                                                    </div>
+                                                                ) : (
+                                                                    <Sparkles className="w-5 h-5 md:w-10 md:h-10 text-white animate-bounce" />
+                                                                )}
                                                             </div>
                                                         </div>
                                                         <h3 className="text-[7px] md:text-sm font-black text-cyan-700 dark:text-cyan-50 uppercase tracking-[0.2em] mb-1">Lumina</h3>
@@ -781,15 +785,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                                     {dashboardUser ? (
                                         <div className="bg-transparent dark:bg-transparent p-4 md:p-5 rounded-3xl border border-transparent shadow-none col-span-1 md:col-span-2 relative overflow-hidden group min-h-[120px] md:min-h-[140px]">
-                                            {weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-3 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-12 h-12 border-2 border-blue-500/40 border-t-blue-400 rounded-full animate-spin"></div><div className="absolute w-10 h-10 bg-blue-400/50 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-blue-300/20 rounded-full animate-ping"></div><Flame className="absolute -top-4 w-6 h-6 text-blue-400 fill-blue-500 animate-[flicker_2s_ease-in-out_infinite] z-20 drop-shadow-[0_0_10px_rgba(59,130,246,1)]" /><Trophy className="w-10 h-10 text-blue-400 fill-blue-500 drop-shadow-[0_0_20px_rgba(59,130,246,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-40 group-hover:opacity-100 transition-opacity duration-300"><Trophy className="w-20 h-20 text-gray-200 dark:text-gray-800/50 group-hover:text-primary dark:group-hover:text-blue-500 transition-colors" /></div>)}
+                                            {weeklyGoal >= 300 ? (<div className="absolute top-0 right-0 p-3 z-20"><div className="relative flex items-center justify-center -translate-y-2"><div className="absolute w-16 h-16 border-4 border-green-500/40 border-t-green-400 rounded-full animate-spin"></div><div className="absolute w-12 h-12 bg-green-400/50 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-green-300/20 rounded-full animate-ping"></div><Flame className="absolute -top-7 -left-3 w-6 h-6 text-red-500 fill-red-600 animate-[flicker_1.5s_ease-in-out_infinite] z-20 drop-shadow-[0_0_15px_rgba(239,68,68,1)]" /><Flame className="absolute -top-9 w-8 h-8 text-red-400 fill-red-500 animate-[flicker_2s_ease-in-out_infinite_0.5s] z-20 drop-shadow-[0_0_15px_rgba(239,68,68,1)]" /><Flame className="absolute -top-7 -right-3 w-6 h-6 text-red-500 fill-red-600 animate-[flicker_1.8s_ease-in-out_infinite_1s] z-20 drop-shadow-[0_0_15px_rgba(239,68,68,1)]" /><Trophy className="w-12 h-12 text-green-300 fill-green-500 drop-shadow-[0_0_25px_rgba(34,197,94,1)] animate-bounce relative z-10" /></div></div>) : weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-3 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-12 h-12 border-2 border-blue-500/40 border-t-blue-400 rounded-full animate-spin"></div><div className="absolute w-10 h-10 bg-blue-400/50 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-blue-300/20 rounded-full animate-ping"></div><Flame className="absolute -top-4 w-6 h-6 text-blue-400 fill-blue-500 animate-[flicker_2s_ease-in-out_infinite] z-20 drop-shadow-[0_0_10px_rgba(59,130,246,1)]" /><Trophy className="w-10 h-10 text-blue-400 fill-blue-500 drop-shadow-[0_0_20px_rgba(59,130,246,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-40 group-hover:opacity-100 transition-opacity duration-300"><Trophy className="w-20 h-20 text-gray-200 dark:text-gray-800/50 group-hover:text-primary dark:group-hover:text-blue-500 transition-colors" /></div>)}
                                             <div className="relative z-10"><h3 className="font-bold text-gray-500 dark:text-gray-400 text-[10px] md:text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3><div className="flex items-end gap-2 mb-2 md:mb-3"><span className="text-2xl md:text-4xl font-black text-primary dark:text-blue-400">{weeklyGoal}</span><span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span></div><div className="w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-2 md:mb-3">
                                                 <div
-                                                    className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= weeklyTarget
+                                                    className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= 300 ? 'bg-green-400 shadow-[0_0_30px_rgba(34,197,94,1)] animate-pulse' : weeklyGoal >= weeklyTarget
                                                         ? 'bg-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.9)] animate-pulse'
                                                         : 'bg-primary dark:bg-blue-500'
                                                         }`}
                                                     style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}
-                                                ></div></div><p className="text-[10px] md:text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}</p></div>
+                                                ></div></div><p className="text-[10px] md:text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyGoal >= 300 ? "☢️ NUCLEAR WELLNESS ACHIEVED! 🔥" : weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}</p></div>
                                         </div>
                                     ) : <StatSkeleton />}
                                     <MoodTracker onMoodSelect={handleMoodSelect} />
@@ -797,7 +801,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                                 <CollapsibleSection title="Arcade" icon={Gamepad2}>
                                     {/* Arcade Content */}
-                                    <div className="grid grid-cols-2 gap-3 md:gap-4 w-full">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 w-full">
                                         {/* TILE 1: MINDFUL MATCH */}
                                         <div
                                             onClick={() => setShowMatchGame(true)}
@@ -831,6 +835,24 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 </div>
                                                 <h3 className="text-[7px] md:text-sm font-black text-sky-700 dark:text-sky-300 uppercase tracking-[0.2em] mb-1">Cloud Hop</h3>
                                                 <p className="hidden md:block text-[10px] font-bold text-sky-600/60 dark:text-sky-400/50 uppercase tracking-widest">Relax & Soar</p>
+                                            </div>
+                                        </div>
+
+                                        {/* TILE 3: STRESS SLICER */}
+                                        <div
+                                            onClick={() => setShowSlicerGame(true)}
+                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(239,68,68,0.15)] hover:shadow-[0_8px_32px_rgba(239,68,68,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-600/5 pointer-events-none"></div>
+                                            <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                                <div className="relative mb-1 md:mb-4">
+                                                    <div className="absolute -inset-4 bg-red-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                    <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-red-500 to-rose-700 border border-red-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(239,68,68,0.4)] group-hover:scale-110 transition-transform">
+                                                        <Flame className="w-5 h-5 md:w-8 md:h-8 text-white" />
+                                                    </div>
+                                                </div>
+                                                <h3 className="text-[7px] md:text-sm font-black text-red-700 dark:text-red-300 uppercase tracking-[0.2em] mb-1">Stress Slicer</h3>
+                                                <p className="hidden md:block text-[10px] font-bold text-red-600/60 dark:text-red-400/50 uppercase tracking-widest">Cathartic Release</p>
                                             </div>
                                         </div>
                                     </div>
@@ -1156,6 +1178,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             </div>
                             <div className="flex-1 overflow-hidden">
                                 <CloudHopGame dashboardUser={dashboardUser} />
+                            </div>
+                        </div>
+                    </Suspense>
+                )
+            }
+
+            {
+                showSlicerGame && (
+                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Loading Slicer Engine...</div>}>
+                        <div className="fixed inset-0 z-[150] bg-base/90 backdrop-blur-xl flex flex-col">
+                            <div className="bg-red-50 dark:bg-red-950/30 p-4 border-b border-red-100 dark:border-red-900/50 flex justify-between items-center shrink-0">
+                                <div className="flex items-center gap-2">
+                                    <Flame className="w-5 h-5 text-red-500" />
+                                    <h2 className="font-black text-red-900 dark:text-red-300 uppercase tracking-widest text-sm">Stress Slicer</h2>
+                                </div>
+                                <button onClick={() => setShowSlicerGame(false)} className="p-2 hover:bg-red-100 dark:hover:bg-red-900 rounded-full transition-colors group">
+                                    <X className="w-6 h-6 text-red-400 group-hover:text-red-600" />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-hidden">
+                                <StressSlicerGame dashboardUser={dashboardUser} />
                             </div>
                         </div>
                     </Suspense>

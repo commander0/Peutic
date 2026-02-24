@@ -459,7 +459,7 @@ export class UserService {
         if (error) logger.error("Save Feedback Failed", feedback.userId, error);
     }
 
-    static async updateGameScore(userId: string, game: 'match' | 'cloud', score: number) {
+    static async updateGameScore(userId: string, game: 'match' | 'cloud' | 'slicer', score: number) {
         const user = this.getUser();
         if (!user || user.id !== userId) return;
 

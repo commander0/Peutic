@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-    Heart, Pizza, Moon, Sun,
-    Sparkles, Zap, ChevronLeft,
-    Gamepad2, RefreshCw, Cpu, Target, CheckCircle2, Award
-} from 'lucide-react';
+import { Heart, Activity, Bath, Moon, Sun, Target, Shield, Info, Pizza, Gamepad2, Sparkles, RefreshCw, CheckCircle2, ChevronLeft, Award, Zap, LogOut, Cpu } from 'lucide-react';
 import { User, Lumina } from '../../types';
 import { PetService } from '../../services/petService';
 import PetCanvas from './PetCanvas';
@@ -187,8 +183,17 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
         }
     };
 
-    const handleAction = async (action: 'feed' | 'play' | 'clean' | 'sleep') => {
-        if (!pet || (pet.isSleeping && action !== 'sleep')) return;
+    const handleAction = async (action: 'feed' | 'play' | 'clean' | 'sleep' | 'release') => {
+        if (!pet) return;
+
+        if (action === 'release') {
+            if (window.confirm("Are you sure you want to release your Lumina? This will reset your progress to start over with a new pet.")) {
+                await PetService.deletePet(user.id);
+                window.location.reload();
+            }
+            return;
+        }
+
         if (action !== 'sleep' && user.balance < COST) {
             showToast(`INSUFFICIENT_FUNDS: REQ ${COST}m`, "error");
             return;
@@ -196,7 +201,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
 
         if (action !== 'sleep' && !await UserService.deductBalance(COST, `Lumina ${action}`)) return;
 
-        let updated = { ...pet };
+        let updated = { ...pet, lastInteractionAt: new Date().toISOString() };
         let newEmotion: typeof emotion = 'happy';
 
         // Stats Logic
@@ -506,7 +511,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex justify-center gap-4 flex-wrap">
+                <div className="flex justify-center gap-2 md:gap-4 flex-wrap">
                     <CyberBtn icon={Pizza} label="FEED" onClick={() => handleAction('feed')} />
                     <CyberBtn icon={Gamepad2} label="PLAY" onClick={() => setShowGameMenu(true)} />
                     <CyberBtn icon={Sparkles} label="ORACLE" onClick={handleOracleConsult} color="purple" />
@@ -518,6 +523,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                         onClick={() => handleAction('sleep')}
                         color={pet.isSleeping ? "yellow" : "cyan"}
                     />
+                    <CyberBtn icon={LogOut} label="NEW" onClick={() => handleAction('release')} color="purple" />
                 </div>
             </footer>
 
@@ -590,8 +596,8 @@ const CyberBtn: React.FC<{ icon: any, label: string, onClick: () => void, color?
         <button
             onClick={onClick}
             className={`
-                group relative px-6 py-4 border ${colorClass} 
-                clip-path-polygon flex flex-col items-center gap-2
+                group relative px-3 py-2 md:px-6 md:py-4 border ${colorClass} 
+                clip-path-polygon flex flex-col items-center gap-1 md:gap-2
                 transition-all active:scale-95 hover:shadow-[0_0_15px_rgba(34,211,238,0.2)]
             `}
         >

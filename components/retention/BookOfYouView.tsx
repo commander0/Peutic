@@ -196,7 +196,7 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                 <div className="absolute -bottom-2 -right-2 w-full h-full border-r-2 border-b-2 border-amber-950/10 dark:border-stone-300/5 rounded-br-lg pointer-events-none hidden md:block z-0"></div>
 
                 {/* LEFT PAGE */}
-                <div className="w-full md:w-1/2 h-full flex flex-col relative overflow-y-auto custom-scrollbar overflow-x-hidden border-b-2 md:border-b-0 border-amber-900/30 dark:border-stone-800 z-10">
+                <div className="w-full md:w-1/2 h-auto min-h-[80vh] md:min-h-0 md:h-full flex flex-col relative overflow-y-auto custom-scrollbar overflow-x-hidden border-b-2 md:border-b-0 border-amber-900/30 dark:border-stone-800 z-10 print:min-h-0 print:h-auto print:overflow-visible">
                     <div className="absolute inset-2 md:inset-4 lg:inset-6 border-[3px] border-double border-amber-900/20 dark:border-stone-500/10 pointer-events-none rounded-sm"></div>
                     <div key={currentVolume} className="w-full h-full flex flex-col p-6 md:p-12 lg:p-20 absolute inset-0 animate-in slide-in-from-right-8 fade-in duration-700">
                         {/* Page Numbers */}
@@ -273,7 +273,7 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                 </div>
 
                 {/* RIGHT PAGE */}
-                <div className="w-full md:w-1/2 h-full flex flex-col relative overflow-y-auto custom-scrollbar overflow-x-hidden z-10">
+                <div className="w-full md:w-1/2 h-auto min-h-[80vh] md:min-h-0 md:h-full flex flex-col relative overflow-y-auto custom-scrollbar overflow-x-hidden z-10 print:min-h-0 print:h-auto print:overflow-visible print:mt-8">
                     <div className="absolute inset-2 md:inset-4 lg:inset-6 border-[3px] border-double border-amber-900/20 dark:border-stone-500/10 pointer-events-none rounded-sm"></div>
                     <div key={currentVolume + "-right"} className="w-full h-full flex flex-col p-6 md:p-12 lg:p-20 absolute inset-0 animate-in slide-in-from-right-16 fade-in duration-1000">
                         {/* Page Numbers */}

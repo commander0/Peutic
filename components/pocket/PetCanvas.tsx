@@ -177,52 +177,63 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                         <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
                             {/* Solar Flare Halo */}
                             <circle cx="0" cy="0" r="80" fill="url(#coreGlow)" opacity="0.4" className="animate-[pulse_2s_infinite]" />
-                            <path d="M 0 -70 L 10 -30 L 70 0 L 10 30 L 0 70 L -10 30 L -70 0 L -10 -30 Z" fill={c.g} opacity="0.8" className="animate-[spin_4s_linear_infinite]" />
-                            <path d="M 0 -60 L 15 -20 L 60 0 L 15 20 L 0 60 L -15 20 L -60 0 L -15 -20 Z" fill={c.s} opacity="0.9" className="animate-[spin_3s_linear_infinite_reverse]" />
-                            <circle cx="0" cy="0" r="25" fill="#fff" className="drop-shadow-[0_0_30px_#fcd34d]" />
-                            <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={2.0} />
+                            <circle cx="0" cy="0" r="60" fill="none" stroke={c.g} strokeWidth="2" className="animate-[spin_10s_linear_infinite]" strokeDasharray="10 20" />
+                            {/* Majestic Shiba Silhouette */}
+                            <path d="M -30 -20 L -45 -65 L -15 -45 L 0 -50 L 15 -45 L 45 -65 L 30 -20 Q 40 10 0 35 Q -40 10 -30 -20 Z" fill="url(#bodyGrad)" className="drop-shadow-[0_0_25px_#fcd34d]" />
+                            <path d="M -25 -10 L -35 -50 L -10 -25 Z M 25 -10 L 35 -50 L 10 -25 Z" fill={c.s} opacity="0.8" />
+                            <circle cx="0" cy="0" r="20" fill={c.p} opacity="0.5" className="animate-pulse" />
+                            <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.8} />
                         </g>
                     )}
                     {pet.level >= 50 && pet.species?.toLowerCase().includes('dino') && (
                         <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
-                            {/* Crystal Behemoth */}
-                            <polygon points="0,-75 60,35 -60,35" fill="url(#coreGlow)" opacity="0.3" className="animate-pulse" />
-                            <polygon points="0,-60 40,20 -40,20" fill={c.s} opacity="0.6" className="animate-[bounce_3s_infinite]" />
-                            <polygon points="-20,-20 50,-50 20,40" fill={c.g} opacity="0.5" className="animate-[spin_8s_linear_infinite]" />
-                            <polygon points="20,-20 -50,-50 -20,40" fill={c.g} opacity="0.5" className="animate-[spin_8s_linear_infinite_reverse]" />
-                            <path d="M 0 -30 L 35 25 L -35 25 Z" fill="#fff" className="drop-shadow-[0_0_20px_#10b981]" stroke={c.p} strokeWidth="4" />
+                            {/* Crystal Behemoth Halo */}
+                            <polygon points="0,-85 65,35 -65,35" fill="url(#coreGlow)" opacity="0.3" className="animate-pulse" />
+                            {/* Majestic Dino Silhouette */}
+                            <path d="M -30 25 L -30 -20 Q -30 -45 0 -55 Q 30 -45 40 -20 L 40 10 Q 55 10 50 30 L 20 30 Q 0 45 -20 35 Z" fill="url(#bodyGrad)" className="drop-shadow-[0_0_25px_#10b981]" />
+                            <path d="M -20 -10 L -30 10 M 20 -10 L 30 10" stroke={c.s} strokeWidth="4" strokeLinecap="round" opacity="0.5" />
+                            {/* Spikes */}
+                            <polygon points="-12,-52 0,-70 12,-52" fill={c.g} className="animate-pulse" />
+                            <polygon points="15,-48 28,-60 25,-42" fill={c.g} className="animate-pulse" />
+                            <polygon points="-15,-48 -28,-60 -25,-42" fill={c.g} className="animate-pulse" />
+                            <circle cx="0" cy="0" r="18" fill={c.s} opacity="0.4" className="animate-bounce" />
                             <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.8} />
                         </g>
                     )}
                     {pet.level >= 50 && pet.species?.toLowerCase().includes('hamu') && (
                         <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
-                            {/* Heart of the Cosmos */}
-                            <circle cx="0" cy="0" r="90" fill="url(#coreGlow)" opacity="0.2" className="animate-[pulse_3s_infinite]" />
-                            <path d="M 0 -50 C 40 -50 60 -10 0 40 C -60 -10 -40 -50 0 -50 Z" fill="none" stroke={c.s} strokeWidth="4" className="animate-[ping_3s_infinite]" />
-                            <path d="M 0 -40 C 30 -40 45 -10 0 30 C -45 -10 -30 -40 0 -40 Z" fill={c.g} opacity="0.6" className="animate-pulse" />
-                            <g className="animate-[spin_5s_linear_infinite]">
-                                <circle cx="50" cy="0" r="8" fill="#fff" className="drop-shadow-[0_0_10px_#fbcfe8]" />
-                                <circle cx="-50" cy="0" r="8" fill="#fff" className="drop-shadow-[0_0_10px_#fbcfe8]" />
+                            {/* Heart of the Cosmos Halo */}
+                            <circle cx="0" cy="0" r="90" fill="url(#coreGlow)" opacity="0.3" className="animate-[pulse_3s_infinite]" />
+                            <g className="animate-[spin_20s_linear_infinite]">
+                                {[...Array(6)].map((_, i) => (
+                                    <circle key={i} cx={75 * Math.cos(i * Math.PI / 3)} cy={75 * Math.sin(i * Math.PI / 3)} r="4" fill={c.p} opacity="0.8" className="animate-ping" style={{ animationDelay: `${i * 0.5}s` }} />
+                                ))}
                             </g>
-                            <circle cx="0" cy="0" r="22" fill="#fff" className="drop-shadow-[0_0_25px_#ec4899] animate-bounce" />
-                            <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.8} />
+                            {/* Majestic Hamu Silhouette */}
+                            <g className="drop-shadow-[0_0_25px_#ec4899]">
+                                <circle cx="-35" cy="-35" r="18" fill="url(#bodyGrad)" />
+                                <circle cx="35" cy="-35" r="18" fill="url(#bodyGrad)" />
+                                <circle cx="-35" cy="-35" r="10" fill={c.s} />
+                                <circle cx="35" cy="-35" r="10" fill={c.s} />
+                                <path d="M -50 0 C -50 -45 50 -45 50 0 C 55 45 30 50 0 50 C -30 50 -55 45 -50 0 Z" fill="url(#bodyGrad)" />
+                                <ellipse cx="-30" cy="15" rx="12" ry="8" fill={c.g} opacity="0.5" />
+                                <ellipse cx="30" cy="15" rx="12" ry="8" fill={c.g} opacity="0.5" />
+                            </g>
+                            <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={2.2} />
                         </g>
                     )}
                     {pet.level >= 50 && pet.species?.toLowerCase().includes('sloth') && (
                         <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
-                            {/* Nirvana Entity */}
-                            <circle cx="0" cy="0" r="80" fill="url(#coreGlow)" opacity="0.4" className="animate-[pulse_6s_infinite]" />
-                            <g className="animate-[spin_20s_linear_infinite]">
-                                {[...Array(12)].map((_, i) => (
-                                    <circle key={i} cx={55 * Math.cos(i * Math.PI / 6)} cy={55 * Math.sin(i * Math.PI / 6)} r="6" fill={c.g} opacity="0.8" />
-                                ))}
+                            {/* Nirvana Entity Halo */}
+                            <circle cx="0" cy="0" r="85" fill="url(#coreGlow)" opacity="0.4" className="animate-[pulse_5s_infinite]" />
+                            <circle cx="0" cy="0" r="65" fill="none" stroke={c.s} strokeWidth="1" strokeDasharray="5 15" className="animate-[spin_15s_linear_infinite]" />
+                            {/* Majestic Sloth Silhouette */}
+                            <g className="drop-shadow-[0_0_25px_#78716c] animate-float">
+                                <path d="M -50 -5 C -50 -60 50 -60 50 -5 C 50 50 -50 50 -50 -5 Z" fill="url(#bodyGrad)" />
+                                {/* Eye patches */}
+                                <path d="M -40 -15 C -40 -35 -10 -40 -5 -15 C 0 10 -25 20 -40 -15 Z" fill={c.s} opacity="0.7" />
+                                <path d="M 40 -15 C 40 -35 10 -40 5 -15 C 0 10 25 20 40 -15 Z" fill={c.s} opacity="0.7" />
                             </g>
-                            <g className="animate-[spin_15s_linear_infinite_reverse]">
-                                {[...Array(8)].map((_, i) => (
-                                    <circle key={i} cx={35 * Math.cos(i * Math.PI / 4)} cy={35 * Math.sin(i * Math.PI / 4)} r="12" fill={c.s} opacity="0.9" />
-                                ))}
-                            </g>
-                            <ellipse cx="0" cy="0" rx="35" ry="25" fill="#fff" className="drop-shadow-[0_0_30px_#e7e5e4] animate-float" />
                             <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.8} />
                         </g>
                     )}

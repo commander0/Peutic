@@ -64,26 +64,30 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
         platformsRef.current = [{ x: 0, y: H - 30, w: W, h: 30, type: 'ground' }];
         let py = H - 80;
         const cloudGap = isMobile ? 60 : (W > 800 ? 50 : 70); // denser on desktop
-        while (py > -3000) { // go higher too!
+        while (py > -8000) { // go much higher!
+            const typeRand = Math.random();
+            const platformType = typeRand > 0.98 ? 'jetpack' : (typeRand > 0.82 ? 'spring' : (typeRand > 0.65 ? 'moving' : 'cloud'));
+
             platformsRef.current.push({
                 x: Math.random() * (W - basePlatW),
                 y: py,
                 w: basePlatW + Math.random() * (isMobile ? 20 : 30),
                 h: isMobile ? 12 : 15,
-                type: Math.random() > 0.95 ? 'spring' : (Math.random() > 0.8 ? 'moving' : 'cloud'),
+                type: platformType,
                 vx: Math.random() > 0.5 ? 1 : -1,
                 hasStar: Math.random() > 0.8,
                 starCollected: false
             });
 
             // Spawn extra parallel clouds on wide screens for density
-            if (W > 800 && Math.random() > 0.4) {
+            if (W > 800 && Math.random() > 0.3) {
+                const typeRand2 = Math.random();
                 platformsRef.current.push({
                     x: Math.random() * (W - basePlatW),
                     y: py + (Math.random() * 30 - 15),
                     w: basePlatW + Math.random() * 30,
                     h: 15,
-                    type: Math.random() > 0.95 ? 'spring' : (Math.random() > 0.8 ? 'moving' : 'cloud'),
+                    type: typeRand2 > 0.98 ? 'jetpack' : (typeRand2 > 0.82 ? 'spring' : (typeRand2 > 0.65 ? 'moving' : 'cloud')),
                     vx: Math.random() > 0.5 ? 1 : -1,
                     hasStar: Math.random() > 0.8,
                     starCollected: false
@@ -120,13 +124,24 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
         const drawCloud = (x: number, y: number, w: number, h: number, type: string) => {
-            if (type === 'spring') ctx.fillStyle = '#84cc16';
+            if (type === 'spring') ctx.fillStyle = '#4ade80'; // brighter green
             else if (type === 'moving') ctx.fillStyle = '#E0F2FE';
+            else if (type === 'jetpack') ctx.fillStyle = '#f43f5e'; // red rocket boost
             else ctx.fillStyle = 'white';
 
             if (type === 'moving') ctx.shadowColor = '#38BDF8';
-            if (type === 'spring') ctx.shadowColor = '#bef264';
+            if (type === 'spring') ctx.shadowColor = '#22c55e';
+            if (type === 'jetpack') ctx.shadowColor = '#fb7185';
             ctx.fillRect(x, y, w, h);
+
+            // Jetpack visual
+            if (type === 'jetpack') {
+                ctx.fillStyle = '#fbbf24';
+                ctx.beginPath(); ctx.arc(x + w / 2, y - 10, 10, 0, Math.PI * 2); ctx.fill();
+                ctx.shadowColor = 'transparent';
+                return;
+            }
+
             const bumpSize = h * 0.8;
             ctx.beginPath(); ctx.arc(x + 10, y, bumpSize, 0, Math.PI * 2); ctx.fill();
             ctx.beginPath(); ctx.arc(x + w - 10, y, bumpSize, 0, Math.PI * 2); ctx.fill();
@@ -150,7 +165,8 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
                     if (pl.y > H + 50) {
                         pl.y = -20;
                         pl.x = Math.random() * (W - (isMobile ? 50 : 70));
-                        pl.type = Math.random() > 0.95 ? 'spring' : (Math.random() > 0.85 ? 'moving' : 'cloud');
+                        const typeRand = Math.random();
+                        pl.type = typeRand > 0.98 ? 'jetpack' : (typeRand > 0.82 ? 'spring' : (typeRand > 0.65 ? 'moving' : 'cloud'));
                         pl.hasStar = Math.random() > 0.8;
                         pl.starCollected = false;
                     }
@@ -181,15 +197,16 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
             if (p.vy > 0) {
                 platformsRef.current.forEach(pl => {
                     if (p.y + p.height > pl.y && p.y + p.height < pl.y + 40 && p.x + p.width > pl.x && p.x < pl.x + pl.w) {
-                        p.vy = pl.type === 'spring' ? JUMP_FORCE * 1.5 : JUMP_FORCE;
+                        p.vy = pl.type === 'jetpack' ? JUMP_FORCE * 2.5 : (pl.type === 'spring' ? JUMP_FORCE * 1.6 : JUMP_FORCE);
+                        const cColor = pl.type === 'jetpack' ? '#f43f5e' : (pl.type === 'spring' ? '#4ade80' : '#ffffff');
                         // Spawn bounce particles
-                        for (let k = 0; k < 6; k++) {
+                        for (let k = 0; k < (pl.type === 'jetpack' ? 15 : 6); k++) {
                             particlesRef.current.push({
                                 x: p.x + p.width / 2,
                                 y: p.y + p.height,
-                                vx: (Math.random() - 0.5) * 6,
-                                vy: Math.random() * -3,
-                                life: 1, color: '#ffffff'
+                                vx: (Math.random() - 0.5) * 8,
+                                vy: Math.random() * (pl.type === 'jetpack' ? -8 : -3),
+                                life: 1, color: cColor
                             });
                         }
                     }
@@ -237,6 +254,43 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
                     ctx.shadowBlur = 0;
                 }
             });
+            const drawPlayer = () => {
+                ctx.save();
+                ctx.translate(p.x + p.width / 2, p.y + p.height / 2);
+
+                // Tilt based on velocity
+                ctx.rotate(p.vx * 0.1);
+
+                // Draw rounded square avatar or circle
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowColor = '#a5f3fc';
+                ctx.shadowBlur = 15;
+                ctx.beginPath();
+                ctx.roundRect(-p.width / 2, -p.height / 2, p.width, p.height, p.width * 0.4);
+                ctx.fill();
+
+                // Cute face
+                ctx.fillStyle = '#0891b2';
+                ctx.shadowBlur = 0;
+                // Eyes
+                ctx.beginPath(); ctx.arc(-6, -4, 3, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(6, -4, 3, 0, Math.PI * 2); ctx.fill();
+                // Mouth depending on velocity
+                ctx.beginPath();
+                if (p.vy < -8) { // Surprised when rocketing
+                    ctx.arc(0, 4, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (p.vy < 0) { // Happy jump
+                    ctx.arc(0, 2, 4, 0, Math.PI);
+                    ctx.stroke();
+                } else { // Neutral falling
+                    ctx.moveTo(-3, 4); ctx.lineTo(3, 4);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            };
+            drawPlayer();
             ctx.shadowBlur = 0;
 
             // Draw particles
@@ -254,27 +308,6 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
                     ctx.fill();
                 }
             }
-
-            ctx.fillStyle = '#fde047';
-            ctx.beginPath();
-            ctx.arc(p.x + p.width / 2, p.y + p.height / 2, p.width / 2, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#000';
-            ctx.beginPath();
-            ctx.arc(p.x + p.width / 2 - 5, p.y + p.height / 2 - 2, 2, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(p.x + p.width / 2 + 5, p.y + p.height / 2 - 2, 2, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(p.x + p.width / 2, p.y + p.height / 2, 8, 0.2, Math.PI - 0.2, false);
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = '#000';
-            ctx.stroke();
-            ctx.lineWidth = 1;
 
             requestRef.current = requestAnimationFrame(update);
         };
@@ -294,9 +327,22 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
     };
     const handleRelease = () => { playerRef.current.vx = 0; };
 
+    // DYNAMIC BACKGROUND HSL CYCLING based on score
+    // Base hue is sky blue (around 200), shift by score
+    const hue = (200 + score / 50) % 360;
+    // Lightness decreases as score goes up, creating sunset -> night -> space
+    // Oscillation equation: 50 + 40 * cos(score / 2000)
+    const lightness = 10 + 40 * (1 + Math.cos(score / 500));
+    const saturation = 60 + 20 * Math.sin(score / 1000); // 60-80%
+
+    const bgGradient = `linear-gradient(to bottom, hsl(${hue}, ${saturation}%, ${Math.max(5, lightness - 10)}%), hsl(${hue}, ${saturation}%, ${Math.max(10, lightness + 20)}%))`;
+
     return (
-        <div className="relative h-full w-full bg-sky-300 overflow-hidden rounded-2xl border-4 border-white dark:border-gray-700 shadow-inner cursor-pointer"
-            onMouseDown={handleTap} onMouseUp={handleRelease} onTouchStart={handleTap} onTouchEnd={handleRelease}>
+        <div
+            className="w-full h-full min-h-[500px] flex flex-col items-center rounded-3xl overflow-hidden relative shadow-[0_0_30px_rgba(56,189,248,0.2)] transition-colors duration-1000"
+            style={{ background: bgGradient }}
+            onMouseDown={handleTap} onMouseUp={handleRelease} onTouchStart={handleTap} onTouchEnd={handleRelease}
+        >
             <div className="absolute top-2 right-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full font-black text-white text-base md:text-lg z-10">{score}m</div>
             {highScore > 0 && <div className="absolute top-2 left-2 bg-yellow-400/20 backdrop-blur-sm px-3 py-1 rounded-full font-black text-white text-xs md:text-sm z-10 border border-yellow-400/50">Best: {highScore}</div>}
             <canvas ref={canvasRef} className="w-full h-full block" />

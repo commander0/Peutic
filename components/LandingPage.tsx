@@ -29,7 +29,7 @@ const AvatarImage: React.FC<{ src: string; alt: string; className?: string }> = 
         return <img src={STABLE_AVATAR_POOL[index]} alt={alt} className={className} loading="lazy" />;
     }
 
-    return <img src={imgSrc} alt={alt} className={className} onError={() => setHasError(true)} loading="lazy" />;
+    return <img src={imgSrc} alt={alt} className={`${className} ${imgSrc?.includes('dicebear') ? 'bg-yellow-200 dark:bg-yellow-900/50' : ''}`} onError={() => setHasError(true)} loading="lazy" />;
 };
 
 interface LandingPageProps {
