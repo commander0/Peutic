@@ -11,7 +11,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { Clock, Home, LayoutDashboard, Brain, BookOpen, User as UserIcon, Settings, Calendar, Menu, Plus, Lock, Sun, Moon, Sparkles, Star, MessageCircle, Mic, Award, PenTool, Image as ImageIcon, Flame, CheckCircle2, Trophy, ArrowRight, TrendingUp, Music, TreePine, Anchor, Wind, Battery, Heart, ShieldCheck, Leaf, CloudRain, LogOut, LifeBuoy, ChevronUp, ChevronDown, Megaphone, Zap, Scissors, Gamepad2, Cloud, Feather, AlertTriangle, Video, Eye, EyeOff, Edit2, Mail, RefreshCw, Save, Twitter, Instagram, Linkedin, X } from 'lucide-react';
 import { NotificationBell } from './common/NotificationBell';
 import { UserService } from '../services/userService';
-import PetCanvas from './pocket/PetCanvas';
+// import PetCanvas from './pocket/PetCanvas';
 import { useToast } from './common/Toast';
 import { CompanionSkeleton, StatSkeleton } from './common/SkeletonLoader';
 import { InspirationQuote } from './common/InspirationQuote';
@@ -691,13 +691,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                         <div className="relative mb-1 md:mb-4">
                                                             <div className="absolute -inset-4 bg-cyan-500/20 blur-xl rounded-full animate-pulse"></div>
                                                             <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-cyan-500 to-blue-700 border border-cyan-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform overflow-hidden">
-                                                                {lumina ? (
-                                                                    <div className="w-[120%] h-[120%] flex items-center justify-center">
-                                                                        <PetCanvas pet={lumina} width={60} height={60} emotion="happy" />
-                                                                    </div>
-                                                                ) : (
-                                                                    <Sparkles className="w-5 h-5 md:w-10 md:h-10 text-white animate-bounce" />
-                                                                )}
+                                                                <Sparkles className="w-5 h-5 md:w-10 md:h-10 text-white animate-bounce" />
                                                             </div>
                                                         </div>
                                                         <h3 className="text-[7px] md:text-sm font-black text-cyan-700 dark:text-cyan-50 uppercase tracking-[0.2em] mb-1">Lumina</h3>
@@ -785,7 +779,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                                     {dashboardUser ? (
                                         <div className="bg-transparent dark:bg-transparent p-4 md:p-5 rounded-3xl border border-transparent shadow-none col-span-1 md:col-span-2 relative overflow-hidden group min-h-[120px] md:min-h-[140px]">
-                                            {weeklyGoal >= 300 ? (<div className="absolute top-0 right-0 p-3 z-20"><div className="relative flex items-center justify-center -translate-y-2"><div className="absolute w-16 h-16 border-4 border-green-500/40 border-t-green-400 rounded-full animate-spin"></div><div className="absolute w-12 h-12 bg-green-400/50 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-green-300/20 rounded-full animate-ping"></div><Flame className="absolute -top-7 -left-3 w-6 h-6 text-red-500 fill-red-600 animate-[flicker_1.5s_ease-in-out_infinite] z-20 drop-shadow-[0_0_15px_rgba(239,68,68,1)]" /><Flame className="absolute -top-9 w-8 h-8 text-red-400 fill-red-500 animate-[flicker_2s_ease-in-out_infinite_0.5s] z-20 drop-shadow-[0_0_15px_rgba(239,68,68,1)]" /><Flame className="absolute -top-7 -right-3 w-6 h-6 text-red-500 fill-red-600 animate-[flicker_1.8s_ease-in-out_infinite_1s] z-20 drop-shadow-[0_0_15px_rgba(239,68,68,1)]" /><Trophy className="w-12 h-12 text-green-300 fill-green-500 drop-shadow-[0_0_25px_rgba(34,197,94,1)] animate-bounce relative z-10" /></div></div>) : weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-3 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-12 h-12 border-2 border-blue-500/40 border-t-blue-400 rounded-full animate-spin"></div><div className="absolute w-10 h-10 bg-blue-400/50 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-blue-300/20 rounded-full animate-ping"></div><Flame className="absolute -top-4 w-6 h-6 text-blue-400 fill-blue-500 animate-[flicker_2s_ease-in-out_infinite] z-20 drop-shadow-[0_0_10px_rgba(59,130,246,1)]" /><Trophy className="w-10 h-10 text-blue-400 fill-blue-500 drop-shadow-[0_0_20px_rgba(59,130,246,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-40 group-hover:opacity-100 transition-opacity duration-300"><Trophy className="w-20 h-20 text-gray-200 dark:text-gray-800/50 group-hover:text-primary dark:group-hover:text-blue-500 transition-colors" /></div>)}
+                                            {weeklyGoal >= 300 ? (<div className="absolute top-0 right-0 p-3 z-20"><div className="relative flex items-center justify-center mt-2"><div className="absolute w-16 h-16 border-4 border-green-500/40 border-t-green-400 rounded-full animate-spin"></div><div className="absolute w-12 h-12 bg-green-400/50 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-green-300/20 rounded-full animate-ping"></div><Flame className="absolute -top-3 -left-1 w-5 h-5 text-red-500 fill-red-600 animate-[flicker_1.5s_ease-in-out_infinite] z-20 drop-shadow-[0_0_15px_rgba(239,68,68,1)]" /><Flame className="absolute -top-4 w-7 h-7 text-red-400 fill-red-500 animate-[flicker_2s_ease-in-out_infinite_0.5s] z-20 drop-shadow-[0_0_15px_rgba(239,68,68,1)]" /><Flame className="absolute -top-3 -right-1 w-5 h-5 text-red-500 fill-red-600 animate-[flicker_1.8s_ease-in-out_infinite_1s] z-20 drop-shadow-[0_0_15px_rgba(239,68,68,1)]" /><Trophy className="w-12 h-12 text-green-300 fill-green-500 drop-shadow-[0_0_25px_rgba(34,197,94,1)] animate-bounce relative z-10" /></div></div>) : weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-3 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-12 h-12 border-2 border-blue-500/40 border-t-blue-400 rounded-full animate-spin"></div><div className="absolute w-10 h-10 bg-blue-400/50 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-blue-300/20 rounded-full animate-ping"></div><Flame className="absolute -top-4 w-6 h-6 text-blue-400 fill-blue-500 animate-[flicker_2s_ease-in-out_infinite] z-20 drop-shadow-[0_0_10px_rgba(59,130,246,1)]" /><Trophy className="w-10 h-10 text-blue-400 fill-blue-500 drop-shadow-[0_0_20px_rgba(59,130,246,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-40 group-hover:opacity-100 transition-opacity duration-300"><Trophy className="w-20 h-20 text-gray-200 dark:text-gray-800/50 group-hover:text-primary dark:group-hover:text-blue-500 transition-colors" /></div>)}
                                             <div className="relative z-10"><h3 className="font-bold text-gray-500 dark:text-gray-400 text-[10px] md:text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3><div className="flex items-end gap-2 mb-2 md:mb-3"><span className="text-2xl md:text-4xl font-black text-primary dark:text-blue-400">{weeklyGoal}</span><span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span></div><div className="w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-2 md:mb-3">
                                                 <div
                                                     className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= 300 ? 'bg-green-400 shadow-[0_0_30px_rgba(34,197,94,1)] animate-pulse' : weeklyGoal >= weeklyTarget
@@ -801,7 +795,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                                 <CollapsibleSection title="Arcade" icon={Gamepad2}>
                                     {/* Arcade Content */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 w-full">
+                                    <div className="grid grid-cols-3 gap-1 md:gap-4 w-full">
                                         {/* TILE 1: MINDFUL MATCH */}
                                         <div
                                             onClick={() => setShowMatchGame(true)}
@@ -1287,8 +1281,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     <Suspense fallback={null}>
                         <ThoughtShredder onClose={() => setShowShredder(false)} />
                     </Suspense>
-                )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 

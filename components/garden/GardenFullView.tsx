@@ -89,9 +89,14 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
 
         // Perform Service Action
         if (type === 'water') {
-            // Watering is now a free, loving interaction (Growth happens automatically from app focus time)
-            await GardenService.waterPlant(garden.userId, intensity); // Just updates timestamp & visual state
-            showToast(`You watered your sanctuary.`, "success");
+            const hasEnough = await UserService.deductBalance(intensity, "Watering Garden");
+            if (!hasEnough) {
+                showToast(`Not enough focus minutes to water (-${intensity}m required).`, "error");
+                setInteraction(null);
+                return;
+            }
+            await GardenService.waterPlant(garden.userId, intensity);
+            showToast(`You watered your sanctuary (-${intensity}m).`, "success");
         } else if (type === 'harvest') {
             const isMighty = stage === 6; // Stage 6 is Ethereal Entity (12+ minutes)
             const result = await GardenService.clipPlant(garden.userId);

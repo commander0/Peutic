@@ -37,10 +37,12 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS garden_state JSONB;
 
 -- 4. Enable RLS on pocket_pets
 ALTER TABLE pocket_pets ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can manage their own pets" ON pocket_pets;
 CREATE POLICY "Users can manage their own pets" ON pocket_pets
     FOR ALL USING (auth.uid() = user_id);
 
 -- 5. Enable RLS on voice_journal
 ALTER TABLE voice_journal ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can manage their own voice journals" ON voice_journal;
 CREATE POLICY "Users can manage their own voice journals" ON voice_journal
     FOR ALL USING (auth.uid() = user_id);
