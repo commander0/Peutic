@@ -162,11 +162,15 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
     const isSunny = moodRatio.sun >= moodRatio.rain;
 
     return (
-        <div className="fixed inset-0 z-[120] bg-zinc-950 dark:bg-black text-amber-950 dark:text-stone-200 overflow-y-auto overflow-x-hidden flex items-center justify-center animate-in zoom-in-95 duration-1000 p-2 md:p-8 lg:p-12 font-serif bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] dark:bg-[url('https://www.transparenttextures.com/patterns/dark-wood.png')] bg-blend-multiply shadow-[inset_0_0_150px_rgba(0,0,0,0.9)] print:static print:h-auto print:w-full print:bg-white print:text-black print:overflow-visible print:block print:p-0 print:shadow-none print:bg-none">
+        <div className="book-of-you-wrapper fixed inset-0 z-[120] bg-zinc-950 dark:bg-black text-amber-950 dark:text-stone-200 overflow-y-auto overflow-x-hidden flex items-center justify-center animate-in zoom-in-95 duration-1000 p-2 md:p-8 lg:p-12 font-serif bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] dark:bg-[url('https://www.transparenttextures.com/patterns/dark-wood.png')] bg-blend-multiply shadow-[inset_0_0_150px_rgba(0,0,0,0.9)] print:static print:h-auto print:w-full print:bg-white print:text-black print:overflow-visible print:block print:p-0 print:shadow-none print:bg-none">
             <style type="text/css">{`
                 @media print {
                     @page { size: landscape; margin: 0; }
                     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    body * { visibility: hidden; }
+                    .book-of-you-wrapper, .book-of-you-wrapper * { visibility: visible; }
+                    .book-of-you-wrapper { position: absolute; left: 0; top: 0; width: 100%; min-height: 100vh; background: white; z-index: 9999; }
+                    .book-of-you-wrapper::before, .book-of-you-wrapper::after { display: none !important; }
                 }
             `}</style>
             {/* FLOATING ACTION BAR */}

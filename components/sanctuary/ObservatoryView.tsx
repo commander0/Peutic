@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Sparkles, Eye } from 'lucide-react';
+import { X, Sparkles } from 'lucide-react';
 import { User } from '../../types';
 import { useToast } from '../common/Toast';
 import { UserService } from '../../services/userService';
@@ -14,6 +14,11 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
     const [oracleMessage, setOracleMessage] = useState<string | null>(null);
     const [isReading, setIsReading] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+
+    // Sigil & Constellation State
+    const [path, setPath] = useState<{ x: number, y: number }[]>([]);
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [stars, setStars] = useState<{ x: number, y: number }[]>([]);
 
     // Audio Refs for Sound Synthesis
     const audioCtxRef = useRef<AudioContext | null>(null);
@@ -104,6 +109,7 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
 
                 setOracleMessage(msg);
                 setIsReading(false);
+                setStars(Array.from({ length: 12 }).map(() => ({ x: 10 + Math.random() * 80, y: 10 + Math.random() * 80 })));
                 playMysticSound('reveal');
 
                 // Grant Lumina XP directly through the service to propagate up to Dashboard
@@ -121,8 +127,47 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
 
     return (
         <div className="fixed inset-0 z-[120] bg-black text-indigo-50 flex flex-col animate-in fade-in duration-1000 overflow-hidden font-serif selection:bg-purple-500 selection:text-white">
+            <style type="text/css">{`
+                @keyframes drawLine {
+                    to { stroke-dashoffset: 0; }
+                }
+            `}</style>
+
             {/* 1. CINEMATIC BACKGROUND */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#1e1b4b_0%,_#000000_80%)]"></div>
+
+            {/* CONSTELLATION REVEAL */}
+            {oracleMessage && !isReading && (
+                <div className="absolute inset-0 z-0 pointer-events-none mix-blend-screen">
+                    {/* Darken the background slightly to pop the stars */}
+                    <div className="absolute inset-0 bg-black/40 animate-in fade-in duration-[3000ms]"></div>
+                    <svg className="absolute inset-0 w-full h-full opacity-80 animate-in fade-in duration-[4000ms]">
+                        <defs>
+                            <filter id="starGlow"><feGaussianBlur stdDeviation="2" result="coloredBlur" /><feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+                        </defs>
+                        {stars.map((start, i) => {
+                            const next = stars[(i + 1) % stars.length];
+                            const dist = Math.hypot(next.x - start.x, next.y - start.y);
+                            if (dist > 50) return null; // Only connect close stars
+                            return (
+                                <line key={`line-${i}`} x1={`${start.x}%`} y1={`${start.y}%`} x2={`${next.x}%`} y2={`${next.y}%`} stroke="#eab308" strokeWidth="0.5" strokeOpacity="0.5" strokeDasharray="1000" style={{ strokeDashoffset: 1000, animation: 'drawLine 4s forwards ease-in-out 1s' }} />
+                            );
+                        })}
+                        {stars.map((start, i) => {
+                            // Connect some internal nodes to make it look like a constellation
+                            const next = stars[(i + 3) % stars.length];
+                            const dist = Math.hypot(next.x - start.x, next.y - start.y);
+                            if (dist > 40) return null;
+                            return (
+                                <line key={`line2-${i}`} x1={`${start.x}%`} y1={`${start.y}%`} x2={`${next.x}%`} y2={`${next.y}%`} stroke="#eab308" strokeWidth="0.3" strokeOpacity="0.3" strokeDasharray="1000" style={{ strokeDashoffset: 1000, animation: 'drawLine 4s forwards ease-in-out 2s' }} />
+                            );
+                        })}
+                        {stars.map((s, i) => (
+                            <circle key={`star-${i}`} cx={`${s.x}%`} cy={`${s.y}%`} r={Math.random() * 2 + 1.5} fill="#ffffff" filter="url(#starGlow)" className="animate-pulse-slow" style={{ animationDelay: `${Math.random() * 2}s` }} />
+                        ))}
+                    </svg>
+                </div>
+            )}
 
             {/* Sacred Geometry Mandala Background */}
             <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none overflow-hidden">
@@ -177,8 +222,39 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                         <div className="absolute top-0 left-0 w-1/2 h-1/2 bg-indigo-500/10 rounded-full blur-[4px]"></div>
                     </div>
 
-                    {/* B. THE CRYSTAL BALL (High Fidelity) */}
-                    <div className={`relative group w-72 h-72 md:w-96 md:h-96 rounded-full transition-all duration-[2000ms] ${isReading ? 'scale-110 drop-shadow-[0_0_50px_rgba(79,70,229,0.5)]' : 'hover:scale-105'} z-20`}>
+                    {/* B. THE CRYSTAL BALL (High Fidelity & Interactive) */}
+                    <div
+                        className={`relative group w-72 h-72 md:w-96 md:h-96 rounded-full transition-all duration-[2000ms] ${isReading ? 'scale-110 drop-shadow-[0_0_50px_rgba(79,70,229,0.5)]' : 'hover:scale-105 cursor-crosshair'} z-20 touch-none`}
+                        onPointerDown={(e) => {
+                            if (isProcessing || isReading || oracleMessage) return;
+                            e.currentTarget.setPointerCapture(e.pointerId);
+                            setIsDrawing(true);
+                            setPath([]);
+                        }}
+                        onPointerMove={(e) => {
+                            if (!isDrawing || isProcessing || isReading || oracleMessage) return;
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const pt = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+                            setPath(prev => {
+                                const newPath = [...prev, pt];
+                                if (newPath.length > 40) {
+                                    setIsDrawing(false);
+                                    divineInsight();
+                                    return [];
+                                }
+                                return newPath;
+                            });
+                        }}
+                        onPointerUp={(e) => {
+                            setIsDrawing(false);
+                            e.currentTarget.releasePointerCapture(e.pointerId);
+                            setPath([]);
+                        }}
+                        onPointerLeave={() => {
+                            setIsDrawing(false);
+                            setPath([]);
+                        }}
+                    >
 
                         {/* B1. Outer Glow (Aura) */}
                         <div className={`absolute -inset-10 bg-indigo-600/20 rounded-full blur-3xl transition-opacity duration-1000 ${isReading ? 'opacity-100 animate-pulse-fast' : 'opacity-30'}`}></div>
@@ -216,6 +292,25 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                                     <span className="mt-4 text-[10px] uppercase tracking-[0.3em] text-indigo-200/60 animate-pulse">Divining...</span>
                                 </div>
                             )}
+
+                            {/* B6.1. Sigil Drawing Overlay */}
+                            {!isReading && !oracleMessage && path.length > 0 && (
+                                <svg className="absolute inset-0 w-full h-full z-40 pointer-events-none">
+                                    <defs>
+                                        <filter id="sigilGlow"><feGaussianBlur stdDeviation="3" result="coloredBlur" /><feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+                                    </defs>
+                                    <polyline
+                                        points={path.map(p => `${p.x},${p.y}`).join(' ')}
+                                        fill="none"
+                                        stroke="#a855f7"
+                                        strokeWidth="4"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        filter="url(#sigilGlow)"
+                                        className="opacity-80 mix-blend-screen"
+                                    />
+                                </svg>
+                            )}
                         </div>
 
                         {/* B7. Surface Reflections (Gloss) */}
@@ -228,19 +323,12 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                     </div>
 
                     {/* D. INTERACTION BUTTON */}
-                    <div className="mt-16 relative z-40 transition-all duration-500">
+                    <div className="mt-16 relative z-40 transition-all duration-500 text-center">
                         {!isReading && !oracleMessage && (
-                            <button
-                                onClick={divineInsight}
-                                disabled={isProcessing}
-                                className={`group relative px-10 py-5 bg-black/40 backdrop-blur-md overflow-hidden transition-all shadow-[0_0_30px_rgba(79,70,229,0.3)] hover:shadow-[0_0_60px_rgba(139,92,246,0.6)] hover:scale-105 rounded-full border border-indigo-500/40 hover:border-fuchsia-400 ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/50 via-purple-600/30 to-indigo-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.8)_100%)] pointer-events-none"></div>
-                                <span className="relative flex items-center justify-center gap-3 font-black text-sm uppercase tracking-[0.4em] text-indigo-100 group-hover:text-white transition-colors drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
-                                    <Eye className="w-5 h-5 text-indigo-300 group-hover:text-fuchsia-300 animate-pulse" /> {isProcessing ? 'Channeling...' : 'Consult Fate'} <span className="opacity-50 font-mono tracking-tight">(-1m)</span>
-                                </span>
-                            </button>
+                            <div className="flex flex-col items-center gap-3">
+                                <span className="font-serif italic text-indigo-300 text-lg tracking-wide drop-shadow-md">Draw a sigil upon the orb to cast your fate.</span>
+                                <span className="text-[10px] font-mono tracking-widest uppercase text-indigo-500/80">Cost: 1 Minute</span>
+                            </div>
                         )}
 
                         {oracleMessage && !isReading && (

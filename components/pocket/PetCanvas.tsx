@@ -1,15 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Lumina } from '../../types';
 
 interface PetCanvasProps {
     pet: Lumina;
     width?: number;
     height?: number;
-    emotion?: 'idle' | 'happy' | 'hungry' | 'sleeping' | 'sad' | 'eating';
+    emotion?: 'idle' | 'happy' | 'hungry' | 'sleeping' | 'sad' | 'eating' | 'energized' | 'thinker' | 'sleepy';
     trick?: 'spin' | 'magic' | null;
 }
 
 const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, emotion = 'idle', trick = null }) => {
+
+    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        setMousePos({ x, y });
+    };
+
+    const handleMouseLeave = () => {
+        setMousePos({ x: 0, y: 0 });
+    };
 
     const getSpeciesColor = (species: string, level: number) => {
         const isApex = level >= 10;
@@ -27,12 +40,17 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
     const c = getSpeciesColor(pet.species, pet.level);
 
     // Bouncy animation based on emotion
-    const bounceClass = emotion === 'sleeping' ? 'animate-pulse-slow' : 'animate-[bounce_2s_infinite]';
+    const bounceClass = (emotion === 'sleeping' || emotion === 'sleepy') ? 'animate-pulse-slow' : emotion === 'energized' ? 'animate-[bounce_0.5s_infinite]' : 'animate-[bounce_2s_infinite]';
     const trickClass = trick === 'spin' ? 'animate-[spin_1s_ease-in-out]' : trick === 'magic' ? 'animate-[ping_0.5s_ease-in-out_infinite] brightness-150' : '';
     const sadClass = emotion === 'sad' ? 'grayscale opacity-80 scale-95' : '';
 
     return (
-        <div style={{ width, height, perspective: '1000px' }} className="relative flex items-center justify-center">
+        <div
+            style={{ width, height, perspective: '1000px' }}
+            className="relative flex items-center justify-center cursor-crosshair overflow-hidden"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+        >
 
             {/* High Fidelity Holographic Base */}
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.15)_0%,transparent_60%)] rounded-full pointer-events-none" />
@@ -116,7 +134,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                                 <circle cx="0" cy="8" r="3" fill={c.g} />
                                             </g>
                                         )}
-                                        <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} />
+                                        <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} mousePos={mousePos} />
                                     </g>
                                 )}
 
@@ -153,7 +171,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                                 <path d="M -20 0 Q 0 -15 20 0" fill="none" stroke={c.g} strokeWidth="3" opacity="0.5" />
                                             </g>
                                         )}
-                                        <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.2} />
+                                        <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.2} mousePos={mousePos} />
                                     </g>
                                 )}
 
@@ -192,7 +210,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                                 <path d="M -25 -5 Q 0 -25 25 -5" fill="none" stroke={c.g} strokeWidth="5" strokeLinecap="round" opacity="0.7" />
                                             </g>
                                         )}
-                                        <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.4} />
+                                        <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.4} mousePos={mousePos} />
                                     </g>
                                 )}
 
@@ -237,7 +255,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                                 </g>
                                             </g>
                                         )}
-                                        <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.5} />
+                                        <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={1.5} mousePos={mousePos} />
                                     </g>
                                 )}
 
@@ -287,7 +305,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                                 <path d="M -50 20 Q -90 50 -100 20 Q -110 -10 -70 5 Z M 50 20 Q 90 50 100 20 Q 110 -10 70 5 Z" fill={c.s} opacity="0.6" className="animate-[sway_5s_ease-in-out_infinite]" />
                                             </g>
                                         )}
-                                        <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={isHamu ? 2.5 : 2.0} />
+                                        <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={isHamu ? 2.5 : 2.0} mousePos={mousePos} />
                                     </g>
                                 )}
                             </>
@@ -311,19 +329,36 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                     </>
                 )}
                 {/* Sleep Zzz */}
-                {(pet.isSleeping || emotion === 'sleeping') && (
+                {(pet.isSleeping || emotion === 'sleeping' || emotion === 'sleepy') && (
                     <>
                         <div className="absolute top-[10%] right-[20%] text-cyan-400 animate-pulse text-2xl font-black font-mono drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]">Z</div>
                         <div className="absolute top-[20%] right-[10%] text-cyan-500 animate-[pulse_2s_infinite] text-xl font-bold font-mono drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]">z</div>
                     </>
                 )}
             </div>
+
+            {/* Glowing Interactive Toy (Orb) */}
+            {(mousePos.x !== 0 || mousePos.y !== 0) && (
+                <div
+                    className="absolute w-6 h-6 bg-yellow-200 rounded-full blur-[2px] pointer-events-none transition-transform duration-75 ease-out shadow-[0_0_20px_rgba(253,224,71,1)] z-50 animate-pulse"
+                    style={{
+                        left: `calc(50% + ${mousePos.x * width}px)`,
+                        top: `calc(50% + ${mousePos.y * height}px)`,
+                        transform: 'translate(-50%, -50%)'
+                    }}
+                />
+            )}
         </div>
     );
 };
 
 // Subcomponent for the Face (Upgraded to Digital LED style)
-const Face = ({ emotion, isSleeping, scale = 1 }: { emotion: string, isSleeping?: boolean, scale?: number }) => {
+const Face = ({ emotion, isSleeping, scale = 1, mousePos = { x: 0, y: 0 } }: { emotion: string, isSleeping?: boolean, scale?: number, mousePos?: { x: number, y: number } }) => {
+
+    // Calculate eye tracking offset
+    const eyeOffsetX = isSleeping ? 0 : mousePos.x * 12;
+    const eyeOffsetY = isSleeping ? 0 : mousePos.y * 12;
+
     return (
         <g style={{ transform: `scale(${scale})` }}>
             {isSleeping ? (
@@ -333,19 +368,25 @@ const Face = ({ emotion, isSleeping, scale = 1 }: { emotion: string, isSleeping?
                 </>
             ) : (
                 <>
-                    {/* Digital Eyes */}
-                    <rect x="-14" y="-8" width="10" height="6" rx="2" fill="#0f172a" className={emotion === 'happy' ? '' : 'animate-[pulse_3s_infinite]'} />
-                    <rect x="4" y="-8" width="10" height="6" rx="2" fill="#0f172a" className={emotion === 'happy' ? '' : 'animate-[pulse_3s_infinite]'} />
+                    <g style={{ transform: `translate(${eyeOffsetX}px, ${eyeOffsetY}px)`, transition: 'transform 0.1s ease-out' }}>
+                        {/* Digital Eyes */}
+                        <rect x="-14" y="-8" width="10" height="6" rx="2" fill="#0f172a" className={emotion === 'happy' ? '' : 'animate-[pulse_3s_infinite]'} />
+                        <rect x="4" y="-8" width="10" height="6" rx="2" fill="#0f172a" className={emotion === 'happy' ? '' : 'animate-[pulse_3s_infinite]'} />
 
-                    {/* Eye Highlights */}
-                    <rect x="-12" y="-6" width="3" height="2" fill="#38bdf8" />
-                    <rect x="6" y="-6" width="3" height="2" fill="#38bdf8" />
+                        {/* Eye Highlights */}
+                        <rect x="-12" y="-6" width="3" height="2" fill="#38bdf8" />
+                        <rect x="6" y="-6" width="3" height="2" fill="#38bdf8" />
+                    </g>
 
                     {/* Mouth */}
                     {emotion === 'happy' && <path d="M -8 4 Q 0 12 8 4" fill="none" stroke="#0f172a" strokeWidth="3" strokeLinecap="round" />}
-                    {emotion === 'eating' && <ellipse cx="0" cy="6" rx="4" ry="6" fill="#0f172a" className="animate-pulse" />}
+                    {(emotion === 'eating' || emotion === 'energized') && <ellipse cx="0" cy="6" rx="4" ry="6" fill="#0f172a" className="animate-pulse" />}
                     {emotion === 'sad' && <path d="M -8 10 Q 0 4 8 10" fill="none" stroke="#0f172a" strokeWidth="3" strokeLinecap="round" />}
                     {['idle', 'hungry'].includes(emotion) && <line x1="-4" y1="5" x2="4" y2="5" stroke="#0f172a" strokeWidth="3" strokeLinecap="round" />}
+
+                    {/* Thinker specifics */}
+                    {emotion === 'thinker' && <path d="M -4 5 Q 0 7 4 5" fill="none" stroke="#0f172a" strokeWidth="3" strokeLinecap="round" />}
+                    {emotion === 'thinker' && <circle cx="10" cy="-14" r="3" fill="#facc15" className="animate-pulse" />}
                 </>
             )}
         </g>

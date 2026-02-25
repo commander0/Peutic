@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, RefreshCw, Download, BookOpen, User as UserIcon, Palette, Trophy, AlertCircle, Loader2, Watch, Smartphone, HeartPulse } from 'lucide-react';
+import { X, RefreshCw, Download, BookOpen, User as UserIcon, Palette, Trophy, AlertCircle, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { User } from '../types';
 import { UserService } from '../services/userService';
@@ -107,7 +107,6 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
                     {[
                         { id: 'identity', label: 'Identity', icon: UserIcon },
                         { id: 'sanctuary', label: 'Sanctuary', icon: Palette },
-                        { id: 'devices', label: 'Devices', icon: Watch },
                         { id: 'journey', label: 'Journey', icon: Trophy }
                     ].map(tab => (
                         <button
@@ -265,61 +264,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
                         </div>
                     )}
 
-                    {activeTab === 'devices' && (
-                        <div className="animate-in slide-in-from-right-4 fade-in duration-300 max-w-sm mx-auto">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                                <Watch className="w-5 h-5 text-blue-500" /> Biometric Integration
-                            </h3>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-6">
-                                Connect your wearables to unlock predictive AI insights and automatic emotion logging based on your heart rate variability (HRV) and sleep stages.
-                            </p>
 
-                            <div className="space-y-4">
-                                <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 p-4 rounded-xl flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-white shadow-sm rounded-xl flex items-center justify-center border border-gray-100">
-                                            <HeartPulse className="w-6 h-6 text-rose-500" />
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold text-sm dark:text-white">Apple Health</h4>
-                                            <p className="text-[10px] text-gray-500">Syncs mood & activity.</p>
-                                        </div>
-                                    </div>
-                                    <button className="px-3 py-1.5 bg-black dark:bg-white text-white dark:text-black font-bold text-xs rounded-lg transition-transform hover:scale-105">
-                                        Connect
-                                    </button>
-                                </div>
-
-                                <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 p-4 rounded-xl flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-black shadow-sm rounded-xl flex items-center justify-center border border-gray-800">
-                                            <div className="w-5 h-5 border-2 border-white rounded-full"></div>
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold text-sm dark:text-white">Oura Ring</h4>
-                                            <p className="text-[10px] text-gray-500">Syncs sleep readiness.</p>
-                                        </div>
-                                    </div>
-                                    <button className="px-3 py-1.5 bg-black dark:bg-white text-white dark:text-black font-bold text-xs rounded-lg transition-transform hover:scale-105">
-                                        Connect
-                                    </button>
-                                </div>
-
-                                <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 p-4 rounded-xl flex items-center justify-between opacity-60">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-blue-500 shadow-sm rounded-xl flex items-center justify-center border border-blue-600">
-                                            <Smartphone className="w-5 h-5 text-white" />
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold text-sm dark:text-white">Google Fit</h4>
-                                            <p className="text-[10px] text-gray-500">Coming soon in V4.1</p>
-                                        </div>
-                                    </div>
-                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-2">Locked</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
                     {activeTab === 'journey' && (
                         <div className="animate-in slide-in-from-right-4 fade-in duration-300">

@@ -27,6 +27,8 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
     const [showShop, setShowShop] = useState(false);
     const [localUser, setLocalUser] = useState<User>(user);
     const [luminaLevel, setLuminaLevel] = useState(1);
+    const [weather, setWeather] = useState<'sun' | 'rain'>('sun');
+    const [bowlRipple, setBowlRipple] = useState(false);
     const timerRef = useRef<number | null>(null);
     const windChimeRef = useRef<HTMLAudioElement | null>(null);
 
@@ -62,10 +64,17 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
             const minutes = history.reduce((acc, curr) => acc + (curr.durationSeconds / 60), 0);
             setTotalFocus(Math.floor(minutes));
 
-            // Link to Lumina Gamification
+            // Link to Gamification
             const pet = await PetService.getPet(user.id);
             if (pet) {
                 setLuminaLevel(pet.level);
+            }
+
+            // Fetch Weather
+            const moods = await UserService.getMoods(user.id);
+            if (moods.length > 0) {
+                const sunCount = moods.filter(x => ['Happy', 'Calm', 'confetti', 'sun'].includes(x.mood as any)).length;
+                setWeather((sunCount / moods.length) >= 0.5 ? 'sun' : 'rain');
             }
         };
         loadHistory();
@@ -345,6 +354,27 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                 </div>
             </header>
 
+            {/* AMBIENT WEATHER WINDOW */}
+            <div className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[80%] md:w-96 h-32 md:h-48 border-[6px] md:border-8 border-stone-800 bg-stone-900/40 shadow-[inset_0_0_50px_rgba(0,0,0,0.8),0_20px_50px_rgba(0,0,0,0.5)] z-0 overflow-hidden flex transform-gpu perspective-1000 rotate-x-6">
+                {/* Shoji Screen Grids */}
+                <div className="absolute inset-0 grid grid-cols-4 grid-rows-2 opacity-60">
+                    {[...Array(8)].map((_, i) => (
+                        <div key={i} className="border border-stone-800/80 bg-[#f4ebd8]/10 backdrop-blur-[2px]"></div>
+                    ))}
+                </div>
+
+                {/* Dynamic Weather Layer behind Shoji */}
+                {weather === 'sun' ? (
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-200/40 via-transparent to-transparent z-[-1]"></div>
+                ) : (
+                    <div className="absolute inset-0 bg-slate-900/60 z-[-1] overflow-hidden">
+                        {[...Array(20)].map((_, i) => (
+                            <div key={i} className="absolute w-[1px] h-12 bg-blue-300/40 animate-[particle-float-up_1s_linear_infinite]" style={{ left: `${Math.random() * 100}%`, top: `-20%`, animationDelay: `${Math.random()}s`, animationDuration: `${0.5 + Math.random() * 0.5}s` }}></div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
             {/* --- VISUAL DECORATIONS --- */}
             {/* Placed at z-10 so it's under main interactive layer but OVER all background masks */}
             <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
@@ -352,22 +382,32 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                     const itemData = SANCTUARY_ITEMS.find(i => i.id === itemId);
                     if (!itemData) return null;
 
-                    // Absolute positioning map for items relative to the full screen
+                    // Absolute positioning map for items relative to the full screen (Spaced out like a living room)
                     const getPositionClass = (id: string) => {
                         switch (id) {
-                            case 'incense': return 'bottom-[15%] left-[20%] md:left-[25%] text-5xl md:text-7xl opacity-100 animate-[sway_4s_ease-in-out_infinite] drop-shadow-2xl';
-                            case 'bonsai': return 'bottom-[20%] right-[15%] md:right-[20%] text-7xl md:text-8xl opacity-100 drop-shadow-2xl';
-                            case 'lantern': return 'top-[15%] left-[15%] md:left-[20%] text-6xl md:text-7xl opacity-100 animate-pulse-slow drop-shadow-[0_0_25px_rgba(24cd,211,153,0.8)]';
-                            case 'stones': return 'bottom-[10%] left-[45%] md:left-[40%] text-4xl md:text-5xl opacity-100 drop-shadow-xl';
-                            case 'scroll': return 'top-[20%] right-[20%] md:right-[25%] text-6xl md:text-7xl opacity-100 drop-shadow-xl';
-                            case 'singing_bowl': return 'bottom-[12%] left-[35%] md:left-[28%] text-5xl md:text-6xl opacity-100 drop-shadow-2xl';
+                            case 'bonsai': return 'bottom-[5%] right-[5%] md:right-[10%] text-[8rem] md:text-[10rem] opacity-100 drop-shadow-2xl z-30';
+                            case 'incense': return 'bottom-[8%] left-[5%] md:left-[10%] text-6xl md:text-8xl opacity-100 animate-[sway_4s_ease-in-out_infinite] drop-shadow-2xl z-30';
+                            case 'lantern': return 'top-[5%] left-[10%] md:left-[15%] text-7xl md:text-8xl opacity-100 animate-[sway_6s_ease-in-out_infinite] drop-shadow-[0_0_30px_rgba(24cd,211,153,0.8)] z-20';
+                            case 'scroll': return 'top-[10%] right-[10%] md:right-[15%] text-[6rem] md:text-[8rem] opacity-90 drop-shadow-xl z-10';
+                            case 'stones': return 'bottom-[2%] left-[40%] md:left-[45%] text-5xl md:text-6xl opacity-100 drop-shadow-2xl z-20';
+                            case 'singing_bowl': return 'bottom-[25%] left-[20%] md:left-[25%] text-6xl md:text-[5.5rem] opacity-100 drop-shadow-[0_15px_15px_rgba(0,0,0,0.5)] pointer-events-auto cursor-pointer z-30 transition-transform active:scale-95';
                             default: return 'hidden';
                         }
                     };
 
+                    const handleBowlClick = () => {
+                        if (itemId !== 'singing_bowl') return;
+                        playBellSound();
+                        setBowlRipple(true);
+                        setTimeout(() => setBowlRipple(false), 2000);
+                    };
+
                     return (
-                        <div key={itemId} className={`absolute ${getPositionClass(itemId)}`}>
+                        <div key={itemId} onClick={itemId === 'singing_bowl' ? handleBowlClick : undefined} className={`absolute ${getPositionClass(itemId)}`}>
                             {itemData.icon}
+                            {itemId === 'singing_bowl' && bowlRipple && (
+                                <div className="absolute inset-0 bg-amber-500/30 rounded-full blur-xl scale-150 animate-[ping_2s_ease-out_forwards] pointer-events-none"></div>
+                            )}
                         </div>
                     );
                 })}

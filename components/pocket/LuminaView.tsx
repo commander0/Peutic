@@ -36,7 +36,7 @@ interface LuminaViewProps {
 
 const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     const [pet, setPet] = useState<Lumina | null>(null);
-    const [emotion, setEmotion] = useState<'idle' | 'happy' | 'hungry' | 'sleeping' | 'sad' | 'eating'>('idle');
+    const [emotion, setEmotion] = useState<'idle' | 'happy' | 'hungry' | 'sleeping' | 'sad' | 'eating' | 'energized' | 'thinker' | 'sleepy'>('idle');
     const [loading, setLoading] = useState(true);
     const [showSelection, setShowSelection] = useState(false);
     const [selectedSpecies, setSelectedSpecies] = useState<'Holo-Hamu' | 'Digi-Dino' | 'Neo-Shiba' | 'Zen-Sloth'>('Holo-Hamu');
@@ -90,6 +90,9 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
             if (data) {
                 setPet(data);
                 if (data.isSleeping) setEmotion('sleeping');
+                else if (data.energy < 30) setEmotion('sleepy');
+                else if (data.energy > 80 && data.happiness > 80) setEmotion('energized');
+                else if (data.experience > data.level * 4) setEmotion('thinker');
             } else {
                 setShowSelection(true);
             }
@@ -427,7 +430,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                     )}
 
                     {/* Character Canvas */}
-                    <div className={`relative transition-all duration-1000 ${isSummoning ? 'scale-110 -translate-y-10 brightness-150' : ''}`}>
+                    <div className={`relative flex items-center justify-center transition-all duration-1000 ${isSummoning ? 'scale-110 -translate-y-10 brightness-150' : ''}`}>
                         <PetCanvas
                             pet={pet}
                             width={canvasSize}

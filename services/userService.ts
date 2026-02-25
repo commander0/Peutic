@@ -954,7 +954,7 @@ export class UserService {
 
         const freeActionsCount = (jRes.count || 0) + (mRes.count || 0) + (vRes.count || 0) + (bRes.count || 0);
         const paidActionsCount = (trxRes.count || 0);
-        const count = (freeActionsCount * 0.5) + (paidActionsCount * 1.0);
+        const count = freeActionsCount + paidActionsCount;
 
         let message = "Start your journey.";
         if (count > 0) message = "Good start!";

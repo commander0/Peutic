@@ -103,9 +103,13 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
             const result = await GardenService.clipPlant(garden.userId);
             if (result.success) {
                 if (isMighty) {
-                    const updatedUser = { ...user, oracleTokens: (user.oracleTokens || 0) + 1 };
+                    const updatedUser = {
+                        ...user,
+                        balance: (user.balance || 0) + 100,
+                        oracleTokens: (user.oracleTokens || 0) + 1
+                    };
                     await UserService.updateUser(updatedUser);
-                    showToast(`Harvested! You received an Oracle Token!`, "success");
+                    showToast(`Ascended! You received an Oracle Token and 100 Serenity Coins!`, "success");
                     setShowPlantSelection(true);
                 } else {
                     showToast(`Harvested! The seed returns to the earth.`, "success");
@@ -334,8 +338,8 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                     />
                     <ControlBtn
                         icon={Scissors}
-                        label="Harvest"
-                        sub={stage === 6 ? "+1 Token" : "Reset"}
+                        label={stage === 6 ? "Ascend" : "Harvest"}
+                        sub={stage === 6 ? "+1 Token, +100 Coins" : "Reset"}
                         active={interaction === 'harvest'}
                         onClick={() => handleAction('harvest')}
                         color="amber"

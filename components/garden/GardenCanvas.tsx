@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { GardenState } from '../../types';
 
 interface GardenCanvasProps {
@@ -10,6 +10,19 @@ interface GardenCanvasProps {
 
 
 const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, interactionType }) => {
+
+    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        setMousePos({ x, y });
+    };
+
+    const handleMouseLeave = () => {
+        setMousePos({ x: 0, y: 0 });
+    };
 
     // Gamification Logic: Max 12 Minutes (1/10th speed)
     const maxMinutes = 12;
@@ -80,19 +93,22 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
                     <circle cx="50" cy="30" r="40" fill={theme.bloom} opacity="0.05" className="animate-[pulse_4s_infinite]" filter="url(#bloom-glow)" />
                 )}
 
-                {/* 3D Glass Pedestal */}
-                <ellipse cx="50" cy="100" rx="20" ry="2" fill="rgba(0,0,0,0.5)" filter="drop-shadow(0 10px 15px rgba(0,0,0,0.8))" /> {/* Deep floating shadow */}
-                <path d="M 25 85 L 75 85 L 65 95 L 35 95 Z" fill="url(#glass-grad)" stroke="rgba(255,255,255,0.2)" strokeWidth="0.5" filter="url(#glass-blur)" />
-                <ellipse cx="50" cy="85" rx="25" ry="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
-                <ellipse cx="50" cy="95" rx="15" ry="2" fill="rgba(255,255,255,0.05)" /> {/* Base reflection */}
+                {/* Pedestal / Dirt (Background Parallax) */}
+                <g style={{ transform: `translate(${mousePos.x * -4}px, ${mousePos.y * -2}px)`, transition: 'transform 0.1s ease-out' }}>
+                    {/* 3D Glass Pedestal */}
+                    <ellipse cx="50" cy="100" rx="20" ry="2" fill="rgba(0,0,0,0.5)" filter="drop-shadow(0 10px 15px rgba(0,0,0,0.8))" /> {/* Deep floating shadow */}
+                    <path d="M 25 85 L 75 85 L 65 95 L 35 95 Z" fill="url(#glass-grad)" stroke="rgba(255,255,255,0.2)" strokeWidth="0.5" filter="url(#glass-blur)" />
+                    <ellipse cx="50" cy="85" rx="25" ry="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
+                    <ellipse cx="50" cy="95" rx="15" ry="2" fill="rgba(255,255,255,0.05)" /> {/* Base reflection */}
 
-                {/* Inner glowing core & ethereal soil */}
-                <circle cx="50" cy="88" r="6" fill={theme.bloom} opacity="0.3" filter="url(#bloom-glow)" className="animate-[pulse_4s_infinite]" />
-                <ellipse cx="50" cy="84.5" rx="18" ry="2" fill="#0f172a" />
-                <ellipse cx="50" cy="84" rx="16" ry="1.5" fill="#1e293b" />
+                    {/* Inner glowing core & ethereal soil */}
+                    <circle cx="50" cy="88" r="6" fill={theme.bloom} opacity="0.3" filter="url(#bloom-glow)" className="animate-[pulse_4s_infinite]" />
+                    <ellipse cx="50" cy="84.5" rx="18" ry="2" fill="#0f172a" />
+                    <ellipse cx="50" cy="84" rx="16" ry="1.5" fill="#1e293b" />
+                </g>
 
-                {/* Growth Stages */}
-                <g style={{ transformOrigin: '50px 85px' }} className={swayClass}>
+                {/* Growth Stages (Foreground Parallax) */}
+                <g style={{ transformOrigin: '50px 85px', transform: `translate(${mousePos.x * 6}px, ${mousePos.y * 3}px)`, transition: 'transform 0.1s ease-out' }} className={swayClass}>
                     {/* STAGE 0: SEED */}
                     {stage === 0 && (
                         <ellipse cx="50" cy="84" rx="2" ry="1.5" fill={theme.leafDark} />
@@ -375,7 +391,12 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
     }, [stage, garden.currentPlantType, interactionType, swayClass]);
 
     return (
-        <div style={{ width: width, height: height }} className="relative flex flex-col items-center justify-end overflow-visible">
+        <div
+            style={{ width: width, height: height, perspective: '1000px' }}
+            className="relative flex flex-col items-center justify-end overflow-visible"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+        >
 
             {/* The SVG Container */}
             <div className={`w-full relative z-20 transition-transform duration-500 origin-bottom ${interactionType === 'clip' ? 'scale-95 rotate-2' : ''}`}>

@@ -9,7 +9,7 @@ import { LanguageSelector } from './common/LanguageSelector';
 import { useLanguage } from './common/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import {
-    Clock, LayoutDashboard, Brain, BookOpen, User as UserIcon, Settings, Plus, Lock, Sun, Moon, Sparkles, Star, Mic, Award, Flame, Trophy, Heart, ShieldCheck, Leaf, LogOut, LifeBuoy, ChevronUp, ChevronDown, Megaphone, Zap, Scissors, Gamepad2, Cloud, Feather, AlertTriangle, Video, Eye, EyeOff, Edit2, Mail, RefreshCw, Save, Twitter, Instagram, Linkedin, X, HeartPulse
+    Clock, LayoutDashboard, Brain, BookOpen, User as UserIcon, Settings, Plus, Lock, Sun, Moon, Sparkles, Star, Mic, Award, Flame, Trophy, Heart, ShieldCheck, Leaf, LogOut, LifeBuoy, ChevronUp, ChevronDown, Megaphone, Zap, Scissors, Gamepad2, Cloud, Feather, AlertTriangle, Video, Eye, EyeOff, Edit2, Mail, RefreshCw, Save, Twitter, Instagram, Linkedin, X
 } from 'lucide-react';
 import { NotificationBell } from './common/NotificationBell';
 import { UserService } from '../services/userService';
@@ -198,7 +198,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
     const idleTimerRef = useRef<number | null>(null);
     const logoutTimerRef = useRef<number | null>(null);
-    const weeklyTarget = 100; // Updated from 10
+    const weeklyTarget = 10;
 
     const {
         showPayment, setShowPayment,
@@ -624,21 +624,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
 
                                 <div className="space-y-4">
-                                    {/* MOCK HRV WIDGET (DEEP BIOMETRICS) */}
-                                    <div className="bg-white/40 dark:bg-black/40 backdrop-blur-xl rounded-3xl p-6 border border-blue-400/20 shadow-[0_8px_32px_rgba(59,130,246,0.15)] flex flex-col md:flex-row items-center gap-6 group cursor-default hover:bg-white/50 dark:hover:bg-black/50 transition-colors">
-                                        <div className="relative w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/30">
-                                            <div className="absolute inset-0 rounded-full border border-blue-400/50 animate-ping"></div>
-                                            <HeartPulse className="w-8 h-8 text-blue-500 group-hover:scale-110 transition-transform" />
-                                        </div>
-                                        <div className="flex-1 text-center md:text-left">
-                                            <h3 className="text-xl font-black text-gray-900 dark:text-white flex items-center justify-center md:justify-start gap-2">Biometric Intelligence <span className="text-xs font-bold px-2 py-0.5 bg-blue-500 text-white rounded-full uppercase tracking-widest hidden md:inline-block">Synced</span></h3>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Apple Health indicates strong vagal tone. AI Prediction: <span className="text-green-500 dark:text-green-400 font-bold">Low Stress Risk</span> today.</p>
-                                        </div>
-                                        <div className="flex flex-col items-center">
-                                            <span className="text-3xl font-black text-blue-500">62<span className="text-sm text-gray-500 ml-1">ms</span></span>
-                                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">HRV Daily Avg</span>
-                                        </div>
-                                    </div>
+
 
                                     <CollapsibleSection title="Spaces" icon={Zap} defaultOpen={false}>
                                         <div className="space-y-4">
