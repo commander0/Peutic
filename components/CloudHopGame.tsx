@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Play } from 'lucide-react';
 import { User } from '../types';
 import { UserService } from '../services/userService';
-import ArcadeAudio from '../services/arcadeAudio';
 
 interface CloudHopGameProps {
     dashboardUser: User;
@@ -19,10 +18,6 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
     const currentScoreRef = useRef(0);
     const playerRef = useRef({ x: 150, y: 300, vx: 0, vy: 0, width: 30, height: 30 });
     const platformsRef = useRef<any[]>([]);
-    const particlesRef = useRef<any[]>([]);
-
-    // Parallax background elements
-    const parallaxRef = useRef<{ x: number, y: number, size: number, speed: number, type: 'star' | 'cloud' }[]>([]);
 
     useEffect(() => {
         const resizeCanvas = () => {
@@ -63,53 +58,20 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
 
         platformsRef.current = [{ x: 0, y: H - 30, w: W, h: 30, type: 'ground' }];
         let py = H - 80;
-        const cloudGap = isMobile ? 60 : (W > 800 ? 50 : 70);
+        const cloudGap = isMobile ? 60 : 70;
 
         while (py > -12000) {
-            const typeRand = Math.random();
-            const platformType = typeRand > 0.98 ? 'jetpack' : (typeRand > 0.82 ? 'spring' : (typeRand > 0.65 ? 'moving' : 'cloud'));
-
             platformsRef.current.push({
                 x: Math.random() * (W - basePlatW),
                 y: py,
-                w: basePlatW + Math.random() * (isMobile ? 20 : 30),
-                h: isMobile ? 12 : 15,
-                type: platformType,
-                vx: Math.random() > 0.5 ? 1 : -1,
-                hasStar: Math.random() > 0.85,
-                starCollected: false
+                w: basePlatW + Math.random() * 20,
+                h: 15,
+                type: 'cloud'
             });
-
-            if (W > 800 && Math.random() > 0.3) {
-                const typeRand2 = Math.random();
-                platformsRef.current.push({
-                    x: Math.random() * (W - basePlatW),
-                    y: py + (Math.random() * 30 - 15),
-                    w: basePlatW + Math.random() * 30,
-                    h: 15,
-                    type: typeRand2 > 0.98 ? 'jetpack' : (typeRand2 > 0.82 ? 'spring' : (typeRand2 > 0.65 ? 'moving' : 'cloud')),
-                    vx: Math.random() > 0.5 ? 1 : -1,
-                    hasStar: Math.random() > 0.85,
-                    starCollected: false
-                });
-            }
-            py -= cloudGap + Math.random() * 25;
-        }
-
-        // Init Parallax
-        parallaxRef.current = [];
-        for (let i = 0; i < 30; i++) {
-            parallaxRef.current.push({
-                x: Math.random() * W,
-                y: Math.random() * H,
-                size: 1 + Math.random() * 3,
-                speed: 0.1 + Math.random() * 0.3,
-                type: Math.random() > 0.5 ? 'star' : 'cloud'
-            });
+            py -= cloudGap + Math.random() * 20;
         }
 
         playerRef.current = { x: W / 2 - (pSize / 2), y: H - 80, vx: 0, vy: 0, width: pSize, height: pSize };
-        particlesRef.current = [];
         currentScoreRef.current = 0;
         setScore(0);
         setGameOver(false);
@@ -139,28 +101,11 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
 
-        const drawCloud = (x: number, y: number, w: number, h: number, type: string) => {
-            if (type === 'spring') ctx.fillStyle = '#4ade80';
-            else if (type === 'moving') ctx.fillStyle = '#E0F2FE';
-            else if (type === 'jetpack') ctx.fillStyle = '#f43f5e';
-            else ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-
-            if (type === 'moving') ctx.shadowColor = '#38BDF8';
-            if (type === 'spring') ctx.shadowColor = '#22c55e';
-            if (type === 'jetpack') ctx.shadowColor = '#fb7185';
-            else ctx.shadowColor = 'rgba(255,255,255,0.4)';
+        const drawCloud = (x: number, y: number, w: number, h: number) => {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.shadowColor = 'rgba(255,255,255,0.4)';
             ctx.shadowBlur = 10;
-
             ctx.fillRect(x, y, w, h);
-
-            if (type === 'jetpack') {
-                ctx.fillStyle = '#fbbf24';
-                ctx.beginPath(); ctx.arc(x + w / 2, y - 10, 10, 0, Math.PI * 2); ctx.fill();
-                ctx.shadowColor = 'transparent';
-                ctx.shadowBlur = 0;
-                return;
-            }
-
             const bumpSize = h * 0.8;
             ctx.beginPath(); ctx.arc(x + 10, y, bumpSize, 0, Math.PI * 2); ctx.fill();
             ctx.beginPath(); ctx.arc(x + w - 10, y, bumpSize, 0, Math.PI * 2); ctx.fill();
@@ -177,166 +122,64 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
             p.vy += GRAVITY;
             p.y += p.vy;
 
-            // LERP CAMERA SMOOTHING
-            const targetY = H * 0.45; // camera target height
+            const targetY = H * 0.45;
             if (p.y < targetY) {
-                const diff = (targetY - p.y) * 0.15; // smooth lerp factor
+                const diff = (targetY - p.y) * 0.15;
                 p.y += diff;
                 currentScoreRef.current += diff;
                 setScore(Math.floor(currentScoreRef.current));
 
                 platformsRef.current.forEach((pl: any) => {
                     pl.y += diff;
-                    // Recycle platforms out of bounds
                     if (pl.y > H + 50) {
                         pl.y = -20;
                         pl.x = Math.random() * (W - (isMobile ? 50 : 70));
-                        const typeRand = Math.random();
-                        pl.type = typeRand > 0.98 ? 'jetpack' : (typeRand > 0.82 ? 'spring' : (typeRand > 0.65 ? 'moving' : 'cloud'));
-                        pl.hasStar = Math.random() > 0.85;
-                        pl.starCollected = false;
-                    }
-                });
-
-                // Move Parallax Layers
-                parallaxRef.current.forEach((pr: any) => {
-                    pr.y += diff * pr.speed;
-                    if (pr.y > H) {
-                        pr.y = -10;
-                        pr.x = Math.random() * W;
                     }
                 });
             }
 
-            // Star Collection
-            platformsRef.current.forEach((pl: any) => {
-                if (pl.hasStar && !pl.starCollected) {
-                    const sx = pl.x + pl.w / 2;
-                    const sy = pl.y - 25;
-                    const dist = Math.hypot(p.x + p.width / 2 - sx, p.y + p.height / 2 - sy);
-                    if (dist < 35) {
-                        pl.starCollected = true;
-                        currentScoreRef.current += 500;
-                        setScore(Math.floor(currentScoreRef.current));
-                        ArcadeAudio.playCollect();
-                        for (let k = 0; k < 12; k++) {
-                            particlesRef.current.push({
-                                x: sx, y: sy,
-                                vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10,
-                                life: 1, color: '#fcd34d'
-                            });
-                        }
-                    }
-                }
-            });
-
-            // Jumping Physics
             if (p.vy > 0) {
                 platformsRef.current.forEach((pl: any) => {
                     if (p.y + p.height >= pl.y && p.y + p.height <= pl.y + 40 && p.x + p.width > pl.x && p.x < pl.x + pl.w) {
-                        p.vy = pl.type === 'jetpack' ? JUMP_FORCE * 2.8 : (pl.type === 'spring' ? JUMP_FORCE * 1.6 : JUMP_FORCE);
-                        p.y = pl.y - p.height; // Lock to platform exactly for visual snappiness
-                        ArcadeAudio.playJump();
-
-                        const cColor = pl.type === 'jetpack' ? '#f43f5e' : (pl.type === 'spring' ? '#4ade80' : '#ffffff');
-                        for (let k = 0; k < (pl.type === 'jetpack' ? 15 : 6); k++) {
-                            particlesRef.current.push({
-                                x: p.x + p.width / 2,
-                                y: p.y + p.height,
-                                vx: (Math.random() - 0.5) * 8,
-                                vy: Math.random() * (pl.type === 'jetpack' ? -8 : -3),
-                                life: 1, color: cColor
-                            });
-                        }
+                        p.vy = JUMP_FORCE;
+                        p.y = pl.y - p.height;
                     }
                 });
             }
-
-            platformsRef.current.filter((pl: any) => !pl.starCollected).forEach((pl: any) => {
-                if (pl.type === 'moving') {
-                    pl.x += pl.vx;
-                    if (pl.x < 0 || pl.x + pl.w > W) pl.vx *= -1;
-                }
-            });
 
             if (p.y > H + p.height) {
                 setGameOver(true);
                 setGameStarted(false);
-                ArcadeAudio.playFail();
                 if (requestRef.current !== undefined) cancelAnimationFrame(requestRef.current);
                 return;
             }
 
-            // DYNAMIC HSL BACKGROUND
             const currentScore = currentScoreRef.current;
-            let hue = (200 + currentScore / 50) % 360;
-            let lightnessTop = Math.max(5, 60 - currentScoreRef.current / 150);
-            let lightnessBot = Math.max(10, 80 - currentScoreRef.current / 150);
-            let saturation = 60 + 20 * Math.sin(currentScore / 1000);
+            let hue = 200;
+            let lightnessTop = Math.max(20, 60 - currentScoreRef.current / 150);
+            let lightnessBot = Math.max(30, 80 - currentScoreRef.current / 150);
 
             const grad = ctx.createLinearGradient(0, 0, 0, H);
-            grad.addColorStop(0, `hsl(${hue}, ${saturation}%, ${lightnessTop}%)`);
-            grad.addColorStop(1, `hsl(${hue}, ${saturation}%, ${lightnessBot}%)`);
+            grad.addColorStop(0, `hsl(${hue}, 60%, ${lightnessTop}%)`);
+            grad.addColorStop(1, `hsl(${hue}, 60%, ${lightnessBot}%)`);
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, W, H);
 
-            // Draw Parallax
-            parallaxRef.current.forEach((pr: any) => {
-                ctx.fillStyle = pr.type === 'star' ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.15)';
-                ctx.beginPath();
-                if (pr.type === 'star') {
-                    ctx.arc(pr.x, pr.y, pr.size, 0, Math.PI * 2);
-                } else {
-                    ctx.arc(pr.x, pr.y, pr.size * 10, 0, Math.PI * 2);
-                    ctx.arc(pr.x + 10, pr.y + 5, pr.size * 8, 0, Math.PI * 2);
-                }
-                ctx.fill();
-            });
-
-            // Draw Platforms
             platformsRef.current.forEach((pl: any) => {
                 if (pl.type === 'ground') { ctx.fillStyle = '#4ade80'; ctx.fillRect(pl.x, pl.y, pl.w, pl.h); }
-                else { drawCloud(pl.x, pl.y, pl.w, pl.h, pl.type); }
-
-                if (pl.hasStar && !pl.starCollected && pl.type !== 'ground') {
-                    ctx.fillStyle = '#fde047';
-                    ctx.shadowColor = '#fcd34d';
-                    ctx.shadowBlur = 15;
-                    ctx.beginPath();
-                    // Draw Star Polygon
-                    const cx = pl.x + pl.w / 2;
-                    const cy = pl.y - 25;
-                    const rot = Math.PI / 2 * 3;
-                    let x = cx, y = cy;
-                    const step = Math.PI / 5;
-                    ctx.moveTo(cx, cy - 8);
-                    for (let i = 0; i < 5; i++) {
-                        x = cx + Math.cos(rot + step * i * 2) * 8;
-                        y = cy + Math.sin(rot + step * i * 2) * 8;
-                        ctx.lineTo(x, y);
-                        x = cx + Math.cos(rot + step * (i * 2 + 1)) * 4;
-                        y = cy + Math.sin(rot + step * (i * 2 + 1)) * 4;
-                        ctx.lineTo(x, y);
-                    }
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-                }
+                else { drawCloud(pl.x, pl.y, pl.w, pl.h); }
             });
 
-            // Draw Player Context (Lumina Pet)
             const drawPlayer = () => {
                 ctx.save();
                 ctx.translate(p.x + p.width / 2, p.y + p.height / 2);
                 ctx.rotate(p.vx * 0.08);
 
-                // Glow Aura
                 ctx.shadowColor = '#60a5fa';
-                ctx.shadowBlur = 20;
+                ctx.shadowBlur = 15;
 
-                // Lumina Core
                 const coreGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, p.width / 2);
                 coreGradient.addColorStop(0, '#ffffff');
-                coreGradient.addColorStop(0.5, '#bae6fd');
                 coreGradient.addColorStop(1, '#0ea5e9');
 
                 ctx.fillStyle = coreGradient;
@@ -344,25 +187,19 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
                 ctx.arc(0, 0, p.width / 2, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Adorable Pet Face
                 ctx.shadowBlur = 0;
-                ctx.fillStyle = '#082f49'; // Dark navy for eyes
+                ctx.fillStyle = '#082f49';
 
-                // Eyes
                 const lookOffsetX = p.vx * 0.5;
                 const lookOffsetY = p.vy < 0 ? -2 : 2;
                 ctx.beginPath(); ctx.arc(-5 + lookOffsetX, -3 + lookOffsetY, 2.5, 0, Math.PI * 2); ctx.fill();
                 ctx.beginPath(); ctx.arc(5 + lookOffsetX, -3 + lookOffsetY, 2.5, 0, Math.PI * 2); ctx.fill();
 
-                // Cute little mouth
                 ctx.beginPath();
-                if (p.vy < -8) { // Jetpacking - wide mouth
-                    ctx.arc(lookOffsetX, 3 + lookOffsetY, 3, 0, Math.PI * 2);
-                    ctx.fill();
-                } else if (p.vy < 0) { // Happy jump - smile
+                if (p.vy < 0) {
                     ctx.arc(lookOffsetX, 1 + lookOffsetY, 4, 0, Math.PI);
                     ctx.stroke();
-                } else { // Falling/Neutral - straight dash
+                } else {
                     ctx.moveTo(-2 + lookOffsetX, 3 + lookOffsetY);
                     ctx.lineTo(2 + lookOffsetX, 3 + lookOffsetY);
                     ctx.lineWidth = 1.5;
@@ -370,37 +207,9 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
                     ctx.stroke();
                 }
 
-                // If jetpacking, add thruster flames beneath
-                if (p.vy < -15) {
-                    ctx.fillStyle = '#f97316';
-                    ctx.beginPath();
-                    ctx.moveTo(-6, p.height / 2);
-                    ctx.lineTo(6, p.height / 2);
-                    ctx.lineTo(0, p.height / 2 + 15 + Math.random() * 10); // flickering tip
-                    ctx.fill();
-                }
-
                 ctx.restore();
             };
             drawPlayer();
-
-            // Draw Particles
-            for (let i = particlesRef.current.length - 1; i >= 0; i--) {
-                const part = particlesRef.current[i];
-                part.x += part.vx;
-                part.y += part.vy;
-                part.life -= 0.05;
-                if (part.life <= 0) {
-                    particlesRef.current.splice(i, 1);
-                } else {
-                    ctx.fillStyle = part.color || `rgba(255, 255, 255, ${part.life})`;
-                    ctx.globalAlpha = part.life;
-                    ctx.beginPath();
-                    ctx.arc(part.x, part.y, 4 * part.life, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.globalAlpha = 1;
-                }
-            }
 
             requestRef.current = requestAnimationFrame(update);
         };

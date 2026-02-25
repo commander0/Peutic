@@ -29,7 +29,7 @@ import { GardenService } from '../services/gardenService';
 // Extracted Components
 import { JournalSection } from './dashboard/JournalSection';
 import { WisdomGenerator } from './dashboard/WisdomGenerator';
-import { ArcadeLeaderboard } from './arcade/ArcadeLeaderboard';
+
 import { MoodTracker } from './dashboard/MoodTracker';
 import { SoundscapePlayer } from './dashboard/SoundscapePlayer';
 import { WeatherEffect } from './dashboard/WeatherEffect';
@@ -829,10 +829,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 </div>
 
                                 <CollapsibleSection title="Arcade" icon={Gamepad2}>
-                                    {/* Arcade Content */}
-                                    <div className="mb-6 w-full">
-                                        <ArcadeLeaderboard />
-                                    </div>
                                     <div className="grid grid-cols-3 gap-1 md:gap-4 w-full">
                                         {/* TILE 1: MINDFUL MATCH */}
                                         <div
