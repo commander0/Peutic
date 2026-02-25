@@ -161,7 +161,7 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
     };
 
     const spawnParticles = (cardIndex: number, color: string, count: number) => {
-        const newParticles = [];
+        const newParticles: any[] = [];
         for (let i = 0; i < count; i++) {
             newParticles.push({
                 id: Math.random(),

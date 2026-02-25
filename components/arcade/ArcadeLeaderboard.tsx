@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Trophy, Medal, Crown } from 'lucide-react';
-import { supabase } from '../../supabaseClient';
+import { supabase } from '../../services/supabaseClient';
 import { User } from '../../types';
 
 export const ArcadeLeaderboard: React.FC = () => {

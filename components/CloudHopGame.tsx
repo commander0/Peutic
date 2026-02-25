@@ -1,3 +1,4 @@
+import React, { useRef, useState, useEffect } from 'react';
 import { Play } from 'lucide-react';
 import { User } from '../types';
 import { UserService } from '../services/userService';
@@ -184,7 +185,7 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
                 currentScoreRef.current += diff;
                 setScore(Math.floor(currentScoreRef.current));
 
-                platformsRef.current.forEach(pl => {
+                platformsRef.current.forEach((pl: any) => {
                     pl.y += diff;
                     // Recycle platforms out of bounds
                     if (pl.y > H + 50) {
@@ -198,7 +199,7 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
                 });
 
                 // Move Parallax Layers
-                parallaxRef.current.forEach(pr => {
+                parallaxRef.current.forEach((pr: any) => {
                     pr.y += diff * pr.speed;
                     if (pr.y > H) {
                         pr.y = -10;
@@ -208,7 +209,7 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
             }
 
             // Star Collection
-            platformsRef.current.forEach(pl => {
+            platformsRef.current.forEach((pl: any) => {
                 if (pl.hasStar && !pl.starCollected) {
                     const sx = pl.x + pl.w / 2;
                     const sy = pl.y - 25;
@@ -231,7 +232,7 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
 
             // Jumping Physics
             if (p.vy > 0) {
-                platformsRef.current.forEach(pl => {
+                platformsRef.current.forEach((pl: any) => {
                     if (p.y + p.height >= pl.y && p.y + p.height <= pl.y + 40 && p.x + p.width > pl.x && p.x < pl.x + pl.w) {
                         p.vy = pl.type === 'jetpack' ? JUMP_FORCE * 2.8 : (pl.type === 'spring' ? JUMP_FORCE * 1.6 : JUMP_FORCE);
                         p.y = pl.y - p.height; // Lock to platform exactly for visual snappiness
@@ -251,7 +252,7 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
                 });
             }
 
-            platformsRef.current.forEach(pl => {
+            platformsRef.current.filter((pl: any) => !pl.starCollected).forEach((pl: any) => {
                 if (pl.type === 'moving') {
                     pl.x += pl.vx;
                     if (pl.x < 0 || pl.x + pl.w > W) pl.vx *= -1;
@@ -280,7 +281,7 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
             ctx.fillRect(0, 0, W, H);
 
             // Draw Parallax
-            parallaxRef.current.forEach(pr => {
+            parallaxRef.current.forEach((pr: any) => {
                 ctx.fillStyle = pr.type === 'star' ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.15)';
                 ctx.beginPath();
                 if (pr.type === 'star') {
@@ -293,7 +294,7 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
             });
 
             // Draw Platforms
-            platformsRef.current.forEach(pl => {
+            platformsRef.current.forEach((pl: any) => {
                 if (pl.type === 'ground') { ctx.fillStyle = '#4ade80'; ctx.fillRect(pl.x, pl.y, pl.w, pl.h); }
                 else { drawCloud(pl.x, pl.y, pl.w, pl.h, pl.type); }
 
