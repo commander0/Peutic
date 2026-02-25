@@ -182,9 +182,30 @@ const StressSlicerGame: React.FC<StressSlicerProps> = ({ dashboardUser }) => {
             const W = getDprWidth();
             const H = getDprHeight();
 
-            // Clear
-            ctx.fillStyle = 'rgba(0,0,0,0.8)';
+            // Dynamic Synthwave Background
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+            bgGrad.addColorStop(0, 'rgba(5, 5, 20, 0.8)'); // Deep cosmic blue
+            bgGrad.addColorStop(1, 'rgba(20, 5, 15, 0.8)'); // Dark void red
+            ctx.fillStyle = bgGrad;
             ctx.fillRect(0, 0, W, H);
+
+            // Animated Scrolling Grid
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(34, 211, 238, 0.15)'; // Faint glowing cyan
+            ctx.lineWidth = 1;
+            const gridSize = 60;
+            const offsetX = (frames * 0.2) % gridSize;
+            const offsetY = (frames * 0.5) % gridSize;
+
+            for (let x = -gridSize + offsetX; x < W; x += gridSize) {
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, H);
+            }
+            for (let y = -gridSize + offsetY; y < H; y += gridSize) {
+                ctx.moveTo(0, y);
+                ctx.lineTo(W, y);
+            }
+            ctx.stroke();
 
             frames++;
             const spawnRate = Math.max(30, 80 - Math.floor(score / 200));

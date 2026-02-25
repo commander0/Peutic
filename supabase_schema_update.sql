@@ -31,9 +31,10 @@ CREATE TABLE IF NOT EXISTS voice_journal (
 );
 
 -- 3. Ensure users table has game_scores JSONB column
-ALTER TABLE users ADD COLUMN IF NOT EXISTS game_scores JSONB DEFAULT '{"cloud": 0, "match": 0}'::jsonb;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS game_scores JSONB DEFAULT '{"cloud": 0, "match": 0, "slicer": 0}'::jsonb;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS unlocked_achievements TEXT[] DEFAULT '{}';
 ALTER TABLE users ADD COLUMN IF NOT EXISTS garden_state JSONB;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS oracle_tokens INTEGER DEFAULT 0;
 
 -- 4. Enable RLS on pocket_pets
 ALTER TABLE pocket_pets ENABLE ROW LEVEL SECURITY;
