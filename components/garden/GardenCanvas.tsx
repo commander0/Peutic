@@ -63,8 +63,11 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
     const SvgContent = useMemo(() => {
         const isRare = ['Lunar Fern', 'Crystal Lotus', 'Storm Oak', 'Sunlight Spire'].includes(garden.currentPlantType);
 
+        // Dynamic viewBox to gracefully scale massive late-stage plants back into the bounds
+        const dynamicViewBox = stage >= 6 ? "-60 -110 220 220" : stage >= 4 ? "-20 -40 140 140" : "0 0 100 100";
+
         return (
-            <svg viewBox="0 0 100 100" className={`w-[80%] h-[80%] drop-shadow-lg mx-auto overflow-visible ${isRare ? 'drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]' : ''}`}>
+            <svg viewBox={dynamicViewBox} className={`w-[90%] h-[90%] md:w-[80%] md:h-[80%] drop-shadow-lg mx-auto overflow-visible transition-all duration-1000 ${isRare ? 'drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]' : ''}`}>
                 <defs>
                     <filter id="bloom-glow" x="-50%" y="-50%" width="200%" height="200%">
                         <feGaussianBlur stdDeviation="3" result="coloredBlur" />

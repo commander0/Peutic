@@ -463,20 +463,37 @@ export class UserService {
         const user = this.getUser();
         if (!user || user.id !== userId) return;
 
-        const currentScores = user.gameScores || { match: 0, cloud: 0 };
+        const currentScores = user.gameScores || { match: 0, cloud: 0, slicer: 0 };
         let newScore = score;
 
         if (game === 'match') {
             const current = currentScores.match || 0;
             newScore = (current === 0) ? score : Math.min(current, score);
-        } else {
+        } else if (game === 'cloud') {
             newScore = Math.max(currentScores.cloud || 0, score);
+        } else if (game === 'slicer') {
+            newScore = Math.max(currentScores.slicer || 0, score);
         }
 
         const newScores = { ...currentScores, [game]: newScore };
         user.gameScores = newScores;
 
-        const { error } = await supabase.from('users').update({ game_scores: newScores }).eq('id', userId);
+        // Arcade Economy: Award Serenity Coins (oracleTokens)
+        let coinsEarned = 0;
+        if (game === 'cloud') coinsEarned = Math.floor(score / 1500);
+        else if (game === 'slicer') coinsEarned = Math.floor(score / 500);
+        else if (game === 'match') {
+            if (score < 60) coinsEarned = 1 + Math.floor((60 - score) / 10);
+        }
+
+        const newTokens = (user.oracleTokens || 0) + coinsEarned;
+        user.oracleTokens = newTokens;
+
+        const { error } = await supabase.from('users').update({
+            game_scores: newScores,
+            oracle_tokens: newTokens
+        }).eq('id', userId);
+
         if (error) {
             logger.error("Update Game Score Failed", userId, error);
         }
@@ -971,7 +988,7 @@ export class UserService {
         ]);
 
         const minutesSpent = (trxRes.data || []).filter((t: any) => t.amount < 0).reduce((acc: number, t: any) => acc + Math.abs(t.amount), 0);
-        const freeActionsCount = (jRes.count || 0) * 10 + (mRes.count || 0) * 5 + (vRes.count || 0) * 15 + (bRes.count || 0) * 5;
+        const freeActionsCount = (jRes.count || 0) + (mRes.count || 0) + (vRes.count || 0) + (bRes.count || 0);
         const count = freeActionsCount + minutesSpent;
 
         let message = "Start your journey.";

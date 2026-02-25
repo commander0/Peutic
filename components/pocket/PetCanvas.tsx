@@ -69,7 +69,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             <div className={`relative transition-all duration-700 w-full h-[80%] flex items-center justify-center ${bounceClass} ${trickClass} ${sadClass}`}>
 
                 {/* Pet scalable SVG container */}
-                <svg viewBox="-150 -150 300 300" className={`w-[85%] h-[85%] filter ${pet.level >= 10 ? 'drop-shadow-[0_0_25px_rgba(6,182,212,0.6)]' : 'drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]'} overflow-visible`}>
+                <svg viewBox="-150 -150 300 300" className={`w-full h-full filter ${pet.level >= 10 ? 'drop-shadow-[0_0_25px_rgba(6,182,212,0.6)]' : 'drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]'} overflow-visible`}>
 
                     <defs>
                         <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
