@@ -60,11 +60,14 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
                             <feMergeNode in="SourceGraphic" />
                         </feMerge>
                     </filter>
-                    <linearGradient id="pot-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#451a03" />
-                        <stop offset="50%" stopColor="#78350f" />
-                        <stop offset="100%" stopColor="#451a03" />
+                    <linearGradient id="glass-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="rgba(255,255,255,0.25)" />
+                        <stop offset="50%" stopColor="rgba(255,255,255,0.05)" />
+                        <stop offset="100%" stopColor="rgba(255,255,255,0.15)" />
                     </linearGradient>
+                    <filter id="glass-blur">
+                        <feGaussianBlur stdDeviation="0.5" />
+                    </filter>
                     <linearGradient id="trunk-grad" x1="0%" y1="0%" x2="100%" y2="0%">
                         <stop offset="0%" stopColor="#291307" />
                         <stop offset="50%" stopColor={theme.trunk} />
@@ -77,13 +80,16 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
                     <circle cx="50" cy="30" r="40" fill={theme.bloom} opacity="0.05" className="animate-[pulse_4s_infinite]" filter="url(#bloom-glow)" />
                 )}
 
-                {/* Pot / Base with gradient */}
-                <path d="M 32 88 L 68 88 L 63 98 L 37 98 Z" fill="url(#pot-grad)" stroke="#291307" strokeWidth="0.5" />
-                <rect x="28" y="85" width="44" height="3" fill="#92400e" rx="1" stroke="#451a03" strokeWidth="0.5" />
-                <path d="M 28 88 L 72 88 L 70 89 L 30 89 Z" fill="#451a03" opacity="0.5" /> {/* pot rim shadow */}
+                {/* 3D Glass Pedestal */}
+                <ellipse cx="50" cy="100" rx="20" ry="2" fill="rgba(0,0,0,0.5)" filter="drop-shadow(0 10px 15px rgba(0,0,0,0.8))" /> {/* Deep floating shadow */}
+                <path d="M 25 85 L 75 85 L 65 95 L 35 95 Z" fill="url(#glass-grad)" stroke="rgba(255,255,255,0.2)" strokeWidth="0.5" filter="url(#glass-blur)" />
+                <ellipse cx="50" cy="85" rx="25" ry="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
+                <ellipse cx="50" cy="95" rx="15" ry="2" fill="rgba(255,255,255,0.05)" /> {/* Base reflection */}
 
-                {/* Soil */}
-                <ellipse cx="50" cy="85" rx="19" ry="2.5" fill="#291307" />
+                {/* Inner glowing core & ethereal soil */}
+                <circle cx="50" cy="88" r="6" fill={theme.bloom} opacity="0.3" filter="url(#bloom-glow)" className="animate-[pulse_4s_infinite]" />
+                <ellipse cx="50" cy="84.5" rx="18" ry="2" fill="#0f172a" />
+                <ellipse cx="50" cy="84" rx="16" ry="1.5" fill="#1e293b" />
 
                 {/* Growth Stages */}
                 <g style={{ transformOrigin: '50px 85px' }} className={swayClass}>

@@ -8,7 +8,9 @@ import { User, Companion, VoiceJournalEntry, Achievement } from '../types';
 import { LanguageSelector } from './common/LanguageSelector';
 import { useLanguage } from './common/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { Clock, Home, LayoutDashboard, Brain, BookOpen, User as UserIcon, Settings, Calendar, Menu, Plus, Lock, Sun, Moon, Sparkles, Star, MessageCircle, Mic, Award, PenTool, Image as ImageIcon, Flame, CheckCircle2, Trophy, ArrowRight, TrendingUp, Music, TreePine, Anchor, Wind, Battery, Heart, ShieldCheck, Leaf, CloudRain, LogOut, LifeBuoy, ChevronUp, ChevronDown, Megaphone, Zap, Scissors, Gamepad2, Cloud, Feather, AlertTriangle, Video, Eye, EyeOff, Edit2, Mail, RefreshCw, Save, Twitter, Instagram, Linkedin, X } from 'lucide-react';
+import {
+    Clock, LayoutDashboard, Brain, BookOpen, User as UserIcon, Settings, Plus, Lock, Sun, Moon, Sparkles, Star, Mic, Award, Flame, Trophy, Heart, ShieldCheck, Leaf, LogOut, LifeBuoy, ChevronUp, ChevronDown, Megaphone, Zap, Scissors, Gamepad2, Cloud, Feather, AlertTriangle, Video, Eye, EyeOff, Edit2, Mail, RefreshCw, Save, Twitter, Instagram, Linkedin, X, HeartPulse
+} from 'lucide-react';
 import { NotificationBell } from './common/NotificationBell';
 import { UserService } from '../services/userService';
 // import PetCanvas from './pocket/PetCanvas';
@@ -45,6 +47,7 @@ const ObservatoryView = lazy(() => import('./sanctuary/ObservatoryView'));
 const DojoView = lazy(() => import('./sanctuary/DojoView'));
 const ThoughtShredder = lazy(() => import('./tools/ThoughtShredder'));
 
+import { SupportCircles } from './community/SupportCircles';
 
 import EmergencyOverlay from './safety/EmergencyOverlay';
 import { VoiceRecorder, VoiceEntryItem } from './journal/VoiceRecorder';
@@ -61,7 +64,7 @@ declare global {
 interface DashboardProps {
     user: User;
     onLogout: () => void;
-    onStartSession: (companion: Companion) => void;
+    onStartSession: (companion: Companion, mode?: 'video' | 'voice') => void;
 }
 
 const AvatarImage = React.memo(({ src, alt, className, isUser = false }: { src?: string, alt?: string, className?: string, isUser?: boolean }) => {
@@ -222,7 +225,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         showCloudHop, setShowCloudHop,
         showSlicerGame, setShowSlicerGame,
         isUnlockingRoom, setIsUnlockingRoom,
-        showVoiceJournal, setShowVoiceJournal
+        showVoiceJournal, setShowVoiceJournal,
+        showSupportCircles, setShowSupportCircles,
+        setShowSerenityShop
     } = useDashboardUI(user);
 
     // Gamification Hook
@@ -236,7 +241,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             case 'open_pet': setShowPocketPet(true); break;
             case 'open_garden': setShowGardenFull(true); break;
             case 'check_streak': setShowBookFull(true); break;
-            case 'open_community': showToast("Redirecting to Community Hub...", "info"); break;
+            case 'open_community': setShowSupportCircles(true); break;
             case 'open_dojo': setShowDojo(true); break;
             case 'open_observatory': setShowObservatory(true); break;
             case 'open_shredder': setShowShredder(true); break;
@@ -353,8 +358,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         }
     };
 
-    const handleStartConnection = (c: Companion) => {
+    const handleStartConnection = (c: Companion, mode: 'video' | 'voice' = 'video') => {
         if ((dashboardUser?.balance || 0) <= 0) { setPaymentError("Insufficient credits. Please add funds to start a session."); setShowPayment(true); return; }
+        if (mode === 'voice') {
+            onStartSession(c, 'voice');
+            return;
+        }
         setPendingCompanion(c);
         setShowTechCheck(true);
     };
@@ -592,6 +601,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     <Plus className="hidden md:block w-3.5 h-3.5 opacity-70" />
                                 </button>
 
+                                <button
+                                    onClick={() => setShowSerenityShop(true)}
+                                    className="h-[42px] px-4 rounded-2xl bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-black shadow-[0_0_15px_rgba(234,179,8,0.3)] hover:shadow-[0_0_20px_rgba(234,179,8,0.5)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 text-[10px] md:text-xs border border-yellow-300/50"
+                                    title="Altruism Bazaar & Economy"
+                                >
+                                    <Award className="w-4 h-4 opacity-80" />
+                                    <span className="md:inline">{dashboardUser?.oracleTokens || 0}</span>
+                                </button>
+
                                 <button onClick={() => setShowProfile(true)} className="w-10 h-10 md:w-11 md:h-11 rounded-2xl overflow-hidden border-2 border-primary shadow-premium transition-all hover:rotate-3 active:scale-90 flex-shrink-0">
                                     <AvatarImage src={isGhostMode ? '' : (dashboardUser?.avatar || '')} alt={isGhostMode ? 'Member' : (dashboardUser?.name || 'User')} className="w-full h-full object-cover" isUser={true} />
                                 </button>
@@ -606,6 +624,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
 
                                 <div className="space-y-4">
+                                    {/* MOCK HRV WIDGET (DEEP BIOMETRICS) */}
+                                    <div className="bg-white/40 dark:bg-black/40 backdrop-blur-xl rounded-3xl p-6 border border-blue-400/20 shadow-[0_8px_32px_rgba(59,130,246,0.15)] flex flex-col md:flex-row items-center gap-6 group cursor-default hover:bg-white/50 dark:hover:bg-black/50 transition-colors">
+                                        <div className="relative w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/30">
+                                            <div className="absolute inset-0 rounded-full border border-blue-400/50 animate-ping"></div>
+                                            <HeartPulse className="w-8 h-8 text-blue-500 group-hover:scale-110 transition-transform" />
+                                        </div>
+                                        <div className="flex-1 text-center md:text-left">
+                                            <h3 className="text-xl font-black text-gray-900 dark:text-white flex items-center justify-center md:justify-start gap-2">Biometric Intelligence <span className="text-xs font-bold px-2 py-0.5 bg-blue-500 text-white rounded-full uppercase tracking-widest hidden md:inline-block">Synced</span></h3>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Apple Health indicates strong vagal tone. AI Prediction: <span className="text-green-500 dark:text-green-400 font-bold">Low Stress Risk</span> today.</p>
+                                        </div>
+                                        <div className="flex flex-col items-center">
+                                            <span className="text-3xl font-black text-blue-500">62<span className="text-sm text-gray-500 ml-1">ms</span></span>
+                                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">HRV Daily Avg</span>
+                                        </div>
+                                    </div>
+
                                     <CollapsibleSection title="Spaces" icon={Zap} defaultOpen={false}>
                                         <div className="space-y-4">
                                             <div className="grid grid-cols-3 gap-1 md:gap-4">
@@ -928,7 +962,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                             <p className="text-primary text-[10px] font-black uppercase tracking-widest mb-2">About {companion.name}</p>
                                                             <p className="text-white text-xs leading-relaxed mb-3">"{companion.bio}"</p>
                                                             <div className="grid grid-cols-2 gap-2 text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-3"><div className="bg-white/10 p-1.5 rounded-lg">{companion.yearsExperience} Yrs Exp</div><div className="bg-white/10 p-1.5 rounded-lg">{companion.degree}</div></div>
-                                                            <button className="bg-white text-black px-4 py-2 rounded-full font-bold text-[10px] flex items-center justify-center gap-2 hover:bg-primary transition-colors"><Video className="w-3 h-3" /> Connect Now</button>
+                                                            <div className="flex flex-col gap-2 mt-2">
+                                                                <button onClick={(e) => { e.stopPropagation(); handleStartConnection(companion, 'video'); }} className="bg-white text-black px-4 py-2 rounded-full font-bold text-[10px] w-full flex items-center justify-center gap-2 hover:bg-primary transition-colors"><Video className="w-3 h-3" /> HD Camera Session</button>
+                                                                <button onClick={(e) => { e.stopPropagation(); handleStartConnection(companion, 'voice'); }} className="bg-black/50 text-white border border-white/20 px-4 py-2 rounded-full font-bold text-[10px] w-full flex items-center justify-center gap-2 hover:bg-blue-500 hover:border-blue-500 transition-colors backdrop-blur-md"><Mic className="w-3 h-3" /> Live Voice Connect</button>
+                                                            </div>
                                                         </div>
                                                         <div className="absolute top-3 left-3 flex gap-2"><div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md ${companion.status === 'AVAILABLE' ? 'bg-green-500/90 text-white shadow-lg shadow-green-500/20' : 'bg-gray-500/90 text-white'}`}>{companion.status === 'AVAILABLE' ? 'Online' : 'Busy'}</div></div><div className="absolute bottom-3 left-3 right-3 group-hover:opacity-0 transition-opacity"><h3 className="text-white font-black text-lg leading-tight mb-0.5 shadow-sm drop-shadow-md">{companion.name}</h3><p className="text-white/90 dark:text-gray-200 text-[10px] font-bold uppercase tracking-wider truncate drop-shadow-md">{companion.specialty}</p></div></div><div className="p-3 bg-primary/10 dark:bg-primary/20 flex justify-between items-center border-t border-primary/20"><div className="flex items-center gap-1"><Star className="w-3 h-3 text-primary fill-primary" /><span className="text-gray-700 dark:text-gray-300 text-xs font-bold">{companion.rating}</span></div><button className="bg-white/50 dark:bg-primary/30 hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white rounded-lg p-2 transition-colors"><Eye className="w-3.5 h-3.5" /></button></div></div>))}</div>)}
                                     {filteredCompanions.length === 0 && (<div className="text-center py-16 bg-gray-50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800"><p className="text-gray-500 font-bold text-sm">No specialists found in this category.</p><button onClick={() => setSpecialtyFilter('All')} className="text-primary text-xs font-bold mt-2 hover:underline">View All</button></div>)}
@@ -1322,6 +1359,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     <Suspense fallback={null}>
                         <ThoughtShredder onClose={() => setShowShredder(false)} />
                     </Suspense>
+                )
+            }
+            {
+                showSupportCircles && (
+                    <SupportCircles onClose={() => setShowSupportCircles(false)} />
                 )
             }
         </div >

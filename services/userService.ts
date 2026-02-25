@@ -944,13 +944,17 @@ export class UserService {
         const startOfCurrentWeek = new Date(joinedAt + weeksSinceJoin * msPerWeek).toISOString();
 
         // Query the database for counts since startOfCurrentWeek instead of relying on the SQL RPC
-        const [jRes, mRes, vRes] = await Promise.all([
+        const [jRes, mRes, vRes, bRes, trxRes] = await Promise.all([
             supabase.from('journals').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('date', startOfCurrentWeek),
             supabase.from('moods').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('date', startOfCurrentWeek),
-            supabase.from('voice_journals').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', startOfCurrentWeek)
+            supabase.from('voice_journals').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', startOfCurrentWeek),
+            supabase.from('breath_logs').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('date', startOfCurrentWeek),
+            supabase.from('transactions').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('date', startOfCurrentWeek)
         ]);
 
-        const count = (jRes.count || 0) + (mRes.count || 0) + (vRes.count || 0);
+        const freeActionsCount = (jRes.count || 0) + (mRes.count || 0) + (vRes.count || 0) + (bRes.count || 0);
+        const paidActionsCount = (trxRes.count || 0);
+        const count = (freeActionsCount * 0.5) + (paidActionsCount * 1.0);
 
         let message = "Start your journey.";
         if (count > 0) message = "Good start!";

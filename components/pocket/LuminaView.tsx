@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Activity, Bath, Moon, Sun, Target, Shield, Info, Pizza, Gamepad2, Sparkles, RefreshCw, CheckCircle2, ChevronLeft, Award, Zap, LogOut, Cpu } from 'lucide-react';
+import { Heart, Moon, Sun, Target, Pizza, Gamepad2, Sparkles, RefreshCw, CheckCircle2, ChevronLeft, Award, Zap, LogOut, Cpu } from 'lucide-react';
 import { User, Lumina } from '../../types';
 import { PetService } from '../../services/petService';
 import PetCanvas from './PetCanvas';
@@ -276,9 +276,9 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
 
     if (showSelection) {
         return (
-            <div className="fixed inset-0 z-[120] bg-gray-950 text-cyan-400 font-mono flex flex-col items-center justify-center p-6">
-                <div className="w-full max-w-md bg-black/80 border border-cyan-500/30 p-8 rounded-xl shadow-[0_0_50px_rgba(6,182,212,0.2)]">
-                    <h2 className="text-2xl font-bold mb-8 text-center tracking-[0.2em] animate-pulse">CHOOSE COMPANION</h2>
+            <div className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-md text-white font-sans flex flex-col items-center justify-center p-6">
+                <div className="w-full max-w-md bg-stone-900/90 backdrop-blur-3xl border border-white/10 p-10 rounded-[2rem] shadow-premium">
+                    <h2 className="text-3xl font-black mb-8 text-center tracking-tight text-white">Choose Companion</h2>
 
                     <div className="grid grid-cols-2 gap-4 mb-8">
                         {['Holo-Hamu', 'Digi-Dino', 'Neo-Shiba', 'Zen-Sloth'].map(s => (
@@ -304,18 +304,18 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                                     placeholder="Enter Pet Name..."
                                     value={petName}
                                     onChange={(e) => setPetName(e.target.value)}
-                                    className="w-full bg-black/50 border-2 border-cyan-700/50 rounded-xl px-4 py-3 text-center text-cyan-100 placeholder-cyan-700/50 focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-500/20 transition-all font-bold tracking-widest uppercase"
+                                    className="w-full bg-black/40 border-2 border-white/10 rounded-2xl px-6 py-4 text-center text-white placeholder-white/40 focus:border-white/40 focus:outline-none transition-all font-bold tracking-widest uppercase shadow-inner"
                                 />
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                                     <Sparkles className="w-4 h-4 text-cyan-500 animate-pulse" />
                                 </div>
                             </div>
 
-                            <div className="relative z-[150]">
+                            <div className="relative z-[150] mt-6">
                                 <button
                                     onClick={handleCreatePet}
                                     disabled={!petName.trim() || isCreating}
-                                    className="w-full bg-cyan-500 hover:bg-cyan-400 disabled:bg-cyan-900 disabled:text-cyan-700 text-black font-bold p-4 rounded-xl tracking-widest hover:shadow-[0_0_20px_rgba(6,182,212,0.6)] transition-all cursor-pointer relative z-50 flex items-center justify-center gap-2"
+                                    className="w-full bg-white text-black hover:bg-gray-200 disabled:bg-white/10 disabled:text-white/40 font-black p-4 rounded-2xl tracking-widest hover:shadow-premium transition-all cursor-pointer relative z-50 flex items-center justify-center gap-2"
                                 >
                                     {isCreating ? (
                                         <>Initializing <Sparkles className="w-4 h-4 animate-spin" /></>
@@ -334,7 +334,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     if (!pet) return null;
 
     return (
-        <div className="fixed inset-0 z-[120] bg-[#050505] text-cyan-500 font-mono tracking-wider overflow-hidden">
+        <div className="fixed inset-0 z-[120] bg-gradient-to-b from-[#0a0a0a] to-[#121212] text-white/90 font-sans tracking-wide overflow-hidden">
 
             {/* --- CYBER / PROGRESSIVE BACKGROUNDS --- */}
             {pet.level < 30 && (
@@ -493,7 +493,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
             </main>
 
             {/* --- CONTROL DECK --- */}
-            <footer className="relative z-20 bg-black/80 border-t border-cyan-500/20 p-6">
+            <footer className="relative z-20 pb-10 px-6 flex flex-col items-center gap-8 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
 
                 {/* Power Level Selector */}
                 <div className="flex justify-center mb-6">
@@ -576,36 +576,28 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
 };
 
 const StatusHolo: React.FC<{ icon: any, value: number, label: string, compact?: boolean }> = ({ icon: Icon, value, label, compact }) => (
-    <div className="flex flex-col items-center gap-1 group">
-        <div className="relative">
-            <Icon className={`w-5 h-5 text-cyan-400 ${value < 30 ? 'animate-pulse text-red-500' : ''}`} />
-            <div className="absolute inset-0 blur-sm bg-cyan-400/20" />
-        </div>
-        {!compact && <span className="text-[9px] font-bold text-cyan-500/70">{label}</span>}
-        <div className="w-1 h-8 bg-gray-900 rounded-full overflow-hidden mt-1">
-            <div className={`w-full bg-cyan-400 transition-all duration-1000`} style={{ height: `${value}%`, marginTop: `${100 - value}%` }} />
+    <div className="flex flex-col items-center gap-2 group p-4 bg-white/5 border border-white/10 rounded-[2rem] backdrop-blur-md shadow-glass-dark">
+        <Icon className={`w-5 h-5 text-white/80 ${value < 30 ? 'animate-pulse text-red-400' : ''}`} />
+        {!compact && <span className="text-[10px] font-bold text-white/50 tracking-widest uppercase">{label}</span>}
+        <div className="w-1.5 h-12 bg-black/40 rounded-full overflow-hidden shadow-inner hidden md:block">
+            <div className={`w-full bg-white/90 transition-all duration-1000`} style={{ height: `${value}%`, marginTop: `${100 - value}%` }} />
         </div>
     </div>
 );
 
-const CyberBtn: React.FC<{ icon: any, label: string, onClick: () => void, color?: string }> = ({ icon: Icon, label, onClick, color = "cyan" }) => {
-    const colorClass = color === "purple" ? "text-purple-400 border-purple-500/50 hover:bg-purple-900/20" :
-        color === "yellow" ? "text-yellow-400 border-yellow-500/50 hover:bg-yellow-900/20" :
-            "text-cyan-400 border-cyan-500/50 hover:bg-cyan-900/20";
+const CyberBtn: React.FC<{ icon: any, label: string, onClick: () => void, color?: string }> = ({ icon: Icon, label, onClick, color = "white" }) => {
     return (
         <button
             onClick={onClick}
             className={`
-                group relative px-3 py-2 md:px-6 md:py-4 border ${colorClass} 
-                clip-path-polygon flex flex-col items-center gap-1 md:gap-2
-                transition-all active:scale-95 hover:shadow-[0_0_15px_rgba(34,211,238,0.2)]
+                group relative px-4 py-3 md:px-6 md:py-5 rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-md flex flex-col items-center gap-2
+                transition-all duration-300 active:scale-95 hover:bg-white/10 hover:shadow-glass hover:-translate-y-1
             `}
         >
-            <Icon className="w-6 h-6" />
-            <span className="text-[10px] font-bold tracking-[0.2em]">{label}</span>
-            {/* Corner Accents */}
-            <div className="absolute top-0 left-0 w-2 h-2 border-l border-t border-current opacity-50" />
-            <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-current opacity-50" />
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-${color}-500/10 group-hover:bg-${color}-500/20 transition-colors`}>
+                <Icon className={`w-6 h-6 text-${color}-400 group-hover:text-${color}-300 transition-colors`} />
+            </div>
+            <span className="text-[10px] font-bold tracking-[0.2em] text-white/70 group-hover:text-white uppercase">{label}</span>
         </button>
     );
 };

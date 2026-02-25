@@ -16,8 +16,14 @@ module.exports = {
                 "text-base": "var(--color-text-base)",
             },
             fontFamily: {
-                display: ['Outfit', 'sans-serif'],
-                body: ['Inter', 'sans-serif'],
+                sans: ['Outfit', 'sans-serif'],
+            },
+            boxShadow: {
+                'inner-glow': 'inset 0 0 20px rgba(250, 204, 21, 0.15)',
+                'premium': '0 20px 40px -15px rgba(0, 0, 0, 0.05)',
+                'premium-hover': '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
+                'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.05)',
+                'glass-dark': '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
             },
         },
     },

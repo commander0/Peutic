@@ -9,6 +9,7 @@ import AdminDashboard from './components/AdminDashboard';
 import AdminLogin from './components/AdminLogin';
 import Auth from './components/Auth';
 import VideoRoom from './components/VideoRoom';
+import { VoiceRoom } from './components/VoiceRoom';
 import StaticPages from './components/StaticPages';
 import { UserService } from './services/userService';
 import { AdminService } from './services/adminService';
@@ -25,7 +26,7 @@ import { useAuth } from './contexts/AuthContext';
 const MainApp: React.FC = () => {
   const { user, isLoading: authLoading, login, logout } = useAuth(); // --- STATE ---
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [activeSessionCompanion, setActiveSessionCompanion] = useState<Companion | null>(null);
+  const [activeSession, setActiveSession] = useState<{ companion: Companion, mode: 'video' | 'voice' } | null>(null);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [showAuth, setShowAuth] = useState(false);
 
@@ -95,7 +96,7 @@ const MainApp: React.FC = () => {
   };
 
   const onLogout = async () => {
-    setActiveSessionCompanion(null);
+    setActiveSession(null);
     await logout();
     navigate('/', { replace: true });
   };
@@ -133,13 +134,22 @@ const MainApp: React.FC = () => {
       <ThemeProvider>
         <LanguageProvider>
           <ToastProvider>
-            {activeSessionCompanion && user ? (
-              <VideoRoom
-                companion={activeSessionCompanion}
-                onEndSession={() => setActiveSessionCompanion(null)}
-                userName={user.name}
-                userId={user.id}
-              />
+            {activeSession && user ? (
+              activeSession.mode === 'voice' ? (
+                <VoiceRoom
+                  companion={activeSession.companion}
+                  onEndSession={() => setActiveSession(null)}
+                  userName={user.name}
+                  userId={user.id}
+                />
+              ) : (
+                <VideoRoom
+                  companion={activeSession.companion}
+                  onEndSession={() => setActiveSession(null)}
+                  userName={user.name}
+                  userId={user.id}
+                />
+              )
             ) : (
               <>
                 {showAuth && <Auth onLogin={onLoginSubmit} onCancel={() => setShowAuth(false)} initialMode={authMode} />}
@@ -148,7 +158,7 @@ const MainApp: React.FC = () => {
                 <Routes>
                   <Route path="/" element={
                     user ? (
-                      user.role === UserRole.ADMIN ? <Navigate to="/admin/dashboard" replace /> : <Dashboard user={user} onLogout={onLogout} onStartSession={(c) => setActiveSessionCompanion(c)} />
+                      user.role === UserRole.ADMIN ? <Navigate to="/admin/dashboard" replace /> : <Dashboard user={user} onLogout={onLogout} onStartSession={(c: Companion, m?: 'video' | 'voice') => setActiveSession({ companion: c, mode: m || 'video' })} />
                     ) : (
                       <LandingPage onLoginClick={(signup) => {
                         setAuthMode(signup ? 'signup' : 'login');

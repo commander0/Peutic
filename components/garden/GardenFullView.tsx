@@ -229,8 +229,8 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
 
             {/* --- SEED SELECTION MODAL --- */}
             {showPlantSelection && (
-                <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md p-6">
-                    <div className="bg-stone-900 border border-stone-800 p-8 rounded-3xl max-w-lg w-full text-center relative shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md p-6">
+                    <div className="bg-stone-900/90 backdrop-blur-3xl border border-white/10 p-8 rounded-3xl max-w-lg w-full text-center relative shadow-premium">
                         <button onClick={() => setShowPlantSelection(false)} className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 text-stone-500 hover:text-white transition-colors">
                             <X className="w-5 h-5" />
                         </button>
@@ -307,7 +307,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                 </div>
 
                 {/* Action Dock */}
-                <div className="flex items-center gap-6 md:gap-12">
+                <div className="flex flex-wrap justify-center items-center gap-4 md:gap-12">
                     <ControlBtn
                         icon={Droplets}
                         label="Nourish"

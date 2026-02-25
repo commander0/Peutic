@@ -99,7 +99,7 @@ const InputModal: React.FC<{
 
 
 const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'safety' | 'users' | 'specialists' | 'financials' | 'settings' | 'claim'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'safety' | 'users' | 'specialists' | 'financials' | 'settings' | 'claim' | 'b2b'>('overview');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { showToast } = useToast();
     const { t } = useLanguage();
@@ -380,6 +380,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                         { id: 'users', icon: Users, label: t('admin_user_db') },
                         { id: 'specialists', icon: Video, label: t('admin_spec_grid') },
                         { id: 'financials', icon: DollarSign, label: t('admin_fin_intel') },
+                        { id: 'b2b', icon: Activity, label: 'Enterprise B2B' },
                         { id: 'claim', icon: Shield, label: t('admin_sys_claim') },
                         { id: 'settings', icon: Settings, label: t('admin_config') },
                     ].map((item) => (
@@ -1072,6 +1073,61 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                             {settings.maxConcurrentSessions > 9999 ? 'Ready for High Traffic Event' : 'Standard Operations Pattern'}
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    {/* --- ENTERPRISE B2B (HR ANALYTICS) --- */}
+                    {activeTab === 'b2b' && (
+                        <div className="space-y-6 animate-in fade-in duration-500">
+                            <div className="flex justify-between items-end">
+                                <div>
+                                    <h2 className="text-2xl font-black tracking-tight mb-1 text-white flex items-center gap-2"><Activity className="w-6 h-6 text-blue-500" /> Enterprise B2B Analytics</h2>
+                                    <p className="text-gray-500 text-xs">Anonymized company wellness and usage trends.</p>
+                                </div>
+                                <button className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-colors shadow-lg shadow-blue-500/20">
+                                    Export CSV Report
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div className="bg-[#0A0A0A] border border-white/5 p-6 rounded-2xl flex flex-col items-center text-center">
+                                    <Users className="w-10 h-10 text-emerald-500 mb-4" />
+                                    <h3 className="text-4xl font-black text-white mb-2">84%</h3>
+                                    <p className="text-gray-400 text-sm font-bold">Employee Adoption Rate</p>
+                                    <span className="text-emerald-500 text-xs mt-2 bg-emerald-500/10 px-2 py-1 rounded">+12% this quarter</span>
+                                </div>
+                                <div className="bg-[#0A0A0A] border border-white/5 p-6 rounded-2xl flex flex-col items-center text-center">
+                                    <Activity className="w-10 h-10 text-yellow-500 mb-4" />
+                                    <h3 className="text-4xl font-black text-white mb-2">Low</h3>
+                                    <p className="text-gray-400 text-sm font-bold">Aggregate Burnout Risk</p>
+                                    <span className="text-yellow-500 text-xs mt-2 bg-yellow-500/10 px-2 py-1 rounded">Based on sentiment analysis</span>
+                                </div>
+                                <div className="bg-[#0A0A0A] border border-white/5 p-6 rounded-2xl flex flex-col items-center text-center">
+                                    <Clock className="w-10 h-10 text-purple-500 mb-4" />
+                                    <h3 className="text-4xl font-black text-white mb-2">45m</h3>
+                                    <p className="text-gray-400 text-sm font-bold">Avg Weekly Engagement</p>
+                                    <span className="text-purple-500 text-xs mt-2 bg-purple-500/10 px-2 py-1 rounded">Per active employee</span>
+                                </div>
+                            </div>
+
+                            <div className="bg-[#0A0A0A] border border-white/5 p-6 rounded-2xl">
+                                <h3 className="font-bold text-white mb-6">Top Anonymized Themes (Company-Wide)</h3>
+                                <div className="space-y-4">
+                                    {['Work-Life Balance', 'Imposter Syndrome', 'Project Deadlines', 'Remote Isolation'].map((theme, i) => (
+                                        <div key={theme} className="flex items-center gap-4">
+                                            <span className="text-gray-500 font-mono text-xs w-4">{i + 1}.</span>
+                                            <div className="flex-1">
+                                                <div className="flex justify-between mb-1">
+                                                    <span className="text-sm font-bold text-gray-300">{theme}</span>
+                                                    <span className="text-xs text-blue-400">{Math.floor(80 - i * 15)}%</span>
+                                                </div>
+                                                <div className="h-1.5 bg-gray-900 rounded-full overflow-hidden">
+                                                    <div className="h-full bg-blue-500 animate-pulse" style={{ width: `${80 - i * 15}%` }}></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>

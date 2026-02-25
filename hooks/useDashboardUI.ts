@@ -27,6 +27,8 @@ export function useDashboardUI(user: User) {
     const [showSlicerGame, setShowSlicerGame] = useState(false);
     const [isUnlockingRoom, setIsUnlockingRoom] = useState(false);
     const [showVoiceJournal, setShowVoiceJournal] = useState(false);
+    const [showSupportCircles, setShowSupportCircles] = useState(false);
+    const [showSerenityShop, setShowSerenityShop] = useState(false);
 
     // Sync profile edits lightly when user prop changes from db
     React.useEffect(() => {
@@ -59,6 +61,8 @@ export function useDashboardUI(user: User) {
         showCloudHop, setShowCloudHop,
         showSlicerGame, setShowSlicerGame,
         isUnlockingRoom, setIsUnlockingRoom,
-        showVoiceJournal, setShowVoiceJournal
+        showVoiceJournal, setShowVoiceJournal,
+        showSupportCircles, setShowSupportCircles,
+        showSerenityShop, setShowSerenityShop
     };
 }
