@@ -69,7 +69,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             <div className={`relative transition-all duration-700 w-full h-[80%] flex items-center justify-center ${bounceClass} ${trickClass} ${sadClass}`}>
 
                 {/* Pet scalable SVG container */}
-                <svg viewBox="0 0 100 100" className={`w-[85%] h-[85%] filter ${pet.level >= 10 ? 'drop-shadow-[0_0_25px_rgba(6,182,212,0.6)]' : 'drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]'} overflow-visible`}>
+                <svg viewBox="-150 -150 300 300" className={`w-[85%] h-[85%] filter ${pet.level >= 10 ? 'drop-shadow-[0_0_25px_rgba(6,182,212,0.6)]' : 'drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]'} overflow-visible`}>
 
                     <defs>
                         <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -84,7 +84,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
 
                     {/* Level 1-2: EGG (Core + Orbital Ring) */}
                     {pet.level < 3 && (
-                        <g className="origin-center" style={{ transform: 'translate(50px, 50px)' }}>
+                        <g className="origin-center" style={{ transform: 'translate(0px, 0px)' }}>
                             <ellipse cx="0" cy="0" rx="15" ry="20" fill="url(#bodyGrad)" className="animate-pulse" />
                             <circle cx="0" cy="0" r="25" fill="none" stroke={c.g} strokeWidth="2" strokeDasharray="10 5" className="animate-[spin_4s_linear_infinite]" />
                             <circle cx="0" cy="0" r="30" fill="none" stroke={c.s} strokeWidth="1" strokeDasharray="5 15" className="animate-[spin_6s_linear_infinite_reverse]" />
@@ -104,7 +104,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                             <>
                                 {/* Level 3-9: BABY */}
                                 {pet.level >= 3 && pet.level < 10 && (
-                                    <g className="origin-center animate-[float_4s_ease-in-out_infinite]" style={{ transform: 'translate(50px, 60px)' }}>
+                                    <g className="origin-center animate-[float_4s_ease-in-out_infinite]" style={{ transform: 'translate(0px, 10px)' }}>
                                         {isShiba && (
                                             <g className="drop-shadow-[0_0_8px_#fbbf24]">
                                                 <path d="M 0 -35 Q 20 -35 25 -10 Q 30 15 0 25 Q -30 15 -25 -10 Q -20 -35 0 -35 Z" fill="url(#bodyGrad)" />
@@ -140,7 +140,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
 
                                 {/* Level 10-19: TEEN */}
                                 {pet.level >= 10 && pet.level < 20 && (
-                                    <g className="origin-center animate-[float_5s_ease-in-out_infinite]" style={{ transform: 'translate(50px, 50px)' }}>
+                                    <g className="origin-center animate-[float_5s_ease-in-out_infinite]" style={{ transform: 'translate(0px, 0px)' }}>
                                         {isShiba && (
                                             <g className="drop-shadow-[0_0_12px_#fbbf24]">
                                                 <path d="M 0 -40 L 30 0 L 20 30 L -20 30 L -30 0 Z" fill="url(#bodyGrad)" />
@@ -177,7 +177,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
 
                                 {/* Level 20-29: MASTER */}
                                 {pet.level >= 20 && pet.level < 30 && (
-                                    <g className="origin-center animate-[float_6s_ease-in-out_infinite]" style={{ transform: 'translate(50px, 50px)' }}>
+                                    <g className="origin-center animate-[float_6s_ease-in-out_infinite]" style={{ transform: 'translate(0px, 0px)' }}>
                                         {isShiba && (
                                             <g className="drop-shadow-[0_0_15px_#fbbf24]">
                                                 <circle cx="0" cy="0" r="55" fill="none" stroke={c.g} strokeWidth="1" opacity="0.5" className="animate-[spin_12s_linear_infinite]" strokeDasharray="10 15" />
@@ -216,7 +216,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
 
                                 {/* Level 30-49: ASCENDANT */}
                                 {pet.level >= 30 && pet.level < 50 && (
-                                    <g className="origin-center animate-[float_4s_ease-in-out_infinite]" style={{ transform: 'translate(50px, 50px)' }}>
+                                    <g className="origin-center animate-[float_4s_ease-in-out_infinite]" style={{ transform: 'translate(0px, 0px)' }}>
                                         {isShiba && (
                                             <g className="drop-shadow-[0_0_20px_#fbbf24]">
                                                 <circle cx="0" cy="0" r="60" fill="url(#coreGlow)" opacity="0.4" className="animate-[ping_3s_ease-in-out_infinite]" />
@@ -261,7 +261,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
 
                                 {/* Level 50+: CELESTIAL */}
                                 {pet.level >= 50 && (
-                                    <g className="origin-center animate-[float_8s_ease-in-out_infinite]" style={{ transform: 'translate(50px, 50px)' }}>
+                                    <g className="origin-center animate-[float_8s_ease-in-out_infinite]" style={{ transform: 'translate(0px, 0px)' }}>
                                         {isShiba && (
                                             <g className="drop-shadow-[0_0_30px_#fbbf24]">
                                                 <circle cx="0" cy="0" r="90" fill="url(#coreGlow)" opacity="0.5" className="animate-[pulse_2s_infinite]" />

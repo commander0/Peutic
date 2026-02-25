@@ -943,18 +943,36 @@ export class UserService {
         const weeksSinceJoin = Math.floor((now - joinedAt) / msPerWeek);
         const startOfCurrentWeek = new Date(joinedAt + weeksSinceJoin * msPerWeek).toISOString();
 
-        // Query the database for counts since startOfCurrentWeek instead of relying on the SQL RPC
+        try {
+            // Revert completely back to the previous version RPC
+            const { data, error } = await supabase.rpc('get_weekly_progress', { p_user_id: userId });
+            if (!error && data !== null) {
+                const count = Number(data);
+                let message = "Start your journey.";
+                if (count > 0) message = "Good start!";
+                if (count >= 10) message = "Building momentum!";
+                if (count >= 30) message = "Working hard!";
+                if (count >= 50) message = "Halfway there!";
+                if (count >= 80) message = "So close!";
+                if (count >= 100) message = "🔥 You are on a hot streak!";
+                return { current: count, message };
+            }
+        } catch (e) {
+            console.error("RPC fallback for weekly progress", e);
+        }
+
+        // Fallback if RPC is missing
         const [jRes, mRes, vRes, bRes, trxRes] = await Promise.all([
             supabase.from('journals').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('date', startOfCurrentWeek),
             supabase.from('moods').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('date', startOfCurrentWeek),
             supabase.from('voice_journals').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', startOfCurrentWeek),
             supabase.from('breath_logs').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('date', startOfCurrentWeek),
-            supabase.from('transactions').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('date', startOfCurrentWeek)
+            supabase.from('transactions').select('amount').eq('user_id', userId).gte('date', startOfCurrentWeek)
         ]);
 
-        const freeActionsCount = (jRes.count || 0) + (mRes.count || 0) + (vRes.count || 0) + (bRes.count || 0);
-        const paidActionsCount = (trxRes.count || 0);
-        const count = freeActionsCount + paidActionsCount;
+        const minutesSpent = (trxRes.data || []).filter((t: any) => t.amount < 0).reduce((acc: number, t: any) => acc + Math.abs(t.amount), 0);
+        const freeActionsCount = (jRes.count || 0) * 10 + (mRes.count || 0) * 5 + (vRes.count || 0) * 15 + (bRes.count || 0) * 5;
+        const count = freeActionsCount + minutesSpent;
 
         let message = "Start your journey.";
         if (count > 0) message = "Good start!";

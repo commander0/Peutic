@@ -198,7 +198,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
     const idleTimerRef = useRef<number | null>(null);
     const logoutTimerRef = useRef<number | null>(null);
-    const weeklyTarget = 10;
+    const weeklyTarget = 100;
 
     const {
         showPayment, setShowPayment,
