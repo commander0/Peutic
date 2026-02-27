@@ -551,10 +551,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     <nav className="flex-1 px-3 lg:px-4 py-6 lg:py-8 space-y-2 lg:space-y-3">
                         {[
                             { id: 'inner_sanctuary', icon: LayoutDashboard, label: t('dash_hub') },
+                            { id: 'store', icon: ShoppingBag, label: 'Store', isModal: true },
                             { id: 'history', icon: Clock, label: t('dash_journal') },
                             { id: 'settings', icon: Settings, label: t('dash_settings') }
                         ].map((item) => (
-                            <button key={item.id} onClick={() => setActiveTab(item.id as any)} className={`w-full flex items-center justify-center lg:justify-start gap-3 p-3 lg:p-4 rounded-xl transition-all duration-300 group border border-transparent ${activeTab === item.id ? 'bg-primary/20 text-primary dark:bg-yellow-500/20 dark:text-yellow-400 border-primary/30 dark:border-yellow-500/30 shadow-sm' : 'text-gray-500 hover:bg-primary-light dark:hover:bg-gray-800 dark:text-gray-400'}`}>
+                            <button key={item.id} onClick={() => item.isModal ? setShowSerenityShop(true) : setActiveTab(item.id as any)} className={`w-full flex items-center justify-center lg:justify-start gap-3 p-3 lg:p-4 rounded-xl transition-all duration-300 group border border-transparent ${activeTab === item.id ? 'bg-primary/20 text-primary dark:bg-yellow-500/20 dark:text-yellow-400 border-primary/30 dark:border-yellow-500/30 shadow-sm' : 'text-gray-500 hover:bg-primary-light dark:hover:bg-gray-800 dark:text-gray-400'}`}>
                                 <item.icon className={`w-5 h-5 lg:w-6 lg:h-6 ${activeTab === item.id ? 'text-primary dark:text-yellow-400' : 'group-hover:text-primary dark:group-hover:text-white'}`} />
                                 <span className="hidden lg:block font-bold text-xs lg:text-sm tracking-wide">{item.label}</span>
                             </button>
@@ -643,14 +644,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 >
                                     <span className="md:inline">{balance}m</span>
                                     <Plus className="hidden md:block w-3.5 h-3.5 opacity-70" />
-                                </button>
-
-                                <button
-                                    onClick={() => setShowSerenityShop(true)}
-                                    className="h-[42px] px-4 rounded-2xl font-black bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 shadow-sm hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 text-[10px] md:text-xs border border-amber-200 dark:border-amber-500/30"
-                                >
-                                    <ShoppingBag className="w-4 h-4" />
-                                    <span className="hidden md:inline">Store</span>
                                 </button>
 
 

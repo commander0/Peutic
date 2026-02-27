@@ -16,7 +16,7 @@ const ITEMS = [
         type: 'charity',
         name: 'Plant a Virtuoso Tree',
         description: 'Contribute to global reforestation. Your focus minutes will be donated to plant one real tree via our partners.',
-        cost: 500,
+        cost: 50,
         icon: TreePine,
         color: 'text-emerald-500',
         bg: 'bg-emerald-500/10'
@@ -26,7 +26,7 @@ const ITEMS = [
         type: 'charity',
         name: 'Provide a Warm Meal',
         description: 'Convert your mental clarity into sustenance for someone in need.',
-        cost: 300,
+        cost: 30,
         icon: Heart,
         color: 'text-rose-500',
         bg: 'bg-rose-500/10'
@@ -36,7 +36,7 @@ const ITEMS = [
         type: 'digital',
         name: 'Lumina Companion Plushie',
         description: 'Unlock the exclusive golden plushie on your dashboard.',
-        cost: 1500,
+        cost: 150,
         icon: Star,
         color: 'text-amber-500',
         bg: 'bg-amber-500/10'
@@ -46,7 +46,7 @@ const ITEMS = [
         type: 'digital',
         name: 'Virtual Coffee for Developers',
         description: 'Send a virtual coffee to the team building Sanctuary.',
-        cost: 50,
+        cost: 5,
         icon: Coffee,
         color: 'text-amber-700',
         bg: 'bg-amber-700/10'
