@@ -369,6 +369,7 @@ export class UserService {
                 cost: 0,
                 description: reason
             });
+            window.dispatchEvent(new CustomEvent('balance-updated'));
             return true;
         } catch (e) {
             console.error("Add Balance Failed", e);
@@ -424,6 +425,7 @@ export class UserService {
                 }
             }
             this.isProcessingTransaction = false;
+            window.dispatchEvent(new CustomEvent('balance-updated'));
             return true;
 
         } catch (e) {

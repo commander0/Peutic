@@ -9,7 +9,7 @@ import { LanguageSelector } from './common/LanguageSelector';
 import { useLanguage } from './common/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import {
-    Clock, LayoutDashboard, Brain, BookOpen, User as UserIcon, Settings, Plus, Lock, Sun, Moon, Sparkles, Star, Mic, Heart, ShieldCheck, Leaf, LogOut, LifeBuoy, ChevronUp, ChevronDown, Megaphone, Zap, Scissors, Gamepad2, Cloud, Feather, AlertTriangle, Video, Eye, EyeOff, Edit2, Mail, RefreshCw, Save, Twitter, Instagram, Linkedin, X, Flame
+    Clock, LayoutDashboard, Brain, BookOpen, User as UserIcon, Settings, Plus, Lock, Sun, Moon, Sparkles, Star, Mic, Heart, ShieldCheck, Leaf, LogOut, LifeBuoy, ChevronUp, ChevronDown, Megaphone, Zap, Scissors, Gamepad2, Cloud, Feather, AlertTriangle, Video, Eye, EyeOff, Edit2, Mail, RefreshCw, Save, Twitter, Instagram, Linkedin, X, Flame, Trophy
 } from 'lucide-react';
 import { NotificationBell } from './common/NotificationBell';
 import { UserService } from '../services/userService';
@@ -674,7 +674,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                                     showToast(`Locked for ${daysRemaining} more days.`, "info");
                                                                 }
                                                             }}
-                                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(168,85,247,0.15)] hover:shadow-[0_8px_32px_rgba(168,85,247,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                                         >
                                                             <div className="flex flex-col items-center justify-center h-full p-2 md:p-6 text-center relative z-10">
                                                                 <div className="relative mb-1 md:mb-4">
@@ -697,7 +697,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 3: LUMINA */}
                                                 <div
                                                     onClick={() => setShowPocketPet(true)}
-                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(34,211,238,0.15)] hover:shadow-[0_8px_32px_rgba(34,211,238,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                                 >
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
                                                         <div className="relative mb-1 md:mb-4">
@@ -716,7 +716,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 4: ORACLE */}
                                                 <div
                                                     onClick={() => handleRoomInteraction('observatory', 25)}
-                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(99,102,241,0.15)] hover:shadow-[0_8px_32px_rgba(99,102,241,0.4)] hover:-translate-y-1' : 'border-gray-300 dark:border-gray-700 grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
+                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1' : 'border-gray-300 dark:border-gray-700 grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
                                                 >
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
                                                         <div className="relative mb-1 md:mb-4">
@@ -742,7 +742,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 5: ZEN DOJO */}
                                                 <div
                                                     onClick={() => handleRoomInteraction('dojo', 15)}
-                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(245,158,11,0.15)] hover:shadow-[0_8px_32px_rgba(245,158,11,0.4)] hover:-translate-y-1' : 'border-gray-300 dark:border-gray-700 grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
+                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1' : 'border-gray-300 dark:border-gray-700 grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
                                                 >
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
                                                         <div className="relative mb-1 md:mb-4">
@@ -768,7 +768,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 6: THOUGHT SHREDDER */}
                                                 <div
                                                     onClick={() => setShowShredder(true)}
-                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(244,63,94,0.15)] hover:shadow-[0_8px_32px_rgba(244,63,94,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                                 >
                                                     <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-600/5 pointer-events-none"></div>
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
@@ -791,7 +791,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                                     {dashboardUser ? (
                                         <div className="bg-transparent dark:bg-transparent p-4 md:p-5 rounded-3xl border border-transparent shadow-none col-span-1 md:col-span-2 relative overflow-hidden group min-h-[120px] md:min-h-[140px]">
-                                            {weeklyGoal >= weeklyTarget ? (
+                                            {weeklyGoal >= 300 ? (
+                                                <div className="absolute top-4 right-4 z-20 flex items-center justify-center">
+                                                    <div className="relative w-16 h-16 flex items-center justify-center">
+                                                        {/* Green Nuclear Flame Effect */}
+                                                        <div className="absolute bottom-6 w-8 h-12 bg-green-500/80 rounded-[50%_50%_30%_30%] blur-md animate-[bounce_0.5s_infinite_alternate] shadow-[0_0_30px_rgba(34,197,94,1)]"></div>
+                                                        <div className="absolute bottom-4 w-6 h-10 bg-emerald-300 rounded-[50%_50%_30%_30%] blur-sm animate-[bounce_0.6s_infinite_alternate] shadow-[0_0_20px_rgba(16,185,129,0.8)]"></div>
+                                                        <Trophy className="w-12 h-12 text-green-400 fill-green-500/50 drop-shadow-[0_0_25px_rgba(34,197,94,1)] animate-bounce relative z-10" />
+                                                        <Leaf className="absolute -right-2 top-0 w-6 h-6 text-green-300 fill-green-400 animate-pulse drop-shadow-[0_0_10px_rgba(74,222,128,1)] z-20" />
+                                                    </div>
+                                                </div>
+                                            ) : weeklyGoal >= weeklyTarget ? (
                                                 <div className="absolute top-4 right-4 z-20 flex items-center justify-center">
                                                     <div className="relative w-14 h-14 flex items-center justify-center">
                                                         <div className="absolute w-full h-full border-2 border-blue-500/40 border-t-blue-400 rounded-full animate-[spin_3s_linear_infinite]"></div>
@@ -833,7 +843,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         {/* TILE 1: MINDFUL MATCH */}
                                         <div
                                             onClick={() => setShowMatchGame(true)}
-                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(139,92,246,0.15)] hover:shadow-[0_8px_32px_rgba(139,92,246,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                         >
                                             <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-pink-600/5 pointer-events-none"></div>
                                             <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">

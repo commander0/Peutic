@@ -126,9 +126,9 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
         const W = canvas.width / dpr;
         const H = canvas.height / dpr;
         const isMobile = W < 600;
-        const GRAVITY = H > 400 ? 0.4 : 0.35;
-        const JUMP_FORCE = H > 400 ? -9 : -8;
-        const MOVE_SPEED = isMobile ? 3.5 : 4.5;
+        const GRAVITY = H > 400 ? 0.5 : 0.45;
+        const JUMP_FORCE = H > 400 ? -12 : -10;
+        const MOVE_SPEED = isMobile ? 5 : 7;
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'ArrowLeft') playerRef.current.vx = -MOVE_SPEED;

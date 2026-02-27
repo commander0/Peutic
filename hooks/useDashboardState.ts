@@ -60,6 +60,12 @@ export const useDashboardState = (initialUser: User) => {
         // Kick off all data fetching in parallel
         refreshData();
 
+        // Custom Event listener for instant balance updates from actions
+        const handleBalanceUpdate = () => {
+            refreshData();
+        };
+        window.addEventListener('balance-updated', handleBalanceUpdate);
+
         // Get companions immediately without delay
         AdminService.getCompanions().then((comps) => {
             setCompanions(comps);
@@ -92,6 +98,7 @@ export const useDashboardState = (initialUser: User) => {
         return () => {
             clearInterval(interval);
             subscription.unsubscribe();
+            window.removeEventListener('balance-updated', handleBalanceUpdate);
         };
     }, []);
 

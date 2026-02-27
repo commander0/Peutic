@@ -341,9 +341,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                             </button>
                         </div>
 
-                        <button type="button" onClick={() => setToast("Enterprise SSO Routing...")} className="w-full h-12 md:h-14 border-2 border-primary/20 dark:border-yellow-500/20 rounded-xl flex items-center justify-center gap-3 hover:bg-primary/5 dark:hover:bg-yellow-500/5 transition-all mb-6 md:mb-8 font-bold text-sm md:text-base text-gray-700 dark:text-gray-300">
-                            <Server className="w-5 h-5 text-primary dark:text-yellow-500" /> Continue with Company SSO
-                        </button>
+                        <div className="mb-4" />
 
                         <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
                             {!isLogin && (
