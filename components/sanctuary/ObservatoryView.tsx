@@ -125,15 +125,15 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
         if (isProcessing || isReading || activeTab !== 'divination') return;
         setIsProcessing(true);
         const COST = 1;
-        const currentTokens = user.oracleTokens || 0;
-        if (currentTokens < COST) {
-            showToast(`The spirits require an offering of ${COST} Serenity Coins. Play minigames to earn more!`, "error");
+
+        if (user.balance < COST) {
+            showToast(`The spirits require an offering of ${COST} Minutes. Play minigames to earn more!`, "error");
             setIsProcessing(false);
             return;
         }
 
-        const updated = await UserService.updateUserPartial(user.id, { oracleTokens: currentTokens - COST });
-        if (updated) {
+        const success = await UserService.deductBalance(COST, 'Oracle Consultation');
+        if (success) {
             setIsReading(true);
             setIsProcessing(false);
             setOracleMessage(null);
@@ -409,7 +409,7 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                             {!isReading && !oracleMessage && (
                                 <div className="flex flex-col items-center gap-3">
                                     <span className="font-serif italic text-indigo-300 text-lg tracking-wide drop-shadow-md">Draw a sigil upon the orb to cast your fate.</span>
-                                    <span className="text-[10px] font-mono tracking-widest uppercase text-indigo-500/80">Cost: 1 Serenity Coin</span>
+                                    <span className="text-[10px] font-mono tracking-widest uppercase text-indigo-500/80">Cost: 1 Minute</span>
                                 </div>
                             )}
 

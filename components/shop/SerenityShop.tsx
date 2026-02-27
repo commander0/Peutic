@@ -36,7 +36,7 @@ const ITEMS = [
         type: 'digital',
         name: 'Lumina Companion Plushie',
         description: 'Unlock the exclusive golden plushie on your dashboard.',
-        cost: 150,
+        cost: 15,
         icon: Star,
         color: 'text-amber-500',
         bg: 'bg-amber-500/10'
@@ -56,7 +56,7 @@ const ITEMS = [
         type: 'charity',
         name: 'Protect Wildlife',
         description: 'Donate your focus to sponsor an endangered animal for a day.',
-        cost: 100,
+        cost: 10,
         icon: Heart,
         color: 'text-orange-500',
         bg: 'bg-orange-500/10'
@@ -66,7 +66,7 @@ const ITEMS = [
         type: 'digital',
         name: 'Sapphire Aura Theme',
         description: 'Unlock an exclusive deep-blue crystalline dashboard theme.',
-        cost: 250,
+        cost: 25,
         icon: Sparkles,
         color: 'text-blue-500',
         bg: 'bg-blue-500/10'

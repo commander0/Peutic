@@ -839,9 +839,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             {weeklyGoal >= 300 ? (
                                                 <div className="absolute top-4 right-4 z-20 flex items-center justify-center">
                                                     <div className="relative w-16 h-16 flex items-center justify-center">
-                                                        {/* Green Nuclear Flame Effect */}
-                                                        <div className="absolute bottom-6 w-8 h-12 bg-green-500/80 rounded-[50%_50%_30%_30%] blur-md animate-[bounce_0.5s_infinite_alternate] shadow-[0_0_30px_rgba(34,197,94,1)]"></div>
-                                                        <div className="absolute bottom-4 w-6 h-10 bg-emerald-300 rounded-[50%_50%_30%_30%] blur-sm animate-[bounce_0.6s_infinite_alternate] shadow-[0_0_20px_rgba(16,185,129,0.8)]"></div>
+                                                        {/* 3 Red Flames Effect */}
+                                                        <div className="absolute top-0 -left-1 w-4 h-8 bg-red-500 rounded-[50%_50%_30%_30%] blur-[2px] animate-[pulse_0.8s_infinite] shadow-[0_0_15px_rgba(239,68,68,1)] -rotate-45 z-0 transform origin-bottom"></div>
+                                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-10 bg-red-500 rounded-[50%_50%_30%_30%] blur-[2px] animate-[bounce_0.6s_infinite_alternate] shadow-[0_0_20px_rgba(239,68,68,1)] z-0"></div>
+                                                        <div className="absolute top-0 -right-1 w-4 h-8 bg-red-500 rounded-[50%_50%_30%_30%] blur-[2px] animate-[pulse_1s_infinite] shadow-[0_0_15px_rgba(239,68,68,1)] rotate-45 z-0 transform origin-bottom"></div>
+
                                                         <Trophy className="w-12 h-12 text-green-400 fill-green-500/50 drop-shadow-[0_0_25px_rgba(34,197,94,1)] animate-bounce relative z-10" />
                                                         <Leaf className="absolute -right-2 top-0 w-6 h-6 text-green-300 fill-green-400 animate-pulse drop-shadow-[0_0_10px_rgba(74,222,128,1)] z-20" />
                                                     </div>
