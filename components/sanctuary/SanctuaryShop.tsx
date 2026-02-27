@@ -42,7 +42,7 @@ const SanctuaryShop: React.FC<SanctuaryShopProps> = ({ user, onClose, onPurchase
                 // Update user decor array
                 const newDecor = [...unlockedDecor, item.id];
                 const updatedUserObj = { ...user, unlockedDecor: newDecor, balance: user.balance - item.price };
-                await UserService.updateUser(updatedUserObj);
+                await UserService.updateUserPartial(user.id, { unlockedDecor: newDecor });
 
                 onPurchaseUpdate(updatedUserObj);
                 showToast(`Acquired ${item.name}!`, "success");
@@ -66,7 +66,7 @@ const SanctuaryShop: React.FC<SanctuaryShopProps> = ({ user, onClose, onPurchase
                     <div>
                         <h2 className="text-2xl font-serif text-amber-100 flex items-center gap-2">
                             <Sparkles className="w-5 h-5 text-amber-500" />
-                            Sanctuary Archive
+                            Shop
                         </h2>
                         <p className="text-stone-400 text-sm mt-1">Exchange focus minutes for physical manifestations.</p>
                     </div>

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { GardenState } from '../../types';
 
 interface GardenCanvasProps {
@@ -11,18 +11,31 @@ interface GardenCanvasProps {
 
 const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, interactionType }) => {
 
-    // Expanded Gamification: Scale up to Ethereal Entity (120 minutes)
-    const maxMinutes = 120;
+    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        setMousePos({ x, y });
+    };
+
+    const handleMouseLeave = () => {
+        setMousePos({ x: 0, y: 0 });
+    };
+
+    // Gamification Logic: Max 12 Minutes (1/10th speed)
+    const maxMinutes = 12;
     const progress = Math.min((garden.focusMinutes || 0) / maxMinutes, 1);
 
     let stage = 0;
     const fm = garden.focusMinutes || 0;
-    if (fm >= 120) stage = 6; // Ethereal Entity
-    else if (fm >= 90) stage = 5; // Mystic Guardian
-    else if (fm >= 60) stage = 4; // Ancient Tree
-    else if (fm >= 40) stage = 3; // Mature Tree
-    else if (fm >= 20) stage = 2; // Sapling
-    else if (fm >= 10) stage = 1; // Sprout
+    if (fm >= 12) stage = 6; // Ethereal Entity
+    else if (fm >= 10) stage = 5; // Mystic Guardian
+    else if (fm >= 8) stage = 4; // Ancient Tree
+    else if (fm >= 6) stage = 3; // Mature Tree
+    else if (fm >= 4) stage = 2; // Sapling
+    else if (fm >= 2) stage = 1; // Sprout
 
     // Determine colors
     const getThemeColors = (type: string) => {
@@ -50,8 +63,11 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
     const SvgContent = useMemo(() => {
         const isRare = ['Lunar Fern', 'Crystal Lotus', 'Storm Oak', 'Sunlight Spire'].includes(garden.currentPlantType);
 
+        // Dynamic viewBox to gracefully scale massive late-stage plants back into the bounds
+        const dynamicViewBox = stage >= 6 ? "-60 -110 220 220" : stage >= 4 ? "-20 -40 140 140" : "0 0 100 100";
+
         return (
-            <svg viewBox="0 0 100 100" className={`w-[80%] h-[80%] drop-shadow-lg mx-auto overflow-visible ${isRare ? 'drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]' : ''}`}>
+            <svg viewBox={dynamicViewBox} className={`w-[90%] h-[90%] md:w-[80%] md:h-[80%] drop-shadow-lg mx-auto overflow-visible transition-all duration-1000 ${isRare ? 'drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]' : ''}`}>
                 <defs>
                     <filter id="bloom-glow" x="-50%" y="-50%" width="200%" height="200%">
                         <feGaussianBlur stdDeviation="3" result="coloredBlur" />
@@ -60,11 +76,14 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
                             <feMergeNode in="SourceGraphic" />
                         </feMerge>
                     </filter>
-                    <linearGradient id="pot-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#451a03" />
-                        <stop offset="50%" stopColor="#78350f" />
-                        <stop offset="100%" stopColor="#451a03" />
+                    <linearGradient id="glass-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="rgba(255,255,255,0.25)" />
+                        <stop offset="50%" stopColor="rgba(255,255,255,0.05)" />
+                        <stop offset="100%" stopColor="rgba(255,255,255,0.15)" />
                     </linearGradient>
+                    <filter id="glass-blur">
+                        <feGaussianBlur stdDeviation="0.5" />
+                    </filter>
                     <linearGradient id="trunk-grad" x1="0%" y1="0%" x2="100%" y2="0%">
                         <stop offset="0%" stopColor="#291307" />
                         <stop offset="50%" stopColor={theme.trunk} />
@@ -77,16 +96,22 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
                     <circle cx="50" cy="30" r="40" fill={theme.bloom} opacity="0.05" className="animate-[pulse_4s_infinite]" filter="url(#bloom-glow)" />
                 )}
 
-                {/* Pot / Base with gradient */}
-                <path d="M 32 88 L 68 88 L 63 98 L 37 98 Z" fill="url(#pot-grad)" stroke="#291307" strokeWidth="0.5" />
-                <rect x="28" y="85" width="44" height="3" fill="#92400e" rx="1" stroke="#451a03" strokeWidth="0.5" />
-                <path d="M 28 88 L 72 88 L 70 89 L 30 89 Z" fill="#451a03" opacity="0.5" /> {/* pot rim shadow */}
+                {/* Pedestal / Dirt (Background Parallax) */}
+                <g style={{ transform: `translate(${mousePos.x * -4}px, ${mousePos.y * -2}px)`, transition: 'transform 0.1s ease-out' }}>
+                    {/* 3D Glass Pedestal */}
+                    <ellipse cx="50" cy="100" rx="20" ry="2" fill="rgba(0,0,0,0.5)" filter="drop-shadow(0 10px 15px rgba(0,0,0,0.8))" /> {/* Deep floating shadow */}
+                    <path d="M 25 85 L 75 85 L 65 95 L 35 95 Z" fill="url(#glass-grad)" stroke="rgba(255,255,255,0.2)" strokeWidth="0.5" filter="url(#glass-blur)" />
+                    <ellipse cx="50" cy="85" rx="25" ry="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
+                    <ellipse cx="50" cy="95" rx="15" ry="2" fill="rgba(255,255,255,0.05)" /> {/* Base reflection */}
 
-                {/* Soil */}
-                <ellipse cx="50" cy="85" rx="19" ry="2.5" fill="#291307" />
+                    {/* Inner glowing core & ethereal soil */}
+                    <circle cx="50" cy="88" r="6" fill={theme.bloom} opacity="0.3" filter="url(#bloom-glow)" className="animate-[pulse_4s_infinite]" />
+                    <ellipse cx="50" cy="84.5" rx="18" ry="2" fill="#0f172a" />
+                    <ellipse cx="50" cy="84" rx="16" ry="1.5" fill="#1e293b" />
+                </g>
 
-                {/* Growth Stages */}
-                <g style={{ transformOrigin: '50px 85px' }} className={swayClass}>
+                {/* Growth Stages (Foreground Parallax) */}
+                <g style={{ transformOrigin: '50px 85px', transform: `translate(${mousePos.x * 6}px, ${mousePos.y * 3}px)`, transition: 'transform 0.1s ease-out' }} className={swayClass}>
                     {/* STAGE 0: SEED */}
                     {stage === 0 && (
                         <ellipse cx="50" cy="84" rx="2" ry="1.5" fill={theme.leafDark} />
@@ -369,7 +394,12 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
     }, [stage, garden.currentPlantType, interactionType, swayClass]);
 
     return (
-        <div style={{ width: width, height: height }} className="relative flex flex-col items-center justify-end overflow-visible">
+        <div
+            style={{ width: width, height: height, perspective: '1000px' }}
+            className="relative flex flex-col items-center justify-end overflow-visible"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+        >
 
             {/* The SVG Container */}
             <div className={`w-full relative z-20 transition-transform duration-500 origin-bottom ${interactionType === 'clip' ? 'scale-95 rotate-2' : ''}`}>

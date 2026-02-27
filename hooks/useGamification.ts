@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User, GardenState, Lumina } from '../types';
 import { GardenService } from '../services/gardenService';
 import { PetService } from '../services/petService';
@@ -13,6 +13,13 @@ export const useGamification = (user: User | null | undefined) => {
 
     // Lumina State
     const [lumina, setLumina] = useState<Lumina | null>(null);
+
+    useEffect(() => {
+        if (user?.id) {
+            refreshGarden();
+            refreshPet();
+        }
+    }, [user?.id]);
 
     const refreshGarden = async () => {
         if (!user?.id) return;

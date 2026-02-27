@@ -9,6 +9,11 @@ export const useNotifications = (user: User | null | undefined) => {
 
     useEffect(() => {
         const checkNotifications = async () => {
+            // Guarantee fresh notifications for current session
+            if (user?.id) {
+                localStorage.removeItem('peutic_cleared_notifs');
+            }
+
             // Delay slightly to let data load references if needed
             await new Promise(resolve => setTimeout(resolve, 1000));
 

@@ -27,8 +27,10 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
     const [showShop, setShowShop] = useState(false);
     const [localUser, setLocalUser] = useState<User>(user);
     const [luminaLevel, setLuminaLevel] = useState(1);
+    const [weather, setWeather] = useState<'sun' | 'rain'>('sun');
+    const [bowlRipple, setBowlRipple] = useState(false);
     const timerRef = useRef<number | null>(null);
-    const bellRef = useRef<HTMLAudioElement | null>(null);
+    const windChimeRef = useRef<HTMLAudioElement | null>(null);
 
     // Sync remote updates
     useEffect(() => {
@@ -62,10 +64,17 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
             const minutes = history.reduce((acc, curr) => acc + (curr.durationSeconds / 60), 0);
             setTotalFocus(Math.floor(minutes));
 
-            // Link to Lumina Gamification
+            // Link to Gamification
             const pet = await PetService.getPet(user.id);
             if (pet) {
                 setLuminaLevel(pet.level);
+            }
+
+            // Fetch Weather
+            const moods = await UserService.getMoods(user.id);
+            if (moods.length > 0) {
+                const sunCount = moods.filter(x => ['Happy', 'Calm', 'confetti', 'sun'].includes(x.mood as any)).length;
+                setWeather((sunCount / moods.length) >= 0.5 ? 'sun' : 'rain');
             }
         };
         loadHistory();
@@ -206,36 +215,44 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
     // Toggle logic for Timer Audio Additions
     useEffect(() => {
         if (isActive) {
-            triggerAmbientSound(); // Start Sound
+            if (soundEnabled) triggerAmbientSound(); // Start Sound
 
             if (timerMode === 'candle') {
-                const windChime = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_2491a6d4ee.mp3");
-                windChime.loop = true;
-                windChime.volume = 0.2;
-                windChime.play().catch(e => console.error(e));
-                audioNodesRef.current.bells = { intervalId: setInterval(() => { }, 1000), audio: windChime };
+                if (soundEnabled && windChimeRef.current) {
+                    windChimeRef.current.volume = 0.2;
+                    windChimeRef.current.play().catch(e => console.error("Chime error:", e));
+                }
+
+                const bellId = window.setInterval(() => {
+                    if (soundEnabled) triggerAmbientSound();
+                }, 45000); // Strike bowl every 45s
+
+                audioNodesRef.current.bells = { intervalId: bellId };
             }
             // Loop sounds if requested
             else if (bellInterval > 0) {
-                const id = setInterval(triggerAmbientSound, bellInterval * 1000);
+                const id = window.setInterval(() => {
+                    if (soundEnabled) triggerAmbientSound();
+                }, bellInterval * 1000);
                 audioNodesRef.current.bells = { intervalId: id };
             }
         } else {
             stopAudio();
+            if (windChimeRef.current) {
+                windChimeRef.current.pause();
+                windChimeRef.current.currentTime = 0;
+            }
         }
 
         // CRITICAL PATCH: Memory cleanup to prevent overlapping audio oscillators
-        return () => stopAudio();
-    }, [isActive, bellInterval]); // Added bellInterval to dependency array
+        return () => {
+            stopAudio();
+            if (windChimeRef.current) windChimeRef.current.pause();
+        };
+    }, [isActive, bellInterval, soundEnabled]);
 
     const toggleTimer = () => {
         setIsActive(!isActive);
-        if (!isActive && soundEnabled) {
-            // Play ambient chimes when starting the timer
-            const chimeAudio = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_2491a6d4ee.mp3");
-            chimeAudio.volume = 0.3;
-            chimeAudio.play().catch(e => console.error("Chime play error:", e));
-        }
     };
 
     const nextKoan = () => {
@@ -295,6 +312,9 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
 
     return (
         <div className="fixed inset-0 h-[100dvh] z-[120] bg-stone-900 text-stone-100 flex flex-col font-serif animate-in fade-in duration-700 overflow-hidden">
+            {/* Audio Elements bound to DOM for Autoplay Bypass */}
+            <audio ref={windChimeRef} src="https://cdn.freesound.org/previews/411/411088_5121236-lq.mp3" loop preload="auto" />
+
             {/* Real Zen Dojo Background (Unsplash) - Deepened Atmosphere */}
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1545569341-9eb8b30979d9?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-luminosity"></div>
 
@@ -334,36 +354,67 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                 </div>
             </header>
 
+            {/* AMBIENT WEATHER WINDOW */}
+            <div className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[80%] md:w-96 h-32 md:h-48 border-[6px] md:border-8 border-stone-800 bg-stone-900/40 shadow-[inset_0_0_50px_rgba(0,0,0,0.8),0_20px_50px_rgba(0,0,0,0.5)] z-0 overflow-hidden flex transform-gpu perspective-1000 rotate-x-6">
+                {/* Shoji Screen Grids */}
+                <div className="absolute inset-0 grid grid-cols-4 grid-rows-2 opacity-60">
+                    {[...Array(8)].map((_, i) => (
+                        <div key={i} className="border border-stone-800/80 bg-[#f4ebd8]/10 backdrop-blur-[2px]"></div>
+                    ))}
+                </div>
+
+                {/* Dynamic Weather Layer behind Shoji */}
+                {weather === 'sun' ? (
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-200/40 via-transparent to-transparent z-[-1]"></div>
+                ) : (
+                    <div className="absolute inset-0 bg-slate-900/60 z-[-1] overflow-hidden">
+                        {[...Array(20)].map((_, i) => (
+                            <div key={i} className="absolute w-[1px] h-12 bg-blue-300/40 animate-[particle-float-up_1s_linear_infinite]" style={{ left: `${Math.random() * 100}%`, top: `-20%`, animationDelay: `${Math.random()}s`, animationDuration: `${0.5 + Math.random() * 0.5}s` }}></div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
             {/* --- VISUAL DECORATIONS --- */}
-            {/* Placed at z-0 so it's under main interactive layer but OVER background */}
-            <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+            {/* Placed at z-10 so it's under main interactive layer but OVER all background masks */}
+            <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
                 {localUser.unlockedDecor?.map(itemId => {
                     const itemData = SANCTUARY_ITEMS.find(i => i.id === itemId);
                     if (!itemData) return null;
 
-                    // Absolute positioning map for items relative to the full screen
+                    // Absolute positioning map for items relative to the full screen (Spaced out like a living room)
                     const getPositionClass = (id: string) => {
                         switch (id) {
-                            case 'incense': return 'bottom-[15%] left-[20%] md:left-[25%] text-4xl md:text-5xl opacity-80 animate-[sway_4s_ease-in-out_infinite]';
-                            case 'bonsai': return 'bottom-[20%] right-[15%] md:right-[20%] text-6xl md:text-7xl opacity-90 drop-shadow-xl';
-                            case 'lantern': return 'top-[15%] left-[15%] md:left-[20%] text-5xl md:text-6xl opacity-70 animate-pulse-slow drop-shadow-[0_0_15px_rgba(24cd,211,153,0.5)]';
-                            case 'stones': return 'bottom-[10%] left-[45%] md:left-[40%] text-3xl md:text-4xl opacity-70';
-                            case 'scroll': return 'top-[20%] right-[20%] md:right-[25%] text-5xl md:text-6xl opacity-85';
-                            case 'singing_bowl': return 'bottom-[12%] left-[35%] md:left-[28%] text-4xl md:text-5xl opacity-90';
+                            case 'bonsai': return 'bottom-[5%] right-[5%] md:right-[10%] text-[8rem] md:text-[10rem] opacity-100 drop-shadow-2xl z-30';
+                            case 'incense': return 'bottom-[8%] left-[5%] md:left-[10%] text-6xl md:text-8xl opacity-100 animate-[sway_4s_ease-in-out_infinite] drop-shadow-2xl z-30';
+                            case 'lantern': return 'top-[5%] left-[10%] md:left-[15%] text-7xl md:text-8xl opacity-100 animate-[sway_6s_ease-in-out_infinite] drop-shadow-[0_0_30px_rgba(24cd,211,153,0.8)] z-20';
+                            case 'scroll': return 'top-[10%] right-[10%] md:right-[15%] text-[6rem] md:text-[8rem] opacity-90 drop-shadow-xl z-10';
+                            case 'stones': return 'bottom-[2%] left-[40%] md:left-[45%] text-5xl md:text-6xl opacity-100 drop-shadow-2xl z-20';
+                            case 'singing_bowl': return 'bottom-[25%] left-[20%] md:left-[25%] text-6xl md:text-[5.5rem] opacity-100 drop-shadow-[0_15px_15px_rgba(0,0,0,0.5)] pointer-events-auto cursor-pointer z-30 transition-transform active:scale-95';
                             default: return 'hidden';
                         }
                     };
 
+                    const handleBowlClick = () => {
+                        if (itemId !== 'singing_bowl') return;
+                        playBellSound();
+                        setBowlRipple(true);
+                        setTimeout(() => setBowlRipple(false), 2000);
+                    };
+
                     return (
-                        <div key={itemId} className={`absolute ${getPositionClass(itemId)}`}>
+                        <div key={itemId} onClick={itemId === 'singing_bowl' ? handleBowlClick : undefined} className={`absolute ${getPositionClass(itemId)}`}>
                             {itemData.icon}
+                            {itemId === 'singing_bowl' && bowlRipple && (
+                                <div className="absolute inset-0 bg-amber-500/30 rounded-full blur-xl scale-150 animate-[ping_2s_ease-out_forwards] pointer-events-none"></div>
+                            )}
                         </div>
                     );
                 })}
             </div>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col items-center justify-start overflow-y-auto custom-scrollbar w-full max-w-md mx-auto p-4 md:p-6 relative z-10 pt-4 md:pt-8" style={{ maxHeight: 'calc(100dvh - 80px)' }}>
+            <main className="flex-1 flex flex-col items-center justify-start overflow-y-auto custom-scrollbar w-full max-w-md mx-auto p-4 md:p-6 relative z-20 pt-4 md:pt-8" style={{ maxHeight: 'calc(100dvh - 80px)' }}>
 
                 {/* Time Selection (Restored - Small) */}
                 {!isActive && (
@@ -389,7 +440,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                     </div>
 
                     {/* The Circle Frame (Candle Container) */}
-                    <div className={`w-64 h-64 md:w-80 md:h-80 rounded-full border border-stone-800 flex flex-col items-center justify-center relative bg-stone-900/30 backdrop-blur-sm shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-all duration-1000 shrink-0 ${isActive ? 'scale-105 border-orange-900/40 animate-ethereal-breathe' : ''}`}>
+                    <div className={`w-64 h-64 md:w-80 md:h-80 rounded-full border border-white/10 flex flex-col items-center justify-center relative bg-white/5 backdrop-blur-3xl shadow-premium transition-all duration-1000 shrink-0 ${isActive ? 'scale-105 border-amber-500/30 animate-ethereal-breathe shadow-[0_0_40px_rgba(245,158,11,0.2)]' : ''}`}>
 
                         {timerMode === 'candle' ? (
                             <div className="flex flex-col items-center justify-center animate-in fade-in duration-1000 scale-125 md:scale-150 relative -mt-8">
@@ -437,7 +488,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
 
                 {/* KOAN DISPLAY - MOVED UP FOR VISIBILITY */}
                 {koan && (
-                    <div className="mb-8 w-full max-w-lg p-6 bg-stone-900/80 backdrop-blur border border-amber-900/30 rounded-2xl text-center animate-in zoom-in duration-500 shadow-2xl relative z-20">
+                    <div className="mb-8 w-full max-w-lg p-8 bg-black/40 backdrop-blur-3xl border border-white/10 rounded-[2rem] text-center animate-in zoom-in duration-500 shadow-premium relative z-20">
                         <p className="text-xl md:text-2xl font-serif italic text-amber-200/90 leading-relaxed drop-shadow-md">"{koan}"</p>
                         <button onClick={() => setKoan(null)} className="text-[10px] text-stone-500 hover:text-stone-300 mt-4 uppercase tracking-widest font-bold">Dismiss</button>
                     </div>
@@ -447,7 +498,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                 <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
                     <button
                         onClick={(e) => { e.stopPropagation(); nextKoan(); }}
-                        className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all bg-stone-900/80 text-amber-500 border border-amber-500/30 hover:bg-amber-500/20 hover:text-amber-200 shadow-lg"
+                        className="px-6 py-3 rounded-[2rem] text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all bg-white/5 text-amber-500 border border-white/10 hover:bg-white/10 hover:text-amber-200 shadow-glass backdrop-blur-md"
                     >
                         <BookOpen className="w-4 h-4" />
                         Seek Wisdom
@@ -457,9 +508,11 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                         onClick={(e) => {
                             e.stopPropagation();
                             setSoundEnabled(!soundEnabled);
-                            if (!soundEnabled && bellRef.current) bellRef.current.play().catch(() => { });
+                            if (!soundEnabled && windChimeRef.current && timerMode === 'candle' && isActive) {
+                                windChimeRef.current.play().catch(() => { });
+                            }
                         }}
-                        className={`p-2 rounded-full transition-all border ${soundEnabled ? 'bg-amber-500/20 text-amber-400 border-amber-500/50 shadow-lg' : 'bg-stone-900/50 text-stone-600 border-stone-800 hover:text-stone-400'}`}
+                        className={`p-3 rounded-full transition-all border backdrop-blur-md ${soundEnabled ? 'bg-amber-500/10 text-amber-400 border-amber-500/40 shadow-glass' : 'bg-white/5 text-stone-400 border-white/10 hover:bg-white/10 hover:text-white shadow-glass-dark'}`}
                     >
                         {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                     </button>
@@ -467,7 +520,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                 </div>
 
                 {/* --- NEW SOUNDSCAPE CONTROLS --- */}
-                <div className="bg-stone-900/60 rounded-3xl p-6 backdrop-blur-md border border-amber-900/20 w-full max-w-lg mb-8 shadow-2xl relative overflow-hidden group">
+                <div className="bg-black/40 rounded-[2rem] p-8 backdrop-blur-3xl border border-white/10 w-full max-w-lg mb-12 shadow-premium relative overflow-hidden group">
                     <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
 
                     <h3 className="text-lg font-serif text-amber-200/80 mb-6 flex items-center justify-center gap-3 tracking-widest uppercase text-sm">

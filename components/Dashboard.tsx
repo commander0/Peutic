@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect, useRef, lazy, Suspense, useTransition } from 'react';
 import { useNotifications } from '../hooks/useNotifications';
+import { useDashboardUI } from '../hooks/useDashboardUI';
 import { useGamification } from '../hooks/useGamification';
 import { useDashboardState } from '../hooks/useDashboardState';
 import { Link, useNavigate } from 'react-router-dom';
@@ -8,16 +9,11 @@ import { LanguageSelector } from './common/LanguageSelector';
 import { useLanguage } from './common/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import {
-    Clock, Settings, LogOut,
-    LayoutDashboard, Plus, X, Mic, Lock, AlertTriangle, ShieldCheck, Heart,
-    BookOpen, Trophy,
-    Sun, Feather, LifeBuoy, RefreshCw, Star, Edit2, Zap, Gamepad2,
-    ChevronDown, ChevronUp, User as UserIcon, Moon, Scissors, Leaf,
-    Twitter, Instagram, Linkedin,
-    Mail, Eye, EyeOff, Megaphone, Sparkles, Save, Video, Brain, Cloud, Flame
+    Clock, LayoutDashboard, Brain, BookOpen, User as UserIcon, Settings, Plus, Lock, Sun, Moon, Sparkles, Star, Mic, Heart, ShieldCheck, Leaf, LogOut, LifeBuoy, ChevronUp, ChevronDown, Megaphone, Zap, Scissors, Gamepad2, Cloud, Feather, AlertTriangle, Video, Eye, EyeOff, Edit2, Mail, RefreshCw, Save, Twitter, Instagram, Linkedin, X, Flame, Trophy
 } from 'lucide-react';
 import { NotificationBell } from './common/NotificationBell';
 import { UserService } from '../services/userService';
+// import PetCanvas from './pocket/PetCanvas';
 import { useToast } from './common/Toast';
 import { CompanionSkeleton, StatSkeleton } from './common/SkeletonLoader';
 import { InspirationQuote } from './common/InspirationQuote';
@@ -29,10 +25,12 @@ import { generateDailyInsight } from '../services/geminiService';
 import TechCheck from './TechCheck';
 import GroundingMode from './GroundingMode';
 import { GardenService } from '../services/gardenService';
+import { ClinicalSafetyScanner } from '../services/clinicalSafetyScanner';
 
 // Extracted Components
 import { JournalSection } from './dashboard/JournalSection';
 import { WisdomGenerator } from './dashboard/WisdomGenerator';
+
 import { MoodTracker } from './dashboard/MoodTracker';
 import { SoundscapePlayer } from './dashboard/SoundscapePlayer';
 import { WeatherEffect } from './dashboard/WeatherEffect';
@@ -41,6 +39,7 @@ import { WeatherEffect } from './dashboard/WeatherEffect';
 
 const MindfulMatchGame = lazy(() => import('./MindfulMatchGame').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Game Engine...</div> })));
 const CloudHopGame = lazy(() => import('./CloudHopGame').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Cloud Engine...</div> })));
+const StressSlicerGame = lazy(() => import('./arcade/StressSlicerGame').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Slicer Engine...</div> })));
 const PaymentModal = lazy(() => import('./PaymentModal').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Payment Secure Node...</div> })));
 const ProfileModal = lazy(() => import('./ProfileModal').catch(() => ({ default: () => <div className="p-10 text-center text-gray-400">Loading Profile Experience...</div> })));
 const GardenFullView = lazy(() => import('./garden/GardenFullView'));
@@ -50,6 +49,7 @@ const ObservatoryView = lazy(() => import('./sanctuary/ObservatoryView'));
 const DojoView = lazy(() => import('./sanctuary/DojoView'));
 const ThoughtShredder = lazy(() => import('./tools/ThoughtShredder'));
 
+import { SupportCircles } from './community/SupportCircles';
 
 import EmergencyOverlay from './safety/EmergencyOverlay';
 import { VoiceRecorder, VoiceEntryItem } from './journal/VoiceRecorder';
@@ -66,7 +66,7 @@ declare global {
 interface DashboardProps {
     user: User;
     onLogout: () => void;
-    onStartSession: (companion: Companion) => void;
+    onStartSession: (companion: Companion, mode?: 'video' | 'voice') => void;
 }
 
 const AvatarImage = React.memo(({ src, alt, className, isUser = false }: { src?: string, alt?: string, className?: string, isUser?: boolean }) => {
@@ -77,7 +77,7 @@ const AvatarImage = React.memo(({ src, alt, className, isUser = false }: { src?:
                 <img
                     src={src}
                     alt={alt || 'Avatar'}
-                    className="w-full h-full object-cover"
+                    className={`w-full h-full object-cover ${src?.includes('dicebear') ? 'bg-yellow-200 dark:bg-yellow-900/50' : ''}`}
                     onError={() => setImgError(true)}
                 />
             ) : (
@@ -191,6 +191,44 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         }
     }, [user?.unlockedAchievements, allAchievements]);
 
+    // Agentic Workflow: Proactive Empathy Check
+    useEffect(() => {
+        if (!user) return;
+        const checkAgenticSafety = async () => {
+            const now = new Date();
+            const lastLogin = new Date(user.lastLoginDate || now);
+            const diffDays = Math.floor(Math.abs(now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
+
+            const agentMessage = ClinicalSafetyScanner.generateProactiveCheckIn(user, diffDays);
+
+            if (agentMessage && !sessionStorage.getItem('agentic_checkin_shown')) {
+                // Determine routing action based on message context
+                let action = 'check_streak';
+                if (agentMessage.includes("Dojo")) action = 'open_dojo';
+                if (agentMessage.includes("sanctuary")) action = 'open_garden';
+
+                setTimeout(() => {
+                    addNotification({
+                        id: `agentic-${Date.now()}`,
+                        title: "Sanctuary AI",
+                        message: agentMessage,
+                        type: 'info',
+                        read: false,
+                        timestamp: new Date(),
+                        action: action
+                    });
+
+                    const sound = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
+                    sound.volume = 0.3;
+                    sound.play().catch(() => { });
+
+                    sessionStorage.setItem('agentic_checkin_shown', 'true');
+                }, 3500); // 3.5s delay for organic feel
+            }
+        };
+        checkAgenticSafety();
+    }, [user?.id]);
+
     const {
         dashboardUser, setDashboardUser,
         balance,
@@ -198,33 +236,38 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         weeklyGoal, weeklyMessage, settings, refreshData
     } = useDashboardState(user);
 
-    const [showPayment, setShowPayment] = useState(false);
-    const [paymentError, setPaymentError] = useState<string | undefined>(undefined);
-    const [showBreathing, setShowBreathing] = useState(false);
-    const [showProfile, setShowProfile] = useState(false);
-    const [showGrounding, setShowGrounding] = useState(false);
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [mood, setMood] = useState<'confetti' | 'rain' | null>(null);
-    const [editName, setEditName] = useState(user.name);
-    const [editEmail, setEditEmail] = useState(user.email);
-    const [isSavingProfile, setIsSavingProfile] = useState(false);
-    const [isIdle, setIsIdle] = useState(false);
     const idleTimerRef = useRef<number | null>(null);
     const logoutTimerRef = useRef<number | null>(null);
+    const weeklyTarget = 100;
 
-    const [showTechCheck, setShowTechCheck] = useState(false);
-    const [isGhostMode, setIsGhostMode] = useState(() => localStorage.getItem('peutic_ghost_mode') === 'true');
-    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-    const [showBookFull, setShowBookFull] = useState(false);
-    const [showGardenFull, setShowGardenFull] = useState(false);
-    const [showPocketPet, setShowPocketPet] = useState(false);
-    const [showObservatory, setShowObservatory] = useState(false);
-    const [showDojo, setShowDojo] = useState(false);
-    const [showShredder, setShowShredder] = useState(false);
-    const [showMatchGame, setShowMatchGame] = useState(false);
-    const [showCloudHop, setShowCloudHop] = useState(false);
-    const [isUnlockingRoom, setIsUnlockingRoom] = useState(false);
-    const weeklyTarget = 100; // Updated from 10
+    const {
+        showPayment, setShowPayment,
+        paymentError, setPaymentError,
+        showBreathing, setShowBreathing,
+        showProfile, setShowProfile,
+        showGrounding, setShowGrounding,
+        showDeleteConfirm, setShowDeleteConfirm,
+        mood, setMood,
+        editName, setEditName,
+        editEmail, setEditEmail,
+        isSavingProfile, setIsSavingProfile,
+        isIdle, setIsIdle,
+        showTechCheck, setShowTechCheck,
+        isGhostMode, setIsGhostMode,
+        isDeletingAccount, setIsDeletingAccount,
+        showBookFull, setShowBookFull,
+        showGardenFull, setShowGardenFull,
+        showPocketPet, setShowPocketPet,
+        showObservatory, setShowObservatory,
+        showDojo, setShowDojo,
+        showShredder, setShowShredder,
+        showMatchGame, setShowMatchGame,
+        showCloudHop, setShowCloudHop,
+        showSlicerGame, setShowSlicerGame,
+        isUnlockingRoom, setIsUnlockingRoom,
+        showVoiceJournal, setShowVoiceJournal,
+        showSupportCircles, setShowSupportCircles
+    } = useDashboardUI(user);
 
     // Gamification Hook
     const { garden, lumina, refreshGarden, handleClipPlant, refreshPet } = useGamification(user);
@@ -237,7 +280,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             case 'open_pet': setShowPocketPet(true); break;
             case 'open_garden': setShowGardenFull(true); break;
             case 'check_streak': setShowBookFull(true); break;
-            case 'open_community': showToast("Redirecting to Community Hub...", "info"); break;
+            case 'open_community': setShowSupportCircles(true); break;
             case 'open_dojo': setShowDojo(true); break;
             case 'open_observatory': setShowObservatory(true); break;
             case 'open_shredder': setShowShredder(true); break;
@@ -254,7 +297,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const { showToast } = useToast();
 
     // --- NEW FEATURE: VOICE JOURNAL & MOOD PULSE ---
-    const [showVoiceJournal, setShowVoiceJournal] = useState(false);
     const [voiceEntries, setVoiceEntries] = useState<VoiceJournalEntry[]>([]);
     const [moodRiskAlert, setMoodRiskAlert] = useState(false);
 
@@ -355,8 +397,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         }
     };
 
-    const handleStartConnection = (c: Companion) => {
+    const handleStartConnection = (c: Companion, mode: 'video' | 'voice' = 'video') => {
         if ((dashboardUser?.balance || 0) <= 0) { setPaymentError("Insufficient credits. Please add funds to start a session."); setShowPayment(true); return; }
+        if (mode === 'voice') {
+            onStartSession(c, 'voice');
+            return;
+        }
         setPendingCompanion(c);
         setShowTechCheck(true);
     };
@@ -594,6 +640,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     <Plus className="hidden md:block w-3.5 h-3.5 opacity-70" />
                                 </button>
 
+
                                 <button onClick={() => setShowProfile(true)} className="w-10 h-10 md:w-11 md:h-11 rounded-2xl overflow-hidden border-2 border-primary shadow-premium transition-all hover:rotate-3 active:scale-90 flex-shrink-0">
                                     <AvatarImage src={isGhostMode ? '' : (dashboardUser?.avatar || '')} alt={isGhostMode ? 'Member' : (dashboardUser?.name || 'User')} className="w-full h-full object-cover" isUser={true} />
                                 </button>
@@ -608,43 +655,45 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
 
                                 <div className="space-y-4">
+
+
                                     <CollapsibleSection title="Spaces" icon={Zap} defaultOpen={false}>
                                         <div className="space-y-4">
                                             <div className="grid grid-cols-3 gap-1 md:gap-4">
                                                 {/* TILE 1: ZEN BONZAI */}
-                                                {garden && (
-                                                    <div
-                                                        onClick={() => setShowGardenFull(true)}
-                                                        className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(34,197,94,0.15)] hover:shadow-[0_8px_32px_rgba(34,197,94,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
-                                                    >
-                                                        <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
-                                                            <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
-                                                            <div className="relative z-10 w-full h-full flex flex-col items-center justify-center pointer-events-none">
-                                                                <div className="relative mb-1 md:mb-4 pointer-events-auto">
-                                                                    <div className="absolute -inset-4 bg-green-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                                    <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-green-500 to-emerald-700 border border-green-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,197,94,0.4)] group-hover:scale-110 transition-transform">
-                                                                        <Leaf className="w-5 h-5 md:w-10 md:h-10 text-white animate-ethereal-breathe" />
-                                                                    </div>
-                                                                </div>
-                                                                {/* Overlay Controls */}
-                                                                <div className="absolute top-2 right-2 pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handleClipPlant();
-                                                                        }}
-                                                                        className="p-2 bg-white/90 dark:bg-black/80 rounded-full shadow-lg hover:scale-110 active:scale-95 text-pink-500 transition-all"
-                                                                        title="Clip for Inspiration"
-                                                                    >
-                                                                        <Scissors className="w-4 h-4" />
-                                                                    </button>
+                                                <div
+                                                    onClick={() => setShowGardenFull(true)}
+                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(34,197,94,0.15)] hover:shadow-[0_8px_32px_rgba(34,197,94,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                >
+                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
+                                                        <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
+                                                        <div className="relative z-10 w-full h-full flex flex-col items-center justify-center pointer-events-none">
+                                                            <div className="relative mb-1 md:mb-4 pointer-events-auto">
+                                                                <div className="absolute -inset-4 bg-green-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                                <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-green-500 to-emerald-700 border border-green-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,197,94,0.4)] group-hover:scale-110 transition-transform">
+                                                                    <Leaf className="w-5 h-5 md:w-10 md:h-10 text-white animate-ethereal-breathe" />
                                                                 </div>
                                                             </div>
-                                                            <h3 className="text-[7px] md:text-sm font-black text-green-700 dark:text-green-300 uppercase tracking-widest drop-shadow-sm text-center mt-[-10px] relative z-20">Zen Bonzai</h3>
-                                                            <p className="hidden md:block text-[9px] font-bold text-green-600/70 dark:text-green-400/60 uppercase tracking-tighter">Lvl {garden.level} &bull; {garden.currentPlantType}</p>
+                                                            {/* Overlay Controls */}
+                                                            <div className="absolute top-2 right-2 pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleClipPlant();
+                                                                    }}
+                                                                    className="p-2 bg-white/90 dark:bg-black/80 rounded-full shadow-lg hover:scale-110 active:scale-95 text-pink-500 transition-all"
+                                                                    title="Clip for Inspiration"
+                                                                >
+                                                                    <Scissors className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
                                                         </div>
+                                                        <h3 className="text-[7px] md:text-sm font-black text-green-700 dark:text-green-300 uppercase tracking-widest drop-shadow-sm text-center mt-[-10px] relative z-20">Zen Bonzai</h3>
+                                                        <p className="hidden md:block text-[9px] font-bold text-green-600/70 dark:text-green-400/60 uppercase tracking-tighter">
+                                                            {garden ? `Lvl ${garden.level} • ${garden.currentPlantType}` : 'Plant Seed'}
+                                                        </p>
                                                     </div>
-                                                )}
+                                                </div>
 
                                                 {/* TILE 2: BOOK OF YOU */}
                                                 {(() => {
@@ -664,7 +713,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                                     showToast(`Locked for ${daysRemaining} more days.`, "info");
                                                                 }
                                                             }}
-                                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(168,85,247,0.15)] hover:shadow-[0_8px_32px_rgba(168,85,247,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                                         >
                                                             <div className="flex flex-col items-center justify-center h-full p-2 md:p-6 text-center relative z-10">
                                                                 <div className="relative mb-1 md:mb-4">
@@ -687,12 +736,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 3: LUMINA */}
                                                 <div
                                                     onClick={() => setShowPocketPet(true)}
-                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(34,211,238,0.15)] hover:shadow-[0_8px_32px_rgba(34,211,238,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                                 >
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
                                                         <div className="relative mb-1 md:mb-4">
                                                             <div className="absolute -inset-4 bg-cyan-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                            <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-cyan-500 to-blue-700 border border-cyan-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform">
+                                                            <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-cyan-500 to-blue-700 border border-cyan-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform overflow-hidden">
                                                                 <Sparkles className="w-5 h-5 md:w-10 md:h-10 text-white animate-bounce" />
                                                             </div>
                                                         </div>
@@ -706,7 +755,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 4: ORACLE */}
                                                 <div
                                                     onClick={() => handleRoomInteraction('observatory', 25)}
-                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(99,102,241,0.15)] hover:shadow-[0_8px_32px_rgba(99,102,241,0.4)] hover:-translate-y-1' : 'border-gray-300 dark:border-gray-700 grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
+                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1' : 'border-gray-300 dark:border-gray-700 grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
                                                 >
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
                                                         <div className="relative mb-1 md:mb-4">
@@ -732,7 +781,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 5: ZEN DOJO */}
                                                 <div
                                                     onClick={() => handleRoomInteraction('dojo', 15)}
-                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(245,158,11,0.15)] hover:shadow-[0_8px_32px_rgba(245,158,11,0.4)] hover:-translate-y-1' : 'border-gray-300 dark:border-gray-700 grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
+                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1' : 'border-gray-300 dark:border-gray-700 grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
                                                 >
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
                                                         <div className="relative mb-1 md:mb-4">
@@ -758,7 +807,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 6: THOUGHT SHREDDER */}
                                                 <div
                                                     onClick={() => setShowShredder(true)}
-                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(244,63,94,0.15)] hover:shadow-[0_8px_32px_rgba(244,63,94,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                                 >
                                                     <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-600/5 pointer-events-none"></div>
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
@@ -781,27 +830,59 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                                     {dashboardUser ? (
                                         <div className="bg-transparent dark:bg-transparent p-4 md:p-5 rounded-3xl border border-transparent shadow-none col-span-1 md:col-span-2 relative overflow-hidden group min-h-[120px] md:min-h-[140px]">
-                                            {weeklyGoal >= weeklyTarget ? (<div className="absolute top-0 right-0 p-3 z-20"><div className="relative flex items-center justify-center"><div className="absolute w-12 h-12 border-2 border-blue-500/40 border-t-blue-400 rounded-full animate-spin"></div><div className="absolute w-10 h-10 bg-blue-400/50 rounded-full blur-xl animate-pulse"></div><div className="absolute w-full h-full bg-blue-300/20 rounded-full animate-ping"></div><Flame className="absolute -top-4 w-6 h-6 text-blue-400 fill-blue-500 animate-[flicker_2s_ease-in-out_infinite] z-20 drop-shadow-[0_0_10px_rgba(59,130,246,1)]" /><Trophy className="w-10 h-10 text-blue-400 fill-blue-500 drop-shadow-[0_0_20px_rgba(59,130,246,1)] animate-bounce relative z-10" /></div></div>) : (<div className="absolute top-0 right-0 p-4 opacity-40 group-hover:opacity-100 transition-opacity duration-300"><Trophy className="w-20 h-20 text-gray-200 dark:text-gray-800/50 group-hover:text-primary dark:group-hover:text-blue-500 transition-colors" /></div>)}
-                                            <div className="relative z-10"><h3 className="font-bold text-gray-500 dark:text-gray-400 text-[10px] md:text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3><div className="flex items-end gap-2 mb-2 md:mb-3"><span className="text-2xl md:text-4xl font-black text-primary dark:text-blue-400">{weeklyGoal}</span><span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span></div><div className="w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-2 md:mb-3">
-                                                <div
-                                                    className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= weeklyTarget
-                                                        ? 'bg-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.9)] animate-pulse'
-                                                        : 'bg-primary dark:bg-blue-500'
-                                                        }`}
-                                                    style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}
-                                                ></div></div><p className="text-[10px] md:text-sm font-bold text-gray-700 dark:text-gray-300">{weeklyGoal >= weeklyTarget ? "🔥 You are on a hot streak!" : weeklyMessage}</p></div>
+                                            {weeklyGoal >= 300 ? (
+                                                <div className="absolute top-4 right-4 z-20 flex items-center justify-center">
+                                                    <div className="relative w-16 h-16 flex items-center justify-center">
+                                                        {/* Green Nuclear Flame Effect */}
+                                                        <div className="absolute bottom-6 w-8 h-12 bg-green-500/80 rounded-[50%_50%_30%_30%] blur-md animate-[bounce_0.5s_infinite_alternate] shadow-[0_0_30px_rgba(34,197,94,1)]"></div>
+                                                        <div className="absolute bottom-4 w-6 h-10 bg-emerald-300 rounded-[50%_50%_30%_30%] blur-sm animate-[bounce_0.6s_infinite_alternate] shadow-[0_0_20px_rgba(16,185,129,0.8)]"></div>
+                                                        <Trophy className="w-12 h-12 text-green-400 fill-green-500/50 drop-shadow-[0_0_25px_rgba(34,197,94,1)] animate-bounce relative z-10" />
+                                                        <Leaf className="absolute -right-2 top-0 w-6 h-6 text-green-300 fill-green-400 animate-pulse drop-shadow-[0_0_10px_rgba(74,222,128,1)] z-20" />
+                                                    </div>
+                                                </div>
+                                            ) : weeklyGoal >= weeklyTarget ? (
+                                                <div className="absolute top-4 right-4 z-20 flex items-center justify-center">
+                                                    <div className="relative w-14 h-14 flex items-center justify-center">
+                                                        <div className="absolute w-full h-full border-2 border-blue-500/40 border-t-blue-400 rounded-full animate-[spin_3s_linear_infinite]"></div>
+                                                        <div className="absolute w-10 h-10 bg-blue-400/50 rounded-full blur-xl animate-pulse"></div>
+                                                        <Leaf className="w-8 h-8 text-blue-400 fill-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,1)] animate-bounce relative z-10" />
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="absolute top-4 right-4 opacity-40 group-hover:opacity-100 transition-opacity duration-300">
+                                                    <Leaf className="w-14 h-14 text-gray-200 dark:text-gray-800/50 group-hover:text-primary dark:group-hover:text-blue-500 transition-colors" />
+                                                </div>
+                                            )}
+                                            <div className="relative z-10">
+                                                <h3 className="font-bold text-gray-500 dark:text-gray-400 text-[10px] md:text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3>
+                                                <div className="flex items-end gap-2 mb-2 md:mb-3">
+                                                    <span className="text-2xl md:text-4xl font-black text-primary dark:text-blue-400">{weeklyGoal}</span>
+                                                    <span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span>
+                                                </div>
+                                                <div className="w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-2 md:mb-3">
+                                                    <div
+                                                        className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= 300 ? 'bg-green-400 shadow-[0_0_20px_rgba(74,222,128,0.9)] animate-pulse'
+                                                            : weeklyGoal >= weeklyTarget ? 'bg-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.9)] animate-pulse'
+                                                                : 'bg-primary dark:bg-blue-500'
+                                                            }`}
+                                                        style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}
+                                                    ></div>
+                                                </div>
+                                                <p className="text-[10px] md:text-sm font-bold text-gray-700 dark:text-gray-300">
+                                                    {weeklyMessage}
+                                                </p>
+                                            </div>
                                         </div>
                                     ) : <StatSkeleton />}
                                     <MoodTracker onMoodSelect={handleMoodSelect} />
                                 </div>
 
                                 <CollapsibleSection title="Arcade" icon={Gamepad2}>
-                                    {/* Arcade Content */}
-                                    <div className="grid grid-cols-2 gap-3 md:gap-4 w-full">
+                                    <div className="grid grid-cols-3 gap-1 md:gap-4 w-full">
                                         {/* TILE 1: MINDFUL MATCH */}
                                         <div
                                             onClick={() => setShowMatchGame(true)}
-                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(139,92,246,0.15)] hover:shadow-[0_8px_32px_rgba(139,92,246,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                         >
                                             <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-pink-600/5 pointer-events-none"></div>
                                             <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
@@ -831,6 +912,24 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 </div>
                                                 <h3 className="text-[7px] md:text-sm font-black text-sky-700 dark:text-sky-300 uppercase tracking-[0.2em] mb-1">Cloud Hop</h3>
                                                 <p className="hidden md:block text-[10px] font-bold text-sky-600/60 dark:text-sky-400/50 uppercase tracking-widest">Relax & Soar</p>
+                                            </div>
+                                        </div>
+
+                                        {/* TILE 3: STRESS SLICER */}
+                                        <div
+                                            onClick={() => setShowSlicerGame(true)}
+                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(239,68,68,0.15)] hover:shadow-[0_8px_32px_rgba(239,68,68,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-600/5 pointer-events-none"></div>
+                                            <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                                <div className="relative mb-1 md:mb-4">
+                                                    <div className="absolute -inset-4 bg-red-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                    <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-red-500 to-rose-700 border border-red-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(239,68,68,0.4)] group-hover:scale-110 transition-transform">
+                                                        <Flame className="w-5 h-5 md:w-8 md:h-8 text-white" />
+                                                    </div>
+                                                </div>
+                                                <h3 className="text-[7px] md:text-sm font-black text-red-700 dark:text-red-300 uppercase tracking-[0.2em] mb-1">Stress Slicer</h3>
+                                                <p className="hidden md:block text-[10px] font-bold text-red-600/60 dark:text-red-400/50 uppercase tracking-widest">Cathartic Release</p>
                                             </div>
                                         </div>
                                     </div>
@@ -871,7 +970,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                             <p className="text-primary text-[10px] font-black uppercase tracking-widest mb-2">About {companion.name}</p>
                                                             <p className="text-white text-xs leading-relaxed mb-3">"{companion.bio}"</p>
                                                             <div className="grid grid-cols-2 gap-2 text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-3"><div className="bg-white/10 p-1.5 rounded-lg">{companion.yearsExperience} Yrs Exp</div><div className="bg-white/10 p-1.5 rounded-lg">{companion.degree}</div></div>
-                                                            <button className="bg-white text-black px-4 py-2 rounded-full font-bold text-[10px] flex items-center justify-center gap-2 hover:bg-primary transition-colors"><Video className="w-3 h-3" /> Connect Now</button>
+                                                            <div className="flex flex-col gap-2 mt-2">
+                                                                <button onClick={(e) => { e.stopPropagation(); handleStartConnection(companion, 'video'); }} className="bg-white text-black px-4 py-2 rounded-full font-bold text-[10px] w-full flex items-center justify-center gap-2 hover:bg-primary transition-colors"><Video className="w-3 h-3" /> HD Camera Session</button>
+                                                                <button onClick={(e) => { e.stopPropagation(); handleStartConnection(companion, 'voice'); }} className="bg-black/50 text-white border border-white/20 px-4 py-2 rounded-full font-bold text-[10px] w-full flex items-center justify-center gap-2 hover:bg-blue-500 hover:border-blue-500 transition-colors backdrop-blur-md"><Mic className="w-3 h-3" /> Live Voice Connect</button>
+                                                            </div>
                                                         </div>
                                                         <div className="absolute top-3 left-3 flex gap-2"><div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md ${companion.status === 'AVAILABLE' ? 'bg-green-500/90 text-white shadow-lg shadow-green-500/20' : 'bg-gray-500/90 text-white'}`}>{companion.status === 'AVAILABLE' ? 'Online' : 'Busy'}</div></div><div className="absolute bottom-3 left-3 right-3 group-hover:opacity-0 transition-opacity"><h3 className="text-white font-black text-lg leading-tight mb-0.5 shadow-sm drop-shadow-md">{companion.name}</h3><p className="text-white/90 dark:text-gray-200 text-[10px] font-bold uppercase tracking-wider truncate drop-shadow-md">{companion.specialty}</p></div></div><div className="p-3 bg-primary/10 dark:bg-primary/20 flex justify-between items-center border-t border-primary/20"><div className="flex items-center gap-1"><Star className="w-3 h-3 text-primary fill-primary" /><span className="text-gray-700 dark:text-gray-300 text-xs font-bold">{companion.rating}</span></div><button className="bg-white/50 dark:bg-primary/30 hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white rounded-lg p-2 transition-colors"><Eye className="w-3.5 h-3.5" /></button></div></div>))}</div>)}
                                     {filteredCompanions.length === 0 && (<div className="text-center py-16 bg-gray-50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800"><p className="text-gray-500 font-bold text-sm">No specialists found in this category.</p><button onClick={() => setSpecialtyFilter('All')} className="text-primary text-xs font-bold mt-2 hover:underline">View All</button></div>)}
@@ -1162,6 +1264,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                 )
             }
 
+            {
+                showSlicerGame && (
+                    <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Loading Slicer Engine...</div>}>
+                        <div className="fixed inset-0 z-[150] bg-base/90 backdrop-blur-xl flex flex-col">
+                            <div className="bg-red-50 dark:bg-red-950/30 p-4 border-b border-red-100 dark:border-red-900/50 flex justify-between items-center shrink-0">
+                                <div className="flex items-center gap-2">
+                                    <Flame className="w-5 h-5 text-red-500" />
+                                    <h2 className="font-black text-red-900 dark:text-red-300 uppercase tracking-widest text-sm">Stress Slicer</h2>
+                                </div>
+                                <button onClick={() => setShowSlicerGame(false)} className="p-2 hover:bg-red-100 dark:hover:bg-red-900 rounded-full transition-colors group">
+                                    <X className="w-6 h-6 text-red-400 group-hover:text-red-600" />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-hidden">
+                                <StressSlicerGame dashboardUser={dashboardUser} />
+                            </div>
+                        </div>
+                    </Suspense>
+                )
+            }
+
             {/* MOOD PULSE ALERT */}
             {
                 moodRiskAlert && (
@@ -1244,8 +1367,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     <Suspense fallback={null}>
                         <ThoughtShredder onClose={() => setShowShredder(false)} />
                     </Suspense>
-                )}
-        </div>
+                )
+            }
+            {
+                showSupportCircles && (
+                    <SupportCircles onClose={() => setShowSupportCircles(false)} />
+                )
+            }
+        </div >
     );
 };
 

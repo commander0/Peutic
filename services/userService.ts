@@ -369,6 +369,7 @@ export class UserService {
                 cost: 0,
                 description: reason
             });
+            window.dispatchEvent(new CustomEvent('balance-updated'));
             return true;
         } catch (e) {
             console.error("Add Balance Failed", e);
@@ -424,6 +425,7 @@ export class UserService {
                 }
             }
             this.isProcessingTransaction = false;
+            window.dispatchEvent(new CustomEvent('balance-updated'));
             return true;
 
         } catch (e) {
@@ -459,24 +461,41 @@ export class UserService {
         if (error) logger.error("Save Feedback Failed", feedback.userId, error);
     }
 
-    static async updateGameScore(userId: string, game: 'match' | 'cloud', score: number) {
+    static async updateGameScore(userId: string, game: 'match' | 'cloud' | 'slicer', score: number) {
         const user = this.getUser();
         if (!user || user.id !== userId) return;
 
-        const currentScores = user.gameScores || { match: 0, cloud: 0 };
+        const currentScores = user.gameScores || { match: 0, cloud: 0, slicer: 0 };
         let newScore = score;
 
         if (game === 'match') {
             const current = currentScores.match || 0;
             newScore = (current === 0) ? score : Math.min(current, score);
-        } else {
+        } else if (game === 'cloud') {
             newScore = Math.max(currentScores.cloud || 0, score);
+        } else if (game === 'slicer') {
+            newScore = Math.max(currentScores.slicer || 0, score);
         }
 
         const newScores = { ...currentScores, [game]: newScore };
         user.gameScores = newScores;
 
-        const { error } = await supabase.from('users').update({ game_scores: newScores }).eq('id', userId);
+        // Arcade Economy: Award Serenity Coins (oracleTokens)
+        let coinsEarned = 0;
+        if (game === 'cloud') coinsEarned = Math.floor(score / 1500);
+        else if (game === 'slicer') coinsEarned = Math.floor(score / 500);
+        else if (game === 'match') {
+            if (score < 60) coinsEarned = 1 + Math.floor((60 - score) / 10);
+        }
+
+        const newTokens = (user.oracleTokens || 0) + coinsEarned;
+        user.oracleTokens = newTokens;
+
+        const { error } = await supabase.from('users').update({
+            game_scores: newScores,
+            oracle_tokens: newTokens
+        }).eq('id', userId);
+
         if (error) {
             logger.error("Update Game Score Failed", userId, error);
         }
@@ -943,14 +962,36 @@ export class UserService {
         const weeksSinceJoin = Math.floor((now - joinedAt) / msPerWeek);
         const startOfCurrentWeek = new Date(joinedAt + weeksSinceJoin * msPerWeek).toISOString();
 
-        // Query the database for counts since startOfCurrentWeek instead of relying on the SQL RPC
-        const [jRes, mRes, vRes] = await Promise.all([
+        try {
+            // Revert completely back to the previous version RPC
+            const { data, error } = await supabase.rpc('get_weekly_progress', { p_user_id: userId });
+            if (!error && data !== null) {
+                const count = Number(data);
+                let message = "Start your journey.";
+                if (count > 0) message = "Good start!";
+                if (count >= 10) message = "Building momentum!";
+                if (count >= 30) message = "Working hard!";
+                if (count >= 50) message = "Halfway there!";
+                if (count >= 80) message = "So close!";
+                if (count >= 100) message = "🔥 You are on a hot streak!";
+                return { current: count, message };
+            }
+        } catch (e) {
+            console.error("RPC fallback for weekly progress", e);
+        }
+
+        // Fallback if RPC is missing
+        const [jRes, mRes, vRes, bRes, trxRes] = await Promise.all([
             supabase.from('journals').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('date', startOfCurrentWeek),
             supabase.from('moods').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('date', startOfCurrentWeek),
-            supabase.from('voice_journals').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', startOfCurrentWeek)
+            supabase.from('voice_journals').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', startOfCurrentWeek),
+            supabase.from('breath_logs').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('date', startOfCurrentWeek),
+            supabase.from('transactions').select('amount').eq('user_id', userId).gte('date', startOfCurrentWeek)
         ]);
 
-        const count = (jRes.count || 0) + (mRes.count || 0) + (vRes.count || 0);
+        const minutesSpent = (trxRes.data || []).filter((t: any) => t.amount < 0).length;
+        const freeActionsCount = (jRes.count || 0) + (mRes.count || 0) + (vRes.count || 0) + (bRes.count || 0);
+        const count = freeActionsCount + minutesSpent;
 
         let message = "Start your journey.";
         if (count > 0) message = "Good start!";

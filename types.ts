@@ -25,6 +25,7 @@ export interface User {
   gameScores?: {
     match: number;
     cloud: number;
+    slicer?: number;
   };
   streak: number;
   lastLoginDate: string;

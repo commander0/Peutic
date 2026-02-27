@@ -1,0 +1,25 @@
+﻿components/arcade/ArcadeLeaderboard.tsx(3,26): error TS2307: Cannot find module '../../supabaseClient' or its corresponding type declarations.
+components/CloudHopGame.tsx(11,23): error TS2304: Cannot find name 'useRef'.
+components/CloudHopGame.tsx(12,24): error TS2304: Cannot find name 'useRef'.
+components/CloudHopGame.tsx(13,31): error TS2304: Cannot find name 'useState'.
+components/CloudHopGame.tsx(14,37): error TS2304: Cannot find name 'useState'.
+components/CloudHopGame.tsx(15,43): error TS2304: Cannot find name 'useState'.
+components/CloudHopGame.tsx(16,39): error TS2304: Cannot find name 'useState'.
+components/CloudHopGame.tsx(18,29): error TS2304: Cannot find name 'useRef'.
+components/CloudHopGame.tsx(19,23): error TS2304: Cannot find name 'useRef'.
+components/CloudHopGame.tsx(20,26): error TS2304: Cannot find name 'useRef'.
+components/CloudHopGame.tsx(21,26): error TS2304: Cannot find name 'useRef'.
+components/CloudHopGame.tsx(24,25): error TS2304: Cannot find name 'useRef'.
+components/CloudHopGame.tsx(26,5): error TS2304: Cannot find name 'useEffect'.
+components/CloudHopGame.tsx(46,5): error TS2304: Cannot find name 'useEffect'.
+components/CloudHopGame.tsx(118,5): error TS2304: Cannot find name 'useEffect'.
+components/CloudHopGame.tsx(187,46): error TS7006: Parameter 'pl' implicitly has an 'any' type.
+components/CloudHopGame.tsx(201,45): error TS7006: Parameter 'pr' implicitly has an 'any' type.
+components/CloudHopGame.tsx(211,42): error TS7006: Parameter 'pl' implicitly has an 'any' type.
+components/CloudHopGame.tsx(234,46): error TS7006: Parameter 'pl' implicitly has an 'any' type.
+components/CloudHopGame.tsx(254,42): error TS7006: Parameter 'pl' implicitly has an 'any' type.
+components/CloudHopGame.tsx(283,41): error TS7006: Parameter 'pr' implicitly has an 'any' type.
+components/CloudHopGame.tsx(296,42): error TS7006: Parameter 'pl' implicitly has an 'any' type.
+components/MindfulMatchGame.tsx(164,15): error TS7034: Variable 'newParticles' implicitly has type 'any[]' in some locations where its type cannot be determined.
+components/MindfulMatchGame.tsx(174,43): error TS7005: Variable 'newParticles' implicitly has an 'any[]' type.
+components/MindfulMatchGame.tsx(176,52): error TS7005: Variable 'newParticles' implicitly has an 'any[]' type.

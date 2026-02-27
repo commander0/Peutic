@@ -106,8 +106,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, onSuccess, initial
     };
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in duration-300 border border-gray-100 dark:border-gray-800">
+        <div className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
+            <div className="bg-white/95 dark:bg-black/90 backdrop-blur-3xl rounded-3xl w-full max-w-md shadow-premium dark:shadow-glass-dark overflow-hidden animate-in zoom-in duration-300 border border-white/20 dark:border-white/10">
                 <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800">
                     <div className="flex items-center gap-2">
                         <ShieldCheck className="w-5 h-5 text-green-600" />

@@ -332,7 +332,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                             </div>
                         )}
 
-                        <div className="grid grid-cols-2 gap-3 md:gap-4 mb-6 md:mb-8">
+                        <div className="grid grid-cols-2 gap-3 md:gap-4 mb-4">
                             <button type="button" onClick={handleGoogleClick} className={`w-full h-12 md:h-14 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center hover:bg-white dark:hover:bg-gray-900 bg-white dark:bg-black shadow-sm transition-transform hover:scale-105 relative overflow-hidden`} title="Sign in with Google">
                                 <svg width="24" height="24" viewBox="0 0 24 24" className="w-5 h-5 md:w-6 md:h-6"><path d="M23.52 12.29C23.52 11.43 23.45 10.61 23.31 9.82H12V14.46H18.46C18.18 15.92 17.32 17.16 16.03 18.02V20.99H19.91C22.18 18.9 23.52 15.83 23.52 12.29Z" fill="#4285F4" /><path d="M12 24C15.24 24 17.96 22.93 19.91 20.99L16.03 18.02C14.95 18.74 13.58 19.17 12 19.17C8.87 19.17 6.22 17.06 5.27 14.2H1.26V17.31C3.24 21.25 7.31 24 12 24Z" fill="#34A853" /><path d="M5.27 14.2C5.03 13.33 4.9 12.42 4.9 11.5C4.9 10.58 5.03 9.67 5.27 8.8V5.69H1.26C0.46 7.29 0 9.1 0 11.5C0 13.9 0.46 15.71 1.26 17.31L5.27 14.2Z" fill="#FBBC05" /><path d="M12 3.83C13.76 3.83 15.35 4.44 16.59 5.62L20 2.21C17.96 0.31 15.24 0 12 0C7.31 0 3.24 2.75 1.26 6.69L5.27 9.8C6.22 6.94 8.87 3.83 12 3.83Z" fill="#EA4335" /></svg>
                             </button>
@@ -340,6 +340,8 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                                 <Facebook className="w-5 h-5 md:w-6 md:h-6 text-[#1877F2]" />
                             </button>
                         </div>
+
+                        <div className="mb-4" />
 
                         <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
                             {!isLogin && (

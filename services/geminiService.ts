@@ -70,7 +70,7 @@ export const generateBookOfYouSummary = async (userName: string, contextObj: str
             body: {
                 action: 'gemini-generate',
                 payload: {
-                    prompt: `Write a beautifully poetic, highly detailed, and deeply introspective 3-paragraph psychological narrative for a "Book of You" chronicle chapter for ${userName}. Base it on their recent psychological state data: ${contextObj}. Use rich, descriptive, atmospheric language. Analyze their emotional growth, validate their struggles, and provide an inspiring, profound conclusion recognizing their intrinsic worth. Do not be generic; weave the raw data into a compelling mental wellness storyline. Format the narrative with proper paragraph breaks.`,
+                    prompt: `Write a beautifully poetic, highly detailed, and deeply introspective 3-paragraph psychological narrative for a "Book of You" chronicle chapter for ${userName}. Base it on their recent psychological state data: ${contextObj}. Use rich, descriptive, atmospheric language. Analyze their emotional growth, validate their struggles, and provide an inspiring, profound conclusion recognizing their intrinsic worth. Ensure this volume feels distinct and totally unique from previous chapters by adopting a different metaphorical theme (e.g., the calm after a storm, the resilience of a deep-rooted tree, the forging of iron, or the quiet dawn). Do not use the exact same paragraph structures or repetitive phrases. Format the narrative with proper paragraph breaks.`,
                     userId,
                     type: 'AI_BOOK_SUMMARY'
                 }

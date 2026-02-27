@@ -19,7 +19,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     const [showInfo, setShowInfo] = useState(false);
     const [showPlantSelection, setShowPlantSelection] = useState(false);
     const [selectedNewPlant, setSelectedNewPlant] = useState<string | null>(null);
-    const [intensity, setIntensity] = useState<5 | 10 | 15>(5); // 5m, 10m, 15m
+    const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
     const { showToast } = useToast();
     const [availablePlants, setAvailablePlants] = useState<string[]>(['Lotus', 'Rose', 'Sunflower', 'Fern', 'Sakura', 'Oak', 'Willow', 'Bonsai']);
 
@@ -41,12 +41,12 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     // Map the current garden minutes to a Gamification Stage
     const stage = useMemo(() => {
         const fm = localGarden.focusMinutes || 0;
-        if (fm >= 12) return 6; // Ethereal Entity
-        if (fm >= 10) return 5;  // Mystic Guardian
-        if (fm >= 8) return 4;  // Ancient Tree
-        if (fm >= 6) return 3;  // Mature Tree
-        if (fm >= 4) return 2;  // Sapling
-        if (fm >= 2) return 1;  // Sprout
+        if (fm >= 6) return 6; // Ethereal Entity
+        if (fm >= 5) return 5;  // Mystic Guardian
+        if (fm >= 4) return 4;  // Ancient Tree
+        if (fm >= 3) return 3;  // Mature Tree
+        if (fm >= 2) return 2;  // Sapling
+        if (fm >= 1) return 1;  // Sprout
         return 0; // Seed
     }, [localGarden.focusMinutes]);
 
@@ -89,17 +89,27 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
 
         // Perform Service Action
         if (type === 'water') {
-            // Watering is now a free, loving interaction (Growth happens automatically from app focus time)
-            await GardenService.waterPlant(garden.userId, 0); // Just updates timestamp & visual state
-            showToast(`You watered your sanctuary.`, "success");
+            const hasEnough = await UserService.deductBalance(intensity, "Watering Garden");
+            if (!hasEnough) {
+                showToast(`Not enough focus minutes to water (-${intensity}m required).`, "error");
+                setInteraction(null);
+                return;
+            }
+            await GardenService.waterPlant(garden.userId, intensity);
+            await GardenService.addFocusMinutes(garden.userId, intensity);
+            showToast(`You watered your sanctuary (-${intensity}m).`, "success");
         } else if (type === 'harvest') {
-            const isMighty = stage === 6; // Stage 6 is Ethereal Entity (12+ minutes)
+            const isMighty = stage === 6; // Stage 6 is Ethereal Entity (6+ minutes)
             const result = await GardenService.clipPlant(garden.userId);
             if (result.success) {
                 if (isMighty) {
-                    const updatedUser = { ...user, oracleTokens: (user.oracleTokens || 0) + 1 };
+                    const updatedUser = {
+                        ...user,
+                        balance: (user.balance || 0) + 100,
+                        oracleTokens: (user.oracleTokens || 0) + 1
+                    };
                     await UserService.updateUser(updatedUser);
-                    showToast(`Harvested! You received an Oracle Token!`, "success");
+                    showToast(`Ascended! You received an Oracle Token and 100 Serenity Coins!`, "success");
                     setShowPlantSelection(true);
                 } else {
                     showToast(`Harvested! The seed returns to the earth.`, "success");
@@ -223,8 +233,8 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
 
             {/* --- SEED SELECTION MODAL --- */}
             {showPlantSelection && (
-                <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md p-6">
-                    <div className="bg-stone-900 border border-stone-800 p-8 rounded-3xl max-w-lg w-full text-center relative shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md p-6">
+                    <div className="bg-stone-900/90 backdrop-blur-3xl border border-white/10 p-8 rounded-3xl max-w-lg w-full text-center relative shadow-premium">
                         <button onClick={() => setShowPlantSelection(false)} className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 text-stone-500 hover:text-white transition-colors">
                             <X className="w-5 h-5" />
                         </button>
@@ -286,10 +296,10 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
 
                 {/* Intensity Slider (Abstracted) */}
                 <div className="flex items-center gap-4 p-1.5 rounded-full bg-black/40 border border-white/10 backdrop-blur-md">
-                    {[5, 10, 15].map((lvl) => (
+                    {[1, 2, 3].map((lvl) => (
                         <button
                             key={lvl}
-                            onClick={() => setIntensity(lvl as 5 | 10 | 15)}
+                            onClick={() => setIntensity(lvl as 1 | 2 | 3)}
                             className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${intensity === lvl
                                 ? 'bg-emerald-500 text-black shadow-[0_0_15px_rgba(16,185,129,0.5)]'
                                 : 'text-white/30 hover:bg-white/5'
@@ -301,11 +311,11 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                 </div>
 
                 {/* Action Dock */}
-                <div className="flex items-center gap-6 md:gap-12">
+                <div className="flex flex-wrap justify-center items-center gap-4 md:gap-12">
                     <ControlBtn
                         icon={Droplets}
                         label="Nourish"
-                        sub={`Free`}
+                        sub={`-${intensity}m`}
                         active={interaction === 'water'}
                         onClick={() => handleAction('water')}
                         color="cyan"
@@ -328,8 +338,8 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                     />
                     <ControlBtn
                         icon={Scissors}
-                        label="Harvest"
-                        sub={stage === 6 ? "+1 Token" : "Reset"}
+                        label={stage === 6 ? "Ascend" : "Harvest"}
+                        sub={stage === 6 ? "+1 Token, +100 Coins" : "Reset"}
                         active={interaction === 'harvest'}
                         onClick={() => handleAction('harvest')}
                         color="amber"

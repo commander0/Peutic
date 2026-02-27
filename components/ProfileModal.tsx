@@ -16,7 +16,7 @@ interface ProfileModalProps {
 const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) => {
     if (!user) return null;
 
-    const [activeTab, setActiveTab] = useState<'identity' | 'sanctuary' | 'journey'>('identity');
+    const [activeTab, setActiveTab] = useState<'identity' | 'sanctuary' | 'journey' | 'devices'>('identity');
     const { theme, setTheme, mode, setMode: setThemeMode } = useTheme();
 
     const [name, setName] = useState(user.name || 'User');
@@ -91,8 +91,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
     );
 
     return (
-        <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white dark:bg-gray-900 w-full max-w-2xl h-[90vh] md:h-auto md:max-h-[85vh] rounded-[2rem] p-0 border border-yellow-200 dark:border-gray-800 shadow-2xl relative flex flex-col overflow-hidden">
+        <div className="fixed inset-0 bg-black/60 dark:bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in">
+            <div className="bg-white/95 dark:bg-black/90 backdrop-blur-3xl w-full max-w-2xl h-[90vh] md:h-auto md:max-h-[85vh] rounded-[2rem] p-0 border border-white/20 dark:border-white/10 shadow-premium dark:shadow-glass-dark relative flex flex-col overflow-hidden">
 
                 {/* HEADER */}
                 <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
@@ -263,6 +263,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
                             <p className="text-center text-xs text-gray-400">Themes seamlessly adapt the environment to your mood.</p>
                         </div>
                     )}
+
+
 
                     {activeTab === 'journey' && (
                         <div className="animate-in slide-in-from-right-4 fade-in duration-300">
