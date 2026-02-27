@@ -321,7 +321,7 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
 
                         if (isVisible) {
                             cardInnerClasses = 'bg-indigo-900/40 backdrop-blur-md border border-indigo-400/50 shadow-[0_0_20px_rgba(99,102,241,0.3)] rotate-y-180';
-                            iconColor = 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]';
+                            iconColor = 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]';
                         }
                         if (isMatched) {
                             cardInnerClasses = 'bg-amber-500/20 backdrop-blur-md border border-amber-400/50 shadow-[0_0_20px_rgba(251,191,36,0.3)] rotate-y-180 scale-95 opacity-60';

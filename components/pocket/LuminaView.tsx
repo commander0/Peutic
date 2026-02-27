@@ -593,14 +593,14 @@ const CyberBtn: React.FC<{ icon: any, label: string, onClick: () => void, color?
         <button
             onClick={onClick}
             className={`
-                group relative px-4 py-3 md:px-6 md:py-5 rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-md flex flex-col items-center gap-2
+                group relative px-2 py-2 md:px-6 md:py-5 rounded-3xl md:rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-md flex flex-col items-center gap-1 md:gap-2
                 transition-all duration-300 active:scale-95 hover:bg-white/10 hover:shadow-glass hover:-translate-y-1
             `}
         >
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-${color}-500/10 group-hover:bg-${color}-500/20 transition-colors`}>
-                <Icon className={`w-6 h-6 text-${color}-400 group-hover:text-${color}-300 transition-colors`} />
+            <div className={`w-8 h-8 md:w-12 md:h-12 rounded-full flex items-center justify-center bg-${color}-500/10 group-hover:bg-${color}-500/20 transition-colors`}>
+                <Icon className={`w-4 h-4 md:w-6 md:h-6 text-${color}-400 group-hover:text-${color}-300 transition-colors`} />
             </div>
-            <span className="text-[10px] font-bold tracking-[0.2em] text-white/70 group-hover:text-white uppercase">{label}</span>
+            <span className="text-[7px] md:text-[10px] font-bold tracking-[0.2em] text-white/70 group-hover:text-white uppercase">{label}</span>
         </button>
     );
 };

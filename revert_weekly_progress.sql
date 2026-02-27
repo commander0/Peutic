@@ -31,7 +31,7 @@ BEGIN
     WHERE user_id = p_user_id
     AND date >= date_trunc('week', current_date);
 
-    SELECT COALESCE(SUM(ABS(amount)), 0) INTO v_minutes_spent
+    SELECT COUNT(*) INTO v_minutes_spent
     FROM transactions
     WHERE user_id = p_user_id
     AND amount < 0
