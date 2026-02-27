@@ -419,6 +419,13 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
 
                 {/* CONTAINER */}
                 <div className="relative group perspective-1000 z-10 w-full max-w-[500px] mx-auto">
+                    {/* FLOW STATE AURA */}
+                    {(user.streak || 0) >= 21 && (
+                        <div className="absolute inset-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 flex items-center justify-center pointer-events-none overflow-hidden mix-blend-screen scale-[1.5]">
+                            <div className="absolute w-[800px] h-[800px] bg-gradient-to-r from-yellow-900/0 via-yellow-500/30 to-yellow-900/0 rounded-full blur-[80px] animate-[spin_10s_linear_infinite]" />
+                            <div className="absolute w-[600px] h-[600px] bg-amber-400/20 rounded-full blur-[60px] animate-pulse-slow" />
+                        </div>
+                    )}
 
                     {/* Ring System */}
                     <div className={`absolute inset-0 -m-12 border border-cyan-500/20 rounded-full animate-[spin_20s_linear_infinite] ${isSummoning ? 'border-purple-500/40 speed-up' : ''}`} />

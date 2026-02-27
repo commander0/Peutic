@@ -497,14 +497,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const filteredCompanions = specialtyFilter === 'All' ? companions : companions.filter(c => c.specialty.includes(specialtyFilter) || c.specialty === specialtyFilter);
     const uniqueSpecialties = Array.from(new Set(companions.map(c => c.specialty))).sort();
 
+    const isFlowState = (dashboardUser?.streak || 0) >= 21;
+
     return (
         <div
-            className="min-h-screen transition-all duration-1000 font-sans text-[var(--color-text-base)]"
+            className={`min-h-screen transition-all duration-1000 font-sans text-[var(--color-text-base)] ${isFlowState ? 'ring-[4px] ring-yellow-400/80 ring-inset shadow-[inset_0_0_150px_rgba(250,204,21,0.15)] bg-yellow-900/5' : ''}`}
             style={{
-                backgroundColor: 'var(--color-bg-base)',
-                backgroundImage: 'var(--color-bg-gradient)'
+                backgroundColor: isFlowState ? undefined : 'var(--color-bg-base)',
+                backgroundImage: isFlowState ? undefined : 'var(--color-bg-gradient)'
             }}
         >
+            {isFlowState && (
+                <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden mix-blend-screen">
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 animate-[pulse_8s_ease-in-out_infinite]"></div>
+                    <div className="absolute top-0 left-0 w-full h-1/4 bg-gradient-to-b from-yellow-500/10 to-transparent"></div>
+                </div>
+            )}
             {mood && <WeatherEffect type={mood} />}
             {/* FLOATING CONTROLS: Separated for better ergonomics */}
             <div className={`fixed bottom-6 left-6 z-[80] transition-all duration-500 ease-in-out border border-white/20 dark:border-white/10 shadow-2xl overflow-hidden backdrop-blur-md w-12 h-12 rounded-full bg-transparent`}>
