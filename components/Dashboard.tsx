@@ -865,10 +865,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     <span className="text-2xl md:text-4xl font-black text-primary dark:text-blue-400">{weeklyGoal}</span>
                                                     <span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span>
                                                 </div>
-                                                <div className={`w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full mb-2 md:mb-3 relative ${weeklyGoal >= 300 ? 'shadow-[0_0_25px_rgba(34,197,94,0.8)]' : weeklyGoal >= weeklyTarget ? 'shadow-[0_0_20px_rgba(59,130,246,0.5)]' : ''}`}>
+                                                <div className={`w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full mb-2 md:mb-3 relative ${weeklyGoal >= 300 ? 'shadow-[0_0_15px_rgba(34,197,94,0.4)]' : weeklyGoal >= weeklyTarget ? 'shadow-[0_0_10px_rgba(59,130,246,0.2)]' : ''}`}>
                                                     <div
-                                                        className={`h-full rounded-full transition-all duration-1000 ease-out absolute left-0 top-0 bottom-0 ${weeklyGoal >= 300 ? 'bg-green-400 shadow-[0_0_20px_rgba(74,222,128,1)] animate-pulse'
-                                                            : weeklyGoal >= weeklyTarget ? 'bg-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.9)] animate-pulse'
+                                                        className={`h-full rounded-full transition-all duration-1000 ease-out absolute left-0 top-0 bottom-0 ${weeklyGoal >= 300 ? 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]'
+                                                            : weeklyGoal >= weeklyTarget ? 'bg-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
                                                                 : 'bg-primary dark:bg-blue-500'
                                                             }`}
                                                         style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}

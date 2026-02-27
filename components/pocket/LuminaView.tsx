@@ -238,7 +238,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
 
         // XP & Level Up
         if (action !== 'sleep') updated.experience += intensity * 5;
-        if (updated.experience >= updated.level * 6.25) {
+        if (updated.experience >= Math.max(1, updated.level * 0.625)) {
             updated.level++;
             updated.experience = 0;
             showToast(`SYSTEM UPGRADE: LEVEL ${updated.level}`, "success");
@@ -263,7 +263,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
         let updated = { ...pet };
         updated.experience += mission.reward;
 
-        if (updated.experience >= updated.level * 6.25) {
+        if (updated.experience >= Math.max(1, updated.level * 0.625)) {
             updated.level++;
             updated.experience = 0;
             showToast(`SYSTEM UPGRADE: LEVEL ${updated.level}`, "success");

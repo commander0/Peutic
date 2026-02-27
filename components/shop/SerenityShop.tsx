@@ -50,6 +50,36 @@ const ITEMS = [
         icon: Coffee,
         color: 'text-amber-700',
         bg: 'bg-amber-700/10'
+    },
+    {
+        id: 'charity-animal',
+        type: 'charity',
+        name: 'Protect Wildlife',
+        description: 'Donate your focus to sponsor an endangered animal for a day.',
+        cost: 100,
+        icon: Heart,
+        color: 'text-orange-500',
+        bg: 'bg-orange-500/10'
+    },
+    {
+        id: 'digital-theme-sapphire',
+        type: 'digital',
+        name: 'Sapphire Aura Theme',
+        description: 'Unlock an exclusive deep-blue crystalline dashboard theme.',
+        cost: 250,
+        icon: Sparkles,
+        color: 'text-blue-500',
+        bg: 'bg-blue-500/10'
+    },
+    {
+        id: 'charity-flowers',
+        type: 'charity',
+        name: 'Send Digital Flowers',
+        description: 'Brighten someone else\'s World Pulse with a bouquet of gratitude.',
+        cost: 15,
+        icon: Heart,
+        color: 'text-pink-500',
+        bg: 'bg-pink-500/10'
     }
 ];
 
@@ -61,15 +91,19 @@ const SerenityShop: React.FC<SerenityShopProps> = ({ user, balance, onClose, onP
         if (balance < item.cost) return;
 
         setIsProcessing(true);
-        // Simulate network delay
-        setTimeout(() => {
-            onPurchase(item.cost, `Shop: ${item.name}`);
-            setPurchasedId(item.id);
-            setIsProcessing(false);
+        // Instant Gratification
+        onPurchase(item.cost, `Shop: ${item.name}`);
+        setPurchasedId(item.id);
 
-            // Auto clear success state
-            setTimeout(() => setPurchasedId(null), 3000);
-        }, 1500);
+        // Play success sound
+        const sound = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
+        sound.volume = 0.5;
+        sound.play().catch(() => { });
+
+        setIsProcessing(false);
+
+        // Auto clear success state
+        setTimeout(() => setPurchasedId(null), 3000);
     };
 
     return (
