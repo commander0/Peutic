@@ -80,7 +80,23 @@ export const generateBookOfYouSummary = async (userName: string, contextObj: str
         if (error || !data?.text) throw error;
         return data.text;
     } catch (e) {
-        return `Dear ${userName}, your mind is a vast landscape of thoughts and emotions. While the ink is still drying on these pages, your resilience stands strong. Every feeling you've experienced this week contributes to the masterpiece of your mental growth.\n\nContinue to observe your mind with curiosity and compassion, for even the storms bring rain that nourishes your inner garden. The chronicle of your life is ever-expanding, written not just in words, but in your daily courage.`;
+        const fallbacks = [
+            `Dear ${userName}, your mind is a vast landscape of thoughts and emotions. While the ink is still drying on these pages, your resilience stands strong. Every feeling you've experienced this week contributes to the masterpiece of your mental growth.\n\nContinue to observe your mind with curiosity and compassion, for even the storms bring rain that nourishes your inner garden. The chronicle of your life is ever-expanding, written not just in words, but in your daily courage.`,
+            `The architecture of your inner sanctuary, ${userName}, grows more intricate with each passing day. This week, we have witnessed the quiet forging of your strength. Like metal tempered in both fire and cooling waters, your experiences are shaping an unbreakable core.\n\nThe shadows you faced have only served to define the light, casting beautiful contrast onto your journey. Honor the stillness you have cultivated, for it is the foundation of your ongoing story.`,
+            `${userName}, the emotional currents of this chapter reveal a profound depth. Like watching a forest slowly adapt to shifting seasons, your mind has shown an incredible capacity to weather the unpredictable winds of thought without losing its deepest roots.\n\nLet these pages serve as a reminder that even when the skies are overcast, your intrinsic worth remains radiant and entirely untouched. You are navigating the wilderness beautifully.`,
+            `A quiet dawn is breaking upon the pages of this volume, ${userName}. Every struggle you chronicled this week, every quiet victory, forms a constellation of growth in your personal night sky.\n\nYou are not defined by the fleeting clouds of anxiety, but by the vast, open space of the sky that holds them. Trust in this gentle expansion of your spirit, for your narrative is unfolding perfectly.`,
+            `The symphony of your emotions has played a complex melody this week, ${userName}. We see the dissonant chords and the harmonious resolutions woven together in the tapestry of your reflections. It is a stunning composition of human experience.\n\nDo not rush to the final note. The resting spaces between your thoughts are just as vital as the active ones. Your sanctuary is always here, holding space for your beautiful ongoing composition.`
+        ];
+
+        let index = 0;
+        try {
+            const parsed = JSON.parse(contextObj);
+            index = (parsed.volumeSequence || 0) % fallbacks.length;
+        } catch {
+            index = Math.floor(Math.random() * fallbacks.length);
+        }
+
+        return fallbacks[index];
     }
 };
 

@@ -109,7 +109,7 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
                 setShredded(true);
                 setIsShredding(false);
 
-                // --- Milestone Logic (25 Shreds) ---
+                // --- Milestone Logic (20 Shreds) ---
                 const words = text.toLowerCase().split(/\W+/);
                 const foundPositives = words.filter(w => POSITIVE_WORDS.includes(w));
 
@@ -119,7 +119,7 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
 
                 let count = parseInt(localStorage.getItem('peutic_shred_count') || '0', 10) + 1;
 
-                if (count >= 25) {
+                if (count >= 20) {
                     if (newWords.length > 0) {
                         const uniqueWords = Array.from(new Set(newWords));
                         setMilestoneNote(`From the ashes of your doubts, remember the light of your own words: ${uniqueWords.join(', ')}. Keep walking forward.`);
@@ -127,9 +127,9 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
                         setMilestoneNote(FALLBACK_AFFIRMATIONS[Math.floor(Math.random() * FALLBACK_AFFIRMATIONS.length)]);
                     }
 
-                    // Leave shred count at 25 for UI visuals
-                    localStorage.setItem('peutic_shred_count', '25');
-                    setShredCount(25);
+                    // Leave shred count at 20 for UI visuals
+                    localStorage.setItem('peutic_shred_count', '20');
+                    setShredCount(20);
                     localStorage.setItem('peutic_shredded_words', '[]'); // Wipe the history for the next round
 
                     setIsReconstructing(true);
@@ -142,7 +142,7 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
                         setTimeout(() => {
                             setShowMilestone(false);
                             // Make sure we auto-reset if they just let it time out
-                            if (parseInt(localStorage.getItem('peutic_shred_count') || '0', 10) >= 25) {
+                            if (parseInt(localStorage.getItem('peutic_shred_count') || '0', 10) >= 20) {
                                 localStorage.setItem('peutic_shred_count', '0');
                                 setShredCount(0);
                             }
@@ -174,7 +174,7 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
     const reset = () => {
         setShredded(false);
         setText('');
-        if (shredCount >= 25 && !isReconstructing) {
+        if (shredCount >= 20 && !isReconstructing) {
             localStorage.setItem('peutic_shred_count', '0');
             setShredCount(0);
         }
@@ -236,12 +236,12 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
 
                             {/* Milestone Tracker Banner */}
                             <div className="mt-6 pt-4 border-t border-stone-800 text-center">
-                                <p className="text-[10px] uppercase tracking-widest font-bold text-stone-500 mb-2">Fragments Released: <span className="text-stone-300">{shredCount}</span> / 25</p>
+                                <p className="text-[10px] uppercase tracking-widest font-bold text-stone-500 mb-2">Fragments Released: <span className="text-stone-300">{shredCount}</span> / 20</p>
                                 <div className="w-full h-1.5 bg-stone-900 rounded-full overflow-hidden mb-2">
-                                    <div className="h-full bg-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.5)] transition-all duration-500" style={{ width: `${Math.min(100, ((shredCount % 25) / 25) * 100)}%` }} />
+                                    <div className="h-full bg-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.5)] transition-all duration-500" style={{ width: `${Math.min(100, ((shredCount % 20) / 20) * 100)}%` }} />
                                 </div>
                                 <p className="text-[10px] text-stone-600 italic font-serif">
-                                    Shred 25 thoughts to piece together a custom introspective note from your fragments.
+                                    Shred 20 thoughts to piece together a custom introspective note from your fragments.
                                 </p>
                             </div>
                         </>
@@ -257,9 +257,9 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
                     {shredded && (
                         <div className="flex-1 flex flex-col items-center justify-center text-center py-10 animate-in zoom-in duration-500">
                             {isReconstructing ? (
-                                <div className="relative w-full h-[250px] flex items-center justify-center overflow-visible">
+                                <div className="relative w-full h-[200px] flex items-center justify-center overflow-visible">
                                     <h4 className="absolute z-0 text-stone-700 animate-pulse text-sm font-bold uppercase tracking-widest mt-20">Reconstructing...</h4>
-                                    {[...Array(25)].map((_, i) => (
+                                    {[...Array(20)].map((_, i) => (
                                         <div
                                             key={i}
                                             className="absolute bg-[#fef3c7] opacity-90 shadow-sm border-t border-l border-white/50"
@@ -273,7 +273,7 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
                                         />
                                     ))}
                                     <style>{`
-                                        ${[...Array(25)].map((_, i) => `
+                                        ${[...Array(20)].map((_, i) => `
                                             @keyframes reconstruct-${i} {
                                                 0% { 
                                                     transform: translate(${(i % 2 === 0 ? 1 : -1) * (150 + (i * 7))}px, ${(i % 3 === 0 ? 1 : -1) * (150 + (i * 5))}px) rotate(${(i * 45)}deg) scale(0.5); 
