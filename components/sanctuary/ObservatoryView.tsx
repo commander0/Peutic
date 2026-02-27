@@ -125,13 +125,15 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
         if (isProcessing || isReading || activeTab !== 'divination') return;
         setIsProcessing(true);
         const COST = 1;
-        if (user.balance < COST) {
-            showToast(`The spirits require an offering of ${COST} minutes.`, "error");
+        const currentTokens = user.oracleTokens || 0;
+        if (currentTokens < COST) {
+            showToast(`The spirits require an offering of ${COST} Serenity Coins. Play minigames to earn more!`, "error");
             setIsProcessing(false);
             return;
         }
 
-        if (await UserService.deductBalance(COST, 'Consulted the Oracle')) {
+        const updated = await UserService.updateUserPartial(user.id, { oracleTokens: currentTokens - COST });
+        if (updated) {
             setIsReading(true);
             setIsProcessing(false);
             setOracleMessage(null);
@@ -231,20 +233,44 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                         </div>
                     ) : (
                         <>
+                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-60 mix-blend-color-dodge pointer-events-none animate-[spin_120s_linear_infinite]"></div>
+                            <div className="absolute -inset-[100%] bg-gradient-to-tr from-blue-900/0 via-purple-600/10 to-indigo-900/0 opacity-50 blur-[100px] pointer-events-none animate-[pulse_10s_ease-in-out_infinite_alternate]"></div>
+                            <div className="absolute top-1/4 left-1/4 w-[40vw] h-[40vw] bg-fuchsia-600/10 rounded-full blur-[100px] mix-blend-screen pointer-events-none animate-pulse-slow"></div>
+                            <div className="absolute bottom-1/4 right-1/4 w-[50vw] h-[50vw] bg-blue-600/10 rounded-full blur-[120px] mix-blend-screen pointer-events-none animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+
                             <svg className="absolute inset-0 w-full h-full pointer-events-none">
                                 <defs>
-                                    <filter id="starGlowArchive"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+                                    <filter id="starGlowArchive"><feGaussianBlur stdDeviation="4" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                                 </defs>
                                 {starPositions.map((pos, i) => {
                                     if (i === starPositions.length - 1) return null;
                                     const next = starPositions[i + 1];
                                     const dist = Math.hypot(next.x - pos.x, next.y - pos.y);
-                                    if (dist > 30) return null;
+                                    if (dist > 35) return null;
                                     return (
-                                        <line key={`pline-${i}`} x1={`${pos.x}%`} y1={`${pos.y}%`} x2={`${next.x}%`} y2={`${next.y}%`} stroke="#3b82f6" strokeWidth="0.5" strokeOpacity="0.2" />
+                                        <line key={`pline-${i}`} x1={`${pos.x}%`} y1={`${pos.y}%`} x2={`${next.x}%`} y2={`${next.y}%`} stroke="#8b5cf6" strokeWidth="1" strokeOpacity="0.35" filter="url(#starGlowArchive)" className="animate-pulse-slow" />
                                     );
                                 })}
                             </svg>
+                            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={`shooting-${i}`} className="absolute h-px w-24 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 rotate-45"
+                                        style={{
+                                            left: `${Math.random() * 100}%`,
+                                            top: `${Math.random() * 50}%`,
+                                            animation: `shooting 4s cubic-bezier(0.4, 0, 1, 1) infinite ${Math.random() * 10}s`
+                                        }}
+                                    />
+                                ))}
+                            </div>
+                            <style type="text/css">{`
+                                @keyframes shooting {
+                                    0% { transform: translate(0, 0) rotate(45deg) scaleX(0); opacity: 0; }
+                                    5% { opacity: 1; }
+                                    10% { transform: translate(300px, 300px) rotate(45deg) scaleX(1); opacity: 0; }
+                                    100% { opacity: 0; }
+                                }
+                            `}</style>
 
                             {starPositions.map((pos) => {
                                 const journal = journals.find(j => j.id === pos.id);
@@ -259,7 +285,7 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                                         style={{ left: `${pos.x}%`, top: `${pos.y}%`, animation: `pulse ${4 + pos.delay}s infinite alternate` }}
                                         onClick={() => handleStarClick(journal)}
                                     >
-                                        <div className={`w-3 h-3 rounded-full bg-white shadow-[0_0_15px_rgba(255,255,255,1)] transition-all ${isSelected ? 'shadow-[0_0_30px_rgba(96,165,250,1)] bg-blue-100 scale-150' : 'group-hover:shadow-[0_0_20px_rgba(96,165,250,0.8)]'}`} style={{ width: pos.r * 2, height: pos.r * 2 }}></div>
+                                        <div className={`w-3 h-3 rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,1)] transition-all ${isSelected ? 'shadow-[0_0_50px_rgba(167,139,250,1)] bg-purple-100 scale-[2]' : 'group-hover:shadow-[0_0_30px_rgba(167,139,250,1)] group-hover:bg-purple-50'}`} style={{ width: pos.r * 2.5, height: pos.r * 2.5 }}></div>
                                         {!isSelected && (
                                             <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap text-[10px] font-sans tracking-widest text-blue-200 bg-blue-900/50 backdrop-blur-md px-2 py-1 rounded border border-blue-500/20 pointer-events-none">
                                                 {new Date(journal.date).toLocaleDateString()}
@@ -352,7 +378,7 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
 
                                 {oracleMessage && !isReading && (
                                     <div className="absolute inset-0 flex items-center justify-center p-6 md:p-12 text-center z-30 bg-indigo-950/50 backdrop-blur-xl overflow-y-auto rounded-full custom-scrollbar shadow-[inset_0_0_60px_rgba(30,27,75,0.9),0_0_30px_rgba(99,102,241,0.5)] border-2 border-indigo-500/30 animate-in zoom-in-90 duration-700 pointer-events-auto">
-                                        <div className="w-full text-transparent bg-clip-text bg-gradient-to-br from-amber-50 via-yellow-200 to-amber-600 font-serif leading-relaxed drop-shadow-[0_0_12px_rgba(251,191,36,0.8)] tracking-wide italic text-sm md:text-base px-4 py-4">
+                                        <div className="w-full text-transparent bg-clip-text bg-gradient-to-br from-amber-50 via-yellow-200 to-amber-600 font-serif leading-relaxed drop-shadow-[0_0_12px_rgba(251,191,36,0.8)] tracking-wide italic text-sm md:text-base px-4 py-4 whitespace-pre-wrap">
                                             <Typewriter text={oracleMessage} speed={30} />
                                         </div>
                                     </div>
@@ -383,7 +409,7 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                             {!isReading && !oracleMessage && (
                                 <div className="flex flex-col items-center gap-3">
                                     <span className="font-serif italic text-indigo-300 text-lg tracking-wide drop-shadow-md">Draw a sigil upon the orb to cast your fate.</span>
-                                    <span className="text-[10px] font-mono tracking-widest uppercase text-indigo-500/80">Cost: 1 Minute</span>
+                                    <span className="text-[10px] font-mono tracking-widest uppercase text-indigo-500/80">Cost: 1 Serenity Coin</span>
                                 </div>
                             )}
 

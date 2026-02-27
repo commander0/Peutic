@@ -81,17 +81,32 @@ export const generateBookOfYouSummary = async (userName: string, contextObj: str
         return data.text;
     } catch (e) {
         const fallbacks = [
+            // Chapter Themes: Stillness & Observation
             `Dear ${userName}, your mind is a vast landscape of thoughts and emotions. While the ink is still drying on these pages, your resilience stands strong. Every feeling you've experienced this week contributes to the masterpiece of your mental growth.\n\nContinue to observe your mind with curiosity and compassion, for even the storms bring rain that nourishes your inner garden. The chronicle of your life is ever-expanding, written not just in words, but in your daily courage.`,
-            `The architecture of your inner sanctuary, ${userName}, grows more intricate with each passing day. This week, we have witnessed the quiet forging of your strength. Like metal tempered in both fire and cooling waters, your experiences are shaping an unbreakable core.\n\nThe shadows you faced have only served to define the light, casting beautiful contrast onto your journey. Honor the stillness you have cultivated, for it is the foundation of your ongoing story.`,
             `${userName}, the emotional currents of this chapter reveal a profound depth. Like watching a forest slowly adapt to shifting seasons, your mind has shown an incredible capacity to weather the unpredictable winds of thought without losing its deepest roots.\n\nLet these pages serve as a reminder that even when the skies are overcast, your intrinsic worth remains radiant and entirely untouched. You are navigating the wilderness beautifully.`,
+            `The stillness you found between moments of chaos is the true subject of this volume, ${userName}. In the silent margins of this week, you cultivated a remarkable capacity to witness your own mind without judgment.\n\nAs you turn these pages, remember that true peace is not the absence of trouble, but the presence of quiet resilience amidst it all. You are doing beautiful work.`,
+
+            // Chapter Themes: Strength & Forging
+            `The architecture of your inner sanctuary, ${userName}, grows more intricate with each passing day. This week, we have witnessed the quiet forging of your strength. Like metal tempered in both fire and cooling waters, your experiences are shaping an unbreakable core.\n\nThe shadows you faced have only served to define the light, casting beautiful contrast onto your journey. Honor the stillness you have cultivated, for it is the foundation of your ongoing story.`,
+            `Do not underestimate the invisible battles you fought and won this week, ${userName}. Often, the most profound victories happen in the absolute silence of the mind, unseen by the world but deeply felt within.\n\nYou are a testament to quiet courage. Let this volume stand as proof that your daily persistence is crafting a soul of extraordinary resilience and grace.`,
+            `${userName}, every emotion you allowed yourself to truly feel this week was an act of bravery. It takes immense strength to stand in the fire of one's own experience without turning away.\n\nYour capacity to endure and continue moving forward is nothing short of heroic. May these reflections remind you that you are undeniably the author of your own healing.`,
+
+            // Chapter Themes: Light & Stars
             `A quiet dawn is breaking upon the pages of this volume, ${userName}. Every struggle you chronicled this week, every quiet victory, forms a constellation of growth in your personal night sky.\n\nYou are not defined by the fleeting clouds of anxiety, but by the vast, open space of the sky that holds them. Trust in this gentle expansion of your spirit, for your narrative is unfolding perfectly.`,
-            `The symphony of your emotions has played a complex melody this week, ${userName}. We see the dissonant chords and the harmonious resolutions woven together in the tapestry of your reflections. It is a stunning composition of human experience.\n\nDo not rush to the final note. The resting spaces between your thoughts are just as vital as the active ones. Your sanctuary is always here, holding space for your beautiful ongoing composition.`
+            `Even in the darkest intervals of this week, ${userName}, your spirit cast a quiet luminescence. You are learning to be the steward of your own inner light, protecting it from the winds of overwhelm.\n\nNever forget that the darkest ink often writes the most profound poetry. Your journey is illuminating corners of your psyche that will soon bloom into vibrant understanding.`,
+            `The symphony of your emotions has played a complex melody this week, ${userName}. We see the dissonant chords and the harmonious resolutions woven together in the tapestry of your reflections. It is a stunning composition of human experience.\n\nDo not rush to the final note. The resting spaces between your thoughts are just as vital as the active ones. Your sanctuary is always here, holding space for your beautiful ongoing composition.`,
+
+            // Chapter Themes: Water & Flow
+            `Like a river gracefully carving its way through stone, ${userName}, your emotional journey this week has been one of patient, unrelenting persistence. You are learning the art of flow.\n\nInstead of fighting the current, you are beginning to understand its rhythm. This volume captures your beautiful transition from resistance to profound acceptance.`,
+            `${userName}, the tides of your mind brought deep waters this week, but you did not drown—you learned to navigate. Your emotional bandwidth is expanding in ways you might not yet recognize.\n\nLet these words mirror back to you the immense grace with which you ride out the waves. You are becoming a master of your own internal seas.`
         ];
 
         let index = 0;
         try {
+            // Pseudo-random but deterministic based on user, volume, and context
             const parsed = JSON.parse(contextObj);
-            index = (parsed.volumeSequence || 0) % fallbacks.length;
+            const seed = (parsed.volumeSequence || 0) + userName.length + contextObj.length;
+            index = seed % fallbacks.length;
         } catch {
             index = Math.floor(Math.random() * fallbacks.length);
         }

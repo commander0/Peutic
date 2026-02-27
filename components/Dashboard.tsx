@@ -9,7 +9,7 @@ import { LanguageSelector } from './common/LanguageSelector';
 import { useLanguage } from './common/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import {
-    Clock, LayoutDashboard, Brain, BookOpen, User as UserIcon, Settings, Plus, Lock, Sun, Moon, Sparkles, Star, Mic, Heart, ShieldCheck, Leaf, LogOut, LifeBuoy, ChevronUp, ChevronDown, Megaphone, Zap, Scissors, Gamepad2, Cloud, Feather, AlertTriangle, Video, Eye, EyeOff, Edit2, Mail, RefreshCw, Save, Twitter, Instagram, Linkedin, X, Flame, Trophy
+    Clock, LayoutDashboard, Brain, BookOpen, User as UserIcon, Settings, Plus, Lock, Sun, Moon, Sparkles, Star, Mic, Heart, ShieldCheck, Leaf, LogOut, LifeBuoy, ChevronUp, ChevronDown, Megaphone, Zap, Scissors, Gamepad2, Cloud, Feather, AlertTriangle, Video, Eye, EyeOff, Edit2, Mail, RefreshCw, Save, Twitter, Instagram, Linkedin, X, Flame, Trophy, ShoppingBag
 } from 'lucide-react';
 import { NotificationBell } from './common/NotificationBell';
 import { UserService } from '../services/userService';
@@ -50,6 +50,9 @@ const DojoView = lazy(() => import('./sanctuary/DojoView'));
 const ThoughtShredder = lazy(() => import('./tools/ThoughtShredder'));
 
 import { SupportCircles } from './community/SupportCircles';
+import WorldPulse from './community/WorldPulse';
+import AgenticRouterModal from './safety/AgenticRouterModal';
+import SerenityShop from './shop/SerenityShop';
 
 import EmergencyOverlay from './safety/EmergencyOverlay';
 import { VoiceRecorder, VoiceEntryItem } from './journal/VoiceRecorder';
@@ -191,43 +194,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         }
     }, [user?.unlockedAchievements, allAchievements]);
 
-    // Agentic Workflow: Proactive Empathy Check
-    useEffect(() => {
-        if (!user) return;
-        const checkAgenticSafety = async () => {
-            const now = new Date();
-            const lastLogin = new Date(user.lastLoginDate || now);
-            const diffDays = Math.floor(Math.abs(now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
 
-            const agentMessage = ClinicalSafetyScanner.generateProactiveCheckIn(user, diffDays);
-
-            if (agentMessage && !sessionStorage.getItem('agentic_checkin_shown')) {
-                // Determine routing action based on message context
-                let action = 'check_streak';
-                if (agentMessage.includes("Dojo")) action = 'open_dojo';
-                if (agentMessage.includes("sanctuary")) action = 'open_garden';
-
-                setTimeout(() => {
-                    addNotification({
-                        id: `agentic-${Date.now()}`,
-                        title: "Sanctuary AI",
-                        message: agentMessage,
-                        type: 'info',
-                        read: false,
-                        timestamp: new Date(),
-                        action: action
-                    });
-
-                    const sound = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
-                    sound.volume = 0.3;
-                    sound.play().catch(() => { });
-
-                    sessionStorage.setItem('agentic_checkin_shown', 'true');
-                }, 3500); // 3.5s delay for organic feel
-            }
-        };
-        checkAgenticSafety();
-    }, [user?.id]);
 
     const {
         dashboardUser, setDashboardUser,
@@ -266,7 +233,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         showSlicerGame, setShowSlicerGame,
         isUnlockingRoom, setIsUnlockingRoom,
         showVoiceJournal, setShowVoiceJournal,
-        showSupportCircles, setShowSupportCircles
+        showSupportCircles, setShowSupportCircles,
+        showWorldPulse, setShowWorldPulse,
+        showAgenticRouter, setShowAgenticRouter,
+        showSerenityShop, setShowSerenityShop,
+        agentMessage, setAgentMessage
     } = useDashboardUI(user);
 
     // Gamification Hook
@@ -291,6 +262,32 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     useEffect(() => {
         generateDailyInsight(user.name, user.id);
     }, [user.id, user.name]);
+
+    // Agentic Workflow: Proactive Empathy Check (Updated for V4 Modal)
+    useEffect(() => {
+        if (!user) return;
+        const checkAgenticSafety = async () => {
+            const now = new Date();
+            const lastLogin = new Date(user.lastLoginDate || now);
+            const diffDays = Math.floor(Math.abs(now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
+
+            const msg = ClinicalSafetyScanner.generateProactiveCheckIn(user, diffDays);
+
+            if (msg && !sessionStorage.getItem('agentic_checkin_shown')) {
+                setTimeout(() => {
+                    setAgentMessage(msg);
+                    setShowAgenticRouter(true);
+
+                    const sound = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
+                    sound.volume = 0.3;
+                    sound.play().catch(() => { });
+
+                    sessionStorage.setItem('agentic_checkin_shown', 'true');
+                }, 3500); // 3.5s delay for organic feel
+            }
+        };
+        checkAgenticSafety();
+    }, [user?.id, setAgentMessage, setShowAgenticRouter]);
 
     const [pendingCompanion, setPendingCompanion] = useState<Companion | null>(null);
     const [specialtyFilter, setSpecialtyFilter] = useState<string>('All');
@@ -648,6 +645,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     <Plus className="hidden md:block w-3.5 h-3.5 opacity-70" />
                                 </button>
 
+                                <button
+                                    onClick={() => setShowSerenityShop(true)}
+                                    className="h-[42px] px-4 rounded-2xl font-black bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 shadow-sm hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 text-[10px] md:text-xs border border-amber-200 dark:border-amber-500/30"
+                                >
+                                    <ShoppingBag className="w-4 h-4" />
+                                    <span className="hidden md:inline">Store</span>
+                                </button>
+
 
                                 <button onClick={() => setShowProfile(true)} className="w-10 h-10 md:w-11 md:h-11 rounded-2xl overflow-hidden border-2 border-primary shadow-premium transition-all hover:rotate-3 active:scale-90 flex-shrink-0">
                                     <AvatarImage src={isGhostMode ? '' : (dashboardUser?.avatar || '')} alt={isGhostMode ? 'Member' : (dashboardUser?.name || 'User')} className="w-full h-full object-cover" isUser={true} />
@@ -867,9 +872,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     <span className="text-2xl md:text-4xl font-black text-primary dark:text-blue-400">{weeklyGoal}</span>
                                                     <span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span>
                                                 </div>
-                                                <div className="w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-2 md:mb-3">
+                                                <div className={`w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full mb-2 md:mb-3 relative ${weeklyGoal >= 300 ? 'shadow-[0_0_25px_rgba(34,197,94,0.8)]' : weeklyGoal >= weeklyTarget ? 'shadow-[0_0_20px_rgba(59,130,246,0.5)]' : ''}`}>
                                                     <div
-                                                        className={`h-full rounded-full transition-all duration-1000 ease-out ${weeklyGoal >= 300 ? 'bg-green-400 shadow-[0_0_20px_rgba(74,222,128,0.9)] animate-pulse'
+                                                        className={`h-full rounded-full transition-all duration-1000 ease-out absolute left-0 top-0 bottom-0 ${weeklyGoal >= 300 ? 'bg-green-400 shadow-[0_0_20px_rgba(74,222,128,1)] animate-pulse'
                                                             : weeklyGoal >= weeklyTarget ? 'bg-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.9)] animate-pulse'
                                                                 : 'bg-primary dark:bg-blue-500'
                                                             }`}
@@ -1204,7 +1209,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             </div>
                             <div className="pt-6 flex flex-col md:flex-row justify-between items-center text-[9px] font-black uppercase tracking-[0.2em] text-gray-700 dark:text-gray-600 gap-3 md:gap-0 border-t border-primary-border/50 dark:border-gray-800">
                                 <p>&copy; {new Date().getFullYear()} Peutic Inc. | ISO 27001 Certified</p>
-                                <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div><span>Network Optimal</span></div>
+                                <div
+                                    onClick={() => setShowWorldPulse(true)}
+                                    className="flex items-center gap-2 cursor-pointer hover:text-indigo-400 transition-colors"
+                                >
+                                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                                    <span>Pulse of the World</span>
+                                </div>
                             </div>
                         </div>
                     </footer>
@@ -1380,6 +1391,47 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             {
                 showSupportCircles && (
                     <SupportCircles onClose={() => setShowSupportCircles(false)} />
+                )
+            }
+            {
+                showWorldPulse && dashboardUser && (
+                    <WorldPulse user={dashboardUser} onClose={() => setShowWorldPulse(false)} />
+                )
+            }
+            {
+                showAgenticRouter && dashboardUser && (
+                    <AgenticRouterModal
+                        user={dashboardUser}
+                        message={agentMessage}
+                        onClose={() => setShowAgenticRouter(false)}
+                        onAcceptAction={(action) => {
+                            setShowAgenticRouter(false);
+                            if (action === 'dojo') setShowDojo(true);
+                            if (action === 'breathing') setShowBreathing(true);
+                            if (action === 'soundscape') {
+                                // Soundscape handled inside MoodTracker or just show toast for now
+                                showToast("Soundscape Queued.", "success");
+                            }
+                        }}
+                    />
+                )
+            }
+            {
+                showSerenityShop && dashboardUser && (
+                    <SerenityShop
+                        user={dashboardUser}
+                        balance={balance}
+                        onClose={() => setShowSerenityShop(false)}
+                        onPurchase={async (cost, desc) => {
+                            if (await UserService.deductBalance(cost, desc)) {
+                                setDashboardUser({ ...dashboardUser, balance: dashboardUser.balance - cost });
+                                setShowSerenityShop(false);
+                                showToast(`Acquired: ${desc}`, "success");
+                            } else {
+                                showToast("Transaction failed.", "error");
+                            }
+                        }}
+                    />
                 )
             }
         </div >
