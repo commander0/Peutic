@@ -163,6 +163,7 @@ export interface GardenState {
   streakCurrent: number;
   streakBest: number;
   focusMinutes: number; // For Ethereal Zen-Tech Growth
+  harvestedPlants?: string[]; // Persistent biome
 }
 
 export interface WisdomEntry {

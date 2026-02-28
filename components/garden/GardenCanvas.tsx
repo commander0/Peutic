@@ -97,6 +97,32 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
                     <circle cx="50" cy="30" r="40" fill={theme.bloom} opacity="0.05" className="animate-[pulse_4s_infinite]" filter="url(#bloom-glow)" />
                 )}
 
+                {/* Harvested Biome (Deep Background Parallax) */}
+                {garden.harvestedPlants && garden.harvestedPlants.length > 0 && (
+                    <g style={{ transform: `translate(${mousePos.x * -8}px, ${mousePos.y * -4}px)`, transition: 'transform 0.1s ease-out' }} opacity="0.4">
+                        {garden.harvestedPlants.map((plant, idx) => {
+                            // Deterministic pseudo-random placement based on index
+                            const tx = ((idx * 83) % 200) - 50; // Spread between -50 and 150
+                            const ty = 85 - ((idx * 17) % 30); // Varying heights in the distance
+                            const scale = 0.2 + (((idx * 11) % 5) * 0.05); // Smaller distant scale
+                            const tc = getThemeColors(plant);
+                            return (
+                                <g key={`${plant}-${idx}`} transform={`translate(${tx}, ${ty}) scale(${scale})`} filter="drop-shadow(0 10px 10px rgba(0,0,0,0.8))">
+                                    <path d="M 50 85 Q 35 50 50 30 Q 65 15 50 10" fill="none" stroke={tc.trunk} strokeWidth="8" strokeLinecap="round" />
+                                    <circle cx="50" cy="20" r="22" fill={tc.leafDark} />
+                                    <circle cx="45" cy="15" r="18" fill={tc.leaf} />
+                                    <circle cx="60" cy="18" r="16" fill={tc.leafDark} />
+                                    <circle cx="20" cy="35" r="16" fill={tc.leafDark} />
+                                    <circle cx="80" cy="25" r="18" fill={tc.leafDark} />
+                                    <circle cx="35" cy="20" r="14" fill={tc.leafDark} />
+                                    <circle cx="45" cy="15" r="6" fill={tc.bloom} opacity="0.4" />
+                                    <circle cx="60" cy="10" r="4" fill={tc.bloom} opacity="0.3" />
+                                </g>
+                            );
+                        })}
+                    </g>
+                )}
+
                 {/* Pedestal / Dirt (Background Parallax) */}
                 <g style={{ transform: `translate(${mousePos.x * -4}px, ${mousePos.y * -2}px)`, transition: 'transform 0.1s ease-out' }}>
                     {/* 3D Glass Pedestal */}

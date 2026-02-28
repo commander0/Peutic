@@ -840,7 +840,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 <div className="absolute top-4 right-4 z-20 flex items-center justify-center">
                                                     <div className="relative w-16 h-16 flex items-center justify-center">
                                                         {/* Removed Green Nuclear Flame Effect per user request */}
-                                                        <Trophy className="w-12 h-12 text-green-400 fill-green-500/50 drop-shadow-[0_0_25px_rgba(34,197,94,1)] animate-bounce relative z-10" />
+                                                        <Trophy className="w-12 h-12 text-green-400 drop-shadow-[0_0_25px_rgba(34,197,94,1)] animate-bounce relative z-10" />
                                                         <Leaf className="absolute -right-2 top-0 w-6 h-6 text-green-300 fill-green-400 animate-pulse drop-shadow-[0_0_10px_rgba(74,222,128,1)] z-20" />
                                                     </div>
                                                 </div>

@@ -26,7 +26,8 @@ export class GardenService {
             lastWateredAt: data.last_watered_at,
             streakCurrent: data.streak_current,
             streakBest: data.streak_best,
-            focusMinutes: data.focus_minutes || 0
+            focusMinutes: data.focus_minutes || 0,
+            harvestedPlants: data.harvested_plants || []
         };
     }
 
@@ -81,7 +82,8 @@ export class GardenService {
             lastWateredAt: initialState.last_watered_at,
             streakCurrent: 0,
             streakBest: 0,
-            focusMinutes: 0
+            focusMinutes: 0,
+            harvestedPlants: []
         };
     }
 
@@ -107,7 +109,8 @@ export class GardenService {
             lastWateredAt: g.last_watered_at,
             streakCurrent: g.streak_current,
             streakBest: g.streak_best,
-            focusMinutes: g.focus_minutes || 0
+            focusMinutes: g.focus_minutes || 0,
+            harvestedPlants: g.harvested_plants || []
         };
     }
 
