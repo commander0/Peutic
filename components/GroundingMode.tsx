@@ -192,15 +192,14 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
         // HYPER-ORGANIC SOOTHING VOICE SELECTION
         const voices = window.speechSynthesis.getVoices();
 
-        // Prioritize Neural/Online premium voices, then standard natural ones
+        // Prioritize Neural/Online premium female voices, then standard natural ones
         const preferredVoice = voices.find(v =>
-            v.name.includes("Google US English") ||
-            v.name.includes("Microsoft Aria Online") ||
-            v.name.includes("Microsoft Guy Online") ||
-            v.name.includes("Neural") ||
-            v.name.includes("Natural") ||
-            v.name.includes("Samantha") ||
-            (v.lang === 'en-US' && v.name.includes("Female"))
+            v.name.includes("Samantha") || v.name.includes("Victoria") ||
+            v.name.includes("Google UK English Female") ||
+            v.name.includes("Microsoft Aria Online") || v.name.includes("Microsoft Jenny") ||
+            (v.lang === 'en-US' && v.name.toLowerCase().includes("female")) ||
+            (v.lang === 'en-GB' && v.name.toLowerCase().includes("female")) ||
+            v.name.includes("Natural") || v.name.includes("Neural")
         );
 
         if (preferredVoice) utterance.voice = preferredVoice;

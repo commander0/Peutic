@@ -438,6 +438,14 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
 
                 {/* CONTAINER */}
                 <div className="relative group perspective-1000 z-10 w-full max-w-[500px] mx-auto">
+                    {/* SAPPHIRE AURA THEME (Cosmetic) */}
+                    {(user.unlockedDecor || []).includes('digital-theme-sapphire') && (
+                        <div className="absolute inset-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 flex items-center justify-center pointer-events-none mix-blend-screen scale-[1.2]">
+                            <div className="absolute w-[450px] h-[450px] bg-gradient-to-r from-blue-900/0 via-blue-500/20 to-blue-900/0 rounded-[40%] blur-[40px] animate-[spin_15s_linear_infinite]" />
+                            <div className="absolute w-[350px] h-[350px] bg-cyan-400/10 rounded-full blur-[30px] animate-pulse" />
+                        </div>
+                    )}
+
                     {/* FLOW STATE AURA */}
                     {(user.streak || 0) >= 21 && (
                         <div className="absolute inset-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 flex items-center justify-center pointer-events-none overflow-hidden mix-blend-screen scale-[1.5]">

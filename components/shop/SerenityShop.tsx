@@ -6,7 +6,7 @@ interface SerenityShopProps {
     user: User;
     balance: number;
     onClose: () => void;
-    onPurchase: (cost: number, description: string) => void;
+    onPurchase: (cost: number, description: string, itemId?: string) => void;
 }
 
 const ITEMS = [
@@ -35,7 +35,7 @@ const ITEMS = [
         type: 'digital',
         name: 'Lumina Companion Plushie',
         description: 'Unlock the exclusive golden plushie on your dashboard.',
-        cost: 15,
+        cost: 2, // Reduced from 15 to one-tenth (rounded)
         icon: Star,
         color: 'text-amber-500',
         bg: 'bg-amber-500/10'
@@ -55,7 +55,7 @@ const ITEMS = [
         type: 'charity',
         name: 'Protect Wildlife',
         description: 'Donate your focus to sponsor an endangered animal for a day.',
-        cost: 10,
+        cost: 1, // Reduced from 10 to one-tenth
         icon: Heart,
         color: 'text-orange-500',
         bg: 'bg-orange-500/10'
@@ -64,8 +64,8 @@ const ITEMS = [
         id: 'digital-theme-sapphire',
         type: 'digital',
         name: 'Sapphire Aura Theme',
-        description: 'Unlock an exclusive deep-blue crystalline dashboard theme.',
-        cost: 25,
+        description: 'Unlock an exclusive deep-blue crystalline aura for your Lumina companion.',
+        cost: 2, // Reduced from 25 to one-tenth (rounded)
         icon: Sparkles,
         color: 'text-blue-500',
         bg: 'bg-blue-500/10'
@@ -91,7 +91,7 @@ const SerenityShop: React.FC<SerenityShopProps> = ({ balance, onClose, onPurchas
 
         setIsProcessing(true);
         // Instant Gratification
-        onPurchase(item.cost, `Shop: ${item.name}`);
+        onPurchase(item.cost, `Shop: ${item.name}`, item.id);
         setPurchasedId(item.id);
 
         // Play success sound

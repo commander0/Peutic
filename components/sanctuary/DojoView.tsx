@@ -7,6 +7,7 @@ import { SanctuaryService } from '../../services/SanctuaryService';
 import { GardenService } from '../../services/gardenService';
 import { PetService } from '../../services/petService';
 import SanctuaryShop, { SANCTUARY_ITEMS } from './SanctuaryShop';
+import PetCanvas from '../pocket/PetCanvas';
 
 interface DojoViewProps {
     user: User;
@@ -26,6 +27,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
     const [soundEnabled, setSoundEnabled] = useState(true);
     const [showShop, setShowShop] = useState(false);
     const [localUser, setLocalUser] = useState<User>(user);
+    const [luminaPet, setLuminaPet] = useState<any>(null);
     const [luminaLevel, setLuminaLevel] = useState(1);
     const [weather, setWeather] = useState<'sun' | 'rain'>('sun');
     const [bowlRipple, setBowlRipple] = useState(false);
@@ -67,6 +69,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
             // Link to Gamification
             const pet = await PetService.getPet(user.id);
             if (pet) {
+                setLuminaPet(pet);
                 setLuminaLevel(pet.level);
             }
 
@@ -338,6 +341,24 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                 ))}
             </div>
 
+            {/* MOCK MULTIPLAYER AVATARS */}
+            <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
+                {[...Array(isActive ? 6 : 0)].map((_, i) => (
+                    <div
+                        key={`multi-${i}`}
+                        className="absolute w-8 h-8 rounded-full bg-white/10 border border-white/20 backdrop-blur-md animate-[sway-drop_20s_ease-in-out_infinite] flex items-center justify-center mix-blend-screen"
+                        style={{
+                            left: `${10 + Math.random() * 80}%`,
+                            top: `${10 + Math.random() * 80}%`,
+                            animationDelay: `${Math.random() * 10}s`,
+                            opacity: 0.1 + Math.random() * 0.3
+                        }}
+                    >
+                        <div className="w-4 h-4 rounded-full bg-white/40 animate-pulse" style={{ animationDuration: `${2 + Math.random() * 2}s` }} />
+                    </div>
+                ))}
+            </div>
+
             {/* Header */}
             <header className="relative z-20 px-8 py-6 flex justify-between items-center">
                 <div className="flex items-center gap-3">
@@ -441,6 +462,13 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
 
                     {/* The Circle Frame (Candle Container) */}
                     <div className={`w-64 h-64 md:w-80 md:h-80 rounded-full border border-white/10 flex flex-col items-center justify-center relative bg-white/5 backdrop-blur-3xl shadow-premium transition-all duration-1000 shrink-0 ${isActive ? 'scale-105 border-amber-500/30 animate-ethereal-breathe shadow-[0_0_40px_rgba(245,158,11,0.2)]' : ''}`}>
+
+                        {/* Lumina Meditation Presence */}
+                        {luminaPet && isActive && (
+                            <div className="absolute -bottom-4 -left-12 md:-left-20 w-32 h-32 md:w-48 md:h-48 z-40 opacity-70 animate-in slide-in-from-left fade-in duration-1000 origin-bottom pointer-events-none">
+                                <PetCanvas pet={luminaPet} width={200} height={200} emotion="sleeping" trick="magic" />
+                            </div>
+                        )}
 
                         {timerMode === 'candle' ? (
                             <div className="flex flex-col items-center justify-center animate-in fade-in duration-1000 scale-125 md:scale-150 relative -mt-8">

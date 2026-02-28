@@ -203,6 +203,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         weeklyGoal, weeklyMessage, settings, refreshData
     } = useDashboardState(user);
 
+    const [hasClippedInnerGarden, setHasClippedInnerGarden] = useState(false);
     const idleTimerRef = useRef<number | null>(null);
     const logoutTimerRef = useRef<number | null>(null);
     const weeklyTarget = 100;
@@ -604,6 +605,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             <h1 className="hidden md:block text-2xl lg:text-3xl font-black tracking-tight dark:text-white leading-tight">
                                                 {activeTab === 'inner_sanctuary' ? 'Sanctuary' : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
                                             </h1>
+                                            {(dashboardUser?.unlockedDecor || []).includes('item-plushie') && (
+                                                <div className="ml-2 w-8 h-8 md:w-10 md:h-10 animate-[bounce_3s_infinite]" title="Lumina Companion Plushie">
+                                                    <svg viewBox="-50 -50 100 100" className="w-full h-full drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]">
+                                                        <path d="M 0 -30 Q 20 -30 25 -10 Q 30 15 0 25 Q -30 15 -25 -10 Q -20 -30 0 -30 Z" fill="#fbbf24" />
+                                                        <path d="M -15 -10 Q -20 -30 -5 -20 Z M 15 -10 Q 20 -30 5 -20 Z" fill="#fef3c7" />
+                                                        <circle cx="-8" cy="-5" r="3" fill="#000" />
+                                                        <circle cx="8" cy="-5" r="3" fill="#000" />
+                                                        <path d="M -3 3 Q 0 8 3 3" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" />
+                                                        <circle cx="-15" cy="5" r="4" fill="#fef08a" opacity="0.5" className="animate-pulse" />
+                                                        <circle cx="15" cy="5" r="4" fill="#fef08a" opacity="0.5" className="animate-pulse" />
+                                                    </svg>
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none flex items-center gap-2 mt-1">
                                             <span>{new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
@@ -685,10 +699,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                                 <button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
-                                                                        handleClipPlant();
+                                                                        if (!hasClippedInnerGarden) {
+                                                                            handleClipPlant();
+                                                                            setHasClippedInnerGarden(true);
+                                                                        }
                                                                     }}
-                                                                    className="p-2 bg-white/90 dark:bg-black/80 rounded-full shadow-lg hover:scale-110 active:scale-95 text-pink-500 transition-all"
-                                                                    title="Clip for Inspiration"
+                                                                    className={`p-2 bg-white/90 dark:bg-black/80 rounded-full shadow-lg ${hasClippedInnerGarden ? 'opacity-50 cursor-not-allowed text-gray-400' : 'hover:scale-110 active:scale-95 text-pink-500'} transition-all`}
+                                                                    title={hasClippedInnerGarden ? "Already Clipped" : "Clip for Inspiration"}
+                                                                    disabled={hasClippedInnerGarden}
                                                                 >
                                                                     <Scissors className="w-4 h-4" />
                                                                 </button>
@@ -840,7 +858,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 <div className="absolute top-4 right-4 z-20 flex items-center justify-center">
                                                     <div className="relative w-16 h-16 flex items-center justify-center">
                                                         {/* Removed Green Nuclear Flame Effect per user request */}
-                                                        <Trophy className="w-12 h-12 text-green-400 drop-shadow-[0_0_25px_rgba(34,197,94,1)] animate-bounce relative z-10" />
+                                                        <Trophy className="w-12 h-12 text-green-400 animate-bounce relative z-10" />
                                                         <Leaf className="absolute -right-2 top-0 w-6 h-6 text-green-300 fill-green-400 animate-pulse drop-shadow-[0_0_10px_rgba(74,222,128,1)] z-20" />
                                                     </div>
                                                 </div>
@@ -860,7 +878,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             <div className="relative z-10">
                                                 <h3 className="font-bold text-gray-500 dark:text-gray-400 text-[10px] md:text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3>
                                                 <div className="flex items-end gap-2 mb-2 md:mb-3">
-                                                    <span className="text-2xl md:text-4xl font-black text-primary dark:text-blue-400">{weeklyGoal}</span>
+                                                    <span className={`text-2xl md:text-4xl font-black ${weeklyGoal >= 300 ? 'text-green-500 dark:text-green-400' : 'text-primary dark:text-blue-400'}`}>{weeklyGoal}</span>
                                                     <span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span>
                                                 </div>
                                                 <div className={`w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full mb-2 md:mb-3 relative ${weeklyGoal >= 300 ? 'shadow-[0_0_15px_rgba(34,197,94,0.4)]' : weeklyGoal >= weeklyTarget ? 'shadow-[0_0_10px_rgba(59,130,246,0.2)]' : ''}`}>
@@ -1412,9 +1430,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         user={dashboardUser}
                         balance={balance}
                         onClose={() => setShowSerenityShop(false)}
-                        onPurchase={async (cost, desc) => {
+                        onPurchase={async (cost, desc, itemId) => {
                             if (await UserService.deductBalance(cost, desc)) {
-                                setDashboardUser({ ...dashboardUser, balance: dashboardUser.balance - cost });
+                                let updatedUser = { ...dashboardUser, balance: dashboardUser.balance - cost };
+
+                                if (itemId && (itemId.startsWith('item-') || itemId.startsWith('digital-'))) {
+                                    const currentDecor = updatedUser.unlockedDecor || [];
+                                    if (!currentDecor.includes(itemId)) {
+                                        updatedUser = { ...updatedUser, unlockedDecor: [...currentDecor, itemId] };
+                                        await UserService.updateUser(updatedUser);
+                                    }
+                                }
+
+                                setDashboardUser(updatedUser);
                                 setShowSerenityShop(false);
                                 showToast(`Acquired: ${desc}`, "success");
                             } else {

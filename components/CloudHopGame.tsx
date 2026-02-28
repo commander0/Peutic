@@ -295,6 +295,8 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
 
             // Draw Platforms
             platformsRef.current.forEach((pl: any) => {
+                if (pl.y + pl.h < -100 || pl.y > H + 100) return; // Culling
+
                 if (pl.type === 'ground') { ctx.fillStyle = '#4ade80'; ctx.fillRect(pl.x, pl.y, pl.w, pl.h); }
                 else { drawCloud(pl.x, pl.y, pl.w, pl.h, pl.type); }
 

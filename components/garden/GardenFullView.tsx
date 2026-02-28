@@ -22,6 +22,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
     const { showToast } = useToast();
     const [availablePlants, setAvailablePlants] = useState<string[]>(['Lotus', 'Rose', 'Sunflower', 'Fern', 'Sakura', 'Oak', 'Willow', 'Bonsai']);
+    const [weather, setWeather] = useState<'sun' | 'rain'>('sun');
 
     // Weather/Day gamification injection
     useEffect(() => {
@@ -74,6 +75,12 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
             const freshData = await GardenService.getGarden(user.id);
             if (freshData && mounted) {
                 setLocalGarden(freshData);
+            }
+            // Fetch Weather Sync based on recent moods
+            const moods = await UserService.getMoods(user.id);
+            if (moods.length > 0 && mounted) {
+                const sunCount = moods.filter(x => ['Happy', 'Calm', 'confetti', 'sun'].includes(x.mood as any)).length;
+                setWeather((sunCount / moods.length) >= 0.5 ? 'sun' : 'rain');
             }
         };
         fetchFreshState();
@@ -152,11 +159,25 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
 
             {/* --- ATMOSPHERIC LAYERS --- */}
 
-            {/* 1. Deep Space / Night Sky Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a] via-[#064e3b] to-[#022c22] opacity-80 pointer-events-none" />
+            {/* 1. Deep Space / Night Sky Gradient OR Dark Rain Layer */}
+            {weather === 'sun' ? (
+                <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a] via-[#064e3b] to-[#022c22] opacity-80 pointer-events-none" />
+            ) : (
+                <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-800 to-indigo-950 opacity-90 pointer-events-none" />
+            )}
 
             {/* 2. Moving Fog / Mist */}
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/foggy-birds.png')] opacity-30 animate-[pulse_10s_ease-in-out_infinite] pointer-events-none mix-blend-overlay" />
+
+            {/* Automatic Background Rain if weather is 'rain' */}
+            {weather === 'rain' && (
+                <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-40">
+                    {[...Array(30)].map((_, i) => (
+                        <div key={i} className="absolute w-[1px] h-16 bg-blue-300/40 animate-[particle-float-up_1s_linear_infinite]"
+                            style={{ left: `${Math.random() * 100}%`, top: `-20%`, animationDelay: `${Math.random()}s`, animationDuration: `${0.4 + Math.random() * 0.4}s` }} />
+                    ))}
+                </div>
+            )}
 
             {/* 3. Dynamic Ambient Particles (CSS Fireflies & Leaves) */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
