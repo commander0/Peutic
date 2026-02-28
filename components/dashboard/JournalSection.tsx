@@ -46,7 +46,7 @@ export const JournalSection: React.FC<{ user: User, onUpdate?: () => void }> = (
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 h-[450px]">
-            <div className="flex flex-col h-full bg-[#fdfbf7] dark:bg-[#1a1a1a] rounded-2xl p-5 border border-yellow-200 dark:border-gray-800 shadow-inner relative overflow-hidden group">
+            <div className="flex flex-col h-full bg-white/50 dark:bg-black/20 backdrop-blur-md rounded-2xl p-5 border-0 shadow-glass relative overflow-hidden group">
                 <div className="absolute top-0 left-0 w-full h-1 bg-yellow-400 opacity-50"></div>
                 <div className="flex items-center justify-between mb-4">
                     <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Entry: {new Date().toLocaleDateString()}</span>
@@ -70,8 +70,8 @@ export const JournalSection: React.FC<{ user: User, onUpdate?: () => void }> = (
                     </button>
                 </div>
             </div>
-            <div className="flex flex-col h-full bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-                <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex justify-between items-center">
+            <div className="flex flex-col h-full bg-white/50 dark:bg-black/20 backdrop-blur-xl rounded-2xl border-0 shadow-glass overflow-hidden">
+                <div className="p-4 bg-transparent flex justify-between items-center">
                     <h3 className="font-bold text-gray-500 text-xs uppercase tracking-wider flex items-center gap-2"><Clock className="w-3 h-3" /> Timeline</h3>
                     <span className="text-[10px] font-bold bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full text-gray-600 dark:text-gray-300">{entries.length} Entries</span>
                 </div>

@@ -113,20 +113,20 @@ const CollapsibleSection = React.memo(({ title, icon: Icon, children, defaultOpe
     };
 
     return (
-        <div className="bg-transparent rounded-3xl border border-[var(--color-primary-border)] overflow-hidden transition-all duration-300" style={{ borderColor: 'var(--color-primary-border)' }}>
-            <button onClick={handleToggle} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-[var(--color-primary)]/10 transition-colors group">
+        <div className="bg-transparent overflow-hidden transition-all duration-300">
+            {/* Unified subtle header without boxing the entire content */}
+            <button onClick={handleToggle} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-[var(--color-primary)]/5 rounded-2xl transition-colors group">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-black/5 text-primary dark:bg-white/10 group-hover:bg-black/10 dark:group-hover:bg-white/20 transition-colors">
+                    <div className="p-2 rounded-xl bg-[var(--color-primary)]/10 text-primary dark:bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
                         <Icon className="w-5 h-5" />
                     </div>
-                    <span className="font-bold text-base dark:text-gray-200">{title}</span>
+                    <span className="font-bold text-lg tracking-wide opacity-90">{title}</span>
                 </div>
-                {isOpen ? <ChevronUp className="w-4 h-4 md:w-5 md:h-5 text-gray-400" /> : <ChevronDown className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />}
+                {isOpen ? <ChevronUp className="w-5 h-5 opacity-50" /> : <ChevronDown className="w-5 h-5 opacity-50" />}
             </button>
-            {/* Provide feedback during transition if needed, or just allow Suspense to handle it */}
             <div className={`transition-[grid-template-rows] duration-300 grid ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                 <div className="overflow-hidden">
-                    <div className="p-4 lg:p-6 pt-0 bg-transparent">
+                    <div className="p-2 lg:p-4 pt-0">
                         {isOpen && children}
                     </div>
                 </div>
@@ -683,7 +683,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 1: ZEN BONZAI */}
                                                 <div
                                                     onClick={() => setShowGardenFull(true)}
-                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(34,197,94,0.15)] hover:shadow-[0_8px_32px_rgba(34,197,94,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-[0_8px_32px_rgba(34,197,94,0.15)] hover:shadow-[0_8px_32px_rgba(34,197,94,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                                 >
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
                                                         <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
@@ -760,7 +760,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 3: LUMINA */}
                                                 <div
                                                     onClick={() => setShowPocketPet(true)}
-                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                                 >
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
                                                         <div className="relative mb-1 md:mb-4">
@@ -779,7 +779,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 4: ORACLE */}
                                                 <div
                                                     onClick={() => handleRoomInteraction('observatory', 25)}
-                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1' : 'border-gray-300 dark:border-gray-700 grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
+                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'shadow-glass hover:shadow-premium hover:-translate-y-1' : 'grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
                                                 >
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
                                                         <div className="relative mb-1 md:mb-4">
@@ -805,7 +805,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 5: ZEN DOJO */}
                                                 <div
                                                     onClick={() => handleRoomInteraction('dojo', 15)}
-                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1' : 'border-gray-300 dark:border-gray-700 grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
+                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'shadow-glass hover:shadow-premium hover:-translate-y-1' : 'grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
                                                 >
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
                                                         <div className="relative mb-1 md:mb-4">
@@ -831,7 +831,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 6: THOUGHT SHREDDER */}
                                                 <div
                                                     onClick={() => setShowShredder(true)}
-                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                                 >
                                                     <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-600/5 pointer-events-none"></div>
                                                     <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
@@ -904,7 +904,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         {/* TILE 1: MINDFUL MATCH */}
                                         <div
                                             onClick={() => setShowMatchGame(true)}
-                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                         >
                                             <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-pink-600/5 pointer-events-none"></div>
                                             <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
@@ -922,7 +922,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         {/* TILE 2: CLOUD HOP */}
                                         <div
                                             onClick={() => setShowCloudHop(true)}
-                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(14,165,233,0.15)] hover:shadow-[0_8px_32px_rgba(14,165,233,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-[0_8px_32px_rgba(14,165,233,0.15)] hover:shadow-[0_8px_32px_rgba(14,165,233,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                         >
                                             <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-cyan-600/5 pointer-events-none"></div>
                                             <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
@@ -940,7 +940,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         {/* TILE 3: STRESS SLICER */}
                                         <div
                                             onClick={() => setShowSlicerGame(true)}
-                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(239,68,68,0.15)] hover:shadow-[0_8px_32px_rgba(239,68,68,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-[0_8px_32px_rgba(239,68,68,0.15)] hover:shadow-[0_8px_32px_rgba(239,68,68,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
                                         >
                                             <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-600/5 pointer-events-none"></div>
                                             <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
