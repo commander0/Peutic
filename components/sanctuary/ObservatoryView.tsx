@@ -168,16 +168,17 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
         setIsProcessing(true);
         const COST = 1;
         try {
-            const garden = await GardenService.getGarden(user.id);
-            const minutes = garden?.focusMinutes || 0;
+            const minutes = user.balance || 0;
 
             if (minutes < COST) {
-                showToast(`The spirits require an offering of ${COST} Focus Minute${COST === 1 ? '' : 's'}. Nurture your Inner Garden or complete activities to earn more!`, "error");
+                showToast(`The spirits require an offering of ${COST} Focus Minute${COST === 1 ? '' : 's'}. Complete activities or nurture your garden to earn more!`, "error");
                 setIsProcessing(false);
                 return;
             }
 
-            await GardenService.addFocusMinutes(user.id, -COST);
+            const success = await UserService.deductBalance(COST, "Consulted the Oracle");
+            if (!success) throw new Error("Balance insufficient");
+
         } catch (e) {
             console.error("Oracle deduction error:", e);
             showToast("The spirits are currently unreachable. Please try again.", "error");
