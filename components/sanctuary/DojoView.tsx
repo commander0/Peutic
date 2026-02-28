@@ -403,15 +403,19 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                     const itemData = SANCTUARY_ITEMS.find(i => i.id === itemId);
                     if (!itemData) return null;
 
-                    // Absolute positioning map for items relative to the full screen (Spaced out like a living room)
+                    // Neatly aligned positioning to create a "living room" feel
                     const getPositionClass = (id: string) => {
                         switch (id) {
-                            case 'bonsai': return 'bottom-[5%] right-[5%] md:right-[10%] text-[8rem] md:text-[10rem] opacity-100 drop-shadow-2xl z-30';
-                            case 'incense': return 'bottom-[8%] left-[5%] md:left-[10%] text-6xl md:text-8xl opacity-100 animate-[sway_4s_ease-in-out_infinite] drop-shadow-2xl z-30';
-                            case 'lantern': return 'top-[5%] left-[10%] md:left-[15%] text-7xl md:text-8xl opacity-100 animate-[sway_6s_ease-in-out_infinite] drop-shadow-[0_0_30px_rgba(24cd,211,153,0.8)] z-20';
-                            case 'scroll': return 'top-[10%] right-[10%] md:right-[15%] text-[6rem] md:text-[8rem] opacity-90 drop-shadow-xl z-10';
-                            case 'stones': return 'bottom-[2%] left-[40%] md:left-[45%] text-5xl md:text-6xl opacity-100 drop-shadow-2xl z-20';
-                            case 'singing_bowl': return 'bottom-[25%] left-[20%] md:left-[25%] text-6xl md:text-[5.5rem] opacity-100 drop-shadow-[0_15px_15px_rgba(0,0,0,0.5)] pointer-events-auto cursor-pointer z-30 transition-transform active:scale-95';
+                            case 'scroll': return 'top-20 right-8 md:top-24 md:right-32 text-[6rem] md:text-[8rem] opacity-90 drop-shadow-2xl z-0';
+                            case 'lantern': return 'top-20 left-4 md:top-24 md:left-24 text-7xl md:text-8xl opacity-100 animate-[sway_6s_ease-in-out_infinite] drop-shadow-[0_0_40px_rgba(251,191,36,0.6)] z-0';
+
+                            // Floor/table layer (back)
+                            case 'bonsai': return 'bottom-[15%] right-4 md:right-32 text-[7rem] md:text-[9rem] drop-shadow-[0_30px_30px_rgba(0,0,0,0.8)] z-10 hover:scale-105 transition-transform';
+                            case 'incense': return 'bottom-[15%] left-4 md:left-24 text-6xl md:text-7xl opacity-100 animate-[sway_4s_ease-in-out_infinite] drop-shadow-[0_30px_30px_rgba(0,0,0,0.8)] z-10';
+
+                            // Floor layer (front, closer to the center candle)
+                            case 'singing_bowl': return 'bottom-[8%] right-24 md:right-48 text-[5rem] md:text-[6rem] drop-shadow-[0_40px_20px_rgba(0,0,0,0.8)] pointer-events-auto cursor-pointer z-30 transition-transform active:scale-90 hover:scale-110';
+                            case 'stones': return 'bottom-[8%] left-24 md:left-48 text-[4rem] md:text-[5rem] drop-shadow-[0_40px_20px_rgba(0,0,0,0.8)] z-20 hover:scale-105 transition-transform';
                             default: return 'hidden';
                         }
                     };
@@ -439,7 +443,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
 
                 {/* Time Selection (Restored - Small) */}
                 {!isActive && (
-                    <div className="flex gap-4 mb-8 highlight-white/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="flex flex-wrap justify-center gap-2 md:gap-4 mb-8 highlight-white/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         {[5, 10, 15, 20, 25].map(m => (
                             <button
                                 key={m}
@@ -581,7 +585,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                                     <label className="text-[10px] uppercase font-black tracking-widest text-emerald-500/70 mb-3 block text-center flex items-center justify-center gap-2">
                                         <Sparkles className="w-3 h-3" /> Lumina Unlocks
                                     </label>
-                                    <div className="grid grid-cols-2 gap-3 w-full">
+                                    <div className="flex flex-wrap justify-center gap-3 w-full">
                                         {luminaLevel >= 30 && (
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); setBellInterval(120); }} // 2 mins special
@@ -612,7 +616,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                 </div>
 
                 {/* STATS ROW */}
-                <div className="grid grid-cols-3 gap-4 w-full max-w-2xl border-t border-stone-800/50 pt-6">
+                <div className="grid grid-cols-3 gap-2 md:gap-4 w-full max-w-2xl border-t border-stone-800/50 pt-6">
                     <div className="flex flex-col items-center">
                         <Flame className="w-5 h-5 text-orange-600 mb-1" />
                         <span className="text-xl font-black text-stone-300">{streak}</span>

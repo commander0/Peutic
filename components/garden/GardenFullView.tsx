@@ -281,7 +281,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                         <h2 className="text-2xl font-serif text-white mb-2">Plant a New Seed</h2>
                         <p className="text-stone-400 text-sm mb-6">Choose your next journey. Each plant type blossoms differently in your inner sanctuary.</p>
 
-                        <div className="grid grid-cols-2 gap-3 mb-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
                             {availablePlants.map(plant => {
                                 const isRare = ['Crystal Lotus', 'Lunar Fern', 'Storm Oak', 'Sunlight Spire'].includes(plant);
                                 return (
@@ -397,7 +397,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                 </div>
 
                 {/* Stats Minimal */}
-                <div className="flex gap-8 text-[10px] font-bold tracking-widest text-white/40 uppercase">
+                <div className="flex flex-wrap justify-center gap-4 md:gap-8 text-[10px] font-bold tracking-widest text-white/40 uppercase">
                     <div className="flex items-center gap-2">
                         <span className="text-pink-400">{localGarden.focusMinutes} Focus Mins</span>
                     </div>
