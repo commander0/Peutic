@@ -3,6 +3,7 @@ import { X, Sparkles, Star, Loader2, PlayCircle } from 'lucide-react';
 import { User } from '../../types';
 import { useToast } from '../common/Toast';
 import { UserService } from '../../services/userService';
+import { GardenService } from '../../services/gardenService';
 import { supabase } from '../../services/supabaseClient';
 
 export type ActivityNode = { id: string; type: 'journal' | 'therapy' | 'transaction'; title: string; content: string; date: string; };
@@ -166,16 +167,23 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
         if (isProcessing || isReading || activeTab !== 'divination') return;
         setIsProcessing(true);
         const COST = 1;
-        const tokens = user.oracleTokens || 0;
+        try {
+            const garden = await GardenService.getGarden(user.id);
+            const minutes = garden?.focusMinutes || 0;
 
-        if (tokens < COST) {
-            showToast(`The spirits require an offering of ${COST} Serenity Coins. Harvest your Inner Garden or explore your World Pulse to earn more!`, "error");
+            if (minutes < COST) {
+                showToast(`The spirits require an offering of ${COST} Focus Minute${COST === 1 ? '' : 's'}. Nurture your Inner Garden or complete activities to earn more!`, "error");
+                setIsProcessing(false);
+                return;
+            }
+
+            await GardenService.addFocusMinutes(user.id, -COST);
+        } catch (e) {
+            console.error("Oracle deduction error:", e);
+            showToast("The spirits are currently unreachable. Please try again.", "error");
             setIsProcessing(false);
             return;
         }
-
-        const updatedUser = { ...user, oracleTokens: tokens - COST };
-        await UserService.updateUser(updatedUser);
 
         setIsReading(true);
         setIsProcessing(false);

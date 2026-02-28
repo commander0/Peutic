@@ -878,7 +878,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             <div className="relative z-10">
                                                 <h3 className="font-bold text-gray-500 dark:text-gray-400 text-[10px] md:text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3>
                                                 <div className="flex items-end gap-2 mb-2 md:mb-3">
-                                                    <span className={`text-2xl md:text-4xl font-black ${weeklyGoal >= 300 ? 'text-green-500 dark:text-green-400' : 'text-primary dark:text-blue-400'}`}>{weeklyGoal}</span>
+                                                    <span className={`text-2xl md:text-4xl font-black ${weeklyGoal >= 300 ? 'text-black dark:text-green-400' : 'text-primary dark:text-blue-400'}`}>{weeklyGoal}</span>
                                                     <span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span>
                                                 </div>
                                                 <div className={`w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full mb-2 md:mb-3 relative ${weeklyGoal >= 300 ? 'shadow-[0_0_15px_rgba(34,197,94,0.4)]' : weeklyGoal >= weeklyTarget ? 'shadow-[0_0_10px_rgba(59,130,246,0.2)]' : ''}`}>
