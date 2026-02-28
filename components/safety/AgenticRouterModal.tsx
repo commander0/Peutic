@@ -1,15 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Bot, Sparkles, X, ArrowRight, HeartPulse, Wind, Music } from 'lucide-react';
-import { User } from '../../types';
-
 interface AgenticRouterModalProps {
-    user: User;
     message: string;
     onClose: () => void;
     onAcceptAction: (action: string) => void;
 }
 
-const AgenticRouterModal: React.FC<AgenticRouterModalProps> = ({ user, message, onClose, onAcceptAction }) => {
+const AgenticRouterModal: React.FC<AgenticRouterModalProps> = ({ message, onClose, onAcceptAction }) => {
     const [actionRoute, setActionRoute] = useState<'dojo' | 'breathing' | 'soundscape'>('breathing');
 
     useEffect(() => {

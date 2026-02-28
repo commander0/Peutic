@@ -43,6 +43,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     const [petName, setPetName] = useState('');
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
     const [trick, setTrick] = useState<'spin' | 'magic' | null>(null);
+    const [luminaMessage, setLuminaMessage] = useState<string | null>(null);
     const [canvasSize, setCanvasSize] = useState(500);
     const [isCreating, setIsCreating] = useState(false);
     const [showMissions, setShowMissions] = useState(false);
@@ -114,10 +115,28 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                 const isRecent = new Date(last.date).getTime() > Date.now() - (24 * 60 * 60 * 1000); // Last 24h
 
                 if (isRecent) {
-                    if (last.mood === 'confetti') setEmotion('happy');
-                    else if (last.mood === 'rain' || last.mood === 'Sad' || last.mood === 'Anxious') setEmotion('sad');
+                    if (last.mood === 'confetti') {
+                        setEmotion('happy');
+                        setLuminaMessage("Your energy is glowing today! Let's celebrate!");
+                    } else if (last.mood === 'rain' || last.mood === 'Sad' || last.mood === 'Anxious') {
+                        setEmotion('sad');
+                        setLuminaMessage("I sense some heavy clouds... take a deep breath. I'm right here with you.");
+                    } else if (last.mood === 'Stressed' || last.mood === 'Angry') {
+                        setEmotion('thinker');
+                        setLuminaMessage("Your system seems overloaded. Ground yourself. We can take it slow.");
+                    } else {
+                        setEmotion('idle');
+                        setLuminaMessage("I'm happy to see you today. What shall we do?");
+                    }
+                } else {
+                    setLuminaMessage("It's been a cycle or two... I'm glad you're back.");
                 }
+            } else {
+                setLuminaMessage("Hello there. Let's grow together.");
             }
+
+            // Auto-hide the initial greeting after 8 seconds
+            setTimeout(() => setLuminaMessage(null), 8000);
         };
         syncMood();
     }, [user.id]);
@@ -438,6 +457,16 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
 
                     {/* Character Canvas */}
                     <div className={`relative flex items-center justify-center transition-all duration-1000 ${isSummoning ? 'scale-110 -translate-y-10 brightness-150' : ''}`}>
+                        {/* Dynamic Dialogue Bubble */}
+                        {luminaMessage && !isSummoning && (
+                            <div className="absolute -top-16 md:-top-24 z-[100] animate-in slide-in-from-bottom-5 fade-in duration-500">
+                                <div className="bg-black/80 backdrop-blur-md border border-cyan-500/50 p-4 rounded-3xl rounded-br-none shadow-[0_0_20px_rgba(6,182,212,0.3)] max-w-[250px] md:max-w-[300px]">
+                                    <p className="text-sm md:text-base font-medium text-cyan-100 italic leading-snug">
+                                        "{luminaMessage}"
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                         <PetCanvas
                             pet={pet}
                             width={canvasSize}

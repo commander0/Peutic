@@ -6,10 +6,11 @@ interface GardenCanvasProps {
     width: number;
     height: number;
     interactionType?: 'clip' | 'water' | 'breath' | 'sing' | 'harvest' | null;
+    hasWeeds?: boolean;
 }
 
 
-const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, interactionType }) => {
+const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, interactionType, hasWeeds }) => {
 
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -374,6 +375,17 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
                     )}
 
                 </g>
+
+                {/* Thorny Gamified Weeds Overlay */}
+                {hasWeeds && (
+                    <g filter="drop-shadow(0px 5px 10px rgba(0,0,0,0.8))" className="animate-[pulse_3s_ease-in-out_infinite] mix-blend-multiply">
+                        <path d="M 20 85 Q 30 60 40 40 Q 50 20 60 30" fill="none" stroke="#450a0a" strokeWidth="3" strokeLinecap="round" />
+                        <path d="M 80 85 Q 70 50 50 35 Q 30 20 20 30" fill="none" stroke="#450a0a" strokeWidth="4" strokeLinecap="round" />
+                        <path d="M 30 90 Q 50 80 60 50 Q 70 30 80 15" fill="none" stroke="#450a0a" strokeWidth="2" strokeLinecap="round" />
+                        {/* Thorns */}
+                        <path d="M 35 50 L 30 48 M 45 30 L 48 25 M 65 65 L 70 68 M 40 45 L 35 40" stroke="#7f1d1d" strokeWidth="1.5" />
+                    </g>
+                )}
 
                 {/* Harvesting/Water Effects Overlay */}
                 {interactionType === 'harvest' && (

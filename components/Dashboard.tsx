@@ -1388,13 +1388,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             }
             {
                 showWorldPulse && dashboardUser && (
-                    <WorldPulse user={dashboardUser} onClose={() => setShowWorldPulse(false)} />
+                    <WorldPulse onClose={() => setShowWorldPulse(false)} />
                 )
             }
             {
                 showAgenticRouter && dashboardUser && (
                     <AgenticRouterModal
-                        user={dashboardUser}
                         message={agentMessage}
                         onClose={() => setShowAgenticRouter(false)}
                         onAcceptAction={(action) => {

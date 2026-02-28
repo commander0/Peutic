@@ -130,6 +130,23 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
         onUpdate();
     };
 
+    const [hasWeeds, setHasWeeds] = useState(() => {
+        // Weeds appear if the user lost their streak and their garden had progressed somewhat (e.g. at least level 2/3)
+        return user.streak === 0 && localGarden.focusMinutes >= 3;
+    });
+
+    const handleClearWeeds = async () => {
+        const cost = 5;
+        const hasEnough = await UserService.deductBalance(cost, "Cleared Garden Weeds");
+        if (!hasEnough) {
+            showToast(`Not enough focus to clear weeds (-${cost}m required).`, "error");
+            return;
+        }
+        setHasWeeds(false);
+        showToast("Weeds cleared! Your garden can breathe again.", "success");
+        onUpdate();
+    };
+
     return (
         <div className="fixed inset-0 z-[100] overflow-hidden bg-[#050a05] text-white animate-in fade-in duration-700">
 
@@ -227,6 +244,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                         width={600}
                         height={500}
                         interactionType={interaction}
+                        hasWeeds={hasWeeds}
                     />
                 </div>
             </main>
@@ -312,14 +330,25 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
 
                 {/* Action Dock */}
                 <div className="flex flex-wrap justify-center items-center gap-4 md:gap-12">
-                    <ControlBtn
-                        icon={Droplets}
-                        label="Nourish"
-                        sub={`-${intensity}m`}
-                        active={interaction === 'water'}
-                        onClick={() => handleAction('water')}
-                        color="cyan"
-                    />
+                    {hasWeeds ? (
+                        <ControlBtn
+                            icon={Scissors}
+                            label="Clear Weeds"
+                            sub="-5m"
+                            active={false}
+                            onClick={handleClearWeeds}
+                            color="red"
+                        />
+                    ) : (
+                        <ControlBtn
+                            icon={Droplets}
+                            label="Nourish"
+                            sub={`-${intensity}m`}
+                            active={interaction === 'water'}
+                            onClick={() => handleAction('water')}
+                            color="cyan"
+                        />
+                    )}
                     <ControlBtn
                         icon={Wind}
                         label="Breathe"

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { ShoppingBag, TreePine, Heart, Coffee, X, Sparkles, CheckCircle2, Star } from 'lucide-react';
 import { User } from '../../types';
-import { UserService } from '../../services/userService';
 
 interface SerenityShopProps {
     user: User;
@@ -83,7 +82,7 @@ const ITEMS = [
     }
 ];
 
-const SerenityShop: React.FC<SerenityShopProps> = ({ user, balance, onClose, onPurchase }) => {
+const SerenityShop: React.FC<SerenityShopProps> = ({ balance, onClose, onPurchase }) => {
     const [purchasedId, setPurchasedId] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -142,7 +141,6 @@ const SerenityShop: React.FC<SerenityShopProps> = ({ user, balance, onClose, onP
                         {ITEMS.map(item => {
                             const Icon = item.icon;
                             const canAfford = balance >= item.cost;
-                            const isBuyingThis = isProcessing && purchasedId === null; // simplified logic
                             const justBought = purchasedId === item.id;
 
                             return (

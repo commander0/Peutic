@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Globe2, Heart, Sparkles, Navigation } from 'lucide-react';
-import { User } from '../../types';
 
 interface WorldPulseProps {
-    user: User;
     onClose: () => void;
 }
 
@@ -19,7 +17,7 @@ const generatePath = () => {
     };
 };
 
-const WorldPulse: React.FC<WorldPulseProps> = ({ user, onClose }) => {
+const WorldPulse: React.FC<WorldPulseProps> = ({ onClose }) => {
     const [orbs, setOrbs] = useState<any[]>([]);
     const [activeUsersCount, setActiveUsersCount] = useState<number>(0);
     const [totalEchoes, setTotalEchoes] = useState<number>(0);
