@@ -21,6 +21,7 @@ const SHOP_ITEMS = [
 export const SerenityShop: React.FC<SerenityShopProps> = ({ user, onClose, onUpdate }) => {
     const { showToast } = useToast();
     const [isProcessing, setIsProcessing] = useState(false);
+    const [rewardId, setRewardId] = useState<string | null>(null);
 
     // We treat oracleTokens as "Serenity Coins" for the V4 economy
     const coins = user.oracleTokens || 0;
@@ -44,6 +45,10 @@ export const SerenityShop: React.FC<SerenityShopProps> = ({ user, onClose, onUpd
             } else {
                 showToast(`Successfully unlocked ${item.title}!`, "success");
             }
+
+            setRewardId(item.id);
+            setTimeout(() => setRewardId(null), 3500);
+
             onUpdate();
         } catch (e) {
             showToast("Failed to process transaction.", "error");
@@ -109,11 +114,23 @@ export const SerenityShop: React.FC<SerenityShopProps> = ({ user, onClose, onUpd
                                 {items.map(item => {
                                     const Icon = item.icon;
                                     const canAfford = coins >= item.cost;
+                                    const isRewarding = rewardId === item.id;
 
                                     return (
-                                        <div key={item.id} className="bg-white/5 border border-white/10 rounded-3xl p-6 flex flex-col justify-between hover:bg-white/10 transition-all group hover:-translate-y-1 hover:shadow-2xl">
-                                            <div>
-                                                <div className={`w-14 h-14 rounded-2xl ${item.bg} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                                        <div key={item.id} className={`bg-white/5 border border-white/10 rounded-3xl p-6 flex flex-col justify-between transition-all duration-500 relative overflow-hidden group hover:-translate-y-1 hover:shadow-2xl ${isRewarding ? 'ring-4 ring-yellow-400 bg-yellow-500/10 scale-105 z-10' : ''}`}>
+                                            {isRewarding && (
+                                                <div className="absolute inset-0 pointer-events-none z-20">
+                                                    {[...Array(15)].map((_, i) => (
+                                                        <div key={`spark2-${i}`} className="absolute text-2xl animate-[ping_1.5s_ease-out_1]"
+                                                            style={{ left: `${5 + Math.random() * 90}%`, top: `${5 + Math.random() * 90}%`, animationDelay: `${Math.random() * 0.4}s` }}>
+                                                            ✨
+                                                        </div>
+                                                    ))}
+                                                    <div className="absolute inset-0 bg-yellow-400/20 animate-pulse mix-blend-screen"></div>
+                                                </div>
+                                            )}
+                                            <div className="relative z-30">
+                                                <div className={`w-14 h-14 rounded-2xl ${item.bg} flex items-center justify-center mb-6 transition-transform ${isRewarding ? 'scale-125 animate-bounce' : 'group-hover:scale-110'}`}>
                                                     <Icon className={`w-7 h-7 ${item.color}`} />
                                                 </div>
                                                 <h4 className="text-xl font-black text-white mb-2">{item.title}</h4>

@@ -22,6 +22,7 @@ export const SANCTUARY_ITEMS = [
 const SanctuaryShop: React.FC<SanctuaryShopProps> = ({ user, onClose, onPurchaseUpdate }) => {
     const { showToast } = useToast();
     const [purchasing, setPurchasing] = useState<string | null>(null);
+    const [rewardId, setRewardId] = useState<string | null>(null);
 
     const unlockedDecor = user.unlockedDecor || [];
 
@@ -45,6 +46,8 @@ const SanctuaryShop: React.FC<SanctuaryShopProps> = ({ user, onClose, onPurchase
                 await UserService.updateUserPartial(user.id, { unlockedDecor: newDecor });
 
                 onPurchaseUpdate(updatedUserObj);
+                setRewardId(item.id);
+                setTimeout(() => setRewardId(null), 3000);
                 showToast(`Acquired ${item.name}!`, "success");
             } else {
                 showToast("Transaction failed.", "error");
@@ -87,18 +90,32 @@ const SanctuaryShop: React.FC<SanctuaryShopProps> = ({ user, onClose, onPurchase
                         const isUnlocked = unlockedDecor.includes(item.id);
                         const canAfford = user.balance >= item.price;
                         const isPurchasing = purchasing === item.id;
+                        const isRewarding = rewardId === item.id;
 
                         return (
                             <div
                                 key={item.id}
-                                className={`p-4 rounded-2xl border transition-all flex items-start gap-4
-                                    ${isUnlocked
-                                        ? 'bg-emerald-900/20 border-emerald-900/50 opacity-70'
-                                        : 'bg-stone-800/40 border-stone-700/50 hover:bg-stone-800'
+                                className={`p-4 rounded-2xl border transition-all duration-500 flex items-start gap-4 relative overflow-hidden
+                                    ${isRewarding
+                                        ? 'bg-amber-500/20 border-amber-400 scale-[1.02] shadow-[0_0_50px_rgba(251,191,36,0.3)] z-10'
+                                        : isUnlocked
+                                            ? 'bg-emerald-900/20 border-emerald-900/50 opacity-70'
+                                            : 'bg-stone-800/40 border-stone-700/50 hover:bg-stone-800'
                                     }
                                 `}
                             >
-                                <div className="text-4xl bg-stone-900/80 p-3 rounded-xl border border-white/5 drop-shadow-md">
+                                {isRewarding && (
+                                    <div className="absolute inset-0 pointer-events-none z-20">
+                                        {[...Array(12)].map((_, i) => (
+                                            <div key={`spark-${i}`} className="absolute text-xl animate-[ping_1s_ease-out_1]"
+                                                style={{ left: `${10 + Math.random() * 80}%`, top: `${10 + Math.random() * 80}%`, animationDelay: `${Math.random() * 0.3}s` }}>
+                                                ✨
+                                            </div>
+                                        ))}
+                                        <div className="absolute inset-0 bg-amber-400/20 animate-pulse mix-blend-screen"></div>
+                                    </div>
+                                )}
+                                <div className="text-4xl bg-stone-900/80 p-3 rounded-xl border border-white/5 drop-shadow-md relative z-30">
                                     {item.icon}
                                 </div>
                                 <div className="flex-1">
