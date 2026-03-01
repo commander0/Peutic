@@ -82,9 +82,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            const fluctuation = Math.floor(Math.random() * 5) - 2; // -2 to +2
+            const fluctuation = Math.floor(Math.random() * 7) - 3; // -3 to +3
             setOnlineCount(prev => Math.max(80, Math.min(450, prev + fluctuation)));
-        }, 20000);
+        }, 3000);
 
         setOnlineCount(Math.floor(Math.random() * (300 - 80 + 1)) + 142);
 
@@ -180,8 +180,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-10 md:gap-12 items-center">
                     <div className="lg:col-span-7 space-y-5 md:space-y-8 text-center">
                         <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-1.5 bg-white dark:bg-gray-900 border border-yellow-200/50 dark:border-gray-800 rounded-full shadow-sm transition-colors">
-                            <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
-                            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 tabular-nums">{onlineCount} {t('hero_badge')}</span>
+                            <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">{onlineCount} {t('hero_badge')}</span>
                         </div>
                         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] md:leading-[1] tracking-tighter dark:text-white">
                             {t('hero_title_1')} <br />
