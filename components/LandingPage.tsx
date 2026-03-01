@@ -154,7 +154,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     </video>
                     {/* Golden tints globally applied to both light and dark modes */}
                     <div className="absolute inset-0 bg-[#facc15]/30 mix-blend-overlay pointer-events-none"></div>
-                    <div className="absolute inset-0 bg-[#fde9a0]/40 mix-blend-multiply pointer-events-none"></div>
+                    <div className="absolute inset-0 bg-[#fde9a0]/40 mix-blend-multiply pointer-events-none text-transparent"></div>
+                    {/* Contrast restoration for dark mode to kill the haze */}
+                    <div className="absolute inset-0 bg-black/50 hidden dark:block pointer-events-none"></div>
 
                     <div className="absolute inset-x-0 bottom-0 h-[40vh] bg-gradient-to-t from-[#fde9a0] via-[#fde9a0]/60 to-transparent dark:from-[#1C1F26] dark:via-[#1C1F26]/50"></div>
                 </div>
