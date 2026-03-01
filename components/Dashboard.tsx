@@ -102,13 +102,19 @@ const AvatarImage = React.memo(({ src, alt, className, isUser = false }: { src?:
 });
 AvatarImage.displayName = 'AvatarImage';
 
-const CollapsibleSection = React.memo(({ title, icon: Icon, children, defaultOpen = false }: { title: string, icon: any, children: React.ReactNode, defaultOpen?: boolean }) => {
-    const [isOpen, setIsOpen] = useState(defaultOpen);
+const CollapsibleSection = React.memo(({ title, icon: Icon, children, defaultOpen = false, isOpen: controlledIsOpen, onToggle }: { title: string, icon: any, children: React.ReactNode, defaultOpen?: boolean, isOpen?: boolean, onToggle?: () => void }) => {
+    const [internalIsOpen, setInternalIsOpen] = useState(defaultOpen);
     const [, startTransition] = useTransition();
+
+    const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
 
     const handleToggle = () => {
         startTransition(() => {
-            setIsOpen(prev => !prev);
+            if (onToggle) {
+                onToggle();
+            } else {
+                setInternalIsOpen(prev => !prev);
+            }
         });
     };
 
@@ -141,6 +147,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const { theme, mode, setTheme, toggleMode } = useTheme();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'inner_sanctuary' | 'history' | 'settings'>('inner_sanctuary');
+    const [openSection, setOpenSection] = useState<'arcade' | 'journal' | null>(null);
 
     // STRICT ADMIN REDIRECT
     useEffect(() => {
@@ -683,15 +690,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 1: ZEN BONZAI */}
                                                 <div
                                                     onClick={() => setShowGardenFull(true)}
-                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-[0_8px_32px_rgba(34,197,94,0.15)] hover:shadow-[0_8px_32px_rgba(34,197,94,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-[0_8px_32px_rgba(34,197,94,0.15)] hover:shadow-[0_8px_32px_rgba(34,197,94,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
                                                 >
-                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
+                                                    <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center">
                                                         <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
                                                         <div className="relative z-10 w-full h-full flex flex-col items-center justify-center pointer-events-none">
                                                             <div className="relative mb-1 md:mb-4 pointer-events-auto">
                                                                 <div className="absolute -inset-4 bg-green-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                                <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-green-500 to-emerald-700 border border-green-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,197,94,0.4)] group-hover:scale-110 transition-transform">
-                                                                    <Leaf className="w-5 h-5 md:w-10 md:h-10 text-white animate-ethereal-breathe" />
+                                                                <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-green-500 to-emerald-700 border border-green-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,197,94,0.4)] group-hover:scale-110 transition-transform">
+                                                                    <Leaf className="w-5 h-5 md:w-6 md:h-6 text-white animate-ethereal-breathe" />
                                                                 </div>
                                                             </div>
                                                             {/* Overlay Controls */}
@@ -737,14 +744,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                                     showToast(`Locked for ${daysRemaining} more days.`, "info");
                                                                 }
                                                             }}
-                                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
                                                         >
-                                                            <div className="flex flex-col items-center justify-center h-full p-2 md:p-6 text-center relative z-10">
+                                                            <div className="flex flex-col items-center justify-center h-full p-2 md:p-4 text-center relative z-10">
                                                                 <div className="relative mb-1 md:mb-4">
                                                                     <div className="absolute -inset-4 md:-inset-6 bg-purple-400/30 dark:bg-purple-500/20 blur-xl rounded-full animate-pulse"></div>
                                                                     <div className="absolute -inset-2 border border-purple-300/50 dark:border-purple-500/30 rounded-full animate-[spin_8s_linear_infinite]"></div>
-                                                                    <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-purple-600 to-indigo-700 border border-purple-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_20px_rgba(168,85,247,0.5)] group-hover:scale-110 transition-transform">
-                                                                        <BookOpen className="w-5 h-5 md:w-10 md:h-10" />
+                                                                    <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-purple-600 to-indigo-700 border border-purple-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_20px_rgba(168,85,247,0.5)] group-hover:scale-110 transition-transform">
+                                                                        <BookOpen className="w-5 h-5 md:w-6 md:h-6" />
                                                                     </div>
                                                                     {isLocked && <div className="absolute -top-2 -right-2 bg-primary text-black p-1 rounded-lg shadow-lg"><Lock className="w-3 h-3" /></div>}
                                                                 </div>
@@ -760,13 +767,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 3: LUMINA */}
                                                 <div
                                                     onClick={() => setShowPocketPet(true)}
-                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
                                                 >
-                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center">
+                                                    <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center">
                                                         <div className="relative mb-1 md:mb-4">
                                                             <div className="absolute -inset-4 bg-cyan-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                            <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-cyan-500 to-blue-700 border border-cyan-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform overflow-hidden">
-                                                                <Sparkles className="w-5 h-5 md:w-10 md:h-10 text-white animate-bounce" />
+                                                            <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-cyan-500 to-blue-700 border border-cyan-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform overflow-hidden">
+                                                                <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-white animate-bounce" />
                                                             </div>
                                                         </div>
                                                         <h3 className="text-[7px] md:text-sm font-black text-cyan-700 dark:text-cyan-50 uppercase tracking-[0.2em] mb-1">Lumina</h3>
@@ -779,13 +786,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 4: ORACLE */}
                                                 <div
                                                     onClick={() => handleRoomInteraction('observatory', 25)}
-                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'shadow-glass hover:shadow-premium hover:-translate-y-1' : 'grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
+                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'shadow-glass hover:shadow-premium hover:-translate-y-1' : 'grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer`}
                                                 >
-                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                                    <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
                                                         <div className="relative mb-1 md:mb-4">
                                                             <div className="absolute -inset-4 bg-indigo-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                            <div className={`w-10 h-10 md:w-20 md:h-20 ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'bg-gradient-to-br from-indigo-500 to-purple-700 border-indigo-400/50 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]' : 'bg-gray-400 dark:bg-gray-600 border-gray-400/50 text-gray-200'} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                                                {dashboardUser?.unlockedRooms?.includes('observatory') ? <Moon className="w-5 h-5 md:w-8 md:h-8 text-white" /> : <Lock className="w-4 h-4 md:w-6 md:h-6 text-gray-200" />}
+                                                            <div className={`w-10 h-10 md:w-16 md:h-16 ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'bg-gradient-to-br from-indigo-500 to-purple-700 border-indigo-400/50 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]' : 'bg-gray-400 dark:bg-gray-600 border-gray-400/50 text-gray-200'} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                                                                {dashboardUser?.unlockedRooms?.includes('observatory') ? <Moon className="w-5 h-5 md:w-6 md:h-6 text-white" /> : <Lock className="w-4 h-4 md:w-5 md:h-5 text-gray-200" />}
                                                             </div>
                                                             {!dashboardUser?.unlockedRooms?.includes('observatory') && (
                                                                 <div className="absolute -top-3 -right-3 md:-top-2 md:-right-2 bg-indigo-500 text-white text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg border border-white/20">
@@ -805,13 +812,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 5: ZEN DOJO */}
                                                 <div
                                                     onClick={() => handleRoomInteraction('dojo', 15)}
-                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'shadow-glass hover:shadow-premium hover:-translate-y-1' : 'grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer`}
+                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'shadow-glass hover:shadow-premium hover:-translate-y-1' : 'grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer`}
                                                 >
-                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                                    <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
                                                         <div className="relative mb-1 md:mb-4">
                                                             <div className="absolute -inset-4 bg-amber-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                            <div className={`w-10 h-10 md:w-20 md:h-20 ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'bg-gradient-to-br from-amber-500 to-orange-700 border-amber-400/50 text-white shadow-[0_0_15px_rgba(245,158,11,0.4)]' : 'bg-gray-400 dark:bg-gray-600 border-gray-400/50 text-gray-200'} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                                                {dashboardUser?.unlockedRooms?.includes('dojo') ? <Zap className="w-5 h-5 md:w-8 md:h-8 text-white" /> : <Lock className="w-4 h-4 md:w-6 md:h-6 text-gray-200" />}
+                                                            <div className={`w-10 h-10 md:w-16 md:h-16 ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'bg-gradient-to-br from-amber-500 to-orange-700 border-amber-400/50 text-white shadow-[0_0_15px_rgba(245,158,11,0.4)]' : 'bg-gray-400 dark:bg-gray-600 border-gray-400/50 text-gray-200'} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                                                                {dashboardUser?.unlockedRooms?.includes('dojo') ? <Zap className="w-5 h-5 md:w-6 md:h-6 text-white" /> : <Lock className="w-4 h-4 md:w-5 md:h-5 text-gray-200" />}
                                                             </div>
                                                             {!dashboardUser?.unlockedRooms?.includes('dojo') && (
                                                                 <div className="absolute -top-3 -right-3 md:-top-2 md:-right-2 bg-amber-500 text-white text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg border border-white/20">
@@ -831,14 +838,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {/* TILE 6: THOUGHT SHREDDER */}
                                                 <div
                                                     onClick={() => setShowShredder(true)}
-                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
+                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
                                                 >
                                                     <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-600/5 pointer-events-none"></div>
-                                                    <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
+                                                    <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
                                                         <div className="relative mb-1 md:mb-4">
                                                             <div className="absolute -inset-4 bg-red-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                            <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-red-500 to-rose-700 border border-red-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(244,63,94,0.4)] group-hover:scale-110 transition-transform">
-                                                                <Scissors className="w-5 h-5 md:w-8 md:h-8 text-white" />
+                                                            <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-red-500 to-rose-700 border border-red-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(244,63,94,0.4)] group-hover:scale-110 transition-transform">
+                                                                <Scissors className="w-5 h-5 md:w-6 md:h-6 text-white" />
                                                             </div>
                                                         </div>
                                                         <h3 className="text-[7px] md:text-sm font-black text-red-700 dark:text-red-300 uppercase tracking-[0.2em] mb-1">Shredder</h3>
@@ -899,80 +906,86 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     <MoodTracker onMoodSelect={handleMoodSelect} />
                                 </div>
 
-                                <CollapsibleSection title="Arcade" icon={Gamepad2}>
-                                    <div className="grid grid-cols-3 gap-1 md:gap-4 w-full">
-                                        {/* TILE 1: MINDFUL MATCH */}
-                                        <div
-                                            onClick={() => setShowMatchGame(true)}
-                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
-                                        >
-                                            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-pink-600/5 pointer-events-none"></div>
-                                            <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
-                                                <div className="relative mb-1 md:mb-4">
-                                                    <div className="absolute -inset-4 bg-violet-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                    <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-violet-500 to-purple-700 border border-violet-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(139,92,246,0.4)] group-hover:scale-110 transition-transform">
-                                                        <Brain className="w-5 h-5 md:w-8 md:h-8 text-white" />
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5 w-full items-start">
+                                    <div className="flex flex-col w-full h-full">
+                                        <CollapsibleSection title="Arcade" icon={Gamepad2} isOpen={openSection === 'arcade'} onToggle={() => setOpenSection(prev => prev === 'arcade' ? null : 'arcade')}>
+                                            <div className="grid grid-cols-3 gap-1 md:gap-4 w-full">
+                                                {/* TILE 1: MINDFUL MATCH */}
+                                                <div
+                                                    onClick={() => setShowMatchGame(true)}
+                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
+                                                >
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-pink-600/5 pointer-events-none"></div>
+                                                    <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
+                                                        <div className="relative mb-1 md:mb-4">
+                                                            <div className="absolute -inset-4 bg-violet-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                            <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-violet-500 to-purple-700 border border-violet-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(139,92,246,0.4)] group-hover:scale-110 transition-transform">
+                                                                <Brain className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                                                            </div>
+                                                        </div>
+                                                        <h3 className="text-[7px] md:text-sm font-black text-violet-700 dark:text-violet-300 uppercase tracking-[0.2em] mb-1">Mindful Match</h3>
+                                                        <p className="hidden md:block text-[10px] font-bold text-violet-600/60 dark:text-violet-400/50 uppercase tracking-widest">Memory & Focus</p>
                                                     </div>
                                                 </div>
-                                                <h3 className="text-[7px] md:text-sm font-black text-violet-700 dark:text-violet-300 uppercase tracking-[0.2em] mb-1">Mindful Match</h3>
-                                                <p className="hidden md:block text-[10px] font-bold text-violet-600/60 dark:text-violet-400/50 uppercase tracking-widest">Memory & Focus</p>
-                                            </div>
-                                        </div>
 
-                                        {/* TILE 2: CLOUD HOP */}
-                                        <div
-                                            onClick={() => setShowCloudHop(true)}
-                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-[0_8px_32px_rgba(14,165,233,0.15)] hover:shadow-[0_8px_32px_rgba(14,165,233,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
-                                        >
-                                            <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-cyan-600/5 pointer-events-none"></div>
-                                            <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
-                                                <div className="relative mb-1 md:mb-4">
-                                                    <div className="absolute -inset-4 bg-sky-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                    <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-sky-500 to-blue-700 border border-sky-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.4)] group-hover:scale-110 transition-transform">
-                                                        <Cloud className="w-5 h-5 md:w-8 md:h-8 text-white" />
+                                                {/* TILE 2: CLOUD HOP */}
+                                                <div
+                                                    onClick={() => setShowCloudHop(true)}
+                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-[0_8px_32px_rgba(14,165,233,0.15)] hover:shadow-[0_8px_32px_rgba(14,165,233,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
+                                                >
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-cyan-600/5 pointer-events-none"></div>
+                                                    <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
+                                                        <div className="relative mb-1 md:mb-4">
+                                                            <div className="absolute -inset-4 bg-sky-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                            <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-sky-500 to-blue-700 border border-sky-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.4)] group-hover:scale-110 transition-transform">
+                                                                <Cloud className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                                                            </div>
+                                                        </div>
+                                                        <h3 className="text-[7px] md:text-sm font-black text-sky-700 dark:text-sky-300 uppercase tracking-[0.2em] mb-1">Cloud Hop</h3>
+                                                        <p className="hidden md:block text-[10px] font-bold text-sky-600/60 dark:text-sky-400/50 uppercase tracking-widest">Relax & Soar</p>
                                                     </div>
                                                 </div>
-                                                <h3 className="text-[7px] md:text-sm font-black text-sky-700 dark:text-sky-300 uppercase tracking-[0.2em] mb-1">Cloud Hop</h3>
-                                                <p className="hidden md:block text-[10px] font-bold text-sky-600/60 dark:text-sky-400/50 uppercase tracking-widest">Relax & Soar</p>
-                                            </div>
-                                        </div>
 
-                                        {/* TILE 3: STRESS SLICER */}
-                                        <div
-                                            onClick={() => setShowSlicerGame(true)}
-                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-[0_8px_32px_rgba(239,68,68,0.15)] hover:shadow-[0_8px_32px_rgba(239,68,68,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[220px] cursor-pointer"
-                                        >
-                                            <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-600/5 pointer-events-none"></div>
-                                            <div className="flex-1 p-2 md:p-6 relative flex flex-col items-center justify-center text-center">
-                                                <div className="relative mb-1 md:mb-4">
-                                                    <div className="absolute -inset-4 bg-red-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                    <div className="w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-red-500 to-rose-700 border border-red-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(239,68,68,0.4)] group-hover:scale-110 transition-transform">
-                                                        <Flame className="w-5 h-5 md:w-8 md:h-8 text-white" />
+                                                {/* TILE 3: STRESS SLICER */}
+                                                <div
+                                                    onClick={() => setShowSlicerGame(true)}
+                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-[0_8px_32px_rgba(239,68,68,0.15)] hover:shadow-[0_8px_32px_rgba(239,68,68,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
+                                                >
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-600/5 pointer-events-none"></div>
+                                                    <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
+                                                        <div className="relative mb-1 md:mb-4">
+                                                            <div className="absolute -inset-4 bg-red-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                            <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-red-500 to-rose-700 border border-red-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(239,68,68,0.4)] group-hover:scale-110 transition-transform">
+                                                                <Flame className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                                                            </div>
+                                                        </div>
+                                                        <h3 className="text-[7px] md:text-sm font-black text-red-700 dark:text-red-300 uppercase tracking-[0.2em] mb-1">Stress Slicer</h3>
+                                                        <p className="hidden md:block text-[10px] font-bold text-red-600/60 dark:text-red-400/50 uppercase tracking-widest">Cathartic Release</p>
                                                     </div>
                                                 </div>
-                                                <h3 className="text-[7px] md:text-sm font-black text-red-700 dark:text-red-300 uppercase tracking-[0.2em] mb-1">Stress Slicer</h3>
-                                                <p className="hidden md:block text-[10px] font-bold text-red-600/60 dark:text-red-400/50 uppercase tracking-widest">Cathartic Release</p>
                                             </div>
-                                        </div>
+                                        </CollapsibleSection>
                                     </div>
-                                </CollapsibleSection>
-                                <CollapsibleSection title="Journal" icon={Feather}>
-                                    <GlobalErrorBoundary fallback={
-                                        <div className="p-6 text-center border border-red-500/20 bg-red-500/5 rounded-xl">
-                                            <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-                                            <h3 className="font-bold text-red-400 text-sm">Hub Temporarily Unavailable</h3>
-                                            <p className="text-xs text-red-300 mt-1">We are restoring the connection. Please try again shortly.</p>
-                                        </div>
-                                    }>
-                                        <Suspense fallback={<div className="p-6 space-y-4"><StatSkeleton /><StatSkeleton /></div>}>
-                                            <div className="space-y-6">
-                                                <JournalSection user={user} />
-                                                <div className="border-t border-dashed border-primary-light dark:border-gray-700" />
-                                                <WisdomGenerator userId={user.id} />
-                                            </div>
-                                        </Suspense>
-                                    </GlobalErrorBoundary>
-                                </CollapsibleSection>
+                                    <div className="flex flex-col w-full h-full">
+                                        <CollapsibleSection title="Journal" icon={Feather} isOpen={openSection === 'journal'} onToggle={() => setOpenSection(prev => prev === 'journal' ? null : 'journal')}>
+                                            <GlobalErrorBoundary fallback={
+                                                <div className="p-6 text-center border border-red-500/20 bg-red-500/5 rounded-xl">
+                                                    <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
+                                                    <h3 className="font-bold text-red-400 text-sm">Hub Temporarily Unavailable</h3>
+                                                    <p className="text-xs text-red-300 mt-1">We are restoring the connection. Please try again shortly.</p>
+                                                </div>
+                                            }>
+                                                <Suspense fallback={<div className="p-6 space-y-4"><StatSkeleton /><StatSkeleton /></div>}>
+                                                    <div className="space-y-6">
+                                                        <JournalSection user={user} />
+                                                        <div className="border-t border-dashed border-primary-light dark:border-gray-700" />
+                                                        <WisdomGenerator userId={user.id} />
+                                                    </div>
+                                                </Suspense>
+                                            </GlobalErrorBoundary>
+                                        </CollapsibleSection>
+                                    </div>
+                                </div>
                                 <div>
                                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-5"><div><h2 className="text-xl md:text-2xl font-black dark:text-primary">{t('sec_specialists')}</h2><p className="text-gray-500 text-xs md:text-sm">{t('roster_heading')}</p></div><div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide"><button onClick={() => setSpecialtyFilter('All')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === 'All' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>All</button>{uniqueSpecialties.map(spec => (<button key={spec} onClick={() => setSpecialtyFilter(spec)} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === spec ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>{spec}</button>))}</div></div>
                                     {loadingCompanions ? (
