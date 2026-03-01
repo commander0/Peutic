@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, CheckCircle, ArrowRight, ShieldCheck, Cookie, Instagram, Twitter, Linkedin, Play, Moon, Sun, Megaphone, Zap, Sparkles, Quote, Star } from 'lucide-react';
+import { Heart, CheckCircle, ArrowRight, ShieldCheck, Cookie, Instagram, Twitter, Linkedin, Play, Moon, Sun, Megaphone, Quote, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from './common/LanguageContext';
 import { LanguageSelector } from './common/LanguageSelector';
@@ -213,20 +213,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     </div>
                     <div className="lg:col-span-5 relative mt-10 md:mt-0 perspective-1000">
                         <div
-                            className="relative w-4/5 md:w-full max-w-xs mx-auto transition-transform duration-200 ease-out transform-gpu preserve-3d"
+                            className="relative w-4/5 md:w-full max-w-xs mx-auto transform-gpu preserve-3d"
                             onMouseMove={handleMouseMove}
                             onMouseLeave={handleMouseLeave}
-                            style={{ transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)` }}
+                            style={{ transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`, transition: tilt.x === 0 && tilt.y === 0 ? 'transform 0.5s ease-out' : 'transform 0.05s linear' }}
                         >
-                            {/* Glass Live Chat UI Element */}
-                            <div className="absolute -right-8 md:-right-16 top-10 md:top-20 bg-white/90 dark:bg-black/80 backdrop-blur-xl p-3 md:p-4 rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.1)] border border-white/40 dark:border-white/10 z-30 animate-float-delayed max-w-[180px] md:max-w-[220px] transform-gpu transition-all" style={{ transform: 'translateZ(50px)' }}>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="w-6 h-6 rounded-full overflow-hidden border border-yellow-200"><img src={INITIAL_COMPANIONS[0].imageUrl} className="w-full h-full object-cover" /></div>
-                                    <p className="text-[9px] md:text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest flex items-center gap-1">Ruby <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse inline-block"></span></p>
-                                </div>
-                                <p className="text-[11px] md:text-xs font-medium dark:text-white leading-relaxed">"I'm right here with you. Let's take a deep breath together."</p>
-                            </div>
-
                             <div
                                 className="relative aspect-[4/5] bg-gray-900 rounded-[2rem] overflow-hidden shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] border border-white/20 dark:border-white/10 group z-10"
                                 style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)', maskImage: 'radial-gradient(white, black)' }}
@@ -261,48 +252,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            {/* FEATURE GRID: Inside the Sanctuary */}
-            <section className="py-16 md:py-24 relative z-10">
-                <div className="max-w-7xl mx-auto px-6">
-                    <div className="text-center mb-12 md:mb-16">
-                        <p className="text-yellow-600 font-black uppercase tracking-[0.4em] text-[9px] md:text-[10px] mb-3">The Experience</p>
-                        <h2 className="text-3xl md:text-5xl font-black tracking-tighter dark:text-white mb-4">Inside the Sanctuary</h2>
-                        <p className="text-gray-600 dark:text-gray-400 font-medium max-w-xl mx-auto">Discover beautiful tools designed specifically to help you manage anxiety, track growth, and find your center.</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-                        {/* Box 1: Zen Dojo */}
-                        <div className="relative group bg-white/40 dark:bg-gray-900/60 backdrop-blur-xl border border-white/60 dark:border-gray-800 rounded-[2rem] p-8 overflow-hidden hover:-translate-y-2 transition-transform duration-500 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] hover:shadow-[0_40px_60px_-15px_rgba(0,0,0,0.1)] dark:shadow-none">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/20 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 group-hover:bg-amber-500/30 transition-colors"></div>
-                            <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg relative z-10 mb-6 group-hover:scale-110 transition-transform">
-                                <Zap className="w-6 h-6 text-white" />
-                            </div>
-                            <h3 className="text-xl font-black mb-3 dark:text-white relative z-10">Zen Dojo</h3>
-                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 leading-relaxed relative z-10">Enter a hyper-focused environment designed to eliminate distractions and cut through mental fog instantly.</p>
-                        </div>
-
-                        {/* Box 2: Lumina Pet */}
-                        <div className="relative group bg-white/40 dark:bg-gray-900/60 backdrop-blur-xl border border-white/60 dark:border-gray-800 rounded-[2rem] p-8 overflow-hidden hover:-translate-y-2 transition-transform duration-500 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] hover:shadow-[0_40px_60px_-15px_rgba(0,0,0,0.1)] dark:shadow-none md:-translate-y-4">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/20 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 group-hover:bg-cyan-500/30 transition-colors"></div>
-                            <div className="w-14 h-14 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg relative z-10 mb-6 group-hover:scale-110 transition-transform">
-                                <Sparkles className="w-6 h-6 text-white" />
-                            </div>
-                            <h3 className="text-xl font-black mb-3 dark:text-white relative z-10">Lumina Companion</h3>
-                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 leading-relaxed relative z-10">A digital spirit pet that responds to your breathing and evolves based on your offline mental health journaling.</p>
-                        </div>
-
-                        {/* Box 3: Oracle */}
-                        <div className="relative group bg-white/40 dark:bg-gray-900/60 backdrop-blur-xl border border-white/60 dark:border-gray-800 rounded-[2rem] p-8 overflow-hidden hover:-translate-y-2 transition-transform duration-500 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] hover:shadow-[0_40px_60px_-15px_rgba(0,0,0,0.1)] dark:shadow-none">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 group-hover:bg-indigo-500/30 transition-colors"></div>
-                            <div className="w-14 h-14 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg relative z-10 mb-6 group-hover:scale-110 transition-transform">
-                                <Moon className="w-6 h-6 text-white" />
-                            </div>
-                            <h3 className="text-xl font-black mb-3 dark:text-white relative z-10">The Oracle</h3>
-                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 leading-relaxed relative z-10">Exchange your earned Focus Minutes for profound, AI-generated insights and tailored emotional guidance.</p>
                         </div>
                     </div>
                 </div>
