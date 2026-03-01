@@ -140,25 +140,24 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 </div>
             )}
 
-            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+            {/* GLOBAL BACKGROUND VIDEO - FIXED TO VIEWPORT */}
+            <div className="fixed top-0 inset-x-0 h-[100vh] pointer-events-none z-0 overflow-hidden">
                 <video
                     autoPlay
                     loop
                     muted
                     playsInline
-                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 min-w-[120vw] min-h-[120vh] object-cover object-[center_30%] opacity-[0.85] dark:opacity-40"
+                    className="absolute inset-0 w-full h-full object-cover object-[center_15%] opacity-[0.85] dark:opacity-40"
                     style={{
-                        maskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)',
-                        WebkitMaskImage: '-webkit-radial-gradient(center, circle, black 30%, transparent 65%)'
+                        maskImage: 'radial-gradient(ellipse at center 25%, black 30%, transparent 70%)',
+                        WebkitMaskImage: '-webkit-radial-gradient(50% 25%, ellipse cover, black 30%, transparent 70%)'
                     }}
                 >
                     <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
                 </video>
-                {/* Strong yellow tint layered over the entire video matching the mockup */}
-                <div className="absolute inset-0 bg-[#facc15]/20 mix-blend-overlay pointer-events-none dark:bg-yellow-500/10 dark:mix-blend-color-dodge"></div>
-                <div className="absolute inset-0 bg-[#fde9a0]/30 mix-blend-multiply pointer-events-none dark:bg-black/30"></div>
+                <div className="absolute inset-0 bg-[#facc15]/30 mix-blend-overlay pointer-events-none dark:bg-yellow-500/10 dark:mix-blend-color-dodge"></div>
+                <div className="absolute inset-0 bg-[#fde9a0]/40 mix-blend-multiply pointer-events-none dark:bg-black/30"></div>
 
-                {/* Bottom gradient fade for text legibility */}
                 <div className="absolute inset-x-0 bottom-0 h-[40vh] bg-gradient-to-t from-[#fde9a0] via-[#fde9a0]/60 to-transparent dark:from-black dark:via-black/50"></div>
             </div>
             <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-2 bg-[#FFFBEB]/80 dark:bg-black/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-3 md:py-6 bg-transparent border-transparent'}`}>
@@ -184,8 +183,31 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     </div>
                 </div>
             </nav>
-            <section className="relative pt-24 pb-12 md:pt-44 md:pb-24 px-4 md:px-6 z-10">
-                <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-10 md:gap-12 items-center">
+            <section className="relative pt-24 pb-12 md:pt-44 md:pb-24 px-4 md:px-6 z-10 overflow-hidden">
+                {/* HERO BACKGROUND VIDEO */}
+                <div className="absolute inset-0 pointer-events-none select-none z-0 hidden">
+                    <video
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 min-w-[120%] min-h-[120%] object-cover object-[center_30%] opacity-[0.85] dark:opacity-40"
+                        style={{
+                            maskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)',
+                            WebkitMaskImage: '-webkit-radial-gradient(center, circle, black 30%, transparent 65%)'
+                        }}
+                    >
+                        <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
+                    </video>
+                    {/* Strong yellow tint layered over the entire video matching the mockup */}
+                    <div className="absolute inset-0 bg-[#facc15]/20 mix-blend-overlay dark:bg-yellow-500/10 dark:mix-blend-color-dodge"></div>
+                    <div className="absolute inset-0 bg-[#fde9a0]/40 mix-blend-multiply dark:bg-black/30"></div>
+
+                    {/* Bottom gradient fade to blend the video boundary with the rest of the page */}
+                    <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#fde9a0] to-transparent dark:from-black"></div>
+                </div>
+
+                <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-10 md:gap-12 items-center relative z-10">
                     <div className="lg:col-span-7 space-y-5 md:space-y-8 text-center">
                         <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-1.5 bg-white dark:bg-gray-900 border border-yellow-200/50 dark:border-gray-800 rounded-full shadow-sm transition-colors">
                             <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -316,7 +338,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 </div>
             </section>
             {/* TESTIMONIALS SECTION */}
-            <section className="py-16 md:py-24 relative overflow-hidden bg-[#FFFBEB]/30 dark:bg-black/20 border-y border-yellow-200/50 dark:border-gray-800">
+            <section className="py-16 md:py-24 relative overflow-hidden transition-colors">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-400/10 dark:bg-yellow-900/10 blur-[100px] pointer-events-none rounded-full"></div>
                 <div className="max-w-7xl mx-auto px-6 relative z-10">
                     <div className="text-center mb-12 md:mb-16">
