@@ -906,84 +906,120 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     <MoodTracker onMoodSelect={handleMoodSelect} />
                                 </div>
 
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5 w-full items-start">
-                                    <div className="flex flex-col w-full h-full">
-                                        <CollapsibleSection title="Arcade" icon={Gamepad2} isOpen={openSection === 'arcade'} onToggle={() => setOpenSection(prev => prev === 'arcade' ? null : 'arcade')}>
-                                            <div className="grid grid-cols-3 gap-1 md:gap-4 w-full">
-                                                {/* TILE 1: MINDFUL MATCH */}
-                                                <div
-                                                    onClick={() => setShowMatchGame(true)}
-                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
-                                                >
-                                                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-pink-600/5 pointer-events-none"></div>
-                                                    <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
-                                                        <div className="relative mb-1 md:mb-4">
-                                                            <div className="absolute -inset-4 bg-violet-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                            <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-violet-500 to-purple-700 border border-violet-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(139,92,246,0.4)] group-hover:scale-110 transition-transform">
-                                                                <Brain className="w-5 h-5 md:w-6 md:h-6 text-white" />
-                                                            </div>
-                                                        </div>
-                                                        <h3 className="text-[7px] md:text-sm font-black text-violet-700 dark:text-violet-300 uppercase tracking-[0.2em] mb-1">Mindful Match</h3>
-                                                        <p className="hidden md:block text-[10px] font-bold text-violet-600/60 dark:text-violet-400/50 uppercase tracking-widest">Memory & Focus</p>
-                                                    </div>
+                                <div className="w-full space-y-4">
+                                    <div className="grid grid-cols-2 gap-4 w-full">
+                                        <button onClick={() => setOpenSection(p => p === 'arcade' ? null : 'arcade')} className="w-full p-3 md:p-6 flex items-center justify-center md:justify-between hover:bg-[var(--color-primary)]/5 rounded-2xl transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center md:text-left bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-glass">
+                                            <div className="flex items-center gap-2 md:gap-3 flex-col md:flex-row mx-auto md:mx-0">
+                                                <div className="p-2 rounded-xl bg-[var(--color-primary)]/10 text-primary dark:bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
+                                                    <Gamepad2 className="w-5 h-5 md:w-6 md:h-6" />
                                                 </div>
-
-                                                {/* TILE 2: CLOUD HOP */}
-                                                <div
-                                                    onClick={() => setShowCloudHop(true)}
-                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-[0_8px_32px_rgba(14,165,233,0.15)] hover:shadow-[0_8px_32px_rgba(14,165,233,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
-                                                >
-                                                    <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-cyan-600/5 pointer-events-none"></div>
-                                                    <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
-                                                        <div className="relative mb-1 md:mb-4">
-                                                            <div className="absolute -inset-4 bg-sky-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                            <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-sky-500 to-blue-700 border border-sky-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.4)] group-hover:scale-110 transition-transform">
-                                                                <Cloud className="w-5 h-5 md:w-6 md:h-6 text-white" />
-                                                            </div>
-                                                        </div>
-                                                        <h3 className="text-[7px] md:text-sm font-black text-sky-700 dark:text-sky-300 uppercase tracking-[0.2em] mb-1">Cloud Hop</h3>
-                                                        <p className="hidden md:block text-[10px] font-bold text-sky-600/60 dark:text-sky-400/50 uppercase tracking-widest">Relax & Soar</p>
-                                                    </div>
-                                                </div>
-
-                                                {/* TILE 3: STRESS SLICER */}
-                                                <div
-                                                    onClick={() => setShowSlicerGame(true)}
-                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-[0_8px_32px_rgba(239,68,68,0.15)] hover:shadow-[0_8px_32px_rgba(239,68,68,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
-                                                >
-                                                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-600/5 pointer-events-none"></div>
-                                                    <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
-                                                        <div className="relative mb-1 md:mb-4">
-                                                            <div className="absolute -inset-4 bg-red-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                            <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-red-500 to-rose-700 border border-red-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(239,68,68,0.4)] group-hover:scale-110 transition-transform">
-                                                                <Flame className="w-5 h-5 md:w-6 md:h-6 text-white" />
-                                                            </div>
-                                                        </div>
-                                                        <h3 className="text-[7px] md:text-sm font-black text-red-700 dark:text-red-300 uppercase tracking-[0.2em] mb-1">Stress Slicer</h3>
-                                                        <p className="hidden md:block text-[10px] font-bold text-red-600/60 dark:text-red-400/50 uppercase tracking-widest">Cathartic Release</p>
-                                                    </div>
-                                                </div>
+                                                <span className="font-bold text-sm md:text-lg tracking-wide opacity-90 truncate">Arcade</span>
                                             </div>
-                                        </CollapsibleSection>
-                                    </div>
-                                    <div className="flex flex-col w-full h-full">
-                                        <CollapsibleSection title="Journal" icon={Feather} isOpen={openSection === 'journal'} onToggle={() => setOpenSection(prev => prev === 'journal' ? null : 'journal')}>
-                                            <GlobalErrorBoundary fallback={
-                                                <div className="p-6 text-center border border-red-500/20 bg-red-500/5 rounded-xl">
-                                                    <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-                                                    <h3 className="font-bold text-red-400 text-sm">Hub Temporarily Unavailable</h3>
-                                                    <p className="text-xs text-red-300 mt-1">We are restoring the connection. Please try again shortly.</p>
+                                            <div className="hidden md:block">
+                                                {openSection === 'arcade' ? <ChevronUp className="w-4 h-4 md:w-5 md:h-5 opacity-50" /> : <ChevronDown className="w-4 h-4 md:w-5 md:h-5 opacity-50" />}
+                                            </div>
+                                        </button>
+                                        <button onClick={() => setOpenSection(p => p === 'journal' ? null : 'journal')} className="w-full p-3 md:p-6 flex items-center justify-center md:justify-between hover:bg-[var(--color-primary)]/5 rounded-2xl transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center md:text-left bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-glass">
+                                            <div className="flex items-center gap-2 md:gap-3 flex-col md:flex-row mx-auto md:mx-0">
+                                                <div className="p-2 rounded-xl bg-[var(--color-primary)]/10 text-primary dark:bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
+                                                    <Feather className="w-5 h-5 md:w-6 md:h-6" />
                                                 </div>
-                                            }>
-                                                <Suspense fallback={<div className="p-6 space-y-4"><StatSkeleton /><StatSkeleton /></div>}>
-                                                    <div className="space-y-6">
-                                                        <JournalSection user={user} />
-                                                        <div className="border-t border-dashed border-primary-light dark:border-gray-700" />
-                                                        <WisdomGenerator userId={user.id} />
+                                                <span className="font-bold text-sm md:text-lg tracking-wide opacity-90 truncate">Journal</span>
+                                            </div>
+                                            <div className="hidden md:block">
+                                                {openSection === 'journal' ? <ChevronUp className="w-4 h-4 md:w-5 md:h-5 opacity-50" /> : <ChevronDown className="w-4 h-4 md:w-5 md:h-5 opacity-50" />}
+                                            </div>
+                                        </button>
+                                    </div>
+
+                                    <div className={`transition-[grid-template-rows] duration-300 grid ${openSection === 'arcade' ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                                        <div className="overflow-hidden">
+                                            <div className="p-2 lg:p-4 pt-0">
+                                                {openSection === 'arcade' && (
+                                                    <div className="grid grid-cols-3 gap-1 md:gap-4 w-full animate-in fade-in slide-in-from-top-2">
+                                                        {/* TILE 1: MINDFUL MATCH */}
+                                                        <div
+                                                            onClick={() => setShowMatchGame(true)}
+                                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
+                                                        >
+                                                            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-pink-600/5 pointer-events-none"></div>
+                                                            <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
+                                                                <div className="relative mb-1 md:mb-4">
+                                                                    <div className="absolute -inset-4 bg-violet-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                                    <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-violet-500 to-purple-700 border border-violet-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(139,92,246,0.4)] group-hover:scale-110 transition-transform">
+                                                                        <Brain className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                                                                    </div>
+                                                                </div>
+                                                                <h3 className="text-[7px] md:text-sm font-black text-violet-700 dark:text-violet-300 uppercase tracking-[0.2em] mb-1">Mindful Match</h3>
+                                                                <p className="hidden md:block text-[10px] font-bold text-violet-600/60 dark:text-violet-400/50 uppercase tracking-widest">Memory & Focus</p>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* TILE 2: CLOUD HOP */}
+                                                        <div
+                                                            onClick={() => setShowCloudHop(true)}
+                                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-[0_8px_32px_rgba(14,165,233,0.15)] hover:shadow-[0_8px_32px_rgba(14,165,233,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
+                                                        >
+                                                            <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-cyan-600/5 pointer-events-none"></div>
+                                                            <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
+                                                                <div className="relative mb-1 md:mb-4">
+                                                                    <div className="absolute -inset-4 bg-sky-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                                    <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-sky-500 to-blue-700 border border-sky-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.4)] group-hover:scale-110 transition-transform">
+                                                                        <Cloud className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                                                                    </div>
+                                                                </div>
+                                                                <h3 className="text-[7px] md:text-sm font-black text-sky-700 dark:text-sky-300 uppercase tracking-[0.2em] mb-1">Cloud Hop</h3>
+                                                                <p className="hidden md:block text-[10px] font-bold text-sky-600/60 dark:text-sky-400/50 uppercase tracking-widest">Relax & Soar</p>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* TILE 3: STRESS SLICER */}
+                                                        <div
+                                                            onClick={() => setShowSlicerGame(true)}
+                                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-[0_8px_32px_rgba(239,68,68,0.15)] hover:shadow-[0_8px_32px_rgba(239,68,68,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
+                                                        >
+                                                            <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-600/5 pointer-events-none"></div>
+                                                            <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
+                                                                <div className="relative mb-1 md:mb-4">
+                                                                    <div className="absolute -inset-4 bg-red-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                                    <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-red-500 to-rose-700 border border-red-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(239,68,68,0.4)] group-hover:scale-110 transition-transform">
+                                                                        <Flame className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                                                                    </div>
+                                                                </div>
+                                                                <h3 className="text-[7px] md:text-sm font-black text-red-700 dark:text-red-300 uppercase tracking-[0.2em] mb-1">Stress Slicer</h3>
+                                                                <p className="hidden md:block text-[10px] font-bold text-red-600/60 dark:text-red-400/50 uppercase tracking-widest">Cathartic Release</p>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </Suspense>
-                                            </GlobalErrorBoundary>
-                                        </CollapsibleSection>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className={`transition-[grid-template-rows] duration-300 grid ${openSection === 'journal' ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                                        <div className="overflow-hidden">
+                                            <div className="p-2 lg:p-4 pt-0 w-full">
+                                                {openSection === 'journal' && (
+                                                    <div className="w-full animate-in fade-in slide-in-from-top-2">
+                                                        <GlobalErrorBoundary fallback={
+                                                            <div className="p-6 text-center border border-red-500/20 bg-red-500/5 rounded-xl">
+                                                                <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
+                                                                <h3 className="font-bold text-red-400 text-sm">Hub Temporarily Unavailable</h3>
+                                                                <p className="text-xs text-red-300 mt-1">We are restoring the connection. Please try again shortly.</p>
+                                                            </div>
+                                                        }>
+                                                            <Suspense fallback={<div className="p-6 space-y-4"><StatSkeleton /><StatSkeleton /></div>}>
+                                                                <div className="space-y-6">
+                                                                    <JournalSection user={user} />
+                                                                    <div className="border-t border-dashed border-primary-light dark:border-gray-700" />
+                                                                    <WisdomGenerator userId={user.id} />
+                                                                </div>
+                                                            </Suspense>
+                                                        </GlobalErrorBoundary>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div>
