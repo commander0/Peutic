@@ -127,7 +127,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     const marqueeRow2 = [...row2, ...row2];
 
     return (
-        <div className={`relative min-h-screen font-sans text-[#0A0A0A] dark:text-[#F3F4F6] selection:bg-yellow-200 selection:text-black transition-colors duration-500 bg-[#fde9a0] dark:bg-black ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+        <div className={`relative min-h-screen font-sans text-[#0A0A0A] dark:text-[#F3F4F6] selection:bg-yellow-200 selection:text-black transition-colors duration-500 bg-[#fde9a0] dark:bg-[#1C1F26] ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
 
             {/* PUBLIC BROADCAST BANNER */}
             {settings.broadcastMessage && (
@@ -157,12 +157,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
                     </video>
                     <div className="absolute inset-0 bg-[#facc15]/30 mix-blend-overlay pointer-events-none dark:bg-yellow-500/10 dark:mix-blend-color-dodge"></div>
-                    <div className="absolute inset-0 bg-[#fde9a0]/40 mix-blend-multiply pointer-events-none dark:bg-black/30"></div>
+                    <div className="absolute inset-0 bg-[#fde9a0]/40 mix-blend-multiply pointer-events-none dark:bg-[#1C1F26]/30"></div>
 
-                    <div className="absolute inset-x-0 bottom-0 h-[40vh] bg-gradient-to-t from-[#fde9a0] via-[#fde9a0]/60 to-transparent dark:from-black dark:via-black/50"></div>
+                    <div className="absolute inset-x-0 bottom-0 h-[40vh] bg-gradient-to-t from-[#fde9a0] via-[#fde9a0]/60 to-transparent dark:from-[#1C1F26] dark:via-[#1C1F26]/50"></div>
                 </div>
             </div>
-            <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-2 bg-[#FFFBEB]/80 dark:bg-black/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-3 md:py-6 bg-transparent border-transparent'}`}>
+            <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-2 bg-[#FFFBEB]/80 dark:bg-[#1C1F26]/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-3 md:py-6 bg-transparent border-transparent'}`}>
                 <div className="max-w-7xl mx-auto px-2 md:px-8 flex justify-between items-center">
                     <div className="flex items-center gap-2 md:gap-3 group cursor-pointer shrink-0">
                         <div className="w-8 h-8 md:w-9 md:h-9 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
@@ -203,10 +203,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     </video>
                     {/* Strong yellow tint layered over the entire video matching the mockup */}
                     <div className="absolute inset-0 bg-[#facc15]/20 mix-blend-overlay dark:bg-yellow-500/10 dark:mix-blend-color-dodge"></div>
-                    <div className="absolute inset-0 bg-[#fde9a0]/40 mix-blend-multiply dark:bg-black/30"></div>
+                    <div className="absolute inset-0 bg-[#fde9a0]/40 mix-blend-multiply dark:bg-[#1C1F26]/30"></div>
 
                     {/* Bottom gradient fade to blend the video boundary with the rest of the page */}
-                    <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#fde9a0] to-transparent dark:from-black"></div>
+                    <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#fde9a0] to-transparent dark:from-[#1C1F26]"></div>
                 </div>
 
                 <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-10 md:gap-12 items-center relative z-10">
