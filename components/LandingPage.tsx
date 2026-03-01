@@ -140,18 +140,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 </div>
             )}
 
-            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 bg-[#FFFBEB] dark:bg-black">
                 <video
                     autoPlay
                     loop
                     muted
                     playsInline
-                    className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center opacity-70 dark:opacity-50 mix-blend-multiply dark:mix-blend-overlay filter blur-[1px]"
+                    className="absolute inset-0 w-full h-full object-cover object-center"
                 >
                     <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
                 </video>
-                <div className="absolute inset-0 bg-yellow-400/40 pointer-events-none mix-blend-overlay dark:bg-yellow-500/20 dark:mix-blend-color-dodge"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-yellow-100/95 via-yellow-50/60 to-yellow-50/30 dark:from-black dark:via-black/70 dark:to-transparent"></div>
+                <div className="absolute inset-0 mix-blend-overlay bg-yellow-400/30 dark:bg-yellow-500/20"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(255,251,235,0.6)_50%,rgba(255,251,235,1)_80%)] dark:bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.6)_50%,rgba(0,0,0,1)_80%)]"></div>
             </div>
             <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-2 bg-[#FFFBEB]/80 dark:bg-black/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-3 md:py-6 bg-transparent border-transparent'}`}>
                 <div className="max-w-7xl mx-auto px-2 md:px-8 flex justify-between items-center">
