@@ -140,8 +140,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 </div>
             )}
 
-            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 bg-[#FFFBEB] dark:bg-[#0A0A0A]">
+            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
                 <video
+                    key={Date.now()}
                     autoPlay
                     loop
                     muted
