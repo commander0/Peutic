@@ -121,7 +121,7 @@ const CollapsibleSection = React.memo(({ title, icon: Icon, children, defaultOpe
     return (
         <div className="bg-transparent overflow-hidden transition-all duration-300">
             {/* Unified subtle header without boxing the entire content */}
-            <button onClick={handleToggle} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-[var(--color-primary)]/5 rounded-2xl transition-colors group">
+            <button onClick={handleToggle} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-[var(--color-primary)]/5 rounded-2xl transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-glass">
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-[var(--color-primary)]/10 text-primary dark:bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
                         <Icon className="w-5 h-5" />

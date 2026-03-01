@@ -192,15 +192,32 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
         // HYPER-ORGANIC SOOTHING VOICE SELECTION
         const voices = window.speechSynthesis.getVoices();
 
-        // Prioritize Neural/Online premium female voices, then standard natural ones
-        const preferredVoice = voices.find(v =>
-            v.name.includes("Samantha") || v.name.includes("Victoria") ||
-            v.name.includes("Google UK English Female") ||
-            v.name.includes("Microsoft Aria Online") || v.name.includes("Microsoft Jenny") ||
-            (v.lang === 'en-US' && v.name.toLowerCase().includes("female")) ||
-            (v.lang === 'en-GB' && v.name.toLowerCase().includes("female")) ||
-            v.name.includes("Natural") || v.name.includes("Neural")
-        );
+        // Exact prioritized list of the most soothing voices across all operating systems
+        const voicePreferences = [
+            "Microsoft Aria Online", // Best Windows
+            "Google UK English Female", // Best Chrome/Android
+            "Samantha", // Best iOS/Mac
+            "Victoria", // iOS alt
+            "Siri Female", // iOS Siri alt
+            "Microsoft Jenny", // Windows alt
+            "Google US English", // Android alt
+            "Natural", // Catch-all for premium
+            "Neural"  // Catch-all for premium
+        ];
+
+        let preferredVoice = undefined;
+
+        for (const pref of voicePreferences) {
+            preferredVoice = voices.find(v => v.name.includes(pref));
+            if (preferredVoice) break;
+        }
+
+        // Ultimate fallback
+        if (!preferredVoice) {
+            preferredVoice = voices.find(v =>
+                (v.lang.startsWith('en') && v.name.toLowerCase().includes("female"))
+            );
+        }
 
         if (preferredVoice) utterance.voice = preferredVoice;
         window.speechSynthesis.speak(utterance);
