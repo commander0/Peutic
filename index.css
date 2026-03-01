@@ -37,9 +37,11 @@
 [data-theme="sunshine"].dark,
 .dark[data-theme="sunshine"] {
     --color-primary: #AF9B00;
-    --color-bg-base: #422006;
-    --color-text-base: #FFFBEB;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #422006 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #422006 0%, transparent 80vw);
+    --color-primary-light: rgba(175, 155, 0, 0.2);
+    --color-primary-border: rgba(175, 155, 0, 0.4);
+    --color-bg-base: #713f12;
+    --color-text-base: #fffbeb;
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #713f12 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #713f12 0%, transparent 80vw);
 }
 
 /* -----------------------------------------------------------------------------
@@ -230,6 +232,27 @@
 
 
 
+
+/* -----------------------------------------------------------------------------
+   11. ETHEREAL (V2 Zen Bioluminescence)
+   ----------------------------------------------------------------------------- */
+[data-theme="ethereal"] {
+    --color-primary: #06b6d4;
+    --color-primary-light: #ecfeff;
+    --color-primary-border: #a5f3fc;
+    --color-bg-base: #f0fdfa;
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #ccfbf1 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #ccfbf1 0%, transparent 80vw);
+}
+
+[data-theme="ethereal"].dark,
+.dark[data-theme="ethereal"] {
+    --color-primary: #22d3ee;
+    --color-primary-light: rgba(34, 211, 238, 0.15);
+    --color-primary-border: rgba(34, 211, 238, 0.4);
+    --color-bg-base: #022c22;
+    --color-text-base: #f0fdfa;
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #064e3b 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #134e4a 0%, transparent 80vw);
+}
 
 /* Utility Animations */
 .animate-aura-glow {

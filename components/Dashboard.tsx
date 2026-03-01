@@ -508,11 +508,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         <div
             className={`min-h-screen transition-all duration-1000 font-sans text-[var(--color-text-base)] ${isFlowState ? 'ring-[4px] ring-yellow-400/80 ring-inset shadow-[inset_0_0_150px_rgba(250,204,21,0.15)] bg-yellow-900/5' : ''}`}
             style={{
-                '--color-bg-base': theme === 'sunshine' && isDark ? '#FCD12A' : undefined,
-                '--color-bg-gradient': theme === 'sunshine' && isDark ? 'radial-gradient(circle at 0% 0%, #FFDF59 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #FCD12A 0%, transparent 80vw)' : undefined,
                 backgroundColor: isFlowState ? undefined : 'var(--color-bg-base)',
                 backgroundImage: isFlowState ? undefined : 'var(--color-bg-gradient)'
-            } as React.CSSProperties}
+            }}
         >
             {isFlowState && (
                 <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden mix-blend-screen">

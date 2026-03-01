@@ -20,8 +20,10 @@ import { LanguageProvider } from './components/common/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 
 
-import { GlobalErrorBoundary } from './components/common/GlobalErrorBoundary';
+import { ZenErrorBoundary } from './components/ZenErrorBoundary';
 import { useAuth } from './contexts/AuthContext';
+import { AnimatePresence } from 'framer-motion';
+import { PageTransition } from './components/common/PageTransition';
 
 const MainApp: React.FC = () => {
   const { user, isLoading: authLoading, login, logout } = useAuth(); // --- STATE ---
@@ -130,7 +132,7 @@ const MainApp: React.FC = () => {
   }
 
   return (
-    <GlobalErrorBoundary>
+    <ZenErrorBoundary>
       <ThemeProvider>
         <LanguageProvider>
           <ToastProvider>
@@ -155,53 +157,55 @@ const MainApp: React.FC = () => {
                 {showAuth && <Auth onLogin={onLoginSubmit} onCancel={() => setShowAuth(false)} initialMode={authMode} />}
 
                 {/* ROUTES */}
-                <Routes>
-                  <Route path="/" element={
-                    user ? (
-                      user.role === UserRole.ADMIN ? <Navigate to="/admin/dashboard" replace /> : <Dashboard user={user} onLogout={onLogout} onStartSession={(c: Companion, m?: 'video' | 'voice') => setActiveSession({ companion: c, mode: m || 'video' })} />
-                    ) : (
-                      <LandingPage onLoginClick={(signup) => {
-                        setAuthMode(signup ? 'signup' : 'login');
-                        setShowAuth(true);
-                      }} />
-                    )
-                  } />
+                <AnimatePresence mode="wait">
+                  <Routes location={location} key={location.pathname}>
+                    <Route path="/" element={
+                      <PageTransition>
+                        {user ? (
+                          user.role === UserRole.ADMIN ? <Navigate to="/admin/dashboard" replace /> : <Dashboard user={user} onLogout={onLogout} onStartSession={(c: Companion, m?: 'video' | 'voice') => setActiveSession({ companion: c, mode: m || 'video' })} />
+                        ) : (
+                          <LandingPage onLoginClick={(signup) => {
+                            setAuthMode(signup ? 'signup' : 'login');
+                            setShowAuth(true);
+                          }} />
+                        )}
+                      </PageTransition>
+                    } />
 
-                  <Route path="/admin" element={<Navigate to="/admin/login" />} />
-                  <Route path="/admin/login" element={<AdminLogin onLogin={() => {
-                    // AdminLogin component likely interacts with local state, 
-                    // but we need it to use our Context login if possible, or just trigger a refresh.
-                    // Actually, current AdminLogin implementation does its own auth call and returns user.
-                    // We should ideally refactor AdminLogin to use useAuth, but for now let's just sync state.
-                    // If AdminLogin calls onLogin(user), we assume session is set.
-                    // We can trigger a profile refresh or just rely on the AuthListener in Context to pick it up.
-                    navigate('/admin/dashboard');
-                  }} />} />
+                    <Route path="/admin" element={<Navigate to="/admin/login" />} />
+                    <Route path="/admin/login" element={
+                      <PageTransition>
+                        <AdminLogin onLogin={() => { navigate('/admin/dashboard'); }} />
+                      </PageTransition>
+                    } />
 
-                  <Route path="/admin/dashboard" element={
-                    user && user.role === UserRole.ADMIN ? (
-                      <AdminDashboard onLogout={onLogout} />
-                    ) : (
-                      <Navigate to="/admin/login" replace />
-                    )
-                  } />
+                    <Route path="/admin/dashboard" element={
+                      <PageTransition>
+                        {user && user.role === UserRole.ADMIN ? (
+                          <AdminDashboard onLogout={onLogout} />
+                        ) : (
+                          <Navigate to="/admin/login" replace />
+                        )}
+                      </PageTransition>
+                    } />
 
-                  <Route path="/book-of-you" element={user ? <BookOfYou /> : <Navigate to="/" />} />
-                  <Route path="/about" element={<StaticPages type="about" />} />
-                  <Route path="/press" element={<StaticPages type="press" />} />
-                  <Route path="/safety" element={<StaticPages type="safety" />} />
-                  <Route path="/crisis" element={<StaticPages type="crisis" />} />
-                  <Route path="/privacy" element={<StaticPages type="privacy" />} />
-                  <Route path="/terms" element={<StaticPages type="terms" />} />
-                  <Route path="/support" element={<StaticPages type="support" />} />
-                  <Route path="*" element={<Navigate to="/" />} />
-                </Routes>
+                    <Route path="/book-of-you" element={<PageTransition>{user ? <BookOfYou /> : <Navigate to="/" />}</PageTransition>} />
+                    <Route path="/about" element={<PageTransition><StaticPages type="about" /></PageTransition>} />
+                    <Route path="/press" element={<PageTransition><StaticPages type="press" /></PageTransition>} />
+                    <Route path="/safety" element={<PageTransition><StaticPages type="safety" /></PageTransition>} />
+                    <Route path="/crisis" element={<PageTransition><StaticPages type="crisis" /></PageTransition>} />
+                    <Route path="/privacy" element={<PageTransition><StaticPages type="privacy" /></PageTransition>} />
+                    <Route path="/terms" element={<PageTransition><StaticPages type="terms" /></PageTransition>} />
+                    <Route path="/support" element={<PageTransition><StaticPages type="support" /></PageTransition>} />
+                    <Route path="*" element={<Navigate to="/" />} />
+                  </Routes>
+                </AnimatePresence>
               </>
             )}
           </ToastProvider>
         </LanguageProvider>
       </ThemeProvider>
-    </GlobalErrorBoundary>
+    </ZenErrorBoundary>
   );
 };
 

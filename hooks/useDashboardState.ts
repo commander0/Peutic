@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import { User, Companion, Transaction, GlobalSettings } from '../types';
 import { UserService } from '../services/userService';
 import { AdminService } from '../services/adminService';
+import { useGlobalState } from '../contexts/GlobalStateContext';
 
 export const useDashboardState = (initialUser: User) => {
-    const [dashboardUser, setDashboardUser] = useState<User>(initialUser);
-    const [balance, setBalance] = useState(initialUser.balance);
+    const { userProfile } = useGlobalState();
+    const dashboardUser = userProfile || initialUser;
+    const balance = dashboardUser.balance;
+
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [companions, setCompanions] = useState<Companion[]>([]);
     const [loadingCompanions, setLoadingCompanions] = useState(true);
@@ -15,14 +18,9 @@ export const useDashboardState = (initialUser: User) => {
 
     const refreshData = async () => {
         AdminService.syncGlobalSettings().then(setSettings);
-        const u = UserService.getUser();
-        if (u) {
-            setDashboardUser(u);
-            setBalance(u.balance);
-
-            // Fetch secondary data in background without blocking
-            UserService.getUserTransactions(u.id).then(setTransactions);
-            UserService.getWeeklyProgress(u.id).then(prog => {
+        if (dashboardUser) {
+            UserService.getUserTransactions(dashboardUser.id).then(setTransactions);
+            UserService.getWeeklyProgress(dashboardUser.id).then(prog => {
                 setWeeklyGoal(prog.current);
                 setWeeklyMessage(prog.message);
             });
@@ -30,7 +28,6 @@ export const useDashboardState = (initialUser: User) => {
         AdminService.getCompanions().then(setCompanions);
     };
 
-    // BROADCAST FIX: Poll for global settings updates
     useEffect(() => {
         const pollSettings = async () => {
             const s = await AdminService.syncGlobalSettings();
@@ -38,75 +35,51 @@ export const useDashboardState = (initialUser: User) => {
         };
 
         const loadWeeklyGoal = async () => {
-            if (initialUser.id) {
-                const progress = await UserService.getWeeklyProgress(initialUser.id);
+            if (dashboardUser.id) {
+                const progress = await UserService.getWeeklyProgress(dashboardUser.id);
                 setWeeklyGoal(progress.current);
                 setWeeklyMessage(progress.message);
             }
         };
 
-        pollSettings(); // Initial sync
+        pollSettings();
         loadWeeklyGoal();
 
         const interval = setInterval(() => {
             pollSettings();
             loadWeeklyGoal();
-        }, 10000); // 10s poll
+        }, 10000);
 
         return () => clearInterval(interval);
-    }, [initialUser.id]);
+    }, [dashboardUser.id]);
 
     useEffect(() => {
-        // Kick off all data fetching in parallel
         refreshData();
 
-        // Custom Event listener for instant balance updates from actions
         const handleBalanceUpdate = () => {
             refreshData();
         };
         window.addEventListener('balance-updated', handleBalanceUpdate);
 
-        // Get companions immediately without delay
         AdminService.getCompanions().then((comps) => {
             setCompanions(comps);
             setLoadingCompanions(false);
-
-            // PRE-FETCH: Smooth loading for specialist avatars
             comps.slice(0, 10).forEach(c => {
                 if (c.imageUrl) (new Image()).src = c.imageUrl;
             });
         });
 
-        // REALTIME: Subscribe to changes instantly instead of polling
-        const subscription = UserService.subscribeToUserChanges(initialUser.id, (updatedUser) => {
-            setDashboardUser(updatedUser);
-            setBalance(updatedUser.balance);
-
-            // Refresh dependent data if needed
-            UserService.getWeeklyProgress(updatedUser.id).then(prog => {
-                setWeeklyGoal(prog.current);
-                setWeeklyMessage(prog.message);
-            });
-        });
-
-        // Backup slow poll (every 60s) just for drift correction
-        const interval = setInterval(async () => {
-            await UserService.syncUser(initialUser.id);
-            refreshData();
-        }, 60000);
-
+        // Split-Brain logic removed - Core user details now managed exclusively by GlobalStateContext Realtime Pipeline
         return () => {
-            clearInterval(interval);
-            subscription.unsubscribe();
             window.removeEventListener('balance-updated', handleBalanceUpdate);
         };
     }, []);
 
     return {
         dashboardUser,
-        setDashboardUser,
+        setDashboardUser: () => { console.warn("V2: setDashboardUser is deprecated. Realtime takes precedence."); },
         balance,
-        setBalance,
+        setBalance: () => { console.warn("V2: setBalance is deprecated. Use transactions/realtime."); },
         transactions,
         companions,
         loadingCompanions,

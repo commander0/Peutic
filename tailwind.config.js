@@ -24,6 +24,7 @@ module.exports = {
                 'premium-hover': '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
                 'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.05)',
                 'glass-dark': '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
+                'ethereal-glow': '0 0 40px -10px var(--color-primary-light), inset 0 0 20px -5px var(--color-primary-light)',
             },
         },
     },

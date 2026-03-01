@@ -4,6 +4,7 @@ import { HashRouter } from 'react-router-dom';
 import App from './App';
 import './index.css';
 import { AuthProvider } from './contexts/AuthContext';
+import { GlobalStateProvider } from './contexts/GlobalStateContext';
 import { CacheService } from './services/cacheService';
 
 // Initialize Caching (Redis if configured)
@@ -25,7 +26,9 @@ root.render(
   <React.StrictMode>
     <HashRouter>
       <AuthProvider>
-        <App />
+        <GlobalStateProvider>
+          <App />
+        </GlobalStateProvider>
       </AuthProvider>
     </HashRouter>
   </React.StrictMode>

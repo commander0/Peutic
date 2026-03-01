@@ -22,11 +22,13 @@
     "@google/genai": "^1.42.0",
     "@sentry/react": "^10.39.0",
     "@supabase/supabase-js": "^2.39.0",
+    "framer-motion": "^12.34.3",
     "lucide-react": "^0.344.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.3",
-    "recharts": "^2.12.2"
+    "recharts": "^2.12.2",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@capacitor/cli": "^6.0.0",
