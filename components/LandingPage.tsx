@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, CheckCircle, ArrowRight, ShieldCheck, Cookie, Instagram, Twitter, Linkedin, Play, Moon, Sun, Megaphone } from 'lucide-react';
+import { Heart, CheckCircle, ArrowRight, ShieldCheck, Cookie, Instagram, Twitter, Linkedin, Play, Moon, Sun, Megaphone, Zap, Sparkles, Quote, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from './common/LanguageContext';
 import { LanguageSelector } from './common/LanguageSelector';
@@ -41,6 +41,27 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     const [showCookies, setShowCookies] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [featuredSpecialists, setFeaturedSpecialists] = useState<Companion[]>([]);
+
+    // 3D Tilt State
+    const [tilt, setTilt] = useState({ x: 0, y: 0 });
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+
+        const tiltX = ((y - centerY) / centerY) * -15; // Max 15deg
+        const tiltY = ((x - centerX) / centerX) * 15;
+
+        setTilt({ x: tiltX, y: tiltY });
+    };
+
+    const handleMouseLeave = () => {
+        setTilt({ x: 0, y: 0 });
+    };
+
     const { lang, setLang, t } = useLanguage();
 
     const { mode, toggleMode: toggleDarkMode } = useTheme();
@@ -170,11 +191,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                             {t('hero_subtitle')}
                         </p>
                         <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center pt-2 md:pt-3">
-                            <button onClick={() => onLoginClick(true)} className="px-8 py-3 md:px-9 md:py-4 bg-[#FACC15] text-black rounded-full font-black text-sm md:text-base uppercase tracking-widest shadow-[0_20px_40px_-15px_rgba(250,204,21,0.4)] hover:shadow-[0_25px_50px_-12px_rgba(250,204,21,0.5)] transition-all hover:-translate-y-1 flex items-center justify-center gap-2.5">
-                                <Play className="w-4 h-4 fill-black" /> {t('cta_start')}
+                            <button onClick={() => onLoginClick(true)} className="group relative px-8 py-3 md:px-9 md:py-4 bg-[#FACC15] text-black rounded-full font-black text-sm md:text-base uppercase tracking-widest shadow-[0_20px_40px_-15px_rgba(250,204,21,0.4)] hover:shadow-[0_25px_50px_-12px_rgba(250,204,21,0.5)] transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2.5 overflow-hidden">
+                                <div className="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                                <div className="absolute inset-0 rounded-full animate-aura-glow opacity-60 pointer-events-none"></div>
+                                <Play className="w-4 h-4 fill-black relative z-10 group-hover:animate-pulse" />
+                                <span className="relative z-10">{t('cta_start')}</span>
                             </button>
-                            <button onClick={() => onLoginClick(true)} className="px-8 py-3 md:px-9 md:py-4 bg-white dark:bg-gray-900 border border-yellow-200 dark:border-gray-700 text-black dark:text-white rounded-full font-black text-sm md:text-base uppercase tracking-widest hover:bg-yellow-50 dark:hover:bg-gray-800 transition-all flex items-center justify-center gap-2.5">
-                                {t('cta_team')}
+                            <button onClick={() => onLoginClick(true)} className="group relative px-8 py-3 md:px-9 md:py-4 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-yellow-200 dark:border-gray-700 text-black dark:text-white rounded-full font-black text-sm md:text-base uppercase tracking-widest overflow-hidden hover:scale-105 active:scale-95 hover:shadow-lg transition-all flex items-center justify-center gap-2.5">
+                                <span className="relative z-10">{t('cta_team')}</span>
+                                <div className="absolute inset-0 bg-yellow-50/50 dark:bg-gray-800/50 scale-0 group-hover:scale-100 transition-transform duration-500 rounded-full pointer-events-none origin-center"></div>
                             </button>
                         </div>
                         <div className="flex items-center justify-center gap-4 md:gap-6 pt-3 md:pt-4">
@@ -186,32 +211,53 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                             <p className="text-[9px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">{t('trusted_by')}</p>
                         </div>
                     </div>
-                    <div className="lg:col-span-5 relative mt-6 md:mt-0">
-                        <div className="relative w-4/5 md:w-full max-w-xs mx-auto -rotate-1 hover:rotate-0 transition-all duration-500 transform-gpu backface-hidden">
+                    <div className="lg:col-span-5 relative mt-10 md:mt-0 perspective-1000">
+                        <div
+                            className="relative w-4/5 md:w-full max-w-xs mx-auto transition-transform duration-200 ease-out transform-gpu preserve-3d"
+                            onMouseMove={handleMouseMove}
+                            onMouseLeave={handleMouseLeave}
+                            style={{ transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)` }}
+                        >
+                            {/* Glass Live Chat UI Element */}
+                            <div className="absolute -right-8 md:-right-16 top-10 md:top-20 bg-white/90 dark:bg-black/80 backdrop-blur-xl p-3 md:p-4 rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.1)] border border-white/40 dark:border-white/10 z-30 animate-float-delayed max-w-[180px] md:max-w-[220px] transform-gpu transition-all" style={{ transform: 'translateZ(50px)' }}>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="w-6 h-6 rounded-full overflow-hidden border border-yellow-200"><img src={INITIAL_COMPANIONS[0].imageUrl} className="w-full h-full object-cover" /></div>
+                                    <p className="text-[9px] md:text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest flex items-center gap-1">Ruby <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse inline-block"></span></p>
+                                </div>
+                                <p className="text-[11px] md:text-xs font-medium dark:text-white leading-relaxed">"I'm right here with you. Let's take a deep breath together."</p>
+                            </div>
+
                             <div
-                                className="relative aspect-[4/5] bg-gray-900 rounded-[2rem] overflow-hidden shadow-2xl border-4 md:border-8 border-white dark:border-gray-800 group z-10"
+                                className="relative aspect-[4/5] bg-gray-900 rounded-[2rem] overflow-hidden shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] border border-white/20 dark:border-white/10 group z-10"
                                 style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)', maskImage: 'radial-gradient(white, black)' }}
                             >
-                                <img src={INITIAL_COMPANIONS[0].imageUrl} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Ruby" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20"></div>
-                                <div className="absolute top-5 left-5 md:top-6 md:left-6">
-                                    <div className="bg-black/30 backdrop-blur-xl border border-white/20 px-3 py-1 rounded-full flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                                <img src={INITIAL_COMPANIONS[0].imageUrl} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 opacity-90 group-hover:opacity-100" alt="Ruby" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                                {/* Shine effect */}
+                                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none transform -skew-x-[20deg] group-hover:translate-x-full"></div>
+
+                                <div className="absolute top-5 left-5 md:top-6 md:left-6 transition-transform duration-300" style={{ transform: 'translateZ(20px)' }}>
+                                    <div className="bg-black/40 backdrop-blur-xl border border-white/20 px-3 py-1.5 rounded-full flex items-center gap-2 shadow-lg">
+                                        <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
                                         <span className="text-[9px] font-black uppercase tracking-widest text-white">{t('live_link')}</span>
                                     </div>
                                 </div>
-                                <div className="absolute bottom-6 left-6 right-6 md:bottom-8 md:left-8 md:right-8">
-                                    <p className="text-yellow-400 text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] mb-1">{t('primary_spec')}</p>
-                                    <h3 className="text-white text-2xl md:text-3xl font-black mb-0.5">Ruby</h3>
-                                    <p className="text-gray-300 font-medium italic text-xs md:text-sm">Anxiety & Emotional Regulation</p>
+                                <div className="absolute bottom-6 left-6 right-6 md:bottom-8 md:left-8 md:right-8 transition-transform duration-300 transform-gpu" style={{ transform: 'translateZ(30px)' }}>
+                                    <div className="inline-block px-2 py-1 bg-yellow-400/20 backdrop-blur-md rounded-md border border-yellow-400/30 mb-2">
+                                        <p className="text-yellow-400 text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em]">{t('primary_spec')}</p>
+                                    </div>
+                                    <h3 className="text-white text-3xl md:text-4xl font-black mb-1 drop-shadow-md">Ruby</h3>
+                                    <p className="text-gray-200 font-medium italic text-xs md:text-sm drop-shadow-md">Anxiety & Emotional Regulation</p>
                                 </div>
                             </div>
-                            <div className="absolute -bottom-4 -left-4 md:-bottom-5 md:-left-5 bg-white dark:bg-gray-800 p-3 md:p-5 rounded-2xl md:rounded-3xl shadow-xl border border-yellow-100 dark:border-gray-700 animate-float z-20 transition-colors">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="p-2 bg-green-50 dark:bg-green-900/30 rounded-xl"><CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-green-500" /></div>
+
+                            {/* Floating Checkmark Card */}
+                            <div className="absolute -bottom-6 -left-6 md:-bottom-8 md:-left-8 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl p-3 md:p-5 rounded-2xl md:rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.1)] border border-white/50 dark:border-white/10 animate-float z-20 transition-all transform-gpu" style={{ transform: 'translateZ(40px)' }}>
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2.5 bg-green-100 dark:bg-green-900/40 rounded-xl shadow-inner"><CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-green-600 dark:text-green-400 drop-shadow-sm" /></div>
                                     <div>
-                                        <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-gray-400">Connection</p>
-                                        <p className="text-sm md:text-base font-black dark:text-white">{t('secure_conn')}</p>
+                                        <p className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Connection</p>
+                                        <p className="text-xs md:text-sm font-black text-gray-900 dark:text-white">{t('secure_conn')}</p>
                                     </div>
                                 </div>
                             </div>
@@ -219,6 +265,49 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     </div>
                 </div>
             </section>
+            {/* FEATURE GRID: Inside the Sanctuary */}
+            <section className="py-16 md:py-24 relative z-10">
+                <div className="max-w-7xl mx-auto px-6">
+                    <div className="text-center mb-12 md:mb-16">
+                        <p className="text-yellow-600 font-black uppercase tracking-[0.4em] text-[9px] md:text-[10px] mb-3">The Experience</p>
+                        <h2 className="text-3xl md:text-5xl font-black tracking-tighter dark:text-white mb-4">Inside the Sanctuary</h2>
+                        <p className="text-gray-600 dark:text-gray-400 font-medium max-w-xl mx-auto">Discover beautiful tools designed specifically to help you manage anxiety, track growth, and find your center.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+                        {/* Box 1: Zen Dojo */}
+                        <div className="relative group bg-white/40 dark:bg-gray-900/60 backdrop-blur-xl border border-white/60 dark:border-gray-800 rounded-[2rem] p-8 overflow-hidden hover:-translate-y-2 transition-transform duration-500 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] hover:shadow-[0_40px_60px_-15px_rgba(0,0,0,0.1)] dark:shadow-none">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/20 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 group-hover:bg-amber-500/30 transition-colors"></div>
+                            <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg relative z-10 mb-6 group-hover:scale-110 transition-transform">
+                                <Zap className="w-6 h-6 text-white" />
+                            </div>
+                            <h3 className="text-xl font-black mb-3 dark:text-white relative z-10">Zen Dojo</h3>
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 leading-relaxed relative z-10">Enter a hyper-focused environment designed to eliminate distractions and cut through mental fog instantly.</p>
+                        </div>
+
+                        {/* Box 2: Lumina Pet */}
+                        <div className="relative group bg-white/40 dark:bg-gray-900/60 backdrop-blur-xl border border-white/60 dark:border-gray-800 rounded-[2rem] p-8 overflow-hidden hover:-translate-y-2 transition-transform duration-500 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] hover:shadow-[0_40px_60px_-15px_rgba(0,0,0,0.1)] dark:shadow-none md:-translate-y-4">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/20 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 group-hover:bg-cyan-500/30 transition-colors"></div>
+                            <div className="w-14 h-14 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg relative z-10 mb-6 group-hover:scale-110 transition-transform">
+                                <Sparkles className="w-6 h-6 text-white" />
+                            </div>
+                            <h3 className="text-xl font-black mb-3 dark:text-white relative z-10">Lumina Companion</h3>
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 leading-relaxed relative z-10">A digital spirit pet that responds to your breathing and evolves based on your offline mental health journaling.</p>
+                        </div>
+
+                        {/* Box 3: Oracle */}
+                        <div className="relative group bg-white/40 dark:bg-gray-900/60 backdrop-blur-xl border border-white/60 dark:border-gray-800 rounded-[2rem] p-8 overflow-hidden hover:-translate-y-2 transition-transform duration-500 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] hover:shadow-[0_40px_60px_-15px_rgba(0,0,0,0.1)] dark:shadow-none">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 group-hover:bg-indigo-500/30 transition-colors"></div>
+                            <div className="w-14 h-14 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg relative z-10 mb-6 group-hover:scale-110 transition-transform">
+                                <Moon className="w-6 h-6 text-white" />
+                            </div>
+                            <h3 className="text-xl font-black mb-3 dark:text-white relative z-10">The Oracle</h3>
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 leading-relaxed relative z-10">Exchange your earned Focus Minutes for profound, AI-generated insights and tailored emotional guidance.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section className="py-12 md:py-16 relative overflow-hidden transition-colors">
                 <div className="max-w-7xl mx-auto text-center mb-8 md:mb-12 px-6">
                     <p className="text-yellow-600 font-black uppercase tracking-[0.4em] text-[9px] md:text-[10px] mb-2 md:mb-3">{t('roster_title')}</p>
@@ -265,6 +354,66 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                                     </div>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+            {/* TESTIMONIALS SECTION */}
+            <section className="py-16 md:py-24 relative overflow-hidden bg-[#FFFBEB]/30 dark:bg-black/20 border-y border-yellow-200/50 dark:border-gray-800">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-400/10 dark:bg-yellow-900/10 blur-[100px] pointer-events-none rounded-full"></div>
+                <div className="max-w-7xl mx-auto px-6 relative z-10">
+                    <div className="text-center mb-12 md:mb-16">
+                        <p className="text-yellow-600 font-black uppercase tracking-[0.4em] text-[9px] md:text-[10px] mb-3">Real Stories</p>
+                        <h2 className="text-3xl md:text-5xl font-black tracking-tighter dark:text-white mb-4">Changed perspectives.</h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Testimonial 1 */}
+                        <div className="bg-white dark:bg-gray-900 p-8 rounded-[2rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-none border border-yellow-100 dark:border-gray-800 relative group hover:-translate-y-2 transition-transform duration-500">
+                            <Quote className="w-8 h-8 text-yellow-200 dark:text-yellow-900/50 absolute top-6 right-8 group-hover:scale-110 transition-transform" />
+                            <div className="flex text-yellow-500 mb-4">
+                                {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
+                            </div>
+                            <p className="text-sm text-gray-700 dark:text-gray-300 font-medium leading-relaxed mb-6 italic">"The Zen Dojo is exactly what I needed. When my anxiety spikes, it's the only place on my phone that actually grounds me instead of distracting me."</p>
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-yellow-200 to-yellow-400 rounded-full"></div>
+                                <div>
+                                    <p className="text-xs font-black dark:text-white">Sarah M.</p>
+                                    <p className="text-[9px] uppercase tracking-widest text-gray-500">Member since '24</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Testimonial 2 */}
+                        <div className="bg-white dark:bg-gray-900 p-8 rounded-[2rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-none border border-yellow-100 dark:border-gray-800 relative group hover:-translate-y-2 transition-transform duration-500 md:-translate-y-4">
+                            <Quote className="w-8 h-8 text-yellow-200 dark:text-yellow-900/50 absolute top-6 right-8 group-hover:scale-110 transition-transform" />
+                            <div className="flex text-yellow-500 mb-4">
+                                {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
+                            </div>
+                            <p className="text-sm text-gray-700 dark:text-gray-300 font-medium leading-relaxed mb-6 italic">"I've never seen AI used quite like this. The Oracle gives me actionable, deeply personal advice that actually helps me process my week."</p>
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-blue-200 to-blue-400 rounded-full"></div>
+                                <div>
+                                    <p className="text-xs font-black dark:text-white">James T.</p>
+                                    <p className="text-[9px] uppercase tracking-widest text-gray-500">Focus User</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Testimonial 3 */}
+                        <div className="bg-white dark:bg-gray-900 p-8 rounded-[2rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-none border border-yellow-100 dark:border-gray-800 relative group hover:-translate-y-2 transition-transform duration-500">
+                            <Quote className="w-8 h-8 text-yellow-200 dark:text-yellow-900/50 absolute top-6 right-8 group-hover:scale-110 transition-transform" />
+                            <div className="flex text-yellow-500 mb-4">
+                                {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
+                            </div>
+                            <p className="text-sm text-gray-700 dark:text-gray-300 font-medium leading-relaxed mb-6 italic">"Watching my Lumina pet evolve perfectly mirrors my own emotional journey. Honestly, it makes me want to log off and breathe more often."</p>
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-purple-200 to-purple-400 rounded-full"></div>
+                                <div>
+                                    <p className="text-xs font-black dark:text-white">Elena R.</p>
+                                    <p className="text-[9px] uppercase tracking-widest text-gray-500">Daily Journaler</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

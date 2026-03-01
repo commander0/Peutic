@@ -36,10 +36,10 @@
 
 [data-theme="sunshine"].dark,
 .dark[data-theme="sunshine"] {
-    --color-primary: #AF9B00;
-    --color-bg-base: #422006;
-    --color-text-base: #FFFBEB;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #422006 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #422006 0%, transparent 80vw);
+    --color-primary: #fef08a;
+    --color-bg-base: #AF9B00;
+    --color-text-base: #0A0A0A;
+    --color-bg-gradient: radial-gradient(circle at 0% 0%, #B8A300 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #8A7A00 0%, transparent 80vw);
 }
 
 /* -----------------------------------------------------------------------------
