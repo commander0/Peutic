@@ -140,13 +140,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 </div>
             )}
 
-            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+            <div className="fixed top-0 left-0 w-full h-[100dvh] pointer-events-none overflow-hidden z-0">
                 <video
+                    key={Math.random()} // force remount on load
                     autoPlay
                     loop
                     muted
                     playsInline
-                    className="absolute inset-0 w-full h-full object-cover object-center opacity-70 dark:opacity-50 mix-blend-multiply dark:mix-blend-overlay filter blur-[1px]"
+                    className="absolute top-0 left-0 w-full h-full object-cover opacity-70 dark:opacity-50 mix-blend-multiply dark:mix-blend-overlay filter blur-[1px]"
+                    style={{ objectFit: 'cover' }}
                 >
                     <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
                 </video>
