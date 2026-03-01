@@ -127,7 +127,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     const marqueeRow2 = [...row2, ...row2];
 
     return (
-        <div className={`min-h-screen font-sans text-[#0A0A0A] dark:text-[#F3F4F6] selection:bg-yellow-200 selection:text-black transition-colors duration-500 bg-[#fde9a0] dark:bg-[#1a1705] ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen font-sans text-[#0A0A0A] dark:text-[#F3F4F6] selection:bg-yellow-200 selection:text-black transition-colors duration-500 bg-[#fde9a0] dark:bg-black ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
 
             {/* PUBLIC BROADCAST BANNER */}
             {settings.broadcastMessage && (
@@ -147,12 +147,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     loop
                     muted
                     playsInline
-                    className="absolute inset-0 w-full h-full object-cover object-[center_15%] opacity-70 dark:opacity-30"
+                    className="absolute inset-0 w-full h-full object-cover object-[center_15%] opacity-[0.85] dark:opacity-40"
+                    style={{
+                        maskImage: 'radial-gradient(ellipse at center 25%, black 30%, transparent 70%)',
+                        WebkitMaskImage: '-webkit-radial-gradient(50% 25%, ellipse cover, black 30%, transparent 70%)'
+                    }}
                 >
                     <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
                 </video>
-                <div className="absolute inset-0 bg-[#facc15]/30 mix-blend-overlay pointer-events-none dark:bg-yellow-500/30 dark:mix-blend-overlay"></div>
-                <div className="absolute inset-0 bg-[#fde9a0]/40 mix-blend-multiply pointer-events-none dark:bg-[#725a00]/30 dark:mix-blend-multiply"></div>
+                <div className="absolute inset-0 bg-[#facc15]/30 mix-blend-overlay pointer-events-none dark:bg-yellow-500/10 dark:mix-blend-color-dodge"></div>
+                <div className="absolute inset-0 bg-[#fde9a0]/40 mix-blend-multiply pointer-events-none dark:bg-black/30"></div>
+
+                <div className="absolute inset-x-0 bottom-0 h-[40vh] bg-gradient-to-t from-[#fde9a0] via-[#fde9a0]/60 to-transparent dark:from-black dark:via-black/50"></div>
             </div>
             <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-2 bg-[#FFFBEB]/80 dark:bg-black/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-3 md:py-6 bg-transparent border-transparent'}`}>
                 <div className="max-w-7xl mx-auto px-2 md:px-8 flex justify-between items-center">
