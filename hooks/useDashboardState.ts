@@ -48,7 +48,7 @@ export const useDashboardState = (initialUser: User) => {
         const interval = setInterval(() => {
             pollSettings();
             loadWeeklyGoal();
-        }, 10000);
+        }, 60000); // Changed from 10s to 60s to reduce excessive network requests and component re-renders
 
         return () => clearInterval(interval);
     }, [dashboardUser.id]);

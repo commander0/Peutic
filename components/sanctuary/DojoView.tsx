@@ -283,11 +283,13 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
         triggerAmbientSound();
 
         if (timerMode === 'focus' || timerMode === 'candle') {
-            const success = await SanctuaryService.saveFocusSession(user.id, selectedMins * 60, 'FOCUS');
-            if (success) {
-                // Link directly to Inner Garden gamification
-                await GardenService.addFocusMinutes(user.id, selectedMins);
-                await UserService.deductBalance(0, 'Focus Session Complete'); // XP Trigger
+            const result = await SanctuaryService.saveFocusSession(user.id, selectedMins * 60, 'FOCUS');
+            if (result.success) {
+                if (!result.atomic) {
+                    // FALLBACK: Link directly to Inner Garden gamification if RPC unavailable
+                    await GardenService.addFocusMinutes(user.id, selectedMins);
+                    await UserService.deductBalance(0, 'Focus Session Complete'); // XP Trigger
+                }
                 showToast(`Focus Session Recorded! +${selectedMins} Garden Mins (+50 XP)`, "success");
                 setStreak((s: number) => s + 1);
                 setTotalFocus((t: number) => t + selectedMins);

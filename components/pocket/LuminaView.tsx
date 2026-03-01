@@ -5,6 +5,7 @@ import { PetService } from '../../services/petService';
 import PetCanvas from './PetCanvas';
 import { useToast } from '../common/Toast';
 import { UserService } from '../../services/userService';
+import { SanctuaryService } from '../../services/SanctuaryService';
 import CloudHopGame from '../CloudHopGame';
 import MindfulMatchGame from '../MindfulMatchGame';
 
@@ -196,6 +197,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                 ];
                 const msg = wisdoms[Math.floor(Math.random() * wisdoms.length)];
                 setOracleMessage(msg);
+                SanctuaryService.saveOracleReading(user.id, msg, "Lumina Pocket");
                 setIsSummoning(false);
                 setTrick(null);
 

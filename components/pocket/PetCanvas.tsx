@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Lumina } from '../../types';
 
 interface PetCanvasProps {
@@ -44,6 +44,80 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
     const trickClass = trick === 'spin' ? 'animate-[spin_1s_ease-in-out]' : trick === 'magic' ? 'animate-[ping_0.5s_ease-in-out_infinite] brightness-150' : '';
     const sadClass = emotion === 'sad' ? 'grayscale opacity-80 scale-95' : '';
 
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    // Dynamic Physics Particles
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        let animationFrameId: number;
+
+        // Define particle count and behavior scaling with level
+        const baseLevel = pet.level || 1;
+        const particleCount = Math.min(baseLevel * 3 + 10, 150);
+        let particles: any[] = [];
+
+        // Convert hex to hue approx for particles to match, or use fixed ethereal hues
+        const isHappy = emotion === 'happy';
+        const isSad = emotion === 'sad';
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * (baseLevel > 20 ? 1.5 : 0.5),
+                vy: (Math.random() - 0.5) * (baseLevel > 20 ? 1.5 : 0.5) - 0.2, // Drift up
+                size: Math.random() * (baseLevel > 30 ? 3 : 1.5) + 0.5,
+                alpha: Math.random(),
+                pulseRate: (Math.random() - 0.5) * 0.05
+            });
+        }
+
+        const render = () => {
+            ctx.clearRect(0, 0, width, height);
+
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha += p.pulseRate;
+
+                // Wrap-around
+                if (p.x < 0) p.x = width;
+                if (p.x > width) p.x = 0;
+                if (p.y < 0) p.y = height;
+                if (p.y > height) p.y = 0;
+                if (p.alpha <= 0.1 || p.alpha >= 1) p.pulseRate *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+
+                // Color context
+                if (isSad) {
+                    ctx.fillStyle = `rgba(150, 150, 150, ${p.alpha})`;
+                    ctx.shadowBlur = 0;
+                } else if (isHappy) {
+                    ctx.fillStyle = `rgba(236, 72, 153, ${p.alpha})`; // Pink
+                    ctx.shadowColor = `rgba(236, 72, 153, 0.8)`;
+                    ctx.shadowBlur = baseLevel > 15 ? 8 : 0;
+                } else {
+                    ctx.fillStyle = `rgba(34, 211, 238, ${p.alpha})`; // Cyan default
+                    ctx.shadowColor = `rgba(34, 211, 238, 0.8)`;
+                    ctx.shadowBlur = baseLevel > 10 ? 12 : 0;
+                }
+
+                ctx.fill();
+            });
+
+            animationFrameId = requestAnimationFrame(render);
+        };
+        render();
+
+        return () => cancelAnimationFrame(animationFrameId);
+    }, [pet.level, width, height, emotion]);
+
     return (
         <div
             style={{ width, height, perspective: '1000px' }}
@@ -52,19 +126,18 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             onMouseLeave={handleMouseLeave}
         >
 
-            {/* High Fidelity Holographic Base */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.15)_0%,transparent_60%)] rounded-full pointer-events-none" />
+            {/* High Fidelity Holographic Base - Dynamic Gradient Based on Species */}
+            <div className="absolute inset-0 rounded-full pointer-events-none transition-all duration-1000 ease-in-out"
+                style={{ background: `radial-gradient(ellipse at center, ${c.p}33 0%, transparent 65%)` }} />
 
-            {/* Ambient Particles */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {[...Array(5)].map((_, i) => (
-                    <div key={i} className="absolute w-1 h-1 bg-cyan-400 rounded-full animate-particle-float opacity-0" style={{
-                        left: `${20 + Math.random() * 60}%`,
-                        animationDelay: `${Math.random() * 4}s`,
-                        animationDuration: `${3 + Math.random() * 3}s`
-                    }} />
-                ))}
-            </div>
+            {/* Dynamic Level-based Canvas Particles */}
+            <canvas
+                ref={canvasRef}
+                width={width}
+                height={height}
+                className="absolute inset-0 pointer-events-none z-10"
+                style={{ filter: emotion === 'sad' ? 'grayscale(100%)' : 'none' }}
+            />
 
             <div className={`relative transition-all duration-700 w-full h-[80%] flex items-center justify-center ${bounceClass} ${trickClass} ${sadClass}`}>
 

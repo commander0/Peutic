@@ -1,30 +1,17 @@
-import { useState, useEffect } from 'react';
-import { User, GardenState, Lumina } from '../types';
+import { useState } from 'react';
+import { User } from '../types';
 import { GardenService } from '../services/gardenService';
-import { PetService } from '../services/petService';
 import { useToast } from '../components/common/Toast';
+import { useGlobalState } from '../contexts/GlobalStateContext';
 
 export const useGamification = (user: User | null | undefined) => {
     const { showToast } = useToast();
+    const { garden, lumina } = useGlobalState();
 
-    // Garden State
-    const [garden, setGarden] = useState<GardenState | null>(null);
     const [isClipping, setIsClipping] = useState(false);
 
-    // Lumina State
-    const [lumina, setLumina] = useState<Lumina | null>(null);
-
-    useEffect(() => {
-        if (user?.id) {
-            refreshGarden();
-            refreshPet();
-        }
-    }, [user?.id]);
-
     const refreshGarden = async () => {
-        if (!user?.id) return;
-        const g = await GardenService.getGarden(user.id);
-        setGarden(g);
+        console.info("V2: refreshGarden is obsolete. Realtime DB subscription active.");
     };
 
     const handleClipPlant = async () => {
@@ -35,12 +22,10 @@ export const useGamification = (user: User | null | undefined) => {
         if (result.success) {
             showToast(result.message || "Clipped!", "success");
             if (result.reward) {
-                // Show Quote Toast
                 showToast(`"${result.reward}"`, "info");
             }
             setTimeout(() => {
                 setIsClipping(false);
-                refreshGarden(); // Refresh stats if needed
             }, 2000);
         } else {
             showToast(result.message || "Cannot clip right now", "error");
@@ -49,9 +34,7 @@ export const useGamification = (user: User | null | undefined) => {
     };
 
     const refreshPet = async () => {
-        if (!user?.id) return;
-        const p = await PetService.getPet(user.id);
-        setLumina(p);
+        console.info("V2: refreshPet is obsolete. Realtime DB subscription active.");
     };
 
     return {

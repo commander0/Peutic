@@ -39,39 +39,72 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
         const fetchInitialState = async () => {
             try {
                 // Fetch User Profile
-                const { data: userData, error: userError } = await supabase
+                const { data: userData } = await supabase
                     .from('users')
                     .select('*')
                     .eq('id', authUser.id)
                     .single();
 
                 if (userData && isMounted) {
-                    const parsed = UserSchema.safeParse(userData);
+                    const mappedUser = {
+                        ...userData,
+                        avatarLocked: userData.avatar_locked,
+                        subscriptionStatus: userData.subscription_status,
+                        joinedAt: userData.joined_at,
+                        lastActive: userData.last_active,
+                        emailPreferences: userData.email_preferences,
+                        gameScores: userData.game_scores,
+                        lastLoginDate: userData.last_login_date,
+                        themePreference: userData.theme_preference,
+                        languagePreference: userData.language_preference,
+                        gamificationEnabled: userData.gamification_enabled,
+                        unlockedRooms: userData.unlocked_rooms,
+                        unlockedAchievements: userData.unlocked_achievements,
+                        unlockedDecor: userData.unlocked_decor,
+                        oracleTokens: userData.oracle_tokens
+                    };
+                    const parsed = UserSchema.safeParse(mappedUser);
                     if (parsed.success) setUserProfile(parsed.data as unknown as User);
                     else console.error("Zod User Parse Error:", parsed.error);
                 }
 
-                // Fetch Garden
                 const { data: gardenData } = await supabase
-                    .from('gardens')
+                    .from('garden_log')
                     .select('*')
-                    .eq('userId', authUser.id)
+                    .eq('user_id', authUser.id)
                     .single();
 
                 if (gardenData && isMounted) {
-                    const parsed = GardenStateSchema.safeParse(gardenData);
+                    const mappedGarden = {
+                        userId: gardenData.user_id,
+                        level: gardenData.level,
+                        currentPlantType: gardenData.current_plant_type,
+                        waterLevel: gardenData.water_level || 50,
+                        lastWateredAt: gardenData.last_watered_at,
+                        streakCurrent: gardenData.streak_current,
+                        streakBest: gardenData.streak_best,
+                        focusMinutes: gardenData.focus_minutes || 0,
+                        harvestedPlants: gardenData.harvested_plants || []
+                    };
+                    const parsed = GardenStateSchema.safeParse(mappedGarden);
                     if (parsed.success) setGarden(parsed.data);
                 }
 
-                // Fetch Lumina
                 const { data: luminaData } = await supabase
-                    .from('luminas')
+                    .from('pocket_pets')
                     .select('*')
-                    .eq('userId', authUser.id)
+                    .eq('user_id', authUser.id)
                     .single();
 
                 if (luminaData && isMounted) {
-                    const parsed = LuminaSchema.safeParse(luminaData);
+                    const mappedLumina = {
+                        ...luminaData,
+                        userId: luminaData.user_id,
+                        isSleeping: luminaData.is_sleeping,
+                        lastInteractionAt: luminaData.last_interaction_at,
+                        createdAt: luminaData.created_at
+                    };
+                    const parsed = LuminaSchema.safeParse(mappedLumina);
                     if (parsed.success) setLumina(parsed.data);
                 }
             } catch (err: any) {
@@ -83,27 +116,61 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({ childre
 
         fetchInitialState();
 
-        // 2. Realtime Subscriptions (The Single Truth implementation)
         const userSub = supabase
             .channel('public:users')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'users', filter: `id=eq.${authUser.id}` }, (payload) => {
-                const parsed = UserSchema.safeParse(payload.new);
-                if (parsed.success && isMounted) setUserProfile(parsed.data);
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'users', filter: `id=eq.${authUser.id}` }, (payload: any) => {
+                const mappedUser = {
+                    ...payload.new,
+                    avatarLocked: payload.new.avatar_locked,
+                    subscriptionStatus: payload.new.subscription_status,
+                    joinedAt: payload.new.joined_at,
+                    lastActive: payload.new.last_active,
+                    emailPreferences: payload.new.email_preferences,
+                    gameScores: payload.new.game_scores,
+                    lastLoginDate: payload.new.last_login_date,
+                    themePreference: payload.new.theme_preference,
+                    languagePreference: payload.new.language_preference,
+                    gamificationEnabled: payload.new.gamification_enabled,
+                    unlockedRooms: payload.new.unlocked_rooms,
+                    unlockedAchievements: payload.new.unlocked_achievements,
+                    unlockedDecor: payload.new.unlocked_decor,
+                    oracleTokens: payload.new.oracle_tokens
+                };
+                const parsed = UserSchema.safeParse(mappedUser);
+                if (parsed.success && isMounted) setUserProfile(parsed.data as any);
             })
             .subscribe();
 
         const gardenSub = supabase
-            .channel('public:gardens')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'gardens', filter: `userId=eq.${authUser.id}` }, (payload: any) => {
-                const parsed = GardenStateSchema.safeParse(payload.new);
+            .channel('public:garden_log')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'garden_log', filter: `user_id=eq.${authUser.id}` }, (payload: any) => {
+                const mappedGarden = {
+                    userId: payload.new.user_id,
+                    level: payload.new.level,
+                    currentPlantType: payload.new.current_plant_type,
+                    waterLevel: payload.new.water_level || 50,
+                    lastWateredAt: payload.new.last_watered_at,
+                    streakCurrent: payload.new.streak_current,
+                    streakBest: payload.new.streak_best,
+                    focusMinutes: payload.new.focus_minutes || 0,
+                    harvestedPlants: payload.new.harvested_plants || []
+                };
+                const parsed = GardenStateSchema.safeParse(mappedGarden);
                 if (parsed.success && isMounted) setGarden(parsed.data);
             })
             .subscribe();
 
         const luminaSub = supabase
-            .channel('public:luminas')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'luminas', filter: `userId=eq.${authUser.id}` }, (payload: any) => {
-                const parsed = LuminaSchema.safeParse(payload.new);
+            .channel('public:pocket_pets')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'pocket_pets', filter: `user_id=eq.${authUser.id}` }, (payload: any) => {
+                const mappedLumina = {
+                    ...payload.new,
+                    userId: payload.new.user_id,
+                    isSleeping: payload.new.is_sleeping,
+                    lastInteractionAt: payload.new.last_interaction_at,
+                    createdAt: payload.new.created_at
+                };
+                const parsed = LuminaSchema.safeParse(mappedLumina);
                 if (parsed.success && isMounted) setLumina(parsed.data);
             })
             .subscribe();

@@ -44,6 +44,12 @@ export class GardenService {
     }
 
     static async harvestPlant(userId: string, userBalanceService: any): Promise<{ success: boolean; message: string }> {
+        // V2 Fix: Eliminate negative bound checking issue for Garden Gamification
+        const garden = await this.getGarden(userId);
+        if (!garden || garden.focusMinutes < 10) {
+            return { success: false, message: "Not enough focus minutes to harvest (need 10)." };
+        }
+
         // Assume maximum gamification: subtract 10 minutes
         const success = await this.addFocusMinutes(userId, -10);
         if (success) {

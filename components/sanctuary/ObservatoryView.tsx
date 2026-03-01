@@ -3,7 +3,8 @@ import { X, Sparkles, Star, Loader2, PlayCircle } from 'lucide-react';
 import { User } from '../../types';
 import { useToast } from '../common/Toast';
 import { UserService } from '../../services/userService';
-import { GardenService } from '../../services/gardenService';
+
+import { SanctuaryService } from '../../services/SanctuaryService';
 import { supabase } from '../../services/supabaseClient';
 
 export type ActivityNode = { id: string; type: 'journal' | 'therapy' | 'transaction'; title: string; content: string; date: string; };
@@ -81,8 +82,9 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
             Promise.all([
                 UserService.getJournals(user.id),
                 UserService.getUserTransactions(user.id),
-                supabase.from('feedback').select('*').eq('user_id', user.id).limit(20)
-            ]).then(([jData, txData, fbRes]) => {
+                supabase.from('feedback').select('*').eq('user_id', user.id).limit(20),
+                SanctuaryService.getOracleHistory(user.id)
+            ]).then(([jData, txData, fbRes, oracleData]) => {
                 const arr: ActivityNode[] = [];
 
                 jData.forEach(j => {
@@ -98,6 +100,10 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                         arr.push({ id: fb.id, type: 'therapy', title: `Therapy with ${fb.companion_name}`, content: `Topics discussed: ${fb.tags?.join(', ') || 'General Check-in'}`, date: fb.date });
                     });
                 }
+
+                oracleData.forEach(o => {
+                    arr.push({ id: o.id, type: 'transaction', title: `Oracle Vision (${o.context})`, content: o.message, date: o.created_at });
+                });
 
                 arr.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
                 const final = arr.slice(-60); // Max 60 stars
@@ -203,6 +209,7 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
 
             setOracleMessage(msg);
             setIsReading(false);
+            SanctuaryService.saveOracleReading(user.id, msg, "Observatory");
             setOracleStars(Array.from({ length: 12 }).map(() => ({ x: 10 + Math.random() * 80, y: 10 + Math.random() * 80 })));
             playMysticSound('reveal');
 
@@ -246,30 +253,30 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                 </div>
             )}
 
-            <header className="relative z-50 p-6 flex items-center justify-center border-b border-indigo-900/30 bg-black/50 backdrop-blur-md">
-                <div className="flex bg-indigo-950/40 rounded-full p-1 border border-indigo-800/50">
+            <button onClick={onClose} className="absolute top-6 right-6 z-[60] p-3 md:p-4 rounded-full bg-white/5 hover:bg-white/10 transition-all border border-white/5 group">
+                <X className="w-5 h-5 text-indigo-300 group-hover:text-white transition-colors" />
+            </button>
+            <header className="relative z-50 p-4 md:p-6 flex flex-col md:flex-row items-center justify-center gap-4 border-b border-indigo-900/30 bg-black/50 backdrop-blur-md">
+                <div className="flex bg-indigo-950/40 rounded-full p-1 border border-indigo-800/50 scale-90 md:scale-100">
                     <button
                         onClick={() => setActiveTab('divination')}
-                        className={`px-6 py-2 rounded-full text-xs font-sans uppercase tracking-widest font-bold transition-all ${activeTab === 'divination' ? 'bg-indigo-600 text-white shadow-[0_0_15px_rgba(79,70,229,0.5)]' : 'text-indigo-400 hover:text-indigo-200'}`}
+                        className={`px-4 md:px-6 py-2 rounded-full text-[10px] md:text-xs font-sans uppercase tracking-widest font-bold transition-all ${activeTab === 'divination' ? 'bg-indigo-600 text-white shadow-[0_0_15px_rgba(79,70,229,0.5)]' : 'text-indigo-400 hover:text-indigo-200'}`}
                     >
                         The Oracle
                     </button>
                     <button
                         onClick={() => setActiveTab('archive')}
-                        className={`px-6 py-2 rounded-full text-xs font-sans uppercase tracking-widest font-bold transition-all flex items-center gap-2 ${activeTab === 'archive' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' : 'text-indigo-400 hover:text-indigo-200'}`}
+                        className={`px-4 md:px-6 py-2 rounded-full text-[10px] md:text-xs font-sans uppercase tracking-widest font-bold transition-all flex items-center gap-2 ${activeTab === 'archive' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' : 'text-indigo-400 hover:text-indigo-200'}`}
                     >
                         <Sparkles className="w-3 h-3" /> Memory Map
                     </button>
                 </div>
                 {activeTab === 'archive' && starPositions.length > 0 && (
-                    <button onClick={startReplay} className="absolute right-24 p-2 px-4 rounded-full bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 transition-all border border-blue-500/30 flex items-center gap-2 group">
+                    <button onClick={startReplay} className="md:absolute right-24 p-2 px-4 rounded-full bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 transition-all border border-blue-500/30 flex items-center gap-2 group">
                         <PlayCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest hidden md:block">Time-Lapse</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest">Time-Lapse</span>
                     </button>
                 )}
-                <button onClick={onClose} className="absolute right-6 p-4 rounded-full bg-white/5 hover:bg-white/10 transition-all border border-white/5 group">
-                    <X className="w-5 h-5 text-indigo-300 group-hover:text-white transition-colors" />
-                </button>
             </header>
 
             {/* TAB CONTENT: MEMORY MAP */}

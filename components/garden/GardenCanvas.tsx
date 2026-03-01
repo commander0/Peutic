@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import { GardenState } from '../../types';
 
 interface GardenCanvasProps {
@@ -61,6 +62,11 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
     // Determines the sway animation speeds based on interaction (wind)
     const swayClass = interactionType === 'sing' ? 'animate-[sway_1s_ease-in-out_infinite]' : 'animate-[sway_3s_ease-in-out_infinite]';
 
+    // Procedural Growth Scaling calculation
+    // Each stage is roughly 2 focus minutes apart
+    const stageProgress = Math.min((fm % 2) / 2, 1);
+    const growthScale = stage < 6 ? 1 + (stageProgress * 0.15) : 1 + (Math.min((fm - 12) / 50, 0.2)); // Scales 15% before evolving. Ethereal caps at +20% extra growth.
+
     const SvgContent = useMemo(() => {
         const isRare = ['Lunar Fern', 'Crystal Lotus', 'Storm Oak', 'Sunlight Spire'].includes(garden.currentPlantType);
 
@@ -68,7 +74,12 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
         const dynamicViewBox = stage >= 6 ? "-60 -110 220 220" : stage >= 4 ? "-20 -40 140 140" : "0 0 100 100";
 
         return (
-            <svg viewBox={dynamicViewBox} className={`w-[90%] h-[90%] md:w-[80%] md:h-[80%] drop-shadow-lg mx-auto overflow-visible transition-all duration-1000 ${isRare ? 'drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]' : ''}`}>
+            <motion.svg
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1.5, ease: "easeOut" }}
+                viewBox={dynamicViewBox}
+                className={`w-[90%] h-[90%] md:w-[80%] md:h-[80%] drop-shadow-lg mx-auto overflow-visible transition-all duration-1000 ${isRare ? 'drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]' : ''}`}>
                 <defs>
                     <filter id="bloom-glow" x="-50%" y="-50%" width="200%" height="200%">
                         <feGaussianBlur stdDeviation="3" result="coloredBlur" />
@@ -137,8 +148,17 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
                     <ellipse cx="50" cy="84" rx="16" ry="1.5" fill="#1e293b" />
                 </g>
 
-                {/* Growth Stages (Foreground Parallax) */}
-                <g style={{ transformOrigin: '50px 85px', transform: `translate(${mousePos.x * 6}px, ${mousePos.y * 3}px)`, transition: 'transform 0.1s ease-out' }} className={swayClass}>
+                {/* Growth Stages (Foreground Parallax + Procedural Scaling) */}
+                <motion.g
+                    style={{ transformOrigin: '50px 85px' }}
+                    animate={{
+                        x: mousePos.x * 6,
+                        y: mousePos.y * 3,
+                        scale: growthScale
+                    }}
+                    transition={{ type: 'spring', bounce: 0, duration: 0.5 }}
+                    className={swayClass}
+                >
                     {/* STAGE 0: SEED */}
                     {stage === 0 && (
                         <ellipse cx="50" cy="84" rx="2" ry="1.5" fill={theme.leafDark} />
@@ -400,7 +420,7 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
                         </>
                     )}
 
-                </g>
+                </motion.g>
 
                 {/* Thorny Gamified Weeds Overlay */}
                 {hasWeeds && (
@@ -427,9 +447,9 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
                         <path d="M 70 15 L 72 20 L 74 15 Z" fill="#60a5fa" className="animate-[bounce_1.1s_infinite]" />
                     </>
                 )}
-            </svg>
+            </motion.svg>
         );
-    }, [stage, garden.currentPlantType, interactionType, swayClass]);
+    }, [stage, garden.currentPlantType, interactionType, swayClass, growthScale, mousePos]);
 
     return (
         <div
