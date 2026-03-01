@@ -549,7 +549,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
 
             <div className="flex h-screen overflow-hidden">
-                <aside className="hidden md:flex w-20 lg:w-64 flex-col border-r border-yellow-200/30 dark:border-gray-800/50 bg-[var(--color-bg-base)]/40 backdrop-blur-2xl transition-all duration-500">
+                <aside className="hidden md:flex w-20 lg:w-64 flex-col border-r border-yellow-200/30 dark:border-gray-800/50 bg-[var(--color-bg-base)]/40 backdrop-blur-2xl transition-all duration-500 hover:w-24 lg:hover:w-72">
                     <div className="p-6 lg:p-8 flex items-center justify-center lg:justify-start gap-3">
                         <div className="w-9 h-9 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg group hover:scale-110 transition-transform">
                             <Heart className="w-5 h-5 text-black fill-black" />
