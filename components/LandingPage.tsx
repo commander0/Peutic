@@ -146,7 +146,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     loop
                     muted
                     playsInline
-                    className="absolute top-1/2 left-1/2 w-auto h-auto min-w-full min-h-full max-w-none -translate-x-1/2 -translate-y-1/2 opacity-70 dark:opacity-50 mix-blend-multiply dark:mix-blend-overlay filter blur-[1px]"
+                    className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center opacity-70 dark:opacity-50 mix-blend-multiply dark:mix-blend-overlay filter blur-[1px]"
                 >
                     <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
                 </video>
