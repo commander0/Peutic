@@ -140,13 +140,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 </div>
             )}
 
-            <div className="absolute top-0 left-0 right-0 h-[100vh] pointer-events-none overflow-hidden z-0">
+            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
                 <video
                     autoPlay
                     loop
                     muted
                     playsInline
-                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 min-w-[120vw] min-h-[120vh] object-cover object-[center_30%] opacity-90 dark:opacity-40"
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 min-w-[120vw] min-h-[120vh] object-cover object-[center_30%] opacity-[0.85] dark:opacity-40"
                     style={{
                         maskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)',
                         WebkitMaskImage: '-webkit-radial-gradient(center, circle, black 30%, transparent 65%)'
@@ -154,10 +154,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 >
                     <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
                 </video>
-                {/* Overlay ambient tint */}
-                <div className="absolute inset-0 bg-yellow-400/10 pointer-events-none mix-blend-overlay dark:bg-yellow-500/10 dark:mix-blend-color-dodge"></div>
+                {/* Strong yellow tint layered over the entire video matching the mockup */}
+                <div className="absolute inset-0 bg-[#facc15]/20 mix-blend-overlay pointer-events-none dark:bg-yellow-500/10 dark:mix-blend-color-dodge"></div>
+                <div className="absolute inset-0 bg-[#fde9a0]/30 mix-blend-multiply pointer-events-none dark:bg-black/30"></div>
+
                 {/* Bottom gradient fade for text legibility */}
-                <div className="absolute inset-x-0 bottom-0 h-[40vh] bg-gradient-to-t from-[#fde9a0] via-[#fde9a0]/40 to-transparent dark:from-black dark:via-black/50"></div>
+                <div className="absolute inset-x-0 bottom-0 h-[40vh] bg-gradient-to-t from-[#fde9a0] via-[#fde9a0]/60 to-transparent dark:from-black dark:via-black/50"></div>
             </div>
             <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-2 bg-[#FFFBEB]/80 dark:bg-black/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-3 md:py-6 bg-transparent border-transparent'}`}>
                 <div className="max-w-7xl mx-auto px-2 md:px-8 flex justify-between items-center">
