@@ -148,10 +148,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         loop
                         muted
                         playsInline
-                        className="absolute inset-0 w-full h-full object-cover object-[center_15%] opacity-[0.85] dark:opacity-40"
+                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 min-w-[120vw] min-h-[120vh] object-cover object-[center_30%] opacity-[0.85] dark:opacity-40"
                         style={{
-                            maskImage: 'radial-gradient(ellipse at center 25%, black 30%, transparent 70%)',
-                            WebkitMaskImage: '-webkit-radial-gradient(50% 25%, ellipse cover, black 30%, transparent 70%)'
+                            maskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)',
+                            WebkitMaskImage: '-webkit-radial-gradient(center, circle, black 30%, transparent 65%)'
                         }}
                     >
                         <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
