@@ -140,7 +140,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 </div>
             )}
 
-            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 bg-[#FFFBEB] dark:bg-black">
+            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
                 <video
                     autoPlay
                     loop
