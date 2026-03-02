@@ -72,7 +72,7 @@ interface DashboardProps {
     onStartSession: (companion: Companion, mode?: 'video' | 'voice') => void;
 }
 
-const AvatarImage = React.memo(({ src, alt, className, isUser = false }: { src?: string, alt?: string, className?: string, isUser?: boolean }) => {
+const AvatarImage = React.memo(({ src, alt, className, isUser = false, isDiamond = false }: { src?: string, alt?: string, className?: string, isUser?: boolean, isDiamond?: boolean }) => {
     const [imgError, setImgError] = useState(false);
     return (
         <div className={`relative ${className || ''} overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>
@@ -97,6 +97,11 @@ const AvatarImage = React.memo(({ src, alt, className, isUser = false }: { src?:
                 </div>
             )}
             {isUser && <div className="absolute inset-0 ring-1 ring-inset ring-black/10"></div>}
+            {isDiamond && (
+                <div className="absolute -top-3 -right-2 text-amber-500 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] z-10 animate-pulse bg-white/20 backdrop-blur-sm rounded-full p-1" title="Diamond Supporter">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-crown"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" /></svg>
+                </div>
+            )}
         </div>
     );
 });
@@ -504,15 +509,23 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
     const isFlowState = (dashboardUser?.streak || 0) >= 21;
 
+    const isSapphire = (dashboardUser?.unlockedDecor || []).includes('digital-theme-sapphire');
+
     return (
         <div
-            className={`min-h-screen transition-all duration-1000 font-sans text-[var(--color-text-base)] ${isFlowState ? 'ring-[4px] ring-yellow-400/80 ring-inset shadow-[inset_0_0_150px_rgba(250,204,21,0.15)] bg-yellow-900/5' : ''}`}
+            className={`min-h-screen transition-all duration-1000 font-sans ${isSapphire ? 'bg-[#050b14] text-blue-50/90' : `text-[var(--color-text-base)] ${isFlowState ? 'ring-[4px] ring-yellow-400/80 ring-inset shadow-[inset_0_0_150px_rgba(250,204,21,0.15)] bg-yellow-900/5' : ''}`}`}
             style={{
-                backgroundColor: isFlowState ? undefined : 'var(--color-bg-base)',
-                backgroundImage: isFlowState ? undefined : 'var(--color-bg-gradient)'
+                backgroundColor: isSapphire || isFlowState ? undefined : 'var(--color-bg-base)',
+                backgroundImage: isSapphire ? 'radial-gradient(circle at 50% 0%, #173860 0%, #050b14 70%)' : isFlowState ? undefined : 'var(--color-bg-gradient)'
             }}
         >
-            {isFlowState && (
+            {isSapphire && (
+                <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden mix-blend-screen opacity-50">
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] animate-[pulse_10s_ease-in-out_infinite]"></div>
+                    <div className="absolute top-0 left-0 w-full h-1/3 bg-gradient-to-b from-blue-400/10 to-transparent"></div>
+                </div>
+            )}
+            {isFlowState && !isSapphire && (
                 <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden mix-blend-screen">
                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 animate-[pulse_8s_ease-in-out_infinite]"></div>
                     <div className="absolute top-0 left-0 w-full h-1/4 bg-gradient-to-b from-yellow-500/10 to-transparent"></div>
@@ -657,7 +670,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
 
                                         <button onClick={() => setShowProfile(true)} className="shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-2xl overflow-hidden border-2 border-primary shadow-premium transition-all hover:rotate-3 active:scale-90 flex-shrink-0">
-                                            <AvatarImage src={isGhostMode ? '' : (dashboardUser?.avatar || '')} alt={isGhostMode ? 'Member' : (dashboardUser?.name || 'User')} className="w-full h-full object-cover" isUser={true} />
+                                            <AvatarImage src={isGhostMode ? '' : (dashboardUser?.avatar || '')} alt={isGhostMode ? 'Member' : (dashboardUser?.name || 'User')} className="w-full h-full object-cover" isUser={true} isDiamond={(dashboardUser?.unlockedDecor || []).includes('item-coffee')} />
                                         </button>
 
                                         {/* Mobile-only Logout Button */}

@@ -77,9 +77,9 @@ export const useDashboardState = (initialUser: User) => {
 
     return {
         dashboardUser,
-        setDashboardUser: () => { console.warn("V2: setDashboardUser is deprecated. Realtime takes precedence."); },
+        setDashboardUser: (u?: any) => { console.warn("V2: setDashboardUser is deprecated. Realtime takes precedence."); },
         balance,
-        setBalance: () => { console.warn("V2: setBalance is deprecated. Use transactions/realtime."); },
+        setBalance: (b?: any) => { console.warn("V2: setBalance is deprecated. Use transactions/realtime."); },
         transactions,
         companions,
         loadingCompanions,

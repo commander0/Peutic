@@ -83,7 +83,7 @@ const ITEMS = [
     }
 ];
 
-const SerenityShop: React.FC<SerenityShopProps> = ({ balance, onClose, onPurchase }) => {
+const SerenityShop: React.FC<SerenityShopProps> = ({ user, balance, onClose, onPurchase }) => {
     const [purchasedId, setPurchasedId] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -163,7 +163,8 @@ const SerenityShop: React.FC<SerenityShopProps> = ({ balance, onClose, onPurchas
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {ITEMS.map(item => {
                             const Icon = item.icon;
-                            const canAfford = balance >= item.cost;
+                            const isOwned = item.type === 'digital' && (user.unlockedDecor || []).includes(item.id);
+                            const canAfford = balance >= item.cost && !isOwned;
                             const justBought = purchasedId === item.id;
 
                             return (
@@ -189,16 +190,18 @@ const SerenityShop: React.FC<SerenityShopProps> = ({ balance, onClose, onPurchas
                                     </p>
 
                                     <button
-                                        disabled={!canAfford || isProcessing || justBought}
+                                        disabled={!canAfford || isProcessing || justBought || isOwned}
                                         onClick={() => handleBuy(item)}
                                         className={`w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2
-                                            ${justBought ? 'bg-green-500 text-white' :
+                                            ${justBought || isOwned ? 'bg-green-500 text-white' :
                                                 canAfford ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 dark:bg-amber-500/20 dark:hover:bg-amber-500/30 dark:text-amber-300' :
                                                     'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600 cursor-not-allowed'}
                                         `}
                                     >
                                         {justBought ? (
                                             <><CheckCircle2 className="w-5 h-5 animate-in zoom-in" /> Acquired!</>
+                                        ) : isOwned ? (
+                                            <><CheckCircle2 className="w-5 h-5" /> Owned</>
                                         ) : !canAfford ? (
                                             'Insufficient Balance'
                                         ) : (
