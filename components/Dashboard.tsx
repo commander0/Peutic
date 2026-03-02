@@ -530,11 +530,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                 </button>
             </div>
 
-            <div className="fixed bottom-24 md:bottom-6 right-4 md:right-6 z-[80] pointer-events-none">
-                <div className="pointer-events-auto">
-                    <SoundscapePlayer />
-                </div>
-            </div>
+            {/* Soundscape Player handles its own fixed positioning */}
+            <SoundscapePlayer />
 
             {/* BROADCAST BANNER */}
             {settings?.dashboardBroadcastMessage && (
