@@ -585,7 +585,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         <header className="mb-4 md:mb-8 grid grid-cols-[auto_1fr] md:flex md:flex-col gap-y-3 gap-x-2 w-full">
 
                             {/* DESKTOP ROW 1 (Header Top) / MOBILE ROW 1&2 GRID */}
-                            <div className="contents md:flex md:flex-row md:items-center md:justify-start md:gap-6 lg:gap-10 w-full shrink-0">
+                            <div className="contents md:flex md:flex-row md:items-center md:justify-between w-full shrink-0">
 
                                 {/* LEFT PANE (Bell + Title) */}
                                 <div className="contents md:flex md:flex-row md:items-center md:gap-3">
@@ -601,7 +601,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                                     {/* TITLE - Mobile Row 1 Col 1 / Desktop Top Left 2 */}
                                     <div className="col-start-1 row-start-1 md:col-auto md:row-auto flex items-center gap-2 shrink-0 self-center">
-                                        <h1 className="text-xl md:text-2xl lg:text-3xl font-black tracking-tight dark:text-white leading-tight shrink-0">
+                                        <div className="md:hidden flex items-center gap-1.5 shrink-0">
+                                            <div className="w-6 h-6 bg-yellow-400 rounded-lg flex items-center justify-center shrink-0 shadow-sm">
+                                                <Heart className="w-3.5 h-3.5 fill-black text-black" />
+                                            </div>
+                                        </div>
+                                        <h1 className="hidden md:block text-xl md:text-2xl lg:text-3xl font-black tracking-tight dark:text-white leading-tight shrink-0">
                                             {activeTab === 'inner_sanctuary' ? 'Sanctuary' : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
                                         </h1>
                                         {(dashboardUser?.unlockedDecor || []).includes('item-plushie') && (
