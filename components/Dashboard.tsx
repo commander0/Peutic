@@ -597,8 +597,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="contents md:flex md:flex-col md:justify-center md:flex-1 md:min-w-0">
                                     {/* TITLE - Mobile Row 1 Col 1 / Desktop Top Left */}
                                     <div className="col-start-1 row-start-1 md:col-auto md:row-auto flex items-center gap-2 shrink-0 self-center">
-                                        <span className="text-xl md:text-xl font-black tracking-tight dark:text-white truncate lg:max-w-[120px] shrink-0">Peutic</span>
-                                        <h1 className="hidden md:block text-2xl lg:text-3xl font-black tracking-tight dark:text-white leading-tight shrink-0">
+                                        <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
+                                            <div className="w-6 h-6 md:w-8 md:h-8 bg-yellow-400 rounded-lg md:rounded-xl flex items-center justify-center shrink-0 shadow-sm">
+                                                <Heart className="w-3.5 h-3.5 md:w-4 md:h-4 fill-black text-black" />
+                                            </div>
+                                            <span className="text-xl md:text-xl font-black tracking-tight dark:text-white truncate lg:max-w-[120px] shrink-0">Peutic</span>
+                                        </div>
+                                        <h1 className="hidden md:block text-2xl lg:text-3xl font-black tracking-tight dark:text-white leading-tight shrink-0 ml-1 md:ml-3">
                                             {activeTab === 'inner_sanctuary' ? 'Sanctuary' : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
                                         </h1>
                                         {(dashboardUser?.unlockedDecor || []).includes('item-plushie') && (
@@ -629,27 +634,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             </div>
 
                             {/* BUTTONS - Mobile Row 1 Col 2 / Desktop Right */}
-                            <div className="col-start-2 row-start-1 md:col-auto md:row-auto flex items-center justify-end flex-nowrap gap-1.5 md:gap-3 shrink-0 overflow-x-auto no-scrollbar max-w-[70vw] md:max-w-none pb-1 md:pb-0 self-center">
-                                <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
+                            <div className="col-start-2 row-start-1 md:col-auto md:row-auto flex items-center justify-end flex-nowrap gap-1.5 md:gap-3 shrink-0 overflow-x-auto no-scrollbar w-full max-w-[80vw] md:max-w-none pb-1 md:pb-0 self-center -mr-1 pr-1">
+                                <div className="shrink-0"><LanguageSelector currentLanguage={lang} onLanguageChange={setLang} /></div>
 
                                 {/* Desktop/Tablet Logout Button - next to globe */}
-                                <button onClick={onLogout} className="hidden md:flex p-2.5 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-100 dark:border-red-900/50 shadow-sm hover:scale-105 transition-all" title="Logout">
+                                <button onClick={onLogout} className="hidden md:flex shrink-0 p-2.5 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-100 dark:border-red-900/50 shadow-sm hover:scale-105 transition-all" title="Logout">
                                     <LogOut className="w-5 h-5" />
                                 </button>
 
-                                <button onClick={() => setShowGrounding(true)} className="relative p-2.5 rounded-2xl bg-white dark:bg-gray-800 border-2 border-blue-400 dark:border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] hover:scale-105 transition-all text-blue-500 overflow-hidden" title="Panic Relief / Grounding Mode">
+                                <button onClick={() => setShowGrounding(true)} className="relative shrink-0 p-2.5 rounded-2xl bg-white dark:bg-gray-800 border-2 border-blue-400 dark:border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] hover:scale-105 transition-all text-blue-500 overflow-hidden" title="Panic Relief / Grounding Mode">
                                     <div className="absolute inset-0 bg-blue-400/20 blur-md rounded-2xl animate-pulse pointer-events-none"></div>
                                     <LifeBuoy className="w-5 h-5 relative z-10" />
                                 </button>
 
-                                <button onClick={toggleDarkMode} className="p-2.5 rounded-2xl bg-white dark:bg-gray-800 border border-primary-light dark:border-gray-700 shadow-sm hover:scale-105 transition-all">
+                                <button onClick={toggleDarkMode} className="shrink-0 p-2.5 rounded-2xl bg-white dark:bg-gray-800 border border-primary-light dark:border-gray-700 shadow-sm hover:scale-105 transition-all">
                                     {isDark ? <Sun className="w-5 h-5 text-primary" /> : <Moon className="w-5 h-5 text-gray-400" />}
                                 </button>
 
                                 <div className="flex items-center gap-2 md:gap-3 shrink-0">
                                     <button
                                         onClick={() => setShowPayment(true)}
-                                        className={`h-[42px] px-4 rounded-2xl font-black shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 text-[10px] md:text-xs border border-transparent ${balance === 0
+                                        className={`shrink-0 h-[42px] px-4 rounded-2xl font-black shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 text-[10px] md:text-xs border border-transparent ${balance === 0
                                             ? 'bg-red-500 text-white animate-pulse'
                                             : 'bg-emerald-500 text-white dark:bg-emerald-600'
                                             }`}
@@ -659,12 +664,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     </button>
 
 
-                                    <button onClick={() => setShowProfile(true)} className="w-10 h-10 md:w-11 md:h-11 rounded-2xl overflow-hidden border-2 border-primary shadow-premium transition-all hover:rotate-3 active:scale-90 flex-shrink-0">
+                                    <button onClick={() => setShowProfile(true)} className="shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-2xl overflow-hidden border-2 border-primary shadow-premium transition-all hover:rotate-3 active:scale-90 flex-shrink-0">
                                         <AvatarImage src={isGhostMode ? '' : (dashboardUser?.avatar || '')} alt={isGhostMode ? 'Member' : (dashboardUser?.name || 'User')} className="w-full h-full object-cover" isUser={true} />
                                     </button>
 
                                     {/* Mobile-only Logout Button */}
-                                    <button onClick={onLogout} className="md:hidden p-2.5 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-100 dark:border-red-900/50 shadow-sm hover:scale-105 transition-all">
+                                    <button onClick={onLogout} className="md:hidden shrink-0 p-2.5 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-100 dark:border-red-900/50 shadow-sm hover:scale-105 transition-all">
                                         <LogOut className="w-5 h-5" />
                                     </button>
                                 </div>
