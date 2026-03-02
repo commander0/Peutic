@@ -72,10 +72,10 @@ interface DashboardProps {
     onStartSession: (companion: Companion, mode?: 'video' | 'voice') => void;
 }
 
-const AvatarImage = React.memo(({ src, alt, className, isUser = false, isDiamond = false }: { src?: string, alt?: string, className?: string, isUser?: boolean, isDiamond?: boolean }) => {
+const AvatarImage = React.memo(({ src, alt, className, isUser = false, isDiamond = false, isTreeBadge = false, isHeartHalo = false, isAnimalAura = false, isFlowerCrown = false }: { src?: string, alt?: string, className?: string, isUser?: boolean, isDiamond?: boolean, isTreeBadge?: boolean, isHeartHalo?: boolean, isAnimalAura?: boolean, isFlowerCrown?: boolean }) => {
     const [imgError, setImgError] = useState(false);
     return (
-        <div className={`relative ${className || ''} overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>
+        <div className={`relative ${className || ''} overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center ${isAnimalAura ? 'ring-[3px] ring-orange-500/80 shadow-[0_0_15px_rgba(249,115,22,0.6)] animate-[pulse_3s_infinite]' : ''}`}>
             {src && !imgError ? (
                 <img
                     src={src}
@@ -96,10 +96,27 @@ const AvatarImage = React.memo(({ src, alt, className, isUser = false, isDiamond
                     )}
                 </div>
             )}
+
+            {/* Heart Halo */}
+            {isHeartHalo && <div className="absolute -inset-1 rounded-full border-2 border-rose-400/80 shadow-[0_0_10px_rgba(244,63,94,0.8)] animate-[spin_10s_linear_infinite] pointer-events-none border-t-transparent border-b-transparent"></div>}
+
             {isUser && <div className="absolute inset-0 ring-1 ring-inset ring-black/10"></div>}
+
             {isDiamond && (
                 <div className="absolute -top-3 -right-2 text-amber-500 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] z-10 animate-pulse bg-white/20 backdrop-blur-sm rounded-full p-1" title="Diamond Supporter">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-crown"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" /></svg>
+                </div>
+            )}
+
+            {isFlowerCrown && (
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 text-pink-500 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] z-10 opacity-90" title="Bouquet of Gratitude">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3c0 1.5 1.5 3 3 6 1.5-3 3-4.5 3-6a3 3 0 0 0-3-3Z" /><path d="M12 11a3 3 0 0 0-6 3c-1.5 0-3 1.5-3 3s1.5 3 3 3h12c1.5 0 3-1.5 3-3s-1.5-3-3-3a3 3 0 0 0-6-3Z" /></svg>
+                </div>
+            )}
+
+            {isTreeBadge && (
+                <div className="absolute -bottom-1 -right-1 text-emerald-500 bg-white/50 backdrop-blur-sm rounded-full p-0.5 drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)] z-10" title="Emerald Tree Badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 14c-.03-.25-.09-.49-.15-.72C17.65 12.98 18 12.51 18 12c0-1.1-.9-2-2-2-.22 0-.43.04-.63.1A3.996 3.996 0 0 0 12 4a3.996 3.996 0 0 0-3.37 6.1C8.43 10.04 8.22 10 8 10c-1.1 0-2 .9-2 2 0 .51.35.98.85 1.28A4.01 4.01 0 0 0 6 14c-2.21 0-4 1.79-4 4 0 2.2 1.79 4 4 4h12c2.2 0 4-1.79 4-4 0-2.21-1.79-4-4-4Z" /><path d="M12 22v-8" /></svg>
                 </div>
             )}
         </div>
@@ -669,8 +686,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         </button>
 
 
-                                        <button onClick={() => setShowProfile(true)} className="shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-2xl overflow-hidden border-2 border-primary shadow-premium transition-all hover:rotate-3 active:scale-90 flex-shrink-0">
-                                            <AvatarImage src={isGhostMode ? '' : (dashboardUser?.avatar || '')} alt={isGhostMode ? 'Member' : (dashboardUser?.name || 'User')} className="w-full h-full object-cover" isUser={true} isDiamond={(dashboardUser?.unlockedDecor || []).includes('item-coffee')} />
+                                        <button onClick={() => setShowProfile(true)} className="shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-2xl overflow-hidden border-2 border-primary shadow-premium transition-all hover:rotate-3 active:scale-90 flex-shrink-0 relative">
+                                            <AvatarImage
+                                                src={isGhostMode ? '' : (dashboardUser?.avatar || '')}
+                                                alt={isGhostMode ? 'Member' : (dashboardUser?.name || 'User')}
+                                                className="w-full h-full object-cover rounded-2xl"
+                                                isUser={true}
+                                                isDiamond={(dashboardUser?.unlockedDecor || []).includes('item-coffee')}
+                                                isTreeBadge={(dashboardUser?.unlockedDecor || []).includes('charity-tree')}
+                                                isHeartHalo={(dashboardUser?.unlockedDecor || []).includes('charity-meal')}
+                                                isAnimalAura={(dashboardUser?.unlockedDecor || []).includes('charity-animal')}
+                                                isFlowerCrown={(dashboardUser?.unlockedDecor || []).includes('charity-flowers')}
+                                            />
                                         </button>
 
                                         {/* Mobile-only Logout Button */}
@@ -1502,7 +1529,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             if (await UserService.deductBalance(cost, desc)) {
                                 let updatedUser = { ...dashboardUser, balance: dashboardUser.balance - cost };
 
-                                if (itemId && (itemId.startsWith('item-') || itemId.startsWith('digital-'))) {
+                                if (itemId && (itemId.startsWith('item-') || itemId.startsWith('digital-') || itemId.startsWith('charity-'))) {
                                     const currentDecor = updatedUser.unlockedDecor || [];
                                     if (!currentDecor.includes(itemId)) {
                                         updatedUser = { ...updatedUser, unlockedDecor: [...currentDecor, itemId] };

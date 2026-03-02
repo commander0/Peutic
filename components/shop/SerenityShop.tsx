@@ -163,7 +163,7 @@ const SerenityShop: React.FC<SerenityShopProps> = ({ user, balance, onClose, onP
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {ITEMS.map(item => {
                             const Icon = item.icon;
-                            const isOwned = item.type === 'digital' && (user.unlockedDecor || []).includes(item.id);
+                            const isOwned = (user.unlockedDecor || []).includes(item.id);
                             const canAfford = balance >= item.cost && !isOwned;
                             const justBought = purchasedId === item.id;
 
