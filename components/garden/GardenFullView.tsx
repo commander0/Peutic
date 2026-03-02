@@ -350,7 +350,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                 </div>
 
                 {/* Action Dock */}
-                <div className="flex flex-wrap justify-center items-center gap-4 md:gap-12">
+                <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-4 md:gap-12 w-full max-w-full px-2">
                     {hasWeeds ? (
                         <ControlBtn
                             icon={Scissors}
@@ -428,18 +428,18 @@ const ControlBtn: React.FC<{
         className={`group relative flex flex-col items-center gap-3 transition-all duration-300 ${active ? 'scale-95 opacity-50' : 'hover:-translate-y-1'}`}
     >
         <div className={`
-            w-16 h-16 rounded-2xl flex items-center justify-center
+            w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center
             bg-white/5 border border-white/10 backdrop-blur-md
             shadow-[0_4px_20px_rgba(0,0,0,0.3)]
             group-hover:bg-white/10 group-hover:border-${color}-400/30
             group-hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]
             transition-all
         `}>
-            <Icon className={`w-7 h-7 text-gray-400 group-hover:text-${color}-300 transition-colors`} />
+            <Icon className={`w-6 h-6 md:w-7 md:h-7 text-gray-400 group-hover:text-${color}-300 transition-colors`} />
         </div>
         <div className="text-center">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-white/70 group-hover:text-white">{label}</div>
-            <div className={`text-[9px] font-medium text-${color}-400/50`}>{sub}</div>
+            <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-white/70 group-hover:text-white">{label}</div>
+            <div className={`text-[8px] md:text-[9px] font-medium text-${color}-400/50`}>{sub}</div>
         </div>
     </button>
 );

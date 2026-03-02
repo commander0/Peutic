@@ -447,8 +447,8 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                                     )}
 
                                     {oracleMessage && !isReading && (
-                                        <div className="absolute inset-0 flex items-center justify-center p-6 md:p-12 text-center z-30 bg-indigo-950/50 backdrop-blur-xl overflow-y-auto rounded-full custom-scrollbar shadow-[inset_0_0_60px_rgba(30,27,75,0.9),0_0_30px_rgba(99,102,241,0.5)] border-2 border-indigo-500/30 animate-in zoom-in-90 duration-700 pointer-events-auto">
-                                            <div className="w-full text-yellow-200 font-serif leading-relaxed drop-shadow-[0_0_12px_rgba(251,191,36,0.8)] tracking-wide italic text-sm md:text-base px-4 py-4 whitespace-pre-wrap">
+                                        <div className="absolute inset-0 flex items-center justify-center p-4 md:p-12 text-center z-30 bg-indigo-950/50 backdrop-blur-xl overflow-y-auto rounded-full no-scrollbar shadow-[inset_0_0_60px_rgba(30,27,75,0.9),0_0_30px_rgba(99,102,241,0.5)] border-2 border-indigo-500/30 animate-in zoom-in-90 duration-700 pointer-events-auto">
+                                            <div className="w-full text-yellow-200 font-serif leading-snug md:leading-relaxed drop-shadow-[0_0_12px_rgba(251,191,36,0.8)] tracking-wide italic text-[11px] md:text-base px-2 md:px-4 py-2 md:py-4 whitespace-pre-wrap">
                                                 <Typewriter text={oracleMessage} speed={30} />
                                             </div>
                                         </div>
