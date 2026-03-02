@@ -259,6 +259,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
                                 <ThemeButton id="midnight" color="bg-indigo-900 border border-indigo-700" label="Midnight" />
                                 <ThemeButton id="coffee" color="bg-amber-800 border border-amber-900" label="Coffee" />
                                 <ThemeButton id="royal" color="bg-purple-700 border border-purple-500" label="Royal" />
+                                {(user?.unlockedDecor || []).includes('digital-theme-sapphire') && (
+                                    <ThemeButton id="sapphire" color="bg-blue-600 border border-blue-400 shadow-[0_0_15px_rgba(37,99,235,0.6)]" label="Sapphire" />
+                                )}
                             </div>
                             <p className="text-center text-xs text-gray-400">Themes seamlessly adapt the environment to your mood.</p>
                         </div>

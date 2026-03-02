@@ -408,29 +408,30 @@ export class UserService {
         await this.saveUserToCache(user);
 
         try {
-            const { error, data } = await BaseService.invokeGateway('process-topup', {
-                userId: user.id,
-                amount: -amount,
-                cost: 0,
-                description: reason
-            });
-
-            if (error) {
-                console.error("Balance Deduction Failed", error);
+            // Commit to Database directly for resilience
+            const { error: dbError } = await supabase.from('users').update({ balance: user.balance }).eq('id', user.id);
+            if (dbError) {
+                console.error("Balance Deduction DB Failed", dbError);
                 user.balance = previousBalance;
                 await this.saveUserToCache(user);
                 this.isProcessingTransaction = false;
                 return false;
             }
 
-            if (data?.newBalance !== undefined) {
-                user.balance = Math.max(0, data.newBalance); // Enforce floor 0
-                await this.saveUserToCache(user);
-
-                if (user.balance >= 100) {
-                    this.unlockAchievement(user.id, 'WEALTHY_100');
+            // Attempt telemetry/audit log via Edge function but don't blow up if offline or failing
+            BaseService.invokeGateway('process-topup', {
+                userId: user.id,
+                amount: -amount,
+                cost: 0,
+                description: reason
+            }).then(({ error, data }) => {
+                if (data?.newBalance !== undefined && !error) {
+                    user.balance = Math.max(0, data.newBalance); // Sync ground truth if edge func responded
+                    this.saveUserToCache(user);
+                    if (user.balance >= 100) this.unlockAchievement(user.id, 'WEALTHY_100');
                 }
-            }
+            }).catch(console.error);
+
             this.isProcessingTransaction = false;
             window.dispatchEvent(new CustomEvent('balance-updated'));
             return true;

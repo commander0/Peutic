@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { UserService } from '../services/userService';
 
-export type ThemeBrand = 'default' | 'sunshine' | 'rose' | 'ocean' | 'forest' | 'sunset' | 'lavender' | 'cyberpunk' | 'midnight' | 'coffee' | 'royal';
+export type ThemeBrand = 'default' | 'sunshine' | 'rose' | 'ocean' | 'forest' | 'sunset' | 'lavender' | 'cyberpunk' | 'midnight' | 'coffee' | 'royal' | 'sapphire';
 export type ThemeMode = 'light' | 'dark';
 
 interface ThemeContextType {
@@ -22,7 +22,7 @@ const ThemeContext = createContext<ThemeContextType>({
 
 export const useTheme = () => useContext(ThemeContext);
 
-export const VALID_THEMES: ThemeBrand[] = ['sunshine', 'rose', 'ocean', 'forest', 'sunset', 'lavender', 'cyberpunk', 'midnight', 'coffee', 'royal'];
+export const VALID_THEMES: ThemeBrand[] = ['sunshine', 'rose', 'ocean', 'forest', 'sunset', 'lavender', 'cyberpunk', 'midnight', 'coffee', 'royal', 'sapphire'];
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [theme, setThemeState] = useState<ThemeBrand>('sunshine');
