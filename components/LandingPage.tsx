@@ -165,7 +165,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         <div className="w-8 h-8 md:w-9 md:h-9 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                             <Heart className="w-5 h-5 md:w-5 md:h-5 fill-black text-black" />
                         </div>
-                        <span className="text-xl md:text-2xl font-black tracking-tight dark:text-white">Peutic</span>
+                        <span className="hidden md:block text-xl md:text-2xl font-black tracking-tight dark:text-white">Peutic</span>
                     </div>
                     <div className="flex items-center gap-1.5 md:gap-6">
                         <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />

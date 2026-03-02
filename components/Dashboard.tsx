@@ -601,7 +601,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             <div className="w-6 h-6 md:w-8 md:h-8 bg-yellow-400 rounded-lg md:rounded-xl flex items-center justify-center shrink-0 shadow-sm">
                                                 <Heart className="w-3.5 h-3.5 md:w-4 md:h-4 fill-black text-black" />
                                             </div>
-                                            <span className="text-xl md:text-xl font-black tracking-tight dark:text-white truncate lg:max-w-[120px] shrink-0">Peutic</span>
+                                            <span className="hidden md:block text-xl md:text-xl font-black tracking-tight dark:text-white truncate lg:max-w-[120px] shrink-0">Peutic</span>
                                         </div>
                                         <h1 className="hidden md:block text-2xl lg:text-3xl font-black tracking-tight dark:text-white leading-tight shrink-0 ml-1 md:ml-3">
                                             {activeTab === 'inner_sanctuary' ? 'Sanctuary' : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
