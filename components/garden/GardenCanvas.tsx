@@ -26,13 +26,15 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
         setMousePos({ x: 0, y: 0 });
     };
 
-    // Gamification Logic: Max 18 Minutes (3 mins per stage * 6 stages)
-    const maxMinutes = 18;
+    // Gamification Logic: Max 24 Minutes (3 mins per stage * 8 stages)
+    const maxMinutes = 24;
     const progress = Math.min((garden.focusMinutes || 0) / maxMinutes, 1);
 
     let stage = 0;
     const fm = garden.focusMinutes || 0;
-    if (fm >= 18) stage = 6; // Ethereal Entity
+    if (fm >= 24) stage = 8; // Cosmic Yggdrasil
+    else if (fm >= 21) stage = 7; // Astral Sovereign
+    else if (fm >= 18) stage = 6; // Ethereal Entity
     else if (fm >= 15) stage = 5; // Mystic Guardian
     else if (fm >= 12) stage = 4; // Ancient Tree
     else if (fm >= 9) stage = 3; // Mature Tree
@@ -65,13 +67,13 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
     // Procedural Growth Scaling calculation
     // Each stage is roughly 3 focus minutes apart
     const stageProgress = Math.min((fm % 3) / 3, 1);
-    const growthScale = stage < 6 ? 1 + (stageProgress * 0.15) : 1 + (Math.min((fm - 18) / 50, 0.2)); // Scales 15% before evolving. Ethereal caps at +20% extra growth.
+    const growthScale = stage < 8 ? 1 + (stageProgress * 0.15) : 1.5; // Massive scalar for stage 8
 
     const SvgContent = useMemo(() => {
         const isRare = ['Lunar Fern', 'Crystal Lotus', 'Storm Oak', 'Sunlight Spire'].includes(garden.currentPlantType);
 
         // Dynamic viewBox to gracefully scale massive late-stage plants back into the bounds
-        const dynamicViewBox = stage >= 6 ? "-60 -110 220 220" : stage >= 4 ? "-20 -40 140 140" : "0 0 100 100";
+        const dynamicViewBox = stage >= 8 ? "-120 -180 340 340" : stage >= 7 ? "-80 -140 260 260" : stage >= 6 ? "-60 -110 220 220" : stage >= 4 ? "-20 -40 140 140" : "0 0 100 100";
 
         return (
             <motion.svg
@@ -420,6 +422,97 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
                         </>
                     )}
 
+                    {/* STAGE 7: ASTRAL SOVEREIGN - Hovering Pedestal, Cosmic Dust */}
+                    {stage === 7 && (
+                        <>
+                            {/* Fragmented Hovering Soil / Shattered Earth Effect */}
+                            <g className="animate-[float_6s_ease-in-out_infinite]" style={{ transform: 'translateY(-10px)' }}>
+                                <circle cx="50" cy="-20" r="150" fill={theme.bloom} opacity="0.1" filter="url(#bloom-glow)" className="animate-[pulse_5s_infinite]" />
+
+                                <path d="M 50 85 Q 20 20 60 -10 Q 100 -40 50 -60" fill="none" stroke="url(#trunk-grad)" strokeWidth="18" strokeLinecap="round" />
+                                <path d="M 20 50 Q -10 20 -20 -10" fill="none" stroke="url(#trunk-grad)" strokeWidth="10" strokeLinecap="round" />
+                                <path d="M 80 50 Q 110 20 120 -10" fill="none" stroke="url(#trunk-grad)" strokeWidth="10" strokeLinecap="round" />
+
+                                {/* Levitating Crystal Roots */}
+                                <g opacity="0.8" stroke={theme.leafLight} strokeWidth="2" strokeLinecap="round" className="animate-[pulse_2s_infinite]">
+                                    <path d="M 45 88 L 30 110" />
+                                    <path d="M 55 88 L 70 105" />
+                                    <path d="M 50 85 L 50 115" />
+                                </g>
+
+                                {/* Sovereign Density Canopy */}
+                                <g filter="drop-shadow(0px 15px 30px rgba(0,0,0,0.8))">
+                                    <circle cx="50" cy="-60" r="60" fill={theme.leafDark} opacity="0.9" />
+                                    <circle cx="-20" cy="-20" r="50" fill={theme.leaf} />
+                                    <circle cx="120" cy="-20" r="50" fill={theme.leafLight} />
+                                    <circle cx="10" cy="-50" r="40" fill={theme.leaf} />
+                                    <circle cx="90" cy="-50" r="40" fill={theme.leafDark} />
+                                </g>
+
+                                {/* Orbital Ring */}
+                                <g className="animate-[spin_15s_linear_infinite]" style={{ transformOrigin: '50px -30px' }}>
+                                    <ellipse cx="50" cy="-30" rx="120" ry="30" fill="none" stroke={theme.bloom} strokeWidth="3" opacity="0.5" strokeDasharray="20 40" filter="url(#bloom-glow)" />
+                                    <circle cx="-70" cy="-30" r="6" fill={theme.bloom} filter="url(#bloom-glow)" />
+                                    <circle cx="170" cy="-30" r="5" fill={theme.bloom} filter="url(#bloom-glow)" />
+                                </g>
+                                <g filter="url(#bloom-glow)" className="animate-[ping_4s_infinite]">
+                                    <circle cx="50" cy="-60" r="8" fill={theme.bloom} />
+                                    <circle cx="-20" cy="-20" r="8" fill={theme.bloom} />
+                                    <circle cx="120" cy="-20" r="8" fill={theme.bloom} />
+                                </g>
+                            </g>
+                        </>
+                    )}
+
+                    {/* STAGE 8: COSMIC YGGDRASIL - Galaxy Spanning, Universal Being */}
+                    {stage >= 8 && (
+                        <>
+                            {/* Massive Galaxy Background Glow */}
+                            <circle cx="50" cy="-60" r="200" fill={theme.bloom} opacity="0.15" filter="url(#bloom-glow)" className="animate-[pulse_3s_infinite]" />
+                            <circle cx="50" cy="-60" r="140" fill={theme.leafLight} opacity="0.1" filter="url(#bloom-glow)" className="animate-[spin_30s_linear_infinite]" strokeWidth="2" strokeDasharray="10 30" stroke={theme.bloom} />
+
+                            {/* Colossal Intertwined Trunk */}
+                            <g className="animate-[float_8s_ease-in-out_infinite]">
+                                <path d="M 50 85 Q -30 20 30 -50 Q 80 -100 50 -140" fill="none" stroke="url(#trunk-grad)" strokeWidth="25" strokeLinecap="round" />
+                                <path d="M 50 85 Q 130 20 70 -50 Q 20 -100 50 -140" fill="none" stroke="url(#trunk-grad)" strokeWidth="20" strokeLinecap="round" opacity="0.9" />
+
+                                <path d="M 40 -10 Q -60 -40 -80 -70" fill="none" stroke="url(#trunk-grad)" strokeWidth="15" strokeLinecap="round" />
+                                <path d="M 60 -10 Q 160 -40 180 -70" fill="none" stroke="url(#trunk-grad)" strokeWidth="15" strokeLinecap="round" />
+
+                                {/* Majestic Universal Canopy */}
+                                <g filter="drop-shadow(0px 20px 40px rgba(0,0,0,0.9))">
+                                    <circle cx="50" cy="-140" r="90" fill={theme.leafDark} opacity="0.9" />
+                                    <circle cx="-80" cy="-70" r="70" fill={theme.leaf} opacity="0.8" />
+                                    <circle cx="180" cy="-70" r="70" fill={theme.leafLight} opacity="0.8" />
+                                    <circle cx="-20" cy="-120" r="60" fill={theme.leaf} />
+                                    <circle cx="120" cy="-120" r="60" fill={theme.leafDark} />
+                                </g>
+
+                                {/* Multi-Orbital Planetary Rings */}
+                                <g className="animate-[spin_20s_linear_infinite]" style={{ transformOrigin: '50px -80px' }}>
+                                    <ellipse cx="50" cy="-80" rx="180" ry="40" fill="none" stroke={theme.bloom} strokeWidth="4" opacity="0.6" strokeDasharray="40 80" filter="url(#bloom-glow)" />
+                                    {/* Orbiting Planets */}
+                                    <circle cx="-130" cy="-80" r="12" fill={theme.leafLight} filter="url(#bloom-glow)" />
+                                    <circle cx="230" cy="-80" r="8" fill={theme.leaf} filter="url(#bloom-glow)" />
+                                </g>
+
+                                <g className="animate-[spin_30s_linear_infinite_reverse]" style={{ transformOrigin: '50px -80px' }}>
+                                    <ellipse cx="50" cy="-80" rx="140" ry="80" fill="none" stroke={theme.bloom} strokeWidth="2" opacity="0.4" strokeDasharray="10 30" />
+                                    <circle cx="50" cy="0" r="10" fill={theme.leafDark} filter="url(#bloom-glow)" />
+                                </g>
+
+                                {/* Starlight / Cosmic Blooms */}
+                                <g filter="url(#bloom-glow)">
+                                    <circle cx="50" cy="-140" r="12" fill={theme.bloom} className="animate-[ping_3s_infinite]" />
+                                    <circle cx="-80" cy="-70" r="10" fill={theme.bloom} className="animate-[ping_4s_infinite]" />
+                                    <circle cx="180" cy="-70" r="10" fill={theme.bloom} className="animate-[ping_2s_infinite]" />
+                                    <circle cx="0" cy="-100" r="8" fill={theme.bloom} className="animate-[ping_5s_infinite]" />
+                                    <circle cx="100" cy="-100" r="8" fill={theme.bloom} className="animate-[ping_3.5s_infinite]" />
+                                </g>
+                            </g>
+                        </>
+                    )}
+
                 </motion.g>
 
                 {/* Thorny Gamified Weeds Overlay */}
@@ -473,7 +566,7 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
             </div>
             <div className="absolute bottom-[-32px] md:bottom-[-40px] flex flex-col items-center">
                 <span className="text-[9px] md:text-[10px] font-sans text-emerald-400 font-black uppercase tracking-[0.2em] mb-0.5">
-                    {stage === 6 ? 'ETHEREAL ENTITY' : stage === 5 ? 'MYSTIC GUARDIAN' : stage === 4 ? 'ANCIENT TREE' : stage === 3 ? 'MATURE TREE' : stage === 2 ? 'SAPLING' : stage === 1 ? 'SPROUT' : 'SEED'}
+                    {stage >= 8 ? 'COSMIC YGGDRASIL' : stage === 7 ? 'ASTRAL SOVEREIGN' : stage === 6 ? 'ETHEREAL ENTITY' : stage === 5 ? 'MYSTIC GUARDIAN' : stage === 4 ? 'ANCIENT TREE' : stage === 3 ? 'MATURE TREE' : stage === 2 ? 'SAPLING' : stage === 1 ? 'SPROUT' : 'SEED'}
                 </span>
                 <span className="text-[8px] md:text-[9px] font-sans text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">
                     {progress >= 1 ? 'ASCENDED' : `${garden.focusMinutes} / ${maxMinutes} MINS`}

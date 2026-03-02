@@ -42,6 +42,8 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     // Map the current garden minutes to a Gamification Stage
     const stage = useMemo(() => {
         const fm = localGarden.focusMinutes || 0;
+        if (fm >= 24) return 8; // Cosmic Yggdrasil
+        if (fm >= 21) return 7; // Astral Sovereign
         if (fm >= 18) return 6; // Ethereal Entity
         if (fm >= 15) return 5;  // Mystic Guardian
         if (fm >= 12) return 4;  // Ancient Tree
@@ -55,7 +57,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
 
     // Generate stable random particle positions to prevent DOM jitter during re-renders
     const particles = useMemo(() => {
-        const count = stage >= 5 ? 30 : stage >= 3 ? 20 : 10;
+        const count = stage >= 7 ? 50 : stage >= 5 ? 30 : stage >= 3 ? 20 : 10;
         return Array.from({ length: count }).map((_, i) => ({
             id: i,
             left: `${Math.random() * 100}%`,
@@ -106,7 +108,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
             await GardenService.addFocusMinutes(garden.userId, intensity);
             showToast(`You watered your sanctuary (-${intensity}m).`, "success");
         } else if (type === 'harvest') {
-            const isMighty = stage === 6; // Stage 6 is Ethereal Entity (6+ minutes)
+            const isMighty = stage >= 8; // Stage 8 is the ultimate Ascension (24+ minutes)
             const result = await GardenService.clipPlant(garden.userId);
             if (result.success) {
                 if (isMighty) {
@@ -202,8 +204,14 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                 {stage >= 5 && (
                     <div className="absolute inset-0 bg-gradient-to-b from-fuchsia-900/20 via-transparent to-transparent mix-blend-color-dodge pointer-events-none animate-[pulse_8s_ease-in-out_infinite]" />
                 )}
-                {stage === 6 && (
+                {stage >= 6 && (
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent pointer-events-none animate-[spin_30s_linear_infinite]" />
+                )}
+                {stage >= 7 && (
+                    <div className="absolute inset-0 bg-gradient-to-b from-blue-900/20 to-transparent mix-blend-color-dodge pointer-events-none animate-[pulse_3s_ease-in-out_infinite]" />
+                )}
+                {stage >= 8 && (
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 animate-[spin_60s_linear_infinite_reverse] pointer-events-none mix-blend-screen" />
                 )}
             </div>
 
@@ -388,8 +396,8 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                     />
                     <ControlBtn
                         icon={Scissors}
-                        label={stage === 6 ? "Ascend" : "Harvest"}
-                        sub={stage === 6 ? "+1 Token, +100 Coins" : "Reset"}
+                        label={stage >= 8 ? "Ascend" : "Harvest"}
+                        sub={stage >= 8 ? "+1 Token, +100 Coins" : "Reset"}
                         active={interaction === 'harvest'}
                         onClick={() => handleAction('harvest')}
                         color="amber"

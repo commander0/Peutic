@@ -332,8 +332,8 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                     </g>
                                 )}
 
-                                {/* Level 50+: CELESTIAL */}
-                                {pet.level >= 50 && (
+                                {/* Level 50-74: CELESTIAL */}
+                                {pet.level >= 50 && pet.level < 75 && (
                                     <g className="origin-center animate-[float_8s_ease-in-out_infinite]" style={{ transform: 'translate(0px, 0px)' }}>
                                         {isShiba && (
                                             <g className="drop-shadow-[0_0_30px_#fbbf24]">
@@ -379,6 +379,108 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                             </g>
                                         )}
                                         <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={isHamu ? 2.5 : 2.0} mousePos={mousePos} />
+                                    </g>
+                                )}
+
+                                {/* Level 75-99: GALACTIC OVERLORD */}
+                                {pet.level >= 75 && pet.level < 100 && (
+                                    <g className="origin-center animate-[float_10s_ease-in-out_infinite]" style={{ transform: 'translate(0px, 0px)' }}>
+                                        {/* Multilayered Holographic Orbital Rings */}
+                                        <g className="animate-[spin_40s_linear_infinite]">
+                                            <ellipse cx="0" cy="0" rx="160" ry="40" fill="none" stroke={c.p} strokeWidth="2" strokeDasharray="30 60 10 30" opacity="0.6" />
+                                            <ellipse cx="0" cy="0" rx="140" ry="30" fill="none" stroke={c.s} strokeWidth="4" strokeDasharray="50 100" opacity="0.8" />
+                                            <circle cx="-160" cy="0" r="10" fill={c.g} filter="url(#coreGlow)" />
+                                            <circle cx="160" cy="0" r="15" fill={c.p} filter="url(#coreGlow)" />
+                                        </g>
+                                        <g className="animate-[spin_25s_linear_infinite_reverse]">
+                                            <ellipse cx="0" cy="0" rx="120" ry="120" fill="none" stroke={c.g} strokeWidth="1" strokeDasharray="2 10" opacity="0.4" />
+                                        </g>
+
+                                        {isShiba && (
+                                            <g className="drop-shadow-[0_0_40px_#fbbf24]">
+                                                <circle cx="0" cy="0" r="130" fill="url(#coreGlow)" opacity="0.6" className="animate-[pulse_2s_infinite]" />
+                                                <polygon points="0,-100 86,-50 86,50 0,100 -86,50 -86,-50" fill={c.s} opacity="0.2" className="animate-[spin_15s_linear_infinite]" />
+                                                <path d="M 0 -70 Q 60 -70 65 0 Q 60 60 0 65 Q -60 60 -65 0 Q -60 -70 0 -70 Z" fill="url(#bodyGrad)" />
+                                                <path d="M -30 -40 L -70 -110 L -10 -70 Z M 30 -40 L 70 -110 L 10 -70 Z" fill={c.g} className="animate-pulse" />
+                                                <circle cx="0" cy="0" r="145" fill="none" stroke={c.p} strokeWidth="3" strokeDasharray="10 20 40 20" className="animate-[spin_20s_linear_infinite]" />
+                                            </g>
+                                        )}
+                                        {isDino && (
+                                            <g className="drop-shadow-[0_0_40px_#34d399]">
+                                                <polygon points="0,-140 120,60 -120,60" fill="url(#coreGlow)" opacity="0.5" className="animate-[ping_4s_infinite]" />
+                                                <polygon points="-65,-35 65,-35 80,50 50,80 -50,80 -80,50" fill="url(#bodyGrad)" />
+                                                <polygon points="0,-90 50,-20 -50,-20" fill={c.s} opacity="0.8" className="animate-bounce" />
+                                                <path d="M -25 -35 L 0 -130 L 35 -50 Z" fill={c.g} className="animate-[pulse_1.2s_infinite]" />
+                                                <path d="M -65 -35 L -100 -60 L -50 -35 Z M 65 -35 L 100 -60 L 50 -35 Z" fill={c.p} className="animate-pulse" />
+                                            </g>
+                                        )}
+                                        {isHamu && (
+                                            <g className="drop-shadow-[0_0_40px_#f472b6]">
+                                                <circle cx="0" cy="0" r="130" fill="url(#coreGlow)" opacity="0.5" className="animate-[pulse_2s_infinite]" />
+                                                <circle cx="0" cy="0" r="80" fill="url(#bodyGrad)" />
+                                                <circle cx="0" cy="0" r="100" fill="none" stroke={c.s} strokeWidth="6" strokeDasharray="20 40" className="animate-[spin_4s_linear_infinite]" />
+                                                <rect x="-40" y="-40" width="80" height="80" fill="none" stroke={c.g} strokeWidth="4" className="animate-[spin_6s_linear_infinite]" />
+                                                <path d="M -60 -40 C -110 -90 -30 -130 -20 -70 Z M 60 -40 C 110 -90 30 -130 20 -70 Z" fill={c.p} opacity="0.9" className="animate-[bounce_2s_infinite]" />
+                                            </g>
+                                        )}
+                                        {isSloth && (
+                                            <g className="drop-shadow-[0_0_40px_#a8a29e]">
+                                                <circle cx="0" cy="0" r="150" fill="url(#coreGlow)" opacity="0.7" className="animate-[pulse_8s_infinite]" />
+                                                <path d="M 0 -80 C 90 -80 90 60 0 60 C -90 60 -90 -80 0 -80 Z" fill="url(#bodyGrad)" />
+                                                <path d="M -60 -35 C -110 -100 -35 -70 -30 -45 Z M 60 -35 C 110 -100 35 -70 30 -45 Z" fill={c.p} opacity="0.9" />
+                                                <path d="M -70 30 Q -120 70 -140 30 Q -150 -15 -100 10 Z M 70 30 Q 120 70 140 30 Q 150 -15 100 10 Z" fill={c.s} opacity="0.7" className="animate-[sway_6s_ease-in-out_infinite]" />
+                                            </g>
+                                        )}
+                                        <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={isHamu ? 3.5 : 3.0} mousePos={mousePos} />
+                                    </g>
+                                )}
+
+                                {/* Level 100+: OMNIVERSAL BEING */}
+                                {pet.level >= 100 && (
+                                    <g className="origin-center animate-[float_15s_ease-in-out_infinite]" style={{ transform: 'translate(0px, 0px)' }}>
+                                        {/* Massive Geometric Clockwork Background */}
+                                        <g className="animate-[spin_60s_linear_infinite]">
+                                            <polygon points="0,-180 155,-90 155,90 0,180 -155,90 -155,-90" fill="none" stroke={c.g} strokeWidth="1" strokeDasharray="10 5" opacity="0.3" />
+                                            <polygon points="0,-160 138,-80 138,80 0,160 -138,80 -138,-80" fill="none" stroke={c.s} strokeWidth="2" opacity="0.5" />
+                                            <circle cx="0" cy="0" r="180" fill="none" stroke={c.p} strokeWidth="1" strokeDasharray="2 20" opacity="0.8" />
+                                        </g>
+                                        <g className="animate-[spin_40s_linear_infinite_reverse]">
+                                            <circle cx="0" cy="0" r="200" fill="none" stroke={c.s} strokeWidth="4" strokeDasharray="50 150 10 150" opacity="0.9" />
+                                        </g>
+
+                                        {isShiba && (
+                                            <g className="drop-shadow-[0_0_60px_#fbbf24]">
+                                                <circle cx="0" cy="0" r="180" fill="url(#coreGlow)" opacity="0.8" className="animate-[pulse_1s_infinite]" />
+                                                <path d="M 0 -90 Q 75 -90 85 0 Q 75 75 0 85 Q -75 75 -85 0 Q -75 -90 0 -90 Z" fill="url(#bodyGrad)" />
+                                                <path d="M -40 -50 L -90 -140 L -15 -90 Z M 40 -50 L 90 -140 L 15 -90 Z" fill={c.g} className="animate-[ping_3s_infinite]" />
+                                            </g>
+                                        )}
+                                        {isDino && (
+                                            <g className="drop-shadow-[0_0_60px_#34d399]">
+                                                <polygon points="0,-180 150,80 -150,80" fill="url(#coreGlow)" opacity="0.6" className="animate-[ping_5s_infinite]" />
+                                                <polygon points="-80,-40 80,-40 100,60 60,100 -60,100 -100,60" fill="url(#bodyGrad)" />
+                                                <path d="M -35 -40 L 0 -170 L 45 -60 Z" fill={c.s} className="animate-[pulse_1s_infinite]" />
+                                                <path d="M -80 -40 L -120 -80 L -60 -40 Z M 80 -40 L 120 -80 L 60 -40 Z" fill={c.p} className="animate-pulse" />
+                                            </g>
+                                        )}
+                                        {isHamu && (
+                                            <g className="drop-shadow-[0_0_60px_#f472b6]">
+                                                <circle cx="0" cy="0" r="160" fill="url(#coreGlow)" opacity="0.7" className="animate-[pulse_1.5s_infinite]" />
+                                                <circle cx="0" cy="0" r="110" fill="url(#bodyGrad)" />
+                                                <rect x="-60" y="-60" width="120" height="120" fill="none" stroke={c.s} strokeWidth="8" className="animate-[spin_3s_linear_infinite]" />
+                                                <rect x="-80" y="-80" width="160" height="160" fill="none" stroke={c.g} strokeWidth="2" strokeDasharray="20 20" className="animate-[spin_5s_linear_infinite_reverse]" />
+                                                <path d="M -80 -50 C -140 -120 -40 -170 -25 -90 Z M 80 -50 C 140 -120 40 -170 25 -90 Z" fill={c.p} opacity="1" className="animate-[bounce_3s_infinite]" />
+                                            </g>
+                                        )}
+                                        {isSloth && (
+                                            <g className="drop-shadow-[0_0_60px_#a8a29e]">
+                                                <circle cx="0" cy="0" r="190" fill="url(#coreGlow)" opacity="0.9" className="animate-[pulse_10s_infinite]" />
+                                                <path d="M 0 -100 C 120 -100 120 75 0 75 C -120 75 -120 -100 0 -100 Z" fill="url(#bodyGrad)" />
+                                                <path d="M -75 -45 C -140 -125 -45 -90 -40 -55 Z M 75 -45 C 140 -125 45 -90 40 -55 Z" fill={c.p} opacity="1" />
+                                                <path d="M -90 40 Q -150 90 -170 40 Q -190 -20 -120 15 Z M 90 40 Q 150 90 170 40 Q 190 -20 120 15 Z" fill={c.s} opacity="0.8" className="animate-[sway_8s_ease-in-out_infinite]" />
+                                            </g>
+                                        )}
+                                        <Face emotion={emotion} isSleeping={pet.isSleeping || emotion === 'sleeping'} scale={isHamu ? 4.5 : 4.0} mousePos={mousePos} />
                                     </g>
                                 )}
                             </>

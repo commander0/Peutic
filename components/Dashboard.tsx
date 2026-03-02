@@ -526,7 +526,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
     const isFlowState = (dashboardUser?.streak || 0) >= 21;
 
-    const isSapphire = (dashboardUser?.unlockedDecor || []).includes('digital-theme-sapphire');
+    const isSapphire = theme === 'sapphire';
 
     return (
         <div
@@ -655,25 +655,24 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     </div>
                                 </div>
 
-                                {/* RIGHT PANE (Buttons) */}
-                                <div className="col-start-2 row-start-1 md:col-auto md:row-auto flex items-center justify-start md:justify-end flex-nowrap gap-2 md:gap-3 overflow-x-auto no-scrollbar min-w-0 w-full pb-1 md:pb-0 self-center pl-1 md:pl-0 overscroll-contain snap-x touch-pan-x">
-                                    <div className="shrink-0 snap-center"><LanguageSelector currentLanguage={lang} onLanguageChange={setLang} /></div>
+                                <div className={`col-start-2 row-start-1 md:col-auto md:row-auto flex items-center justify-start md:justify-end flex-nowrap gap-2 md:gap-3 ${(dashboardUser?.unlockedDecor || []).includes('item-plushie') ? 'overflow-x-auto snap-x snap-mandatory touch-pan-x overscroll-x-contain pr-4 md:pr-0 pb-2 md:pb-0' : 'overflow-x-auto md:overflow-visible pb-1 md:pb-0'} no-scrollbar min-w-0 w-full self-center pl-1 md:pl-0`}>
+                                    <div className="shrink-0 snap-start"><LanguageSelector currentLanguage={lang} onLanguageChange={setLang} /></div>
 
                                     {/* Desktop/Tablet Logout Button - next to globe */}
                                     <button onClick={onLogout} className="hidden md:flex shrink-0 p-2.5 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-100 dark:border-red-900/50 shadow-sm hover:scale-105 transition-all" title="Logout">
                                         <LogOut className="w-5 h-5" />
                                     </button>
 
-                                    <button onClick={() => setShowGrounding(true)} className="relative shrink-0 snap-center p-2.5 rounded-2xl bg-white dark:bg-gray-800 border-2 border-blue-400 dark:border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] hover:scale-105 transition-all text-blue-500 overflow-hidden" title="Panic Relief / Grounding Mode">
+                                    <button onClick={() => setShowGrounding(true)} className="relative shrink-0 snap-start p-2.5 rounded-2xl bg-white dark:bg-gray-800 border-2 border-blue-400 dark:border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] hover:scale-105 transition-all text-blue-500 overflow-hidden" title="Panic Relief / Grounding Mode">
                                         <div className="absolute inset-0 bg-blue-400/20 blur-md rounded-2xl animate-pulse pointer-events-none"></div>
                                         <LifeBuoy className="w-5 h-5 relative z-10" />
                                     </button>
 
-                                    <button onClick={toggleDarkMode} className="shrink-0 snap-center p-2.5 rounded-2xl bg-white dark:bg-gray-800 border border-primary-light dark:border-gray-700 shadow-sm hover:scale-105 transition-all">
+                                    <button onClick={toggleDarkMode} className="shrink-0 snap-start p-2.5 rounded-2xl bg-white dark:bg-gray-800 border border-primary-light dark:border-gray-700 shadow-sm hover:scale-105 transition-all">
                                         {isDark ? <Sun className="w-5 h-5 text-primary" /> : <Moon className="w-5 h-5 text-gray-400" />}
                                     </button>
 
-                                    <div className="flex items-center gap-2 md:gap-3 shrink-0 snap-center pr-2 md:pr-0">
+                                    <div className="flex items-center gap-2 md:gap-3 shrink-0 snap-end pr-2 md:pr-0">
                                         <button
                                             onClick={() => setShowPayment(true)}
                                             className={`shrink-0 h-[42px] px-4 rounded-2xl font-black shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 text-[10px] md:text-xs border border-transparent ${balance === 0
@@ -735,17 +734,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     onClick={() => setShowGardenFull(true)}
                                                     className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-[0_8px_32px_rgba(34,197,94,0.15)] hover:shadow-[0_8px_32px_rgba(34,197,94,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
                                                 >
-                                                    <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center">
+                                                    <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
                                                         <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
-                                                        <div className="relative z-10 w-full h-full flex flex-col items-center justify-center pointer-events-none">
-                                                            <div className="relative mb-1 md:mb-4 pointer-events-auto">
-                                                                <div className="absolute -inset-4 bg-green-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                                <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-green-500 to-emerald-700 border border-green-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,197,94,0.4)] group-hover:scale-110 transition-transform">
-                                                                    <Leaf className="w-5 h-5 md:w-6 md:h-6 text-white animate-ethereal-breathe" />
-                                                                </div>
+                                                        <div className="relative mb-1 md:mb-4 pointer-events-auto">
+                                                            <div className="absolute -inset-4 bg-green-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                            <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-green-500 to-emerald-700 border border-green-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,197,94,0.4)] group-hover:scale-110 transition-transform">
+                                                                <Leaf className="w-5 h-5 md:w-6 md:h-6 text-white animate-ethereal-breathe" />
                                                             </div>
                                                             {/* Overlay Controls */}
-                                                            <div className="absolute top-2 right-2 pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <div className="absolute top-[-10px] right-[-10px] pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity z-30">
                                                                 <button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
@@ -754,16 +751,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                                             setHasClippedInnerGarden(true);
                                                                         }
                                                                     }}
-                                                                    className={`p-2 bg-white/90 dark:bg-black/80 rounded-full shadow-lg ${hasClippedInnerGarden ? 'opacity-50 cursor-not-allowed text-gray-400' : 'hover:scale-110 active:scale-95 text-pink-500'} transition-all`}
+                                                                    className={`p-1 md:p-2 bg-white/90 dark:bg-black/80 rounded-full shadow-lg ${hasClippedInnerGarden ? 'opacity-50 cursor-not-allowed text-gray-400' : 'hover:scale-110 active:scale-95 text-pink-500'} transition-all`}
                                                                     title={hasClippedInnerGarden ? "Already Clipped" : "Clip for Inspiration"}
                                                                     disabled={hasClippedInnerGarden}
                                                                 >
-                                                                    <Scissors className="w-4 h-4" />
+                                                                    <Scissors className="w-3 h-3 md:w-4 md:h-4" />
                                                                 </button>
                                                             </div>
                                                         </div>
-                                                        <h3 className="text-[7px] md:text-sm font-black text-green-700 dark:text-green-300 uppercase tracking-widest drop-shadow-sm text-center mt-[-16px] relative z-20">Inner Garden</h3>
-                                                        <p className="hidden md:block text-[9px] font-bold text-green-600/70 dark:text-green-400/60 uppercase tracking-tighter">
+                                                        <h3 className="text-[7px] md:text-sm font-black text-green-700 dark:text-green-300 uppercase tracking-widest drop-shadow-sm relative z-20">Inner Garden</h3>
+                                                        <p className="hidden md:block text-[9px] font-bold text-green-600/70 dark:text-green-400/60 uppercase tracking-tighter relative z-20">
                                                             {garden ? `Lvl ${garden.level} • ${garden.currentPlantType}` : 'Plant Seed'}
                                                         </p>
                                                     </div>
