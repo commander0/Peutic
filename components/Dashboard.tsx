@@ -582,10 +582,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     )}
 
                     <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-10 pb-24">
-                        <header className="mb-8 md:mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                            <div className="flex items-center justify-between w-full md:w-auto">
-                                <div className="flex items-center gap-4">
-                                    <div className="hidden md:block">
+                        <header className="mb-4 md:mb-12 flex items-start md:items-center justify-between gap-2 md:gap-6 w-full">
+                            <div className="flex items-center justify-start flex-1 min-w-0 overflow-hidden">
+                                <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
+                                    <div className="hidden md:block shrink-0">
                                         <NotificationBell
                                             notifications={notifications}
                                             onClear={handleClearNotification}
@@ -593,7 +593,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             onAction={handleNotificationAction}
                                         />
                                     </div>
-                                    <div className="md:hidden">
+                                    <div className="md:hidden shrink-0 mt-0.5">
                                         {/* Mobile Notification Bell */}
                                         <NotificationBell
                                             notifications={notifications}
@@ -603,14 +603,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         />
                                     </div>
 
-                                    <div className="flex flex-col">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-lg md:text-xl font-black tracking-tight dark:text-white truncate max-w-[120px]">Peutic</span>
-                                            <h1 className="hidden md:block text-2xl lg:text-3xl font-black tracking-tight dark:text-white leading-tight">
+                                    <div className="flex flex-col flex-1 min-w-0 justify-center">
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <span className="text-base md:text-xl font-black tracking-tight dark:text-white truncate lg:max-w-[120px] shrink-0">Peutic</span>
+                                            <h1 className="hidden md:block text-2xl lg:text-3xl font-black tracking-tight dark:text-white leading-tight shrink-0">
                                                 {activeTab === 'inner_sanctuary' ? 'Sanctuary' : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
                                             </h1>
                                             {(dashboardUser?.unlockedDecor || []).includes('item-plushie') && (
-                                                <div className="ml-2 w-8 h-8 md:w-10 md:h-10 animate-[bounce_3s_infinite]" title="Lumina Companion Plushie">
+                                                <div className="ml-1 md:ml-2 w-6 h-6 md:w-10 md:h-10 animate-[bounce_3s_infinite] shrink-0" title="Lumina Companion Plushie">
                                                     <svg viewBox="-50 -50 100 100" className="w-full h-full drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]">
                                                         <path d="M 0 -30 Q 20 -30 25 -10 Q 30 15 0 25 Q -30 15 -25 -10 Q -20 -30 0 -30 Z" fill="#fbbf24" />
                                                         <path d="M -15 -10 Q -20 -30 -5 -20 Z M 15 -10 Q 20 -30 5 -20 Z" fill="#fef3c7" />
@@ -623,10 +623,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none flex items-center gap-2 mt-1">
-                                            <span>{new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-                                            <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
-                                            <div className="flex-1 min-w-0">
+                                        <div className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1 truncate w-full">
+                                            <span className="shrink-0">{new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                                            <span className="w-1 h-1 bg-gray-300 rounded-full shrink-0"></span>
+                                            <div className="flex-1 min-w-0 truncate">
                                                 <InspirationQuote />
                                             </div>
                                         </div>
@@ -636,7 +636,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 {/* Desktop Title Removed (Moved to Left) */}
                             </div>
 
-                            <div className="flex items-center flex-wrap gap-2 md:gap-3">
+                            <div className="flex items-center justify-end flex-wrap gap-1.5 md:gap-3 shrink-0 max-w-[55%] md:max-w-none">
                                 <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
 
                                 {/* Desktop/Tablet Logout Button - next to globe */}
@@ -884,17 +884,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             <div className="relative z-10">
                                                 <h3 className="font-bold text-gray-500 dark:text-gray-400 text-[10px] md:text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3>
                                                 <div className="flex items-end gap-2 mb-2 md:mb-3">
-                                                    <span className={`text-2xl md:text-4xl font-black ${weeklyGoal >= 300 ? 'text-black dark:text-green-400' : 'text-blue-500 dark:text-blue-400'}`}>{weeklyGoal}</span>
-                                                    <span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyGoal >= 100 ? '300' : '100'} activities</span>
+                                                    <span className={`text-2xl md:text-4xl font-black text-black ${weeklyGoal >= 300 ? 'dark:text-green-400' : 'dark:text-blue-400'}`}>{weeklyGoal}</span>
+                                                    <span className="text-black dark:text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyGoal >= 100 ? '300' : '100'} activities</span>
                                                 </div>
                                                 <div className={`w-full h-2 md:h-2.5 rounded-full mb-2 md:mb-3 relative overflow-hidden ${weeklyGoal >= 300 ? 'bg-green-400 shadow-[0_0_15px_rgba(34,197,94,0.4)]'
-                                                        : weeklyGoal >= 100 ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
-                                                            : 'bg-gray-200 dark:bg-gray-800'
+                                                    : weeklyGoal >= 100 ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                                                        : 'bg-gray-200 dark:bg-gray-800'
                                                     }`}>
                                                     <div
                                                         className={`h-full rounded-full transition-all duration-1000 ease-out absolute left-0 top-0 bottom-0 ${weeklyGoal >= 300 ? 'bg-green-400'
-                                                                : weeklyGoal >= 100 ? 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]'
-                                                                    : 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                                                            : weeklyGoal >= 100 ? 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]'
+                                                                : 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
                                                             }`}
                                                         style={{ width: `${weeklyGoal >= 100 ? Math.min(100, ((weeklyGoal - 100) / 200) * 100) : Math.min(100, (weeklyGoal / 100) * 100)}%` }}
                                                     ></div>
