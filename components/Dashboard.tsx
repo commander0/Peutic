@@ -1539,7 +1539,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         const currentDecor = updatedUser.unlockedDecor || [];
                                         if (!currentDecor.includes(itemId)) {
                                             updatedUser = { ...updatedUser, unlockedDecor: [...currentDecor, itemId] };
-                                            await UserService.updateUser(updatedUser);
+                                            await UserService.updateUserPartial(dashboardUser.id, { unlockedDecor: updatedUser.unlockedDecor });
                                         }
                                     }
 

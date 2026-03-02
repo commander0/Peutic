@@ -320,6 +320,7 @@ export class UserService {
 
         type UserUpdate = Database['public']['Tables']['users']['Update'];
 
+        const existingMeta = (this.currentUser as any)?.metadata || {};
         const payload: UserUpdate = {
             name: user.name,
             avatar_url: user.avatar,
@@ -330,7 +331,13 @@ export class UserService {
             last_login_date: user.lastLoginDate,
             streak: user.streak,
             game_scores: user.gameScores,
-            unlocked_rooms: user.unlockedRooms
+            unlocked_rooms: user.unlockedRooms,
+            metadata: {
+                ...existingMeta,
+                unlockedDecor: user.unlockedDecor,
+                unlockedRooms: user.unlockedRooms,
+                oracleTokens: user.oracleTokens
+            }
         };
 
         const { error } = await supabase.from('users').update(payload).eq('id', user.id);
