@@ -583,7 +583,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                     <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-10 pb-24">
                         <header className="mb-4 md:mb-12 flex items-start md:items-center justify-between gap-2 md:gap-6 w-full">
-                            <div className="flex items-center justify-start flex-1 min-w-0 overflow-hidden">
+                            <div className="flex items-center justify-start flex-1 min-w-0">
                                 <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
                                     <div className="hidden md:block shrink-0">
                                         <NotificationBell
