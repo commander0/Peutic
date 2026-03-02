@@ -49,10 +49,10 @@ const ObservatoryView = lazy(() => import('./sanctuary/ObservatoryView'));
 const DojoView = lazy(() => import('./sanctuary/DojoView'));
 const ThoughtShredder = lazy(() => import('./tools/ThoughtShredder'));
 
-import { SupportCircles } from './community/SupportCircles';
-import WorldPulse from './community/WorldPulse';
-import AgenticRouterModal from './safety/AgenticRouterModal';
-import SerenityShop from './shop/SerenityShop';
+const SupportCircles = lazy(() => import('./community/SupportCircles').then(m => ({ default: m.SupportCircles })));
+const WorldPulse = lazy(() => import('./community/WorldPulse'));
+const AgenticRouterModal = lazy(() => import('./safety/AgenticRouterModal'));
+const SerenityShop = lazy(() => import('./shop/SerenityShop'));
 
 import EmergencyOverlay from './safety/EmergencyOverlay';
 import { VoiceRecorder, VoiceEntryItem } from './journal/VoiceRecorder';
@@ -1494,57 +1494,64 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             }
             {
                 showSupportCircles && (
-                    <SupportCircles onClose={() => setShowSupportCircles(false)} />
+                    <Suspense fallback={null}>
+                        <SupportCircles onClose={() => setShowSupportCircles(false)} />
+                    </Suspense>
                 )
             }
             {
                 showWorldPulse && dashboardUser && (
-                    <WorldPulse onClose={() => setShowWorldPulse(false)} />
+                    <Suspense fallback={null}>
+                        <WorldPulse onClose={() => setShowWorldPulse(false)} />
+                    </Suspense>
                 )
             }
             {
                 showAgenticRouter && dashboardUser && (
-                    <AgenticRouterModal
-                        message={agentMessage}
-                        onClose={() => setShowAgenticRouter(false)}
-                        onAcceptAction={(action) => {
-                            setShowAgenticRouter(false);
-                            if (action === 'dojo') setShowDojo(true);
-                            if (action === 'breathing') setShowBreathing(true);
-                            if (action === 'soundscape') {
-                                // Soundscape handled inside MoodTracker or just show toast for now
-                                showToast("Soundscape Queued.", "success");
-                            }
-                        }}
-                    />
+                    <Suspense fallback={null}>
+                        <AgenticRouterModal
+                            message={agentMessage}
+                            onClose={() => setShowAgenticRouter(false)}
+                            onAcceptAction={(action) => {
+                                setShowAgenticRouter(false);
+                                if (action === 'dojo') setShowDojo(true);
+                                if (action === 'breathing') setShowBreathing(true);
+                                if (action === 'soundscape') {
+                                    showToast("Soundscape Queued.", "success");
+                                }
+                            }}
+                        />
+                    </Suspense>
                 )
             }
             {
                 showSerenityShop && dashboardUser && (
-                    <SerenityShop
-                        user={dashboardUser}
-                        balance={balance}
-                        onClose={() => setShowSerenityShop(false)}
-                        onPurchase={async (cost, desc, itemId) => {
-                            if (await UserService.deductBalance(cost, desc)) {
-                                let updatedUser = { ...dashboardUser, balance: dashboardUser.balance - cost };
+                    <Suspense fallback={null}>
+                        <SerenityShop
+                            user={dashboardUser}
+                            balance={balance}
+                            onClose={() => setShowSerenityShop(false)}
+                            onPurchase={async (cost, desc, itemId) => {
+                                if (await UserService.deductBalance(cost, desc)) {
+                                    let updatedUser = { ...dashboardUser, balance: dashboardUser.balance - cost };
 
-                                if (itemId && (itemId.startsWith('item-') || itemId.startsWith('digital-') || itemId.startsWith('charity-'))) {
-                                    const currentDecor = updatedUser.unlockedDecor || [];
-                                    if (!currentDecor.includes(itemId)) {
-                                        updatedUser = { ...updatedUser, unlockedDecor: [...currentDecor, itemId] };
-                                        await UserService.updateUser(updatedUser);
+                                    if (itemId && (itemId.startsWith('item-') || itemId.startsWith('digital-') || itemId.startsWith('charity-'))) {
+                                        const currentDecor = updatedUser.unlockedDecor || [];
+                                        if (!currentDecor.includes(itemId)) {
+                                            updatedUser = { ...updatedUser, unlockedDecor: [...currentDecor, itemId] };
+                                            await UserService.updateUser(updatedUser);
+                                        }
                                     }
-                                }
 
-                                setDashboardUser(updatedUser);
-                                setShowSerenityShop(false);
-                                showToast(`Acquired: ${desc}`, "success");
-                            } else {
-                                showToast("Transaction failed.", "error");
-                            }
-                        }}
-                    />
+                                    setDashboardUser(updatedUser);
+                                    setShowSerenityShop(false);
+                                    showToast(`Acquired: ${desc}`, "success");
+                                } else {
+                                    showToast("Transaction failed.", "error");
+                                }
+                            }}
+                        />
+                    </Suspense>
                 )
             }
         </div >

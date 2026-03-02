@@ -314,7 +314,11 @@ export class AdminService {
     }
 
     static verifyMasterKey(key: string): boolean {
-        const masterKey = (import.meta as any).env.VITE_MASTER_KEY || 'PEUTIC_ADMIN_ACCESS_2026';
+        const masterKey = (import.meta as any).env.VITE_MASTER_KEY;
+        if (!masterKey) {
+            console.error("VITE_MASTER_KEY is missing from environment variables!");
+            return false;
+        }
         return key === masterKey;
     }
 
