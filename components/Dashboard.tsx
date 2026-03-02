@@ -585,7 +585,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         <header className="mb-4 md:mb-8 grid grid-cols-[auto_1fr] md:flex md:flex-col gap-y-3 gap-x-2 w-full">
 
                             {/* DESKTOP ROW 1 (Header Top) / MOBILE ROW 1&2 GRID */}
-                            <div className="contents md:flex md:flex-row md:items-center md:justify-between w-full">
+                            <div className="contents md:flex md:flex-row md:items-center md:justify-start md:gap-6 lg:gap-10 w-full shrink-0">
 
                                 {/* LEFT PANE (Bell + Title) */}
                                 <div className="contents md:flex md:flex-row md:items-center md:gap-3">
@@ -621,7 +621,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 </div>
 
                                 {/* RIGHT PANE (Buttons) */}
-                                <div className="col-start-2 row-start-1 md:col-auto md:row-auto flex items-center justify-end flex-nowrap gap-1.5 md:gap-3 shrink-0 overflow-x-auto md:overflow-visible no-scrollbar w-full max-w-[80vw] md:max-w-none pb-1 md:pb-0 self-center -mr-1 pr-1">
+                                <div className="col-start-2 row-start-1 md:col-auto md:row-auto flex items-center justify-end flex-nowrap gap-1.5 md:gap-3 shrink-0 overflow-x-auto md:overflow-visible no-scrollbar w-full max-w-[80vw] md:w-auto md:max-w-none pb-1 md:pb-0 self-center -mr-1 pr-1 md:mr-0 md:pr-0">
                                     <div className="shrink-0"><LanguageSelector currentLanguage={lang} onLanguageChange={setLang} /></div>
 
                                     {/* Desktop/Tablet Logout Button - next to globe */}
