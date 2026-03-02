@@ -582,61 +582,54 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     )}
 
                     <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-10 pb-24">
-                        <header className="mb-4 md:mb-12 grid grid-cols-[1fr_auto] md:flex md:flex-row md:items-center justify-between gap-y-3 gap-x-2 md:gap-6 w-full">
-                            <div className="flex items-center justify-start min-w-0 order-1 md:flex-1">
-                                <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
-                                    <div className="hidden md:block shrink-0">
-                                        <NotificationBell
-                                            notifications={notifications}
-                                            onClear={handleClearNotification}
-                                            onClearAll={handleClearAllNotifications}
-                                            onAction={handleNotificationAction}
-                                        />
-                                    </div>
-                                    <div className="md:hidden shrink-0 mt-0.5">
-                                        {/* Mobile Notification Bell */}
-                                        <NotificationBell
-                                            notifications={notifications}
-                                            onClear={handleClearNotification}
-                                            onClearAll={handleClearAllNotifications}
-                                            onAction={handleNotificationAction}
-                                        />
+                        <header className="mb-4 md:mb-12 grid grid-cols-[auto_1fr] md:flex md:flex-row md:items-center justify-between gap-y-3 gap-x-2 md:gap-6 w-full">
+                            <div className="contents md:flex md:flex-1 md:items-center md:gap-4 md:min-w-0 mt-0.5 md:mt-0">
+                                {/* BELL - Mobile Row 2 Col 1 / Desktop Left */}
+                                <div className="col-start-1 row-start-2 md:col-auto md:row-auto flex items-center justify-center shrink-0">
+                                    <NotificationBell
+                                        notifications={notifications}
+                                        onClear={handleClearNotification}
+                                        onClearAll={handleClearAllNotifications}
+                                        onAction={handleNotificationAction}
+                                    />
+                                </div>
+
+                                <div className="contents md:flex md:flex-col md:justify-center md:flex-1 md:min-w-0">
+                                    {/* TITLE - Mobile Row 1 Col 1 / Desktop Top Left */}
+                                    <div className="col-start-1 row-start-1 md:col-auto md:row-auto flex items-center gap-2 shrink-0 self-center">
+                                        <span className="text-xl md:text-xl font-black tracking-tight dark:text-white truncate lg:max-w-[120px] shrink-0">Peutic</span>
+                                        <h1 className="hidden md:block text-2xl lg:text-3xl font-black tracking-tight dark:text-white leading-tight shrink-0">
+                                            {activeTab === 'inner_sanctuary' ? 'Sanctuary' : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
+                                        </h1>
+                                        {(dashboardUser?.unlockedDecor || []).includes('item-plushie') && (
+                                            <div className="ml-1 md:ml-2 w-6 h-6 md:w-10 md:h-10 animate-[bounce_3s_infinite] shrink-0" title="Lumina Companion Plushie">
+                                                <svg viewBox="-50 -50 100 100" className="w-full h-full drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]">
+                                                    <path d="M 0 -30 Q 20 -30 25 -10 Q 30 15 0 25 Q -30 15 -25 -10 Q -20 -30 0 -30 Z" fill="#fbbf24" />
+                                                    <path d="M -15 -10 Q -20 -30 -5 -20 Z M 15 -10 Q 20 -30 5 -20 Z" fill="#fef3c7" />
+                                                    <circle cx="-8" cy="-5" r="3" fill="#000" />
+                                                    <circle cx="8" cy="-5" r="3" fill="#000" />
+                                                    <path d="M -3 3 Q 0 8 3 3" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" />
+                                                    <circle cx="-15" cy="5" r="4" fill="#fef08a" opacity="0.5" className="animate-pulse" />
+                                                    <circle cx="15" cy="5" r="4" fill="#fef08a" opacity="0.5" className="animate-pulse" />
+                                                </svg>
+                                            </div>
+                                        )}
                                     </div>
 
-                                    <div className="flex flex-col flex-1 min-w-0 justify-center">
-                                        <div className="flex items-center gap-2 shrink-0">
-                                            <span className="text-base md:text-xl font-black tracking-tight dark:text-white truncate lg:max-w-[120px] shrink-0">Peutic</span>
-                                            <h1 className="hidden md:block text-2xl lg:text-3xl font-black tracking-tight dark:text-white leading-tight shrink-0">
-                                                {activeTab === 'inner_sanctuary' ? 'Sanctuary' : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
-                                            </h1>
-                                            {(dashboardUser?.unlockedDecor || []).includes('item-plushie') && (
-                                                <div className="ml-1 md:ml-2 w-6 h-6 md:w-10 md:h-10 animate-[bounce_3s_infinite] shrink-0" title="Lumina Companion Plushie">
-                                                    <svg viewBox="-50 -50 100 100" className="w-full h-full drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]">
-                                                        <path d="M 0 -30 Q 20 -30 25 -10 Q 30 15 0 25 Q -30 15 -25 -10 Q -20 -30 0 -30 Z" fill="#fbbf24" />
-                                                        <path d="M -15 -10 Q -20 -30 -5 -20 Z M 15 -10 Q 20 -30 5 -20 Z" fill="#fef3c7" />
-                                                        <circle cx="-8" cy="-5" r="3" fill="#000" />
-                                                        <circle cx="8" cy="-5" r="3" fill="#000" />
-                                                        <path d="M -3 3 Q 0 8 3 3" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" />
-                                                        <circle cx="-15" cy="5" r="4" fill="#fef08a" opacity="0.5" className="animate-pulse" />
-                                                        <circle cx="15" cy="5" r="4" fill="#fef08a" opacity="0.5" className="animate-pulse" />
-                                                    </svg>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none flex items-center mt-0.5 md:mt-1 truncate w-full">
-                                            <span className="shrink-0">{new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-                                            <span className="hidden md:block w-1 h-1 bg-gray-300 rounded-full mx-1.5 md:mx-2 shrink-0"></span>
-                                            <div className="hidden md:block flex-1 min-w-0 truncate">
-                                                <InspirationQuote />
-                                            </div>
+                                    {/* QUOTE - Mobile Row 2 Col 2 / Desktop Bottom Left */}
+                                    <div className="col-start-2 row-start-2 md:col-auto md:row-auto flex items-center p-2.5 md:p-0 md:mt-1 rounded-xl bg-gradient-to-r from-blue-50/50 to-purple-50/50 md:bg-transparent dark:from-white/5 dark:to-white/5 md:dark:bg-transparent border border-blue-100/50 md:border-transparent dark:border-white/10 md:dark:border-transparent shadow-sm md:shadow-none min-w-0 mt-0 text-left">
+                                        <div className="md:hidden w-1.5 h-1.5 bg-blue-400 dark:bg-blue-500 rounded-full animate-pulse shrink-0 mr-2.5"></div>
+                                        <div className="hidden md:block shrink-0 text-[10px] font-black text-gray-400 uppercase tracking-widest">{new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</div>
+                                        <div className="hidden md:block w-1 h-1 bg-gray-300 rounded-full mx-1.5 md:mx-2 shrink-0"></div>
+                                        <div className="text-[10px] md:font-black text-blue-900/70 md:text-gray-400 dark:text-blue-100/70 uppercase tracking-widest flex-1 min-w-0 truncate pr-2 md:pr-0">
+                                            <InspirationQuote />
                                         </div>
                                     </div>
                                 </div>
-                                {/* Desktop Title only */}
-                                {/* Desktop Title Removed (Moved to Left) */}
                             </div>
 
-                            <div className="flex items-center justify-end flex-nowrap gap-1.5 md:gap-3 shrink-0 overflow-x-auto no-scrollbar max-w-full pb-1 md:pb-0 order-2">
+                            {/* BUTTONS - Mobile Row 1 Col 2 / Desktop Right */}
+                            <div className="col-start-2 row-start-1 md:col-auto md:row-auto flex items-center justify-end flex-nowrap gap-1.5 md:gap-3 shrink-0 overflow-x-auto no-scrollbar max-w-[70vw] md:max-w-none pb-1 md:pb-0 self-center">
                                 <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
 
                                 {/* Desktop/Tablet Logout Button - next to globe */}
@@ -674,14 +667,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     <button onClick={onLogout} className="md:hidden p-2.5 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-100 dark:border-red-900/50 shadow-sm hover:scale-105 transition-all">
                                         <LogOut className="w-5 h-5" />
                                     </button>
-                                </div>
-                            </div>
-
-                            {/* Mobile-only Inspiration Quote Row */}
-                            <div className="col-span-2 order-3 md:hidden flex items-center justify-center p-2.5 mt-2 rounded-xl bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-white/5 dark:to-white/5 border border-blue-100/50 dark:border-white/10 shadow-sm backdrop-blur-sm">
-                                <div className="w-1.5 h-1.5 bg-blue-400 dark:bg-blue-500 rounded-full animate-pulse shrink-0 mr-2.5"></div>
-                                <div className="text-[10px] font-black text-blue-900/70 dark:text-blue-100/70 uppercase tracking-widest leading-relaxed flex-1 min-w-0 text-center truncate pr-2">
-                                    <InspirationQuote />
                                 </div>
                             </div>
                         </header>
