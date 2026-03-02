@@ -420,7 +420,7 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                                     const pt = { x: e.clientX - rect.left, y: e.clientY - rect.top };
                                     setPath(prev => {
                                         const newPath = [...prev, pt];
-                                        if (newPath.length > 40) {
+                                        if (newPath.length > 120) {
                                             setIsDrawing(false);
                                             divineInsight();
                                             return [];

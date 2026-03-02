@@ -23,6 +23,11 @@ export const WisdomGenerator: React.FC<{ userId: string, onUpdate?: () => void }
 
     const handleGenerate = async () => {
         if (!input.trim()) return;
+        if (gallery.length >= 20) {
+            showToast("Your Wisdom Art gallery is completely full. Please delete an older card to draw a new one.", "error");
+            return;
+        }
+
         setLoading(true);
         try {
             await new Promise(resolve => setTimeout(resolve, 800));

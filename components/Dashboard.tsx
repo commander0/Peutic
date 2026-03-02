@@ -762,7 +762,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                                 </button>
                                                             </div>
                                                         </div>
-                                                        <h3 className="text-[7px] md:text-sm font-black text-green-700 dark:text-green-300 uppercase tracking-widest drop-shadow-sm text-center mt-[-10px] relative z-20">Zen Bonzai</h3>
+                                                        <h3 className="text-[7px] md:text-sm font-black text-green-700 dark:text-green-300 uppercase tracking-widest drop-shadow-sm text-center mt-[-16px] relative z-20">Inner Garden</h3>
                                                         <p className="hidden md:block text-[9px] font-bold text-green-600/70 dark:text-green-400/60 uppercase tracking-tighter">
                                                             {garden ? `Lvl ${garden.level} • ${garden.currentPlantType}` : 'Plant Seed'}
                                                         </p>

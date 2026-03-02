@@ -26,18 +26,18 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
         setMousePos({ x: 0, y: 0 });
     };
 
-    // Gamification Logic: Max 12 Minutes (1/10th speed)
-    const maxMinutes = 12;
+    // Gamification Logic: Max 18 Minutes (3 mins per stage * 6 stages)
+    const maxMinutes = 18;
     const progress = Math.min((garden.focusMinutes || 0) / maxMinutes, 1);
 
     let stage = 0;
     const fm = garden.focusMinutes || 0;
-    if (fm >= 12) stage = 6; // Ethereal Entity
-    else if (fm >= 10) stage = 5; // Mystic Guardian
-    else if (fm >= 8) stage = 4; // Ancient Tree
-    else if (fm >= 6) stage = 3; // Mature Tree
-    else if (fm >= 4) stage = 2; // Sapling
-    else if (fm >= 2) stage = 1; // Sprout
+    if (fm >= 18) stage = 6; // Ethereal Entity
+    else if (fm >= 15) stage = 5; // Mystic Guardian
+    else if (fm >= 12) stage = 4; // Ancient Tree
+    else if (fm >= 9) stage = 3; // Mature Tree
+    else if (fm >= 6) stage = 2; // Sapling
+    else if (fm >= 3) stage = 1; // Sprout
 
     // Determine colors
     const getThemeColors = (type: string) => {
@@ -63,9 +63,9 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
     const swayClass = interactionType === 'sing' ? 'animate-[sway_1s_ease-in-out_infinite]' : 'animate-[sway_3s_ease-in-out_infinite]';
 
     // Procedural Growth Scaling calculation
-    // Each stage is roughly 2 focus minutes apart
-    const stageProgress = Math.min((fm % 2) / 2, 1);
-    const growthScale = stage < 6 ? 1 + (stageProgress * 0.15) : 1 + (Math.min((fm - 12) / 50, 0.2)); // Scales 15% before evolving. Ethereal caps at +20% extra growth.
+    // Each stage is roughly 3 focus minutes apart
+    const stageProgress = Math.min((fm % 3) / 3, 1);
+    const growthScale = stage < 6 ? 1 + (stageProgress * 0.15) : 1 + (Math.min((fm - 18) / 50, 0.2)); // Scales 15% before evolving. Ethereal caps at +20% extra growth.
 
     const SvgContent = useMemo(() => {
         const isRare = ['Lunar Fern', 'Crystal Lotus', 'Storm Oak', 'Sunlight Spire'].includes(garden.currentPlantType);
