@@ -173,7 +173,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                             {darkMode ? <Sun className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" /> : <Moon className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />}
                         </button>
                         <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-1 hidden sm:block"></div>
-                        <button onClick={() => onLoginClick(false)} className="text-xs font-black uppercase tracking-widest hover:opacity-70 transition-opacity px-2 md:px-3 dark:text-gray-300 shrink-0 whitespace-nowrap">
+                        <button onClick={() => onLoginClick(false)} className="text-xs font-black uppercase tracking-widest hover:opacity-70 transition-opacity px-2 md:px-3 dark:text-white shrink-0 whitespace-nowrap">
                             {t('nav_signin')}
                         </button>
                         <button onClick={() => onLoginClick(true)} className="bg-yellow-400 text-black px-4 py-2 md:px-6 md:py-2.5 rounded-full font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-yellow-300 transition-all hover:scale-105 active:scale-95 shadow-xl shrink-0 whitespace-nowrap">
@@ -216,7 +216,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                             {t('hero_title_1')} <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-orange-400">{t('hero_title_2')}</span>
                         </h1>
-                        <p className="text-base sm:text-lg md:text-xl text-black dark:text-white font-medium max-w-sm md:max-w-md mx-auto leading-relaxed px-2">
+                        <p className="text-base sm:text-lg md:text-xl text-gray-700 dark:text-white font-medium max-w-sm md:max-w-md mx-auto leading-relaxed px-2">
                             {t('hero_subtitle')}
                         </p>
                         <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center pt-2 md:pt-3">
@@ -237,7 +237,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                                     <img key={i} src={src} className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-[#FFFBEB] dark:border-black object-cover" alt="User" />
                                 ))}
                             </div>
-                            <p className="text-[9px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">{t('trusted_by')}</p>
+                            <p className="text-[9px] md:text-xs font-bold text-black dark:text-gray-400 uppercase tracking-widest">{t('trusted_by')}</p>
                         </div>
                     </div>
                     <div className="lg:col-span-5 relative mt-10 md:mt-0 perspective-1000">

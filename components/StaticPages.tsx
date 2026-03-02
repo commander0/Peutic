@@ -374,8 +374,8 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
   };
 
   return (
-    <div className="min-h-screen font-sans transition-colors duration-500 relative">
-      <div className="fixed inset-0 pointer-events-none z-0 bg-[#fde9a0] dark:bg-[#0A192F] transition-colors duration-500">
+    <div className="min-h-screen font-sans relative">
+      <div className="fixed inset-0 pointer-events-none z-0 bg-[#fde9a0] dark:bg-[#0A192F]">
         <div className="absolute inset-0 transition-opacity duration-500 bg-gradient-to-br from-transparent to-black/5 dark:to-transparent"></div>
       </div>
       <div className="max-w-4xl mx-auto px-4 py-8 md:py-12 relative z-10">
