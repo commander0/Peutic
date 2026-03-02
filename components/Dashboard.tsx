@@ -582,8 +582,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     )}
 
                     <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-10 pb-24">
-                        <header className="mb-4 md:mb-12 flex items-start md:items-center justify-between gap-2 md:gap-6 w-full">
-                            <div className="flex items-center justify-start flex-1 min-w-0">
+                        <header className="mb-4 md:mb-12 grid grid-cols-[1fr_auto] md:flex md:flex-row md:items-center justify-between gap-y-3 gap-x-2 md:gap-6 w-full">
+                            <div className="flex items-center justify-start min-w-0 order-1 md:flex-1">
                                 <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
                                     <div className="hidden md:block shrink-0">
                                         <NotificationBell
@@ -623,10 +623,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1 truncate w-full">
+                                        <div className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none flex items-center mt-0.5 md:mt-1 truncate w-full">
                                             <span className="shrink-0">{new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-                                            <span className="w-1 h-1 bg-gray-300 rounded-full shrink-0"></span>
-                                            <div className="flex-1 min-w-0 truncate">
+                                            <span className="hidden md:block w-1 h-1 bg-gray-300 rounded-full mx-1.5 md:mx-2 shrink-0"></span>
+                                            <div className="hidden md:block flex-1 min-w-0 truncate">
                                                 <InspirationQuote />
                                             </div>
                                         </div>
@@ -636,7 +636,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 {/* Desktop Title Removed (Moved to Left) */}
                             </div>
 
-                            <div className="flex items-center justify-end flex-nowrap gap-1.5 md:gap-3 shrink-0 overflow-x-auto no-scrollbar max-w-full pb-1 md:pb-0">
+                            <div className="flex items-center justify-end flex-nowrap gap-1.5 md:gap-3 shrink-0 overflow-x-auto no-scrollbar max-w-full pb-1 md:pb-0 order-2">
                                 <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
 
                                 {/* Desktop/Tablet Logout Button - next to globe */}
@@ -674,6 +674,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     <button onClick={onLogout} className="md:hidden p-2.5 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-100 dark:border-red-900/50 shadow-sm hover:scale-105 transition-all">
                                         <LogOut className="w-5 h-5" />
                                     </button>
+                                </div>
+                            </div>
+
+                            {/* Mobile-only Inspiration Quote Row */}
+                            <div className="col-span-2 order-3 md:hidden flex items-center justify-center p-2.5 mt-2 rounded-xl bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-white/5 dark:to-white/5 border border-blue-100/50 dark:border-white/10 shadow-sm backdrop-blur-sm">
+                                <div className="w-1.5 h-1.5 bg-blue-400 dark:bg-blue-500 rounded-full animate-pulse shrink-0 mr-2.5"></div>
+                                <div className="text-[10px] font-black text-blue-900/70 dark:text-blue-100/70 uppercase tracking-widest leading-relaxed flex-1 min-w-0 text-center truncate pr-2">
+                                    <InspirationQuote />
                                 </div>
                             </div>
                         </header>
