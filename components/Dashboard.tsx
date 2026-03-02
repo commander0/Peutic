@@ -622,11 +622,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     </div>
 
                                     {/* QUOTE - Mobile Row 2 Col 2 / Desktop Bottom Left */}
-                                    <div className="col-start-2 row-start-2 md:col-auto md:row-auto flex items-center p-2.5 md:p-0 rounded-xl bg-gradient-to-r from-blue-50/50 to-purple-50/50 md:bg-transparent dark:from-white/5 dark:to-white/5 md:dark:bg-transparent border border-blue-100/50 md:border-transparent dark:border-white/10 md:dark:border-transparent shadow-sm md:shadow-none min-w-0 text-left md:w-full md:max-w-xl lg:max-w-3xl">
+                                    <div className="col-start-2 row-start-2 md:col-auto md:row-auto flex items-center p-2.5 md:p-0 rounded-xl bg-gradient-to-r from-blue-50/50 to-purple-50/50 md:bg-transparent dark:from-white/5 dark:to-white/5 md:dark:bg-transparent border border-blue-100/50 md:border-transparent dark:border-white/10 md:dark:border-transparent shadow-sm md:shadow-none min-w-0 text-left w-full md:max-w-none md:flex-1 md:mt-0.5">
                                         <div className="md:hidden w-1.5 h-1.5 bg-blue-400 dark:bg-blue-500 rounded-full animate-pulse shrink-0 mr-2.5"></div>
                                         <div className="hidden md:block shrink-0 text-[10px] font-black text-gray-400 uppercase tracking-widest">{new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</div>
                                         <div className="hidden md:block w-1 h-1 bg-gray-300 rounded-full mx-1.5 md:mx-2 shrink-0"></div>
-                                        <div className="text-[10px] md:font-black text-blue-900/70 md:text-gray-400 dark:text-blue-100/70 uppercase tracking-widest flex-1 min-w-0 pr-2 md:pr-0 leading-relaxed">
+                                        <div className="text-[10px] md:font-black text-blue-900/70 md:text-gray-400 dark:text-blue-100/70 uppercase tracking-widest flex-1 min-w-0 pr-2 md:pr-0 truncate md:leading-none">
                                             <InspirationQuote />
                                         </div>
                                     </div>
