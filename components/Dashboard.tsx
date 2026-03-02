@@ -594,9 +594,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     />
                                 </div>
 
-                                <div className="contents md:flex md:flex-row md:items-center md:flex-1 md:min-w-0 md:gap-4 lg:gap-6">
+                                <div className="contents md:flex md:flex-col md:items-start md:justify-center md:flex-1 md:min-w-0 md:gap-1.5">
                                     {/* TITLE - Mobile Row 1 Col 1 / Desktop Top Left */}
-                                    <div className="col-start-1 row-start-1 md:col-auto md:row-auto flex items-center gap-2 shrink-0 self-center">
+                                    <div className="col-start-1 row-start-1 md:col-auto md:row-auto flex items-center gap-2 shrink-0 self-center md:self-start">
                                         <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
                                             <div className="w-6 h-6 md:w-8 md:h-8 bg-yellow-400 rounded-lg md:rounded-xl flex items-center justify-center shrink-0 shadow-sm">
                                                 <Heart className="w-3.5 h-3.5 md:w-4 md:h-4 fill-black text-black" />
@@ -621,12 +621,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         )}
                                     </div>
 
-                                    {/* QUOTE - Mobile Row 2 Col 2 / Desktop Center */}
-                                    <div className="col-start-2 row-start-2 md:col-auto md:row-auto flex items-center p-2.5 md:p-0 rounded-xl bg-gradient-to-r from-blue-50/50 to-purple-50/50 md:bg-transparent dark:from-white/5 dark:to-white/5 md:dark:bg-transparent border border-blue-100/50 md:border-transparent dark:border-white/10 md:dark:border-transparent shadow-sm md:shadow-none min-w-0 text-left md:flex-1">
+                                    {/* QUOTE - Mobile Row 2 Col 2 / Desktop Bottom Left */}
+                                    <div className="col-start-2 row-start-2 md:col-auto md:row-auto flex items-center p-2.5 md:p-0 rounded-xl bg-gradient-to-r from-blue-50/50 to-purple-50/50 md:bg-transparent dark:from-white/5 dark:to-white/5 md:dark:bg-transparent border border-blue-100/50 md:border-transparent dark:border-white/10 md:dark:border-transparent shadow-sm md:shadow-none min-w-0 text-left md:w-full md:max-w-xl lg:max-w-3xl">
                                         <div className="md:hidden w-1.5 h-1.5 bg-blue-400 dark:bg-blue-500 rounded-full animate-pulse shrink-0 mr-2.5"></div>
                                         <div className="hidden md:block shrink-0 text-[10px] font-black text-gray-400 uppercase tracking-widest">{new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</div>
                                         <div className="hidden md:block w-1 h-1 bg-gray-300 rounded-full mx-1.5 md:mx-2 shrink-0"></div>
-                                        <div className="text-[10px] md:font-black text-blue-900/70 md:text-gray-400 dark:text-blue-100/70 uppercase tracking-widest flex-1 min-w-0 truncate pr-2 md:pr-0">
+                                        <div className="text-[10px] md:font-black text-blue-900/70 md:text-gray-400 dark:text-blue-100/70 uppercase tracking-widest flex-1 min-w-0 pr-2 md:pr-0 leading-relaxed">
                                             <InspirationQuote />
                                         </div>
                                     </div>
@@ -634,7 +634,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             </div>
 
                             {/* BUTTONS - Mobile Row 1 Col 2 / Desktop Right */}
-                            <div className="col-start-2 row-start-1 md:col-auto md:row-auto flex items-center justify-end flex-nowrap gap-1.5 md:gap-3 shrink-0 overflow-x-auto no-scrollbar w-full max-w-[80vw] md:max-w-none pb-1 md:pb-0 self-center -mr-1 pr-1">
+                            <div className="col-start-2 row-start-1 md:col-auto md:row-auto flex items-center justify-end flex-nowrap gap-1.5 md:gap-3 shrink-0 overflow-x-auto md:overflow-visible no-scrollbar w-full max-w-[80vw] md:max-w-none pb-1 md:pb-0 self-center -mr-1 pr-1">
                                 <div className="shrink-0"><LanguageSelector currentLanguage={lang} onLanguageChange={setLang} /></div>
 
                                 {/* Desktop/Tablet Logout Button - next to globe */}
