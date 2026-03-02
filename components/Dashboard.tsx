@@ -636,7 +636,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 {/* Desktop Title Removed (Moved to Left) */}
                             </div>
 
-                            <div className="flex items-center justify-end flex-wrap gap-1.5 md:gap-3 shrink-0 max-w-[55%] md:max-w-none">
+                            <div className="flex items-center justify-end flex-nowrap gap-1.5 md:gap-3 shrink-0 overflow-x-auto no-scrollbar max-w-full pb-1 md:pb-0">
                                 <LanguageSelector currentLanguage={lang} onLanguageChange={setLang} />
 
                                 {/* Desktop/Tablet Logout Button - next to globe */}
