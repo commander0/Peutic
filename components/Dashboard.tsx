@@ -903,7 +903,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                                     {dashboardUser ? (
-                                        <div className="bg-transparent dark:bg-transparent p-4 md:p-5 rounded-3xl border border-transparent shadow-none col-span-1 md:col-span-2 relative overflow-hidden group min-h-[120px] md:min-h-[140px]">
+                                        <div className="bg-white/20 dark:bg-black/20 backdrop-blur-md p-4 md:p-5 rounded-3xl border border-white/20 dark:border-white/5 shadow-glass col-span-1 md:col-span-2 relative overflow-hidden group min-h-[120px] md:min-h-[140px]">
                                             {weeklyGoal >= 300 ? (
                                                 <div className="absolute top-4 right-4 z-20 flex items-center justify-center">
                                                     <div className="relative w-16 h-16 flex items-center justify-center">
