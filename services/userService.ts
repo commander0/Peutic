@@ -659,13 +659,15 @@ export class UserService {
 
     static async updateUserPartial(userId: string, updates: Partial<User>): Promise<User | null> {
         try {
-            // Map our frontend keys to DB columns
+            // First fetch latest to avoid race-condition overwriting of metadata
+            const { data: currentRow } = await supabase.from('users').select('metadata, unlocked_decor').eq('id', userId).single();
+            const existingMeta = currentRow?.metadata || {};
+
             const dbUpdates: any = {};
             if (updates.name !== undefined) dbUpdates.name = updates.name;
             if (updates.balance !== undefined) dbUpdates.balance = updates.balance;
             if (updates.themePreference !== undefined) dbUpdates.theme_preference = updates.themePreference;
 
-            const existingMeta = (this.currentUser as any)?.metadata || {};
             let metaUpdated = false;
             let newMeta = { ...existingMeta };
 
