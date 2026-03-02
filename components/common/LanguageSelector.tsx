@@ -43,29 +43,60 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                 </button>
 
                 {isOpen && (
-                    <div className="absolute left-0 md:right-0 md:left-auto mt-2 w-48 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-2xl z-[100] overflow-hidden animate-in slide-in-from-top-2 fade-in duration-300 ease-out">
-                        <div className="p-2 space-y-1">
-                            {LANGUAGES.map((lang) => (
-                                <button
-                                    key={lang.code}
-                                    onClick={() => {
-                                        onLanguageChange(lang.code);
-                                        setIsOpen(false);
-                                    }}
-                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-colors ${currentLanguage === lang.code
-                                        ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-500'
-                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
-                                        }`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-base">{lang.flag}</span>
-                                        <span>{lang.label}</span>
-                                    </div>
-                                    {currentLanguage === lang.code && <Check className="w-3.5 h-3.5" />}
-                                </button>
-                            ))}
+                    <>
+                        {/* Mobile Modal Overlay */}
+                        <div className="fixed inset-0 z-[1000] bg-black/40 backdrop-blur-sm md:hidden flex items-end sm:items-center justify-center p-4 animate-in fade-in" onClick={() => setIsOpen(false)}>
+                            <div className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-[2rem] p-4 shadow-2xl border border-gray-100 dark:border-gray-800 animate-in slide-in-from-bottom-8 sm:zoom-in-95" onClick={(e) => e.stopPropagation()}>
+                                <h3 className="text-center font-black mb-4 text-gray-800 dark:text-gray-200 uppercase tracking-widest text-[10px]">Select Language</h3>
+                                <div className="space-y-2">
+                                    {LANGUAGES.map((lang) => (
+                                        <button
+                                            key={lang.code + '-mobile'}
+                                            onClick={() => {
+                                                onLanguageChange(lang.code);
+                                                setIsOpen(false);
+                                            }}
+                                            className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all ${currentLanguage === lang.code
+                                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-700/50'
+                                                : 'text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/50 border border-transparent hover:bg-gray-100 dark:hover:bg-gray-800'
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-xl">{lang.flag}</span>
+                                                <span>{lang.label}</span>
+                                            </div>
+                                            {currentLanguage === lang.code && <Check className="w-5 h-5" />}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
-                    </div>
+
+                        {/* Desktop Dropdown */}
+                        <div className="hidden md:block absolute left-0 md:right-0 md:left-auto mt-2 w-48 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-2xl z-[100] overflow-hidden animate-in slide-in-from-top-2 fade-in duration-300 ease-out">
+                            <div className="p-2 space-y-1">
+                                {LANGUAGES.map((lang) => (
+                                    <button
+                                        key={lang.code}
+                                        onClick={() => {
+                                            onLanguageChange(lang.code);
+                                            setIsOpen(false);
+                                        }}
+                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-colors ${currentLanguage === lang.code
+                                            ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-500'
+                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-base">{lang.flag}</span>
+                                            <span>{lang.label}</span>
+                                        </div>
+                                        {currentLanguage === lang.code && <Check className="w-3.5 h-3.5" />}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </>
                 )}
             </div>
         );

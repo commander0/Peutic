@@ -594,7 +594,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     />
                                 </div>
 
-                                <div className="contents md:flex md:flex-col md:justify-center md:flex-1 md:min-w-0">
+                                <div className="contents md:flex md:flex-row md:items-center md:flex-1 md:min-w-0 md:gap-4 lg:gap-6">
                                     {/* TITLE - Mobile Row 1 Col 1 / Desktop Top Left */}
                                     <div className="col-start-1 row-start-1 md:col-auto md:row-auto flex items-center gap-2 shrink-0 self-center">
                                         <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
@@ -621,8 +621,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         )}
                                     </div>
 
-                                    {/* QUOTE - Mobile Row 2 Col 2 / Desktop Bottom Left */}
-                                    <div className="col-start-2 row-start-2 md:col-auto md:row-auto flex items-center p-2.5 md:p-0 md:mt-1 rounded-xl bg-gradient-to-r from-blue-50/50 to-purple-50/50 md:bg-transparent dark:from-white/5 dark:to-white/5 md:dark:bg-transparent border border-blue-100/50 md:border-transparent dark:border-white/10 md:dark:border-transparent shadow-sm md:shadow-none min-w-0 mt-0 text-left">
+                                    {/* QUOTE - Mobile Row 2 Col 2 / Desktop Center */}
+                                    <div className="col-start-2 row-start-2 md:col-auto md:row-auto flex items-center p-2.5 md:p-0 rounded-xl bg-gradient-to-r from-blue-50/50 to-purple-50/50 md:bg-transparent dark:from-white/5 dark:to-white/5 md:dark:bg-transparent border border-blue-100/50 md:border-transparent dark:border-white/10 md:dark:border-transparent shadow-sm md:shadow-none min-w-0 text-left md:flex-1">
                                         <div className="md:hidden w-1.5 h-1.5 bg-blue-400 dark:bg-blue-500 rounded-full animate-pulse shrink-0 mr-2.5"></div>
                                         <div className="hidden md:block shrink-0 text-[10px] font-black text-gray-400 uppercase tracking-widest">{new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</div>
                                         <div className="hidden md:block w-1 h-1 bg-gray-300 rounded-full mx-1.5 md:mx-2 shrink-0"></div>
