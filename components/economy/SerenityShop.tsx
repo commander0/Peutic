@@ -23,6 +23,7 @@ export const SerenityShop: React.FC<SerenityShopProps> = ({ user, onClose, onUpd
     const [isProcessing, setIsProcessing] = useState(false);
     const [rewardId, setRewardId] = useState<string | null>(null);
 
+    const unlockedDecor = user.unlockedDecor || [];
     // We treat oracleTokens as "Serenity Coins" for the V4 economy
     const coins = user.oracleTokens || 0;
 
@@ -36,7 +37,12 @@ export const SerenityShop: React.FC<SerenityShopProps> = ({ user, onClose, onUpd
         try {
             // Deduct coins (re-using the oracle token deduction logic)
             const newBalance = coins - item.cost;
-            await UserService.updateUser({ ...user, oracleTokens: newBalance });
+            let updatedDecor = [...unlockedDecor];
+            if (item.type === 'digital' && !updatedDecor.includes(item.id)) {
+                updatedDecor.push(item.id);
+            }
+
+            await UserService.updateUser({ ...user, oracleTokens: newBalance, unlockedDecor: updatedDecor });
 
             if (item.type === 'physical') {
                 showToast(`Physical order placed! Check your email for shipping details.`, "success");
@@ -113,7 +119,8 @@ export const SerenityShop: React.FC<SerenityShopProps> = ({ user, onClose, onUpd
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {items.map(item => {
                                     const Icon = item.icon;
-                                    const canAfford = coins >= item.cost;
+                                    const isOwned = item.type === 'digital' && unlockedDecor.includes(item.id);
+                                    const canAfford = coins >= item.cost && !isOwned;
                                     const isRewarding = rewardId === item.id;
 
                                     return (
@@ -144,10 +151,10 @@ export const SerenityShop: React.FC<SerenityShopProps> = ({ user, onClose, onUpd
                                                 </div>
                                                 <button
                                                     onClick={() => handlePurchase(item)}
-                                                    disabled={!canAfford || isProcessing}
-                                                    className={`px-6 py-2 rounded-full font-bold text-sm uppercase tracking-wider transition-all ${canAfford ? 'bg-white text-black hover:bg-yellow-400' : 'bg-white/10 text-gray-500 cursor-not-allowed'}`}
+                                                    disabled={!canAfford || isProcessing || isOwned}
+                                                    className={`px-6 py-2 rounded-full font-bold text-sm uppercase tracking-wider transition-all ${isOwned ? 'bg-indigo-500/20 text-indigo-300' : canAfford ? 'bg-white text-black hover:bg-yellow-400' : 'bg-white/10 text-gray-500 cursor-not-allowed'}`}
                                                 >
-                                                    {isProcessing ? 'Processing' : canAfford ? 'Claim' : 'Locked'}
+                                                    {isOwned ? 'Owned' : isProcessing ? 'Processing' : canAfford ? 'Claim' : 'Locked'}
                                                 </button>
                                             </div>
                                         </div>

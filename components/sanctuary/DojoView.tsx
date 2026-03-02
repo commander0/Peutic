@@ -320,8 +320,12 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
             {/* Audio Elements bound to DOM for Autoplay Bypass */}
             <audio ref={windChimeRef} src="https://cdn.freesound.org/previews/411/411088_5121236-lq.mp3" loop preload="auto" />
 
-            {/* Real Zen Dojo Background (Unsplash) - Deepened Atmosphere */}
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1545569341-9eb8b30979d9?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-luminosity"></div>
+            {/* Real Zen Dojo Background (Unsplash) - Deepened Atmosphere or Cosmic Dojo */}
+            {localUser.unlockedDecor?.includes('digital_dojo') ? (
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2048&auto=format&fit=crop')] bg-cover bg-center opacity-40 mix-blend-screen transition-all duration-[2000ms]"></div>
+            ) : (
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1545569341-9eb8b30979d9?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-luminosity"></div>
+            )}
 
             {/* Parallax / Dynamic Lighting Layers */}
             <div className="absolute inset-0 bg-gradient-to-t from-black via-stone-950/90 to-stone-900/60 mix-blend-multiply"></div>
