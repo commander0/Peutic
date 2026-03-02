@@ -653,26 +653,28 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     {isDark ? <Sun className="w-5 h-5 text-primary" /> : <Moon className="w-5 h-5 text-gray-400" />}
                                 </button>
 
-                                <button
-                                    onClick={() => setShowPayment(true)}
-                                    className={`h-[42px] px-4 rounded-2xl font-black shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 text-[10px] md:text-xs border border-transparent ${balance === 0
-                                        ? 'bg-red-500 text-white animate-pulse'
-                                        : 'bg-emerald-500 text-white dark:bg-emerald-600'
-                                        }`}
-                                >
-                                    <span className="md:inline">{balance}m</span>
-                                    <Plus className="hidden md:block w-3.5 h-3.5 opacity-70" />
-                                </button>
+                                <div className="flex items-center gap-2 md:gap-3 shrink-0">
+                                    <button
+                                        onClick={() => setShowPayment(true)}
+                                        className={`h-[42px] px-4 rounded-2xl font-black shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 text-[10px] md:text-xs border border-transparent ${balance === 0
+                                            ? 'bg-red-500 text-white animate-pulse'
+                                            : 'bg-emerald-500 text-white dark:bg-emerald-600'
+                                            }`}
+                                    >
+                                        <span className="md:inline">{balance}m</span>
+                                        <Plus className="hidden md:block w-3.5 h-3.5 opacity-70" />
+                                    </button>
 
 
-                                <button onClick={() => setShowProfile(true)} className="w-10 h-10 md:w-11 md:h-11 rounded-2xl overflow-hidden border-2 border-primary shadow-premium transition-all hover:rotate-3 active:scale-90 flex-shrink-0">
-                                    <AvatarImage src={isGhostMode ? '' : (dashboardUser?.avatar || '')} alt={isGhostMode ? 'Member' : (dashboardUser?.name || 'User')} className="w-full h-full object-cover" isUser={true} />
-                                </button>
+                                    <button onClick={() => setShowProfile(true)} className="w-10 h-10 md:w-11 md:h-11 rounded-2xl overflow-hidden border-2 border-primary shadow-premium transition-all hover:rotate-3 active:scale-90 flex-shrink-0">
+                                        <AvatarImage src={isGhostMode ? '' : (dashboardUser?.avatar || '')} alt={isGhostMode ? 'Member' : (dashboardUser?.name || 'User')} className="w-full h-full object-cover" isUser={true} />
+                                    </button>
 
-                                {/* Mobile-only Logout Button */}
-                                <button onClick={onLogout} className="md:hidden p-2.5 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-100 dark:border-red-900/50 shadow-sm hover:scale-105 transition-all">
-                                    <LogOut className="w-5 h-5" />
-                                </button>
+                                    {/* Mobile-only Logout Button */}
+                                    <button onClick={onLogout} className="md:hidden p-2.5 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-100 dark:border-red-900/50 shadow-sm hover:scale-105 transition-all">
+                                        <LogOut className="w-5 h-5" />
+                                    </button>
+                                </div>
                             </div>
                         </header>
                         {activeTab === 'inner_sanctuary' && (
@@ -882,16 +884,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             <div className="relative z-10">
                                                 <h3 className="font-bold text-gray-500 dark:text-gray-400 text-[10px] md:text-xs uppercase tracking-widest mb-1">Weekly Wellness Goal</h3>
                                                 <div className="flex items-end gap-2 mb-2 md:mb-3">
-                                                    <span className={`text-2xl md:text-4xl font-black ${weeklyGoal >= 300 ? 'text-black dark:text-green-400' : 'text-primary dark:text-blue-400'}`}>{weeklyGoal}</span>
-                                                    <span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyTarget} activities</span>
+                                                    <span className={`text-2xl md:text-4xl font-black ${weeklyGoal >= 300 ? 'text-black dark:text-green-400' : 'text-blue-500 dark:text-blue-400'}`}>{weeklyGoal}</span>
+                                                    <span className="text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyGoal >= 100 ? '300' : '100'} activities</span>
                                                 </div>
-                                                <div className={`w-full h-2 md:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full mb-2 md:mb-3 relative ${weeklyGoal >= 300 ? 'shadow-[0_0_15px_rgba(34,197,94,0.4)]' : weeklyGoal >= weeklyTarget ? 'shadow-[0_0_10px_rgba(59,130,246,0.2)]' : ''}`}>
+                                                <div className={`w-full h-2 md:h-2.5 rounded-full mb-2 md:mb-3 relative overflow-hidden ${weeklyGoal >= 300 ? 'bg-green-400 shadow-[0_0_15px_rgba(34,197,94,0.4)]'
+                                                        : weeklyGoal >= 100 ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                                                            : 'bg-gray-200 dark:bg-gray-800'
+                                                    }`}>
                                                     <div
-                                                        className={`h-full rounded-full transition-all duration-1000 ease-out absolute left-0 top-0 bottom-0 ${weeklyGoal >= 300 ? 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]'
-                                                            : weeklyGoal >= weeklyTarget ? 'bg-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
-                                                                : 'bg-primary dark:bg-blue-500'
+                                                        className={`h-full rounded-full transition-all duration-1000 ease-out absolute left-0 top-0 bottom-0 ${weeklyGoal >= 300 ? 'bg-green-400'
+                                                                : weeklyGoal >= 100 ? 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]'
+                                                                    : 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
                                                             }`}
-                                                        style={{ width: `${Math.min(100, (weeklyGoal / weeklyTarget) * 100)}%` }}
+                                                        style={{ width: `${weeklyGoal >= 100 ? Math.min(100, ((weeklyGoal - 100) / 200) * 100) : Math.min(100, (weeklyGoal / 100) * 100)}%` }}
                                                     ></div>
                                                 </div>
                                                 <p className="text-[10px] md:text-sm font-bold text-gray-700 dark:text-gray-300">
