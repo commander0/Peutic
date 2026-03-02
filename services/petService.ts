@@ -3,18 +3,9 @@ import { supabase } from './supabaseClient';
 import { logger } from './logger'; // Leaving logger logic for other methods
 
 export class PetService {
-    private static CACHE_KEY = 'peutic_anima';
 
     static async getPet(userId: string): Promise<Lumina | null> {
         try {
-            // Check Local Cache first
-            const cached = localStorage.getItem(`${this.CACHE_KEY}_${userId}`);
-            if (cached) {
-                // Return cached immediately for speed, verify in background? 
-                // For now, let's just return cached if valid, but maybe we should verify.
-            }
-
-            // Direct DB Access (Reliable with RLS)
             const { data, error } = await supabase
                 .from('pocket_pets')
                 .select('*')
@@ -23,13 +14,11 @@ export class PetService {
 
             if (error) {
                 console.error("Error fetching pet:", error);
-                return cached ? JSON.parse(cached) : null;
+                return null;
             }
 
             if (data) {
-                const decayedAnima = this.calculateDecay(data);
-                localStorage.setItem(`${this.CACHE_KEY}_${userId}`, JSON.stringify(decayedAnima));
-                return decayedAnima;
+                return this.calculateDecay(data);
             }
 
             return null;
@@ -81,9 +70,7 @@ export class PetService {
 
         if (!data) throw new Error("No data returned from pet creation");
 
-        const newPet = this.mapAnimaBase(data);
-        localStorage.setItem(`${this.CACHE_KEY}_${userId}`, JSON.stringify(newPet));
-        return newPet;
+        return this.mapAnimaBase(data);
     }
 
     static async updatePet(anima: Lumina): Promise<void> {
@@ -94,8 +81,6 @@ export class PetService {
 
         if (error) {
             logger.error("Update Anima Failed", anima.id, error);
-        } else {
-            localStorage.setItem(`${this.CACHE_KEY}_${anima.userId}`, JSON.stringify(anima));
         }
     }
 
@@ -107,7 +92,6 @@ export class PetService {
                 .eq('user_id', userId);
 
             if (error) throw error;
-            localStorage.removeItem(`${this.CACHE_KEY}_${userId}`);
         } catch (error) {
             logger.error("Failed to delete pet", userId, error);
             throw error;
