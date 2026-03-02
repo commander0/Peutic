@@ -166,7 +166,7 @@ CollapsibleSection.displayName = 'CollapsibleSection';
 
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession }) => {
     const { lang, setLang, t } = useLanguage();
-    const { theme, mode, setTheme, toggleMode } = useTheme();
+    const { theme, mode, setTheme, setMode, toggleMode } = useTheme();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'inner_sanctuary' | 'history' | 'settings'>('inner_sanctuary');
     const [openSection, setOpenSection] = useState<'arcade' | 'journal' | null>(null);
@@ -612,7 +612,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                     )}
 
                     <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-10 pb-24">
-                        <header className="mb-4 md:mb-8 grid grid-cols-[auto_1fr] md:flex md:flex-col gap-y-3 gap-x-2 w-full">
+                        <header className="mb-4 md:mb-8 grid grid-cols-[auto_minmax(0,1fr)] md:flex md:flex-col gap-y-3 gap-x-2 w-full">
 
                             {/* DESKTOP ROW 1 (Header Top) / MOBILE ROW 1&2 GRID */}
                             <div className="contents md:flex md:flex-row md:items-center md:justify-between w-full shrink-0">
@@ -656,24 +656,24 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 </div>
 
                                 {/* RIGHT PANE (Buttons) */}
-                                <div className="col-start-2 row-start-1 md:col-auto md:row-auto flex items-center justify-end flex-nowrap gap-1.5 md:gap-3 shrink-0 overflow-x-auto md:overflow-visible no-scrollbar w-full max-w-[80vw] md:w-auto md:max-w-none pb-1 md:pb-0 self-center -mr-1 pr-1 md:mr-0 md:pr-0">
-                                    <div className="shrink-0"><LanguageSelector currentLanguage={lang} onLanguageChange={setLang} /></div>
+                                <div className="col-start-2 row-start-1 md:col-auto md:row-auto flex items-center justify-start md:justify-end flex-nowrap gap-2 md:gap-3 overflow-x-auto no-scrollbar min-w-0 w-full pb-1 md:pb-0 self-center pl-1 md:pl-0 overscroll-contain snap-x touch-pan-x">
+                                    <div className="shrink-0 snap-center"><LanguageSelector currentLanguage={lang} onLanguageChange={setLang} /></div>
 
                                     {/* Desktop/Tablet Logout Button - next to globe */}
                                     <button onClick={onLogout} className="hidden md:flex shrink-0 p-2.5 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-100 dark:border-red-900/50 shadow-sm hover:scale-105 transition-all" title="Logout">
                                         <LogOut className="w-5 h-5" />
                                     </button>
 
-                                    <button onClick={() => setShowGrounding(true)} className="relative shrink-0 p-2.5 rounded-2xl bg-white dark:bg-gray-800 border-2 border-blue-400 dark:border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] hover:scale-105 transition-all text-blue-500 overflow-hidden" title="Panic Relief / Grounding Mode">
+                                    <button onClick={() => setShowGrounding(true)} className="relative shrink-0 snap-center p-2.5 rounded-2xl bg-white dark:bg-gray-800 border-2 border-blue-400 dark:border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] hover:scale-105 transition-all text-blue-500 overflow-hidden" title="Panic Relief / Grounding Mode">
                                         <div className="absolute inset-0 bg-blue-400/20 blur-md rounded-2xl animate-pulse pointer-events-none"></div>
                                         <LifeBuoy className="w-5 h-5 relative z-10" />
                                     </button>
 
-                                    <button onClick={toggleDarkMode} className="shrink-0 p-2.5 rounded-2xl bg-white dark:bg-gray-800 border border-primary-light dark:border-gray-700 shadow-sm hover:scale-105 transition-all">
+                                    <button onClick={toggleDarkMode} className="shrink-0 snap-center p-2.5 rounded-2xl bg-white dark:bg-gray-800 border border-primary-light dark:border-gray-700 shadow-sm hover:scale-105 transition-all">
                                         {isDark ? <Sun className="w-5 h-5 text-primary" /> : <Moon className="w-5 h-5 text-gray-400" />}
                                     </button>
 
-                                    <div className="flex items-center gap-2 md:gap-3 shrink-0">
+                                    <div className="flex items-center gap-2 md:gap-3 shrink-0 snap-center pr-2 md:pr-0">
                                         <button
                                             onClick={() => setShowPayment(true)}
                                             className={`shrink-0 h-[42px] px-4 rounded-2xl font-black shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 text-[10px] md:text-xs border border-transparent ${balance === 0
@@ -1540,6 +1540,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         if (!currentDecor.includes(itemId)) {
                                             updatedUser = { ...updatedUser, unlockedDecor: [...currentDecor, itemId] };
                                             await UserService.updateUserPartial(dashboardUser.id, { unlockedDecor: updatedUser.unlockedDecor });
+
+                                            if (itemId === 'digital-theme-sapphire') {
+                                                setTheme('sapphire');
+                                                setMode('dark'); // Sapphire is optimized for dark mode
+                                            }
                                         }
                                     }
 
