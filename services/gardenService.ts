@@ -50,9 +50,11 @@ export class GardenService {
             return { success: false, message: "Not enough focus minutes to harvest (need 10)." };
         }
 
-        // Assume maximum gamification: subtract 10 minutes
-        const success = await this.addFocusMinutes(userId, -10);
-        if (success) {
+        // Direct clamped update to prevent race conditions resolving into negatives
+        const clampedMinutes = Math.max(0, garden.focusMinutes - 10);
+        const { error } = await supabase.from('garden_log').update({ focus_minutes: clampedMinutes }).eq('user_id', userId);
+
+        if (!error) {
             // Give a cool prize (50 XP/Coins)
             if (userBalanceService && userBalanceService.addBalance) {
                 await userBalanceService.addBalance(50, 'Harvested Garden Bonsai');

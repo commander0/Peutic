@@ -42,7 +42,7 @@ const SanctuaryShop: React.FC<SanctuaryShopProps> = ({ user, onClose, onPurchase
             if (success) {
                 // Update user decor array
                 const newDecor = [...unlockedDecor, item.id];
-                const updatedUserObj = { ...user, unlockedDecor: newDecor, balance: user.balance - item.price };
+                const updatedUserObj = { ...user, unlockedDecor: newDecor, balance: Math.max(0, user.balance - item.price) };
                 await UserService.updateUserPartial(user.id, { unlockedDecor: newDecor });
 
                 onPurchaseUpdate(updatedUserObj);

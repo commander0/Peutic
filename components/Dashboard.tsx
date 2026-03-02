@@ -501,7 +501,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
         if (await UserService.deductBalance(cost, `Unlock Sanctuary Room: ${roomId}`)) {
             const updatedUser = {
                 ...dashboardUser,
-                balance: dashboardUser.balance - cost,
+                balance: Math.max(0, dashboardUser.balance - cost),
                 unlockedRooms: [...currentRooms, roomId]
             };
             setDashboardUser(updatedUser);
@@ -1530,7 +1530,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             onClose={() => setShowSerenityShop(false)}
                             onPurchase={async (cost, desc, itemId) => {
                                 if (await UserService.deductBalance(cost, desc)) {
-                                    let updatedUser = { ...dashboardUser, balance: dashboardUser.balance - cost };
+                                    let updatedUser = { ...dashboardUser, balance: Math.max(0, dashboardUser.balance - cost) };
 
                                     if (itemId && (itemId.startsWith('item-') || itemId.startsWith('digital-') || itemId.startsWith('charity-'))) {
                                         const currentDecor = updatedUser.unlockedDecor || [];
