@@ -149,18 +149,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         muted
                         playsInline
                         className="absolute inset-0 w-full h-full object-cover object-[center_20%] opacity-[0.85]"
-                        style={{
-                            maskImage: 'linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%)',
-                            WebkitMaskImage: '-webkit-linear-gradient(top, transparent 0%, black 25%, black 75%, transparent 100%)'
-                        }}
                     >
                         <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
                     </video>
                     {/* Golden tints globally applied to both light and dark modes */}
                     <div className="absolute inset-0 bg-[#facc15]/30 mix-blend-overlay pointer-events-none"></div>
                     <div className="absolute inset-0 bg-[#fde9a0]/40 mix-blend-multiply pointer-events-none"></div>
-                    {/* Symmetrical top and bottom gradient fades to ground the nav and page flow */}
-                    <div className="absolute inset-x-0 top-0 h-[40vh] bg-gradient-to-b from-[#fde9a0] via-[#fde9a0]/60 to-transparent dark:from-[#1C1F26] dark:via-[#1C1F26]/50"></div>
+
                     <div className="absolute inset-x-0 bottom-0 h-[40vh] bg-gradient-to-t from-[#fde9a0] via-[#fde9a0]/60 to-transparent dark:from-[#1C1F26] dark:via-[#1C1F26]/50"></div>
                 </div>
             </div>
@@ -197,8 +192,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         playsInline
                         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 min-w-[120%] min-h-[120%] object-cover object-[center_30%] opacity-[0.85] dark:opacity-40"
                         style={{
-                            maskImage: 'linear-gradient(to bottom, transparent 0%, black 30%, black 70%, transparent 100%)',
-                            WebkitMaskImage: '-webkit-linear-gradient(top, transparent 0%, black 30%, black 70%, transparent 100%)'
+                            maskImage: 'radial-gradient(circle at center, black 30%, transparent 65%)',
+                            WebkitMaskImage: '-webkit-radial-gradient(center, circle, black 30%, transparent 65%)'
                         }}
                     >
                         <source src="https://videos.pexels.com/video-files/3249935/3249935-hd_1920_1080_25fps.mp4" type="video/mp4" />
