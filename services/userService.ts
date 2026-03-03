@@ -408,11 +408,12 @@ export class UserService {
         await this.saveUserToCache(user);
 
         try {
-            // Commit to Database directly for resilience
-            const { error: dbError } = await supabase.from('users').update({ balance: user.balance }).eq('id', user.id);
-            if (dbError) {
-                console.error("Balance Deduction DB Failed", dbError);
-                user.balance = previousBalance;
+            // Commit to Database directly via RPC for atomic double-spend protection
+            const { data: dbSuccess, error: dbError } = await supabase.rpc('deduct_user_balance', { p_user_id: user.id, p_amount: amount });
+
+            if (dbError || dbSuccess === false) {
+                console.warn("[Concurrency] Balance Deduction Rejected by Server", dbError || "Insufficient Funds Server-Side");
+                user.balance = previousBalance; // Rollback localized optimistic update
                 await this.saveUserToCache(user);
                 this.isProcessingTransaction = false;
                 return false;

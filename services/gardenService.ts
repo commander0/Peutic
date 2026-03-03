@@ -50,11 +50,10 @@ export class GardenService {
             return { success: false, message: "Not enough focus minutes to harvest (need 10)." };
         }
 
-        // Direct clamped update to prevent race conditions resolving into negatives
-        const clampedMinutes = Math.max(0, garden.focusMinutes - 10);
-        const { error } = await supabase.from('garden_log').update({ focus_minutes: clampedMinutes }).eq('user_id', userId);
+        // Atomic RPC Update to guarantee no double-spend or negative drops under concurrency
+        const { data: harvestSuccess, error: rpcError } = await supabase.rpc('harvest_garden_focus_minutes', { p_user_id: userId, p_cost: 10 });
 
-        if (!error) {
+        if (harvestSuccess && !rpcError) {
             // Give a cool prize (50 XP/Coins)
             if (userBalanceService && userBalanceService.addBalance) {
                 await userBalanceService.addBalance(50, 'Harvested Garden Bonsai');
