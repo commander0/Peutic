@@ -759,8 +759,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     <Maximize2 className="w-5 h-5 text-white animate-pulse" />
                                                 </div>
                                                 <div className="absolute inset-0 pointer-events-none group-hover:pointer-events-auto overflow-hidden">
-                                                    {/* Desktop: Scale engine UI natively to 80% of actual size to prevent cramped layout */}
-                                                    <div className="w-full h-full md:w-[125%] md:h-[125%] md:origin-top-left md:scale-[0.8] transition-transform">
+                                                    {/* Desktop: Scale engine UI natively to 60% of actual size to prevent cramped layout */}
+                                                    <div className="w-full h-full md:w-[166%] md:h-[166%] md:origin-top-left md:scale-[0.6] transition-transform">
                                                         <GardenFullView isEmbedded={true} garden={garden} user={dashboardUser} onClose={() => { }} onUpdate={refreshGarden} />
                                                     </div>
                                                 </div>
@@ -774,8 +774,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     <Maximize2 className="w-5 h-5 text-white animate-pulse" />
                                                 </div>
                                                 <div className="absolute inset-0 pointer-events-none group-hover:pointer-events-auto overflow-hidden">
-                                                    {/* Desktop: Scale engine UI natively to 80% of actual size to prevent cramped layout */}
-                                                    <div className="w-full h-full md:w-[125%] md:h-[125%] md:origin-top-left md:scale-[0.8] transition-transform">
+                                                    {/* Desktop: Scale engine UI natively to 60% of actual size to prevent cramped layout */}
+                                                    <div className="w-full h-full md:w-[166%] md:h-[166%] md:origin-top-left md:scale-[0.6] transition-transform">
                                                         <LuminaView isEmbedded={true} user={dashboardUser} onClose={() => { }} />
                                                     </div>
                                                 </div>
