@@ -189,7 +189,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
 
     if (showOnboarding) {
         return (
-            <div className="fixed inset-0 bg-[#FFFBEB] dark:bg-black z-[100] flex flex-col md:flex-row animate-in fade-in slide-in-from-bottom-5 duration-500">
+            <div className="fixed inset-0 bg-[var(--color-bg-base)] dark:bg-black z-[100] flex flex-col md:flex-row animate-in fade-in slide-in-from-bottom-5 duration-500">
 
                 {/* PUBLIC BROADCAST BANNER */}
                 {settings.broadcastMessage && (
@@ -207,7 +207,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                         <Heart className="w-64 h-64 text-black opacity-10 animate-pulse" />
                     </div>
                 </div>
-                <div className="w-full md:w-1/2 h-full overflow-y-auto flex flex-col bg-[#FFFBEB] dark:bg-black text-black dark:text-white relative">
+                <div className="w-full md:w-1/2 h-full overflow-y-auto flex flex-col bg-[var(--color-bg-base)] dark:bg-black text-black dark:text-white relative">
                     <div className="flex-1 flex flex-col justify-end md:justify-center p-6 md:p-20 pb-12 md:pb-20 min-h-full">
                         <div className="max-w-md w-full mx-auto">
                             {onboardingStep === 0 && (
@@ -281,7 +281,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
     }
 
     return (
-        <div className="fixed inset-0 bg-[#FFFBEB] dark:bg-black z-[100] flex flex-col md:flex-row transition-colors">
+        <div className="fixed inset-0 bg-[var(--color-bg-base)] dark:bg-black z-[100] flex flex-col md:flex-row transition-colors">
 
             {/* PUBLIC BROADCAST BANNER */}
             {settings.broadcastMessage && (
@@ -311,7 +311,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             </div>
 
             {/* Right Side */}
-            <div className="w-full md:w-1/2 p-6 md:p-20 flex flex-col justify-center relative bg-[#FFFBEB] dark:bg-black text-black dark:text-white overflow-y-auto h-full">
+            <div className="w-full md:w-1/2 p-6 md:p-20 flex flex-col justify-center relative bg-[var(--color-bg-base)] dark:bg-black text-black dark:text-white overflow-y-auto h-full">
                 <button onClick={onCancel} className="absolute top-4 right-4 md:top-8 md:right-8 text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white font-bold z-[101]">Back</button>
 
                 <div className="max-w-md w-full mx-auto pt-10 md:pt-0">

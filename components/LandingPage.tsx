@@ -159,7 +159,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     <div className="absolute inset-x-0 bottom-0 h-[40vh] bg-gradient-to-t from-[#fde9a0] via-[#fde9a0]/60 to-transparent dark:from-[#1C1F26] dark:via-[#1C1F26]/50"></div>
                 </div>
             </div>
-            <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-2 bg-[#FFFBEB]/80 dark:bg-[#1C1F26]/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-3 md:py-6 bg-transparent border-transparent'}`}>
+            <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-2 bg-[var(--color-bg-base)]/80 dark:bg-[#1C1F26]/80 backdrop-blur-xl border-b border-yellow-200/30 dark:border-gray-800 shadow-sm' : 'py-3 md:py-6 bg-transparent border-transparent'}`}>
                 <div className="max-w-7xl mx-auto px-2 md:px-8 flex justify-between items-center">
                     <div className="flex items-center gap-2 md:gap-3 group cursor-pointer shrink-0">
                         <div className="w-8 h-8 md:w-9 md:h-9 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
@@ -234,7 +234,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         <div className="flex items-center justify-center gap-4 md:gap-6 pt-3 md:pt-4">
                             <div className="flex -space-x-2">
                                 {STABLE_AVATAR_POOL.slice(0, 4).map((src, i) => (
-                                    <img key={i} src={src} className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-[#FFFBEB] dark:border-black object-cover" alt="User" />
+                                    <img key={i} src={src} className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-[var(--color-bg-base)] dark:border-black object-cover" alt="User" />
                                 ))}
                             </div>
                             <p className="text-[9px] md:text-xs font-bold text-black dark:text-gray-400 uppercase tracking-widest">{t('trusted_by')}</p>
@@ -312,7 +312,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                                         <AvatarImage src={spec.imageUrl} className="w-full h-full object-cover" alt={spec.name} />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                                     </div>
-                                    <div className="h-[25%] md:h-[20%] bg-[#FFFBEB] dark:bg-gray-900 p-2 flex flex-col justify-center items-center text-center relative z-10 transition-colors">
+                                    <div className="h-[25%] md:h-[20%] bg-[var(--color-bg-base)] dark:bg-gray-900 p-2 flex flex-col justify-center items-center text-center relative z-10 transition-colors">
                                         <p className="text-[9px] md:text-[10px] font-black text-gray-800 dark:text-gray-200 uppercase tracking-widest line-clamp-1">{spec.specialty}</p>
                                     </div>
                                 </div>
@@ -326,7 +326,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                                         <AvatarImage src={spec.imageUrl} className="w-full h-full object-cover" alt={spec.name} />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                                     </div>
-                                    <div className="h-[25%] md:h-[20%] bg-[#FFFBEB] dark:bg-gray-900 p-2 flex flex-col justify-center items-center text-center relative z-10 transition-colors">
+                                    <div className="h-[25%] md:h-[20%] bg-[var(--color-bg-base)] dark:bg-gray-900 p-2 flex flex-col justify-center items-center text-center relative z-10 transition-colors">
                                         <p className="text-[9px] md:text-[10px] font-black text-gray-800 dark:text-gray-200 uppercase tracking-widest line-clamp-1">{spec.specialty}</p>
                                     </div>
                                 </div>
@@ -423,7 +423,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             </section>
             <section className="py-10 md:py-12 px-6">
                 <div className="max-w-lg mx-auto">
-                    <div className="bg-[#FFFBEB] dark:bg-gray-900 text-black dark:text-white rounded-[1.5rem] p-6 text-center relative overflow-hidden shadow-xl border border-yellow-200 dark:border-gray-800 transition-colors">
+                    <div className="bg-[var(--color-bg-base)] dark:bg-gray-900 text-black dark:text-white rounded-[1.5rem] p-6 text-center relative overflow-hidden shadow-xl border border-yellow-200 dark:border-gray-800 transition-colors">
                         <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-yellow-100/30 dark:bg-yellow-900/10 blur-[80px] pointer-events-none"></div>
                         <div className="relative z-10 space-y-2 md:space-y-3">
                             <p className="text-black/60 dark:text-white/60 font-black uppercase tracking-[0.4em] text-[8px]">{t('pricing_badge')}</p>
@@ -492,7 +492,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 </div>
             </footer>
             {showCookies && (
-                <div className="fixed bottom-6 md:bottom-8 left-0 right-0 mx-auto w-[90%] max-w-2xl bg-[#FFFBEB] dark:bg-gray-900 text-black dark:text-white p-4 md:p-6 z-[100] rounded-lg md:rounded-xl border-2 border-yellow-400 shadow-2xl animate-slide-up-fade">
+                <div className="fixed bottom-6 md:bottom-8 left-0 right-0 mx-auto w-[90%] max-w-2xl bg-[var(--color-bg-base)] dark:bg-gray-900 text-black dark:text-white p-4 md:p-6 z-[100] rounded-lg md:rounded-xl border-2 border-yellow-400 shadow-2xl animate-slide-up-fade">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 text-center md:text-left">
                         <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
                             <Cookie className="w-8 h-8 md:w-10 md:h-10 text-yellow-600" />

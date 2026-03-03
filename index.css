@@ -116,160 +116,295 @@
 /* -----------------------------------------------------------------------------
    ENTERPRISE THEMES (Subtle and Clinical)
    ----------------------------------------------------------------------------- */
-/* 1. SUNSHINE */
+/* 1. SUNSHINE (Vibrant Yellow Default) */
 [data-theme="sunshine"] {
-    --color-primary: #ca8a04;
-    --color-primary-light: #fef08a;
-    --color-primary-border: #fde047;
+    --color-bg-base: #FACC15;
+    /* yellow-400 */
+    --color-bg-surface: #FEF08A;
+    /* yellow-200 */
+    --color-text-base: #422006;
+    /* yellow-950 */
+    --color-border-subtle: #FDE047;
+    /* yellow-300 */
+    --color-primary: #A16207;
+    /* yellow-700 */
+    --color-primary-light: #FEF08A;
+    --color-primary-border: #FDE047;
 }
 
 .dark[data-theme="sunshine"] {
-    --color-primary: #eab308;
-    --color-primary-light: rgba(234, 179, 8, 0.08);
-    --color-primary-border: rgba(234, 179, 8, 0.15);
+    --color-bg-base: #422006;
+    /* yellow-950 */
+    --color-bg-surface: #713F12;
+    /* yellow-900 */
+    --color-text-base: #FEF08A;
+    --color-primary: #FACC15;
+    --color-primary-light: rgba(250, 204, 21, 0.1);
+    --color-primary-border: rgba(250, 204, 21, 0.2);
 }
 
 /* 2. ROSE */
 [data-theme="rose"] {
-    --color-primary: #e11d48;
+    --color-bg-base: #FDA4AF;
+    /* rose-300 */
+    --color-bg-surface: #FECDD3;
+    /* rose-200 */
+    --color-text-base: #4C0519;
+    /* rose-950 */
+    --color-border-subtle: #FB7185;
+    --color-primary: #BE123C;
+    /* rose-700 */
     --color-primary-light: #ffe4e6;
     --color-primary-border: #fecdd3;
 }
 
 .dark[data-theme="rose"] {
-    --color-primary: #fb7185;
-    --color-primary-light: rgba(251, 113, 133, 0.08);
-    --color-primary-border: rgba(251, 113, 133, 0.15);
+    --color-bg-base: #4C0519;
+    --color-bg-surface: #881337;
+    --color-text-base: #FECDD3;
+    --color-primary: #FB7185;
+    --color-primary-light: rgba(251, 113, 133, 0.1);
+    --color-primary-border: rgba(251, 113, 133, 0.2);
 }
 
 /* 3. OCEAN */
 [data-theme="ocean"] {
-    --color-primary: #0284c7;
+    --color-bg-base: #7DD3FC;
+    /* sky-300 */
+    --color-bg-surface: #BAE6FD;
+    /* sky-200 */
+    --color-text-base: #082F49;
+    /* sky-950 */
+    --color-border-subtle: #38BDF8;
+    --color-primary: #0369A1;
+    /* sky-700 */
     --color-primary-light: #e0f2fe;
     --color-primary-border: #bae6fd;
 }
 
 .dark[data-theme="ocean"] {
-    --color-primary: #38bdf8;
-    --color-primary-light: rgba(56, 189, 248, 0.08);
-    --color-primary-border: rgba(56, 189, 248, 0.15);
+    --color-bg-base: #082F49;
+    --color-bg-surface: #0C4A6E;
+    --color-text-base: #BAE6FD;
+    --color-primary: #38BDF8;
+    --color-primary-light: rgba(56, 189, 248, 0.1);
+    --color-primary-border: rgba(56, 189, 248, 0.2);
 }
 
 /* 4. FOREST */
 [data-theme="forest"] {
-    --color-primary: #059669;
+    --color-bg-base: #6EE7B7;
+    /* emerald-300 */
+    --color-bg-surface: #A7F3D0;
+    /* emerald-200 */
+    --color-text-base: #022C22;
+    /* emerald-950 */
+    --color-border-subtle: #34D399;
+    --color-primary: #047857;
+    /* emerald-700 */
     --color-primary-light: #d1fae5;
     --color-primary-border: #a7f3d0;
 }
 
 .dark[data-theme="forest"] {
-    --color-primary: #34d399;
-    --color-primary-light: rgba(52, 211, 153, 0.08);
-    --color-primary-border: rgba(52, 211, 153, 0.15);
+    --color-bg-base: #022C22;
+    --color-bg-surface: #064E3B;
+    --color-text-base: #A7F3D0;
+    --color-primary: #34D399;
+    --color-primary-light: rgba(52, 211, 153, 0.1);
+    --color-primary-border: rgba(52, 211, 153, 0.2);
 }
 
 /* 5. SUNSET */
 [data-theme="sunset"] {
-    --color-primary: #ea580c;
+    --color-bg-base: #FDBA74;
+    /* orange-300 */
+    --color-bg-surface: #FED7AA;
+    /* orange-200 */
+    --color-text-base: #431407;
+    /* orange-950 */
+    --color-border-subtle: #FB923C;
+    --color-primary: #C2410C;
+    /* orange-700 */
     --color-primary-light: #ffedd5;
     --color-primary-border: #fed7aa;
 }
 
 .dark[data-theme="sunset"] {
-    --color-primary: #fb923c;
-    --color-primary-light: rgba(251, 146, 60, 0.08);
-    --color-primary-border: rgba(251, 146, 60, 0.15);
+    --color-bg-base: #431407;
+    --color-bg-surface: #7C2D12;
+    --color-text-base: #FED7AA;
+    --color-primary: #FB923C;
+    --color-primary-light: rgba(251, 146, 60, 0.1);
+    --color-primary-border: rgba(251, 146, 60, 0.2);
 }
 
 /* 6. LAVENDER */
 [data-theme="lavender"] {
-    --color-primary: #6d28d9;
+    --color-bg-base: #C4B5FD;
+    /* violet-300 */
+    --color-bg-surface: #DDD6FE;
+    /* violet-200 */
+    --color-text-base: #2E1065;
+    /* violet-950 */
+    --color-border-subtle: #A78BFA;
+    --color-primary: #6D28D9;
+    /* violet-700 */
     --color-primary-light: #ede9fe;
     --color-primary-border: #ddd6fe;
 }
 
 .dark[data-theme="lavender"] {
-    --color-primary: #a78bfa;
-    --color-primary-light: rgba(167, 139, 250, 0.08);
-    --color-primary-border: rgba(167, 139, 250, 0.15);
+    --color-bg-base: #2E1065;
+    --color-bg-surface: #4C1D95;
+    --color-text-base: #DDD6FE;
+    --color-primary: #A78BFA;
+    --color-primary-light: rgba(167, 139, 250, 0.1);
+    --color-primary-border: rgba(167, 139, 250, 0.2);
 }
 
-/* 7. CYBERPUNK (Subdued) */
+/* 7. CYBERPUNK */
 [data-theme="cyberpunk"] {
-    --color-primary: #0891b2;
+    --color-bg-base: #67E8F9;
+    /* cyan-300 */
+    --color-bg-surface: #A5F3FC;
+    /* cyan-200 */
+    --color-text-base: #083344;
+    /* cyan-950 */
+    --color-border-subtle: #22D3EE;
+    --color-primary: #0E7490;
+    /* cyan-700 */
     --color-primary-light: #cffafe;
     --color-primary-border: #a5f3fc;
 }
 
 .dark[data-theme="cyberpunk"] {
-    --color-primary: #22d3ee;
-    --color-primary-light: rgba(34, 211, 238, 0.08);
-    --color-primary-border: rgba(34, 211, 238, 0.15);
+    --color-bg-base: #083344;
+    --color-bg-surface: #164E63;
+    --color-text-base: #A5F3FC;
+    --color-primary: #22D3EE;
+    --color-primary-light: rgba(34, 211, 238, 0.1);
+    --color-primary-border: rgba(34, 211, 238, 0.2);
 }
 
 /* 8. MIDNIGHT */
 [data-theme="midnight"] {
-    --color-primary: #4338ca;
+    --color-bg-base: #A5B4FC;
+    /* indigo-300 */
+    --color-bg-surface: #C7D2FE;
+    /* indigo-200 */
+    --color-text-base: #1E1B4B;
+    /* indigo-950 */
+    --color-border-subtle: #818CF8;
+    --color-primary: #4338CA;
+    /* indigo-700 */
     --color-primary-light: #e0e7ff;
     --color-primary-border: #c7d2fe;
 }
 
 .dark[data-theme="midnight"] {
-    --color-primary: #818cf8;
-    --color-primary-light: rgba(129, 140, 248, 0.08);
-    --color-primary-border: rgba(129, 140, 248, 0.15);
+    --color-bg-base: #1E1B4B;
+    --color-bg-surface: #312E81;
+    --color-text-base: #C7D2FE;
+    --color-primary: #818CF8;
+    --color-primary-light: rgba(129, 140, 248, 0.1);
+    --color-primary-border: rgba(129, 140, 248, 0.2);
 }
 
 /* 9. COFFEE */
 [data-theme="coffee"] {
-    --color-primary: #78350f;
+    --color-bg-base: #FCD34D;
+    /* amber-300 */
+    --color-bg-surface: #FDE68A;
+    /* amber-200 */
+    --color-text-base: #451A03;
+    /* amber-950 */
+    --color-border-subtle: #FBBF24;
+    --color-primary: #B45309;
+    /* amber-700 */
     --color-primary-light: #fefce8;
     --color-primary-border: #fde047;
 }
 
 .dark[data-theme="coffee"] {
-    --color-primary: #fbbf24;
-    --color-primary-light: rgba(251, 191, 36, 0.08);
-    --color-primary-border: rgba(251, 191, 36, 0.15);
+    --color-bg-base: #451A03;
+    --color-bg-surface: #78350F;
+    --color-text-base: #FDE68A;
+    --color-primary: #FBBF24;
+    --color-primary-light: rgba(251, 191, 36, 0.1);
+    --color-primary-border: rgba(251, 191, 36, 0.2);
 }
 
 /* 10. ROYAL */
 [data-theme="royal"] {
-    --color-primary: #581c87;
+    --color-bg-base: #D8B4FE;
+    /* purple-300 */
+    --color-bg-surface: #E9D5FF;
+    /* purple-200 */
+    --color-text-base: #3B0764;
+    /* purple-950 */
+    --color-border-subtle: #C084FC;
+    --color-primary: #7E22CE;
+    /* purple-700 */
     --color-primary-light: #f3e8ff;
     --color-primary-border: #e9d5ff;
 }
 
 .dark[data-theme="royal"] {
-    --color-primary: #c084fc;
-    --color-primary-light: rgba(192, 132, 252, 0.08);
-    --color-primary-border: rgba(192, 132, 252, 0.15);
+    --color-bg-base: #3B0764;
+    --color-bg-surface: #581C87;
+    --color-text-base: #E9D5FF;
+    --color-primary: #C084FC;
+    --color-primary-light: rgba(192, 132, 252, 0.1);
+    --color-primary-border: rgba(192, 132, 252, 0.2);
 }
 
 /* 11. ETHEREAL */
 [data-theme="ethereal"] {
-    --color-primary: #0d9488;
+    --color-bg-base: #5EEAD4;
+    /* teal-300 */
+    --color-bg-surface: #99F6E4;
+    /* teal-200 */
+    --color-text-base: #042F2E;
+    /* teal-950 */
+    --color-border-subtle: #2DD4BF;
+    --color-primary: #0F766E;
+    /* teal-700 */
     --color-primary-light: #ccfbf1;
     --color-primary-border: #99f6e4;
 }
 
 .dark[data-theme="ethereal"] {
-    --color-primary: #2dd4bf;
-    --color-primary-light: rgba(45, 212, 191, 0.08);
-    --color-primary-border: rgba(45, 212, 191, 0.15);
+    --color-bg-base: #042F2E;
+    --color-bg-surface: #115E59;
+    --color-text-base: #99F6E4;
+    --color-primary: #2DD4BF;
+    --color-primary-light: rgba(45, 212, 191, 0.1);
+    --color-primary-border: rgba(45, 212, 191, 0.2);
 }
 
 /* 12. SAPPHIRE */
 [data-theme="sapphire"] {
-    --color-primary: #1d4ed8;
+    --color-bg-base: #93C5FD;
+    /* blue-300 */
+    --color-bg-surface: #BFDBFE;
+    /* blue-200 */
+    --color-text-base: #172554;
+    /* blue-950 */
+    --color-border-subtle: #60A5FA;
+    --color-primary: #1D4ED8;
+    /* blue-700 */
     --color-primary-light: #dbeafe;
     --color-primary-border: #bfdbfe;
 }
 
 .dark[data-theme="sapphire"] {
-    --color-primary: #60a5fa;
-    --color-primary-light: rgba(96, 165, 250, 0.08);
-    --color-primary-border: rgba(96, 165, 250, 0.15);
+    --color-bg-base: #172554;
+    --color-bg-surface: #1E3A8A;
+    --color-text-base: #BFDBFE;
+    --color-primary: #60A5FA;
+    --color-primary-light: rgba(96, 165, 250, 0.1);
+    --color-primary-border: rgba(96, 165, 250, 0.2);
 }
 
 /* --- ANIMATIONS (Muted & Smooth) --- */

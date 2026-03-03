@@ -726,7 +726,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
                                 {expandedCanvas ? (
                                     <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in zoom-in duration-300">
-                                        <div className="w-full max-w-7xl h-full max-h-[90vh] bg-[#FFFBEB] dark:bg-black rounded-2xl shadow-2xl overflow-hidden relative border border-white/10 flex flex-col">
+                                        <div className="w-full max-w-7xl h-full max-h-[90vh] bg-[var(--color-bg-base)] dark:bg-black rounded-2xl shadow-2xl overflow-hidden relative border border-white/10 flex flex-col">
                                             <button
                                                 onClick={() => setExpandedCanvas(null)}
                                                 className="absolute top-4 right-4 z-50 bg-black/50 hover:bg-red-500 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-lg"
@@ -744,7 +744,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     </div>
                                 ) : null}
 
-                                <div className="flex flex-col xl:flex-row gap-6 h-[600px] relative z-10 transition-all">
+                                <div className="flex flex-col md:flex-row gap-6 h-[600px] relative z-10 transition-all">
                                     <div
                                         onClick={() => setExpandedCanvas('garden')}
                                         className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#050a05]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
@@ -842,13 +842,31 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 <p className="hidden md:block text-[10px] font-bold text-red-600/60 dark:text-red-400/50 uppercase tracking-widest">Release & Let Go</p>
                                             </div>
                                         </div>
+
+                                        {/* TILE 7: BOOK OF YOU */}
+                                        <Link
+                                            to="/book-of-you"
+                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-xl border-0 shadow-sm hover:shadow-sm hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-amber-600/5 pointer-events-none"></div>
+                                            <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
+                                                <div className="relative mb-1 md:mb-4">
+                                                    <div className="absolute -inset-4 bg-yellow-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                    <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-yellow-500 to-amber-700 border border-yellow-400/50 rounded-lg flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
+                                                        <BookOpen className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                                                    </div>
+                                                </div>
+                                                <h3 className="text-[7px] md:text-sm font-black text-amber-700 dark:text-amber-300 uppercase tracking-[0.2em] mb-1">Book of You</h3>
+                                                <p className="hidden md:block text-[10px] font-bold text-amber-600/60 dark:text-amber-400/50 uppercase tracking-widest">Your Journey</p>
+                                            </div>
+                                        </Link>
                                     </div>
                                 </div>
                             </div>
                         )}
 
                         {activeTab === 'hub' && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
+                            <div className="space-y-4 md:space-y-5 animate-in fade-in slide-in-from-bottom-5 duration-500">
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                                     {dashboardUser ? (
@@ -901,25 +919,25 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     <MoodTracker onMoodSelect={handleMoodSelect} />
                                 </div>
 
-                                <div className="w-full space-y-4">
+                                <div className="w-full space-y-2 md:space-y-4">
                                     <div className="grid grid-cols-2 gap-4 w-full">
-                                        <button onClick={() => setOpenSection(p => p === 'arcade' ? null : 'arcade')} className="w-full p-3 md:p-6 flex items-center justify-center md:justify-between hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center md:text-left bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-sm">
+                                        <button onClick={() => setOpenSection(p => p === 'arcade' ? null : 'arcade')} className="w-full py-2.5 px-3 md:p-5 flex items-center justify-center md:justify-between hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center md:text-left bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-sm">
                                             <div className="flex items-center gap-2 md:gap-3 flex-col md:flex-row mx-auto md:mx-0">
-                                                <div className="p-2 rounded-xl bg-[var(--color-primary)]/10 text-primary dark:bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
-                                                    <Gamepad2 className="w-5 h-5 md:w-6 md:h-6" />
+                                                <div className="p-1.5 md:p-2 rounded-xl bg-[var(--color-primary)]/10 text-primary dark:bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
+                                                    <Gamepad2 className="w-4 h-4 md:w-6 md:h-6" />
                                                 </div>
-                                                <span className="font-bold text-sm md:text-lg tracking-wide opacity-90 truncate">Arcade</span>
+                                                <span className="font-bold text-xs md:text-lg tracking-wide opacity-90 truncate">Arcade</span>
                                             </div>
                                             <div className="hidden md:block">
                                                 {openSection === 'arcade' ? <ChevronUp className="w-4 h-4 md:w-5 md:h-5 opacity-50" /> : <ChevronDown className="w-4 h-4 md:w-5 md:h-5 opacity-50" />}
                                             </div>
                                         </button>
-                                        <button onClick={() => setOpenSection(p => p === 'journal' ? null : 'journal')} className="w-full p-3 md:p-6 flex items-center justify-center md:justify-between hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center md:text-left bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-sm">
+                                        <button onClick={() => setOpenSection(p => p === 'journal' ? null : 'journal')} className="w-full py-2.5 px-3 md:p-5 flex items-center justify-center md:justify-between hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center md:text-left bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-sm">
                                             <div className="flex items-center gap-2 md:gap-3 flex-col md:flex-row mx-auto md:mx-0">
-                                                <div className="p-2 rounded-xl bg-[var(--color-primary)]/10 text-primary dark:bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
-                                                    <Feather className="w-5 h-5 md:w-6 md:h-6" />
+                                                <div className="p-1.5 md:p-2 rounded-xl bg-[var(--color-primary)]/10 text-primary dark:bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
+                                                    <Feather className="w-4 h-4 md:w-6 md:h-6" />
                                                 </div>
-                                                <span className="font-bold text-sm md:text-lg tracking-wide opacity-90 truncate">Journal</span>
+                                                <span className="font-bold text-xs md:text-lg tracking-wide opacity-90 truncate">Journal</span>
                                             </div>
                                             <div className="hidden md:block">
                                                 {openSection === 'journal' ? <ChevronUp className="w-4 h-4 md:w-5 md:h-5 opacity-50" /> : <ChevronDown className="w-4 h-4 md:w-5 md:h-5 opacity-50" />}
@@ -1017,8 +1035,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         </div>
                                     </div>
                                 </div>
-                                <div>
-                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-5"><div><h2 className="text-xl md:text-2xl font-black dark:text-primary">{t('sec_specialists')}</h2><p className="text-gray-500 text-xs md:text-sm">{t('roster_heading')}</p></div><div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide"><button onClick={() => setSpecialtyFilter('All')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === 'All' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>All</button>{uniqueSpecialties.map(spec => (<button key={spec} onClick={() => setSpecialtyFilter(spec)} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === spec ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>{spec}</button>))}</div></div>
+                                <div className="mt-2 md:mt-0">
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-3 md:gap-4 mb-4 md:mb-5"><div><h2 className="text-xl md:text-2xl font-black dark:text-primary">{t('sec_specialists')}</h2><p className="text-gray-500 text-xs md:text-sm">{t('roster_heading')}</p></div><div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide"><button onClick={() => setSpecialtyFilter('All')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === 'All' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>All</button>{uniqueSpecialties.map(spec => (<button key={spec} onClick={() => setSpecialtyFilter(spec)} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${specialtyFilter === spec ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>{spec}</button>))}</div></div>
                                     {loadingCompanions ? (
                                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                                             {[1, 2, 3, 4, 5].map(i => <CompanionSkeleton key={i} />)}

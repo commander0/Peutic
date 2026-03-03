@@ -32,7 +32,7 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({ position, wait, onMoodSelect 
     };
 
     return (
-        <div className="min-h-screen bg-[#FFFBEB] dark:bg-black text-black dark:text-white flex flex-col items-center justify-center p-6 relative overflow-hidden transition-colors duration-500">
+        <div className="min-h-screen bg-[var(--color-bg-base)] dark:bg-black text-black dark:text-white flex flex-col items-center justify-center p-6 relative overflow-hidden transition-colors duration-500">
             {/* Background Decorations */}
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-300 animate-pulse"></div>
             <div className="absolute top-20 left-10 text-yellow-500/10 dark:text-yellow-500/5 animate-spin-slow">
