@@ -44,12 +44,12 @@ const Soundscapes: React.FC = () => {
             {!isOpen ? (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="w-14 h-14 bg-indigo-600 hover:bg-indigo-500 rounded-full shadow-[0_0_20px_rgba(79,70,229,0.4)] flex items-center justify-center transition-all hover:scale-110 active:scale-95 group"
+                    className="w-14 h-14 bg-indigo-600 hover:bg-indigo-500 rounded-full shadow-sm flex items-center justify-center transition-all hover:scale-110 active:scale-95 group"
                 >
                     <Music className="w-6 h-6 text-white group-hover:rotate-12 transition-transform" />
                 </button>
             ) : (
-                <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900 rounded-3xl p-6 text-white shadow-2xl border border-indigo-700 animate-in slide-in-from-bottom-10 fade-in duration-300 relative">
+                <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900 rounded-xl p-6 text-white shadow-2xl border border-indigo-700 animate-in slide-in-from-bottom-10 fade-in duration-300 relative">
                     <button
                         onClick={() => setIsOpen(false)}
                         className="absolute top-2 right-2 p-2 hover:bg-white/10 rounded-full transition-colors"

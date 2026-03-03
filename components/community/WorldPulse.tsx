@@ -94,11 +94,11 @@ const WorldPulse: React.FC<WorldPulseProps> = ({ onClose }) => {
                 </div>
 
                 <div className="flex gap-6 mt-4">
-                    <div className="flex flex-col items-end backdrop-blur-md bg-white/5 px-6 py-4 rounded-3xl border border-white/10">
+                    <div className="flex flex-col items-end backdrop-blur-md bg-white/5 px-6 py-4 rounded-xl border border-white/10">
                         <span className="text-fuchsia-400 text-xs font-bold tracking-widest uppercase mb-1 flex items-center gap-2"><Heart className="w-3 h-3 animate-pulse" /> Active Entities</span>
                         <span className="text-3xl font-mono text-white">{activeUsersCount.toLocaleString()}</span>
                     </div>
-                    <div className="flex flex-col items-end backdrop-blur-md bg-white/5 px-6 py-4 rounded-3xl border border-white/10 hidden md:flex">
+                    <div className="flex flex-col items-end backdrop-blur-md bg-white/5 px-6 py-4 rounded-xl border border-white/10 hidden md:flex">
                         <span className="text-cyan-400 text-xs font-bold tracking-widest uppercase mb-1 flex items-center gap-2"><Sparkles className="w-3 h-3" /> Ethereal Echoes</span>
                         <span className="text-3xl font-mono text-white">{totalEchoes.toLocaleString()}</span>
                     </div>
@@ -120,7 +120,7 @@ const WorldPulse: React.FC<WorldPulseProps> = ({ onClose }) => {
                         } as React.CSSProperties}
                     >
                         <div
-                            className={`rounded-full ${orb.color} blur-[2px] shadow-[0_0_30px_rgba(255,255,255,0.8)]`}
+                            className={`rounded-full ${orb.color} blur-[2px] shadow-sm`}
                             style={{ width: `${orb.scale * 12}px`, height: `${orb.scale * 12}px` }}
                         />
                         {/* Glow halo */}

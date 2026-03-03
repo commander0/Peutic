@@ -48,7 +48,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
             return (
                 <div className="min-h-[100dvh] w-full bg-[#050505] text-stone-300 flex flex-col items-center justify-center p-8 font-sans animate-in fade-in duration-500">
-                    <div className="max-w-md w-full text-center space-y-6 bg-stone-900/50 p-8 rounded-3xl border border-red-900/30 shadow-[0_0_50px_rgba(220,38,38,0.05)]">
+                    <div className="max-w-md w-full text-center space-y-6 bg-stone-900/50 p-8 rounded-xl border border-red-900/30 shadow-sm">
                         <div className="w-20 h-20 bg-red-950/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-900/50">
                             <AlertOctagon className="w-10 h-10 text-red-500 animate-pulse" />
                         </div>

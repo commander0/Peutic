@@ -39,7 +39,7 @@ const WisdomCircle: React.FC<WisdomCircleProps> = ({ userId }) => {
     };
 
     return (
-        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-900/10 rounded-3xl border border-indigo-100 dark:border-indigo-900/30 p-6 shadow-sm overflow-hidden relative">
+        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-900/10 rounded-xl border border-indigo-100 dark:border-indigo-900/30 p-6 shadow-sm overflow-hidden relative">
             <div className="flex items-center gap-2 mb-6">
                 <div className="p-2 bg-indigo-100 dark:bg-indigo-900/40 rounded-lg">
                     <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
@@ -51,7 +51,7 @@ const WisdomCircle: React.FC<WisdomCircleProps> = ({ userId }) => {
             </div>
 
             {/* Input Area */}
-            <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-indigo-50 dark:border-gray-800 shadow-sm mb-8 relative z-10 transition-shadow focus-within:shadow-md focus-within:border-indigo-200">
+            <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border border-indigo-50 dark:border-gray-800 shadow-sm mb-8 relative z-10 transition-shadow focus-within:shadow-md focus-within:border-indigo-200">
                 <textarea
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
@@ -88,7 +88,7 @@ const WisdomCircle: React.FC<WisdomCircleProps> = ({ userId }) => {
                     </div>
                 ) : (
                     stream.map((entry) => (
-                        <div key={entry.id} className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm p-5 rounded-2xl border border-indigo-50 dark:border-indigo-900/10 hover:border-indigo-200 dark:hover:border-indigo-800 transition-all group">
+                        <div key={entry.id} className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm p-5 rounded-lg border border-indigo-50 dark:border-indigo-900/10 hover:border-indigo-200 dark:hover:border-indigo-800 transition-all group">
                             <Quote className="w-4 h-4 text-indigo-300 dark:text-gray-600 mb-2 fill-current" />
                             <p className="text-gray-700 dark:text-gray-300 text-sm font-medium leading-relaxed mb-4 line-clamp-4">
                                 "{entry.content}"

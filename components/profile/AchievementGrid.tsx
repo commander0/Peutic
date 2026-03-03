@@ -65,7 +65,7 @@ const AchievementGrid: React.FC<AchievementGridProps> = ({ userId }) => {
         return (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 animate-pulse">
                 {[...Array(6)].map((_, i) => (
-                    <div key={i} className="h-24 bg-gray-100 dark:bg-gray-800 rounded-2xl"></div>
+                    <div key={i} className="h-24 bg-gray-100 dark:bg-gray-800 rounded-lg"></div>
                 ))}
             </div>
         );
@@ -83,7 +83,7 @@ const AchievementGrid: React.FC<AchievementGridProps> = ({ userId }) => {
                 return (
                     <div
                         key={ach.id}
-                        className={`relative p-4 rounded-2xl border transition-all duration-300 flex items-center gap-4 ${isUnlocked
+                        className={`relative p-4 rounded-lg border transition-all duration-300 flex items-center gap-4 ${isUnlocked
                             ? 'bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/10 dark:to-orange-900/10 border-yellow-200 dark:border-yellow-700/30 shadow-sm'
                             : 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 grayscale opacity-80'
                             }`}
@@ -115,7 +115,7 @@ const AchievementGrid: React.FC<AchievementGridProps> = ({ userId }) => {
 
                         {/* Shine Effect if unlocked */}
                         {isUnlocked && (
-                            <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-white/0 via-white/30 to-white/0 opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />
+                            <div className="absolute inset-0 rounded-lg bg-gradient-to-tr from-white/0 via-white/30 to-white/0 opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />
                         )}
                     </div>
                 );

@@ -1,484 +1,312 @@
 /* -----------------------------------------------------------------------------
-   PEUTIC THEME SYSTEM (10 Unique Themes)
+   PEUTIC V3.0 ENTERPRISE DESIGN SYSTEM
    ----------------------------------------------------------------------------- */
-:root {
-    --color-primary: #FACC15;
-    /* Default Yellow */
-    --color-primary-light: #FEF08A;
-    --color-primary-border: #FDE047;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-    --color-bg-base: #fef3c7;
-    /* Warm White */
-    --color-text-base: #0A0A0A;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #fde68a 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #fde68a 0%, transparent 80vw);
-}
+@layer base {
+    :root {
+        /* Enterprise Standard Palette */
+        --color-slate-50: #f8fafc;
+        --color-slate-100: #f1f5f9;
+        --color-slate-200: #e2e8f0;
+        --color-slate-800: #1e293b;
+        --color-slate-900: #0f172a;
+        --color-slate-950: #020617;
 
-/* GLOBAL DARK MODE OVERRIDES (Base Layer) */
-.dark {
-    --color-bg-base: #0A0A0A;
-    --color-text-base: #F3F4F6;
-    --color-primary-light: rgba(250, 204, 21, 0.1);
-    --color-primary-border: rgba(250, 204, 21, 0.2);
+        /* Default Light Foundation */
+        --color-bg-base: #ffffff;
+        --color-bg-surface: #f8fafc;
+        --color-text-base: #0f172a;
+        --color-text-muted: #64748b;
+        --color-border-subtle: #e2e8f0;
+
+        /* Interactive Default (Ocean Baseline) */
+        --color-primary: #0284c7;
+        /* Sky-600 */
+        --color-primary-light: #e0f2fe;
+        --color-primary-border: #bae6fd;
+        --color-bg-gradient: radial-gradient(circle at 100% 0%, rgba(14, 165, 233, 0.05), transparent 40vw);
+    }
+
+    .dark {
+        /* Default Dark Foundation */
+        --color-bg-base: #020617;
+        /* Slate-950 */
+        --color-bg-surface: #0f172a;
+        /* Slate-900 */
+        --color-text-base: #f8fafc;
+        --color-text-muted: #94a3b8;
+        --color-border-subtle: #1e293b;
+
+        --color-primary: #38bdf8;
+        /* Sky-400 */
+        --color-primary-light: rgba(56, 189, 248, 0.1);
+        --color-primary-border: rgba(56, 189, 248, 0.2);
+        --color-bg-gradient: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.03), transparent 60vw);
+    }
+
+    body {
+        background-color: var(--color-bg-base);
+        color: var(--color-text-base);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+        letter-spacing: -0.015em;
+        line-height: 1.5;
+        overflow-x: hidden;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+
+    ::selection {
+        background: var(--color-primary-light);
+        color: var(--color-primary);
+    }
+
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--color-border-subtle);
+        border-radius: 4px;
+    }
+
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Refined Typography Hierarchy */
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply tracking-tight font-semibold text-balance;
+    }
+
+    input,
+    textarea {
+        @apply transition-all duration-200 outline-none placeholder-slate-400 dark:placeholder-slate-600;
+    }
+
+    /* Remove excessive neon inputs */
+    input:focus,
+    textarea:focus {
+        @apply ring-2 ring-primary/20 border-primary outline-none;
+    }
 }
 
 /* -----------------------------------------------------------------------------
-   1. SUNSHINE (Bright Gold - Default)
+   ENTERPRISE THEMES (Subtle and Clinical)
    ----------------------------------------------------------------------------- */
+/* 1. SUNSHINE */
 [data-theme="sunshine"] {
-    --color-primary: #FACC15;
+    --color-primary: #ca8a04;
     --color-primary-light: #fef08a;
-    /* Changed from #FFFBEB to Yellow-200 */
-    --color-primary-border: #fdee00;
-    --color-bg-base: #fef3c7;
-    --color-text-base: #0A0A0A;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #fde68a 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #fde68a 0%, transparent 80vw);
+    --color-primary-border: #fde047;
 }
 
-[data-theme="sunshine"].dark,
 .dark[data-theme="sunshine"] {
-    --color-primary: #AF9B00;
-    --color-primary-light: rgba(175, 155, 0, 0.2);
-    --color-primary-border: rgba(175, 155, 0, 0.4);
-    --color-bg-base: #713f12;
-    --color-text-base: #fffbeb;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #713f12 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #713f12 0%, transparent 80vw);
+    --color-primary: #eab308;
+    --color-primary-light: rgba(234, 179, 8, 0.08);
+    --color-primary-border: rgba(234, 179, 8, 0.15);
 }
 
-/* -----------------------------------------------------------------------------
-   2. ROSE (Romance/Soft)
-   ----------------------------------------------------------------------------- */
+/* 2. ROSE */
 [data-theme="rose"] {
-    --color-primary: #FB7185;
+    --color-primary: #e11d48;
     --color-primary-light: #ffe4e6;
-    /* Changed from #FFF1F2 to Rose-100 */
-    --color-primary-border: #FECDD3;
-    --color-bg-base: #fff1f2;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #ffe4e6 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #ffe4e6 0%, transparent 80vw);
+    --color-primary-border: #fecdd3;
 }
 
-[data-theme="rose"].dark,
 .dark[data-theme="rose"] {
-    --color-primary: #F43F5E;
-    --color-primary-light: rgba(244, 63, 94, 0.1);
-    --color-primary-border: rgba(244, 63, 94, 0.3);
-    --color-bg-base: #1c0508;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, rgba(244, 63, 94, 0.1) 0%, transparent 80vw), radial-gradient(circle at 100% 100%, rgba(244, 63, 94, 0.1) 0%, transparent 80vw);
+    --color-primary: #fb7185;
+    --color-primary-light: rgba(251, 113, 133, 0.08);
+    --color-primary-border: rgba(251, 113, 133, 0.15);
 }
 
-/* -----------------------------------------------------------------------------
-   3. OCEAN (Calm/Blue)
-   ----------------------------------------------------------------------------- */
+/* 3. OCEAN */
 [data-theme="ocean"] {
-    --color-primary: #0ea5e9;
+    --color-primary: #0284c7;
     --color-primary-light: #e0f2fe;
-    --color-primary-border: #7dd3fc;
-    --color-bg-base: #e0f2fe;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #bae6fd 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #bae6fd 0%, transparent 80vw);
+    --color-primary-border: #bae6fd;
 }
 
-[data-theme="ocean"].dark,
 .dark[data-theme="ocean"] {
     --color-primary: #38bdf8;
-    --color-primary-light: rgba(56, 189, 248, 0.2);
-    --color-primary-border: rgba(56, 189, 248, 0.4);
-    --color-bg-base: #0c4a6e;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #0c4a6e 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #0c4a6e 0%, transparent 80vw);
+    --color-primary-light: rgba(56, 189, 248, 0.08);
+    --color-primary-border: rgba(56, 189, 248, 0.15);
 }
 
-/* -----------------------------------------------------------------------------
-   4. FOREST (Nature/Green)
-   ----------------------------------------------------------------------------- */
+/* 4. FOREST */
 [data-theme="forest"] {
     --color-primary: #059669;
     --color-primary-light: #d1fae5;
-    --color-primary-border: #6ee7b7;
-    --color-bg-base: #d1fae5;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #a7f3d0 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #a7f3d0 0%, transparent 80vw);
+    --color-primary-border: #a7f3d0;
 }
 
-[data-theme="forest"].dark,
 .dark[data-theme="forest"] {
-    --color-primary: #10b981;
-    --color-primary-light: rgba(16, 185, 129, 0.2);
-    --color-primary-border: rgba(16, 185, 129, 0.4);
-    --color-bg-base: #064e3b;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #064e3b 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #064e3b 0%, transparent 80vw);
+    --color-primary: #34d399;
+    --color-primary-light: rgba(52, 211, 153, 0.08);
+    --color-primary-border: rgba(52, 211, 153, 0.15);
 }
 
-/* -----------------------------------------------------------------------------
-   5. SUNSET (Vibrant Orange/Purple)
-   ----------------------------------------------------------------------------- */
+/* 5. SUNSET */
 [data-theme="sunset"] {
-    --color-primary: #F97316;
-    --color-primary-light: #FFF7ED;
-    --color-primary-border: #FFEDD5;
-    --color-bg-base: #fff7ed;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #ffedd5 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #ffedd5 0%, transparent 80vw);
+    --color-primary: #ea580c;
+    --color-primary-light: #ffedd5;
+    --color-primary-border: #fed7aa;
 }
 
-[data-theme="sunset"].dark,
 .dark[data-theme="sunset"] {
-    --color-primary: #FB923C;
-    --color-primary-light: rgba(251, 146, 60, 0.1);
-    --color-primary-border: rgba(251, 146, 60, 0.3);
-    --color-bg-base: #1e0901;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, rgba(249, 115, 22, 0.1) 0%, transparent 80vw), radial-gradient(circle at 100% 100%, rgba(249, 115, 22, 0.1) 0%, transparent 80vw);
+    --color-primary: #fb923c;
+    --color-primary-light: rgba(251, 146, 60, 0.08);
+    --color-primary-border: rgba(251, 146, 60, 0.15);
 }
 
-/* -----------------------------------------------------------------------------
-   6. LAVENDER (Soft Purple)
-   ----------------------------------------------------------------------------- */
+/* 6. LAVENDER */
 [data-theme="lavender"] {
-    --color-primary: #7c3aed;
+    --color-primary: #6d28d9;
     --color-primary-light: #ede9fe;
-    --color-primary-border: #c4b5fd;
-    --color-bg-base: #ede9fe;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #ddd6fe 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #ddd6fe 0%, transparent 80vw);
+    --color-primary-border: #ddd6fe;
 }
 
-[data-theme="lavender"].dark,
 .dark[data-theme="lavender"] {
     --color-primary: #a78bfa;
-    --color-primary-light: rgba(167, 139, 250, 0.2);
-    --color-primary-border: rgba(167, 139, 250, 0.4);
-    --color-bg-base: #2e1065;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #2e1065 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #2e1065 0%, transparent 80vw);
+    --color-primary-light: rgba(167, 139, 250, 0.08);
+    --color-primary-border: rgba(167, 139, 250, 0.15);
 }
 
-/* -----------------------------------------------------------------------------
-   7. NEON (High Tech)
-   ----------------------------------------------------------------------------- */
+/* 7. CYBERPUNK (Subdued) */
 [data-theme="cyberpunk"] {
-    --color-primary: #06b6d4;
-    --color-primary-light: #ECFEFF;
-    --color-primary-border: #22d3ee;
-    --color-bg-base: #ecfeff;
-    --color-text-base: #080808;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #cffafe 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #cffafe 0%, transparent 80vw);
-}
-
-[data-theme="cyberpunk"].dark,
-.dark[data-theme="cyberpunk"] {
-    --color-primary: #00f0ff;
-    --color-primary-light: rgba(0, 240, 255, 0.15);
-    --color-primary-border: #00f0ff;
-    --color-bg-base: #050510;
-    --color-text-base: #e0faff;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #050510 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #050510 0%, transparent 80vw);
-}
-
-/* -----------------------------------------------------------------------------
-   8. NIGHT (Deep Indigo)
-   ----------------------------------------------------------------------------- */
-[data-theme="midnight"] {
-    --color-primary: #4F46E5;
-    --color-primary-light: #EEF2FF;
-    --color-primary-border: #C7D2FE;
-    --color-bg-base: #eef2ff;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #e0e7ff 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #e0e7ff 0%, transparent 80vw);
-}
-
-[data-theme="midnight"].dark,
-.dark[data-theme="midnight"] {
-    --color-primary: #818CF8;
-    --color-primary-light: rgba(129, 140, 248, 0.1);
-    --color-primary-border: rgba(129, 140, 248, 0.3);
-    --color-bg-base: #060614;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, rgba(79, 70, 229, 0.1) 0%, transparent 80vw), radial-gradient(circle at 100% 100%, rgba(79, 70, 229, 0.1) 0%, transparent 80vw);
-}
-
-/* -----------------------------------------------------------------------------
-   9. COFFEE (Earthy/Warm)
-   ----------------------------------------------------------------------------- */
-[data-theme="coffee"] {
-    --color-primary: #854d0e;
-    --color-primary-light: #fefce8;
-    --color-primary-border: #dcb068;
-    --color-bg-base: #fffbf0;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #aaaa8a 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #aaaa8a 0%, transparent 80vw);
-}
-
-[data-theme="coffee"].dark,
-.dark[data-theme="coffee"] {
-    --color-primary: #d4a373;
-    --color-primary-light: rgba(212, 163, 115, 0.1);
-    --color-primary-border: rgba(212, 163, 115, 0.3);
-    --color-bg-base: #140d08;
-    --color-text-base: #eaddcf;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, rgba(133, 77, 14, 0.1) 0%, transparent 80vw), radial-gradient(circle at 100% 100%, rgba(133, 77, 14, 0.1) 0%, transparent 80vw);
-}
-
-/* -----------------------------------------------------------------------------
-   10. ROYAL (Gold/Purple Luxury)
-   ----------------------------------------------------------------------------- */
-[data-theme="royal"] {
-    --color-primary: #7e22ce;
-    --color-primary-light: #f3e8ff;
-    --color-primary-border: #d8b4fe;
-    --color-bg-base: #f3e8ff;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #e9d5ff 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #e9d5ff 0%, transparent 80vw);
-}
-
-[data-theme="royal"].dark,
-.dark[data-theme="royal"] {
-    --color-primary: #ffd700;
-    --color-primary-light: rgba(255, 215, 0, 0.15);
-    --color-primary-border: rgba(255, 215, 0, 0.5);
-    --color-bg-base: #3b0764;
-    --color-text-base: #fdf4ff;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #3b0764 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #3b0764 0%, transparent 80vw);
-}
-
-
-
-
-
-/* -----------------------------------------------------------------------------
-   11. ETHEREAL (V2 Zen Bioluminescence)
-   ----------------------------------------------------------------------------- */
-[data-theme="ethereal"] {
-    --color-primary: #06b6d4;
-    --color-primary-light: #ecfeff;
+    --color-primary: #0891b2;
+    --color-primary-light: #cffafe;
     --color-primary-border: #a5f3fc;
-    --color-bg-base: #f0fdfa;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #ccfbf1 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #ccfbf1 0%, transparent 80vw);
 }
 
-[data-theme="ethereal"].dark,
-.dark[data-theme="ethereal"] {
+.dark[data-theme="cyberpunk"] {
     --color-primary: #22d3ee;
-    --color-primary-light: rgba(34, 211, 238, 0.15);
-    --color-primary-border: rgba(34, 211, 238, 0.4);
-    --color-bg-base: #022c22;
-    --color-text-base: #f0fdfa;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #064e3b 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #134e4a 0%, transparent 80vw);
+    --color-primary-light: rgba(34, 211, 238, 0.08);
+    --color-primary-border: rgba(34, 211, 238, 0.15);
 }
 
-/* -----------------------------------------------------------------------------
-   12. SAPPHIRE (Deep Crystal Blue)
-   ----------------------------------------------------------------------------- */
+/* 8. MIDNIGHT */
+[data-theme="midnight"] {
+    --color-primary: #4338ca;
+    --color-primary-light: #e0e7ff;
+    --color-primary-border: #c7d2fe;
+}
+
+.dark[data-theme="midnight"] {
+    --color-primary: #818cf8;
+    --color-primary-light: rgba(129, 140, 248, 0.08);
+    --color-primary-border: rgba(129, 140, 248, 0.15);
+}
+
+/* 9. COFFEE */
+[data-theme="coffee"] {
+    --color-primary: #78350f;
+    --color-primary-light: #fefce8;
+    --color-primary-border: #fde047;
+}
+
+.dark[data-theme="coffee"] {
+    --color-primary: #fbbf24;
+    --color-primary-light: rgba(251, 191, 36, 0.08);
+    --color-primary-border: rgba(251, 191, 36, 0.15);
+}
+
+/* 10. ROYAL */
+[data-theme="royal"] {
+    --color-primary: #581c87;
+    --color-primary-light: #f3e8ff;
+    --color-primary-border: #e9d5ff;
+}
+
+.dark[data-theme="royal"] {
+    --color-primary: #c084fc;
+    --color-primary-light: rgba(192, 132, 252, 0.08);
+    --color-primary-border: rgba(192, 132, 252, 0.15);
+}
+
+/* 11. ETHEREAL */
+[data-theme="ethereal"] {
+    --color-primary: #0d9488;
+    --color-primary-light: #ccfbf1;
+    --color-primary-border: #99f6e4;
+}
+
+.dark[data-theme="ethereal"] {
+    --color-primary: #2dd4bf;
+    --color-primary-light: rgba(45, 212, 191, 0.08);
+    --color-primary-border: rgba(45, 212, 191, 0.15);
+}
+
+/* 12. SAPPHIRE */
 [data-theme="sapphire"] {
-    --color-primary: #2563EB;
-    --color-primary-light: #eff6ff;
-    --color-primary-border: #93c5fd;
-    --color-bg-base: #eff6ff;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #dbeafe 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #dbeafe 0%, transparent 80vw);
+    --color-primary: #1d4ed8;
+    --color-primary-light: #dbeafe;
+    --color-primary-border: #bfdbfe;
 }
 
-[data-theme="sapphire"].dark,
 .dark[data-theme="sapphire"] {
-    --color-primary: #60A5FA;
-    --color-primary-light: rgba(96, 165, 250, 0.2);
-    --color-primary-border: rgba(96, 165, 250, 0.4);
-    --color-bg-base: #172554;
-    --color-text-base: #eff6ff;
-    --color-bg-gradient: radial-gradient(circle at 0% 0%, #1e3a8a 0%, transparent 80vw), radial-gradient(circle at 100% 100%, #1e3a8a 0%, transparent 80vw);
+    --color-primary: #60a5fa;
+    --color-primary-light: rgba(96, 165, 250, 0.08);
+    --color-primary-border: rgba(96, 165, 250, 0.15);
 }
 
-/* Utility Animations */
-.animate-aura-glow {
-    animation: aura-glow 3s infinite ease-in-out;
+/* --- ANIMATIONS (Muted & Smooth) --- */
+.animate-flicker {
+    animation: flicker 4s infinite alternate cubic-bezier(0.45, 0.05, 0.55, 0.95);
 }
 
-@keyframes aura-glow {
-    0% {
-        box-shadow: 0 0 10px var(--color-primary-light);
-    }
-
-    50% {
-        box-shadow: 0 0 25px var(--color-primary);
-    }
-
-    100% {
-        box-shadow: 0 0 10px var(--color-primary-light);
-    }
-}
-
-@keyframes sway {
-
-    0%,
-    100% {
-        transform: rotate(0deg);
-    }
-
-    25% {
-        transform: rotate(2deg);
-    }
-
-    75% {
-        transform: rotate(-2deg);
-    }
-}
-
-/* Base Transition */
-body {
-    background-color: var(--color-bg-base);
-    color: var(--color-text-base);
-    transition: background-color 0.5s ease, color 0.5s ease;
-}
-
-::selection {
-    background: var(--color-primary);
-    color: black;
-}
-
-/* --- CRITICAL VISUAL FX ENGINE --- */
-
-/* 1. Realistic Candle Flicker */
 @keyframes flicker {
 
     0%,
     100% {
-        transform: translateX(-50%) scale(1);
-        opacity: 1;
-    }
-
-    10% {
-        transform: translateX(-52%) scale(0.9) skewX(-2deg);
-        opacity: 0.9;
-    }
-
-    20% {
-        transform: translateX(-48%) scale(1.1) skewX(2deg);
-        opacity: 1;
-    }
-
-    30% {
-        transform: translateX(-51%) scale(0.95);
-        opacity: 0.95;
-    }
-
-    40% {
-        transform: translateX(-49%) scale(1.05);
         opacity: 1;
     }
 
     50% {
-        transform: translateX(-50%) scale(1);
-        opacity: 1;
-        filter: brightness(1.2);
-    }
-
-    60% {
-        transform: translateX(-51%) scale(0.9);
-        opacity: 0.9;
-    }
-
-    70% {
-        transform: translateX(-49%) scale(1.1);
-        opacity: 1;
-    }
-
-    80% {
-        transform: translateX(-52%) scale(0.95);
-        opacity: 0.95;
-    }
-
-    90% {
-        transform: translateX(-48%) scale(1.05);
-        opacity: 1;
-    }
-}
-
-.animate-flicker {
-    animation: flicker 3s infinite alternate cubic-bezier(0.45, 0.05, 0.55, 0.95);
-}
-
-/* 2. Floating Levitation */
-@keyframes float {
-    0% {
-        transform: translateY(0px) rotate(0deg);
-    }
-
-    50% {
-        transform: translateY(-15px) rotate(2deg);
-    }
-
-    100% {
-        transform: translateY(0px) rotate(0deg);
+        opacity: 0.85;
     }
 }
 
 .animate-float {
-    animation: float 6s ease-in-out infinite;
+    animation: float 8s ease-in-out infinite;
 }
 
-@keyframes float-delayed {
+@keyframes float {
     0% {
-        transform: translateY(0px) rotate(0deg);
+        transform: translateY(0px);
     }
 
     50% {
-        transform: translateY(-10px) rotate(-2deg);
+        transform: translateY(-8px);
     }
 
     100% {
-        transform: translateY(0px) rotate(0deg);
+        transform: translateY(0px);
     }
 }
 
-.animate-float-delayed {
-    animation: float-delayed 7s ease-in-out infinite 2s;
-}
-
-/* 3. Ember Particles */
-@keyframes ember-fly-1 {
-    0% {
-        transform: translate(0, 0) scale(1);
-        opacity: 1;
-    }
-
-    100% {
-        transform: translate(-20px, -80px) scale(0);
-        opacity: 0;
-    }
-}
-
-.animate-ember-fly-1 {
-    animation: ember-fly-1 2s linear infinite;
-}
-
-@keyframes ember-fly-2 {
-    0% {
-        transform: translate(0, 0) scale(1);
-        opacity: 1;
-    }
-
-    100% {
-        transform: translate(20px, -60px) scale(0);
-        opacity: 0;
-    }
-}
-
-.animate-ember-fly-2 {
-    animation: ember-fly-2 2.5s linear infinite 0.5s;
-}
-
-/* 4. Pulse Slow & Fast */
-.animate-pulse-slow {
-    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.animate-pulse-fast {
-    animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* 5. Spin Slow */
-.animate-spin-slow {
-    animation: spin 12s linear infinite;
-}
-
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-/* 6. Tilt for Holo Cards */
 .perspective-1000 {
     perspective: 1000px;
 }
@@ -487,123 +315,7 @@ body {
     transform-style: preserve-3d;
 }
 
-/* 7. Ethereal Breathe (Zen Dojo) */
-@keyframes ethereal-breathe {
-
-    0%,
-    100% {
-        transform: scale(1);
-        opacity: 0.8;
-    }
-
-    50% {
-        transform: scale(1.05);
-        opacity: 1;
-        filter: brightness(1.1);
-    }
-}
-
-.animate-ethereal-breathe {
-    animation: ethereal-breathe 8s ease-in-out infinite;
-}
-
-/* 8. Mystical Shimmer (Oracle) */
-@keyframes shimmer {
-    0% {
-        background-position: -200% center;
-    }
-
-    100% {
-        background-position: 200% center;
-    }
-}
-
-.animate-shimmer {
-    background: linear-gradient(90deg,
-            rgba(255, 255, 255, 0) 0%,
-            rgba(255, 255, 255, 0.1) 50%,
-            rgba(255, 255, 255, 0) 100%);
-    background-size: 200% auto;
-    animation: shimmer 3s linear infinite;
-}
-
-/* 9. Particle Float (Oracle/Lumina) */
-@keyframes particle-float-up {
-    0% {
-        transform: translateY(0) scale(1);
-        opacity: 0;
-    }
-
-    10% {
-        opacity: 0.8;
-    }
-
-    90% {
-        opacity: 0.2;
-    }
-
-    100% {
-        transform: translateY(-100px) scale(0.5);
-        opacity: 0;
-    }
-}
-
-.animate-particle-float {
-    animation: particle-float-up 4s ease-in infinite;
-}
-
-/* 10. Typewriter Cursor */
-@keyframes blink-cursor {
-
-    0%,
-    100% {
-        border-color: transparent
-    }
-
-    50% {
-        border-color: currentColor
-    }
-}
-
-.typewriter-cursor {
-    border-right: 2px solid;
-    animation: blink-cursor 0.75s step-end infinite;
-}
-
-/* --- GLOBAL INPUT AESTHETICS (Focus Rings) --- */
-@layer base {
-
-    input,
-    textarea {
-        @apply transition-all duration-300 outline-none;
-    }
-
-    input:focus,
-    textarea:focus {
-        @apply outline-none ring-0 border-primary/50;
-        box-shadow: 0 0 20px var(--color-primary-light), inset 0 0 10px rgba(255, 255, 255, 0.05);
-    }
-}
-
-/* --- GLOBAL TYPOGRAPHY & ICONOGRAPHY --- */
-@layer base {
-
-    /* Refined Text Hierarchies */
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
-        @apply tracking-tighter text-balance;
-    }
-
-    p {
-        @apply leading-relaxed tracking-normal text-black/80 dark:text-white/80;
-    }
-
-    /* Standardize Lucide icon stroke widths globally to 1.5 for a sleeker look */
-    svg.lucide {
-        stroke-width: 1.5px !important;
-    }
+/* Smooth UI specific */
+.glass-panel {
+    @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/50 shadow-sm rounded-xl;
 }

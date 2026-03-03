@@ -114,7 +114,7 @@ const TechCheck: React.FC<TechCheckProps> = ({ onConfirm, onCancel }) => {
 
     return (
         <div className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-gray-900 border border-gray-800 rounded-3xl max-w-lg w-full p-8 shadow-2xl animate-in zoom-in duration-300">
+            <div className="bg-gray-900 border border-gray-800 rounded-xl max-w-lg w-full p-8 shadow-2xl animate-in zoom-in duration-300">
                 <h2 className="text-2xl font-black text-white mb-6 text-center">Tech Check</h2>
 
                 {hasPermissions === null && (

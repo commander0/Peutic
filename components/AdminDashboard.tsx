@@ -48,7 +48,7 @@ const ConfirmModal: React.FC<{
     if (!isOpen) return null;
     return (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-gray-950 border border-gray-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in duration-200">
+            <div className="bg-gray-950 border border-gray-800 rounded-lg w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in duration-200">
                 <div className="p-6 text-center">
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${type === 'danger' ? 'bg-red-500/10 text-red-500' : 'bg-blue-500/10 text-blue-500'}`}>
                         {type === 'danger' ? <AlertTriangle className="w-6 h-6" /> : <Shield className="w-6 h-6" />}
@@ -76,7 +76,7 @@ const InputModal: React.FC<{
     if (!isOpen) return null;
     return (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-gray-950 border border-gray-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in duration-200">
+            <div className="bg-gray-950 border border-gray-800 rounded-lg w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in duration-200">
                 <div className="p-6">
                     <h3 className="text-xl font-black text-white mb-4 text-center">{title}</h3>
                     <input
@@ -359,7 +359,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
             <aside className={`fixed md:static inset-y-0 left-0 w-64 bg-[#050505] border-r border-white/5 z-50 transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 flex flex-col`}>
                 <div className="p-5 border-b border-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-yellow-500 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.4)]">
+                        <div className="w-9 h-9 bg-yellow-500 rounded-xl flex items-center justify-center shadow-sm">
                             <Activity className="w-5 h-5 text-black" />
                         </div>
                         <div>
@@ -444,7 +444,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                 <div className="lg:col-span-2 space-y-6">
 
                                     {/* 1. Active Concurrency */}
-                                    <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-5">
+                                    <div className="bg-[#0A0A0A] border border-white/5 rounded-lg p-5">
                                         <h3 className="font-bold text-white mb-5 flex items-center gap-2 text-sm"><Server className="w-4 h-4 text-purple-500" /> Real-time Concurrency</h3>
 
                                         {/* Dynamic Block Meter based on Capacity */}
@@ -452,7 +452,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                             {Array.from({ length: MAX_CONCURRENT_CAPACITY }).map((_, i) => (
                                                 <div
                                                     key={i}
-                                                    className={`w-7 h-7 md:w-8 md:h-8 rounded-lg transition-all duration-500 border border-black/20 ${i < activeCount ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)] animate-pulse' : 'bg-gray-800/50'}`}
+                                                    className={`w-7 h-7 md:w-8 md:h-8 rounded-lg transition-all duration-500 border border-black/20 ${i < activeCount ? 'bg-green-500 shadow-sm animate-pulse' : 'bg-gray-800/50'}`}
                                                 ></div>
                                             ))}
                                         </div>
@@ -464,7 +464,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                     </div>
 
                                     {/* 2. Waiting Room */}
-                                    <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-5">
+                                    <div className="bg-[#0A0A0A] border border-white/5 rounded-lg p-5">
                                         <h3 className="font-bold text-white mb-5 flex items-center gap-2 text-sm"><Clock className="w-4 h-4 text-yellow-500" /> Waiting Room</h3>
 
                                         {/* 35 Block Meter */}
@@ -472,7 +472,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                             {Array.from({ length: 35 }).map((_, i) => (
                                                 <div
                                                     key={i}
-                                                    className={`aspect-square rounded-lg transition-all duration-500 border border-black/20 ${i < waitingCount ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.6)] animate-pulse' : 'bg-gray-800/50'}`}
+                                                    className={`aspect-square rounded-lg transition-all duration-500 border border-black/20 ${i < waitingCount ? 'bg-yellow-500 shadow-sm animate-pulse' : 'bg-gray-800/50'}`}
                                                 ></div>
                                             ))}
                                         </div>
@@ -484,7 +484,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                     </div>
 
                                     {/* Global Broadcaster */}
-                                    <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-5 relative overflow-hidden">
+                                    <div className="bg-[#0A0A0A] border border-white/5 rounded-lg p-5 relative overflow-hidden">
                                         <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><Megaphone className="w-20 h-20 text-white" /></div>
                                         <h3 className="font-bold text-white mb-4 flex items-center gap-2 text-sm"><Megaphone className="w-4 h-4 text-blue-500" /> Multi-Channel Broadcast System</h3>
 
@@ -525,7 +525,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                 </div>
 
                                 {/* Live Feed */}
-                                <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-5">
+                                <div className="bg-[#0A0A0A] border border-white/5 rounded-lg p-5">
                                     <h3 className="font-bold text-white mb-4 flex items-center gap-2 text-sm"><Activity className="w-4 h-4 text-yellow-500" /> Activity Log</h3>
                                     <div className="space-y-2">
                                         {loading ? (
@@ -553,7 +553,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                             <p className="text-gray-500 text-xs mb-6">Monitor high-risk interactions and flagged journals.</p>
 
                             <div className="grid md:grid-cols-3 gap-6">
-                                <div className="col-span-2 bg-red-950/10 border border-red-900/30 p-5 rounded-2xl">
+                                <div className="col-span-2 bg-red-950/10 border border-red-900/30 p-5 rounded-lg">
                                     <div className="flex items-center gap-3 mb-5">
                                         <ShieldAlert className="w-5 h-5 text-red-500" />
                                         <h3 className="font-bold text-white text-sm">Keyword Watchlist</h3>
@@ -566,7 +566,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                     <p className="text-gray-500 text-[9px] mt-3 italic">System triggers alerts when these keywords appear in journals or AI interactions.</p>
                                 </div>
 
-                                <div className="bg-[#0A0A0A] border border-white/5 p-5 rounded-2xl">
+                                <div className="bg-[#0A0A0A] border border-white/5 p-5 rounded-lg">
                                     <h3 className="font-bold text-white mb-4 text-sm">Security Summary</h3>
                                     <div className="space-y-4">
                                         <div className="flex justify-between items-center bg-black/30 p-3 rounded-lg border border-gray-800">
@@ -582,7 +582,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                             </div>
 
                             {/* Real-time Alerts List */}
-                            <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl overflow-hidden">
+                            <div className="bg-[#0A0A0A] border border-white/5 rounded-lg overflow-hidden">
                                 <h3 className="p-5 font-bold text-white text-sm border-b border-gray-800 flex items-center gap-2">
                                     <Activity className="w-4 h-4 text-red-500" /> Safety Alert Stream
                                 </h3>
@@ -638,7 +638,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                 )}
                             </div>
 
-                            <div className="bg-[#0A0A0A] border border-white/5 p-5 rounded-2xl">
+                            <div className="bg-[#0A0A0A] border border-white/5 p-5 rounded-lg">
                                 <h3 className="font-bold text-white mb-4 text-sm">Banned Users</h3>
                                 <div className="space-y-2">
                                     {users.filter(u => u.subscriptionStatus === 'BANNED').length === 0 ? (
@@ -688,7 +688,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                     onChange={e => setSearchTerm(e.target.value)}
                                 />
                             </div>
-                            <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl overflow-hidden">
+                            <div className="bg-[#0A0A0A] border border-white/5 rounded-lg overflow-hidden">
                                 <table className="w-full text-left">
                                     <thead className="bg-black/50 text-[10px] font-bold text-gray-400 uppercase">
                                         <tr>
@@ -747,7 +747,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                         <StatCard title="Payouts" value={stripeStats.recentPayouts.length} icon={CreditCard} subValue="Pending/Paid" subLabel="Transfers" color="purple" />
                                     </>
                                 ) : (
-                                    <div className="col-span-full text-center py-10 bg-gray-900/50 border border-dashed border-gray-800 rounded-2xl">
+                                    <div className="col-span-full text-center py-10 bg-gray-900/50 border border-dashed border-gray-800 rounded-lg">
                                         <AlertTriangle className="w-8 h-8 text-red-500 mx-auto mb-3" />
                                         <p className="text-red-400 font-bold">Failed to load Stripe data.</p>
                                     </div>
@@ -757,7 +757,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                             <div className="grid lg:grid-cols-3 gap-6">
                                 <div className="lg:col-span-2 space-y-6">
                                     {/* Detailed Transaction History */}
-                                    <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl overflow-hidden">
+                                    <div className="bg-[#0A0A0A] border border-white/5 rounded-lg overflow-hidden">
                                         <h3 className="p-5 font-bold text-white text-sm border-b border-gray-800 flex items-center gap-2">
                                             <List className="w-4 h-4 text-green-500" /> All Balance Transactions
                                         </h3>
@@ -798,7 +798,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
                                 <div className="space-y-6">
                                     {/* Recent Payouts */}
-                                    <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-5">
+                                    <div className="bg-[#0A0A0A] border border-white/5 rounded-lg p-5">
                                         <h3 className="font-bold text-white mb-5 flex items-center gap-2 text-sm"><CreditCard className="w-4 h-4 text-purple-500" /> Recent Payouts</h3>
                                         <div className="space-y-3">
                                             {loadingFinancials ? (
@@ -821,7 +821,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                     </div>
 
                                     {/* Financial Context */}
-                                    <div className="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 border border-indigo-500/20 rounded-2xl p-5">
+                                    <div className="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 border border-indigo-500/20 rounded-lg p-5">
                                         <h3 className="text-indigo-400 font-bold text-xs uppercase tracking-widest mb-4">Financial Policy</h3>
                                         <p className="text-[10px] text-gray-400 leading-relaxed mb-4">
                                             Payouts are automatically initiated according to your Stripe schedule. Charges typically clear to "Available" within 2 business days.
@@ -851,7 +851,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                             </div>
 
                             {specialistView === 'list' ? (
-                                <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl overflow-hidden">
+                                <div className="bg-[#0A0A0A] border border-white/5 rounded-lg overflow-hidden">
                                     <table className="w-full text-left">
                                         <thead className="bg-black text-[10px] font-bold text-gray-500 uppercase">
                                             <tr>
@@ -917,7 +917,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                     {activeTab === 'claim' && (
                         <div className="space-y-6 animate-in fade-in duration-500 max-w-4xl">
                             <div className="flex items-center gap-4 mb-8">
-                                <div className="w-12 h-12 bg-yellow-500 rounded-2xl flex items-center justify-center shadow-lg shadow-yellow-500/20">
+                                <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center shadow-lg shadow-yellow-500/20">
                                     <Shield className="w-6 h-6 text-black" />
                                 </div>
                                 <div>
@@ -927,7 +927,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                             </div>
 
                             <div className="grid md:grid-cols-2 gap-6">
-                                <div className="bg-gray-900 border border-gray-800 p-6 rounded-3xl relative overflow-hidden">
+                                <div className="bg-gray-900 border border-gray-800 p-6 rounded-xl relative overflow-hidden">
                                     <div className="absolute top-0 right-0 p-4 opacity-5 hover:opacity-10 transition-opacity"><Crown className="w-24 h-24 text-white" /></div>
                                     <h3 className="text-white font-bold mb-4 flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" /> Ownership Verified</h3>
                                     <p className="text-gray-400 text-sm leading-relaxed mb-6">
@@ -946,7 +946,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                     </div>
                                 </div>
 
-                                <div className="bg-gray-900 border border-gray-800 p-6 rounded-3xl">
+                                <div className="bg-gray-900 border border-gray-800 p-6 rounded-xl">
                                     <h3 className="text-white font-bold mb-4 flex items-center gap-2 text-sm"><Lock className="w-4 h-4 text-red-500" /> Reclamation Protocol</h3>
                                     <p className="text-gray-400 text-xs mb-6">
                                         In the event of lost access, the system can be reclaimed using the <span className="text-red-400 font-bold">Master Security Key</span> set in the environment configuration.
@@ -964,7 +964,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                 </div>
                             </div>
 
-                            <div className="bg-yellow-500/5 border border-yellow-500/20 p-6 rounded-3xl">
+                            <div className="bg-yellow-500/5 border border-yellow-500/20 p-6 rounded-xl">
                                 <h3 className="text-yellow-500 font-bold mb-4 flex items-center gap-2 text-sm"><AlertTriangle className="w-4 h-4" /> Admin Security Best Practices</h3>
                                 <ul className="grid md:grid-cols-2 gap-4">
                                     {[
@@ -988,7 +988,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                         <div className="space-y-6 animate-in fade-in duration-500">
                             <h2 className="text-2xl font-black">{t('admin_config')}</h2>
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                <div className="bg-[#0A0A0A] border border-white/5 p-5 rounded-2xl space-y-4">
+                                <div className="bg-[#0A0A0A] border border-white/5 p-5 rounded-lg space-y-4">
                                     <h3 className="font-bold text-white mb-2 text-sm">Pricing Control</h3>
                                     <div className="flex justify-between items-center">
                                         <span className="text-xs text-gray-400">Active Sale ($1.59/m)</span>
@@ -1001,7 +1001,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                     </div>
                                 </div>
 
-                                <div className="bg-[#0A0A0A] border border-white/5 p-5 rounded-2xl space-y-4">
+                                <div className="bg-[#0A0A0A] border border-white/5 p-5 rounded-lg space-y-4">
                                     <h3 className="font-bold text-white mb-2 text-sm">System Access</h3>
                                     <div className="flex justify-between items-center">
                                         <div className="flex items-center gap-2">
@@ -1018,7 +1018,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                     </div>
                                 </div>
 
-                                <div className="bg-[#0A0A0A] border border-white/5 p-5 rounded-2xl space-y-4">
+                                <div className="bg-[#0A0A0A] border border-white/5 p-5 rounded-lg space-y-4">
                                     <h3 className="font-bold text-white mb-2 text-sm">Concurrency Limit</h3>
                                     <div className="flex flex-col gap-3">
                                         <div className="flex items-center justify-between">

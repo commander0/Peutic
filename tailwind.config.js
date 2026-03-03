@@ -16,7 +16,7 @@ module.exports = {
                 "text-base": "var(--color-text-base)",
             },
             fontFamily: {
-                sans: ['Outfit', 'sans-serif'],
+                sans: ['Inter', 'sans-serif'],
             },
             boxShadow: {
                 'inner-glow': 'inset 0 0 20px rgba(250, 204, 21, 0.15)',

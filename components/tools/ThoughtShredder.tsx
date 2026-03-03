@@ -196,7 +196,7 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
 
     return (
         <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-            <div className="bg-stone-900 border border-stone-800 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative flex flex-col max-h-[90vh]">
+            <div className="bg-stone-900 border border-stone-800 w-full max-w-md rounded-xl overflow-hidden shadow-2xl relative flex flex-col max-h-[90vh]">
 
                 {/* Header */}
                 <div className="p-5 border-b border-stone-800 flex justify-between items-center bg-stone-950">
@@ -238,7 +238,7 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
                             <div className="mt-6 pt-4 border-t border-stone-800 text-center">
                                 <p className="text-[10px] uppercase tracking-widest font-bold text-stone-500 mb-2">Fragments Released: <span className="text-stone-300">{shredCount}</span> / 20</p>
                                 <div className="w-full h-1.5 bg-stone-900 rounded-full overflow-hidden mb-2">
-                                    <div className="h-full bg-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.5)] transition-all duration-500" style={{ width: `${Math.min(100, ((shredCount % 20) / 20) * 100)}%` }} />
+                                    <div className="h-full bg-red-500/50 shadow-sm transition-all duration-500" style={{ width: `${Math.min(100, ((shredCount % 20) / 20) * 100)}%` }} />
                                 </div>
                                 <p className="text-[10px] text-stone-600 italic font-serif">
                                     Shred 20 thoughts to piece together a custom introspective note from your fragments.
@@ -294,7 +294,7 @@ const ThoughtShredder: React.FC<ThoughtShredderProps> = ({ onClose }) => {
                                     `}</style>
                                 </div>
                             ) : showMilestone ? (
-                                <div className="p-8 bg-amber-500/10 border border-amber-500/30 rounded-2xl shadow-[0_0_50px_rgba(245,158,11,0.2)] animate-in fade-in duration-1000 zoom-in-90 max-w-sm mb-8 relative overflow-hidden">
+                                <div className="p-8 bg-amber-500/10 border border-amber-500/30 rounded-lg shadow-sm animate-in fade-in duration-1000 zoom-in-90 max-w-sm mb-8 relative overflow-hidden">
                                     <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/20 to-transparent opacity-50"></div>
                                     <h4 className="text-xl font-serif font-bold text-amber-200 mb-4 drop-shadow-md relative z-10">A Gift From the Void</h4>
                                     <p className="text-amber-100/90 font-serif leading-relaxed italic text-sm relative z-10">{milestoneNote}</p>

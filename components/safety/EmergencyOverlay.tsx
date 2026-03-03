@@ -87,7 +87,7 @@ const EmergencyOverlay: React.FC<EmergencyOverlayProps> = ({ userId, onClose }) 
                             <div className="relative mb-16">
                                 {/* Visual Breather */}
                                 <div className={`w-72 h-72 rounded-full border-4 border-white/10 flex items-center justify-center transition-all duration-[4000ms] ease-in-out shadow-2xl
-                                    ${phase === 'Inhale' ? 'scale-110 bg-[#0ea5e9]/20 shadow-[0_0_50px_rgba(14,165,233,0.3)]' :
+                                    ${phase === 'Inhale' ? 'scale-110 bg-[#0ea5e9]/20 shadow-sm' :
                                         phase === 'Hold' ? 'scale-110 bg-[#0ea5e9]/30' : 'scale-90 bg-transparent'}`}>
 
                                     <span className="text-4xl font-black text-white tracking-widest uppercase drop-shadow-lg animate-in fade-in duration-500">
@@ -134,7 +134,7 @@ const EmergencyOverlay: React.FC<EmergencyOverlayProps> = ({ userId, onClose }) 
                             { count: 2, text: "Things you can SMELL", color: "text-orange-400" },
                             { count: 1, text: "Thing you can TASTE", color: "text-red-400" },
                         ].map((item) => (
-                            <div key={item.count} className="bg-white/5 p-4 rounded-2xl border border-white/10 flex items-center gap-4 hover:bg-white/10 transition-colors cursor-pointer group">
+                            <div key={item.count} className="bg-white/5 p-4 rounded-lg border border-white/10 flex items-center gap-4 hover:bg-white/10 transition-colors cursor-pointer group">
                                 <span className={`text-3xl font-black ${item.color} w-8`}>{item.count}</span>
                                 <span className="text-gray-300 font-bold group-hover:text-white">{item.text}</span>
                             </div>

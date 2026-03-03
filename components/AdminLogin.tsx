@@ -205,14 +205,14 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
 
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-yellow-500 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-[0_0_30px_rgba(234,179,8,0.5)]">
+                    <div className="w-16 h-16 bg-yellow-500 rounded-lg mx-auto mb-6 flex items-center justify-center shadow-sm">
                         <Shield className="w-8 h-8 text-black fill-black" />
                     </div>
                     <h1 className="text-3xl font-black text-white tracking-tight">COMMAND CENTER</h1>
                     <p className="text-gray-500 font-mono text-xs mt-2 tracking-widest uppercase">Restricted Access Level 5</p>
                 </div>
 
-                <div className="bg-gray-900 border border-gray-800 rounded-3xl p-8 shadow-2xl overflow-hidden relative">
+                <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 shadow-2xl overflow-hidden relative">
                     {lockout > 0 ? (
                         <div className="text-center py-12">
                             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />

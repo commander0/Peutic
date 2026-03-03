@@ -62,7 +62,7 @@ const SanctuaryShop: React.FC<SanctuaryShopProps> = ({ user, onClose, onPurchase
 
     return (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-stone-900 border border-amber-900/50 rounded-3xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl relative overflow-hidden">
+            <div className="bg-stone-900 border border-amber-900/50 rounded-xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl relative overflow-hidden">
 
                 {/* Header */}
                 <header className="p-6 border-b border-stone-800 flex justify-between items-center bg-stone-900/80 sticky top-0 z-10">
@@ -95,9 +95,9 @@ const SanctuaryShop: React.FC<SanctuaryShopProps> = ({ user, onClose, onPurchase
                         return (
                             <div
                                 key={item.id}
-                                className={`p-4 rounded-2xl border transition-all duration-500 flex items-start gap-4 relative overflow-hidden
+                                className={`p-4 rounded-lg border transition-all duration-500 flex items-start gap-4 relative overflow-hidden
                                     ${isRewarding
-                                        ? 'bg-amber-500/20 border-amber-400 scale-[1.02] shadow-[0_0_50px_rgba(251,191,36,0.3)] z-10'
+                                        ? 'bg-amber-500/20 border-amber-400 scale-[1.02] shadow-sm z-10'
                                         : isUnlocked
                                             ? 'bg-emerald-900/20 border-emerald-900/50 opacity-70'
                                             : 'bg-stone-800/40 border-stone-700/50 hover:bg-stone-800'
@@ -132,7 +132,7 @@ const SanctuaryShop: React.FC<SanctuaryShopProps> = ({ user, onClose, onPurchase
                                             disabled={!canAfford || isPurchasing}
                                             className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-all
                                                 ${canAfford
-                                                    ? 'bg-amber-500 text-amber-950 hover:bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.2)]'
+                                                    ? 'bg-amber-500 text-amber-950 hover:bg-amber-400 shadow-sm'
                                                     : 'bg-stone-800 text-stone-500 cursor-not-allowed border border-stone-700'
                                                 }
                                             `}

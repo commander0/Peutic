@@ -68,7 +68,7 @@ export const SerenityShop: React.FC<SerenityShopProps> = ({ user, onClose, onUpd
             {/* Header */}
             <div className="flex justify-between items-center p-6 border-b border-white/10 shrink-0 bg-[#0A0A0A]/80 backdrop-blur-xl z-20 sticky top-0">
                 <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-[0_0_20px_rgba(234,179,8,0.3)]">
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-sm">
                         <Award className="w-6 h-6 text-black" />
                     </div>
                     <div>
@@ -124,7 +124,7 @@ export const SerenityShop: React.FC<SerenityShopProps> = ({ user, onClose, onUpd
                                     const isRewarding = rewardId === item.id;
 
                                     return (
-                                        <div key={item.id} className={`bg-white/5 border border-white/10 rounded-3xl p-6 flex flex-col justify-between transition-all duration-500 relative overflow-hidden group hover:-translate-y-1 hover:shadow-2xl ${isRewarding ? 'ring-4 ring-yellow-400 bg-yellow-500/10 scale-105 z-10' : ''}`}>
+                                        <div key={item.id} className={`bg-white/5 border border-white/10 rounded-xl p-6 flex flex-col justify-between transition-all duration-500 relative overflow-hidden group hover:-translate-y-1 hover:shadow-2xl ${isRewarding ? 'ring-4 ring-yellow-400 bg-yellow-500/10 scale-105 z-10' : ''}`}>
                                             {isRewarding && (
                                                 <div className="absolute inset-0 pointer-events-none z-20">
                                                     {[...Array(15)].map((_, i) => (
@@ -137,7 +137,7 @@ export const SerenityShop: React.FC<SerenityShopProps> = ({ user, onClose, onUpd
                                                 </div>
                                             )}
                                             <div className="relative z-30">
-                                                <div className={`w-14 h-14 rounded-2xl ${item.bg} flex items-center justify-center mb-6 transition-transform ${isRewarding ? 'scale-125 animate-bounce' : 'group-hover:scale-110'}`}>
+                                                <div className={`w-14 h-14 rounded-lg ${item.bg} flex items-center justify-center mb-6 transition-transform ${isRewarding ? 'scale-125 animate-bounce' : 'group-hover:scale-110'}`}>
                                                     <Icon className={`w-7 h-7 ${item.color}`} />
                                                 </div>
                                                 <h4 className="text-xl font-black text-white mb-2">{item.title}</h4>

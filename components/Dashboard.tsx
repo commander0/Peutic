@@ -75,7 +75,7 @@ interface DashboardProps {
 const AvatarImage = React.memo(({ src, alt, className, isUser = false, isDiamond = false, isTreeBadge = false, isHeartHalo = false, isAnimalAura = false, isFlowerCrown = false }: { src?: string, alt?: string, className?: string, isUser?: boolean, isDiamond?: boolean, isTreeBadge?: boolean, isHeartHalo?: boolean, isAnimalAura?: boolean, isFlowerCrown?: boolean }) => {
     const [imgError, setImgError] = useState(false);
     return (
-        <div className={`relative ${className || ''} overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center ${isAnimalAura ? 'ring-[3px] ring-orange-500/80 shadow-[0_0_15px_rgba(249,115,22,0.6)] animate-[pulse_3s_infinite]' : ''}`}>
+        <div className={`relative ${className || ''} overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center ${isAnimalAura ? 'ring-[3px] ring-orange-500/80 shadow-sm animate-[pulse_3s_infinite]' : ''}`}>
             {src && !imgError ? (
                 <img
                     src={src}
@@ -98,7 +98,7 @@ const AvatarImage = React.memo(({ src, alt, className, isUser = false, isDiamond
             )}
 
             {/* Heart Halo */}
-            {isHeartHalo && <div className="absolute -inset-1 rounded-full border-2 border-rose-400/80 shadow-[0_0_10px_rgba(244,63,94,0.8)] animate-[spin_10s_linear_infinite] pointer-events-none border-t-transparent border-b-transparent"></div>}
+            {isHeartHalo && <div className="absolute -inset-1 rounded-full border-2 border-rose-400/80 shadow-sm animate-[spin_10s_linear_infinite] pointer-events-none border-t-transparent border-b-transparent"></div>}
 
             {isUser && <div className="absolute inset-0 ring-1 ring-inset ring-black/10"></div>}
 
@@ -143,7 +143,7 @@ const CollapsibleSection = React.memo(({ title, icon: Icon, children, defaultOpe
     return (
         <div className="bg-transparent overflow-hidden transition-all duration-300">
             {/* Unified subtle header without boxing the entire content */}
-            <button onClick={handleToggle} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-[var(--color-primary)]/5 rounded-2xl transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-glass">
+            <button onClick={handleToggle} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-glass">
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-[var(--color-primary)]/10 text-primary dark:bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
                         <Icon className="w-5 h-5" />
@@ -168,7 +168,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const { lang, setLang, t } = useLanguage();
     const { theme, mode, setTheme, setMode, toggleMode } = useTheme();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<'inner_sanctuary' | 'history' | 'settings'>('inner_sanctuary');
+    const [activeTab, setActiveTab] = useState<'hub' | 'sanctuary' | 'history' | 'settings'>('sanctuary');
     const [openSection, setOpenSection] = useState<'arcade' | 'journal' | null>(null);
 
     // STRICT ADMIN REDIRECT
@@ -576,16 +576,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
 
             <div className="flex h-screen overflow-hidden">
-                <aside className="hidden md:flex w-20 lg:w-64 flex-col border-r border-yellow-200/30 dark:border-gray-800/50 bg-[var(--color-bg-base)]/40 backdrop-blur-2xl transition-all duration-500">
+                <aside className="hidden md:flex w-20 lg:w-64 flex-col border-r border-slate-200/50 dark:border-slate-800/50 bg-[var(--color-bg-base)]/40 backdrop-blur-2xl transition-all duration-500 z-50">
                     <div className="p-6 lg:p-8 flex items-center justify-center lg:justify-start gap-3">
-                        <div className="w-9 h-9 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg group hover:scale-110 transition-transform">
-                            <Heart className="w-5 h-5 text-black fill-black" />
+                        <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm group hover:scale-110 transition-transform">
+                            <Heart className="w-5 h-5 text-primary fill-primary" />
                         </div>
-                        <span className="hidden lg:block text-xl font-black tracking-tight dark:text-white">Peutic</span>
+                        <span className="hidden lg:block text-xl font-bold tracking-tight text-slate-900 dark:text-white">Peutic</span>
                     </div>
                     <nav className="flex-1 px-3 lg:px-4 py-6 lg:py-8 space-y-2 lg:space-y-3">
                         {[
-                            { id: 'inner_sanctuary', icon: LayoutDashboard, label: t('dash_hub') },
+                            { id: 'hub', icon: LayoutDashboard, label: 'Dashboard' },
+                            { id: 'sanctuary', icon: Sparkles, label: 'Sanctuary' },
                             { id: 'store', icon: ShoppingBag, label: 'Store', isModal: true },
                             { id: 'history', icon: Clock, label: t('dash_journal') },
                             { id: 'settings', icon: Settings, label: t('dash_settings') }
@@ -603,7 +604,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                 <main className={`flex-1 overflow-y-auto relative scroll-smooth transition-all duration-1000 will-change-transform ${isIdle ? 'blur-2xl grayscale brightness-50 pointer-events-none' : ''}`}>
                     {isIdle && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-auto">
-                            <div className="bg-white/20 backdrop-blur-md p-8 rounded-3xl border border-white/30 text-center shadow-2xl">
+                            <div className="bg-white/20 backdrop-blur-md p-8 rounded-xl border border-white/30 text-center shadow-2xl">
                                 <ShieldCheck className="w-16 h-16 text-white mx-auto mb-4 animate-pulse" />
                                 <h2 className="text-2xl font-black text-white mb-2">Privacy Shield Active</h2>
                                 <p className="text-white/80 text-sm">Move your mouse to unlock.</p>
@@ -637,11 +638,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             </div>
                                         </div>
                                         <h1 className="hidden md:block text-xl md:text-2xl lg:text-3xl font-black tracking-tight dark:text-white leading-tight shrink-0">
-                                            {activeTab === 'inner_sanctuary' ? 'Sanctuary' : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
+                                            {activeTab === 'hub' ? 'Dashboard' : activeTab === 'sanctuary' ? 'Sanctuary' : activeTab === 'history' ? t('sec_history') : t('dash_settings')}
                                         </h1>
                                         {(dashboardUser?.unlockedDecor || []).includes('item-plushie') && (
                                             <div className="ml-1 md:ml-2 w-6 h-6 md:w-10 md:h-10 animate-[bounce_3s_infinite] shrink-0" title="Lumina Companion Plushie">
-                                                <svg viewBox="-50 -50 100 100" className="w-full h-full drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]">
+                                                <svg viewBox="-50 -50 100 100" className="w-full h-full drop-shadow-sm">
                                                     <path d="M 0 -30 Q 20 -30 25 -10 Q 30 15 0 25 Q -30 15 -25 -10 Q -20 -30 0 -30 Z" fill="#fbbf24" />
                                                     <path d="M -15 -10 Q -20 -30 -5 -20 Z M 15 -10 Q 20 -30 5 -20 Z" fill="#fef3c7" />
                                                     <circle cx="-8" cy="-5" r="3" fill="#000" />
@@ -659,23 +660,23 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     <div className="shrink-0 snap-start"><LanguageSelector currentLanguage={lang} onLanguageChange={setLang} /></div>
 
                                     {/* Desktop/Tablet Logout Button - next to globe */}
-                                    <button onClick={onLogout} className="hidden md:flex shrink-0 p-2.5 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-100 dark:border-red-900/50 shadow-sm hover:scale-105 transition-all" title="Logout">
+                                    <button onClick={onLogout} className="hidden md:flex shrink-0 p-2.5 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-100 dark:border-red-900/50 shadow-sm hover:scale-105 transition-all" title="Logout">
                                         <LogOut className="w-5 h-5" />
                                     </button>
 
-                                    <button onClick={() => setShowGrounding(true)} className="relative shrink-0 snap-start p-2.5 rounded-2xl bg-white dark:bg-gray-800 border-2 border-blue-400 dark:border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] hover:scale-105 transition-all text-blue-500 overflow-hidden" title="Panic Relief / Grounding Mode">
-                                        <div className="absolute inset-0 bg-blue-400/20 blur-md rounded-2xl animate-pulse pointer-events-none"></div>
+                                    <button onClick={() => setShowGrounding(true)} className="relative shrink-0 snap-start p-2.5 rounded-lg bg-white dark:bg-gray-800 border-2 border-blue-400 dark:border-blue-500 shadow-sm hover:shadow-sm hover:scale-105 transition-all text-blue-500 overflow-hidden" title="Panic Relief / Grounding Mode">
+                                        <div className="absolute inset-0 bg-blue-400/20 blur-md rounded-lg animate-pulse pointer-events-none"></div>
                                         <LifeBuoy className="w-5 h-5 relative z-10" />
                                     </button>
 
-                                    <button onClick={toggleDarkMode} className="shrink-0 snap-start p-2.5 rounded-2xl bg-white dark:bg-gray-800 border border-primary-light dark:border-gray-700 shadow-sm hover:scale-105 transition-all">
+                                    <button onClick={toggleDarkMode} className="shrink-0 snap-start p-2.5 rounded-lg bg-white dark:bg-gray-800 border border-primary-light dark:border-gray-700 shadow-sm hover:scale-105 transition-all">
                                         {isDark ? <Sun className="w-5 h-5 text-primary" /> : <Moon className="w-5 h-5 text-gray-400" />}
                                     </button>
 
                                     <div className="flex items-center gap-2 md:gap-3 shrink-0 snap-end pr-2 md:pr-0">
                                         <button
                                             onClick={() => setShowPayment(true)}
-                                            className={`shrink-0 h-[42px] px-4 rounded-2xl font-black shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 text-[10px] md:text-xs border border-transparent ${balance === 0
+                                            className={`shrink-0 h-[42px] px-4 rounded-lg font-black shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 text-[10px] md:text-xs border border-transparent ${balance === 0
                                                 ? 'bg-red-500 text-white animate-pulse'
                                                 : 'bg-emerald-500 text-white dark:bg-emerald-600'
                                                 }`}
@@ -685,11 +686,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         </button>
 
 
-                                        <button onClick={() => setShowProfile(true)} className="shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-2xl overflow-hidden border-2 border-primary shadow-premium transition-all hover:rotate-3 active:scale-90 flex-shrink-0 relative">
+                                        <button onClick={() => setShowProfile(true)} className="shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-lg overflow-hidden border-2 border-primary shadow-premium transition-all hover:rotate-3 active:scale-90 flex-shrink-0 relative">
                                             <AvatarImage
                                                 src={isGhostMode ? '' : (dashboardUser?.avatar || '')}
                                                 alt={isGhostMode ? 'Member' : (dashboardUser?.name || 'User')}
-                                                className="w-full h-full object-cover rounded-2xl"
+                                                className="w-full h-full object-cover rounded-lg"
                                                 isUser={true}
                                                 isDiamond={(dashboardUser?.unlockedDecor || []).includes('item-coffee')}
                                                 isTreeBadge={(dashboardUser?.unlockedDecor || []).includes('charity-tree')}
@@ -700,7 +701,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         </button>
 
                                         {/* Mobile-only Logout Button */}
-                                        <button onClick={onLogout} className="md:hidden shrink-0 p-2.5 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-100 dark:border-red-900/50 shadow-sm hover:scale-105 transition-all">
+                                        <button onClick={onLogout} className="md:hidden shrink-0 p-2.5 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-100 dark:border-red-900/50 shadow-sm hover:scale-105 transition-all">
                                             <LogOut className="w-5 h-5" />
                                         </button>
                                     </div>
@@ -720,193 +721,105 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             </div>
 
                         </header>
-                        {activeTab === 'inner_sanctuary' && (
+                        {activeTab === 'sanctuary' && dashboardUser && garden && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
-
+                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 relative z-10">
+                                    <div className="bg-white/20 dark:bg-[#050a05]/40 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative">
+                                        <GardenFullView isEmbedded={true} garden={garden} user={dashboardUser} onClose={() => { }} onUpdate={refreshGarden} />
+                                    </div>
+                                    <div className="bg-white/20 dark:bg-[#0a0a0a]/40 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative">
+                                        <LuminaView isEmbedded={true} user={dashboardUser} onClose={() => { }} />
+                                    </div>
+                                </div>
                                 <div className="space-y-4">
-
-
-                                    <CollapsibleSection title="Spaces" icon={Zap} defaultOpen={false}>
-                                        <div className="space-y-4">
-                                            <div className="grid grid-cols-3 gap-1 md:gap-4">
-                                                {/* TILE 1: ZEN BONZAI */}
-                                                <div
-                                                    onClick={() => setShowGardenFull(true)}
-                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-[0_8px_32px_rgba(34,197,94,0.15)] hover:shadow-[0_8px_32px_rgba(34,197,94,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
-                                                >
-                                                    <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
-                                                        <div className="absolute inset-0 bg-green-400/10 md:bg-green-400/20 blur-2xl md:blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>
-                                                        <div className="relative mb-1 md:mb-4 pointer-events-auto">
-                                                            <div className="absolute -inset-4 bg-green-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                            <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-green-500 to-emerald-700 border border-green-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,197,94,0.4)] group-hover:scale-110 transition-transform">
-                                                                <Leaf className="w-5 h-5 md:w-6 md:h-6 text-white animate-ethereal-breathe" />
-                                                            </div>
-                                                            {/* Overlay Controls */}
-                                                            <div className="absolute top-[-10px] right-[-10px] pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity z-30">
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        if (!hasClippedInnerGarden) {
-                                                                            handleClipPlant();
-                                                                            setHasClippedInnerGarden(true);
-                                                                        }
-                                                                    }}
-                                                                    className={`p-1 md:p-2 bg-white/90 dark:bg-black/80 rounded-full shadow-lg ${hasClippedInnerGarden ? 'opacity-50 cursor-not-allowed text-gray-400' : 'hover:scale-110 active:scale-95 text-pink-500'} transition-all`}
-                                                                    title={hasClippedInnerGarden ? "Already Clipped" : "Clip for Inspiration"}
-                                                                    disabled={hasClippedInnerGarden}
-                                                                >
-                                                                    <Scissors className="w-3 h-3 md:w-4 md:h-4" />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                        <h3 className="text-[7px] md:text-sm font-black text-green-700 dark:text-green-300 uppercase tracking-widest drop-shadow-sm relative z-20">Inner Garden</h3>
-                                                        <p className="hidden md:block text-[9px] font-bold text-green-600/70 dark:text-green-400/60 uppercase tracking-tighter relative z-20">
-                                                            {garden ? `Lvl ${garden.level} • ${garden.currentPlantType}` : 'Plant Seed'}
-                                                        </p>
+                                    <h3 className="font-bold text-slate-800 dark:text-slate-300 px-2 uppercase tracking-widest text-[10px]">Arcade & Utility</h3>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        {/* TILE 4: ORACLE */}
+                                        <div
+                                            onClick={() => handleRoomInteraction('observatory', 25)}
+                                            className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-xl border-0 ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'shadow-glass hover:shadow-premium hover:-translate-y-1' : 'grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer`}
+                                        >
+                                            <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
+                                                <div className="relative mb-1 md:mb-4">
+                                                    <div className="absolute -inset-4 bg-indigo-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                    <div className={`w-10 h-10 md:w-16 md:h-16 ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'bg-gradient-to-br from-indigo-500 to-purple-700 border-indigo-400/50 text-white shadow-sm' : 'bg-gray-400 dark:bg-gray-600 border-gray-400/50 text-gray-200'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                                                        {dashboardUser?.unlockedRooms?.includes('observatory') ? <Moon className="w-5 h-5 md:w-6 md:h-6 text-white" /> : <Lock className="w-4 h-4 md:w-5 md:h-5 text-gray-200" />}
                                                     </div>
-                                                </div>
-
-                                                {/* TILE 2: BOOK OF YOU */}
-                                                {(() => {
-                                                    const joinedDate = new Date(dashboardUser?.joinedAt || new Date().toISOString());
-                                                    const now = new Date();
-                                                    const diffTime = Math.abs(now.getTime() - joinedDate.getTime());
-                                                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                                                    const isLocked = diffDays < 7;
-                                                    const daysRemaining = 7 - diffDays;
-
-                                                    return (
-                                                        <div
-                                                            onClick={() => {
-                                                                if (!isLocked) {
-                                                                    setShowBookFull(true);
-                                                                } else {
-                                                                    showToast(`Locked for ${daysRemaining} more days.`, "info");
-                                                                }
-                                                            }}
-                                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border border-white/20 dark:border-white/5 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
-                                                        >
-                                                            <div className="flex flex-col items-center justify-center h-full p-2 md:p-4 text-center relative z-10">
-                                                                <div className="relative mb-1 md:mb-4">
-                                                                    <div className="absolute -inset-4 md:-inset-6 bg-purple-400/30 dark:bg-purple-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                                    <div className="absolute -inset-2 border border-purple-300/50 dark:border-purple-500/30 rounded-full animate-[spin_8s_linear_infinite]"></div>
-                                                                    <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-purple-600 to-indigo-700 border border-purple-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_20px_rgba(168,85,247,0.5)] group-hover:scale-110 transition-transform">
-                                                                        <BookOpen className="w-5 h-5 md:w-6 md:h-6" />
-                                                                    </div>
-                                                                    {isLocked && <div className="absolute -top-2 -right-2 bg-primary text-black p-1 rounded-lg shadow-lg"><Lock className="w-3 h-3" /></div>}
-                                                                </div>
-                                                                <h3 className="text-[7px] md:text-sm font-black text-purple-700 dark:text-purple-300 uppercase tracking-widest drop-shadow-[0_0_6px_rgba(168,85,247,0.6)]">Book of You</h3>
-                                                                <p className="hidden md:block text-[10px] font-bold text-purple-500/70 dark:text-purple-400/50 uppercase tracking-widest">
-                                                                    {isLocked ? `Unlocked in ${daysRemaining}d` : 'Open Chronicle'}
-                                                                </p>
-                                                            </div>
+                                                    {!dashboardUser?.unlockedRooms?.includes('observatory') && (
+                                                        <div className="absolute -top-3 -right-3 md:-top-2 md:-right-2 bg-indigo-500 text-white text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg border border-white/20">
+                                                            25m
                                                         </div>
-                                                    );
-                                                })()}
-
-                                                {/* TILE 3: LUMINA */}
-                                                <div
-                                                    onClick={() => setShowPocketPet(true)}
-                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
-                                                >
-                                                    <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center">
-                                                        <div className="relative mb-1 md:mb-4">
-                                                            <div className="absolute -inset-4 bg-cyan-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                            <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-cyan-500 to-blue-700 border border-cyan-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform overflow-hidden">
-                                                                <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-white animate-bounce" />
-                                                            </div>
-                                                        </div>
-                                                        <h3 className="text-[7px] md:text-sm font-black text-cyan-700 dark:text-cyan-50 uppercase tracking-[0.2em] mb-1">Lumina</h3>
-                                                        <p className="hidden md:block text-[10px] font-bold text-cyan-600/60 dark:text-cyan-400/50 uppercase tracking-widest">
-                                                            {lumina ? `${lumina.name} Lvl ${lumina.level}` : 'Summon Friend'}
-                                                        </p>
-                                                    </div>
+                                                    )}
                                                 </div>
-
-                                                {/* TILE 4: ORACLE */}
-                                                <div
-                                                    onClick={() => handleRoomInteraction('observatory', 25)}
-                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'shadow-glass hover:shadow-premium hover:-translate-y-1' : 'grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer`}
-                                                >
-                                                    <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
-                                                        <div className="relative mb-1 md:mb-4">
-                                                            <div className="absolute -inset-4 bg-indigo-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                            <div className={`w-10 h-10 md:w-16 md:h-16 ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'bg-gradient-to-br from-indigo-500 to-purple-700 border-indigo-400/50 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]' : 'bg-gray-400 dark:bg-gray-600 border-gray-400/50 text-gray-200'} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                                                {dashboardUser?.unlockedRooms?.includes('observatory') ? <Moon className="w-5 h-5 md:w-6 md:h-6 text-white" /> : <Lock className="w-4 h-4 md:w-5 md:h-5 text-gray-200" />}
-                                                            </div>
-                                                            {!dashboardUser?.unlockedRooms?.includes('observatory') && (
-                                                                <div className="absolute -top-3 -right-3 md:-top-2 md:-right-2 bg-indigo-500 text-white text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg border border-white/20">
-                                                                    25m
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        <h3 className="text-[7px] md:text-sm font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-[0.2em] mb-1">Oracle</h3>
-                                                        {dashboardUser?.unlockedRooms?.includes('observatory') ? (
-                                                            <p className="hidden md:block text-[10px] font-bold text-indigo-600/60 dark:text-indigo-400/50 uppercase tracking-widest">Dreams & Vision</p>
-                                                        ) : (
-                                                            <p className="hidden md:block text-[10px] font-bold text-gray-500 uppercase tracking-widest">Locked</p>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {/* TILE 5: ZEN DOJO */}
-                                                <div
-                                                    onClick={() => handleRoomInteraction('dojo', 15)}
-                                                    className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'shadow-glass hover:shadow-premium hover:-translate-y-1' : 'grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer`}
-                                                >
-                                                    <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
-                                                        <div className="relative mb-1 md:mb-4">
-                                                            <div className="absolute -inset-4 bg-amber-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                            <div className={`w-10 h-10 md:w-16 md:h-16 ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'bg-gradient-to-br from-amber-500 to-orange-700 border-amber-400/50 text-white shadow-[0_0_15px_rgba(245,158,11,0.4)]' : 'bg-gray-400 dark:bg-gray-600 border-gray-400/50 text-gray-200'} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                                                {dashboardUser?.unlockedRooms?.includes('dojo') ? <Zap className="w-5 h-5 md:w-6 md:h-6 text-white" /> : <Lock className="w-4 h-4 md:w-5 md:h-5 text-gray-200" />}
-                                                            </div>
-                                                            {!dashboardUser?.unlockedRooms?.includes('dojo') && (
-                                                                <div className="absolute -top-3 -right-3 md:-top-2 md:-right-2 bg-amber-500 text-white text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg border border-white/20">
-                                                                    15m
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        <h3 className="text-[7px] md:text-sm font-black text-amber-700 dark:text-amber-300 uppercase tracking-[0.2em] mb-1">Zen Dojo</h3>
-                                                        {dashboardUser?.unlockedRooms?.includes('dojo') ? (
-                                                            <p className="hidden md:block text-[10px] font-bold text-amber-600/60 dark:text-amber-400/50 uppercase tracking-widest">Focus & Flow</p>
-                                                        ) : (
-                                                            <p className="hidden md:block text-[10px] font-bold text-gray-500 uppercase tracking-widest">Locked</p>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {/* TILE 6: THOUGHT SHREDDER */}
-                                                <div
-                                                    onClick={() => setShowShredder(true)}
-                                                    className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
-                                                >
-                                                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-600/5 pointer-events-none"></div>
-                                                    <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
-                                                        <div className="relative mb-1 md:mb-4">
-                                                            <div className="absolute -inset-4 bg-red-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                            <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-red-500 to-rose-700 border border-red-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(244,63,94,0.4)] group-hover:scale-110 transition-transform">
-                                                                <Scissors className="w-5 h-5 md:w-6 md:h-6 text-white" />
-                                                            </div>
-                                                        </div>
-                                                        <h3 className="text-[7px] md:text-sm font-black text-red-700 dark:text-red-300 uppercase tracking-[0.2em] mb-1">Shredder</h3>
-                                                        <p className="hidden md:block text-[10px] font-bold text-red-600/60 dark:text-red-400/50 uppercase tracking-widest">Release & Let Go</p>
-                                                    </div>
-                                                </div>
-
+                                                <h3 className="text-[7px] md:text-sm font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-[0.2em] mb-1">Oracle</h3>
+                                                {dashboardUser?.unlockedRooms?.includes('observatory') ? (
+                                                    <p className="hidden md:block text-[10px] font-bold text-indigo-600/60 dark:text-indigo-400/50 uppercase tracking-widest">Dreams & Vision</p>
+                                                ) : (
+                                                    <p className="hidden md:block text-[10px] font-bold text-gray-500 uppercase tracking-widest">Locked</p>
+                                                )}
                                             </div>
                                         </div>
-                                    </CollapsibleSection>
+
+                                        {/* TILE 5: ZEN DOJO */}
+                                        <div
+                                            onClick={() => handleRoomInteraction('dojo', 15)}
+                                            className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-xl border-0 ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'shadow-glass hover:shadow-premium hover:-translate-y-1' : 'grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer`}
+                                        >
+                                            <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
+                                                <div className="relative mb-1 md:mb-4">
+                                                    <div className="absolute -inset-4 bg-amber-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                    <div className={`w-10 h-10 md:w-16 md:h-16 ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'bg-gradient-to-br from-amber-500 to-orange-700 border-amber-400/50 text-white shadow-sm' : 'bg-gray-400 dark:bg-gray-600 border-gray-400/50 text-gray-200'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                                                        {dashboardUser?.unlockedRooms?.includes('dojo') ? <Zap className="w-5 h-5 md:w-6 md:h-6 text-white" /> : <Lock className="w-4 h-4 md:w-5 md:h-5 text-gray-200" />}
+                                                    </div>
+                                                    {!dashboardUser?.unlockedRooms?.includes('dojo') && (
+                                                        <div className="absolute -top-3 -right-3 md:-top-2 md:-right-2 bg-amber-500 text-white text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg border border-white/20">
+                                                            15m
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <h3 className="text-[7px] md:text-sm font-black text-amber-700 dark:text-amber-300 uppercase tracking-[0.2em] mb-1">Zen Dojo</h3>
+                                                {dashboardUser?.unlockedRooms?.includes('dojo') ? (
+                                                    <p className="hidden md:block text-[10px] font-bold text-amber-600/60 dark:text-amber-400/50 uppercase tracking-widest">Focus & Flow</p>
+                                                ) : (
+                                                    <p className="hidden md:block text-[10px] font-bold text-gray-500 uppercase tracking-widest">Locked</p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* TILE 6: THOUGHT SHREDDER */}
+                                        <div
+                                            onClick={() => setShowShredder(true)}
+                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-xl border-0 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-600/5 pointer-events-none"></div>
+                                            <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
+                                                <div className="relative mb-1 md:mb-4">
+                                                    <div className="absolute -inset-4 bg-red-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                    <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-red-500 to-rose-700 border border-red-400/50 rounded-lg flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
+                                                        <Scissors className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                                                    </div>
+                                                </div>
+                                                <h3 className="text-[7px] md:text-sm font-black text-red-700 dark:text-red-300 uppercase tracking-[0.2em] mb-1">Shredder</h3>
+                                                <p className="hidden md:block text-[10px] font-bold text-red-600/60 dark:text-red-400/50 uppercase tracking-widest">Release & Let Go</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'hub' && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                                     {dashboardUser ? (
-                                        <div className="bg-white/20 dark:bg-black/20 backdrop-blur-md p-4 md:p-5 rounded-3xl border border-white/20 dark:border-white/5 shadow-glass col-span-1 md:col-span-2 relative overflow-hidden group min-h-[120px] md:min-h-[140px]">
+                                        <div className="bg-white/20 dark:bg-black/20 backdrop-blur-md p-4 md:p-5 rounded-xl border border-white/20 dark:border-white/5 shadow-glass col-span-1 md:col-span-2 relative overflow-hidden group min-h-[120px] md:min-h-[140px]">
                                             {weeklyGoal >= 300 ? (
                                                 <div className="absolute top-4 right-4 z-20 flex items-center justify-center">
                                                     <div className="relative w-16 h-16 flex items-center justify-center">
                                                         {/* Removed Green Nuclear Flame Effect per user request */}
                                                         <Trophy className="w-12 h-12 text-green-400 animate-bounce relative z-10" />
-                                                        <Leaf className="absolute -right-2 top-0 w-6 h-6 text-green-300 fill-green-400 animate-pulse drop-shadow-[0_0_10px_rgba(74,222,128,1)] z-20" />
+                                                        <Leaf className="absolute -right-2 top-0 w-6 h-6 text-green-300 fill-green-400 animate-pulse drop-shadow-sm z-20" />
                                                     </div>
                                                 </div>
                                             ) : weeklyGoal >= weeklyTarget ? (
@@ -914,7 +827,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     <div className="relative w-14 h-14 flex items-center justify-center">
                                                         <div className="absolute w-full h-full border-2 border-blue-500/40 border-t-blue-400 rounded-full animate-[spin_3s_linear_infinite]"></div>
                                                         <div className="absolute w-10 h-10 bg-blue-400/50 rounded-full blur-xl animate-pulse"></div>
-                                                        <Leaf className="w-8 h-8 text-blue-400 fill-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,1)] animate-bounce relative z-10" />
+                                                        <Leaf className="w-8 h-8 text-blue-400 fill-blue-500 drop-shadow-sm animate-bounce relative z-10" />
                                                     </div>
                                                 </div>
                                             ) : (
@@ -928,14 +841,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                     <span className={`text-2xl md:text-4xl font-black text-black ${weeklyGoal >= 300 ? 'dark:text-green-400' : 'dark:text-blue-400'}`}>{weeklyGoal}</span>
                                                     <span className="text-black dark:text-gray-400 text-[10px] md:text-sm font-bold mb-1">/ {weeklyGoal >= 100 ? '300' : '100'} activities</span>
                                                 </div>
-                                                <div className={`w-full h-2 md:h-2.5 rounded-full mb-2 md:mb-3 relative overflow-hidden ${weeklyGoal >= 300 ? 'bg-green-400 shadow-[0_0_15px_rgba(34,197,94,0.4)]'
-                                                    : weeklyGoal >= 100 ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                                                <div className={`w-full h-2 md:h-2.5 rounded-full mb-2 md:mb-3 relative overflow-hidden ${weeklyGoal >= 300 ? 'bg-green-400 shadow-sm'
+                                                    : weeklyGoal >= 100 ? 'bg-blue-500 shadow-sm'
                                                         : 'bg-gray-200 dark:bg-gray-800'
                                                     }`}>
                                                     <div
                                                         className={`h-full rounded-full transition-all duration-1000 ease-out absolute left-0 top-0 bottom-0 ${weeklyGoal >= 300 ? 'bg-green-400'
-                                                            : weeklyGoal >= 100 ? 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]'
-                                                                : 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                                                            : weeklyGoal >= 100 ? 'bg-green-400 shadow-sm'
+                                                                : 'bg-blue-500 shadow-sm'
                                                             }`}
                                                         style={{ width: `${weeklyGoal >= 100 ? Math.min(100, ((weeklyGoal - 100) / 200) * 100) : Math.min(100, (weeklyGoal / 100) * 100)}%` }}
                                                     ></div>
@@ -951,7 +864,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                                 <div className="w-full space-y-4">
                                     <div className="grid grid-cols-2 gap-4 w-full">
-                                        <button onClick={() => setOpenSection(p => p === 'arcade' ? null : 'arcade')} className="w-full p-3 md:p-6 flex items-center justify-center md:justify-between hover:bg-[var(--color-primary)]/5 rounded-2xl transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center md:text-left bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-glass">
+                                        <button onClick={() => setOpenSection(p => p === 'arcade' ? null : 'arcade')} className="w-full p-3 md:p-6 flex items-center justify-center md:justify-between hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center md:text-left bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-glass">
                                             <div className="flex items-center gap-2 md:gap-3 flex-col md:flex-row mx-auto md:mx-0">
                                                 <div className="p-2 rounded-xl bg-[var(--color-primary)]/10 text-primary dark:bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
                                                     <Gamepad2 className="w-5 h-5 md:w-6 md:h-6" />
@@ -962,7 +875,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {openSection === 'arcade' ? <ChevronUp className="w-4 h-4 md:w-5 md:h-5 opacity-50" /> : <ChevronDown className="w-4 h-4 md:w-5 md:h-5 opacity-50" />}
                                             </div>
                                         </button>
-                                        <button onClick={() => setOpenSection(p => p === 'journal' ? null : 'journal')} className="w-full p-3 md:p-6 flex items-center justify-center md:justify-between hover:bg-[var(--color-primary)]/5 rounded-2xl transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center md:text-left bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-glass">
+                                        <button onClick={() => setOpenSection(p => p === 'journal' ? null : 'journal')} className="w-full p-3 md:p-6 flex items-center justify-center md:justify-between hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center md:text-left bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-glass">
                                             <div className="flex items-center gap-2 md:gap-3 flex-col md:flex-row mx-auto md:mx-0">
                                                 <div className="p-2 rounded-xl bg-[var(--color-primary)]/10 text-primary dark:bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
                                                     <Feather className="w-5 h-5 md:w-6 md:h-6" />
@@ -983,13 +896,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                         {/* TILE 1: MINDFUL MATCH */}
                                                         <div
                                                             onClick={() => setShowMatchGame(true)}
-                                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
+                                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-xl border-0 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
                                                         >
                                                             <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-pink-600/5 pointer-events-none"></div>
                                                             <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
                                                                 <div className="relative mb-1 md:mb-4">
                                                                     <div className="absolute -inset-4 bg-violet-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                                    <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-violet-500 to-purple-700 border border-violet-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(139,92,246,0.4)] group-hover:scale-110 transition-transform">
+                                                                    <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-violet-500 to-purple-700 border border-violet-400/50 rounded-lg flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
                                                                         <Brain className="w-5 h-5 md:w-6 md:h-6 text-white" />
                                                                     </div>
                                                                 </div>
@@ -1001,13 +914,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                         {/* TILE 2: CLOUD HOP */}
                                                         <div
                                                             onClick={() => setShowCloudHop(true)}
-                                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-[0_8px_32px_rgba(14,165,233,0.15)] hover:shadow-[0_8px_32px_rgba(14,165,233,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
+                                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-xl border-0 shadow-[0_8px_32px_rgba(14,165,233,0.15)] hover:shadow-[0_8px_32px_rgba(14,165,233,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
                                                         >
                                                             <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-cyan-600/5 pointer-events-none"></div>
                                                             <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
                                                                 <div className="relative mb-1 md:mb-4">
                                                                     <div className="absolute -inset-4 bg-sky-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                                    <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-sky-500 to-blue-700 border border-sky-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.4)] group-hover:scale-110 transition-transform">
+                                                                    <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-sky-500 to-blue-700 border border-sky-400/50 rounded-lg flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
                                                                         <Cloud className="w-5 h-5 md:w-6 md:h-6 text-white" />
                                                                     </div>
                                                                 </div>
@@ -1019,13 +932,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                         {/* TILE 3: STRESS SLICER */}
                                                         <div
                                                             onClick={() => setShowSlicerGame(true)}
-                                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-3xl border-0 shadow-[0_8px_32px_rgba(239,68,68,0.15)] hover:shadow-[0_8px_32px_rgba(239,68,68,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
+                                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-xl border-0 shadow-[0_8px_32px_rgba(239,68,68,0.15)] hover:shadow-[0_8px_32px_rgba(239,68,68,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
                                                         >
                                                             <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-600/5 pointer-events-none"></div>
                                                             <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
                                                                 <div className="relative mb-1 md:mb-4">
                                                                     <div className="absolute -inset-4 bg-red-500/20 blur-xl rounded-full animate-pulse"></div>
-                                                                    <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-red-500 to-rose-700 border border-red-400/50 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(239,68,68,0.4)] group-hover:scale-110 transition-transform">
+                                                                    <div className="w-10 h-10 md:w-16 md:h-16 bg-gradient-to-br from-red-500 to-rose-700 border border-red-400/50 rounded-lg flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
                                                                         <Flame className="w-5 h-5 md:w-6 md:h-6 text-white" />
                                                                     </div>
                                                                 </div>
@@ -1090,13 +1003,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                             </div>
                                                         </div>
                                                         <div className="absolute top-3 left-3 flex gap-2"><div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md ${companion.status === 'AVAILABLE' ? 'bg-green-500/90 text-white shadow-lg shadow-green-500/20' : 'bg-gray-500/90 text-white'}`}>{companion.status === 'AVAILABLE' ? 'Online' : 'Busy'}</div></div><div className="absolute bottom-3 left-3 right-3 group-hover:opacity-0 transition-opacity"><h3 className="text-white font-black text-lg leading-tight mb-0.5 shadow-sm drop-shadow-md">{companion.name}</h3><p className="text-white/90 dark:text-gray-200 text-[10px] font-bold uppercase tracking-wider truncate drop-shadow-md">{companion.specialty}</p></div></div><div className="p-3 bg-primary/10 dark:bg-primary/20 flex justify-between items-center border-t border-primary/20"><div className="flex items-center gap-1"><Star className="w-3 h-3 text-primary fill-primary" /><span className="text-gray-700 dark:text-gray-300 text-xs font-bold">{companion.rating}</span></div><button className="bg-white/50 dark:bg-primary/30 hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white rounded-lg p-2 transition-colors"><Eye className="w-3.5 h-3.5" /></button></div></div>))}</div>)}
-                                    {filteredCompanions.length === 0 && (<div className="text-center py-16 bg-gray-50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800"><p className="text-gray-500 font-bold text-sm">No specialists found in this category.</p><button onClick={() => setSpecialtyFilter('All')} className="text-primary text-xs font-bold mt-2 hover:underline">View All</button></div>)}
+                                    {filteredCompanions.length === 0 && (<div className="text-center py-16 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-800"><p className="text-gray-500 font-bold text-sm">No specialists found in this category.</p><button onClick={() => setSpecialtyFilter('All')} className="text-primary text-xs font-bold mt-2 hover:underline">View All</button></div>)}
                                 </div>
                             </div>
                         )}
                         {activeTab === 'history' && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-500">
-                                <div className="bg-white/70 dark:bg-gray-900/40 rounded-3xl border border-yellow-100/50 dark:border-gray-800/50 overflow-hidden backdrop-blur-md shadow-xl hover:shadow-2xl transition-shadow duration-500">
+                                <div className="bg-white/70 dark:bg-gray-900/40 rounded-xl border border-yellow-100/50 dark:border-gray-800/50 overflow-hidden backdrop-blur-md shadow-xl hover:shadow-2xl transition-shadow duration-500">
                                     <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
                                         <h3 className="font-black text-lg dark:text-primary">{t('sec_history')}</h3>
                                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Financials & Check-ins</span>
@@ -1111,7 +1024,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     </div>
                                 </div>
 
-                                <div className="bg-white/70 dark:bg-gray-900/40 rounded-3xl border border-yellow-100/50 dark:border-gray-800/50 overflow-hidden backdrop-blur-md shadow-xl hover:shadow-2xl transition-shadow duration-500">
+                                <div className="bg-white/70 dark:bg-gray-900/40 rounded-xl border border-yellow-100/50 dark:border-gray-800/50 overflow-hidden backdrop-blur-md shadow-xl hover:shadow-2xl transition-shadow duration-500">
                                     <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/20">
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-red-100 dark:bg-red-900/40 rounded-xl text-red-600 dark:text-red-400"><Mic className="w-5 h-5" /></div>
@@ -1123,13 +1036,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     </div>
                                     <div className="p-5">
                                         {voiceEntries.length === 0 ? (
-                                            <div className="py-12 text-center border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-2xl">
+                                            <div className="py-12 text-center border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-lg">
                                                 <p className="text-gray-400 text-sm italic">You haven't left any voice notes yet.</p>
                                             </div>
                                         ) : (
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                                                 {voiceEntries.map(entry => (
-                                                    <div key={entry.id} className="p-4 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-gray-800/50">
+                                                    <div key={entry.id} className="p-4 border border-gray-100 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-800/50">
                                                         <VoiceEntryItem
                                                             entry={entry}
                                                             onDelete={async (id) => {
@@ -1147,14 +1060,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         )}
                         {activeTab === 'settings' && (
                             <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in slide-in-from-right-5 duration-500">
-                                <div className="bg-white dark:bg-gray-900 rounded-3xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
+                                <div className="bg-white dark:bg-gray-900 rounded-xl border border-yellow-200 dark:border-gray-800 overflow-hidden shadow-sm">
                                     <div className="p-5 md:p-6 border-b border-primary-light dark:border-gray-800"><h3 className="font-black text-lg md:text-xl dark:text-primary mb-1">{t('dash_settings')}</h3><p className="text-gray-500 text-xs">Manage your personal information.</p></div>
                                     <div className="p-5 md:p-6 space-y-5">
                                         <div className="flex items-center gap-5"><div className="relative"><div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-4 border-primary-light dark:border-gray-800"><AvatarImage src={dashboardUser?.avatar || ''} alt="Profile" className="w-full h-full object-cover" isUser={true} /></div><button onClick={() => setShowProfile(true)} className="absolute bottom-0 right-0 p-1.5 bg-black text-white rounded-full hover:bg-gray-800 transition-colors shadow-lg"><Edit2 className="w-3 h-3" /></button></div><div className="flex-1 space-y-3"><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Display Name</label><div className="relative"><UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-primary outline-none transition-colors text-sm font-bold dark:text-white" /></div></div><div><label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Email Address</label><div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-primary outline-none transition-colors text-sm font-bold dark:text-white" /></div></div></div></div>
                                         <div className="flex justify-end pt-2"><button onClick={saveProfileChanges} disabled={isSavingProfile} className="px-5 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-bold text-xs hover:opacity-80 transition-opacity flex items-center gap-2">{isSavingProfile ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}{t('ui_save')}</button></div>
                                     </div>
                                 </div>
-                                <div className="bg-white dark:bg-gray-900 rounded-3xl border border-primary-light dark:border-gray-800 overflow-hidden shadow-sm">
+                                <div className="bg-white dark:bg-gray-900 rounded-xl border border-primary-light dark:border-gray-800 overflow-hidden shadow-sm">
                                     <div className="p-5 md:p-6 border-b border-primary-light dark:border-gray-800"><h3 className="font-black text-lg md:text-xl dark:text-primary mb-1">Preferences</h3><p className="text-gray-500 text-xs">Customize your sanctuary experience.</p></div>
                                     <div className="p-5 md:p-6 space-y-5">
                                         <div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"><Moon className="w-4 h-4 text-gray-600 dark:text-gray-400" /></div><div><p className="font-bold text-gray-900 dark:text-white text-sm">Dark Mode</p><p className="text-[10px] text-gray-500">Reduce eye strain.</p></div></div><button onClick={toggleDarkMode} className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${isDark ? 'bg-primary' : 'bg-gray-200'}`}><span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${isDark ? 'translate-x-5' : 'translate-x-1'}`} /></button></div>
@@ -1225,7 +1138,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                                     </div>
                                 </div>
-                                <div className="bg-white/70 dark:bg-gray-900/40 rounded-3xl border border-primary-light/50 dark:border-gray-800/50 overflow-hidden backdrop-blur-md shadow-sm">
+                                <div className="bg-white/70 dark:bg-gray-900/40 rounded-xl border border-primary-light/50 dark:border-gray-800/50 overflow-hidden backdrop-blur-md shadow-sm">
                                     <div className="p-5 md:p-6 border-b border-primary-light/30 dark:border-gray-800/50"><h3 className="font-black text-lg md:text-xl dark:text-primary mb-1">Security Health</h3><p className="text-gray-500 text-xs text-green-500 flex items-center gap-1 font-bold animate-pulse"><ShieldCheck className="w-3 h-3" /> All systems secured & encrypted</p></div>
                                     <div className="p-5 md:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         {[
@@ -1234,7 +1147,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             { label: 'Identity Protection', status: 'JWT Secure', icon: UserIcon },
                                             { label: 'Privacy Shield', status: 'Active (5m Idle)', icon: EyeOff }
                                         ].map((item, i) => (
-                                            <div key={i} className="p-4 bg-gray-50/50 dark:bg-gray-800/30 rounded-2xl border border-gray-100/50 dark:border-gray-700/50 flex items-center gap-3">
+                                            <div key={i} className="p-4 bg-gray-50/50 dark:bg-gray-800/30 rounded-lg border border-gray-100/50 dark:border-gray-700/50 flex items-center gap-3">
                                                 <div className="p-2 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg">
                                                     <item.icon className="w-4 h-4" />
                                                 </div>
@@ -1247,17 +1160,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     </div>
                                 </div>
 
-                                <div className="bg-red-50 dark:bg-red-950/20 rounded-3xl border border-red-100 dark:border-red-900 overflow-hidden shadow-sm">
+                                <div className="bg-red-50 dark:bg-red-950/20 rounded-xl border border-red-100 dark:border-red-900 overflow-hidden shadow-sm">
                                     <div className="p-5 md:p-6 border-b border-red-100 dark:border-red-900"><h3 className="font-black text-lg md:text-xl text-red-900 dark:text-red-400 mb-1">Danger Zone</h3><p className="text-red-600/70 dark:text-red-400/60 text-xs">Permanent actions for your data.</p></div>
                                     <div className="p-5 md:p-6">
                                         {showDeleteConfirm ? (
-                                            <div className="bg-white dark:bg-black p-5 rounded-2xl border border-red-200 dark:border-red-900 text-center animate-in zoom-in duration-200">
+                                            <div className="bg-white dark:bg-black p-5 rounded-lg border border-red-200 dark:border-red-900 text-center animate-in zoom-in duration-200">
                                                 <AlertTriangle className="w-10 h-10 text-red-500 mx-auto mb-3" />
                                                 <h4 className="font-bold text-base mb-1 dark:text-primary">Are you absolutely sure?</h4>
                                                 <p className="text-gray-500 text-xs mb-4">This action cannot be undone. This will permanently delete your account, journal entries, and remaining balance.</p>
 
                                                 {balance > 0 && (
-                                                    <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl mb-5 text-left flex items-start gap-3">
+                                                    <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-lg mb-5 text-left flex items-start gap-3">
                                                         <div className="bg-red-500/20 p-2 rounded-lg">
                                                             <Plus className="w-4 h-4 text-red-500 rotate-45" />
                                                         </div>
@@ -1299,7 +1212,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <div className="md:col-span-3"><h4 className="font-black mb-3 text-[9px] uppercase tracking-[0.3em] text-gray-700 dark:text-gray-400">Regulatory</h4><ul className="space-y-2 text-xs font-bold text-gray-800 dark:text-gray-500"><li><Link to="/privacy" className="hover:text-primary dark:hover:text-primary transition-colors">Privacy Policy</Link></li><li><Link to="/terms" className="hover:text-primary dark:hover:text-primary transition-colors">Terms of Service</Link></li></ul></div>
 
                             </div>
-                            <div className="mb-8 p-4 bg-primary-light dark:bg-primary/10 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 border border-primary-border dark:border-primary/20">
+                            <div className="mb-8 p-4 bg-primary-light dark:bg-primary/10 rounded-lg flex flex-col md:flex-row items-center justify-between gap-4 border border-primary-border dark:border-primary/20">
                                 <div className="flex items-center gap-2 text-primary dark:text-primary font-bold text-xs">
                                     <AlertTriangle className="w-4 h-4" />
                                     <span>Not a Medical Service. For entertainment & companionship only.</span>
@@ -1321,6 +1234,29 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         </div>
                     </footer>
                 </main >
+
+                {/* --- V3 MOBILE BOTTOM NAVIGATION --- */}
+                <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-[#020617]/80 backdrop-blur-lg border-t border-slate-200/50 dark:border-slate-800/50 flex justify-around items-center px-2 py-3 z-[90] pb-[env(safe-area-inset-bottom)]">
+                    {[
+                        { id: 'hub', icon: LayoutDashboard, label: 'Dashboard' },
+                        { id: 'sanctuary', icon: Sparkles, label: 'Sanctuary' },
+                        { id: 'store', icon: ShoppingBag, label: 'Store', isModal: true },
+                        { id: 'history', icon: Clock, label: t('dash_journal') },
+                        { id: 'settings', icon: Settings, label: t('dash_settings') }
+                    ].map((item) => {
+                        const isActive = activeTab === item.id;
+                        return (
+                            <button
+                                key={item.id}
+                                onClick={() => item.isModal ? setShowSerenityShop(true) : setActiveTab(item.id as any)}
+                                className={`flex flex-col items-center gap-1 min-w-[64px] transition-all duration-300 ${isActive ? 'text-primary scale-105' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                            >
+                                <item.icon className="w-5 h-5" />
+                                <span className="text-[10px] font-semibold">{item.label}</span>
+                            </button>
+                        );
+                    })}
+                </nav>
             </div >
             {showPayment && (
                 <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Secure Payment node...</div>}>
@@ -1419,7 +1355,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             {
                 showVoiceJournal && (
                     <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="bg-primary-light dark:bg-black/50 dark:backdrop-blur-xl dark:border dark:border-white/10 w-full max-w-lg rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="bg-primary-light dark:bg-black/50 dark:backdrop-blur-xl dark:border dark:border-white/10 w-full max-w-lg rounded-xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-xl font-black flex items-center gap-2 dark:text-primary"><Mic className="w-5 h-5 text-red-500" /> Voice Journal</h2>
                                 <button onClick={() => setShowVoiceJournal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"><X className="w-5 h-5" /></button>

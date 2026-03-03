@@ -260,13 +260,13 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                 <div className="flex bg-indigo-950/40 rounded-full p-1 border border-indigo-800/50 scale-90 md:scale-100">
                     <button
                         onClick={() => setActiveTab('divination')}
-                        className={`px-4 md:px-6 py-2 rounded-full text-[10px] md:text-xs font-sans uppercase tracking-widest font-bold transition-all ${activeTab === 'divination' ? 'bg-indigo-600 text-white shadow-[0_0_15px_rgba(79,70,229,0.5)]' : 'text-indigo-400 hover:text-indigo-200'}`}
+                        className={`px-4 md:px-6 py-2 rounded-full text-[10px] md:text-xs font-sans uppercase tracking-widest font-bold transition-all ${activeTab === 'divination' ? 'bg-indigo-600 text-white shadow-sm' : 'text-indigo-400 hover:text-indigo-200'}`}
                     >
                         The Oracle
                     </button>
                     <button
                         onClick={() => setActiveTab('archive')}
-                        className={`px-4 md:px-6 py-2 rounded-full text-[10px] md:text-xs font-sans uppercase tracking-widest font-bold transition-all flex items-center gap-2 ${activeTab === 'archive' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' : 'text-indigo-400 hover:text-indigo-200'}`}
+                        className={`px-4 md:px-6 py-2 rounded-full text-[10px] md:text-xs font-sans uppercase tracking-widest font-bold transition-all flex items-center gap-2 ${activeTab === 'archive' ? 'bg-blue-600 text-white shadow-sm' : 'text-indigo-400 hover:text-indigo-200'}`}
                     >
                         <Sparkles className="w-3 h-3" /> Memory Map
                     </button>
@@ -347,7 +347,7 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                                                 playMysticSound('chime');
                                             }}
                                         >
-                                            <div className={`w-3 h-3 rounded-full shadow-[0_0_20px_rgba(255,255,255,1)] transition-all ${isSelected ? (isTherapy ? 'shadow-[0_0_50px_rgba(250,204,21,1)] bg-yellow-200 scale-[2]' : 'shadow-[0_0_50px_rgba(167,139,250,1)] bg-purple-100 scale-[2]') : (isTherapy ? 'bg-yellow-100 group-hover:shadow-[0_0_30px_rgba(250,204,21,1)] group-hover:bg-yellow-50' : 'bg-white group-hover:shadow-[0_0_30px_rgba(167,139,250,1)] group-hover:bg-purple-50')}`} style={{ width: pos.r * (isTherapy ? 3.5 : 2.5), height: pos.r * (isTherapy ? 3.5 : 2.5) }}></div>
+                                            <div className={`w-3 h-3 rounded-full shadow-sm transition-all ${isSelected ? (isTherapy ? 'shadow-sm bg-yellow-200 scale-[2]' : 'shadow-sm bg-purple-100 scale-[2]') : (isTherapy ? 'bg-yellow-100 group-hover:shadow-sm group-hover:bg-yellow-50' : 'bg-white group-hover:shadow-sm group-hover:bg-purple-50')}`} style={{ width: pos.r * (isTherapy ? 3.5 : 2.5), height: pos.r * (isTherapy ? 3.5 : 2.5) }}></div>
                                             {!isSelected && (
                                                 <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap text-[10px] font-sans tracking-widest text-blue-200 bg-blue-900/50 backdrop-blur-md px-2 py-1 rounded border border-blue-500/20 pointer-events-none">
                                                     {isTherapy ? 'Gold Star Session' : new Date(activity.date).toLocaleDateString()}
@@ -364,7 +364,7 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                                 )}
 
                                 {selectedStar && (
-                                    <div className="absolute bottom-10 left-10 right-10 md:left-1/2 md:-translate-x-1/2 md:w-[500px] bg-indigo-950/80 backdrop-blur-xl border border-blue-500/30 rounded-2xl p-6 shadow-[0_0_50px_rgba(37,99,235,0.2)] z-50 animate-in slide-in-from-bottom-10 fade-in duration-500">
+                                    <div className="absolute bottom-10 left-10 right-10 md:left-1/2 md:-translate-x-1/2 md:w-[500px] bg-indigo-950/80 backdrop-blur-xl border border-blue-500/30 rounded-lg p-6 shadow-sm z-50 animate-in slide-in-from-bottom-10 fade-in duration-500">
                                         <button onClick={() => setSelectedStar(null)} className="absolute top-4 right-4 text-blue-300 hover:text-white transition-colors">
                                             <X className="w-5 h-5" />
                                         </button>
@@ -395,19 +395,19 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                     <main className="flex-1 flex flex-col items-center justify-center relative z-10 perspective-[1200px] w-full max-w-md mx-auto h-full animate-in fade-in duration-500">
                         <div className="relative flex flex-col items-center justify-center mt-20">
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[120%] md:-translate-y-[130%] flex flex-col items-center pointer-events-none">
-                                <div className={`w-36 h-48 md:w-44 md:h-56 bg-gradient-to-b from-stone-900 via-indigo-950 to-purple-900 rounded-[40%_40%_60%_60%] blur-[2px] shadow-[0_0_30px_rgba(0,0,0,0.8)] relative overflow-hidden group transition-all duration-[3000ms] ${isReading ? 'scale-105' : ''}`}>
-                                    <div className={`absolute top-1/3 left-1/4 w-4 h-2 bg-indigo-400 rounded-full blur-[2px] transition-all duration-1000 ${isReading ? 'opacity-100 animate-pulse scale-110 drop-shadow-[0_0_15px_rgba(129,140,248,1)]' : 'opacity-20'} `}></div>
-                                    <div className={`absolute top-1/3 right-1/4 w-4 h-2 bg-indigo-400 rounded-full blur-[2px] transition-all duration-1000 ${isReading ? 'opacity-100 animate-pulse scale-110 drop-shadow-[0_0_15px_rgba(129,140,248,1)]' : 'opacity-20'} `}></div>
+                                <div className={`w-36 h-48 md:w-44 md:h-56 bg-gradient-to-b from-stone-900 via-indigo-950 to-purple-900 rounded-[40%_40%_60%_60%] blur-[2px] shadow-sm relative overflow-hidden group transition-all duration-[3000ms] ${isReading ? 'scale-105' : ''}`}>
+                                    <div className={`absolute top-1/3 left-1/4 w-4 h-2 bg-indigo-400 rounded-full blur-[2px] transition-all duration-1000 ${isReading ? 'opacity-100 animate-pulse scale-110 drop-shadow-sm' : 'opacity-20'} `}></div>
+                                    <div className={`absolute top-1/3 right-1/4 w-4 h-2 bg-indigo-400 rounded-full blur-[2px] transition-all duration-1000 ${isReading ? 'opacity-100 animate-pulse scale-110 drop-shadow-sm' : 'opacity-20'} `}></div>
                                     <div className="absolute inset-x-2 top-[30%] bottom-0 bg-black/90 rounded-[50%_50%_0_0] blur-md"></div>
                                 </div>
                                 <div className={`w-72 h-32 md:w-96 md:h-40 bg-gradient-to-b from-purple-950 via-stone-900/80 to-transparent rounded-[50%_50%_0_0] -mt-12 md:-mt-16 blur-md transition-all duration-[3000ms] ${isReading ? 'opacity-80' : 'opacity-50'}`}></div>
                             </div>
 
-                            <div className={`absolute -left-12 md:-left-24 top-1/3 w-20 h-40 md:w-28 md:h-48 bg-gradient-to-b from-stone-900 via-indigo-950 to-purple-900 rounded-[50%_50%_40%_40%_/_70%_70%_30%_30%] blur-[2px] shadow-[0_0_30px_rgba(0,0,0,0.8)] transition-all duration-[2000ms] ease-in-out z-10 pointer-events-none ${isReading ? 'translate-x-[40px] md:translate-x-[70px] -translate-y-8 rotate-[45deg] opacity-100 drop-shadow-[0_0_20px_rgba(79,70,229,0.4)]' : 'rotate-[20deg] opacity-40'}`}></div>
-                            <div className={`absolute -right-12 md:-right-24 top-1/3 w-20 h-40 md:w-28 md:h-48 bg-gradient-to-b from-stone-900 via-indigo-950 to-purple-900 rounded-[50%_50%_40%_40%_/_70%_70%_30%_30%] blur-[2px] shadow-[0_0_30px_rgba(0,0,0,0.8)] transition-all duration-[2000ms] ease-in-out z-10 pointer-events-none ${isReading ? '-translate-x-[40px] md:-translate-x-[70px] -translate-y-8 -rotate-[45deg] opacity-100 drop-shadow-[0_0_20px_rgba(79,70,229,0.4)]' : '-rotate-[20deg] opacity-40'}`}></div>
+                            <div className={`absolute -left-12 md:-left-24 top-1/3 w-20 h-40 md:w-28 md:h-48 bg-gradient-to-b from-stone-900 via-indigo-950 to-purple-900 rounded-[50%_50%_40%_40%_/_70%_70%_30%_30%] blur-[2px] shadow-sm transition-all duration-[2000ms] ease-in-out z-10 pointer-events-none ${isReading ? 'translate-x-[40px] md:translate-x-[70px] -translate-y-8 rotate-[45deg] opacity-100 drop-shadow-sm' : 'rotate-[20deg] opacity-40'}`}></div>
+                            <div className={`absolute -right-12 md:-right-24 top-1/3 w-20 h-40 md:w-28 md:h-48 bg-gradient-to-b from-stone-900 via-indigo-950 to-purple-900 rounded-[50%_50%_40%_40%_/_70%_70%_30%_30%] blur-[2px] shadow-sm transition-all duration-[2000ms] ease-in-out z-10 pointer-events-none ${isReading ? '-translate-x-[40px] md:-translate-x-[70px] -translate-y-8 -rotate-[45deg] opacity-100 drop-shadow-sm' : '-rotate-[20deg] opacity-40'}`}></div>
 
                             <div
-                                className={`relative group w-72 h-72 md:w-96 md:h-96 rounded-full transition-all duration-[2000ms] ${isReading ? 'scale-110 drop-shadow-[0_0_50px_rgba(79,70,229,0.5)]' : 'hover:scale-105 cursor-crosshair'} z-20 touch-none`}
+                                className={`relative group w-72 h-72 md:w-96 md:h-96 rounded-full transition-all duration-[2000ms] ${isReading ? 'scale-110 drop-shadow-sm' : 'hover:scale-105 cursor-crosshair'} z-20 touch-none`}
                                 onPointerDown={(e) => {
                                     if (isProcessing || isReading || oracleMessage) return;
                                     e.currentTarget.setPointerCapture(e.pointerId);
@@ -448,7 +448,7 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
 
                                     {oracleMessage && !isReading && (
                                         <div className="absolute inset-0 flex items-center justify-center p-4 md:p-12 text-center z-30 bg-indigo-950/50 backdrop-blur-xl overflow-y-auto rounded-full no-scrollbar shadow-[inset_0_0_60px_rgba(30,27,75,0.9),0_0_30px_rgba(99,102,241,0.5)] border-2 border-indigo-500/30 animate-in zoom-in-90 duration-700 pointer-events-auto">
-                                            <div className="w-full text-yellow-200 font-serif leading-snug md:leading-relaxed drop-shadow-[0_0_12px_rgba(251,191,36,0.8)] tracking-wide italic text-[11px] md:text-base px-2 md:px-4 py-2 md:py-4 whitespace-pre-wrap">
+                                            <div className="w-full text-yellow-200 font-serif leading-snug md:leading-relaxed drop-shadow-sm tracking-wide italic text-[11px] md:text-base px-2 md:px-4 py-2 md:py-4 whitespace-pre-wrap">
                                                 <Typewriter text={oracleMessage} speed={30} />
                                             </div>
                                         </div>
@@ -456,7 +456,7 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
 
                                     {isReading && (
                                         <div className="absolute inset-0 flex flex-col items-center justify-center z-30">
-                                            <Sparkles className="w-16 h-16 text-indigo-200 animate-spin-slow opacity-90 drop-shadow-[0_0_25px_rgba(255,255,255,0.8)]" />
+                                            <Sparkles className="w-16 h-16 text-indigo-200 animate-spin-slow opacity-90 drop-shadow-sm" />
                                             <span className="mt-4 text-[10px] uppercase tracking-[0.3em] text-indigo-200/60 animate-pulse">Divining...</span>
                                         </div>
                                     )}

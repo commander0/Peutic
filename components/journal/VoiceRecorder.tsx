@@ -124,7 +124,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userId, onSave }) 
     };
 
     return (
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-yellow-100 dark:border-gray-800 shadow-sm flex flex-col items-center">
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-yellow-100 dark:border-gray-800 shadow-sm flex flex-col items-center">
             <h3 className="font-bold text-gray-500 text-xs uppercase tracking-widest mb-6 w-full text-center">Voice Journal</h3>
 
             {/* VISUALIZER PLACEHOLDER */}
@@ -308,7 +308,7 @@ export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id:
     };
 
     return (
-        <div className="group relative p-4 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] overflow-hidden">
+        <div className="group relative p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] overflow-hidden">
             {/* Waveform Visualization Simulation (Animated on hover) */}
             <div className="absolute inset-0 flex items-center justify-center gap-1 opacity-[0.03] dark:opacity-[0.07] pointer-events-none group-hover:opacity-20 transition-opacity duration-700 h-full w-full px-8">
                 {[...Array(24)].map((_, i) => (
@@ -328,7 +328,7 @@ export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id:
                 <div className="flex items-center gap-4">
                     <button
                         onClick={togglePlay}
-                        className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-lg ${playing ? 'bg-black text-white dark:bg-yellow-400 dark:text-black scale-110' : 'bg-gray-100 dark:bg-gray-800 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'}`}
+                        className={`w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-500 shadow-lg ${playing ? 'bg-black text-white dark:bg-yellow-400 dark:text-black scale-110' : 'bg-gray-100 dark:bg-gray-800 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'}`}
                     >
                         {playing ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-1" />}
                     </button>
@@ -360,7 +360,7 @@ export const VoiceEntryItem: React.FC<{ entry: VoiceJournalEntry, onDelete: (id:
                 <div className="flex items-center gap-3">
                     <button
                         onClick={toggleBoost}
-                        className={`group/boost px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] transition-all duration-500 flex items-center gap-1.5 ${isBoosted ? 'bg-yellow-400 text-black shadow-[0_0_20px_rgba(250,204,21,0.4)]' : 'bg-gray-50 dark:bg-gray-800/50 text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 border border-transparent hover:border-yellow-200/50'}`}
+                        className={`group/boost px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] transition-all duration-500 flex items-center gap-1.5 ${isBoosted ? 'bg-yellow-400 text-black shadow-sm' : 'bg-gray-50 dark:bg-gray-800/50 text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 border border-transparent hover:border-yellow-200/50'}`}
                     >
                         <Volume2 className={`w-3 h-3 ${isBoosted ? 'animate-pulse' : ''}`} />
                         {isBoosted ? 'Boosted 2.5x' : 'Boost Audio'}

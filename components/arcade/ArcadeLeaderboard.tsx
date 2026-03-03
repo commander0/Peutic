@@ -41,15 +41,15 @@ export const ArcadeLeaderboard: React.FC = () => {
     const sortedLeaders = getSortedLeaders();
 
     return (
-        <div className="bg-white/50 dark:bg-black/20 backdrop-blur-xl border border-gray-100 dark:border-white/5 rounded-3xl p-6">
+        <div className="bg-white/50 dark:bg-black/20 backdrop-blur-xl border border-gray-100 dark:border-white/5 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-2xl bg-yellow-500/20 flex items-center justify-center text-yellow-500">
+                <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center text-yellow-500">
                     <Trophy className="w-5 h-5" />
                 </div>
                 <h3 className="text-xl font-black text-gray-800 dark:text-gray-100 uppercase tracking-widest">Global Ranks</h3>
             </div>
 
-            <div className="flex gap-2 mb-6 bg-gray-100/50 dark:bg-white/5 p-1 rounded-2xl">
+            <div className="flex gap-2 mb-6 bg-gray-100/50 dark:bg-white/5 p-1 rounded-lg">
                 <button
                     onClick={() => setActiveTab('cloud')}
                     className={`flex-1 text-xs font-bold uppercase tracking-wider py-2 rounded-xl transition-all ${activeTab === 'cloud' ? 'bg-white dark:bg-white/10 text-sky-500 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
@@ -77,7 +77,7 @@ export const ArcadeLeaderboard: React.FC = () => {
             ) : (
                 <div className="space-y-3">
                     {sortedLeaders.map((u, i) => (
-                        <div key={u.id} className="flex items-center gap-4 p-3 rounded-2xl bg-white/50 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 transition-colors">
+                        <div key={u.id} className="flex items-center gap-4 p-3 rounded-lg bg-white/50 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 transition-colors">
                             <div className="w-8 text-center font-black text-gray-300 dark:text-gray-600 text-lg">
                                 {i === 0 ? <Crown className="w-5 h-5 mx-auto text-yellow-400 drop-shadow-md" /> :
                                     i === 1 ? <Medal className="w-5 h-5 mx-auto text-gray-300 drop-shadow-md" /> :

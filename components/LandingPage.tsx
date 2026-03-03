@@ -257,7 +257,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
 
                                 <div className="absolute top-5 left-5 md:top-6 md:left-6 transition-transform duration-300" style={{ transform: 'translateZ(20px)' }}>
                                     <div className="bg-black/40 backdrop-blur-xl border border-white/20 px-3 py-1.5 rounded-full flex items-center gap-2 shadow-lg">
-                                        <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+                                        <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-sm"></div>
                                         <span className="text-[9px] font-black uppercase tracking-widest text-white">{t('live_link')}</span>
                                     </div>
                                 </div>
@@ -271,7 +271,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                             </div>
 
                             {/* Floating Checkmark Card */}
-                            <div className="absolute -bottom-6 -left-6 md:-bottom-8 md:-left-8 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl p-3 md:p-5 rounded-2xl md:rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.1)] border border-white/50 dark:border-white/10 animate-float z-20 transition-all transform-gpu" style={{ transform: 'translateZ(40px)' }}>
+                            <div className="absolute -bottom-6 -left-6 md:-bottom-8 md:-left-8 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl p-3 md:p-5 rounded-lg md:rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.1)] border border-white/50 dark:border-white/10 animate-float z-20 transition-all transform-gpu" style={{ transform: 'translateZ(40px)' }}>
                                 <div className="flex items-center gap-3">
                                     <div className="p-2.5 bg-green-100 dark:bg-green-900/40 rounded-xl shadow-inner"><CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-green-600 dark:text-green-400 drop-shadow-sm" /></div>
                                     <div>
@@ -307,7 +307,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         {/* Row 1 */}
                         <div className="flex gap-4 md:gap-5 animate-marquee w-fit px-4">
                             {marqueeRow1.map((spec, i) => (
-                                <div key={`${spec.id}-1-${i}`} onClick={() => onLoginClick(true)} className="relative flex-shrink-0 w-36 h-48 md:w-52 md:h-64 bg-white dark:bg-gray-900 rounded-2xl md:rounded-[1.5rem] overflow-hidden shadow-lg border border-yellow-100 dark:border-gray-800 hover:scale-105 hover:shadow-2xl hover:border-yellow-400 transition-all duration-300 cursor-pointer group">
+                                <div key={`${spec.id}-1-${i}`} onClick={() => onLoginClick(true)} className="relative flex-shrink-0 w-36 h-48 md:w-52 md:h-64 bg-white dark:bg-gray-900 rounded-lg md:rounded-[1.5rem] overflow-hidden shadow-lg border border-yellow-100 dark:border-gray-800 hover:scale-105 hover:shadow-2xl hover:border-yellow-400 transition-all duration-300 cursor-pointer group">
                                     <div className="h-[75%] md:h-[80%] w-full relative">
                                         <AvatarImage src={spec.imageUrl} className="w-full h-full object-cover" alt={spec.name} />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
@@ -321,7 +321,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         {/* Row 2 */}
                         <div className="flex gap-4 md:gap-5 animate-marquee-reverse w-fit px-4">
                             {marqueeRow2.map((spec, i) => (
-                                <div key={`${spec.id}-2-${i}`} onClick={() => onLoginClick(true)} className="relative flex-shrink-0 w-36 h-48 md:w-52 md:h-64 bg-white dark:bg-gray-900 rounded-2xl md:rounded-[1.5rem] overflow-hidden shadow-lg border border-yellow-100 dark:border-gray-800 hover:scale-105 hover:shadow-2xl hover:border-yellow-400 transition-all duration-300 cursor-pointer group">
+                                <div key={`${spec.id}-2-${i}`} onClick={() => onLoginClick(true)} className="relative flex-shrink-0 w-36 h-48 md:w-52 md:h-64 bg-white dark:bg-gray-900 rounded-lg md:rounded-[1.5rem] overflow-hidden shadow-lg border border-yellow-100 dark:border-gray-800 hover:scale-105 hover:shadow-2xl hover:border-yellow-400 transition-all duration-300 cursor-pointer group">
                                     <div className="h-[75%] md:h-[80%] w-full relative">
                                         <AvatarImage src={spec.imageUrl} className="w-full h-full object-cover" alt={spec.name} />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
@@ -492,7 +492,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 </div>
             </footer>
             {showCookies && (
-                <div className="fixed bottom-6 md:bottom-8 left-0 right-0 mx-auto w-[90%] max-w-2xl bg-[#FFFBEB] dark:bg-gray-900 text-black dark:text-white p-4 md:p-6 z-[100] rounded-2xl md:rounded-[2rem] border-2 border-yellow-400 shadow-2xl animate-slide-up-fade">
+                <div className="fixed bottom-6 md:bottom-8 left-0 right-0 mx-auto w-[90%] max-w-2xl bg-[#FFFBEB] dark:bg-gray-900 text-black dark:text-white p-4 md:p-6 z-[100] rounded-lg md:rounded-[2rem] border-2 border-yellow-400 shadow-2xl animate-slide-up-fade">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 text-center md:text-left">
                         <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
                             <Cookie className="w-8 h-8 md:w-10 md:h-10 text-yellow-600" />

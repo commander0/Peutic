@@ -56,7 +56,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                                                 onLanguageChange(lang.code);
                                                 setIsOpen(false);
                                             }}
-                                            className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all ${currentLanguage === lang.code
+                                            className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-bold transition-all ${currentLanguage === lang.code
                                                 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-700/50'
                                                 : 'text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/50 border border-transparent hover:bg-gray-100 dark:hover:bg-gray-800'
                                                 }`}
@@ -73,7 +73,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                         </div>
 
                         {/* Desktop Dropdown */}
-                        <div className="hidden md:block absolute left-0 md:right-0 md:left-auto mt-2 w-48 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-2xl z-[100] overflow-hidden animate-in slide-in-from-top-2 fade-in duration-300 ease-out">
+                        <div className="hidden md:block absolute left-0 md:right-0 md:left-auto mt-2 w-48 bg-white dark:bg-gray-900 rounded-lg border border-gray-100 dark:border-gray-800 shadow-2xl z-[100] overflow-hidden animate-in slide-in-from-top-2 fade-in duration-300 ease-out">
                             <div className="p-2 space-y-1">
                                 {LANGUAGES.map((lang) => (
                                     <button

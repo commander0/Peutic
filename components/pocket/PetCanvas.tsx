@@ -142,7 +142,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             <div className={`relative transition-all duration-700 w-full h-[80%] flex items-center justify-center ${bounceClass} ${trickClass} ${sadClass}`}>
 
                 {/* Pet scalable SVG container */}
-                <svg viewBox="-180 -180 360 360" className={`w-full h-full filter ${pet.level >= 10 ? 'drop-shadow-[0_0_25px_rgba(6,182,212,0.6)]' : 'drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]'} overflow-visible`}>
+                <svg viewBox="-180 -180 360 360" className={`w-full h-full filter ${pet.level >= 10 ? 'drop-shadow-sm' : 'drop-shadow-sm'} overflow-visible`}>
 
                     <defs>
                         <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -179,21 +179,21 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                 {pet.level >= 3 && pet.level < 10 && (
                                     <g className="origin-center animate-[float_4s_ease-in-out_infinite]" style={{ transform: 'translate(0px, 10px)' }}>
                                         {isShiba && (
-                                            <g className="drop-shadow-[0_0_8px_#fbbf24]">
+                                            <g className="drop-shadow-sm">
                                                 <path d="M 0 -35 Q 20 -35 25 -10 Q 30 15 0 25 Q -30 15 -25 -10 Q -20 -35 0 -35 Z" fill="url(#bodyGrad)" />
                                                 <path d="M -18 -15 Q -25 -35 -5 -25 Z M 18 -15 Q 25 -35 5 -25 Z" fill={c.s} opacity="0.9" />
                                                 <circle cx="0" cy="-5" r="4" fill={c.p} className="animate-pulse" />
                                             </g>
                                         )}
                                         {isDino && (
-                                            <g className="drop-shadow-[0_0_8px_#34d399]">
+                                            <g className="drop-shadow-sm">
                                                 <path d="M 0 -30 L 20 -10 L 25 15 L 0 30 L -25 15 L -20 -10 Z" fill="url(#bodyGrad)" />
                                                 <path d="M -15 -18 L 0 -35 L 15 -18 Z" fill={c.g} opacity="0.8" />
                                                 <polygon points="-8,-5 8,-5 0,8" fill={c.s} className="animate-pulse" />
                                             </g>
                                         )}
                                         {isHamu && (
-                                            <g className="drop-shadow-[0_0_8px_#f472b6]">
+                                            <g className="drop-shadow-sm">
                                                 <circle cx="0" cy="0" r="22" fill="url(#bodyGrad)" />
                                                 <circle cx="-16" cy="-18" r="10" fill="none" stroke={c.s} strokeWidth="3" />
                                                 <circle cx="16" cy="-18" r="10" fill="none" stroke={c.s} strokeWidth="3" />
@@ -201,7 +201,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                             </g>
                                         )}
                                         {isSloth && (
-                                            <g className="drop-shadow-[0_0_8px_#a8a29e]">
+                                            <g className="drop-shadow-sm">
                                                 <ellipse cx="0" cy="0" rx="24" ry="18" fill="url(#bodyGrad)" />
                                                 <path d="M -15 -5 Q 0 -15 15 -5" fill="none" stroke={c.s} strokeWidth="4" strokeLinecap="round" opacity="0.6" />
                                                 <circle cx="0" cy="8" r="3" fill={c.g} />
@@ -215,7 +215,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                 {pet.level >= 10 && pet.level < 20 && (
                                     <g className="origin-center animate-[float_5s_ease-in-out_infinite]" style={{ transform: 'translate(0px, 0px)' }}>
                                         {isShiba && (
-                                            <g className="drop-shadow-[0_0_12px_#fbbf24]">
+                                            <g className="drop-shadow-sm">
                                                 <path d="M 0 -40 L 30 0 L 20 30 L -20 30 L -30 0 Z" fill="url(#bodyGrad)" />
                                                 <path d="M -20 -15 L -35 -45 L -5 -25 Z M 20 -15 L 35 -45 L 5 -25 Z" fill={c.s} />
                                                 <polygon points="0,-15 10,5 -10,5" fill={c.p} opacity="0.8" className="animate-pulse" />
@@ -223,7 +223,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                             </g>
                                         )}
                                         {isDino && (
-                                            <g className="drop-shadow-[0_0_12px_#34d399]">
+                                            <g className="drop-shadow-sm">
                                                 <path d="M 0 -45 L 35 -10 L 25 35 L -25 35 L -35 -10 Z" fill="url(#bodyGrad)" />
                                                 <path d="M -20 -20 L 0 -50 L 20 -20 Z" fill={c.g} opacity="0.9" />
                                                 <path d="M -35 -10 L -50 0 L -28 10 Z" fill={c.s} />
@@ -231,14 +231,14 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                             </g>
                                         )}
                                         {isHamu && (
-                                            <g className="drop-shadow-[0_0_12px_#f472b6]">
+                                            <g className="drop-shadow-sm">
                                                 <rect x="-26" y="-26" width="52" height="52" rx="16" fill="url(#bodyGrad)" />
                                                 <path d="M -26 -10 C -40 -20 -15 -45 -10 -26 Z M 26 -10 C 40 -20 15 -45 10 -26 Z" fill={c.s} opacity="0.8" />
                                                 <circle cx="0" cy="0" r="32" fill="none" stroke={c.g} strokeWidth="1" strokeDasharray="8 8" className="animate-[spin_8s_linear_infinite]" />
                                             </g>
                                         )}
                                         {isSloth && (
-                                            <g className="drop-shadow-[0_0_12px_#a8a29e]">
+                                            <g className="drop-shadow-sm">
                                                 <ellipse cx="0" cy="0" rx="36" ry="24" fill="url(#bodyGrad)" />
                                                 <path d="M -25 -10 Q -40 -30 -15 -15 Z M 25 -10 Q 40 -30 15 -15 Z" fill={c.s} />
                                                 <path d="M -20 0 Q 0 -15 20 0" fill="none" stroke={c.g} strokeWidth="3" opacity="0.5" />
@@ -252,7 +252,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                 {pet.level >= 20 && pet.level < 30 && (
                                     <g className="origin-center animate-[float_6s_ease-in-out_infinite]" style={{ transform: 'translate(0px, 0px)' }}>
                                         {isShiba && (
-                                            <g className="drop-shadow-[0_0_15px_#fbbf24]">
+                                            <g className="drop-shadow-sm">
                                                 <circle cx="0" cy="0" r="55" fill="none" stroke={c.g} strokeWidth="1" opacity="0.5" className="animate-[spin_12s_linear_infinite]" strokeDasharray="10 15" />
                                                 <path d="M 0 -45 L 35 15 L -35 15 Z" fill="url(#bodyGrad)" />
                                                 <path d="M -20 -20 L -45 -55 L -5 -35 Z M 20 -20 L 45 -55 L 5 -35 Z" fill={c.s} className="animate-pulse" />
@@ -261,7 +261,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                             </g>
                                         )}
                                         {isDino && (
-                                            <g className="drop-shadow-[0_0_15px_#34d399]">
+                                            <g className="drop-shadow-sm">
                                                 <polygon points="-30,-30 30,-30 45,10 20,40 -20,40 -45,10" fill="url(#bodyGrad)" />
                                                 <polygon points="0,-30 0,-60 20,-30" fill={c.g} className="animate-pulse" />
                                                 <polygon points="-30,-30 -30,-55 -10,-30" fill={c.s} className="animate-[pulse_1.5s_infinite_0.5s]" />
@@ -269,7 +269,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                             </g>
                                         )}
                                         {isHamu && (
-                                            <g className="drop-shadow-[0_0_15px_#f472b6]">
+                                            <g className="drop-shadow-sm">
                                                 <circle cx="0" cy="0" r="32" fill="url(#bodyGrad)" />
                                                 <circle cx="0" cy="0" r="48" fill="none" stroke={c.s} strokeWidth="2" strokeDasharray="4 12" className="animate-[spin_6s_linear_infinite]" />
                                                 <circle cx="0" cy="0" r="58" fill="none" stroke={c.g} strokeWidth="1" strokeDasharray="20 10" className="animate-[spin_10s_linear_infinite_reverse]" />
@@ -277,7 +277,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                             </g>
                                         )}
                                         {isSloth && (
-                                            <g className="drop-shadow-[0_0_15px_#a8a29e]">
+                                            <g className="drop-shadow-sm">
                                                 <ellipse cx="0" cy="0" rx="42" ry="32" fill="url(#bodyGrad)" />
                                                 <path d="M -30 -15 Q -50 -45 -15 -25 Z M 30 -15 Q 50 -45 15 -25 Z" fill={c.s} opacity="0.8" />
                                                 <path d="M -25 -5 Q 0 -25 25 -5" fill="none" stroke={c.g} strokeWidth="5" strokeLinecap="round" opacity="0.7" />
@@ -291,7 +291,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                 {pet.level >= 30 && pet.level < 50 && (
                                     <g className="origin-center animate-[float_4s_ease-in-out_infinite]" style={{ transform: 'translate(0px, 0px)' }}>
                                         {isShiba && (
-                                            <g className="drop-shadow-[0_0_20px_#fbbf24]">
+                                            <g className="drop-shadow-sm">
                                                 <circle cx="0" cy="0" r="60" fill="url(#coreGlow)" opacity="0.4" className="animate-[ping_3s_ease-in-out_infinite]" />
                                                 <path d="M 0 -55 L 20 -20 L 55 0 L 20 20 L 0 55 L -20 20 L -55 0 L -20 -20 Z" fill={c.p} opacity="0.3" className="animate-[spin_15s_linear_infinite]" />
                                                 <path d="M 0 -40 Q 30 -40 35 0 Q 30 30 0 35 Q -30 30 -35 0 Q -30 -40 0 -40 Z" fill="url(#bodyGrad)" />
@@ -300,7 +300,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                             </g>
                                         )}
                                         {isDino && (
-                                            <g className="drop-shadow-[0_0_20px_#34d399]">
+                                            <g className="drop-shadow-sm">
                                                 <polygon points="0,-60 50,35 -50,35" fill="url(#coreGlow)" opacity="0.4" className="animate-pulse" />
                                                 <polygon points="-35,-20 35,-20 45,25 25,45 -25,45 -45,25" fill="url(#bodyGrad)" />
                                                 <polygon points="0,-45 25,-15 -25,-15" fill={c.p} opacity="0.6" className="animate-bounce" />
@@ -310,7 +310,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                             </g>
                                         )}
                                         {isHamu && (
-                                            <g className="drop-shadow-[0_0_20px_#f472b6]">
+                                            <g className="drop-shadow-sm">
                                                 <circle cx="0" cy="0" r="40" fill="url(#bodyGrad)" />
                                                 <circle cx="0" cy="0" r="55" fill="none" stroke={c.s} strokeWidth="3" strokeDasharray="8 16" className="animate-[spin_4s_linear_infinite]" />
                                                 <circle cx="0" cy="0" r="70" fill="none" stroke={c.g} strokeWidth="1" strokeDasharray="30 15" className="animate-[spin_8s_linear_infinite_reverse]" />
@@ -319,7 +319,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                             </g>
                                         )}
                                         {isSloth && (
-                                            <g className="drop-shadow-[0_0_20px_#a8a29e]">
+                                            <g className="drop-shadow-sm">
                                                 <circle cx="0" cy="0" r="60" fill="url(#coreGlow)" opacity="0.5" className="animate-[pulse_4s_infinite]" />
                                                 <path d="M 0 -45 C 50 -45 50 35 0 35 C -50 35 -50 -45 0 -45 Z" fill="url(#bodyGrad)" />
                                                 <path d="M -35 -20 C -60 -55 -20 -40 -15 -25 Z M 35 -20 C 60 -55 20 -40 15 -25 Z" fill={c.p} opacity="0.7" />
@@ -336,7 +336,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                 {pet.level >= 50 && pet.level < 75 && (
                                     <g className="origin-center animate-[float_8s_ease-in-out_infinite]" style={{ transform: 'translate(0px, 0px)' }}>
                                         {isShiba && (
-                                            <g className="drop-shadow-[0_0_30px_#fbbf24]">
+                                            <g className="drop-shadow-sm">
                                                 <circle cx="0" cy="0" r="90" fill="url(#coreGlow)" opacity="0.5" className="animate-[pulse_2s_infinite]" />
                                                 <g className="animate-[spin_20s_linear_infinite]">
                                                     <path d="M 0 -80 L 25 -25 L 80 0 L 25 25 L 0 80 L -25 25 L -80 0 L -25 -25 Z" fill={c.s} opacity="0.2" />
@@ -347,7 +347,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                             </g>
                                         )}
                                         {isDino && (
-                                            <g className="drop-shadow-[0_0_30px_#34d399]">
+                                            <g className="drop-shadow-sm">
                                                 <polygon points="0,-100 85,45 -85,45" fill="url(#coreGlow)" opacity="0.4" className="animate-pulse" />
                                                 <polygon points="-45,-25 45,-25 55,35 35,55 -35,55 -55,35" fill="url(#bodyGrad)" />
                                                 <polygon points="0,-60 35,-15 -35,-15" fill={c.s} opacity="0.7" className="animate-bounce" />
@@ -357,7 +357,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                             </g>
                                         )}
                                         {isHamu && (
-                                            <g className="drop-shadow-[0_0_30px_#f472b6]">
+                                            <g className="drop-shadow-sm">
                                                 <circle cx="0" cy="0" r="100" fill="url(#coreGlow)" opacity="0.4" className="animate-[pulse_3s_infinite]" />
                                                 <circle cx="0" cy="0" r="50" fill="url(#bodyGrad)" />
                                                 <circle cx="0" cy="0" r="70" fill="none" stroke={c.s} strokeWidth="4" strokeDasharray="12 24" className="animate-[spin_5s_linear_infinite]" />
@@ -367,7 +367,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                             </g>
                                         )}
                                         {isSloth && (
-                                            <g className="drop-shadow-[0_0_30px_#a8a29e]">
+                                            <g className="drop-shadow-sm">
                                                 <circle cx="0" cy="0" r="110" fill="url(#coreGlow)" opacity="0.6" className="animate-[pulse_6s_infinite]" />
                                                 <path d="M 0 -60 C 65 -60 65 45 0 45 C -65 45 -65 -60 0 -60 Z" fill="url(#bodyGrad)" />
                                                 <path d="M -45 -25 C -80 -70 -25 -50 -20 -30 Z M 45 -25 C 80 -70 25 -50 20 -30 Z" fill={c.p} opacity="0.8" />
@@ -397,7 +397,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                         </g>
 
                                         {isShiba && (
-                                            <g className="drop-shadow-[0_0_40px_#fbbf24]">
+                                            <g className="drop-shadow-sm">
                                                 <circle cx="0" cy="0" r="130" fill="url(#coreGlow)" opacity="0.6" className="animate-[pulse_2s_infinite]" />
                                                 <polygon points="0,-100 86,-50 86,50 0,100 -86,50 -86,-50" fill={c.s} opacity="0.2" className="animate-[spin_15s_linear_infinite]" />
                                                 <path d="M 0 -70 Q 60 -70 65 0 Q 60 60 0 65 Q -60 60 -65 0 Q -60 -70 0 -70 Z" fill="url(#bodyGrad)" />
@@ -406,7 +406,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                             </g>
                                         )}
                                         {isDino && (
-                                            <g className="drop-shadow-[0_0_40px_#34d399]">
+                                            <g className="drop-shadow-sm">
                                                 <polygon points="0,-140 120,60 -120,60" fill="url(#coreGlow)" opacity="0.5" className="animate-[ping_4s_infinite]" />
                                                 <polygon points="-65,-35 65,-35 80,50 50,80 -50,80 -80,50" fill="url(#bodyGrad)" />
                                                 <polygon points="0,-90 50,-20 -50,-20" fill={c.s} opacity="0.8" className="animate-bounce" />
@@ -415,7 +415,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                             </g>
                                         )}
                                         {isHamu && (
-                                            <g className="drop-shadow-[0_0_40px_#f472b6]">
+                                            <g className="drop-shadow-sm">
                                                 <circle cx="0" cy="0" r="130" fill="url(#coreGlow)" opacity="0.5" className="animate-[pulse_2s_infinite]" />
                                                 <circle cx="0" cy="0" r="80" fill="url(#bodyGrad)" />
                                                 <circle cx="0" cy="0" r="100" fill="none" stroke={c.s} strokeWidth="6" strokeDasharray="20 40" className="animate-[spin_4s_linear_infinite]" />
@@ -424,7 +424,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                             </g>
                                         )}
                                         {isSloth && (
-                                            <g className="drop-shadow-[0_0_40px_#a8a29e]">
+                                            <g className="drop-shadow-sm">
                                                 <circle cx="0" cy="0" r="150" fill="url(#coreGlow)" opacity="0.7" className="animate-[pulse_8s_infinite]" />
                                                 <path d="M 0 -80 C 90 -80 90 60 0 60 C -90 60 -90 -80 0 -80 Z" fill="url(#bodyGrad)" />
                                                 <path d="M -60 -35 C -110 -100 -35 -70 -30 -45 Z M 60 -35 C 110 -100 35 -70 30 -45 Z" fill={c.p} opacity="0.9" />
@@ -449,14 +449,14 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                         </g>
 
                                         {isShiba && (
-                                            <g className="drop-shadow-[0_0_60px_#fbbf24]">
+                                            <g className="drop-shadow-sm">
                                                 <circle cx="0" cy="0" r="180" fill="url(#coreGlow)" opacity="0.8" className="animate-[pulse_1s_infinite]" />
                                                 <path d="M 0 -90 Q 75 -90 85 0 Q 75 75 0 85 Q -75 75 -85 0 Q -75 -90 0 -90 Z" fill="url(#bodyGrad)" />
                                                 <path d="M -40 -50 L -90 -140 L -15 -90 Z M 40 -50 L 90 -140 L 15 -90 Z" fill={c.g} className="animate-[ping_3s_infinite]" />
                                             </g>
                                         )}
                                         {isDino && (
-                                            <g className="drop-shadow-[0_0_60px_#34d399]">
+                                            <g className="drop-shadow-sm">
                                                 <polygon points="0,-180 150,80 -150,80" fill="url(#coreGlow)" opacity="0.6" className="animate-[ping_5s_infinite]" />
                                                 <polygon points="-80,-40 80,-40 100,60 60,100 -60,100 -100,60" fill="url(#bodyGrad)" />
                                                 <path d="M -35 -40 L 0 -170 L 45 -60 Z" fill={c.s} className="animate-[pulse_1s_infinite]" />
@@ -464,7 +464,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                             </g>
                                         )}
                                         {isHamu && (
-                                            <g className="drop-shadow-[0_0_60px_#f472b6]">
+                                            <g className="drop-shadow-sm">
                                                 <circle cx="0" cy="0" r="160" fill="url(#coreGlow)" opacity="0.7" className="animate-[pulse_1.5s_infinite]" />
                                                 <circle cx="0" cy="0" r="110" fill="url(#bodyGrad)" />
                                                 <rect x="-60" y="-60" width="120" height="120" fill="none" stroke={c.s} strokeWidth="8" className="animate-[spin_3s_linear_infinite]" />
@@ -473,7 +473,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                                             </g>
                                         )}
                                         {isSloth && (
-                                            <g className="drop-shadow-[0_0_60px_#a8a29e]">
+                                            <g className="drop-shadow-sm">
                                                 <circle cx="0" cy="0" r="190" fill="url(#coreGlow)" opacity="0.9" className="animate-[pulse_10s_infinite]" />
                                                 <path d="M 0 -100 C 120 -100 120 75 0 75 C -120 75 -120 -100 0 -100 Z" fill="url(#bodyGrad)" />
                                                 <path d="M -75 -45 C -140 -125 -45 -90 -40 -55 Z M 75 -45 C 140 -125 45 -90 40 -55 Z" fill={c.p} opacity="1" />
@@ -499,15 +499,15 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
                 {/* Happy Hearts */}
                 {emotion === 'happy' && (
                     <>
-                        <div className="absolute top-[20%] right-[20%] text-pink-500 animate-bounce text-2xl drop-shadow-[0_0_5px_rgba(236,72,153,0.8)]">❤️</div>
-                        <div className="absolute top-[30%] left-[20%] text-pink-400 animate-[bounce_1s_infinite] text-lg drop-shadow-[0_0_5px_rgba(236,72,153,0.8)]">❤️</div>
+                        <div className="absolute top-[20%] right-[20%] text-pink-500 animate-bounce text-2xl drop-shadow-sm">❤️</div>
+                        <div className="absolute top-[30%] left-[20%] text-pink-400 animate-[bounce_1s_infinite] text-lg drop-shadow-sm">❤️</div>
                     </>
                 )}
                 {/* Sleep Zzz */}
                 {(pet.isSleeping || emotion === 'sleeping' || emotion === 'sleepy') && (
                     <>
-                        <div className="absolute top-[10%] right-[20%] text-cyan-400 animate-pulse text-2xl font-black font-mono drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]">Z</div>
-                        <div className="absolute top-[20%] right-[10%] text-cyan-500 animate-[pulse_2s_infinite] text-xl font-bold font-mono drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]">z</div>
+                        <div className="absolute top-[10%] right-[20%] text-cyan-400 animate-pulse text-2xl font-black font-mono drop-shadow-sm">Z</div>
+                        <div className="absolute top-[20%] right-[10%] text-cyan-500 animate-[pulse_2s_infinite] text-xl font-bold font-mono drop-shadow-sm">z</div>
                     </>
                 )}
             </div>
@@ -515,7 +515,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             {/* Glowing Interactive Toy (Orb) */}
             {(mousePos.x !== 0 || mousePos.y !== 0) && (
                 <div
-                    className="absolute w-6 h-6 bg-yellow-200 rounded-full blur-[2px] pointer-events-none transition-transform duration-75 ease-out shadow-[0_0_20px_rgba(253,224,71,1)] z-50 animate-pulse"
+                    className="absolute w-6 h-6 bg-yellow-200 rounded-full blur-[2px] pointer-events-none transition-transform duration-75 ease-out shadow-sm z-50 animate-pulse"
                     style={{
                         left: `calc(50% + ${mousePos.x * width}px)`,
                         top: `calc(50% + ${mousePos.y * height}px)`,

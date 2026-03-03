@@ -47,7 +47,7 @@ const AgenticRouterModal: React.FC<AgenticRouterModalProps> = ({ message, onClos
                 <div className="flex items-center gap-4 mb-8">
                     <div className="relative">
                         <div className="absolute inset-0 bg-emerald-500/30 blur-xl animate-pulse"></div>
-                        <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-lg border border-emerald-300/50">
+                        <div className="relative w-12 h-12 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-lg border border-emerald-300/50">
                             <Bot className="w-6 h-6 text-white" />
                         </div>
                     </div>
@@ -59,8 +59,8 @@ const AgenticRouterModal: React.FC<AgenticRouterModalProps> = ({ message, onClos
                     </div>
                 </div>
 
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8 relative">
-                    <div className="absolute -left-2 top-6 w-1 h-12 bg-emerald-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.8)]"></div>
+                <div className="bg-white/5 border border-white/10 rounded-lg p-6 mb-8 relative">
+                    <div className="absolute -left-2 top-6 w-1 h-12 bg-emerald-400 rounded-full shadow-sm"></div>
                     <p className="text-lg text-gray-200 leading-relaxed font-light">
                         "{message}"
                     </p>
@@ -69,7 +69,7 @@ const AgenticRouterModal: React.FC<AgenticRouterModalProps> = ({ message, onClos
                 <div className="space-y-4">
                     <button
                         onClick={handleAccept}
-                        className="w-full relative group overflow-hidden rounded-2xl bg-white text-black font-black py-4 px-6 flex items-center justify-between hover:scale-[1.02] active:scale-95 transition-all"
+                        className="w-full relative group overflow-hidden rounded-lg bg-white text-black font-black py-4 px-6 flex items-center justify-between hover:scale-[1.02] active:scale-95 transition-all"
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-emerald-100 to-teal-100 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         <span className="relative z-10 flex items-center gap-3 text-lg">

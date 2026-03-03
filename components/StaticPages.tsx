@@ -45,15 +45,15 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
                 </p>
               </div>
               <div className="relative">
-                <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=800&auto=format&fit=crop" className="rounded-3xl shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500" alt="Team meeting" />
-                <div className="absolute -bottom-6 -left-6 bg-white dark:bg-gray-800 p-4 md:p-6 rounded-2xl shadow-xl border border-[var(--color-primary-border)] dark:border-gray-700">
+                <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=800&auto=format&fit=crop" className="rounded-xl shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500" alt="Team meeting" />
+                <div className="absolute -bottom-6 -left-6 bg-white dark:bg-gray-800 p-4 md:p-6 rounded-lg shadow-xl border border-[var(--color-primary-border)] dark:border-gray-700">
                   <p className="font-black text-2xl md:text-4xl text-[var(--color-primary)]">1M+</p>
                   <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Sessions Completed</p>
                 </div>
               </div>
             </section>
 
-            <section className="bg-[var(--color-primary-light)]/50 dark:bg-[var(--color-primary)]/10 rounded-3xl p-6 md:p-10 border border-[var(--color-primary-border)] dark:border-[var(--color-primary)]/30">
+            <section className="bg-[var(--color-primary-light)]/50 dark:bg-[var(--color-primary)]/10 rounded-xl p-6 md:p-10 border border-[var(--color-primary-border)] dark:border-[var(--color-primary)]/30">
               <h2 className="text-2xl md:text-3xl font-black mb-8 text-center dark:text-white">Our Core Values</h2>
               <div className="grid md:grid-cols-3 gap-8">
                 <div className="text-center">
@@ -96,7 +96,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
                 { img: STABLE_AVATAR_POOL[5], name: "Priya M.", role: "Founder", quote: "Founder burnout is real. Peutic helps me reset my mindset between high-stakes meetings." },
                 { img: STABLE_AVATAR_POOL[4], name: "James L.", role: "Musician", quote: "I use it to clear creative blocks. The specialists ask the right questions to get me unstuck." }
               ].map((story, i) => (
-                <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
+                <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
                   <div className="flex items-center gap-4 mb-4">
                     <img src={story.img} alt={story.name} className="w-14 h-14 rounded-full object-cover border-2 border-[var(--color-primary-border)] dark:border-[var(--color-primary)]/50" />
                     <div>
@@ -112,7 +112,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
               ))}
             </div>
 
-            <div className="bg-black dark:bg-white text-white dark:text-black rounded-3xl p-8 md:p-10 text-center relative overflow-hidden">
+            <div className="bg-black dark:bg-white text-white dark:text-black rounded-xl p-8 md:p-10 text-center relative overflow-hidden">
               <div className="relative z-10">
                 <h2 className="text-2xl md:text-3xl font-black mb-6">Media Inquiries</h2>
                 <p className="text-gray-400 dark:text-gray-600 mb-8 max-w-xl mx-auto text-sm md:text-base">Writing a story about the future of mental health? We'd love to chat.</p>
@@ -134,25 +134,25 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
             </div>
 
             <div className="grid md:grid-cols-2 gap-6 md:gap-8">
-              <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm">
+              <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                 <h3 className="text-xl md:text-2xl font-bold mb-4 flex items-center gap-2 dark:text-white"><Lock className="w-5 h-5 md:w-6 md:h-6 text-green-600" /> Military-Grade Encryption</h3>
                 <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm md:text-base">
                   Every video packet is encrypted using AES-256 standards. Our architecture is Peer-to-Peer (P2P) focused, meaning video data flows directly between you and the specialist whenever possible, bypassing central servers entirely.
                 </p>
               </div>
-              <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm">
+              <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                 <h3 className="text-xl md:text-2xl font-bold mb-4 flex items-center gap-2 dark:text-white"><Award className="w-5 h-5 md:w-6 md:h-6 text-[var(--color-primary)]" /> Specialist Vetting</h3>
                 <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm md:text-base">
                   We accept less than 1% of applicants. Every specialist undergoes a vigorous 5-step background check, credential verification, and emotional resonance testing before they ever speak to a user.
                 </p>
               </div>
-              <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm">
+              <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                 <h3 className="text-xl md:text-2xl font-bold mb-4 flex items-center gap-2 dark:text-white"><AlertTriangle className="w-5 h-5 md:w-6 md:h-6 text-orange-600" /> Real-time Moderation AI</h3>
                 <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm md:text-base">
                   Our passive safety AI monitors for signs of abuse or harassment to protect both users and specialists. If a violation is detected, the session is flagged for immediate human review.
                 </p>
               </div>
-              <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm">
+              <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                 <h3 className="text-xl md:text-2xl font-bold mb-4 flex items-center gap-2 dark:text-white"><FileText className="w-5 h-5 md:w-6 md:h-6 text-blue-600" /> Zero-Knowledge Storage</h3>
                 <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm md:text-base">
                   We do not store video recordings of your sessions unless you explicitly opt-in for therapeutic review. Your journal entries are encrypted at rest with a key derived from your password.
@@ -175,7 +175,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
             </div>
 
             <div className="grid md:grid-cols-2 gap-6 md:gap-8">
-              <div className="bg-red-50 dark:bg-red-950/20 p-6 md:p-8 rounded-3xl border border-red-100 dark:border-red-900 text-center">
+              <div className="bg-red-50 dark:bg-red-950/20 p-6 md:p-8 rounded-xl border border-red-100 dark:border-red-900 text-center">
                 <h3 className="text-xl md:text-2xl font-black text-red-700 dark:text-red-400 mb-2">Emergency Services</h3>
                 <p className="text-red-600 dark:text-red-300/80 mb-6 text-sm md:text-base">Immediate Police/Ambulance Assistance</p>
                 <a href="tel:911" className="inline-flex items-center gap-2 bg-red-600 text-white px-6 py-3 md:px-8 md:py-4 rounded-xl font-black text-xl md:text-2xl hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20">
@@ -184,7 +184,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
                 <p className="text-xs text-red-400 mt-4 font-bold uppercase tracking-widest">In the United States</p>
               </div>
 
-              <div className="bg-blue-50 dark:bg-blue-950/20 p-6 md:p-8 rounded-3xl border border-blue-100 dark:border-blue-900 text-center">
+              <div className="bg-blue-50 dark:bg-blue-950/20 p-6 md:p-8 rounded-xl border border-blue-100 dark:border-blue-900 text-center">
                 <h3 className="text-xl md:text-2xl font-black text-blue-700 dark:text-blue-400 mb-2">Suicide & Crisis Lifeline</h3>
                 <p className="text-blue-600 dark:text-blue-300/80 mb-6 text-sm md:text-base">24/7 Free & Confidential Support</p>
                 <a href="tel:988" className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 md:px-8 md:py-4 rounded-xl font-black text-xl md:text-2xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">
@@ -194,7 +194,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm">
+            <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
               <h3 className="text-xl md:text-2xl font-bold mb-6 dark:text-white">International Resources</h3>
               <div className="grid md:grid-cols-2 gap-4 text-xs md:text-sm">
                 <div className="flex justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
@@ -312,7 +312,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
               <div>
                 <h2 className="text-xl md:text-2xl font-bold mb-6 dark:text-white">Contact Us</h2>
                 {sent ? (
-                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900 p-6 md:p-8 rounded-2xl text-center">
+                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900 p-6 md:p-8 rounded-lg text-center">
                     <div className="w-12 h-12 md:w-16 md:h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                       <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-green-600 dark:text-green-400" />
                     </div>
@@ -383,7 +383,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
           <ArrowLeft className="w-3 h-3 md:w-4 md:h-4" /> {t('ui_cancel')}
         </Link>
 
-        <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-md rounded-3xl p-6 md:p-16 border border-yellow-100 dark:border-blue-900/50 shadow-xl transition-colors duration-500">
+        <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-md rounded-xl p-6 md:p-16 border border-yellow-100 dark:border-blue-900/50 shadow-xl transition-colors duration-500">
           {renderContent()}
         </div>
 

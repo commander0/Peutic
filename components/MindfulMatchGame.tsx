@@ -208,11 +208,11 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
     };
 
     return (
-        <div className="bg-gradient-to-br from-indigo-900/40 to-slate-900/40 w-full h-full flex flex-col rounded-2xl p-4 border border-indigo-500/20 overflow-hidden relative shadow-inner items-center justify-center">
+        <div className="bg-gradient-to-br from-indigo-900/40 to-slate-900/40 w-full h-full flex flex-col rounded-lg p-4 border border-indigo-500/20 overflow-hidden relative shadow-inner items-center justify-center">
 
             {/* Header / HUD */}
             <div className="absolute top-3 left-4 z-20 flex gap-3">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full text-indigo-100 border border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.1)]">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full text-indigo-100 border border-white/10 shadow-sm">
                     <Timer className="w-3 h-3 text-indigo-300" />
                     {formatTime(time)}
                 </div>
@@ -220,7 +220,7 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
                     Moves: {moves}
                 </div>
                 {combo > 1 && (
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-1.5 rounded-full border border-amber-300/50 animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.6)]">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-1.5 rounded-full border border-amber-300/50 animate-pulse shadow-sm">
                         Combo x{combo}!
                     </div>
                 )}
@@ -240,17 +240,17 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
                     <div className="absolute inset-0 bg-indigo-500/10 blur-3xl rounded-full"></div>
                     <div className="relative mb-8">
                         <div className="absolute inset-0 bg-amber-400 blur-2xl opacity-30 animate-pulse"></div>
-                        <Trophy className="w-24 h-24 text-amber-400 relative z-10 animate-bounce drop-shadow-[0_0_20px_rgba(251,191,36,0.8)]" />
+                        <Trophy className="w-24 h-24 text-amber-400 relative z-10 animate-bounce drop-shadow-sm" />
                     </div>
 
                     <h2 className="font-black text-4xl text-white mb-3 tracking-tight drop-shadow-lg">Harmony Achieved</h2>
 
                     <div className="flex gap-4 mb-8">
-                        <div className="bg-white/5 backdrop-blur-lg px-8 py-5 rounded-2xl border border-white/10 flex flex-col items-center shadow-2xl">
+                        <div className="bg-white/5 backdrop-blur-lg px-8 py-5 rounded-lg border border-white/10 flex flex-col items-center shadow-2xl">
                             <p className="text-[10px] text-indigo-300 uppercase tracking-[0.2em] font-black mb-2">Time Flow</p>
                             <p className="text-4xl font-black text-white font-variant-numeric tabular-nums drop-shadow-md">{formatTime(time)}</p>
                         </div>
-                        <div className="bg-white/5 backdrop-blur-lg px-8 py-5 rounded-2xl border border-white/10 flex flex-col items-center shadow-2xl">
+                        <div className="bg-white/5 backdrop-blur-lg px-8 py-5 rounded-lg border border-white/10 flex flex-col items-center shadow-2xl">
                             <p className="text-[10px] text-indigo-300 uppercase tracking-[0.2em] font-black mb-2">Actions</p>
                             <p className="text-4xl font-black text-white font-variant-numeric tabular-nums drop-shadow-md">{moves}</p>
                         </div>
@@ -258,7 +258,7 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
 
                     <button
                         onClick={initGame}
-                        className="bg-white text-indigo-950 px-10 py-4 rounded-full font-black text-sm uppercase tracking-widest hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-all flex items-center gap-2"
+                        className="bg-white text-indigo-950 px-10 py-4 rounded-full font-black text-sm uppercase tracking-widest hover:scale-105 hover:shadow-sm transition-all flex items-center gap-2"
                     >
                         <Sparkles className="w-4 h-4" /> Re-enter the Void
                     </button>
@@ -267,7 +267,7 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
                 <div className="w-full h-full max-w-3xl aspect-[4/3] grid grid-cols-4 grid-rows-4 gap-2 sm:gap-4 p-2 relative z-10 mt-10">
                     {memorizing && (
                         <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-                            <div className="bg-indigo-900/80 backdrop-blur-md px-8 py-4 rounded-full shadow-[0_0_50px_rgba(99,102,241,0.5)] border border-indigo-400/30 animate-pulse">
+                            <div className="bg-indigo-900/80 backdrop-blur-md px-8 py-4 rounded-full shadow-sm border border-indigo-400/30 animate-pulse">
                                 <span className="font-black text-2xl tracking-[0.3em] text-indigo-200 uppercase">Focus</span>
                             </div>
                         </div>
@@ -280,7 +280,7 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
                         return (
                             <div
                                 key={f.id}
-                                className="absolute pointer-events-none z-50 text-amber-300 font-black text-xl md:text-2xl drop-shadow-[0_0_10px_rgba(245,158,11,1)] animate-[floatUp_1.5s_ease-out_forwards]"
+                                className="absolute pointer-events-none z-50 text-amber-300 font-black text-xl md:text-2xl drop-shadow-sm animate-[floatUp_1.5s_ease-out_forwards]"
                                 style={{
                                     left: `${(col * 25) + 12}%`,
                                     top: `${(row * 25) + 2}%`
@@ -320,12 +320,12 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
                         let iconColor = 'text-indigo-400/50';
 
                         if (isVisible) {
-                            cardInnerClasses = 'bg-indigo-900/40 backdrop-blur-md border border-indigo-400/50 shadow-[0_0_20px_rgba(99,102,241,0.3)] rotate-y-180';
-                            iconColor = 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]';
+                            cardInnerClasses = 'bg-indigo-900/40 backdrop-blur-md border border-indigo-400/50 shadow-sm rotate-y-180';
+                            iconColor = 'text-yellow-400 drop-shadow-sm';
                         }
                         if (isMatched) {
-                            cardInnerClasses = 'bg-amber-500/20 backdrop-blur-md border border-amber-400/50 shadow-[0_0_20px_rgba(251,191,36,0.3)] rotate-y-180 scale-95 opacity-60';
-                            iconColor = 'text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]';
+                            cardInnerClasses = 'bg-amber-500/20 backdrop-blur-md border border-amber-400/50 shadow-sm rotate-y-180 scale-95 opacity-60';
+                            iconColor = 'text-amber-300 drop-shadow-sm';
                         }
                         if (card.thawLevel > 0) {
                             // Ice layer styling
@@ -336,7 +336,7 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
                             <div key={i} className="perspective-1000 w-full h-full">
                                 <button
                                     onClick={() => handleCardClick(i)}
-                                    className={`w-full h-full rounded-2xl flex items-center justify-center transition-all duration-500 transform-style-3d overflow-hidden ${cardInnerClasses} relative group`}
+                                    className={`w-full h-full rounded-lg flex items-center justify-center transition-all duration-500 transform-style-3d overflow-hidden ${cardInnerClasses} relative group`}
                                 >
                                     {/* Intricate Back Pattern */}
                                     {!isVisible && card.thawLevel === 0 && (
@@ -352,7 +352,7 @@ const MindfulMatchGame: React.FC<MindfulMatchGameProps> = ({ dashboardUser }) =>
                                         card.thawLevel > 0 ? (
                                             <Snowflake className="w-6 h-6 md:w-10 md:h-10 text-sky-200 animate-[spin_10s_linear_infinite]" />
                                         ) : (
-                                            <div className="w-3 h-3 md:w-4 md:h-4 bg-indigo-500/50 rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)] group-hover:scale-150 transition-transform"></div>
+                                            <div className="w-3 h-3 md:w-4 md:h-4 bg-indigo-500/50 rounded-full shadow-sm group-hover:scale-150 transition-transform"></div>
                                         )
                                     )}
 

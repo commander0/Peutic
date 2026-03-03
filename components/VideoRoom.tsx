@@ -520,7 +520,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
     if (showSummary) {
         return (
             <div className="fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
-                <div className="bg-gray-900 border border-gray-800 p-8 rounded-3xl max-w-md w-full text-center animate-in zoom-in duration-300 shadow-2xl my-auto">
+                <div className="bg-gray-900 border border-gray-800 p-8 rounded-xl max-w-md w-full text-center animate-in zoom-in duration-300 shadow-2xl my-auto">
                     <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/50"><CheckCircle className="w-8 h-8 text-green-500" /></div>
                     <h2 className="text-2xl font-black text-white mb-6 tracking-tight">Session Complete</h2>
 
@@ -528,7 +528,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                     {wisdomCard && (
                         <div className="mb-6 animate-in slide-in-from-top-4 duration-700">
                             <div
-                                className="p-6 rounded-2xl text-center shadow-lg border border-white/10"
+                                className="p-6 rounded-lg text-center shadow-lg border border-white/10"
                                 style={{ backgroundColor: wisdomCard.color }}
                             >
                                 <Sparkles className="w-5 h-5 text-yellow-600 mx-auto mb-2 animate-pulse" />
@@ -550,7 +550,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                         </div>
                     )}
 
-                    <div className="bg-black/50 rounded-2xl p-4 mb-6 border border-gray-800">
+                    <div className="bg-black/50 rounded-lg p-4 mb-6 border border-gray-800">
                         <div className="flex justify-between mb-2"><span className="text-gray-500 font-bold text-xs uppercase">Time</span><span className="font-mono font-bold text-white">{formatTime(duration)}</span></div>
                         <div className="flex justify-between items-center"><span className="text-gray-500 font-bold text-xs uppercase">Cost (@ ${currentRate}/m)</span><span className="text-green-500 font-black text-lg">${cost.toFixed(2)}</span></div>
                     </div>
@@ -603,7 +603,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                                     <div className="absolute inset-0 rounded-full border-4 border-yellow-500/30 z-20"></div>
                                     <img
                                         src={companion.imageUrl}
-                                        className="w-full h-full rounded-full object-cover border-4 border-yellow-500/50 shadow-[0_0_80px_rgba(250,204,21,0.2)] relative z-10"
+                                        className="w-full h-full rounded-full object-cover border-4 border-yellow-500/50 shadow-sm relative z-10"
                                         alt={companion.name}
                                     />
                                     <div className="absolute bottom-4 right-4 bg-green-500 w-8 h-8 rounded-full border-4 border-[#0A0A0A] z-30 animate-pulse shadow-xl"></div>
@@ -638,7 +638,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                                             </div>
                                             <div className="text-right">
                                                 <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Estimated Arrival</p>
-                                                <div className="px-4 py-2 bg-yellow-500/10 rounded-2xl border border-yellow-500/20 inline-block">
+                                                <div className="px-4 py-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20 inline-block">
                                                     <span className="text-xl font-black text-yellow-500">{estWait > 0 ? `~${estWait}s` : 'Next'}</span>
                                                 </div>
                                             </div>
@@ -647,7 +647,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                                         <div className="space-y-3">
                                             <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden p-[2px] border border-white/5">
                                                 <div
-                                                    className="h-full bg-gradient-to-r from-yellow-600 to-yellow-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(250,204,21,0.5)]"
+                                                    className="h-full bg-gradient-to-r from-yellow-600 to-yellow-400 rounded-full transition-all duration-1000 ease-out shadow-sm"
                                                     style={{ width: `${Math.max(5, 100 - (queuePos * 10))}%` }}
                                                 ></div>
                                             </div>
@@ -670,7 +670,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
                                         </div>
 
                                         {serviceDelay && (
-                                            <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-3xl flex items-start gap-3 animate-in fade-in">
+                                            <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-start gap-3 animate-in fade-in">
                                                 <div className="p-2 bg-blue-500/20 rounded-full mt-0.5">
                                                     <Clock className="w-4 h-4 text-blue-400" />
                                                 </div>
@@ -705,7 +705,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
             {/* State: ERROR */}
             {(connectionState === 'ERROR' || connectionState === 'QUEUE_FULL') && (
-                <div className="relative z-10 text-center p-8 bg-red-900/80 backdrop-blur-md rounded-3xl border border-red-500/30 max-w-md w-full animate-in zoom-in">
+                <div className="relative z-10 text-center p-8 bg-red-900/80 backdrop-blur-md rounded-xl border border-red-500/30 max-w-md w-full animate-in zoom-in">
                     <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
                     <h2 className="text-2xl font-black text-white mb-2">Connection Interrupted</h2>
                     <p className="text-gray-300 mb-6">{errorMsg || "System is currently at capacity. Please try again later."}</p>
@@ -756,7 +756,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({ companion, onEndSession, userName
 
                     {/* Icebreaker / Tools Panel (Bottom Left) */}
                     <div className="absolute bottom-6 left-6 z-20 hidden md:block">
-                        <div className="bg-black/60 backdrop-blur-lg border border-white/10 rounded-2xl p-4 max-w-sm">
+                        <div className="bg-black/60 backdrop-blur-lg border border-white/10 rounded-lg p-4 max-w-sm">
                             <div className="flex justify-between items-center mb-2">
                                 <h4 className="text-yellow-500 text-xs font-black uppercase tracking-widest flex items-center gap-2"><Sparkles className="w-3 h-3" /> Conversation Starter</h4>
                                 <button onClick={nextIcebreaker} className="text-gray-400 hover:text-white transition-colors"><RefreshCcw className="w-3 h-3" /></button>

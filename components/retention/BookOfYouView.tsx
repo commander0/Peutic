@@ -212,7 +212,7 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                                 <BookOpen className="w-6 h-6 lg:w-8 lg:h-8 text-amber-900/70 dark:text-stone-300 group-hover:text-amber-900 dark:group-hover:text-white transition-colors drop-shadow-md" />
                             </div>
                             <div className="w-full h-px bg-gradient-to-r from-transparent via-amber-900/30 dark:via-stone-600 to-transparent mb-8 lg:mb-12"></div>
-                            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-serif text-amber-950 dark:text-stone-100 mb-4 lg:mb-6 tracking-wide drop-shadow-[0_0_15px_rgba(217,119,6,0.3)] dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">The Book<br />of You</h1>
+                            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-serif text-amber-950 dark:text-stone-100 mb-4 lg:mb-6 tracking-wide drop-shadow-sm dark:drop-shadow-sm">The Book<br />of You</h1>
                             <p className="text-lg lg:text-xl text-amber-900/70 dark:text-stone-400 font-serif italic">A chronicle of {user.name}'s journey.</p>
 
                             <div className="mt-12 lg:mt-16 flex flex-col items-center justify-center gap-4 lg:gap-6 z-20 relative">
@@ -272,8 +272,8 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                 {/* THE SPINE SHADOW - Desktop Only */}
                 <div className="hidden md:block w-16 shrink-0 h-full bg-gradient-to-r from-transparent via-black/10 to-transparent dark:from-transparent dark:via-black/60 dark:to-transparent shadow-[inset_15px_0_30px_rgba(0,0,0,0.1),inset_-15px_0_30px_rgba(0,0,0,0.1)] dark:shadow-[inset_20px_0_40px_rgba(0,0,0,0.4),inset_-20px_0_40px_rgba(0,0,0,0.4)] z-10 relative pointer-events-none print:hidden">
                     <div className="absolute inset-y-0 left-1/2 -ml-px w-px bg-black/20 dark:bg-black/80 w-[2px]"></div>
-                    <div className="absolute inset-y-0 left-[calc(100%-1px)] w-[1px] bg-white/30 dark:bg-white/10 shadow-[0_0_5px_rgba(255,255,255,0.5)]"></div>
-                    <div className="absolute inset-y-0 right-[calc(100%-1px)] w-[1px] bg-white/30 dark:bg-white/10 shadow-[0_0_5px_rgba(255,255,255,0.5)]"></div>
+                    <div className="absolute inset-y-0 left-[calc(100%-1px)] w-[1px] bg-white/30 dark:bg-white/10 shadow-sm"></div>
+                    <div className="absolute inset-y-0 right-[calc(100%-1px)] w-[1px] bg-white/30 dark:bg-white/10 shadow-sm"></div>
                 </div>
 
                 {/* RIGHT PAGE */}

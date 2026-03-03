@@ -44,9 +44,9 @@ export const SupportCircles: React.FC<SupportCirclesProps> = ({ onClose }) => {
 
             <div className="w-full max-w-5xl mx-auto p-4 md:p-8 relative z-10 flex-1 flex flex-col">
                 {/* Header */}
-                <div className="flex justify-between items-center mb-8 bg-white/5 backdrop-blur-xl border border-white/10 p-4 rounded-3xl">
+                <div className="flex justify-between items-center mb-8 bg-white/5 backdrop-blur-xl border border-white/10 p-4 rounded-xl">
                     <div className="flex items-center gap-4">
-                        <div className="p-3 bg-blue-500/20 rounded-2xl border border-blue-500/30">
+                        <div className="p-3 bg-blue-500/20 rounded-lg border border-blue-500/30">
                             <Radio className="w-6 h-6 text-blue-400" />
                         </div>
                         <div>
@@ -69,7 +69,7 @@ export const SupportCircles: React.FC<SupportCirclesProps> = ({ onClose }) => {
                                     <div
                                         key={room.id}
                                         onClick={() => setActiveRoom(room)}
-                                        className="group bg-white/5 hover:bg-white/10 border border-white/10 rounded-3xl p-6 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(59,130,246,0.15)] flex flex-col justify-between min-h-[160px]"
+                                        className="group bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-6 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-sm flex flex-col justify-between min-h-[160px]"
                                     >
                                         <div>
                                             <div className="flex justify-between items-start mb-4">
@@ -90,7 +90,7 @@ export const SupportCircles: React.FC<SupportCirclesProps> = ({ onClose }) => {
                             </div>
                         </div>
 
-                        <div className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-blue-500/20 rounded-3xl p-8 text-center flex flex-col items-center">
+                        <div className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-blue-500/20 rounded-xl p-8 text-center flex flex-col items-center">
                             <HandHeart className="w-12 h-12 text-blue-400 mb-4" />
                             <h3 className="text-white font-black text-xl mb-2">Safe, Anonymous Space</h3>
                             <p className="text-blue-200/80 max-w-md text-sm leading-relaxed">
@@ -112,7 +112,7 @@ export const SupportCircles: React.FC<SupportCirclesProps> = ({ onClose }) => {
                         <div className="flex-1 flex items-center justify-center relative min-h-[400px]">
                             {/* Central AI Moderator */}
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center">
-                                <div className={`w-28 h-28 rounded-full border-4 border-[#050510] bg-gradient-to-tr from-purple-600 to-blue-500 flex items-center justify-center shadow-[0_0_50px_rgba(168,85,247,0.4)] transition-all duration-300 ${speakingUser === 'host' ? 'scale-110 shadow-[0_0_80px_rgba(168,85,247,0.8)]' : ''}`}>
+                                <div className={`w-28 h-28 rounded-full border-4 border-[#050510] bg-gradient-to-tr from-purple-600 to-blue-500 flex items-center justify-center shadow-sm transition-all duration-300 ${speakingUser === 'host' ? 'scale-110 shadow-sm' : ''}`}>
                                     <Shield className={`w-12 h-12 text-white ${speakingUser === 'host' ? 'animate-pulse' : ''}`} />
                                 </div>
                                 <div className="mt-4 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20 flex flex-col items-center">
@@ -136,7 +136,7 @@ export const SupportCircles: React.FC<SupportCirclesProps> = ({ onClose }) => {
                                         style={{ transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))` }}
                                     >
                                         <div className="flex flex-col items-center">
-                                            <div className={`w-14 h-14 rounded-full border-2 bg-gray-800 flex items-center justify-center transition-all ${isSpeaking ? 'border-green-400 scale-125 shadow-[0_0_30px_rgba(74,222,128,0.4)]' : isMe ? 'border-blue-500' : 'border-gray-700'}`}>
+                                            <div className={`w-14 h-14 rounded-full border-2 bg-gray-800 flex items-center justify-center transition-all ${isSpeaking ? 'border-green-400 scale-125 shadow-sm' : isMe ? 'border-blue-500' : 'border-gray-700'}`}>
                                                 {isSpeaking ? <MessageSquare className="w-5 h-5 text-green-400 animate-pulse" /> : <div className="w-8 h-8 rounded-full bg-gray-700"></div>}
                                             </div>
                                             <span className="mt-2 text-[9px] text-gray-500 font-bold uppercase tracking-widest">{isMe ? 'You' : `Anon_${i + 1}`}</span>

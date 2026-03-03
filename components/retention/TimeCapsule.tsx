@@ -43,7 +43,7 @@ const TimeCapsuleComponent: React.FC<TimeCapsuleProps> = ({ userId }) => {
     };
 
     return (
-        <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 border border-indigo-100 dark:border-gray-800 shadow-sm">
+        <div className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-indigo-100 dark:border-gray-800 shadow-sm">
             <div className="flex items-center gap-3 mb-6">
                 <div className="bg-indigo-100 dark:bg-indigo-900/30 p-2 rounded-xl">
                     <Clock className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
@@ -55,7 +55,7 @@ const TimeCapsuleComponent: React.FC<TimeCapsuleProps> = ({ userId }) => {
             </div>
 
             {/* CREATION FORM */}
-            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-4 mb-6">
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 mb-6">
                 <textarea
                     className="w-full bg-transparent border-none resize-none focus:ring-0 text-sm mb-3 dark:text-white"
                     placeholder="Dear Future Me, today I felt..."

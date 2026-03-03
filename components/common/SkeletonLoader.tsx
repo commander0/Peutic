@@ -10,7 +10,7 @@ const SkeletonLoader: React.FC<SkeletonProps> = ({ className = '', variant = 're
     const variantStyle =
         variant === 'circle' ? "rounded-full" :
             variant === 'text' ? "rounded-md h-3" :
-                "rounded-2xl";
+                "rounded-lg";
 
     return (
         <div className={`${baseStyle} ${variantStyle} ${className}`} />
@@ -30,7 +30,7 @@ export const CompanionSkeleton = () => (
 );
 
 export const StatSkeleton = () => (
-    <div className="bg-gray-900 p-5 rounded-3xl border border-gray-800 shadow-sm relative overflow-hidden">
+    <div className="bg-gray-900 p-5 rounded-xl border border-gray-800 shadow-sm relative overflow-hidden">
         <SkeletonLoader variant="text" className="w-1/3 mb-2 opacity-50" />
         <div className="flex items-end gap-2 mb-3">
             <SkeletonLoader variant="rect" className="w-1/4 h-8" />
@@ -41,7 +41,7 @@ export const StatSkeleton = () => (
 );
 
 export const TableSkeleton = ({ rows = 5, cols = 4 }: { rows?: number, cols?: number }) => (
-    <div className="bg-gray-950 rounded-2xl border border-gray-800 overflow-hidden animate-in fade-in">
+    <div className="bg-gray-950 rounded-lg border border-gray-800 overflow-hidden animate-in fade-in">
         <div className="bg-gray-900 p-4 border-b border-gray-800 flex gap-4">
             {Array.from({ length: cols }).map((_, i) => (
                 <SkeletonLoader key={i} variant="text" className="flex-1 opacity-50" />

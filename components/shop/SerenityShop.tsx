@@ -170,10 +170,10 @@ const SerenityShop: React.FC<SerenityShopProps> = ({ user, balance, onClose, onP
                             return (
                                 <div
                                     key={item.id}
-                                    className={`relative bg-white dark:bg-black/40 border border-gray-200 dark:border-white/5 rounded-3xl p-6 transition-all duration-300 ${canAfford ? 'hover:shadow-xl hover:-translate-y-1 hover:border-amber-300 dark:hover:border-amber-500/30' : 'opacity-75 grayscale-[0.5]'}`}
+                                    className={`relative bg-white dark:bg-black/40 border border-gray-200 dark:border-white/5 rounded-xl p-6 transition-all duration-300 ${canAfford ? 'hover:shadow-xl hover:-translate-y-1 hover:border-amber-300 dark:hover:border-amber-500/30' : 'opacity-75 grayscale-[0.5]'}`}
                                 >
                                     <div className="flex items-start justify-between mb-4">
-                                        <div className={`p-3 rounded-2xl ${item.bg} ${item.color}`}>
+                                        <div className={`p-3 rounded-lg ${item.bg} ${item.color}`}>
                                             <Icon className="w-6 h-6" />
                                         </div>
                                         <div className="flex flex-col items-end">

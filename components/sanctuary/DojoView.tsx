@@ -413,7 +413,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                     const getPositionClass = (id: string) => {
                         switch (id) {
                             case 'scroll': return 'top-20 right-8 md:top-24 md:right-32 text-[6rem] md:text-[8rem] opacity-90 drop-shadow-2xl z-0';
-                            case 'lantern': return 'top-20 left-4 md:top-24 md:left-24 text-7xl md:text-8xl opacity-100 animate-[sway_6s_ease-in-out_infinite] drop-shadow-[0_0_40px_rgba(251,191,36,0.6)] z-0';
+                            case 'lantern': return 'top-20 left-4 md:top-24 md:left-24 text-7xl md:text-8xl opacity-100 animate-[sway_6s_ease-in-out_infinite] drop-shadow-sm z-0';
 
                             // Floor/table layer (back)
                             case 'bonsai': return 'bottom-[15%] right-4 md:right-32 text-[7rem] md:text-[9rem] drop-shadow-[0_30px_30px_rgba(0,0,0,0.8)] z-10 hover:scale-105 transition-transform';
@@ -471,7 +471,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                     </div>
 
                     {/* The Circle Frame (Candle Container) */}
-                    <div className={`w-64 h-64 md:w-80 md:h-80 rounded-full border border-white/10 flex flex-col items-center justify-center relative bg-white/5 backdrop-blur-3xl shadow-premium transition-all duration-1000 shrink-0 ${isActive ? 'scale-105 border-amber-500/30 animate-ethereal-breathe shadow-[0_0_40px_rgba(245,158,11,0.2)]' : ''}`}>
+                    <div className={`w-64 h-64 md:w-80 md:h-80 rounded-full border border-white/10 flex flex-col items-center justify-center relative bg-white/5 backdrop-blur-3xl shadow-premium transition-all duration-1000 shrink-0 ${isActive ? 'scale-105 border-amber-500/30 animate-ethereal-breathe shadow-sm' : ''}`}>
 
                         {/* Lumina Meditation Presence */}
                         {luminaPet && isActive && (
@@ -493,7 +493,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                                         <div className="absolute inset-0 bg-orange-500/30 blur-2xl rounded-full animate-pulse-slow"></div>
 
                                         {/* Main Flame Shape */}
-                                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-14 bg-gradient-to-t from-orange-600 via-yellow-400 to-white rounded-[50%_50%_50%_50%_/_60%_60%_40%_40%] shadow-[0_0_20px_rgba(255,165,0,0.6)] animate-flicker transform-gpu">
+                                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-14 bg-gradient-to-t from-orange-600 via-yellow-400 to-white rounded-[50%_50%_50%_50%_/_60%_60%_40%_40%] shadow-sm animate-flicker transform-gpu">
                                             {/* Blue Core */}
                                             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-3 bg-blue-600/80 rounded-full blur-[1px]"></div>
                                         </div>
@@ -501,8 +501,8 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                                         {/* Sparkles/Embers */}
                                         {isActive && (
                                             <>
-                                                <div className="absolute bottom-2 left-1/2 w-0.5 h-0.5 bg-yellow-100 shadow-[0_0_5px_white] animate-ember-fly-1"></div>
-                                                <div className="absolute bottom-4 left-1/2 w-0.5 h-0.5 bg-orange-100 shadow-[0_0_5px_white] animate-ember-fly-2"></div>
+                                                <div className="absolute bottom-2 left-1/2 w-0.5 h-0.5 bg-yellow-100 shadow-sm animate-ember-fly-1"></div>
+                                                <div className="absolute bottom-4 left-1/2 w-0.5 h-0.5 bg-orange-100 shadow-sm animate-ember-fly-2"></div>
                                             </>
                                         )}
                                     </div>
@@ -576,7 +576,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                                         key={sec}
                                         onClick={(e) => { e.stopPropagation(); setBellInterval(sec); }}
                                         className={`px-2 py-3 rounded-xl text-xs font-bold tracking-wider text-center transition-all ${bellInterval === sec
-                                            ? 'bg-amber-500/20 text-amber-200 border border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
+                                            ? 'bg-amber-500/20 text-amber-200 border border-amber-500/50 shadow-sm'
                                             : 'hover:bg-white/5 text-stone-500 border border-white/5'
                                             }`}
                                     >
@@ -596,7 +596,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); setBellInterval(120); }} // 2 mins special
                                                 className={`px-2 py-3 rounded-xl text-xs font-bold tracking-wider text-center transition-all ${bellInterval === 120
-                                                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                                                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-sm'
                                                     : 'bg-emerald-900/10 text-emerald-600/60 border border-emerald-900/30 hover:border-emerald-700/50'
                                                     }`}
                                             >
@@ -607,7 +607,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); setBellInterval(300); }} // Overrides 5 min logic dynamically
                                                 className={`px-2 py-3 rounded-xl text-xs font-bold tracking-wider text-center transition-all ${bellInterval === 300 && luminaLevel >= 50
-                                                    ? 'bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/50 shadow-[0_0_15px_rgba(217,70,239,0.2)]'
+                                                    ? 'bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/50 shadow-sm'
                                                     : 'bg-fuchsia-900/10 text-fuchsia-600/60 border border-fuchsia-900/30 hover:border-fuchsia-700/50'
                                                     }`}
                                             >

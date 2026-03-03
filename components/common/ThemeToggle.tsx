@@ -43,7 +43,7 @@ export const ThemeToggle = () => {
             </button>
 
             {isOpen && (
-                <div className="absolute top-full right-0 mt-2 w-64 bg-base/90 backdrop-blur-xl border border-primary/20 rounded-2xl shadow-xl p-4 z-50 animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute top-full right-0 mt-2 w-64 bg-base/90 backdrop-blur-xl border border-primary/20 rounded-lg shadow-xl p-4 z-50 animate-in fade-in zoom-in-95 duration-200">
                     <div className="flex justify-between items-center mb-4 pb-2 border-b border-primary/10">
                         <span className="text-xs font-black uppercase text-text-base/60 tracking-widest">Appearance</span>
                         <button

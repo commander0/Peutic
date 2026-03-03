@@ -155,7 +155,7 @@ export const VoiceRoom: React.FC<VoiceRoomProps> = ({ companion, onEndSession })
                 {/* Visual Context Preview Hub */}
                 {uploadedImage && (
                     <div className="absolute top-0 right-8 animate-in slide-in-from-right-10 fade-in duration-500">
-                        <div className="p-2 backdrop-blur-xl bg-white/5 border border-white/20 rounded-2xl flex flex-col items-end gap-2 shadow-2xl">
+                        <div className="p-2 backdrop-blur-xl bg-white/5 border border-white/20 rounded-lg flex flex-col items-end gap-2 shadow-2xl">
                             <span className="text-[8px] font-black uppercase text-blue-400 tracking-widest bg-blue-500/10 px-2 py-1 rounded-full"><Focus className="w-3 h-3 inline mr-1" /> Vision Active</span>
                             <img src={uploadedImage} alt="Context" className="w-32 h-32 object-cover rounded-xl border border-white/10" />
                         </div>
@@ -171,7 +171,7 @@ export const VoiceRoom: React.FC<VoiceRoomProps> = ({ companion, onEndSession })
                     <div className="absolute inset-[-20px] rounded-full border-4 border-yellow-500/40 transition-all duration-100" style={{ transform: `scale(${1 + voiceActivity / 100})`, opacity: voiceActivity > 0 ? 1 : 0 }}></div>
 
                     {/* Avatar Core */}
-                    <div className="w-48 h-48 md:w-64 md:h-64 rounded-full relative z-10 overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] bg-black">
+                    <div className="w-48 h-48 md:w-64 md:h-64 rounded-full relative z-10 overflow-hidden border border-white/10 shadow-sm bg-black">
                         <img src={companion.imageUrl} alt={companion.name} className={`w-full h-full object-cover transition-transform duration-[2000ms] ${isAIThinking ? 'scale-110 blur-[2px]' : 'scale-100'}`} />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                         <div className="absolute bottom-6 left-0 right-0 text-center">
@@ -228,7 +228,7 @@ export const VoiceRoom: React.FC<VoiceRoomProps> = ({ companion, onEndSession })
 
                     <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-16 h-16 rounded-full flex items-center justify-center bg-white/10 border border-white/20 text-white hover:bg-blue-500 hover:border-blue-500 hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] transition-all backdrop-blur-sm relative group overflow-hidden"
+                        className="w-16 h-16 rounded-full flex items-center justify-center bg-white/10 border border-white/20 text-white hover:bg-blue-500 hover:border-blue-500 hover:shadow-sm transition-all backdrop-blur-sm relative group overflow-hidden"
                     >
                         <ImageIcon className="w-6 h-6 group-hover:-translate-y-8 transition-transform" />
                         <Camera className="w-6 h-6 absolute translate-y-8 group-hover:translate-y-0 transition-transform" />
@@ -238,7 +238,7 @@ export const VoiceRoom: React.FC<VoiceRoomProps> = ({ companion, onEndSession })
 
                     <button
                         onClick={onEndSession}
-                        className="w-16 h-16 rounded-full flex items-center justify-center bg-red-600/80 border border-red-500 text-white hover:bg-red-500 shadow-[0_0_30px_rgba(220,38,38,0.4)] transition-all"
+                        className="w-16 h-16 rounded-full flex items-center justify-center bg-red-600/80 border border-red-500 text-white hover:bg-red-500 shadow-sm transition-all"
                     >
                         <PhoneOff className="w-6 h-6" />
                     </button>

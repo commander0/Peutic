@@ -38,7 +38,7 @@ export class ZenErrorBoundary extends Component<Props, State> {
         if (this.state.hasError) {
             return (
                 <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-6 text-center text-white font-sans">
-                    <div className="max-w-md w-full backdrop-blur-3xl bg-white/5 rounded-3xl p-8 border border-white/10 shadow-2xl animate-fade-in-up">
+                    <div className="max-w-md w-full backdrop-blur-3xl bg-white/5 rounded-xl p-8 border border-white/10 shadow-2xl animate-fade-in-up">
                         <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center rounded-full bg-red-500/10 text-red-400">
                             <RefreshCw className="w-8 h-8 opacity-80" />
                         </div>

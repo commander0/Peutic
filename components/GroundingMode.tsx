@@ -294,7 +294,7 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
             {/* Blocked Audio Overlay */}
             {audioBlocked && (
                 <div className="absolute inset-0 z-[110] bg-black/80 flex items-center justify-center backdrop-blur-md">
-                    <button onClick={() => { setAudioBlocked(false); startAmbientSong(); playAiVoice(currentStep.narration); }} className="bg-white text-black px-8 py-4 rounded-full font-bold text-xl flex items-center gap-3 hover:scale-105 transition-transform shadow-[0_0_40px_rgba(255,255,255,0.3)] animate-pulse">
+                    <button onClick={() => { setAudioBlocked(false); startAmbientSong(); playAiVoice(currentStep.narration); }} className="bg-white text-black px-8 py-4 rounded-full font-bold text-xl flex items-center gap-3 hover:scale-105 transition-transform shadow-sm animate-pulse">
                         <Play className="w-6 h-6 fill-black" /> Begin Session
                     </button>
                 </div>
@@ -312,17 +312,17 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
 
             {/* PROGRESS BAR */}
             <div className="absolute top-0 left-0 h-1.5 bg-white/10 w-full">
-                <div className="h-full bg-gradient-to-r from-blue-400 to-purple-400 shadow-[0_0_20px_rgba(96,165,250,0.8)] transition-all duration-700 ease-out" style={{ width: `${progress}%` }}></div>
+                <div className="h-full bg-gradient-to-r from-blue-400 to-purple-400 shadow-sm transition-all duration-700 ease-out" style={{ width: `${progress}%` }}></div>
             </div>
 
             {/* CONTENT */}
-            <div className={`relative z-10 max-w-2xl w-full px-8 md:px-16 py-12 md:py-20 text-center transition-all duration-[800ms] transform ${isTransitioning ? 'opacity-0 scale-95 blur-xl translate-y-10' : 'opacity-100 scale-100 blur-0 translate-y-0'} bg-white/5 backdrop-blur-3xl rounded-[3rem] border border-white/10 shadow-[0_0_80px_rgba(255,255,255,0.05),inset_0_0_40px_rgba(255,255,255,0.05)]`}>
+            <div className={`relative z-10 max-w-2xl w-full px-8 md:px-16 py-12 md:py-20 text-center transition-all duration-[800ms] transform ${isTransitioning ? 'opacity-0 scale-95 blur-xl translate-y-10' : 'opacity-100 scale-100 blur-0 translate-y-0'} bg-white/5 backdrop-blur-3xl rounded-[3rem] border border-white/10 shadow-sm`}>
 
                 {/* ICON GLOW */}
                 <div className="mb-10 flex justify-center relative">
                     <div className="absolute inset-0 bg-white/20 blur-[60px] animate-[pulse_4s_ease-in-out_infinite]"></div>
                     <div className="relative w-28 h-28 bg-gradient-to-br from-white/20 to-transparent rounded-full flex items-center justify-center backdrop-blur-2xl border border-white/30 shadow-[0_20px_40px_rgba(0,0,0,0.5)] animate-[bounce_6s_infinite]">
-                        <currentStep.icon className="w-12 h-12 text-white drop-shadow-[0_0_20px_rgba(255,255,255,1)]" />
+                        <currentStep.icon className="w-12 h-12 text-white drop-shadow-sm" />
                     </div>
                 </div>
 
@@ -338,7 +338,7 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
 
                         {/* Core Liquid */}
                         <div className="absolute inset-0 bg-white/10 rounded-[40%_60%_70%_30%/40%_50%_60%_50%] animate-[spin_8s_linear_infinite] blur-xl"></div>
-                        <div className="absolute inset-10 bg-gradient-to-br from-white/30 to-transparent rounded-full backdrop-blur-xl border border-white/40 shadow-[0_0_60px_rgba(255,255,255,0.2)] flex items-center justify-center transition-all duration-[4000ms] ease-in-out breathing-text-container">
+                        <div className="absolute inset-10 bg-gradient-to-br from-white/30 to-transparent rounded-full backdrop-blur-xl border border-white/40 shadow-sm flex items-center justify-center transition-all duration-[4000ms] ease-in-out breathing-text-container">
                             <span className="font-sans font-black tracking-[0.3em] text-xl uppercase text-white drop-shadow-[0_2px_15px_rgba(0,0,0,0.8)]">{breathText}</span>
                         </div>
                     </div>
@@ -349,7 +349,7 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
                     <div className="space-y-10">
                         <div className="flex justify-center gap-5 mb-8">
                             {Array.from({ length: currentStep.count }).map((_, i) => (
-                                <div key={i} className={`w-5 h-5 rounded-full transition-all duration-500 shadow-[0_0_15px_rgba(255,255,255,0.3)] ${i < counter ? 'bg-white scale-150 shadow-[0_0_30px_rgba(255,255,255,1)]' : 'bg-white/10'}`}></div>
+                                <div key={i} className={`w-5 h-5 rounded-full transition-all duration-500 shadow-sm ${i < counter ? 'bg-white scale-150 shadow-sm' : 'bg-white/10'}`}></div>
                             ))}
                         </div>
                         <button
@@ -366,7 +366,7 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
                 )}
 
                 {currentStep.id === 'complete' && (
-                    <button onClick={onClose} className="px-14 py-6 bg-white text-black rounded-full font-black text-2xl tracking-wide hover:bg-blue-50 transition-all shadow-[0_0_60px_rgba(255,255,255,0.6)] hover:scale-105 hover:shadow-[0_0_80px_rgba(255,255,255,0.8)] mt-4">
+                    <button onClick={onClose} className="px-14 py-6 bg-white text-black rounded-full font-black text-2xl tracking-wide hover:bg-blue-50 transition-all shadow-sm hover:scale-105 hover:shadow-sm mt-4">
                         Return to Sanctuary
                     </button>
                 )}

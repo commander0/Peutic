@@ -478,18 +478,18 @@ const StressSlicerGame: React.FC<StressSlicerProps> = ({ dashboardUser }) => {
     }, [gameStarted, gameOver]);
 
     return (
-        <div className="w-full h-full min-h-[500px] flex flex-col items-center bg-black rounded-3xl overflow-hidden relative font-mono shadow-[0_0_50px_rgba(239,68,68,0.1)]">
+        <div className="w-full h-full min-h-[500px] flex flex-col items-center bg-black rounded-xl overflow-hidden relative font-mono shadow-sm">
             {/* HUD */}
             <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-10 pointer-events-none">
                 <div className="space-y-1">
-                    <div className="text-xl font-bold font-mono text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]">SCORE: {score}</div>
+                    <div className="text-xl font-bold font-mono text-cyan-400 drop-shadow-sm">SCORE: {score}</div>
                     <div className="text-sm font-mono text-cyan-500/60">HIGH: {highScore}</div>
                 </div>
 
                 <div className="flex flex-col items-end gap-1">
                     <div className="flex gap-2 text-2xl">
                         {[...Array(3)].map((_, i) => (
-                            <span key={i} className={`transition-all duration-300 ${i < lives ? "text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]" : "text-gray-800 scale-75"}`}>❤️</span>
+                            <span key={i} className={`transition-all duration-300 ${i < lives ? "text-red-500 drop-shadow-sm" : "text-gray-800 scale-75"}`}>❤️</span>
                         ))}
                     </div>
                     {gameStarted && (
@@ -504,7 +504,7 @@ const StressSlicerGame: React.FC<StressSlicerProps> = ({ dashboardUser }) => {
 
             {!gameStarted && !gameOver && (
                 <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center p-8 text-center z-20 backdrop-blur-md">
-                    <h2 className="text-5xl font-black text-red-500 tracking-widest mb-2 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)] font-mono">STRESS SLICER</h2>
+                    <h2 className="text-5xl font-black text-red-500 tracking-widest mb-2 drop-shadow-sm font-mono">STRESS SLICER</h2>
                     <h3 className="text-sky-400 tracking-[0.5em] text-sm mb-6 uppercase">Wave Edition</h3>
                     <p className="text-gray-400 max-w-sm mb-8 leading-relaxed">
                         Stroke aggressively to slice anxiety. <br />
@@ -513,7 +513,7 @@ const StressSlicerGame: React.FC<StressSlicerProps> = ({ dashboardUser }) => {
                     </p>
                     <button
                         onClick={initGame}
-                        className="px-8 py-4 bg-red-500 hover:bg-red-400 text-black font-black rounded-xl transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] flex items-center gap-3 font-mono tracking-widest"
+                        className="px-8 py-4 bg-red-500 hover:bg-red-400 text-black font-black rounded-xl transition-all hover:scale-105 hover:shadow-sm flex items-center gap-3 font-mono tracking-widest"
                     >
                         <Play className="w-6 h-6 fill-current" />
                         ENGAGE
@@ -523,16 +523,16 @@ const StressSlicerGame: React.FC<StressSlicerProps> = ({ dashboardUser }) => {
 
             {gameOver && (
                 <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center p-8 text-center z-20 backdrop-blur-lg">
-                    <h2 className="text-6xl font-black text-white mb-2 font-mono drop-shadow-[0_0_30px_rgba(255,255,255,0.8)]">FRAGMENTED</h2>
+                    <h2 className="text-6xl font-black text-white mb-2 font-mono drop-shadow-sm">FRAGMENTED</h2>
                     <div className="text-sm tracking-[0.3em] text-red-500 uppercase mb-6">Wave Reached: {currentWave} ({waveName})</div>
 
-                    <div className="text-3xl text-cyan-400 mb-10 font-mono font-bold bg-cyan-950/30 px-8 py-4 rounded-2xl border border-cyan-500/30">
+                    <div className="text-3xl text-cyan-400 mb-10 font-mono font-bold bg-cyan-950/30 px-8 py-4 rounded-lg border border-cyan-500/30">
                         FINAL SCORE: {score}
                     </div>
 
                     <button
                         onClick={initGame}
-                        className="px-8 py-4 bg-transparent border-2 border-cyan-500 text-cyan-500 hover:bg-cyan-500 hover:text-black font-black font-mono tracking-widest rounded-xl transition-all hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] flex items-center gap-3 hover:scale-105"
+                        className="px-8 py-4 bg-transparent border-2 border-cyan-500 text-cyan-500 hover:bg-cyan-500 hover:text-black font-black font-mono tracking-widest rounded-xl transition-all hover:shadow-sm flex items-center gap-3 hover:scale-105"
                     >
                         <Play className="w-5 h-5 fill-current" />
                         RE-ENTER FLOW

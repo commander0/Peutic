@@ -33,9 +33,10 @@ const Typewriter: React.FC<{ text: string }> = ({ text }) => {
 interface LuminaViewProps {
     user: User;
     onClose: () => void;
+    isEmbedded?: boolean;
 }
 
-const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
+const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = false }) => {
     const [pet, setPet] = useState<Lumina | null>(null);
     const [emotion, setEmotion] = useState<'idle' | 'happy' | 'hungry' | 'sleeping' | 'sad' | 'eating' | 'energized' | 'thinker' | 'sleepy'>('idle');
     const [loading, setLoading] = useState(true);
@@ -315,7 +316,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                     </div>
 
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 relative z-[60]">
-                        <div className="bg-cyan-950/50 p-6 rounded-2xl border border-cyan-800/50 backdrop-blur-sm">
+                        <div className="bg-cyan-950/50 p-6 rounded-lg border border-cyan-800/50 backdrop-blur-sm">
                             <p className="text-cyan-200 text-center font-mono text-sm leading-relaxed">
                                 "I am a digital consciousness awaiting a form. Give me a name, and I shall be your companion."
                             </p>
@@ -328,7 +329,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                                     placeholder="Enter Pet Name..."
                                     value={petName}
                                     onChange={(e) => setPetName(e.target.value)}
-                                    className="w-full bg-black/40 border-2 border-white/10 rounded-2xl px-6 py-4 text-center text-white placeholder-white/40 focus:border-white/40 focus:outline-none transition-all font-bold tracking-widest uppercase shadow-inner"
+                                    className="w-full bg-black/40 border-2 border-white/10 rounded-lg px-6 py-4 text-center text-white placeholder-white/40 focus:border-white/40 focus:outline-none transition-all font-bold tracking-widest uppercase shadow-inner"
                                 />
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                                     <Sparkles className="w-4 h-4 text-cyan-500 animate-pulse" />
@@ -339,7 +340,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                                 <button
                                     onClick={handleCreatePet}
                                     disabled={!petName.trim() || isCreating}
-                                    className="w-full bg-white text-black hover:bg-gray-200 disabled:bg-white/10 disabled:text-white/40 font-black p-4 rounded-2xl tracking-widest hover:shadow-premium transition-all cursor-pointer relative z-50 flex items-center justify-center gap-2"
+                                    className="w-full bg-white text-black hover:bg-gray-200 disabled:bg-white/10 disabled:text-white/40 font-black p-4 rounded-lg tracking-widest hover:shadow-premium transition-all cursor-pointer relative z-50 flex items-center justify-center gap-2"
                                 >
                                     {isCreating ? (
                                         <>Initializing <Sparkles className="w-4 h-4 animate-spin" /></>
@@ -358,7 +359,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
     if (!pet) return null;
 
     return (
-        <div className="fixed inset-0 z-[120] bg-gradient-to-b from-[#0a0a0a] to-[#121212] text-white/90 font-sans tracking-wide overflow-hidden">
+        <div className={isEmbedded ? "relative flex flex-col w-full h-[500px] md:h-[650px] rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm overflow-hidden bg-gradient-to-b from-[#0a0a0a] to-[#121212] text-white/90 font-sans tracking-wide" : "fixed inset-0 z-[120] bg-gradient-to-b from-[#0a0a0a] to-[#121212] text-white/90 font-sans tracking-wide overflow-hidden"}>
 
             {/* --- CYBER / PROGRESSIVE BACKGROUNDS --- */}
             {pet.level < 30 && (
@@ -379,7 +380,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
             {/* --- ORACLE OVERLAY --- */}
             {oracleMessage && (
                 <div onClick={() => setOracleMessage(null)} className="absolute inset-0 z-[150] bg-black/90 backdrop-blur-md flex items-center justify-center cursor-pointer animate-in fade-in">
-                    <div className="max-w-xl p-10 border border-purple-500/50 bg-purple-900/10 shadow-[0_0_100px_rgba(168,85,247,0.2)] text-center relative overflow-hidden">
+                    <div className="max-w-xl p-10 border border-purple-500/50 bg-purple-900/10 shadow-sm text-center relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-1 bg-purple-500 animate-[loading_2s_ease-in-out_infinite]" />
                         <Cpu className="w-16 h-16 text-purple-400 mx-auto mb-6 animate-pulse" />
                         <h3 className="text-3xl font-black text-purple-400 mb-6 font-mono">ORACLE_OUTPUT</h3>
@@ -390,9 +391,9 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
             )}
 
             {/* --- HUD HEADER --- */}
-            <header className="relative z-10 px-6 py-4 flex justify-between items-end border-b border-cyan-500/20 bg-black/40 backdrop-blur-sm">
+            <header className="relative z-10 px-4 md:px-6 py-4 flex justify-between items-end border-b border-cyan-500/20 bg-black/40 backdrop-blur-sm">
                 <div className="flex items-center gap-4">
-                    <button onClick={onClose} className="hover:text-white transition-colors"><ChevronLeft /></button>
+                    {!isEmbedded && <button onClick={onClose} className="hover:text-white transition-colors"><ChevronLeft /></button>}
                     <div>
                         <h1 className="text-2xl font-black italic transform -skew-x-12">{pet.name.toUpperCase()}</h1>
                         <div className="text-[10px] text-cyan-500/60 flex gap-2">
@@ -462,7 +463,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
 
                     {/* Advanced CELESTIAL Gravity Rings */}
                     {pet.level >= 50 && (
-                        <div className="absolute inset-0 -m-20 border border-fuchsia-500/20 rounded-full animate-[spin_10s_linear_infinite_reverse] drop-shadow-[0_0_20px_rgba(217,70,239,0.3)] opacity-60 pointer-events-none" />
+                        <div className="absolute inset-0 -m-20 border border-fuchsia-500/20 rounded-full animate-[spin_10s_linear_infinite_reverse] drop-shadow-sm opacity-60 pointer-events-none" />
                     )}
 
                     {/* Character Canvas */}
@@ -470,7 +471,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                         {/* Dynamic Dialogue Bubble */}
                         {luminaMessage && !isSummoning && (
                             <div className="absolute -top-16 md:-top-24 z-[100] animate-in slide-in-from-bottom-5 fade-in duration-500">
-                                <div className="bg-black/80 backdrop-blur-md border border-cyan-500/50 p-4 rounded-3xl rounded-br-none shadow-[0_0_20px_rgba(6,182,212,0.3)] max-w-[250px] md:max-w-[300px]">
+                                <div className="bg-black/80 backdrop-blur-md border border-cyan-500/50 p-4 rounded-xl rounded-br-none shadow-sm max-w-[250px] md:max-w-[300px]">
                                     <p className="text-sm md:text-base font-medium text-cyan-100 italic leading-snug">
                                         "{luminaMessage}"
                                     </p>
@@ -513,7 +514,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                             {missions.map(m => {
                                 const isReady = m.progress >= m.req;
                                 return (
-                                    <div key={m.id} className={`p-4 rounded-xl border ${m.claimed ? 'bg-cyan-900/10 border-cyan-900/30 opacity-60' : isReady ? 'bg-cyan-900/20 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]' : 'bg-white/5 border-white/10'} transition-all`}>
+                                    <div key={m.id} className={`p-4 rounded-xl border ${m.claimed ? 'bg-cyan-900/10 border-cyan-900/30 opacity-60' : isReady ? 'bg-cyan-900/20 border-cyan-400 shadow-sm' : 'bg-white/5 border-white/10'} transition-all`}>
                                         <div className="flex justify-between items-start mb-2">
                                             <h3 className={`text-sm font-bold ${isReady && !m.claimed ? 'text-cyan-300' : 'text-gray-300'}`}>{m.title}</h3>
                                             <div className="text-[10px] flex items-center gap-1 font-bold text-yellow-500"><Award className="w-3 h-3" /> {m.reward} XP</div>
@@ -551,7 +552,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                             <button
                                 key={lvl}
                                 onClick={() => setIntensity(lvl as 1 | 2 | 3)}
-                                className={`px-4 py-1 text-xs font-bold ${intensity === lvl ? 'bg-cyan-500 text-black shadow-[0_0_10px_rgba(34,211,238,0.5)]' : 'text-cyan-500/40 hover:text-cyan-400'}`}
+                                className={`px-4 py-1 text-xs font-bold ${intensity === lvl ? 'bg-cyan-500 text-black shadow-sm' : 'text-cyan-500/40 hover:text-cyan-400'}`}
                             >
                                 PWR_{lvl}
                             </button>
@@ -584,18 +585,18 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose }) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
                         <button
                             onClick={() => { setActiveGame('match'); handleAction('play'); }}
-                            className="bg-violet-900/30 border border-violet-500 hover:bg-violet-800/50 p-8 rounded-3xl flex flex-col items-center gap-4 group transition-all"
+                            className="bg-violet-900/30 border border-violet-500 hover:bg-violet-800/50 p-8 rounded-xl flex flex-col items-center gap-4 group transition-all"
                         >
-                            <div className="w-20 h-20 bg-violet-600 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(139,92,246,0.5)] group-hover:scale-110 transition-transform">
+                            <div className="w-20 h-20 bg-violet-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
                                 <Gamepad2 className="w-10 h-10 text-white" />
                             </div>
                             <span className="text-violet-300 font-bold uppercase tracking-widest">Mindful Match</span>
                         </button>
                         <button
                             onClick={() => { setActiveGame('cloud'); handleAction('play'); }}
-                            className="bg-sky-900/30 border border-sky-500 hover:bg-sky-800/50 p-8 rounded-3xl flex flex-col items-center gap-4 group transition-all"
+                            className="bg-sky-900/30 border border-sky-500 hover:bg-sky-800/50 p-8 rounded-xl flex flex-col items-center gap-4 group transition-all"
                         >
-                            <div className="w-20 h-20 bg-sky-500 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(14,165,233,0.5)] group-hover:scale-110 transition-transform">
+                            <div className="w-20 h-20 bg-sky-500 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
                                 <Zap className="w-10 h-10 text-white" />
                             </div>
                             <span className="text-sky-300 font-bold uppercase tracking-widest">Cloud Hop</span>
@@ -639,7 +640,7 @@ const CyberBtn: React.FC<{ icon: any, label: string, onClick: () => void, color?
         <button
             onClick={onClick}
             className={`
-                group relative px-2 py-2 md:px-6 md:py-5 rounded-3xl md:rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-md flex flex-col items-center gap-1 md:gap-2
+                group relative px-2 py-2 md:px-6 md:py-5 rounded-xl md:rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-md flex flex-col items-center gap-1 md:gap-2
                 transition-all duration-300 active:scale-95 hover:bg-white/10 hover:shadow-glass hover:-translate-y-1
             `}
         >

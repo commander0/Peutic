@@ -81,7 +81,7 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 1.5, ease: "easeOut" }}
                 viewBox={dynamicViewBox}
-                className={`w-[90%] h-[90%] md:w-[80%] md:h-[80%] drop-shadow-lg mx-auto overflow-visible transition-all duration-1000 ${isRare ? 'drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]' : ''}`}>
+                className={`w-[90%] h-[90%] md:w-[80%] md:h-[80%] drop-shadow-lg mx-auto overflow-visible transition-all duration-1000 ${isRare ? 'drop-shadow-sm' : ''}`}>
                 <defs>
                     <filter id="bloom-glow" x="-50%" y="-50%" width="200%" height="200%">
                         <feGaussianBlur stdDeviation="3" result="coloredBlur" />
@@ -560,7 +560,7 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
             {/* Focus Minutes / Age Indicator */}
             <div className="absolute bottom-[-15px] md:bottom-[-20px] w-full max-w-[150px] h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden shadow-inner flex relative">
                 <div
-                    className={`absolute left-0 top-0 h-full transition-all duration-1000 ${progress >= 1 ? 'bg-fuchsia-500 animate-pulse shadow-[0_0_15px_rgba(217,70,239,0.8)]' : 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]'}`}
+                    className={`absolute left-0 top-0 h-full transition-all duration-1000 ${progress >= 1 ? 'bg-fuchsia-500 animate-pulse shadow-sm' : 'bg-emerald-500 shadow-sm'}`}
                     style={{ width: `${progress * 100}%` }}
                 />
             </div>

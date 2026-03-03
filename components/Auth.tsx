@@ -216,7 +216,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                                         <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tight">{t('auth_welcome_prefix')}, {firstName || 'Buddy'}.</h2>
                                         <p className="text-gray-500 dark:text-gray-400 text-lg md:text-xl font-medium leading-relaxed">{t('auth_tailor_desc')}</p>
                                     </div>
-                                    <button onClick={() => setOnboardingStep(1)} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 md:py-5 rounded-2xl font-black hover:scale-[1.02] transition-transform text-base md:text-lg shadow-xl">{t('auth_begin_setup')}</button>
+                                    <button onClick={() => setOnboardingStep(1)} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 md:py-5 rounded-lg font-black hover:scale-[1.02] transition-transform text-base md:text-lg shadow-xl">{t('auth_begin_setup')}</button>
                                 </div>
                             )}
                             {onboardingStep === 1 && (
@@ -225,7 +225,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                                         <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tight">{t('auth_privacy_title')}</h2>
                                         <p className="text-gray-500 dark:text-gray-400 text-lg md:text-xl font-medium leading-relaxed">{t('auth_privacy_desc')}</p>
                                     </div>
-                                    <button onClick={() => setOnboardingStep(2)} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 md:py-5 rounded-2xl font-black hover:scale-[1.02] transition-transform text-base md:text-lg shadow-xl">{t('auth_i_understand')}</button>
+                                    <button onClick={() => setOnboardingStep(2)} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 md:py-5 rounded-lg font-black hover:scale-[1.02] transition-transform text-base md:text-lg shadow-xl">{t('auth_i_understand')}</button>
                                 </div>
                             )}
                             {onboardingStep === 2 && (
@@ -242,7 +242,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                                             ))}
                                         </div>
                                     </div>
-                                    <button onClick={() => setOnboardingStep(3)} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 md:py-5 rounded-2xl font-black hover:scale-[1.02] transition-transform text-base md:text-lg shadow-xl">{t('auth_finalize')}</button>
+                                    <button onClick={() => setOnboardingStep(3)} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 md:py-5 rounded-lg font-black hover:scale-[1.02] transition-transform text-base md:text-lg shadow-xl">{t('auth_finalize')}</button>
                                 </div>
                             )}
                             {onboardingStep === 3 && (
@@ -267,7 +267,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                                     <button
                                         onClick={finishOnboarding}
                                         disabled={loading}
-                                        className={`w-full bg-[#FACC15] text-black py-4 md:py-5 rounded-2xl font-black shadow-[0_20px_40px_-15px_rgba(250,204,21,0.5)] hover:bg-[#EAB308] hover:scale-105 transition-all text-base md:text-lg uppercase tracking-widest flex items-center justify-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                        className={`w-full bg-[#FACC15] text-black py-4 md:py-5 rounded-lg font-black shadow-[0_20px_40px_-15px_rgba(250,204,21,0.5)] hover:bg-[#EAB308] hover:scale-105 transition-all text-base md:text-lg uppercase tracking-widest flex items-center justify-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                                     >
                                         {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> {t('ui_loading')}...</> : t('auth_enter_dash')}
                                     </button>

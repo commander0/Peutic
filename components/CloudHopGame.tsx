@@ -424,14 +424,14 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
 
     return (
         <div
-            className="w-full h-full min-h-[500px] flex flex-col items-center rounded-3xl overflow-hidden relative shadow-[0_0_50px_rgba(56,189,248,0.15)] bg-slate-900 border border-slate-700/50"
+            className="w-full h-full min-h-[500px] flex flex-col items-center rounded-xl overflow-hidden relative shadow-sm bg-slate-900 border border-slate-700/50"
             onMouseDown={handleTap} onMouseUp={handleRelease} onTouchStart={handleTap} onTouchEnd={handleRelease}
         >
-            <div className="absolute top-4 right-4 bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full font-black text-white text-base md:text-lg z-10 border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.1)] flex items-center gap-2">
+            <div className="absolute top-4 right-4 bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full font-black text-white text-base md:text-lg z-10 border border-white/10 shadow-sm flex items-center gap-2">
                 <span className="text-sky-300 tracking-widest text-xs uppercase">Altitude</span> {score}m
             </div>
             {highScore > 0 && (
-                <div className="absolute top-4 left-4 bg-yellow-400/10 backdrop-blur-md px-4 py-1.5 rounded-full font-black text-yellow-300 text-xs md:text-sm z-10 border border-yellow-400/30 flex items-center gap-2 shadow-[0_0_15px_rgba(250,204,21,0.2)]">
+                <div className="absolute top-4 left-4 bg-yellow-400/10 backdrop-blur-md px-4 py-1.5 rounded-full font-black text-yellow-300 text-xs md:text-sm z-10 border border-yellow-400/30 flex items-center gap-2 shadow-sm">
                     <span className="tracking-widest uppercase">Apex</span> {highScore}m
                 </div>
             )}
@@ -444,10 +444,10 @@ const CloudHopGame: React.FC<CloudHopGameProps> = ({ dashboardUser }) => {
                         {gameOver && (
                             <div className="mb-8">
                                 <h3 className="text-sky-400 text-sm font-black tracking-[0.3em] uppercase mb-2">Descent Complete</h3>
-                                <p className="text-white font-black text-5xl mb-4 drop-shadow-[0_0_15px_rgba(56,189,248,0.5)]">{score}m</p>
+                                <p className="text-white font-black text-5xl mb-4 drop-shadow-sm">{score}m</p>
                             </div>
                         )}
-                        <button onClick={initGame} className="bg-sky-500 hover:bg-sky-400 text-slate-900 px-8 py-4 rounded-full font-black text-sm md:text-base shadow-[0_0_30px_rgba(56,189,248,0.4)] hover:scale-105 transition-all flex items-center gap-3 tracking-widest uppercase">
+                        <button onClick={initGame} className="bg-sky-500 hover:bg-sky-400 text-slate-900 px-8 py-4 rounded-full font-black text-sm md:text-base shadow-sm hover:scale-105 transition-all flex items-center gap-3 tracking-widest uppercase">
                             <Play className="w-5 h-5 fill-current" /> {gameOver ? 'Take Flight Again' : 'Initiate Launch'}
                         </button>
                     </div>

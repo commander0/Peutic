@@ -11,9 +11,10 @@ interface GardenFullViewProps {
     user: User;
     onClose: () => void;
     onUpdate: () => void;
+    isEmbedded?: boolean;
 }
 
-const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, onUpdate }) => {
+const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, onUpdate, isEmbedded = false }) => {
     const [localGarden, setLocalGarden] = useState(garden);
     const [interaction, setInteraction] = useState<'water' | 'breath' | 'sing' | 'harvest' | null>(null);
     const [showInfo, setShowInfo] = useState(false);
@@ -157,7 +158,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     };
 
     return (
-        <div className="fixed inset-0 z-[100] overflow-hidden bg-[#050a05] text-white animate-in fade-in duration-700">
+        <div className={isEmbedded ? "relative flex flex-col w-full h-[500px] md:h-[650px] rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm overflow-hidden bg-[#050a05] text-white animate-in fade-in duration-700 group" : "fixed inset-0 z-[100] overflow-hidden bg-[#050a05] text-white animate-in fade-in duration-700"}>
 
             {/* --- ATMOSPHERIC LAYERS --- */}
 
@@ -186,7 +187,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                 {particles.map((p) => (
                     <div
                         key={p.id}
-                        className={`absolute ${p.isLeaf ? 'w-2 h-2 rounded-[50%_0_50%_50%] rotate-45 animate-[bounce_5s_infinite]' : 'w-1.5 h-1.5 rounded-full blur-[1px] animate-[ping_4s_ease-in-out_infinite]'} ${isRare ? 'bg-fuchsia-200 shadow-[0_0_8px_rgba(250,204,21,0.8)]' : 'bg-emerald-200 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`}
+                        className={`absolute ${p.isLeaf ? 'w-2 h-2 rounded-[50%_0_50%_50%] rotate-45 animate-[bounce_5s_infinite]' : 'w-1.5 h-1.5 rounded-full blur-[1px] animate-[ping_4s_ease-in-out_infinite]'} ${isRare ? 'bg-fuchsia-200 shadow-sm' : 'bg-emerald-200 shadow-sm'}`}
                         style={{
                             left: p.left,
                             top: p.top,
@@ -239,16 +240,23 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
             )}
 
             {/* --- HEADER --- */}
-            <header className="relative z-30 p-6 flex justify-between items-center bg-gradient-to-b from-black/60 to-transparent">
-                <button onClick={onClose} className="flex items-center gap-2 text-white/70 hover:text-white transition-colors group">
-                    <div className="p-2 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10">
-                        <ChevronLeft className="w-5 h-5" />
+            <header className="relative z-30 p-4 md:p-6 flex justify-between items-center bg-gradient-to-b from-black/60 to-transparent">
+                {!isEmbedded ? (
+                    <button onClick={onClose} className="flex items-center gap-2 text-white/70 hover:text-white transition-colors group">
+                        <div className="p-2 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10">
+                            <ChevronLeft className="w-5 h-5" />
+                        </div>
+                        <span className="text-sm font-medium tracking-widest uppercase">Sanctuary</span>
+                    </button>
+                ) : (
+                    <div className="flex items-center gap-2 text-white/70">
+                        <Sprout className="w-5 h-5" />
+                        <span className="text-xs font-bold tracking-widest uppercase mt-0.5">Inner Garden</span>
                     </div>
-                    <span className="text-sm font-medium tracking-widest uppercase">Sanctuary</span>
-                </button>
+                )}
 
                 <div className="text-center">
-                    <h1 className="text-2xl font-light tracking-[0.3em] text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 to-teal-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.5)]">
+                    <h1 className="text-2xl font-light tracking-[0.3em] text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 to-teal-400 drop-shadow-sm">
                         {localGarden.currentPlantType.toUpperCase()}
                     </h1>
                     <div className="flex items-center justify-center gap-2 mt-1">
@@ -281,7 +289,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
             {/* --- SEED SELECTION MODAL --- */}
             {showPlantSelection && (
                 <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md p-6">
-                    <div className="bg-stone-900/90 backdrop-blur-3xl border border-white/10 p-8 rounded-3xl max-w-lg w-full text-center relative shadow-premium">
+                    <div className="bg-stone-900/90 backdrop-blur-3xl border border-white/10 p-8 rounded-xl max-w-lg w-full text-center relative shadow-premium">
                         <button onClick={() => setShowPlantSelection(false)} className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 text-stone-500 hover:text-white transition-colors">
                             <X className="w-5 h-5" />
                         </button>
@@ -330,7 +338,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                                     }
                                 }
                             }}
-                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-8 rounded-2xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full shadow-[0_0_20px_rgba(16,185,129,0.2)]"
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-8 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full shadow-sm"
                         >
                             Confirm Selection
                         </button>
@@ -348,7 +356,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                             key={lvl}
                             onClick={() => setIntensity(lvl as 1 | 2 | 3)}
                             className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${intensity === lvl
-                                ? 'bg-emerald-500 text-black shadow-[0_0_15px_rgba(16,185,129,0.5)]'
+                                ? 'bg-emerald-500 text-black shadow-sm'
                                 : 'text-white/30 hover:bg-white/5'
                                 }`}
                         >
@@ -436,11 +444,11 @@ const ControlBtn: React.FC<{
         className={`group relative flex flex-col items-center gap-3 transition-all duration-300 ${active ? 'scale-95 opacity-50' : 'hover:-translate-y-1'}`}
     >
         <div className={`
-            w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center
+            w-14 h-14 md:w-16 md:h-16 rounded-lg flex items-center justify-center
             bg-white/5 border border-white/10 backdrop-blur-md
             shadow-[0_4px_20px_rgba(0,0,0,0.3)]
             group-hover:bg-white/10 group-hover:border-${color}-400/30
-            group-hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]
+            group-hover:shadow-sm
             transition-all
         `}>
             <Icon className={`w-6 h-6 md:w-7 md:h-7 text-gray-400 group-hover:text-${color}-300 transition-colors`} />

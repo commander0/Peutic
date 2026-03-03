@@ -83,7 +83,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
     const ThemeButton = ({ id, color, label }: { id: string, color: string, label: string }) => (
         <button
             onClick={() => setTheme(id as any)}
-            className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${theme === id ? 'border-yellow-500 bg-yellow-500/10' : 'border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+            className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all ${theme === id ? 'border-yellow-500 bg-yellow-500/10' : 'border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
         >
             <div className={`w-8 h-8 rounded-full shadow-lg ${color}`}></div>
             <span className={`text-[10px] font-bold uppercase tracking-wider ${theme === id ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-500'}`}>{label}</span>
@@ -126,7 +126,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
                             {error && <div className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-bold border border-red-100">{error}</div>}
 
                             {/* AVATAR CUSTOMIZER */}
-                            <div className="flex items-center gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-dashed border-gray-200 dark:border-gray-700">
                                 <img src={previewAvatar} alt="Avatar" className="w-16 h-16 rounded-full bg-white shadow-sm" />
                                 <div className="flex-1">
                                     <div className="flex items-center justify-between mb-2">
@@ -255,12 +255,12 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
                                 <ThemeButton id="forest" color="bg-emerald-500 border border-emerald-300" label="Forest" />
                                 <ThemeButton id="sunset" color="bg-orange-400 border border-orange-200" label="Sunset" />
                                 <ThemeButton id="lavender" color="bg-violet-400 border border-violet-200" label="Lavender" />
-                                <ThemeButton id="cyberpunk" color="bg-cyan-400 border border-cyan-200 shadow-[0_0_10px_rgba(34,211,238,0.5)]" label="Cyberpunk" />
+                                <ThemeButton id="cyberpunk" color="bg-cyan-400 border border-cyan-200 shadow-sm" label="Cyberpunk" />
                                 <ThemeButton id="midnight" color="bg-indigo-900 border border-indigo-700" label="Midnight" />
                                 <ThemeButton id="coffee" color="bg-amber-800 border border-amber-900" label="Coffee" />
                                 <ThemeButton id="royal" color="bg-purple-700 border border-purple-500" label="Royal" />
                                 {(user?.unlockedDecor || []).includes('digital-theme-sapphire') && (
-                                    <ThemeButton id="sapphire" color="bg-blue-600 border border-blue-400 shadow-[0_0_15px_rgba(37,99,235,0.6)]" label="Sapphire" />
+                                    <ThemeButton id="sapphire" color="bg-blue-600 border border-blue-400 shadow-sm" label="Sapphire" />
                                 )}
                             </div>
                             <p className="text-center text-xs text-gray-400">Themes seamlessly adapt the environment to your mood.</p>

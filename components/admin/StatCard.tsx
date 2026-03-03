@@ -25,7 +25,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, trend, de
     return (
         <div className="bg-[#0A0A0A] p-6 rounded-[2rem] border border-white/5 shadow-sm hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
             <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 rounded-2xl ${colorClasses[color] || colorClasses.yellow} group-hover:scale-110 transition-transform`}>
+                <div className={`p-3 rounded-lg ${colorClasses[color] || colorClasses.yellow} group-hover:scale-110 transition-transform`}>
                     <Icon className="w-6 h-6" />
                 </div>
                 {(trend || subValue) && (
