@@ -189,7 +189,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
 
     if (showOnboarding) {
         return (
-            <div className="fixed inset-0 bg-slate-50 dark:bg-slate-900 z-[100] flex flex-col md:flex-row animate-in fade-in slide-in-from-bottom-5 duration-500">
+            <div className="fixed inset-0 bg-[#FFFBEB] dark:bg-black z-[100] flex flex-col md:flex-row animate-in fade-in slide-in-from-bottom-5 duration-500">
 
                 {/* PUBLIC BROADCAST BANNER */}
                 {settings.broadcastMessage && (
@@ -202,12 +202,12 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                     </div>
                 )}
 
-                <div className="hidden md:block w-1/2 bg-slate-900 dark:bg-slate-950 relative overflow-hidden">
+                <div className="hidden md:block w-1/2 bg-[#FACC15] dark:bg-yellow-600 relative overflow-hidden">
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <Heart className="w-64 h-64 text-slate-100 opacity-5 animate-pulse" />
+                        <Heart className="w-64 h-64 text-black opacity-10 animate-pulse" />
                     </div>
                 </div>
-                <div className="w-full md:w-1/2 h-full overflow-y-auto flex flex-col bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 relative">
+                <div className="w-full md:w-1/2 h-full overflow-y-auto flex flex-col bg-[#FFFBEB] dark:bg-black text-black dark:text-white relative">
                     <div className="flex-1 flex flex-col justify-end md:justify-center p-6 md:p-20 pb-12 md:pb-20 min-h-full">
                         <div className="max-w-md w-full mx-auto">
                             {onboardingStep === 0 && (
@@ -267,7 +267,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                                     <button
                                         onClick={finishOnboarding}
                                         disabled={loading}
-                                        className={`w-full bg-primary text-white py-4 md:py-5 rounded-lg font-black shadow-md hover:bg-primary/90 hover:scale-[1.02] transition-all text-base md:text-lg uppercase tracking-widest flex items-center justify-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                        className={`w-full bg-[#FACC15] text-black py-4 md:py-5 rounded-lg font-black shadow-[0_20px_40px_-15px_rgba(250,204,21,0.5)] hover:bg-[#EAB308] hover:scale-105 transition-all text-base md:text-lg uppercase tracking-widest flex items-center justify-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                                     >
                                         {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> {t('ui_loading')}...</> : t('auth_enter_dash')}
                                     </button>
@@ -281,7 +281,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
     }
 
     return (
-        <div className="fixed inset-0 bg-slate-50 dark:bg-slate-900 z-[100] flex flex-col md:flex-row transition-colors">
+        <div className="fixed inset-0 bg-[#FFFBEB] dark:bg-black z-[100] flex flex-col md:flex-row transition-colors">
 
             {/* PUBLIC BROADCAST BANNER */}
             {settings.broadcastMessage && (
@@ -311,7 +311,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
             </div>
 
             {/* Right Side */}
-            <div className="w-full md:w-1/2 p-6 md:p-20 flex flex-col justify-center relative bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 overflow-y-auto h-full">
+            <div className="w-full md:w-1/2 p-6 md:p-20 flex flex-col justify-center relative bg-[#FFFBEB] dark:bg-black text-black dark:text-white overflow-y-auto h-full">
                 <button onClick={onCancel} className="absolute top-4 right-4 md:top-8 md:right-8 text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white font-bold z-[101]">Back</button>
 
                 <div className="max-w-md w-full mx-auto pt-10 md:pt-0">
@@ -347,20 +347,20 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onCancel, initialMode = 'login' })
                             {!isLogin && (
                                 <>
                                     <div className="grid grid-cols-2 gap-3 md:gap-4 animate-in slide-in-from-bottom-2 fade-in">
-                                        <input type="text" required className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm md:text-base dark:text-slate-100" placeholder={t('auth_first_name')} value={firstName} onChange={e => setFirstName(e.target.value)} />
-                                        <input type="text" required className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm md:text-base dark:text-slate-100" placeholder={t('auth_last_name')} value={lastName} onChange={e => setLastName(e.target.value)} />
+                                        <input type="text" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm md:text-base dark:text-white" placeholder={t('auth_first_name')} value={firstName} onChange={e => setFirstName(e.target.value)} />
+                                        <input type="text" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm md:text-base dark:text-white" placeholder={t('auth_last_name')} value={lastName} onChange={e => setLastName(e.target.value)} />
                                     </div>
                                     <div className="space-y-1">
                                         <label className="text-xs font-bold text-gray-500 uppercase ml-1">{t('auth_dob')}</label>
-                                        <input type="date" required className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all animate-in slide-in-from-bottom-3 fade-in text-sm md:text-base dark:text-slate-100" value={birthday} onChange={e => setBirthday(e.target.value)} />
+                                        <input type="date" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all animate-in slide-in-from-bottom-3 fade-in text-sm md:text-base dark:text-white" value={birthday} onChange={e => setBirthday(e.target.value)} />
                                     </div>
                                 </>
                             )}
-                            <input type="email" required className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm md:text-base dark:text-slate-100" placeholder={t('auth_email')} value={email} onChange={e => setEmail(e.target.value)} />
-                            <input type="password" required className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm md:text-base dark:text-slate-100" placeholder={t('auth_password')} value={password} onChange={e => setPassword(e.target.value)} />
+                            <input type="email" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm md:text-base dark:text-white" placeholder={t('auth_email')} value={email} onChange={e => setEmail(e.target.value)} />
+                            <input type="password" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm md:text-base dark:text-white" placeholder={t('auth_password')} value={password} onChange={e => setPassword(e.target.value)} />
                             {!isLogin && (
                                 <>
-                                    <input type="password" required className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all animate-in slide-in-from-bottom-4 fade-in text-sm md:text-base dark:text-slate-100" placeholder={t('auth_password')} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+                                    <input type="password" required className="w-full p-3 rounded-xl border border-yellow-200 dark:border-gray-800 bg-yellow-50 dark:bg-gray-900 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all animate-in slide-in-from-bottom-4 fade-in text-sm md:text-base dark:text-white" placeholder={t('auth_password')} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
                                     <p className="text-[10px] text-gray-500 dark:text-gray-400 px-1 leading-tight">Password must be 8+ chars with uppercase, lowercase, number, & symbol.</p>
                                 </>
                             )}

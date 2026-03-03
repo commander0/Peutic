@@ -9,7 +9,7 @@ import { LanguageSelector } from './common/LanguageSelector';
 import { useLanguage } from './common/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import {
-    Clock, LayoutDashboard, Brain, BookOpen, User as UserIcon, Settings, Plus, Lock, Sun, Moon, Sparkles, Star, Mic, Heart, ShieldCheck, Leaf, LogOut, LifeBuoy, ChevronUp, ChevronDown, Megaphone, Zap, Scissors, Gamepad2, Cloud, Feather, AlertTriangle, Video, Eye, EyeOff, Edit2, Mail, RefreshCw, Save, Twitter, Instagram, Linkedin, X, Flame, Trophy, ShoppingBag
+    Clock, LayoutDashboard, Brain, BookOpen, User as UserIcon, Settings, Plus, Lock, Sun, Moon, Sparkles, Star, Mic, Heart, ShieldCheck, Leaf, LogOut, LifeBuoy, ChevronUp, ChevronDown, Megaphone, Zap, Scissors, Gamepad2, Cloud, Feather, AlertTriangle, Video, Eye, EyeOff, Edit2, Mail, RefreshCw, Save, Twitter, Instagram, Linkedin, X, Flame, Trophy, ShoppingBag, Maximize2
 } from 'lucide-react';
 import { NotificationBell } from './common/NotificationBell';
 import { UserService } from '../services/userService';
@@ -168,7 +168,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const { lang, setLang, t } = useLanguage();
     const { theme, mode, setTheme, setMode, toggleMode } = useTheme();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<'hub' | 'sanctuary' | 'history' | 'settings'>('sanctuary');
+    const [activeTab, setActiveTab] = useState<'hub' | 'sanctuary' | 'history' | 'settings'>('hub');
+    const [expandedCanvas, setExpandedCanvas] = useState<'garden' | 'lumina' | null>(null);
     const [openSection, setOpenSection] = useState<'arcade' | 'journal' | null>(null);
 
     // STRICT ADMIN REDIRECT
@@ -723,12 +724,50 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         </header>
                         {activeTab === 'sanctuary' && dashboardUser && garden && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
-                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 relative z-10">
-                                    <div className="bg-white/20 dark:bg-[#050a05]/40 backdrop-blur-xl rounded-xl border border-slate-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative">
-                                        <GardenFullView isEmbedded={true} garden={garden} user={dashboardUser} onClose={() => { }} onUpdate={refreshGarden} />
+                                {expandedCanvas ? (
+                                    <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in zoom-in duration-300">
+                                        <div className="w-full max-w-7xl h-full max-h-[90vh] bg-[#FFFBEB] dark:bg-black rounded-2xl shadow-2xl overflow-hidden relative border border-white/10 flex flex-col">
+                                            <button
+                                                onClick={() => setExpandedCanvas(null)}
+                                                className="absolute top-4 right-4 z-50 bg-black/50 hover:bg-red-500 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-lg"
+                                            >
+                                                <X className="w-6 h-6" />
+                                            </button>
+                                            <div className="flex-1 w-full h-full relative overflow-y-auto">
+                                                {expandedCanvas === 'garden' ? (
+                                                    <GardenFullView isEmbedded={false} garden={garden} user={dashboardUser} onClose={() => setExpandedCanvas(null)} onUpdate={refreshGarden} />
+                                                ) : (
+                                                    <LuminaView isEmbedded={false} user={dashboardUser} onClose={() => setExpandedCanvas(null)} />
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="bg-white/20 dark:bg-[#0a0a0a]/40 backdrop-blur-xl rounded-xl border border-slate-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative">
-                                        <LuminaView isEmbedded={true} user={dashboardUser} onClose={() => { }} />
+                                ) : null}
+
+                                <div className="flex flex-col xl:flex-row gap-6 h-[600px] relative z-10 transition-all">
+                                    <div
+                                        onClick={() => setExpandedCanvas('garden')}
+                                        className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#050a05]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
+                                    >
+                                        <div className="absolute inset-x-0 top-0 p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span className="font-bold tracking-widest uppercase text-xs text-white">Inner Garden</span>
+                                            <Maximize2 className="w-5 h-5 text-white animate-pulse" />
+                                        </div>
+                                        <div className="absolute inset-0 pointer-events-none group-hover:pointer-events-auto">
+                                            <GardenFullView isEmbedded={true} garden={garden} user={dashboardUser} onClose={() => { }} onUpdate={refreshGarden} />
+                                        </div>
+                                    </div>
+                                    <div
+                                        onClick={() => setExpandedCanvas('lumina')}
+                                        className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#0a0a0a]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
+                                    >
+                                        <div className="absolute inset-x-0 top-0 p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span className="font-bold tracking-widest uppercase text-xs text-white">Lumina Companion</span>
+                                            <Maximize2 className="w-5 h-5 text-white animate-pulse" />
+                                        </div>
+                                        <div className="absolute inset-0 pointer-events-none group-hover:pointer-events-auto">
+                                            <LuminaView isEmbedded={true} user={dashboardUser} onClose={() => { }} />
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="space-y-4">
