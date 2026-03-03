@@ -118,7 +118,7 @@
    ----------------------------------------------------------------------------- */
 /* 1. SUNSHINE (Vibrant Yellow Default) */
 [data-theme="sunshine"] {
-    --color-bg-base: #FFFBEB;
+    --color-bg-base: #FEFCE8;
     --color-bg-surface: #FEF08A;
     --color-text-base: #422006;
     --color-border-subtle: #FDE047;
@@ -376,7 +376,7 @@
     --color-primary-border: rgba(45, 212, 191, 0.2);
 }
 
-/* 12. SAPPHIRE */
+/* 13. SAPPHIRE */
 [data-theme="sapphire"] {
     --color-bg-base: #93C5FD;
     /* blue-300 */

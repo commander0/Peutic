@@ -359,7 +359,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
     if (!pet) return null;
 
     return (
-        <div className={isEmbedded ? "relative flex flex-col w-full h-[500px] md:h-[650px] rounded-xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm overflow-hidden bg-gradient-to-b from-[#0a0a0a] to-[#121212] text-white/90 font-sans tracking-wide" : "fixed inset-0 z-[120] bg-gradient-to-b from-[#0a0a0a] to-[#121212] text-white/90 font-sans tracking-wide overflow-hidden"}>
+        <div className={isEmbedded ? "relative flex flex-col w-full h-full rounded-xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm overflow-hidden bg-gradient-to-b from-[#0a0a0a] to-[#121212] text-white/90 font-sans tracking-wide" : "fixed inset-0 z-[120] bg-gradient-to-b from-[#0a0a0a] to-[#121212] text-white/90 font-sans tracking-wide overflow-hidden"}>
 
             {/* --- CYBER / PROGRESSIVE BACKGROUNDS --- */}
             {pet.level < 30 && (

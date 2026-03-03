@@ -744,7 +744,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     </div>
                                 ) : null}
 
-                                <div className="flex flex-col md:flex-row gap-6 h-[600px] relative z-10 transition-all">
+                                <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-[600px] min-h-[calc(100vh-28rem)] relative z-10 transition-all">
                                     <div
                                         onClick={() => setExpandedCanvas('garden')}
                                         className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#050a05]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
@@ -920,55 +920,73 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 </div>
 
                                 <div className="w-full space-y-2 md:space-y-4">
-                                    <div className="md:hidden w-full">
-                                        <button onClick={() => setOpenSection(p => p === 'sanctuary' ? null : 'sanctuary')} className="w-full py-2.5 px-3 flex items-center justify-center hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-sm">
-                                            <div className="flex items-center gap-2 flex-col mx-auto">
-                                                <div className="p-1.5 rounded-xl bg-[var(--color-primary)]/10 text-primary dark:bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
-                                                    <Sparkles className="w-4 h-4" />
-                                                </div>
-                                                <span className="font-bold text-xs tracking-wide opacity-90 truncate">Sanctuary</span>
-                                            </div>
-                                        </button>
-                                    </div>
-                                    <div className={`transition-[grid-template-rows] duration-300 grid md:hidden ${openSection === 'sanctuary' ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
-                                        <div className="overflow-hidden">
-                                            <div className="w-full animate-in fade-in slide-in-from-top-2">
-                                                <div className="flex flex-col gap-4">
-                                                    <div onClick={() => setExpandedCanvas('garden')} className="bg-[var(--color-bg-base)] dark:bg-black/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative h-[300px] cursor-pointer group">
-                                                        <GardenFullView isEmbedded={true} garden={garden!} user={dashboardUser} onClose={() => { }} onUpdate={refreshGarden} />
-                                                        <div className="absolute inset-x-0 top-0 p-3 bg-gradient-to-b from-black/50 to-transparent z-20 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity"><span className="font-bold tracking-widest text-xs text-white uppercase">Inner Garden</span><Maximize2 className="w-4 h-4 text-white" /></div>
+                                    <div className="grid grid-cols-3 md:grid-cols-2 gap-2 md:gap-4 w-full">
+                                        <div className="md:hidden w-full flex">
+                                            <button onClick={() => setOpenSection(p => p === 'sanctuary' ? null : 'sanctuary')} className="w-full py-2.5 px-2 md:p-5 flex items-center justify-center hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-sm">
+                                                <div className="flex items-center gap-1.5 md:gap-2 flex-col mx-auto">
+                                                    <div className="p-1.5 rounded-xl bg-[var(--color-primary)]/10 text-primary dark:bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
+                                                        <Sparkles className="w-4 h-4" />
                                                     </div>
-                                                    <div onClick={() => setExpandedCanvas('lumina')} className="bg-[var(--color-bg-base)] dark:bg-black/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative h-[300px] cursor-pointer group">
-                                                        <LuminaView isEmbedded={true} user={dashboardUser} onClose={() => { }} />
-                                                        <div className="absolute inset-x-0 top-0 p-3 bg-gradient-to-b from-black/50 to-transparent z-20 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity"><span className="font-bold tracking-widest text-xs text-white uppercase">Lumina</span><Maximize2 className="w-4 h-4 text-white" /></div>
-                                                    </div>
+                                                    <span className="font-bold text-[10px] md:text-xs tracking-wide opacity-90 truncate uppercase">Sanctuary</span>
                                                 </div>
-                                            </div>
+                                            </button>
                                         </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4 w-full">
-                                        <button onClick={() => setOpenSection(p => p === 'arcade' ? null : 'arcade')} className="w-full py-2.5 px-3 md:p-5 flex items-center justify-center md:justify-between hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center md:text-left bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-sm">
-                                            <div className="flex items-center gap-2 md:gap-3 flex-col md:flex-row mx-auto md:mx-0">
+
+                                        <button onClick={() => setOpenSection(p => p === 'arcade' ? null : 'arcade')} className="w-full py-2.5 px-2 md:p-5 flex items-center justify-center md:justify-between hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center md:text-left bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-sm">
+                                            <div className="flex items-center gap-1.5 md:gap-3 flex-col md:flex-row mx-auto md:mx-0">
                                                 <div className="p-1.5 md:p-2 rounded-xl bg-[var(--color-primary)]/10 text-primary dark:bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
                                                     <Gamepad2 className="w-4 h-4 md:w-6 md:h-6" />
                                                 </div>
-                                                <span className="font-bold text-xs md:text-lg tracking-wide opacity-90 truncate">Arcade</span>
+                                                <span className="font-bold text-[10px] md:text-lg tracking-wide opacity-90 truncate uppercase md:normal-case">Arcade</span>
                                             </div>
                                             <div className="hidden md:block">
                                                 {openSection === 'arcade' ? <ChevronUp className="w-4 h-4 md:w-5 md:h-5 opacity-50" /> : <ChevronDown className="w-4 h-4 md:w-5 md:h-5 opacity-50" />}
                                             </div>
                                         </button>
-                                        <button onClick={() => setOpenSection(p => p === 'journal' ? null : 'journal')} className="w-full py-2.5 px-3 md:p-5 flex items-center justify-center md:justify-between hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center md:text-left bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-sm">
-                                            <div className="flex items-center gap-2 md:gap-3 flex-col md:flex-row mx-auto md:mx-0">
+                                        <button onClick={() => setOpenSection(p => p === 'journal' ? null : 'journal')} className="w-full py-2.5 px-2 md:p-5 flex items-center justify-center md:justify-between hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center md:text-left bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-sm">
+                                            <div className="flex items-center gap-1.5 md:gap-3 flex-col md:flex-row mx-auto md:mx-0">
                                                 <div className="p-1.5 md:p-2 rounded-xl bg-[var(--color-primary)]/10 text-primary dark:bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
                                                     <Feather className="w-4 h-4 md:w-6 md:h-6" />
                                                 </div>
-                                                <span className="font-bold text-xs md:text-lg tracking-wide opacity-90 truncate">Journal</span>
+                                                <span className="font-bold text-[10px] md:text-lg tracking-wide opacity-90 truncate uppercase md:normal-case">Journal</span>
                                             </div>
                                             <div className="hidden md:block">
                                                 {openSection === 'journal' ? <ChevronUp className="w-4 h-4 md:w-5 md:h-5 opacity-50" /> : <ChevronDown className="w-4 h-4 md:w-5 md:h-5 opacity-50" />}
                                             </div>
                                         </button>
+                                    </div>
+
+                                    <div className={`transition-[grid-template-rows] duration-300 grid md:hidden ${openSection === 'sanctuary' ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                                        <div className="overflow-hidden">
+                                            <div className="w-full animate-in fade-in slide-in-from-top-2">
+                                                <div className="grid grid-cols-2 gap-3 w-full p-1 pb-3">
+                                                    <div onClick={() => { setExpandedCanvas('garden'); setOpenSection(null); }} className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl border-0 shadow-sm hover:shadow-sm hover:-translate-y-1 transition-all overflow-hidden flex flex-col items-center justify-center h-[120px] cursor-pointer">
+                                                        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-700 rounded-xl flex items-center justify-center text-white shadow-sm mb-2 group-hover:scale-110 transition-transform"><Leaf className="w-6 h-6" /></div>
+                                                        <span className="font-black text-xs text-green-700 dark:text-green-300 uppercase tracking-[0.1em]">Garden</span>
+                                                    </div>
+                                                    <Link to="/book-of-you" className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl border-0 shadow-sm hover:shadow-sm hover:-translate-y-1 transition-all overflow-hidden flex flex-col items-center justify-center h-[120px] cursor-pointer">
+                                                        <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-amber-700 rounded-xl flex items-center justify-center text-white shadow-sm mb-2 group-hover:scale-110 transition-transform"><BookOpen className="w-6 h-6" /></div>
+                                                        <span className="font-black text-xs text-amber-700 dark:text-amber-300 uppercase tracking-[0.1em]">Book of You</span>
+                                                    </Link>
+                                                    <div onClick={() => { setExpandedCanvas('lumina'); setOpenSection(null); }} className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl border-0 shadow-sm hover:shadow-sm hover:-translate-y-1 transition-all overflow-hidden flex flex-col items-center justify-center h-[120px] cursor-pointer">
+                                                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-700 rounded-xl flex items-center justify-center text-white shadow-sm mb-2 group-hover:scale-110 transition-transform"><Sparkles className="w-6 h-6" /></div>
+                                                        <span className="font-black text-xs text-blue-700 dark:text-blue-300 uppercase tracking-[0.1em]">Lumina</span>
+                                                    </div>
+                                                    <div onClick={() => handleRoomInteraction('observatory', 25)} className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl border-0 shadow-sm hover:shadow-sm hover:-translate-y-1 transition-all overflow-hidden flex flex-col items-center justify-center h-[120px] cursor-pointer">
+                                                        <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-700 rounded-xl flex items-center justify-center text-white shadow-sm mb-2 group-hover:scale-110 transition-transform"><Moon className="w-6 h-6" /></div>
+                                                        <span className="font-black text-xs text-indigo-700 dark:text-indigo-300 uppercase tracking-[0.1em]">Oracle</span>
+                                                    </div>
+                                                    <div onClick={() => handleRoomInteraction('dojo', 15)} className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl border-0 shadow-sm hover:shadow-sm hover:-translate-y-1 transition-all overflow-hidden flex flex-col items-center justify-center h-[120px] cursor-pointer">
+                                                        <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-700 rounded-xl flex items-center justify-center text-white shadow-sm mb-2 group-hover:scale-110 transition-transform"><Zap className="w-6 h-6" /></div>
+                                                        <span className="font-black text-xs text-amber-700 dark:text-amber-300 uppercase tracking-[0.1em]">Zen Dojo</span>
+                                                    </div>
+                                                    <div onClick={() => setShowShredder(true)} className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl border-0 shadow-sm hover:shadow-sm hover:-translate-y-1 transition-all overflow-hidden flex flex-col items-center justify-center h-[120px] cursor-pointer">
+                                                        <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-rose-700 rounded-xl flex items-center justify-center text-white shadow-sm mb-2 group-hover:scale-110 transition-transform"><Scissors className="w-6 h-6" /></div>
+                                                        <span className="font-black text-xs text-red-700 dark:text-red-300 uppercase tracking-[0.1em]">Shredder</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div className={`transition-[grid-template-rows] duration-300 grid ${openSection === 'arcade' ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
