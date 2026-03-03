@@ -384,7 +384,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
 
                                 {/* Level 75-99: GALACTIC OVERLORD */}
                                 {pet.level >= 75 && pet.level < 100 && (
-                                    <g className="origin-center animate-[float_10s_ease-in-out_infinite]" style={{ transform: 'translate(0px, 0px)' }}>
+                                    <g className="origin-center animate-[float_10s_ease-in-out_infinite]" style={{ transform: 'scale(0.75)' }}>
                                         {/* Multilayered Holographic Orbital Rings */}
                                         <g className="animate-[spin_40s_linear_infinite]">
                                             <ellipse cx="0" cy="0" rx="160" ry="40" fill="none" stroke={c.p} strokeWidth="2" strokeDasharray="30 60 10 30" opacity="0.6" />
@@ -437,7 +437,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
 
                                 {/* Level 100+: OMNIVERSAL BEING */}
                                 {pet.level >= 100 && (
-                                    <g className="origin-center animate-[float_15s_ease-in-out_infinite]" style={{ transform: 'translate(0px, 0px)' }}>
+                                    <g className="origin-center animate-[float_15s_ease-in-out_infinite]" style={{ transform: 'scale(0.55)' }}>
                                         {/* Massive Geometric Clockwork Background */}
                                         <g className="animate-[spin_60s_linear_infinite]">
                                             <polygon points="0,-180 155,-90 155,90 0,180 -155,90 -155,-90" fill="none" stroke={c.g} strokeWidth="1" strokeDasharray="10 5" opacity="0.3" />
