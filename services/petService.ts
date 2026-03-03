@@ -16,9 +16,9 @@ export class PetService {
                 console.error("Error fetching pet:", error);
                 return null;
             }
-
             if (data) {
-                return this.calculateDecay(data);
+                const mappedAnima = this.mapAnimaBase(data);
+                return this.calculateDecay(mappedAnima);
             }
 
             return null;
