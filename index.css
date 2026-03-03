@@ -118,8 +118,10 @@
    ----------------------------------------------------------------------------- */
 /* 1. SUNSHINE (Vibrant Yellow Default) */
 [data-theme="sunshine"] {
-    --color-bg-base: #FEFCE8;
-    --color-bg-surface: #FEF08A;
+    --color-bg-base: #FFF3C4;
+    /* A perfect warm emotional support pastel yellow */
+    --color-bg-surface: #FFE79A;
+    /* Slightly deeper warm yellow for contrast */
     --color-text-base: #422006;
     --color-border-subtle: #FDE047;
     --color-primary: #A16207;

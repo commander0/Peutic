@@ -553,8 +553,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
             {/* GLOBAL EXPANDED CANVAS MODAL */}
             {expandedCanvas && (
-                <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in zoom-in duration-300">
-                    <div className="w-full max-w-7xl h-full max-h-[90vh] bg-[var(--color-bg-base)] dark:bg-black rounded-2xl shadow-2xl overflow-hidden relative border border-white/10 flex flex-col">
+                <div className="fixed inset-y-0 right-0 left-0 md:left-20 lg:left-64 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 md:p-6 lg:p-8 animate-in fade-in zoom-in duration-300">
+                    <div className="w-full max-w-7xl h-full max-h-[90vh] md:max-h-[95vh] bg-[var(--color-bg-base)] dark:bg-black rounded-2xl shadow-2xl overflow-hidden relative border border-white/10 flex flex-col">
                         <button
                             onClick={() => setExpandedCanvas(null)}
                             className="absolute top-4 right-4 z-50 bg-black/50 hover:bg-red-500 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-lg"
@@ -601,7 +601,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             <div className="flex h-screen overflow-hidden">
                 <aside className="hidden md:flex w-20 lg:w-64 flex-col border-r border-slate-200/50 dark:border-slate-800/50 bg-[var(--color-bg-base)]/40 backdrop-blur-2xl transition-all duration-500 z-50">
                     <div className="p-6 lg:p-8 flex items-center justify-center lg:justify-start gap-3">
-                        <img src="/icon.svg" alt="Peutic Logo" className="w-9 h-9 rounded-xl shadow-sm hover:scale-110 transition-transform object-cover" />
+                        <img src="/icon.svg" alt="Peutic Logo" className="w-9 h-9 rounded-xl shadow-sm hover:scale-110 transition-transform object-contain" />
                         <span className="hidden lg:block text-xl font-bold tracking-tight text-slate-900 dark:text-white">Peutic</span>
                     </div>
                     <nav className="flex-1 px-3 lg:px-4 py-6 lg:py-8 space-y-2 lg:space-y-3">
