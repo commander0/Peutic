@@ -16,8 +16,8 @@
         --color-slate-950: #020617;
 
         /* Default Light Foundation */
-        --color-bg-base: #FFFBEB;
-        --color-bg-surface: #FEF3C7;
+        --color-bg-base: #fcdd62;
+        --color-bg-surface: #fce68f;
         --color-text-base: #1E293B;
         --color-text-muted: #64748B;
         --color-border-subtle: #FDE68A;
@@ -118,10 +118,10 @@
    ----------------------------------------------------------------------------- */
 /* 1. SUNSHINE (Vibrant Yellow Default) */
 [data-theme="sunshine"] {
-    --color-bg-base: #FFF3C4;
+    --color-bg-base: #fcdd62;
     /* A perfect warm emotional support pastel yellow */
-    --color-bg-surface: #FFE79A;
-    /* Slightly deeper warm yellow for contrast */
+    --color-bg-surface: #fce68f;
+    /* Slightly lighter warm yellow for contrast */
     --color-text-base: #422006;
     --color-border-subtle: #FDE047;
     --color-primary: #A16207;
