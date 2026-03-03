@@ -52,6 +52,11 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
     const [showGameMenu, setShowGameMenu] = useState(false);
     const [activeGame, setActiveGame] = useState<'match' | 'cloud' | null>(null);
 
+    // Tactile Interaction State
+    const [isPetting, setIsPetting] = useState(false);
+    const [, setAffectionTracker] = useState(0);
+    const [particles, setParticles] = useState<{ id: number, x: number, y: number }[]>([]);
+
     // Mission State (Mocked for gamification)
     const [missions, setMissions] = useState([
         { id: 1, title: 'First Bite', desc: 'Feed your Lumina today', req: 1, progress: 0, reward: 50, claimed: false },
@@ -297,6 +302,52 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
         showToast(`MISSION ACCOMPLISHED: +${mission.reward} XP`, "success");
     };
 
+    // --- TACTILE PETTING ENGINE ---
+    const handlePointerDown = () => {
+        setIsPetting(true);
+    };
+
+    const handlePointerUp = () => {
+        setIsPetting(false);
+        setAffectionTracker(0); // reset combo
+    };
+
+    const handlePointerMove = (e: React.PointerEvent) => {
+        if (!isPetting || !pet) return;
+
+        // Spawn a heart particle every few frames
+        if (Math.random() > 0.75) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const newParticle = { id: Date.now() + Math.random(), x, y };
+
+            setParticles(prev => [...prev.slice(-12), newParticle]);
+            setTimeout(() => {
+                setParticles(prev => prev.filter(p => p.id !== newParticle.id));
+            }, 800);
+        }
+
+        setAffectionTracker(prev => {
+            const next = prev + 1;
+            // Burst payoff threshold
+            if (next > 45) {
+                setEmotion('happy');
+                setTrick('spin');
+
+                // Only grant stats if they aren't capped, to prevent infinite farming abuse
+                if (pet.happiness < 100) {
+                    const updated = { ...pet, happiness: Math.min(100, pet.happiness + 2), experience: pet.experience + 1 };
+                    setPet(updated);
+                    PetService.updatePet(updated);
+                    showToast("Lumina loves your affection!", "success");
+                }
+                return 0; // reset tracker after burst
+            }
+            return next;
+        });
+    };
+
     if (loading) return <div className="fixed inset-0 bg-black text-cyan-500 flex items-center justify-center font-mono">INITIALIZING LINK...</div>;
 
     if (showSelection) {
@@ -466,8 +517,39 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
                         <div className="absolute inset-0 -m-20 border border-fuchsia-500/20 rounded-full animate-[spin_10s_linear_infinite_reverse] drop-shadow-sm opacity-60 pointer-events-none" />
                     )}
 
-                    {/* Character Canvas */}
-                    <div className={`relative flex items-center justify-center transition-all duration-1000 ${isSummoning ? 'scale-110 -translate-y-10 brightness-150' : ''}`}>
+                    {/* Character Canvas Tracker */}
+                    <div
+                        className={`relative flex items-center justify-center transition-all duration-300 cursor-pointer ${isSummoning ? 'scale-110 -translate-y-10 brightness-150' : ''} ${isPetting ? 'scale-105 brightness-110' : ''}`}
+                        onPointerDown={handlePointerDown}
+                        onPointerUp={handlePointerUp}
+                        onPointerLeave={handlePointerUp}
+                        onPointerMove={handlePointerMove}
+                        style={{ touchAction: 'none' }} // Lock scrolling
+                    >
+                        {/* Tactile Bio-Particles */}
+                        {particles.map(p => (
+                            <div
+                                key={p.id}
+                                className="absolute z-[200] pointer-events-none transition-transform duration-700 ease-out animate-pulse"
+                                style={{
+                                    left: p.x - 12,
+                                    top: p.y - 24,
+                                    transform: `translateY(-40px) scale(0.5) rotate(${Math.random() * 40 - 20}deg)`,
+                                    opacity: 0
+                                }}
+                                ref={el => {
+                                    // Trigger hardware-accelerated CSS float on mount
+                                    if (el) {
+                                        requestAnimationFrame(() => {
+                                            el.style.transform = `translateY(-80px) scale(1.5) rotate(${Math.random() * 60 - 30}deg)`;
+                                            el.style.opacity = '1';
+                                        });
+                                    }
+                                }}
+                            >
+                                <Heart className="w-6 h-6 fill-red-500 text-red-400 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
+                            </div>
+                        ))}
                         {/* Dynamic Dialogue Bubble */}
                         {luminaMessage && !isSummoning && (
                             <div className="absolute -top-16 md:-top-24 z-[100] animate-in slide-in-from-bottom-5 fade-in duration-500">

@@ -2,6 +2,7 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 // @ts-ignore: Bypass Vite PWA node typings for build pipeline
 import { VitePWA } from 'vite-plugin-pwa'
+import viteCompression from 'vite-plugin-compression'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -9,8 +10,21 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, (process as any).cwd(), '');
 
   return {
+    // 🔒 Security & Performance: Automatically strips all console.logs and debuggers from production builds.
+    esbuild: {
+      drop: ['console', 'debugger'],
+    },
     plugins: [
       react(),
+      // ⚡ Compression: Generates .br and .gz files automatically for insanely fast CDN delivery.
+      viteCompression({
+        algorithm: 'brotliCompress',
+        ext: '.br',
+      }),
+      viteCompression({
+        algorithm: 'gzip',
+        ext: '.gz',
+      }),
       VitePWA({
         registerType: 'autoUpdate',
         injectRegister: 'auto',
@@ -66,7 +80,10 @@ export default defineConfig(({ mode }) => {
           manualChunks: {
             'vendor-react': ['react', 'react-dom', 'react-router-dom'],
             'vendor-charts': ['recharts'],
-            'vendor-icons': ['lucide-react']
+            'vendor-icons': ['lucide-react'],
+            // ✂️ Explicit Chunk Splitting for massive libraries
+            'vendor-supabase': ['@supabase/supabase-js'],
+            'vendor-framer': ['framer-motion']
           }
         }
       }

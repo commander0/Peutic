@@ -2,8 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Droplets, Wind, Info, ChevronLeft, Music, Scissors, X, Sprout, Sparkles } from 'lucide-react';
 import GardenCanvas from './GardenCanvas';
 import { UserService } from '../../services/userService';
-import { GardenState, User } from '../../types';
+import { GardenState, User, Lumina } from '../../types';
 import { GardenService } from '../../services/gardenService';
+import { PetService } from '../../services/petService';
+import PetCanvas from '../pocket/PetCanvas';
 import { useToast } from '../common/Toast';
 
 interface GardenFullViewProps {
@@ -17,10 +19,13 @@ interface GardenFullViewProps {
 const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, onUpdate, isEmbedded = false }) => {
     const [localGarden, setLocalGarden] = useState(garden);
     const [interaction, setInteraction] = useState<'water' | 'breath' | 'sing' | 'harvest' | null>(null);
+    const [isMicListening, setIsMicListening] = useState(false);
+    const [micVolume, setMicVolume] = useState(0);
     const [showInfo, setShowInfo] = useState(false);
     const [showPlantSelection, setShowPlantSelection] = useState(false);
     const [selectedNewPlant, setSelectedNewPlant] = useState<string | null>(null);
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
+    const [pet, setPet] = useState<Lumina | null>(null);
     const { showToast } = useToast();
     const [availablePlants, setAvailablePlants] = useState<string[]>(['Lotus', 'Rose', 'Sunflower', 'Fern', 'Sakura', 'Oak', 'Willow', 'Bonsai']);
     const [weather, setWeather] = useState<'sun' | 'rain'>('sun');
@@ -85,13 +90,78 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                 const sunCount = moods.filter(x => ['Happy', 'Calm', 'confetti', 'sun'].includes(x.mood as any)).length;
                 setWeather((sunCount / moods.length) >= 0.5 ? 'sun' : 'rain');
             }
+
+            // FETCH RESIDENT SYNERGY (Lumina)
+            const resident = await PetService.getPet(user.id);
+            if (resident && mounted) setPet(resident);
         };
         fetchFreshState();
         return () => { mounted = false; };
     }, [user.id]);
 
     const handleAction = async (type: 'water' | 'breath' | 'sing' | 'harvest') => {
-        // Trigger Visuals
+        // Microphone Logic Override
+        if (type === 'sing') {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                setIsMicListening(true);
+                setInteraction('sing');
+                showToast("Sing or hum to your plant for 10 seconds...", "info");
+
+                const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+                const analyser = audioCtx.createAnalyser();
+                const source = audioCtx.createMediaStreamSource(stream);
+                source.connect(analyser);
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+
+                let focusGained = 0;
+
+                const checkAudio = setInterval(() => {
+                    analyser.getByteFrequencyData(dataArray);
+                    let sum = 0;
+                    for (let i = 0; i < bufferLength; i++) {
+                        sum += dataArray[i];
+                    }
+                    const average = sum / bufferLength;
+                    setMicVolume(average);
+
+                    if (average > 10) {
+                        focusGained += 0.5; // Gain half a minute of focus per second of active humming
+                    }
+                }, 1000);
+
+                setTimeout(async () => {
+                    clearInterval(checkAudio);
+                    stream.getTracks().forEach(track => track.stop());
+                    audioCtx.close();
+                    setIsMicListening(false);
+                    setMicVolume(0);
+                    setInteraction(null);
+
+                    if (focusGained > 0) {
+                        const earned = Math.floor(focusGained);
+                        if (earned > 0) {
+                            await GardenService.addFocusMinutes(user.id, earned);
+                            showToast(`Your vibration nurtured the plant! (+${earned}m growth)`, "success");
+                            const freshData = await GardenService.getGarden(user.id);
+                            if (freshData) setLocalGarden(freshData);
+                            onUpdate();
+                        } else {
+                            showToast("The plant enjoyed your presence.", "info");
+                        }
+                    } else {
+                        showToast("The plant listened quietly.", "info");
+                    }
+                }, 10000);
+            } catch (err) {
+                showToast("Microphone access is required to sing to the plant.", "error");
+            }
+            return;
+        }
+
+        // Trigger Visuals for others
         if (type !== 'harvest') {
             setInteraction(type);
             setTimeout(() => setInteraction(null), 4000); // Effect duration
@@ -128,8 +198,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
             } else {
                 showToast(result.message || "Failed to harvest.", "error");
             }
-        } else {
-            // Breath / Sing are now free ambient interactions
+        } else if (type === 'breath') {
             showToast(`Shared ${type} with garden.`, "success");
         }
 
@@ -231,11 +300,25 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                 <div className="absolute inset-0 z-20 pointer-events-none bg-white/5 backdrop-blur-[2px] animate-[pulse_2s_ease-in-out_infinite]" />
             )}
 
-            {/* Sing/Music Effect */}
-            {interaction === 'sing' && (
+            {/* Sing/Music Effect (Fallback if mic inaccessible) */}
+            {interaction === 'sing' && !isMicListening && (
                 <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center">
                     <div className="w-[500px] h-[500px] rounded-full border border-pink-500/20 animate-[ping_2s_linear_infinite]" />
                     <div className="absolute w-[300px] h-[300px] rounded-full border border-purple-500/30 animate-[ping_2s_linear_infinite_reverse]" />
+                </div>
+            )}
+
+            {/* Live Mic Feedback Aura */}
+            {isMicListening && (
+                <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center transition-all duration-[50ms]">
+                    <div
+                        className="rounded-[40%] bg-gradient-to-r from-pink-500/30 to-fuchsia-500/30 blur-3xl transition-all duration-[100ms] animate-[spin_4s_linear_infinite]"
+                        style={{
+                            width: `${300 + (micVolume * 4)}px`,
+                            height: `${300 + (micVolume * 4)}px`,
+                            opacity: Math.min(1, 0.1 + (micVolume / 100))
+                        }}
+                    />
                 </div>
             )}
 
@@ -275,7 +358,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                 {/* Aura Ring backing the canvas */}
                 <div className="absolute w-[300px] h-[300px] md:w-[600px] md:h-[600px] bg-emerald-900/10 rounded-full blur-[100px] pointer-events-none" />
 
-                <div className="w-full max-w-4xl h-full flex items-center justify-center">
+                <div className="w-full max-w-4xl h-full flex items-center justify-center relative">
                     <GardenCanvas
                         garden={localGarden}
                         width={600}
@@ -283,6 +366,35 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                         interactionType={interaction}
                         hasWeeds={hasWeeds}
                     />
+
+                    {/* --- CROSS-REALM SYNERGY: Lumina Sleeping in the Garden --- */}
+                    {pet && (
+                        <div className="absolute z-[50] group cursor-pointer transition-transform duration-700 hover:scale-110 pointer-events-auto"
+                            style={{
+                                bottom: '10%',
+                                right: '15%',
+                                filter: weather === 'rain' ? 'brightness(0.7) sepia(0.3) hue-rotate(-20deg)' : 'brightness(1.1)'
+                            }}
+                            onClick={() => showToast(`${pet.name} is resting peacefully under the ${localGarden.currentPlantType}.`, 'info')}
+                        >
+                            {/* Zzz Animation */}
+                            <div className="absolute -top-12 right-4 text-white flex gap-1 opacity-70">
+                                <span className="animate-[particle-float-up_3s_ease-in-out_infinite] font-serif italic text-cyan-200">Z</span>
+                                <span className="animate-[particle-float-up_3.5s_ease-in-out_infinite_0.5s] text-lg font-serif italic text-cyan-300">z</span>
+                                <span className="animate-[particle-float-up_4s_ease-in-out_infinite_1s] text-2xl font-serif italic text-cyan-400">z</span>
+                            </div>
+                            <PetCanvas
+                                pet={pet}
+                                width={120}
+                                height={120}
+                                emotion={weather === 'rain' ? 'sad' : 'sleeping'}
+                                trick={null}
+                            />
+                            {weather === 'rain' && (
+                                <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-48 h-32 bg-[url('https://www.transparenttextures.com/patterns/foggy-birds.png')] opacity-30 animate-pulse mix-blend-screen pointer-events-none" />
+                            )}
+                        </div>
+                    )}
                 </div>
             </main>
 
