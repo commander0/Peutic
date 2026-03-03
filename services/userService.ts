@@ -992,16 +992,15 @@ export class UserService {
         }
 
         // Fallback if RPC is missing
-        const [jRes, mRes, vRes, bRes, trxRes] = await Promise.all([
+        const [jRes, vRes, bRes, trxRes] = await Promise.all([
             supabase.from('journals').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('date', startOfCurrentWeek),
-            supabase.from('moods').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('date', startOfCurrentWeek),
             supabase.from('voice_journals').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', startOfCurrentWeek),
             supabase.from('breath_logs').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('date', startOfCurrentWeek),
             supabase.from('transactions').select('amount').eq('user_id', userId).gte('date', startOfCurrentWeek)
         ]);
 
         const minutesSpent = (trxRes.data || []).filter((t: any) => t.amount < 0).length;
-        const freeActionsCount = (jRes.count || 0) + (mRes.count || 0) + (vRes.count || 0) + (bRes.count || 0);
+        const freeActionsCount = (jRes.count || 0) + (vRes.count || 0) + (bRes.count || 0);
         const count = freeActionsCount + minutesSpent;
 
         let message = "Start your journey.";
