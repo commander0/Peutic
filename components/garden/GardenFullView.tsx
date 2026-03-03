@@ -2,10 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Droplets, Wind, Info, ChevronLeft, Music, Scissors, X, Sprout, Sparkles } from 'lucide-react';
 import GardenCanvas from './GardenCanvas';
 import { UserService } from '../../services/userService';
-import { GardenState, User, Lumina } from '../../types';
+import { GardenState, User } from '../../types';
 import { GardenService } from '../../services/gardenService';
-import { PetService } from '../../services/petService';
-import PetCanvas from '../pocket/PetCanvas';
 import { useToast } from '../common/Toast';
 
 interface GardenFullViewProps {
@@ -25,7 +23,6 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     const [showPlantSelection, setShowPlantSelection] = useState(false);
     const [selectedNewPlant, setSelectedNewPlant] = useState<string | null>(null);
     const [intensity, setIntensity] = useState<1 | 2 | 3>(1); // 1m, 2m, 3m
-    const [pet, setPet] = useState<Lumina | null>(null);
     const { showToast } = useToast();
     const [availablePlants, setAvailablePlants] = useState<string[]>(['Lotus', 'Rose', 'Sunflower', 'Fern', 'Sakura', 'Oak', 'Willow', 'Bonsai']);
     const [weather, setWeather] = useState<'sun' | 'rain'>('sun');
@@ -90,10 +87,6 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                 const sunCount = moods.filter(x => ['Happy', 'Calm', 'confetti', 'sun'].includes(x.mood as any)).length;
                 setWeather((sunCount / moods.length) >= 0.5 ? 'sun' : 'rain');
             }
-
-            // FETCH RESIDENT SYNERGY (Lumina)
-            const resident = await PetService.getPet(user.id);
-            if (resident && mounted) setPet(resident);
         };
         fetchFreshState();
         return () => { mounted = false; };
@@ -366,35 +359,6 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
                         interactionType={interaction}
                         hasWeeds={hasWeeds}
                     />
-
-                    {/* --- CROSS-REALM SYNERGY: Lumina Sleeping in the Garden --- */}
-                    {pet && (
-                        <div className="absolute z-[50] group cursor-pointer transition-transform duration-700 hover:scale-110 pointer-events-auto"
-                            style={{
-                                bottom: '10%',
-                                right: '15%',
-                                filter: weather === 'rain' ? 'brightness(0.7) sepia(0.3) hue-rotate(-20deg)' : 'brightness(1.1)'
-                            }}
-                            onClick={() => showToast(`${pet.name} is resting peacefully under the ${localGarden.currentPlantType}.`, 'info')}
-                        >
-                            {/* Zzz Animation */}
-                            <div className="absolute -top-12 right-4 text-white flex gap-1 opacity-70">
-                                <span className="animate-[particle-float-up_3s_ease-in-out_infinite] font-serif italic text-cyan-200">Z</span>
-                                <span className="animate-[particle-float-up_3.5s_ease-in-out_infinite_0.5s] text-lg font-serif italic text-cyan-300">z</span>
-                                <span className="animate-[particle-float-up_4s_ease-in-out_infinite_1s] text-2xl font-serif italic text-cyan-400">z</span>
-                            </div>
-                            <PetCanvas
-                                pet={pet}
-                                width={120}
-                                height={120}
-                                emotion={weather === 'rain' ? 'sad' : 'sleeping'}
-                                trick={null}
-                            />
-                            {weather === 'rain' && (
-                                <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-48 h-32 bg-[url('https://www.transparenttextures.com/patterns/foggy-birds.png')] opacity-30 animate-pulse mix-blend-screen pointer-events-none" />
-                            )}
-                        </div>
-                    )}
                 </div>
             </main>
 

@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect, useRef, lazy, Suspense, useTransition } from 'react';
+﻿import React, { useState, useEffect, useRef, Suspense, lazy, useMemo, useTransition } from 'react';
+import { createPortal } from 'react-dom';
 import { useNotifications } from '../hooks/useNotifications';
 import { useDashboardUI } from '../hooks/useDashboardUI';
 import { useGamification } from '../hooks/useGamification';
@@ -1396,27 +1397,32 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                 </main >
 
                 {/* --- V3 MOBILE BOTTOM NAVIGATION --- */}
-                <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-[#020617]/80 backdrop-blur-lg border-t border-slate-200/50 dark:border-slate-800/50 flex justify-around items-center px-2 py-3 z-[90] pb-[env(safe-area-inset-bottom)]">
-                    {[
-                        { id: 'hub', icon: LayoutDashboard, label: 'Dashboard' },
-                        { id: 'sanctuary', icon: Sparkles, label: 'Sanctuary' },
-                        { id: 'store', icon: ShoppingBag, label: 'Store', isModal: true },
-                        { id: 'history', icon: Clock, label: t('dash_journal') },
-                        { id: 'settings', icon: Settings, label: t('dash_settings') }
-                    ].map((item) => {
-                        const isActive = activeTab === item.id;
-                        return (
-                            <button
-                                key={item.id}
-                                onClick={() => item.isModal ? setShowSerenityShop(true) : setActiveTab(item.id as any)}
-                                className={`flex flex-col items-center gap-1 min-w-[64px] transition-all duration-300 ${isActive ? 'text-primary scale-105' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
-                            >
-                                <item.icon className="w-5 h-5" />
-                                <span className="text-[10px] font-semibold">{item.label}</span>
-                            </button>
-                        );
-                    })}
-                </nav>
+                {createPortal(
+                    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--color-bg-surface)] backdrop-blur-2xl border-t border-[var(--color-primary-border)] flex justify-around items-center px-1 py-1 sm:py-2 z-[200] pb-[calc(env(safe-area-inset-bottom)+8px)] shadow-[0_-15px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_-5px_30px_rgba(0,0,0,0.5)] transition-colors duration-500">
+                        {[
+                            { id: 'hub', icon: LayoutDashboard, label: 'Dashboard' },
+                            { id: 'sanctuary', icon: Sparkles, label: 'Sanctuary' },
+                            { id: 'store', icon: ShoppingBag, label: 'Store', isModal: true },
+                            { id: 'history', icon: Clock, label: t('dash_journal') },
+                            { id: 'settings', icon: Settings, label: t('dash_settings') }
+                        ].map((item) => {
+                            const isActive = activeTab === item.id && !item.isModal;
+                            return (
+                                <button
+                                    key={item.id}
+                                    onClick={() => item.isModal ? setShowSerenityShop(true) : setActiveTab(item.id as any)}
+                                    className={`flex flex-col items-center gap-1 min-w-[60px] p-2 transition-all duration-300 ${isActive ? 'text-[var(--color-primary)] font-black scale-105' : 'text-gray-500 dark:text-gray-400 opacity-80 hover:opacity-100'}`}
+                                >
+                                    <div className={`relative p-1.5 rounded-xl transition-colors duration-300 ${isActive ? 'bg-[var(--color-primary-light)] text-[var(--color-primary)] border border-[var(--color-primary-border)]' : 'bg-transparent border border-transparent'}`}>
+                                        <item.icon className="w-5 h-5" />
+                                    </div>
+                                    <span className="text-[9px] font-bold uppercase tracking-wider">{item.label}</span>
+                                </button>
+                            );
+                        })}
+                    </nav>,
+                    document.body
+                )}
             </div >
             {showPayment && (
                 <Suspense fallback={<div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center text-white font-bold">Secure Payment node...</div>}>

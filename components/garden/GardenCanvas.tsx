@@ -67,13 +67,17 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
     // Procedural Growth Scaling calculation
     // Each stage is roughly 3 focus minutes apart
     const stageProgress = Math.min((fm % 3) / 3, 1);
-    const growthScale = stage < 8 ? 1 + (stageProgress * 0.15) : 1.5; // Massive scalar for stage 8
+    const growthScale = stage < 8 ? 1 + (stageProgress * 0.1) : 1.15; // Capped max bounds
 
     const SvgContent = useMemo(() => {
         const isRare = ['Lunar Fern', 'Crystal Lotus', 'Storm Oak', 'Sunlight Spire'].includes(garden.currentPlantType);
 
-        // Dynamic viewBox to gracefully scale massive late-stage plants back into the bounds
-        const dynamicViewBox = stage >= 8 ? "-120 -180 340 340" : stage >= 7 ? "-80 -140 260 260" : stage >= 6 ? "-60 -110 220 220" : stage >= 4 ? "-20 -40 140 140" : "0 0 100 100";
+        // Dynamic viewBox to gracefully scale massive late-stage plants securely into bounds
+        const dynamicViewBox = stage >= 8 ? "-220 -300 540 540"
+            : stage >= 7 ? "-100 -180 300 300"
+                : stage >= 6 ? "-70 -140 260 260"
+                    : stage >= 4 ? "-30 -70 160 160"
+                        : "-10 -20 120 120";
 
         return (
             <motion.svg
@@ -81,7 +85,7 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 1.5, ease: "easeOut" }}
                 viewBox={dynamicViewBox}
-                className={`w-[90%] h-[90%] md:w-[80%] md:h-[80%] drop-shadow-lg mx-auto overflow-visible transition-all duration-1000 ${isRare ? 'drop-shadow-sm' : ''}`}>
+                className={`w-full h-full max-w-[100%] max-h-[100%] p-4 drop-shadow-lg mx-auto overflow-visible transition-all duration-1000 ${isRare ? 'drop-shadow-sm' : ''}`}>
                 <defs>
                     <filter id="bloom-glow" x="-50%" y="-50%" width="200%" height="200%">
                         <feGaussianBlur stdDeviation="3" result="coloredBlur" />
