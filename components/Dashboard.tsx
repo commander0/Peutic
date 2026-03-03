@@ -562,11 +562,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             <X className="w-6 h-6" />
                         </button>
                         <div className="flex-1 w-full h-full relative overflow-y-auto">
-                            {expandedCanvas === 'garden' ? (
-                                <GardenFullView isEmbedded={false} garden={garden!} user={dashboardUser!} onClose={() => setExpandedCanvas(null)} onUpdate={refreshGarden} />
-                            ) : (
-                                <LuminaView isEmbedded={false} user={dashboardUser!} onClose={() => setExpandedCanvas(null)} />
-                            )}
+                            <Suspense fallback={<div className="w-full h-full flex flex-col items-center justify-center space-y-4"><div className="w-10 h-10 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin"></div><div className="text-[10px] font-bold tracking-[0.3em] uppercase opacity-50">Loading Sanctuary...</div></div>}>
+                                {expandedCanvas === 'garden' ? (
+                                    <GardenFullView isEmbedded={false} garden={garden!} user={dashboardUser!} onClose={() => setExpandedCanvas(null)} onUpdate={refreshGarden} />
+                                ) : (
+                                    <LuminaView isEmbedded={false} user={dashboardUser!} onClose={() => setExpandedCanvas(null)} />
+                                )}
+                            </Suspense>
                         </div>
                     </div>
                 </div>
@@ -744,34 +746,42 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         </header>
                         {activeTab === 'sanctuary' && dashboardUser && garden && (
                             <>
-                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
-                                    <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-[600px] min-h-[calc(100vh-28rem)] relative z-10 transition-all">
-                                        <div
-                                            onClick={() => setExpandedCanvas('garden')}
-                                            className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#050a05]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
-                                        >
-                                            <div className="absolute inset-x-0 top-0 p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <span className="font-bold tracking-widest uppercase text-xs text-white">Inner Garden</span>
-                                                <Maximize2 className="w-5 h-5 text-white animate-pulse" />
+                                <Suspense fallback={<div className="flex-1 min-h-[600px] flex items-center justify-center"><div className="animate-pulse text-primary font-bold tracking-widest uppercase">Initializing Sanctuary...</div></div>}>
+                                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
+                                        <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-[600px] min-h-[calc(100vh-28rem)] relative z-10 transition-all">
+                                            <div
+                                                onClick={() => setExpandedCanvas('garden')}
+                                                className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#050a05]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
+                                            >
+                                                <div className="absolute inset-x-0 top-0 p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <span className="font-bold tracking-widest uppercase text-xs text-white">Inner Garden</span>
+                                                    <Maximize2 className="w-5 h-5 text-white animate-pulse" />
+                                                </div>
+                                                <div className="absolute inset-0 pointer-events-none group-hover:pointer-events-auto overflow-hidden">
+                                                    {/* Desktop: Scale engine UI natively to 80% of actual size to prevent cramped layout */}
+                                                    <div className="w-full h-full md:w-[125%] md:h-[125%] md:origin-top-left md:scale-[0.8] transition-transform">
+                                                        <GardenFullView isEmbedded={true} garden={garden} user={dashboardUser} onClose={() => { }} onUpdate={refreshGarden} />
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="absolute inset-0 pointer-events-none group-hover:pointer-events-auto">
-                                                <GardenFullView isEmbedded={true} garden={garden} user={dashboardUser} onClose={() => { }} onUpdate={refreshGarden} />
-                                            </div>
-                                        </div>
-                                        <div
-                                            onClick={() => setExpandedCanvas('lumina')}
-                                            className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#0a0a0a]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
-                                        >
-                                            <div className="absolute inset-x-0 top-0 p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <span className="font-bold tracking-widest uppercase text-xs text-white">Lumina Companion</span>
-                                                <Maximize2 className="w-5 h-5 text-white animate-pulse" />
-                                            </div>
-                                            <div className="absolute inset-0 pointer-events-none group-hover:pointer-events-auto">
-                                                <LuminaView isEmbedded={true} user={dashboardUser} onClose={() => { }} />
+                                            <div
+                                                onClick={() => setExpandedCanvas('lumina')}
+                                                className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#0a0a0a]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
+                                            >
+                                                <div className="absolute inset-x-0 top-0 p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <span className="font-bold tracking-widest uppercase text-xs text-white">Lumina Companion</span>
+                                                    <Maximize2 className="w-5 h-5 text-white animate-pulse" />
+                                                </div>
+                                                <div className="absolute inset-0 pointer-events-none group-hover:pointer-events-auto overflow-hidden">
+                                                    {/* Desktop: Scale engine UI natively to 80% of actual size to prevent cramped layout */}
+                                                    <div className="w-full h-full md:w-[125%] md:h-[125%] md:origin-top-left md:scale-[0.8] transition-transform">
+                                                        <LuminaView isEmbedded={true} user={dashboardUser} onClose={() => { }} />
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </Suspense>
                                 <div className="space-y-4">
                                     <h3 className="font-bold text-slate-800 dark:text-slate-300 px-2 uppercase tracking-widest text-[10px]">Arcade & Utility</h3>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
