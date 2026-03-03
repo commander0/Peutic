@@ -550,6 +550,28 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                 </div>
             )}
             {mood && <WeatherEffect type={mood} />}
+
+            {/* GLOBAL EXPANDED CANVAS MODAL */}
+            {expandedCanvas && (
+                <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in zoom-in duration-300">
+                    <div className="w-full max-w-7xl h-full max-h-[90vh] bg-[var(--color-bg-base)] dark:bg-black rounded-2xl shadow-2xl overflow-hidden relative border border-white/10 flex flex-col">
+                        <button
+                            onClick={() => setExpandedCanvas(null)}
+                            className="absolute top-4 right-4 z-50 bg-black/50 hover:bg-red-500 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-lg"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                        <div className="flex-1 w-full h-full relative overflow-y-auto">
+                            {expandedCanvas === 'garden' ? (
+                                <GardenFullView isEmbedded={false} garden={garden!} user={dashboardUser!} onClose={() => setExpandedCanvas(null)} onUpdate={refreshGarden} />
+                            ) : (
+                                <LuminaView isEmbedded={false} user={dashboardUser!} onClose={() => setExpandedCanvas(null)} />
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* FLOATING CONTROLS: Separated for better ergonomics */}
             <div className={`fixed bottom-24 md:bottom-6 left-4 md:left-6 z-[80] transition-all duration-500 ease-in-out border border-white/20 dark:border-white/10 shadow-2xl overflow-hidden backdrop-blur-md w-12 h-12 rounded-full bg-transparent`}>
                 <button
@@ -579,9 +601,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             <div className="flex h-screen overflow-hidden">
                 <aside className="hidden md:flex w-20 lg:w-64 flex-col border-r border-slate-200/50 dark:border-slate-800/50 bg-[var(--color-bg-base)]/40 backdrop-blur-2xl transition-all duration-500 z-50">
                     <div className="p-6 lg:p-8 flex items-center justify-center lg:justify-start gap-3">
-                        <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm group hover:scale-110 transition-transform">
-                            <Heart className="w-5 h-5 text-primary fill-primary" />
-                        </div>
+                        <img src="/icon.svg" alt="Peutic Logo" className="w-9 h-9 rounded-xl shadow-sm hover:scale-110 transition-transform object-cover" />
                         <span className="hidden lg:block text-xl font-bold tracking-tight text-slate-900 dark:text-white">Peutic</span>
                     </div>
                     <nav className="flex-1 px-3 lg:px-4 py-6 lg:py-8 space-y-2 lg:space-y-3">
@@ -723,53 +743,32 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                         </header>
                         {activeTab === 'sanctuary' && dashboardUser && garden && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
-                                {expandedCanvas ? (
-                                    <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in zoom-in duration-300">
-                                        <div className="w-full max-w-7xl h-full max-h-[90vh] bg-[var(--color-bg-base)] dark:bg-black rounded-2xl shadow-2xl overflow-hidden relative border border-white/10 flex flex-col">
-                                            <button
-                                                onClick={() => setExpandedCanvas(null)}
-                                                className="absolute top-4 right-4 z-50 bg-black/50 hover:bg-red-500 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-lg"
-                                            >
-                                                <X className="w-6 h-6" />
-                                            </button>
-                                            <div className="flex-1 w-full h-full relative overflow-y-auto">
-                                                {expandedCanvas === 'garden' ? (
-                                                    <GardenFullView isEmbedded={false} garden={garden} user={dashboardUser} onClose={() => setExpandedCanvas(null)} onUpdate={refreshGarden} />
-                                                ) : (
-                                                    <LuminaView isEmbedded={false} user={dashboardUser} onClose={() => setExpandedCanvas(null)} />
-                                                )}
-                                            </div>
-                                        </div>
+                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">                                <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-[600px] min-h-[calc(100vh-28rem)] relative z-10 transition-all">
+                                <div
+                                    onClick={() => setExpandedCanvas('garden')}
+                                    className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#050a05]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
+                                >
+                                    <div className="absolute inset-x-0 top-0 p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span className="font-bold tracking-widest uppercase text-xs text-white">Inner Garden</span>
+                                        <Maximize2 className="w-5 h-5 text-white animate-pulse" />
                                     </div>
-                                ) : null}
-
-                                <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-[600px] min-h-[calc(100vh-28rem)] relative z-10 transition-all">
-                                    <div
-                                        onClick={() => setExpandedCanvas('garden')}
-                                        className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#050a05]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
-                                    >
-                                        <div className="absolute inset-x-0 top-0 p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <span className="font-bold tracking-widest uppercase text-xs text-white">Inner Garden</span>
-                                            <Maximize2 className="w-5 h-5 text-white animate-pulse" />
-                                        </div>
-                                        <div className="absolute inset-0 pointer-events-none group-hover:pointer-events-auto">
-                                            <GardenFullView isEmbedded={true} garden={garden} user={dashboardUser} onClose={() => { }} onUpdate={refreshGarden} />
-                                        </div>
-                                    </div>
-                                    <div
-                                        onClick={() => setExpandedCanvas('lumina')}
-                                        className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#0a0a0a]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
-                                    >
-                                        <div className="absolute inset-x-0 top-0 p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <span className="font-bold tracking-widest uppercase text-xs text-white">Lumina Companion</span>
-                                            <Maximize2 className="w-5 h-5 text-white animate-pulse" />
-                                        </div>
-                                        <div className="absolute inset-0 pointer-events-none group-hover:pointer-events-auto">
-                                            <LuminaView isEmbedded={true} user={dashboardUser} onClose={() => { }} />
-                                        </div>
+                                    <div className="absolute inset-0 pointer-events-none group-hover:pointer-events-auto">
+                                        <GardenFullView isEmbedded={true} garden={garden} user={dashboardUser} onClose={() => { }} onUpdate={refreshGarden} />
                                     </div>
                                 </div>
+                                <div
+                                    onClick={() => setExpandedCanvas('lumina')}
+                                    className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#0a0a0a]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
+                                >
+                                    <div className="absolute inset-x-0 top-0 p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span className="font-bold tracking-widest uppercase text-xs text-white">Lumina Companion</span>
+                                        <Maximize2 className="w-5 h-5 text-white animate-pulse" />
+                                    </div>
+                                    <div className="absolute inset-0 pointer-events-none group-hover:pointer-events-auto">
+                                        <LuminaView isEmbedded={true} user={dashboardUser} onClose={() => { }} />
+                                    </div>
+                                </div>
+                            </div>
                                 <div className="space-y-4">
                                     <h3 className="font-bold text-slate-800 dark:text-slate-300 px-2 uppercase tracking-widest text-[10px]">Arcade & Utility</h3>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -958,31 +957,79 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                                     <div className={`transition-[grid-template-rows] duration-300 grid md:hidden ${openSection === 'sanctuary' ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                                         <div className="overflow-hidden">
-                                            <div className="w-full animate-in fade-in slide-in-from-top-2">
-                                                <div className="grid grid-cols-2 gap-3 w-full p-1 pb-3">
-                                                    <div onClick={() => { setExpandedCanvas('garden'); setOpenSection(null); }} className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl border-0 shadow-sm hover:shadow-sm hover:-translate-y-1 transition-all overflow-hidden flex flex-col items-center justify-center h-[120px] cursor-pointer">
-                                                        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-700 rounded-xl flex items-center justify-center text-white shadow-sm mb-2 group-hover:scale-110 transition-transform"><Leaf className="w-6 h-6" /></div>
-                                                        <span className="font-black text-xs text-green-700 dark:text-green-300 uppercase tracking-[0.1em]">Garden</span>
+                                            <div className="w-full animate-in fade-in slide-in-from-top-2 p-2 pt-0">
+                                                <div className="grid grid-cols-3 gap-1 w-full">
+                                                    <div onClick={() => { setExpandedCanvas('garden'); setOpenSection(null); }} className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl border-0 shadow-[0_8px_32px_rgba(34,197,94,0.15)] hover:shadow-[0_8px_32px_rgba(34,197,94,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] cursor-pointer">
+                                                        <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-600/5 pointer-events-none"></div>
+                                                        <div className="flex-1 p-2 relative flex flex-col items-center justify-center text-center">
+                                                            <div className="relative mb-1">
+                                                                <div className="absolute -inset-4 bg-green-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-700 border border-green-400/50 rounded-lg flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
+                                                                    <Leaf className="w-5 h-5 text-white" />
+                                                                </div>
+                                                            </div>
+                                                            <h3 className="text-[7px] font-black text-green-700 dark:text-green-300 uppercase tracking-[0.2em] mb-1">Garden</h3>
+                                                        </div>
                                                     </div>
-                                                    <Link to="/book-of-you" className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl border-0 shadow-sm hover:shadow-sm hover:-translate-y-1 transition-all overflow-hidden flex flex-col items-center justify-center h-[120px] cursor-pointer">
-                                                        <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-amber-700 rounded-xl flex items-center justify-center text-white shadow-sm mb-2 group-hover:scale-110 transition-transform"><BookOpen className="w-6 h-6" /></div>
-                                                        <span className="font-black text-xs text-amber-700 dark:text-amber-300 uppercase tracking-[0.1em]">Book of You</span>
+                                                    <Link to="/book-of-you" className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl border-0 shadow-[0_8px_32px_rgba(234,179,8,0.15)] hover:shadow-[0_8px_32px_rgba(234,179,8,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] cursor-pointer">
+                                                        <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-amber-600/5 pointer-events-none"></div>
+                                                        <div className="flex-1 p-2 relative flex flex-col items-center justify-center text-center">
+                                                            <div className="relative mb-1">
+                                                                <div className="absolute -inset-4 bg-yellow-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                                <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-amber-700 border border-yellow-400/50 rounded-lg flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
+                                                                    <BookOpen className="w-5 h-5 text-white" />
+                                                                </div>
+                                                            </div>
+                                                            <h3 className="text-[7px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-[0.2em] mb-1">Book of You</h3>
+                                                        </div>
                                                     </Link>
-                                                    <div onClick={() => { setExpandedCanvas('lumina'); setOpenSection(null); }} className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl border-0 shadow-sm hover:shadow-sm hover:-translate-y-1 transition-all overflow-hidden flex flex-col items-center justify-center h-[120px] cursor-pointer">
-                                                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-700 rounded-xl flex items-center justify-center text-white shadow-sm mb-2 group-hover:scale-110 transition-transform"><Sparkles className="w-6 h-6" /></div>
-                                                        <span className="font-black text-xs text-blue-700 dark:text-blue-300 uppercase tracking-[0.1em]">Lumina</span>
+                                                    <div onClick={() => { setExpandedCanvas('lumina'); setOpenSection(null); }} className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl border-0 shadow-[0_8px_32px_rgba(59,130,246,0.15)] hover:shadow-[0_8px_32px_rgba(59,130,246,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] cursor-pointer">
+                                                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-600/5 pointer-events-none"></div>
+                                                        <div className="flex-1 p-2 relative flex flex-col items-center justify-center text-center">
+                                                            <div className="relative mb-1">
+                                                                <div className="absolute -inset-4 bg-blue-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-700 border border-blue-400/50 rounded-lg flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
+                                                                    <Sparkles className="w-5 h-5 text-white" />
+                                                                </div>
+                                                            </div>
+                                                            <h3 className="text-[7px] font-black text-blue-700 dark:text-blue-300 uppercase tracking-[0.2em] mb-1">Lumina</h3>
+                                                        </div>
                                                     </div>
-                                                    <div onClick={() => handleRoomInteraction('observatory', 25)} className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl border-0 shadow-sm hover:shadow-sm hover:-translate-y-1 transition-all overflow-hidden flex flex-col items-center justify-center h-[120px] cursor-pointer">
-                                                        <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-700 rounded-xl flex items-center justify-center text-white shadow-sm mb-2 group-hover:scale-110 transition-transform"><Moon className="w-6 h-6" /></div>
-                                                        <span className="font-black text-xs text-indigo-700 dark:text-indigo-300 uppercase tracking-[0.1em]">Oracle</span>
+                                                    <div onClick={() => handleRoomInteraction('observatory', 25)} className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl border-0 shadow-[0_8px_32px_rgba(99,102,241,0.15)] hover:shadow-[0_8px_32px_rgba(99,102,241,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] cursor-pointer">
+                                                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-600/5 pointer-events-none"></div>
+                                                        <div className="flex-1 p-2 relative flex flex-col items-center justify-center text-center">
+                                                            <div className="relative mb-1">
+                                                                <div className="absolute -inset-4 bg-indigo-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-700 border border-indigo-400/50 rounded-lg flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
+                                                                    <Moon className="w-5 h-5 text-white" />
+                                                                </div>
+                                                            </div>
+                                                            <h3 className="text-[7px] font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-[0.2em] mb-1">Oracle</h3>
+                                                        </div>
                                                     </div>
-                                                    <div onClick={() => handleRoomInteraction('dojo', 15)} className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl border-0 shadow-sm hover:shadow-sm hover:-translate-y-1 transition-all overflow-hidden flex flex-col items-center justify-center h-[120px] cursor-pointer">
-                                                        <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-700 rounded-xl flex items-center justify-center text-white shadow-sm mb-2 group-hover:scale-110 transition-transform"><Zap className="w-6 h-6" /></div>
-                                                        <span className="font-black text-xs text-amber-700 dark:text-amber-300 uppercase tracking-[0.1em]">Zen Dojo</span>
+                                                    <div onClick={() => handleRoomInteraction('dojo', 15)} className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl border-0 shadow-[0_8px_32px_rgba(245,158,11,0.15)] hover:shadow-[0_8px_32px_rgba(245,158,11,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] cursor-pointer">
+                                                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-600/5 pointer-events-none"></div>
+                                                        <div className="flex-1 p-2 relative flex flex-col items-center justify-center text-center">
+                                                            <div className="relative mb-1">
+                                                                <div className="absolute -inset-4 bg-amber-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-700 border border-amber-400/50 rounded-lg flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
+                                                                    <Zap className="w-5 h-5 text-white" />
+                                                                </div>
+                                                            </div>
+                                                            <h3 className="text-[7px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-[0.2em] mb-1">Zen Dojo</h3>
+                                                        </div>
                                                     </div>
-                                                    <div onClick={() => setShowShredder(true)} className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl border-0 shadow-sm hover:shadow-sm hover:-translate-y-1 transition-all overflow-hidden flex flex-col items-center justify-center h-[120px] cursor-pointer">
-                                                        <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-rose-700 rounded-xl flex items-center justify-center text-white shadow-sm mb-2 group-hover:scale-110 transition-transform"><Scissors className="w-6 h-6" /></div>
-                                                        <span className="font-black text-xs text-red-700 dark:text-red-300 uppercase tracking-[0.1em]">Shredder</span>
+                                                    <div onClick={() => setShowShredder(true)} className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl border-0 shadow-[0_8px_32px_rgba(239,68,68,0.15)] hover:shadow-[0_8px_32px_rgba(239,68,68,0.4)] hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] cursor-pointer">
+                                                        <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-600/5 pointer-events-none"></div>
+                                                        <div className="flex-1 p-2 relative flex flex-col items-center justify-center text-center">
+                                                            <div className="relative mb-1">
+                                                                <div className="absolute -inset-4 bg-red-500/20 blur-xl rounded-full animate-pulse"></div>
+                                                                <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-rose-700 border border-red-400/50 rounded-lg flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
+                                                                    <Scissors className="w-5 h-5 text-white" />
+                                                                </div>
+                                                            </div>
+                                                            <h3 className="text-[7px] font-black text-red-700 dark:text-red-300 uppercase tracking-[0.2em] mb-1">Shredder</h3>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
