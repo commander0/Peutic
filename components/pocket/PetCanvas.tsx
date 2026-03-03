@@ -142,7 +142,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
             <div className={`relative transition-all duration-700 w-full h-[80%] flex items-center justify-center ${bounceClass} ${trickClass} ${sadClass}`}>
 
                 {/* Pet scalable SVG container */}
-                <svg viewBox="-120 -120 240 240" className={`w-full h-full filter ${pet.level >= 10 ? 'drop-shadow-[0_0_25px_rgba(6,182,212,0.6)]' : 'drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]'} overflow-visible`}>
+                <svg viewBox="-180 -180 360 360" className={`w-full h-full filter ${pet.level >= 10 ? 'drop-shadow-[0_0_25px_rgba(6,182,212,0.6)]' : 'drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]'} overflow-visible`}>
 
                     <defs>
                         <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -384,7 +384,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
 
                                 {/* Level 75-99: GALACTIC OVERLORD */}
                                 {pet.level >= 75 && pet.level < 100 && (
-                                    <g className="origin-center animate-[float_10s_ease-in-out_infinite]" style={{ transform: 'scale(0.75)' }}>
+                                    <g className="origin-center animate-[float_10s_ease-in-out_infinite]" style={{ transform: 'translate(0px, 0px)' }}>
                                         {/* Multilayered Holographic Orbital Rings */}
                                         <g className="animate-[spin_40s_linear_infinite]">
                                             <ellipse cx="0" cy="0" rx="160" ry="40" fill="none" stroke={c.p} strokeWidth="2" strokeDasharray="30 60 10 30" opacity="0.6" />
@@ -437,7 +437,7 @@ const PetCanvas: React.FC<PetCanvasProps> = ({ pet, width = 300, height = 300, e
 
                                 {/* Level 100+: OMNIVERSAL BEING */}
                                 {pet.level >= 100 && (
-                                    <g className="origin-center animate-[float_15s_ease-in-out_infinite]" style={{ transform: 'scale(0.55)' }}>
+                                    <g className="origin-center animate-[float_15s_ease-in-out_infinite]" style={{ transform: 'translate(0px, 0px)' }}>
                                         {/* Massive Geometric Clockwork Background */}
                                         <g className="animate-[spin_60s_linear_infinite]">
                                             <polygon points="0,-180 155,-90 155,90 0,180 -155,90 -155,-90" fill="none" stroke={c.g} strokeWidth="1" strokeDasharray="10 5" opacity="0.3" />
