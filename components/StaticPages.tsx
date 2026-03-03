@@ -327,7 +327,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
                       <input
                         required
                         type="email"
-                        className="w-full p-3 md:p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:border-yellow-400 outline-none text-sm md:text-base dark:text-white"
+                        className="w-full p-3 md:p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:border-primary outline-none text-sm md:text-base dark:text-white"
                         placeholder="you@example.com"
                         value={email}
                         onChange={e => setEmail(e.target.value)}
@@ -337,7 +337,7 @@ const StaticPages: React.FC<StaticPageProps> = ({ type }) => {
                       <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">How can we help?</label>
                       <textarea
                         required
-                        className="w-full p-3 md:p-4 h-32 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:border-yellow-400 outline-none resize-none text-sm md:text-base dark:text-white"
+                        className="w-full p-3 md:p-4 h-32 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:border-primary outline-none resize-none text-sm md:text-base dark:text-white"
                         placeholder="Describe your issue..."
                         value={message}
                         onChange={e => setMessage(e.target.value)}

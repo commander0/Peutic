@@ -158,7 +158,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     };
 
     return (
-        <div className={isEmbedded ? "relative flex flex-col w-full h-[500px] md:h-[650px] rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm overflow-hidden bg-[#050a05] text-white animate-in fade-in duration-700 group" : "fixed inset-0 z-[100] overflow-hidden bg-[#050a05] text-white animate-in fade-in duration-700"}>
+        <div className={isEmbedded ? "relative flex flex-col w-full h-[500px] md:h-[650px] rounded-xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm overflow-hidden bg-[#050a05] text-white animate-in fade-in duration-700 group" : "fixed inset-0 z-[100] overflow-hidden bg-[#050a05] text-white animate-in fade-in duration-700"}>
 
             {/* --- ATMOSPHERIC LAYERS --- */}
 
@@ -289,7 +289,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
             {/* --- SEED SELECTION MODAL --- */}
             {showPlantSelection && (
                 <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md p-6">
-                    <div className="bg-stone-900/90 backdrop-blur-3xl border border-white/10 p-8 rounded-xl max-w-lg w-full text-center relative shadow-premium">
+                    <div className="bg-stone-900/90 backdrop-blur-3xl border border-white/10 p-8 rounded-xl max-w-lg w-full text-center relative shadow-sm">
                         <button onClick={() => setShowPlantSelection(false)} className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 text-stone-500 hover:text-white transition-colors">
                             <X className="w-5 h-5" />
                         </button>

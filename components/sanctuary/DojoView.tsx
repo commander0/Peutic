@@ -471,7 +471,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                     </div>
 
                     {/* The Circle Frame (Candle Container) */}
-                    <div className={`w-64 h-64 md:w-80 md:h-80 rounded-full border border-white/10 flex flex-col items-center justify-center relative bg-white/5 backdrop-blur-3xl shadow-premium transition-all duration-1000 shrink-0 ${isActive ? 'scale-105 border-amber-500/30 animate-ethereal-breathe shadow-sm' : ''}`}>
+                    <div className={`w-64 h-64 md:w-80 md:h-80 rounded-full border border-white/10 flex flex-col items-center justify-center relative bg-white/5 backdrop-blur-3xl shadow-sm transition-all duration-1000 shrink-0 ${isActive ? 'scale-105 border-amber-500/30 animate-ethereal-breathe shadow-sm' : ''}`}>
 
                         {/* Lumina Meditation Presence */}
                         {luminaPet && isActive && (
@@ -526,7 +526,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
 
                 {/* KOAN DISPLAY - MOVED UP FOR VISIBILITY */}
                 {koan && (
-                    <div className="mb-8 w-full max-w-lg p-8 bg-black/40 backdrop-blur-3xl border border-white/10 rounded-[2rem] text-center animate-in zoom-in duration-500 shadow-premium relative z-20">
+                    <div className="mb-8 w-full max-w-lg p-8 bg-black/40 backdrop-blur-3xl border border-white/10 rounded-xl text-center animate-in zoom-in duration-500 shadow-sm relative z-20">
                         <p className="text-xl md:text-2xl font-serif italic text-amber-200/90 leading-relaxed drop-shadow-md">"{koan}"</p>
                         <button onClick={() => setKoan(null)} className="text-[10px] text-stone-500 hover:text-stone-300 mt-4 uppercase tracking-widest font-bold">Dismiss</button>
                     </div>
@@ -536,7 +536,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                 <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
                     <button
                         onClick={(e) => { e.stopPropagation(); nextKoan(); }}
-                        className="px-6 py-3 rounded-[2rem] text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all bg-white/5 text-amber-500 border border-white/10 hover:bg-white/10 hover:text-amber-200 shadow-glass backdrop-blur-md"
+                        className="px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all bg-white/5 text-amber-500 border border-white/10 hover:bg-white/10 hover:text-amber-200 shadow-sm backdrop-blur-md"
                     >
                         <BookOpen className="w-4 h-4" />
                         Seek Wisdom
@@ -550,7 +550,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                                 windChimeRef.current.play().catch(() => { });
                             }
                         }}
-                        className={`p-3 rounded-full transition-all border backdrop-blur-md ${soundEnabled ? 'bg-amber-500/10 text-amber-400 border-amber-500/40 shadow-glass' : 'bg-white/5 text-stone-400 border-white/10 hover:bg-white/10 hover:text-white shadow-glass-dark'}`}
+                        className={`p-3 rounded-full transition-all border backdrop-blur-md ${soundEnabled ? 'bg-amber-500/10 text-amber-400 border-amber-500/40 shadow-sm' : 'bg-white/5 text-stone-400 border-white/10 hover:bg-white/10 hover:text-white shadow-sm'}`}
                     >
                         {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                     </button>
@@ -558,7 +558,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                 </div>
 
                 {/* --- NEW SOUNDSCAPE CONTROLS --- */}
-                <div className="bg-black/40 rounded-[2rem] p-8 backdrop-blur-3xl border border-white/10 w-full max-w-lg mb-12 shadow-premium relative overflow-hidden group">
+                <div className="bg-black/40 rounded-xl p-8 backdrop-blur-3xl border border-white/10 w-full max-w-lg mb-12 shadow-sm relative overflow-hidden group">
                     <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
 
                     <h3 className="text-lg font-serif text-amber-200/80 mb-6 flex items-center justify-center gap-3 tracking-widest uppercase text-sm">

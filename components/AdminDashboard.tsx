@@ -84,7 +84,7 @@ const InputModal: React.FC<{
                         value={val}
                         onChange={e => setVal(e.target.value)}
                         placeholder={placeholder}
-                        className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white mb-6 focus:border-yellow-500 outline-none text-center font-mono"
+                        className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white mb-6 focus:border-primary outline-none text-center font-mono"
                         autoFocus
                     />
                     <div className="flex gap-3">
@@ -498,7 +498,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                                         onFocus={() => { setIsEditingPublic(true); isEditingPublicRef.current = true; }}
                                                         onBlur={() => { setIsEditingPublic(false); isEditingPublicRef.current = false; }}
                                                         placeholder="Public message (Login/Landing)..."
-                                                        className="flex-1 bg-black border border-gray-700 rounded-xl px-4 py-2 text-xs text-white focus:border-yellow-500 outline-none"
+                                                        className="flex-1 bg-black border border-gray-700 rounded-xl px-4 py-2 text-xs text-white focus:border-primary outline-none"
                                                     />
                                                     <button onClick={handleBroadcast} className="bg-yellow-600 hover:bg-yellow-700 text-black px-5 py-2 rounded-xl font-bold transition-colors text-xs">Deploy</button>
                                                     {settings.broadcastMessage && <button onClick={clearBroadcast} className="bg-gray-800 hover:bg-gray-700 text-gray-400 px-3 py-2 rounded-xl font-bold transition-colors text-xs">Clear</button>}
@@ -682,7 +682,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                             <div className="flex justify-between items-center">
                                 <h2 className="text-2xl font-black">{t('admin_user_db')}</h2>
                                 <input
-                                    className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 text-xs focus:border-yellow-500 outline-none w-64"
+                                    className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 text-xs focus:border-primary outline-none w-64"
                                     placeholder="Search users..."
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
@@ -1045,7 +1045,7 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                                 <input
                                                     type="number"
                                                     min="1"
-                                                    className="w-16 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-center font-bold text-xs text-white outline-none focus:border-yellow-500 hover:border-gray-600 transition-colors"
+                                                    className="w-16 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-center font-bold text-xs text-white outline-none focus:border-primary hover:border-gray-600 transition-colors"
                                                     key={settings.maxConcurrentSessions} // Force re-render on external update
                                                     defaultValue={settings.maxConcurrentSessions}
                                                     onKeyDown={(e) => {

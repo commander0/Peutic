@@ -46,7 +46,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                     <>
                         {/* Mobile Modal Overlay */}
                         <div className="fixed inset-0 z-[1000] bg-black/40 backdrop-blur-sm md:hidden flex items-end sm:items-center justify-center p-4 animate-in fade-in" onClick={() => setIsOpen(false)}>
-                            <div className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-[2rem] p-4 shadow-2xl border border-gray-100 dark:border-gray-800 animate-in slide-in-from-bottom-8 sm:zoom-in-95" onClick={(e) => e.stopPropagation()}>
+                            <div className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-xl p-4 shadow-2xl border border-gray-100 dark:border-gray-800 animate-in slide-in-from-bottom-8 sm:zoom-in-95" onClick={(e) => e.stopPropagation()}>
                                 <h3 className="text-center font-black mb-4 text-gray-800 dark:text-gray-200 uppercase tracking-widest text-[10px]">Select Language</h3>
                                 <div className="space-y-2">
                                     {LANGUAGES.map((lang) => (

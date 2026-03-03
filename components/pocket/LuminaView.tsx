@@ -302,7 +302,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
     if (showSelection) {
         return (
             <div className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-md text-white font-sans flex flex-col items-center justify-center p-6">
-                <div className="w-full max-w-md bg-stone-900/90 backdrop-blur-3xl border border-white/10 p-10 rounded-[2rem] shadow-premium">
+                <div className="w-full max-w-md bg-stone-900/90 backdrop-blur-3xl border border-white/10 p-10 rounded-xl shadow-sm">
                     <h2 className="text-3xl font-black mb-8 text-center tracking-tight text-white">Choose Companion</h2>
 
                     <div className="grid grid-cols-2 gap-4 mb-8">
@@ -340,7 +340,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
                                 <button
                                     onClick={handleCreatePet}
                                     disabled={!petName.trim() || isCreating}
-                                    className="w-full bg-white text-black hover:bg-gray-200 disabled:bg-white/10 disabled:text-white/40 font-black p-4 rounded-lg tracking-widest hover:shadow-premium transition-all cursor-pointer relative z-50 flex items-center justify-center gap-2"
+                                    className="w-full bg-white text-black hover:bg-gray-200 disabled:bg-white/10 disabled:text-white/40 font-black p-4 rounded-lg tracking-widest hover:shadow-sm transition-all cursor-pointer relative z-50 flex items-center justify-center gap-2"
                                 >
                                     {isCreating ? (
                                         <>Initializing <Sparkles className="w-4 h-4 animate-spin" /></>
@@ -359,7 +359,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
     if (!pet) return null;
 
     return (
-        <div className={isEmbedded ? "relative flex flex-col w-full h-[500px] md:h-[650px] rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm overflow-hidden bg-gradient-to-b from-[#0a0a0a] to-[#121212] text-white/90 font-sans tracking-wide" : "fixed inset-0 z-[120] bg-gradient-to-b from-[#0a0a0a] to-[#121212] text-white/90 font-sans tracking-wide overflow-hidden"}>
+        <div className={isEmbedded ? "relative flex flex-col w-full h-[500px] md:h-[650px] rounded-xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm overflow-hidden bg-gradient-to-b from-[#0a0a0a] to-[#121212] text-white/90 font-sans tracking-wide" : "fixed inset-0 z-[120] bg-gradient-to-b from-[#0a0a0a] to-[#121212] text-white/90 font-sans tracking-wide overflow-hidden"}>
 
             {/* --- CYBER / PROGRESSIVE BACKGROUNDS --- */}
             {pet.level < 30 && (
@@ -626,7 +626,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
 };
 
 const StatusHolo: React.FC<{ icon: any, value: number, label: string, compact?: boolean }> = ({ icon: Icon, value, label, compact }) => (
-    <div className="flex flex-col items-center gap-2 group p-4 bg-white/5 border border-white/10 rounded-[2rem] backdrop-blur-md shadow-glass-dark">
+    <div className="flex flex-col items-center gap-2 group p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-md shadow-sm">
         <Icon className={`w-5 h-5 text-white/80 ${value < 30 ? 'animate-pulse text-red-400' : ''}`} />
         {!compact && <span className="text-[10px] font-bold text-white/50 tracking-widest uppercase">{label}</span>}
         <div className="w-1.5 h-12 bg-black/40 rounded-full overflow-hidden shadow-inner hidden md:block">
@@ -640,8 +640,8 @@ const CyberBtn: React.FC<{ icon: any, label: string, onClick: () => void, color?
         <button
             onClick={onClick}
             className={`
-                group relative px-2 py-2 md:px-6 md:py-5 rounded-xl md:rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-md flex flex-col items-center gap-1 md:gap-2
-                transition-all duration-300 active:scale-95 hover:bg-white/10 hover:shadow-glass hover:-translate-y-1
+                group relative px-2 py-2 md:px-6 md:py-5 rounded-xl md:rounded-xl bg-white/5 border border-white/10 backdrop-blur-md flex flex-col items-center gap-1 md:gap-2
+                transition-all duration-300 active:scale-95 hover:bg-white/10 hover:shadow-sm hover:-translate-y-1
             `}
         >
             <div className={`w-8 h-8 md:w-12 md:h-12 rounded-full flex items-center justify-center bg-${color}-500/10 group-hover:bg-${color}-500/20 transition-colors`}>

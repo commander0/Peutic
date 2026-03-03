@@ -248,7 +248,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                             style={{ transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`, transition: tilt.x === 0 && tilt.y === 0 ? 'transform 0.5s ease-out' : 'transform 0.05s linear' }}
                         >
                             <div
-                                className="relative aspect-[4/5] bg-gray-900 rounded-[2rem] overflow-hidden shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] border border-white/20 dark:border-white/10 group z-10"
+                                className="relative aspect-[4/5] bg-gray-900 rounded-xl overflow-hidden shadow-lg border border-white/20 dark:border-white/10 group z-10"
                                 style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)', maskImage: 'radial-gradient(white, black)' }}
                             >
                                 <img src={INITIAL_COMPANIONS[0].imageUrl} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 opacity-90 group-hover:opacity-100" alt="Ruby" />
@@ -346,7 +346,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* Testimonial 1 */}
-                        <div className="bg-white dark:bg-gray-900 p-8 rounded-[2rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-none border border-yellow-100 dark:border-gray-800 relative group hover:-translate-y-2 transition-transform duration-500">
+                        <div className="bg-white dark:bg-gray-900 p-8 rounded-xl shadow-md dark:shadow-none border border-yellow-100 dark:border-gray-800 relative group hover:-translate-y-2 transition-transform duration-500">
                             <Quote className="w-8 h-8 text-yellow-200 dark:text-yellow-900/50 absolute top-6 right-8 group-hover:scale-110 transition-transform" />
                             <div className="flex text-yellow-500 mb-4">
                                 {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
@@ -362,7 +362,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         </div>
 
                         {/* Testimonial 2 */}
-                        <div className="bg-white dark:bg-gray-900 p-8 rounded-[2rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-none border border-yellow-100 dark:border-gray-800 relative group hover:-translate-y-2 transition-transform duration-500 md:-translate-y-4">
+                        <div className="bg-white dark:bg-gray-900 p-8 rounded-xl shadow-md dark:shadow-none border border-yellow-100 dark:border-gray-800 relative group hover:-translate-y-2 transition-transform duration-500 md:-translate-y-4">
                             <Quote className="w-8 h-8 text-yellow-200 dark:text-yellow-900/50 absolute top-6 right-8 group-hover:scale-110 transition-transform" />
                             <div className="flex text-yellow-500 mb-4">
                                 {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
@@ -378,7 +378,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         </div>
 
                         {/* Testimonial 3 */}
-                        <div className="bg-white dark:bg-gray-900 p-8 rounded-[2rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-none border border-yellow-100 dark:border-gray-800 relative group hover:-translate-y-2 transition-transform duration-500">
+                        <div className="bg-white dark:bg-gray-900 p-8 rounded-xl shadow-md dark:shadow-none border border-yellow-100 dark:border-gray-800 relative group hover:-translate-y-2 transition-transform duration-500">
                             <Quote className="w-8 h-8 text-yellow-200 dark:text-yellow-900/50 absolute top-6 right-8 group-hover:scale-110 transition-transform" />
                             <div className="flex text-yellow-500 mb-4">
                                 {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
@@ -492,7 +492,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 </div>
             </footer>
             {showCookies && (
-                <div className="fixed bottom-6 md:bottom-8 left-0 right-0 mx-auto w-[90%] max-w-2xl bg-[#FFFBEB] dark:bg-gray-900 text-black dark:text-white p-4 md:p-6 z-[100] rounded-lg md:rounded-[2rem] border-2 border-yellow-400 shadow-2xl animate-slide-up-fade">
+                <div className="fixed bottom-6 md:bottom-8 left-0 right-0 mx-auto w-[90%] max-w-2xl bg-[#FFFBEB] dark:bg-gray-900 text-black dark:text-white p-4 md:p-6 z-[100] rounded-lg md:rounded-xl border-2 border-yellow-400 shadow-2xl animate-slide-up-fade">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 text-center md:text-left">
                         <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
                             <Cookie className="w-8 h-8 md:w-10 md:h-10 text-yellow-600" />

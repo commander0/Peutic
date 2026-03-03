@@ -92,7 +92,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
 
     return (
         <div className="fixed inset-0 bg-black/60 dark:bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in">
-            <div className="bg-white/95 dark:bg-black/90 backdrop-blur-3xl w-full max-w-2xl h-[90vh] md:h-auto md:max-h-[85vh] rounded-[2rem] p-0 border border-white/20 dark:border-white/10 shadow-premium dark:shadow-glass-dark relative flex flex-col overflow-hidden">
+            <div className="bg-white/95 dark:bg-black/90 backdrop-blur-3xl w-full max-w-2xl h-[90vh] md:h-auto md:max-h-[85vh] rounded-xl p-0 border border-white/20 dark:border-white/10 shadow-sm dark:shadow-sm relative flex flex-col overflow-hidden">
 
                 {/* HEADER */}
                 <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
@@ -136,7 +136,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
                                         </button>
                                     </div>
                                     <input
-                                        className="w-full text-[10px] p-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-yellow-500 mb-3 font-mono"
+                                        className="w-full text-[10px] p-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-primary mb-3 font-mono"
                                         value={previewAvatar.split('seed=')[1]?.split('&')[0] || ''}
                                         onChange={(e) => setPreviewAvatar(`https://api.dicebear.com/7.x/lorelei/svg?seed=${e.target.value}&backgroundColor=FCD34D`)}
                                         placeholder="Enter Style Seed..."
@@ -150,7 +150,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onUpdate }) 
                                 </div>
                             </div>
 
-                            <div><label className="text-xs font-bold text-gray-500 uppercase block mb-2">Display Name</label><input className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 outline-none dark:text-white" value={name} onChange={e => setName(e.target.value)} /></div>
+                            <div><label className="text-xs font-bold text-gray-500 uppercase block mb-2">Display Name</label><input className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-primary outline-none dark:text-white" value={name} onChange={e => setName(e.target.value)} /></div>
                             <div><label className="text-xs font-bold text-gray-500 uppercase block mb-2">Email</label><input className="w-full p-3 bg-gray-100 dark:bg-gray-800/50 border border-transparent rounded-xl text-gray-500 cursor-not-allowed" value={user.email} disabled /></div>
 
                             {/* NOTIFICATIONS */}

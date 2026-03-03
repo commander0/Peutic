@@ -143,7 +143,7 @@ const CollapsibleSection = React.memo(({ title, icon: Icon, children, defaultOpe
     return (
         <div className="bg-transparent overflow-hidden transition-all duration-300">
             {/* Unified subtle header without boxing the entire content */}
-            <button onClick={handleToggle} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-glass">
+            <button onClick={handleToggle} className="w-full p-4 lg:p-6 flex items-center justify-between hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-sm">
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-[var(--color-primary)]/10 text-primary dark:bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
                         <Icon className="w-5 h-5" />
@@ -686,7 +686,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         </button>
 
 
-                                        <button onClick={() => setShowProfile(true)} className="shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-lg overflow-hidden border-2 border-primary shadow-premium transition-all hover:rotate-3 active:scale-90 flex-shrink-0 relative">
+                                        <button onClick={() => setShowProfile(true)} className="shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-lg overflow-hidden border-2 border-primary shadow-sm transition-all hover:rotate-3 active:scale-90 flex-shrink-0 relative">
                                             <AvatarImage
                                                 src={isGhostMode ? '' : (dashboardUser?.avatar || '')}
                                                 alt={isGhostMode ? 'Member' : (dashboardUser?.name || 'User')}
@@ -724,10 +724,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         {activeTab === 'sanctuary' && dashboardUser && garden && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
                                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 relative z-10">
-                                    <div className="bg-white/20 dark:bg-[#050a05]/40 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative">
+                                    <div className="bg-white/20 dark:bg-[#050a05]/40 backdrop-blur-xl rounded-xl border border-slate-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative">
                                         <GardenFullView isEmbedded={true} garden={garden} user={dashboardUser} onClose={() => { }} onUpdate={refreshGarden} />
                                     </div>
-                                    <div className="bg-white/20 dark:bg-[#0a0a0a]/40 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative">
+                                    <div className="bg-white/20 dark:bg-[#0a0a0a]/40 backdrop-blur-xl rounded-xl border border-slate-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative">
                                         <LuminaView isEmbedded={true} user={dashboardUser} onClose={() => { }} />
                                     </div>
                                 </div>
@@ -737,7 +737,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         {/* TILE 4: ORACLE */}
                                         <div
                                             onClick={() => handleRoomInteraction('observatory', 25)}
-                                            className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-xl border-0 ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'shadow-glass hover:shadow-premium hover:-translate-y-1' : 'grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer`}
+                                            className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-xl border-0 ${dashboardUser?.unlockedRooms?.includes('observatory') ? 'shadow-sm hover:shadow-sm hover:-translate-y-1' : 'grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer`}
                                         >
                                             <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
                                                 <div className="relative mb-1 md:mb-4">
@@ -763,7 +763,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         {/* TILE 5: ZEN DOJO */}
                                         <div
                                             onClick={() => handleRoomInteraction('dojo', 15)}
-                                            className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-xl border-0 ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'shadow-glass hover:shadow-premium hover:-translate-y-1' : 'grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer`}
+                                            className={`group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-xl border-0 ${dashboardUser?.unlockedRooms?.includes('dojo') ? 'shadow-sm hover:shadow-sm hover:-translate-y-1' : 'grayscale opacity-80'} transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer`}
                                         >
                                             <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
                                                 <div className="relative mb-1 md:mb-4">
@@ -789,7 +789,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         {/* TILE 6: THOUGHT SHREDDER */}
                                         <div
                                             onClick={() => setShowShredder(true)}
-                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-xl border-0 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
+                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-xl border-0 shadow-sm hover:shadow-sm hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
                                         >
                                             <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-600/5 pointer-events-none"></div>
                                             <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">
@@ -813,7 +813,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                                     {dashboardUser ? (
-                                        <div className="bg-white/20 dark:bg-black/20 backdrop-blur-md p-4 md:p-5 rounded-xl border border-white/20 dark:border-white/5 shadow-glass col-span-1 md:col-span-2 relative overflow-hidden group min-h-[120px] md:min-h-[140px]">
+                                        <div className="bg-white/20 dark:bg-black/20 backdrop-blur-md p-4 md:p-5 rounded-xl border border-white/20 dark:border-white/5 shadow-sm col-span-1 md:col-span-2 relative overflow-hidden group min-h-[120px] md:min-h-[140px]">
                                             {weeklyGoal >= 300 ? (
                                                 <div className="absolute top-4 right-4 z-20 flex items-center justify-center">
                                                     <div className="relative w-16 h-16 flex items-center justify-center">
@@ -864,7 +864,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                                 <div className="w-full space-y-4">
                                     <div className="grid grid-cols-2 gap-4 w-full">
-                                        <button onClick={() => setOpenSection(p => p === 'arcade' ? null : 'arcade')} className="w-full p-3 md:p-6 flex items-center justify-center md:justify-between hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center md:text-left bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-glass">
+                                        <button onClick={() => setOpenSection(p => p === 'arcade' ? null : 'arcade')} className="w-full p-3 md:p-6 flex items-center justify-center md:justify-between hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center md:text-left bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-sm">
                                             <div className="flex items-center gap-2 md:gap-3 flex-col md:flex-row mx-auto md:mx-0">
                                                 <div className="p-2 rounded-xl bg-[var(--color-primary)]/10 text-primary dark:bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
                                                     <Gamepad2 className="w-5 h-5 md:w-6 md:h-6" />
@@ -875,7 +875,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 {openSection === 'arcade' ? <ChevronUp className="w-4 h-4 md:w-5 md:h-5 opacity-50" /> : <ChevronDown className="w-4 h-4 md:w-5 md:h-5 opacity-50" />}
                                             </div>
                                         </button>
-                                        <button onClick={() => setOpenSection(p => p === 'journal' ? null : 'journal')} className="w-full p-3 md:p-6 flex items-center justify-center md:justify-between hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center md:text-left bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-glass">
+                                        <button onClick={() => setOpenSection(p => p === 'journal' ? null : 'journal')} className="w-full p-3 md:p-6 flex items-center justify-center md:justify-between hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center md:text-left bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-sm">
                                             <div className="flex items-center gap-2 md:gap-3 flex-col md:flex-row mx-auto md:mx-0">
                                                 <div className="p-2 rounded-xl bg-[var(--color-primary)]/10 text-primary dark:bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
                                                     <Feather className="w-5 h-5 md:w-6 md:h-6" />
@@ -896,7 +896,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                         {/* TILE 1: MINDFUL MATCH */}
                                                         <div
                                                             onClick={() => setShowMatchGame(true)}
-                                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-xl border-0 shadow-glass hover:shadow-premium hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
+                                                            className="group relative bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-xl md:rounded-xl border-0 shadow-sm hover:shadow-sm hover:-translate-y-1 transition-all overflow-hidden flex flex-col h-[100px] md:h-[160px] cursor-pointer"
                                                         >
                                                             <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-pink-600/5 pointer-events-none"></div>
                                                             <div className="flex-1 p-2 md:p-4 relative flex flex-col items-center justify-center text-center">

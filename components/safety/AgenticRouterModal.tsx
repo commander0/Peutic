@@ -33,7 +33,7 @@ const AgenticRouterModal: React.FC<AgenticRouterModalProps> = ({ message, onClos
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/20 rounded-full blur-[100px] animate-pulse-slow"></div>
             </div>
 
-            <div className="relative w-full max-w-lg bg-[#0a0a0a] border border-white/10 rounded-[2rem] p-8 shadow-2xl overflow-hidden">
+            <div className="relative w-full max-w-lg bg-[#0a0a0a] border border-white/10 rounded-xl p-8 shadow-2xl overflow-hidden">
                 {/* Tech scan line */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-50"></div>
 

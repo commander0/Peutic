@@ -261,7 +261,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                         <input
                                             type="password"
                                             required
-                                            className="w-full bg-black border border-yellow-500/30 rounded-xl p-4 pl-12 text-white focus:border-yellow-500 outline-none transition-colors"
+                                            className="w-full bg-black border border-yellow-500/30 rounded-xl p-4 pl-12 text-white focus:border-primary outline-none transition-colors"
                                             placeholder="MASTER SECURITY KEY"
                                             value={claimMasterKey}
                                             onChange={e => setClaimMasterKey(e.target.value)}
@@ -275,10 +275,10 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                         </button>
                                     </div>
 
-                                    <input type="email" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="New Admin Email" value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} />
+                                    <input type="email" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-primary outline-none transition-colors" placeholder="New Admin Email" value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} />
                                     <div className="grid grid-cols-2 gap-4">
-                                        <input type="password" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="Password" value={newAdminPassword} onChange={e => setNewAdminPassword(e.target.value)} />
-                                        <input type="password" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="Confirm" value={newAdminConfirmPassword} onChange={e => setNewAdminConfirmPassword(e.target.value)} />
+                                        <input type="password" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-primary outline-none transition-colors" placeholder="Password" value={newAdminPassword} onChange={e => setNewAdminPassword(e.target.value)} />
+                                        <input type="password" required className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-primary outline-none transition-colors" placeholder="Confirm" value={newAdminConfirmPassword} onChange={e => setNewAdminConfirmPassword(e.target.value)} />
                                     </div>
                                     <button disabled={loading} className="w-full bg-yellow-500 text-black font-black py-4 rounded-xl hover:bg-yellow-400 transition-colors mt-4 shadow-lg shadow-yellow-500/20 uppercase tracking-widest text-sm">
                                         {loading ? "INITIALIZING..." : "CREATE ADMIN ACCOUNT"}
@@ -295,11 +295,11 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Admin Identifier</label>
-                                        <input type="email" className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="admin@peutic.com" value={email} onChange={e => setEmail(e.target.value)} />
+                                        <input type="email" className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-primary outline-none transition-colors" placeholder="admin@peutic.com" value={email} onChange={e => setEmail(e.target.value)} />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Secure Key</label>
-                                        <input type="password" className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-yellow-500 outline-none transition-colors" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} />
+                                        <input type="password" className="w-full bg-black border border-gray-700 rounded-xl p-4 text-white focus:border-primary outline-none transition-colors" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} />
                                     </div>
                                     <button type="submit" disabled={loading} className="w-full bg-white hover:bg-gray-200 text-black font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02]">
                                         {loading ? <span className="animate-pulse">Authenticating...</span> : <><KeyRound className="w-4 h-4" /> ACCESS TERMINAL</>}

@@ -354,7 +354,7 @@ const GroundingMode: React.FC<GroundingModeProps> = ({ onClose }) => {
                         </div>
                         <button
                             onClick={handleTap}
-                            className="w-full py-6 bg-white/10 hover:bg-white/20 border-t border-white/30 text-white rounded-[2rem] font-bold text-2xl tracking-wide hover:scale-105 active:scale-95 transition-all shadow-2xl backdrop-blur-xl flex items-center justify-center gap-4 group"
+                            className="w-full py-6 bg-white/10 hover:bg-white/20 border-t border-white/30 text-white rounded-xl font-bold text-2xl tracking-wide hover:scale-105 active:scale-95 transition-all shadow-2xl backdrop-blur-xl flex items-center justify-center gap-4 group"
                         >
                             {counter + 1 >= currentStep.count ? (
                                 <span className="flex items-center gap-3 group-hover:translate-x-2 transition-transform drop-shadow-md">Complete <ArrowRight className="w-7 h-7" /></span>
