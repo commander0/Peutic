@@ -118,25 +118,18 @@
    ----------------------------------------------------------------------------- */
 /* 1. SUNSHINE (Vibrant Yellow Default) */
 [data-theme="sunshine"] {
-    --color-bg-base: #FACC15;
-    /* yellow-400 */
+    --color-bg-base: #FFFBEB;
     --color-bg-surface: #FEF08A;
-    /* yellow-200 */
     --color-text-base: #422006;
-    /* yellow-950 */
     --color-border-subtle: #FDE047;
-    /* yellow-300 */
     --color-primary: #A16207;
-    /* yellow-700 */
     --color-primary-light: #FEF08A;
     --color-primary-border: #FDE047;
 }
 
 .dark[data-theme="sunshine"] {
-    --color-bg-base: #422006;
-    /* yellow-950 */
-    --color-bg-surface: #713F12;
-    /* yellow-900 */
+    --color-bg-base: #000000;
+    --color-bg-surface: #111111;
     --color-text-base: #FEF08A;
     --color-primary: #FACC15;
     --color-primary-light: rgba(250, 204, 21, 0.1);

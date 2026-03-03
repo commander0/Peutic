@@ -170,7 +170,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'hub' | 'sanctuary' | 'history' | 'settings'>('hub');
     const [expandedCanvas, setExpandedCanvas] = useState<'garden' | 'lumina' | null>(null);
-    const [openSection, setOpenSection] = useState<'arcade' | 'journal' | null>(null);
+    const [openSection, setOpenSection] = useState<'arcade' | 'journal' | 'sanctuary' | null>(null);
 
     // STRICT ADMIN REDIRECT
     useEffect(() => {
@@ -920,6 +920,32 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 </div>
 
                                 <div className="w-full space-y-2 md:space-y-4">
+                                    <div className="md:hidden w-full">
+                                        <button onClick={() => setOpenSection(p => p === 'sanctuary' ? null : 'sanctuary')} className="w-full py-2.5 px-3 flex items-center justify-center hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-sm">
+                                            <div className="flex items-center gap-2 flex-col mx-auto">
+                                                <div className="p-1.5 rounded-xl bg-[var(--color-primary)]/10 text-primary dark:bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
+                                                    <Sparkles className="w-4 h-4" />
+                                                </div>
+                                                <span className="font-bold text-xs tracking-wide opacity-90 truncate">Sanctuary</span>
+                                            </div>
+                                        </button>
+                                    </div>
+                                    <div className={`transition-[grid-template-rows] duration-300 grid md:hidden ${openSection === 'sanctuary' ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                                        <div className="overflow-hidden">
+                                            <div className="w-full animate-in fade-in slide-in-from-top-2">
+                                                <div className="flex flex-col gap-4">
+                                                    <div onClick={() => setExpandedCanvas('garden')} className="bg-[var(--color-bg-base)] dark:bg-black/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative h-[300px] cursor-pointer group">
+                                                        <GardenFullView isEmbedded={true} garden={garden!} user={dashboardUser} onClose={() => { }} onUpdate={refreshGarden} />
+                                                        <div className="absolute inset-x-0 top-0 p-3 bg-gradient-to-b from-black/50 to-transparent z-20 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity"><span className="font-bold tracking-widest text-xs text-white uppercase">Inner Garden</span><Maximize2 className="w-4 h-4 text-white" /></div>
+                                                    </div>
+                                                    <div onClick={() => setExpandedCanvas('lumina')} className="bg-[var(--color-bg-base)] dark:bg-black/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative h-[300px] cursor-pointer group">
+                                                        <LuminaView isEmbedded={true} user={dashboardUser} onClose={() => { }} />
+                                                        <div className="absolute inset-x-0 top-0 p-3 bg-gradient-to-b from-black/50 to-transparent z-20 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity"><span className="font-bold tracking-widest text-xs text-white uppercase">Lumina</span><Maximize2 className="w-4 h-4 text-white" /></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div className="grid grid-cols-2 gap-4 w-full">
                                         <button onClick={() => setOpenSection(p => p === 'arcade' ? null : 'arcade')} className="w-full py-2.5 px-3 md:p-5 flex items-center justify-center md:justify-between hover:bg-[var(--color-primary)]/5 rounded-lg transition-colors group border border-transparent hover:border-[var(--color-primary)]/10 text-center md:text-left bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-sm">
                                             <div className="flex items-center gap-2 md:gap-3 flex-col md:flex-row mx-auto md:mx-0">
