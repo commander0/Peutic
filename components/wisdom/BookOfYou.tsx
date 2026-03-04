@@ -11,7 +11,8 @@ const BookOfYou: React.FC = () => {
     const [arts, setArts] = useState<ArtEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [isLocked, setIsLocked] = useState(true);
-    const [moodRatio, setMoodRatio] = useState({ sun: 0, rain: 0 }); // Percentages
+    const [availableVolumes, setAvailableVolumes] = useState<{ key: string, label: string }[]>([]);
+    const [activeVolumeIndex, setActiveVolumeIndex] = useState(0);
 
     useEffect(() => {
         const loadData = async () => {
@@ -42,15 +43,35 @@ const BookOfYou: React.FC = () => {
                 setMoods(m);
                 setArts(a);
 
-                // Calculate Mood Ratio
-                const total = m.length;
-                if (total > 0) {
-                    const sunCount = m.filter(x => x.mood && ['Happy', 'Calm', 'confetti', 'sun'].includes(x.mood)).length;
-                    const sunPct = (sunCount / total) * 100;
-                    setMoodRatio({ sun: sunPct, rain: 100 - sunPct });
-                } else {
-                    setMoodRatio({ sun: 50, rain: 50 }); // Default balanced
+                const volumeKeys = new Set<string>();
+                const addVolumeKey = (dateStr: string) => {
+                    if (!dateStr) return;
+                    const d = new Date(dateStr);
+                    if (!isNaN(d.getTime())) {
+                        volumeKeys.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+                    }
+                };
+
+                j.forEach(x => addVolumeKey(x.date));
+                m.forEach(x => addVolumeKey(x.date));
+                a.forEach(x => addVolumeKey(x.createdAt));
+
+                const sortedKeys = Array.from(volumeKeys).sort().reverse();
+                if (sortedKeys.length === 0) {
+                    const today = new Date();
+                    sortedKeys.push(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`);
                 }
+
+                const volumes = sortedKeys.map(key => {
+                    const [yy, mm] = key.split('-');
+                    const date = new Date(parseInt(yy), parseInt(mm) - 1, 1);
+                    return {
+                        key,
+                        label: date.toLocaleString('default', { month: 'long', year: 'numeric' })
+                    };
+                });
+
+                setAvailableVolumes(volumes);
             }
             setLoading(false);
         };
@@ -93,11 +114,37 @@ const BookOfYou: React.FC = () => {
 
     if (!user) return <div className="p-12 text-center text-red-500">Please log in to view your book.</div>;
 
-    // Determine Dominant Weather
+    const activeVolume = availableVolumes.length > 0 ? availableVolumes[activeVolumeIndex] : null;
+    const activeKey = activeVolume?.key || '';
+
+    const filterByVolume = (dateStr: string) => {
+        if (!dateStr || !activeKey) return false;
+        const d = new Date(dateStr);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === activeKey;
+    };
+
+    const currentJournals = journals.filter(x => filterByVolume(x.date));
+    const currentMoods = moods.filter(x => filterByVolume(x.date));
+    const currentArts = arts.filter(x => filterByVolume(x.createdAt));
+
+    let sunPct = 50;
+    let rainPct = 50;
+    if (currentMoods.length > 0) {
+        const sunCount = currentMoods.filter(x => x.mood && ['Happy', 'Calm', 'confetti', 'sun'].includes(x.mood)).length;
+        sunPct = (sunCount / currentMoods.length) * 100;
+        rainPct = 100 - sunPct;
+    }
+    const moodRatio = { sun: sunPct, rain: rainPct };
     const isSunny = moodRatio.sun >= moodRatio.rain;
 
     return (
-        <div className="min-h-[100dvh] bg-[#1a1816] text-[#2c241c] p-4 md:p-10 print:p-0 print:bg-white relative overflow-hidden flex justify-center selection:bg-[#8b7355]/30">
+        <div className="min-h-[100dvh] bg-[#1a1816] text-[#2c241c] p-4 md:p-10 print:p-8 print:bg-[#1a1816] relative overflow-hidden flex justify-center selection:bg-[#8b7355]/30">
+            <style>{`
+                @media print {
+                    @page { size: landscape; margin: 0; }
+                    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                }
+            `}</style>
 
             {/* ATMOSPHERIC SURROUNDINGS */}
             <div className="fixed inset-0 pointer-events-none z-0">
@@ -110,7 +157,7 @@ const BookOfYou: React.FC = () => {
             </div>
 
             {/* THE TOME BINDING (MOBILE/DESKTOP CONTAINER) */}
-            <div className="w-full max-w-2xl bg-[#f4ebd8] shadow-[0_30px_60px_rgba(0,0,0,0.8),inset_0_0_100px_rgba(139,115,85,0.1)] rounded-sm md:rounded-r-2xl border-l-[16px] border-[#4a3b2c] min-h-[90vh] print:shadow-none print:border-none print:w-full relative z-10 before:content-[''] before:absolute before:inset-2 md:before:inset-4 before:border-2 before:border-[#8b7355]/20 before:pointer-events-none overflow-hidden pb-32">
+            <div className="w-full max-w-4xl bg-[#f4ebd8] shadow-[0_30px_60px_rgba(0,0,0,0.8),inset_0_0_100px_rgba(139,115,85,0.1)] rounded-sm md:rounded-r-2xl border-l-[16px] border-[#4a3b2c] min-h-[90vh] print:shadow-xl print:w-[1000px] print:max-w-none print:mx-auto relative z-10 before:content-[''] before:absolute before:inset-2 md:before:inset-4 before:border-2 before:border-[#8b7355]/20 before:pointer-events-none overflow-hidden pb-32">
 
                 {/* PARCHMENT TEXTURE */}
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/aged-paper.png')] opacity-40 mix-blend-multiply pointer-events-none z-0"></div>
@@ -141,9 +188,16 @@ const BookOfYou: React.FC = () => {
 
                         <p className="text-lg md:text-xl text-[#5c4a3d] italic font-serif tracking-wide px-4 leading-relaxed">The living chronicle of <span className="font-bold text-[#3e3226]">{user.name}</span>.</p>
 
-                        <div className="mt-16 text-[10px] text-[#8b7355] font-black uppercase tracking-[0.4em] font-sans flex items-center justify-center gap-4">
+                        <div className="mt-16 text-[10px] text-[#8b7355] font-black uppercase tracking-[0.4em] font-sans flex flex-col items-center justify-center gap-6 print:hidden">
+                            <div className="flex items-center gap-6 bg-[#f4ebd8] px-2 py-1.5 rounded-full border border-[#8b7355]/30 shadow-sm relative z-20">
+                                <button onClick={() => setActiveVolumeIndex(Math.min(availableVolumes.length - 1, activeVolumeIndex + 1))} disabled={activeVolumeIndex === availableVolumes.length - 1} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#8b7355]/10 disabled:opacity-30 transition-all font-serif italic text-lg">&larr;</button>
+                                <span className="pt-0.5 min-w-[140px] text-center">Volume &bull; {activeVolume?.label}</span>
+                                <button onClick={() => setActiveVolumeIndex(Math.max(0, activeVolumeIndex - 1))} disabled={activeVolumeIndex === 0} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#8b7355]/10 disabled:opacity-30 transition-all font-serif italic text-lg">&rarr;</button>
+                            </div>
+                        </div>
+                        <div className="hidden print:flex mt-16 text-[10px] text-[#8b7355] font-black uppercase tracking-[0.4em] font-sans items-center justify-center gap-4">
                             <span className="w-8 h-px bg-[#8b7355]/30"></span>
-                            Volume I &bull; {new Date().getFullYear()}
+                            Volume &bull; {activeVolume?.label}
                             <span className="w-8 h-px bg-[#8b7355]/30"></span>
                         </div>
                     </div>
@@ -157,9 +211,9 @@ const BookOfYou: React.FC = () => {
                             </h2>
                         </div>
 
-                        {journals.length === 0 ? <p className="text-[#a38051] italic text-center font-serif">The pages await your ink.</p> : (
+                        {currentJournals.length === 0 ? <p className="text-[#a38051] italic text-center font-serif relative z-10">No reflections recorded for this bound volume.</p> : (
                             <div className="space-y-12">
-                                {journals.map(j => (
+                                {currentJournals.map(j => (
                                     <div key={j.id} className="relative group p-6 backdrop-blur-[2px] bg-[#ffffff]/30 rounded-sm border border-[#8b7355]/10 shadow-sm transition-all hover:bg-[#ffffff]/50 hover:shadow-md">
                                         <div className="absolute -left-[3px] top-6 w-[5px] h-12 bg-[#a38051]/60"></div>
                                         <h3 className="text-[10px] font-black text-[#8b7355] font-sans mb-3 uppercase tracking-[0.2em] border-b border-[#8b7355]/10 pb-2 inline-block">
@@ -205,8 +259,9 @@ const BookOfYou: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 opacity-80 hover:opacity-100 transition-opacity">
-                            {moods.slice(0, 8).map((m, i) => {
+                        {currentMoods.length === 0 && <p className="text-[#a38051] italic text-center font-serif -mt-8 mb-8 relative z-10 text-sm">No inner winds tracked for this volume.</p>}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 opacity-80 hover:opacity-100 transition-opacity relative z-10">
+                            {currentMoods.slice(0, 8).map((m, i) => {
                                 const isPositive = (m.mood as any) === 'confetti' || (m.mood as any) === 'Happy' || (m.mood as any) === 'Calm' || (m.mood as any) === 'sun';
                                 const isNegative = (m.mood as any) === 'rain' || (m.mood as any) === 'Anxious' || (m.mood as any) === 'Sad';
                                 let emoji = '😐'; // Default neutral
@@ -235,19 +290,19 @@ const BookOfYou: React.FC = () => {
                                 Chapter III<br /><span className="text-[#8b7355] text-xl md:text-2xl italic normal-case tracking-normal">Visions</span>
                             </h2>
                         </div>
-                        {arts.length === 0 ? <p className="text-[#a38051] italic text-center font-serif">No visions chronicled yet.</p> : (
-                            <div className="space-y-12">
-                                {arts.map((a, i) => (
+                        {currentArts.length === 0 ? <p className="text-[#a38051] italic text-center font-serif relative z-10">No visions bound to this volume.</p> : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+                                {currentArts.map((a, i) => (
                                     <div key={a.id} className="break-inside-avoid group relative">
-                                        <div className="absolute inset-0 bg-[#d4b886]/10 transform translate-x-2 translate-y-2 pointer-events-none rounded-sm"></div>
-                                        <div className={`p-4 md:p-6 bg-[#ffffff]/60 border border-[#8b7355]/20 shadow-md relative z-10 transition-transform duration-700 hover:rotate-1 ${i % 2 === 0 ? '-rotate-1' : 'rotate-[0.5deg]'}`}>
-                                            <div className="aspect-[4/3] bg-black/5 overflow-hidden border border-[#8b7355]/10 shadow-[inset_0_2px_10px_rgba(0,0,0,0.05)] mb-6">
-                                                <img src={a.imageUrl} alt={a.prompt} className="w-full h-full object-cover mix-blend-multiply opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
+                                        <div className="absolute inset-0 bg-[#d4b886]/10 transform translate-x-1.5 translate-y-1.5 pointer-events-none rounded-sm"></div>
+                                        <div className={`p-4 bg-[#ffffff]/60 border border-[#8b7355]/20 shadow-md relative z-10 transition-transform duration-700 hover:scale-[1.03] hover:z-20 ${i % 2 === 0 ? '-rotate-1' : 'rotate-[0.5deg]'}`}>
+                                            <div className="aspect-[4/3] bg-black/5 overflow-hidden border border-[#8b7355]/10 shadow-[inset_0_2px_10px_rgba(0,0,0,0.05)] mb-4">
+                                                <img src={a.imageUrl} alt={a.prompt} className="w-full h-full object-cover mix-blend-multiply opacity-90 group-hover:opacity-100 transition-all duration-700" />
                                             </div>
-                                            <div className="text-center px-4">
-                                                <p className="font-serif text-[#3e3226] italic leading-relaxed text-sm md:text-base selection:bg-[#d4b886]/40">"{a.prompt}"</p>
-                                                <div className="w-12 h-px bg-[#8b7355]/30 mx-auto my-4"></div>
-                                                <p className="text-[9px] text-[#8b7355] font-black uppercase tracking-[0.2em]">{new Date(a.createdAt).toLocaleDateString()}</p>
+                                            <div className="text-center px-1">
+                                                <p className="font-serif text-[#3e3226] italic leading-snug text-xs md:text-sm selection:bg-[#d4b886]/40 line-clamp-3" title={a.prompt}>"{a.prompt}"</p>
+                                                <div className="w-8 h-px bg-[#8b7355]/30 mx-auto my-3"></div>
+                                                <p className="text-[8px] text-[#8b7355] font-black uppercase tracking-[0.2em]">{new Date(a.createdAt).toLocaleDateString()}</p>
                                             </div>
                                         </div>
                                     </div>
