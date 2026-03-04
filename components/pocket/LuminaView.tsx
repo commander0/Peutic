@@ -224,12 +224,19 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
             return;
         }
 
-        if (action !== 'sleep' && user.balance < COST) {
-            showToast(`INSUFFICIENT_FUNDS: REQ ${COST}m`, "error");
-            return;
-        }
+        if (action !== 'sleep') {
+            // Peak Evolution Cap
+            if (pet.level >= 100) {
+                showToast("MAXIMUM EVOLUTION REACHED. Release Lumina to start over.", "info");
+                return;
+            }
 
-        if (action !== 'sleep' && !await UserService.deductBalance(COST, `Lumina ${action}`)) return;
+            if (user.balance < COST) {
+                showToast(`INSUFFICIENT_FUNDS: REQ ${COST}m`, "error");
+                return;
+            }
+            if (!await UserService.deductBalance(COST, `Lumina ${action}`)) return;
+        }
 
         let updated = { ...pet, lastInteractionAt: new Date().toISOString() };
         let newEmotion: typeof emotion = 'happy';
@@ -410,23 +417,23 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
     if (!pet) return null;
 
     return (
-        <div className={isEmbedded ? "relative flex flex-col w-full h-full rounded-xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm overflow-hidden bg-gradient-to-b from-[#0a0a0a] to-[#121212] text-white/90 font-sans tracking-wide" : "fixed inset-0 z-[120] flex flex-col bg-gradient-to-b from-[#0a0a0a] to-[#121212] text-white/90 font-sans tracking-wide overflow-hidden pb-[90px] lg:pb-0"}>
+        <div className={isEmbedded ? "relative flex flex-col w-full h-full rounded-2xl border border-white/10 shadow-2xl overflow-hidden bg-[#030508] text-white/90 font-sans tracking-wide" : "fixed inset-0 z-[120] flex flex-col bg-[#030508] text-white/90 font-sans tracking-wide overflow-hidden pb-[90px] lg:pb-0"}>
 
-            {/* --- CYBER / PROGRESSIVE BACKGROUNDS --- */}
-            {pet.level < 30 && (
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(34,211,238,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
-            )}
+            {/* --- CINEMATIC NEO-ZEN BACKGROUND --- */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(6,182,212,0.15)_0%,transparent_60%)] pointer-events-none" />
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px] pointer-events-none" />
+
             {pet.level >= 30 && pet.level < 50 && (
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(250,204,21,0.05),transparent_70%)] animate-[pulse_10s_ease-in-out_infinite] pointer-events-none" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(250,204,21,0.05),transparent_70%)] animate-[pulse_10s_ease-in-out_infinite] pointer-events-none mix-blend-screen" />
             )}
             {pet.level >= 50 && (
-                <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
+                <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-60 mix-blend-screen">
                     <div className="absolute inset-x-0 h-[200%] w-[200%] -left-[50%] -top-[50%] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] animate-[spin_120s_linear_infinite]" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-fuchsia-900/20 via-transparent to-black mix-blend-color-dodge" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-fuchsia-900/10 via-transparent to-transparent mix-blend-color-dodge" />
                 </div>
             )}
 
-            <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/10 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-full h-[40vh] bg-gradient-to-t from-cyan-900/20 to-transparent pointer-events-none" />
 
             {/* --- ORACLE OVERLAY --- */}
             {oracleMessage && (
@@ -442,32 +449,37 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
             )}
 
             {/* --- HUD HEADER --- */}
-            <header className="relative z-10 px-4 md:px-6 py-4 flex justify-between items-end border-b border-cyan-500/20 bg-black/40 backdrop-blur-sm">
-                <div className="flex items-center gap-4">
-                    {!isEmbedded && <button onClick={onClose} className="hover:text-white transition-colors"><ChevronLeft /></button>}
+            <header className="relative z-20 px-6 py-5 flex justify-between items-center bg-white/[0.02] backdrop-blur-3xl border-b border-white/10 shadow-sm">
+                <div className="flex items-center gap-6">
+                    {!isEmbedded && <button onClick={onClose} className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/10 hover:bg-white/10 transition-all group shadow-inner"><ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /></button>}
                     <div>
-                        <h1 className="text-2xl font-black italic transform -skew-x-12">{pet.name.toUpperCase()}</h1>
-                        <div className="text-[10px] text-cyan-500/60 flex gap-2">
-                            <span>LVL_0{pet.level}</span>
-                            <span>//</span>
-                            <span>{pet.species.toUpperCase()}</span>
-                            <span>//</span>
-                            <span>XP: {pet.experience}/{pet.level * 6.25}</span>
+                        <h1 className="text-2xl font-black italic tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">{pet.name.toUpperCase()}</h1>
+                        <div className="text-[10px] text-cyan-400/80 flex gap-2 tracking-widest uppercase mt-1">
+                            <span>LVL_{String(pet.level).padStart(2, '0')}</span>
+                            <span className="text-white/20">//</span>
+                            <span>{pet.species}</span>
+                            <span className="text-white/20">//</span>
+                            <span>XP: {Math.floor(pet.experience)}/{Math.floor(pet.level * 6.25)}</span>
                         </div>
                     </div>
                 </div>
 
-                {/* Progress Bar (Visualizer replacement) */}
-                <div className="flex flex-col items-end w-32 md:w-48">
-                    <div className="text-[10px] text-cyan-500/60 mb-1">XP PROGRESS</div>
-                    <div className="w-full h-1.5 bg-gray-900 rounded-full overflow-hidden">
-                        <div className="h-full bg-cyan-400" style={{ width: `${(pet.experience / (pet.level * 6.25)) * 100}%` }} />
+                {/* Glassmorphic Progress Bar */}
+                <div className="flex flex-col items-end w-32 md:w-56">
+                    <div className="w-full h-2 md:h-2.5 bg-black/40 border border-white/10 rounded-full overflow-hidden shadow-inner relative">
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
+                        <div
+                            className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 relative shadow-[0_0_10px_rgba(34,211,238,0.5)] transition-all duration-1000 ease-out"
+                            style={{ width: `${(pet.experience / (pet.level * 6.25)) * 100}%` }}
+                        >
+                            <div className="absolute top-0 right-0 w-4 h-full bg-white/40 blur-[2px]" />
+                        </div>
                     </div>
                 </div>
             </header>
 
             {/* --- MAIN PORTAL --- */}
-            <main className="flex-1 relative flex flex-col items-center justify-center p-4 w-full max-w-md mx-auto">
+            <main className="flex-1 relative flex flex-col items-center justify-center p-4 w-full mx-auto">
 
                 {/* --- ORACLE SUMMONING OVERLAY (THINKING STATE) --- */}
                 {isSummoning && (
@@ -508,13 +520,13 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
                         </div>
                     )}
 
-                    {/* Ring System */}
-                    <div className={`absolute inset-0 -m-12 border border-cyan-500/20 rounded-full animate-[spin_20s_linear_infinite] ${isSummoning ? 'border-purple-500/40 speed-up' : ''}`} />
-                    <div className="absolute inset-0 -m-6 border-t border-b border-cyan-400/40 rounded-full animate-[spin_5s_linear_infinite_reverse]" />
+                    {/* Ring System (Liquid Light Aura) */}
+                    <div className={`absolute inset-0 -m-16 rounded-full border border-cyan-500/10 bg-gradient-to-br from-cyan-500/5 to-transparent mix-blend-screen animate-[spin_20s_linear_infinite] shadow-[inset_0_0_40px_rgba(34,211,238,0.1)] backdrop-blur-sm ${isSummoning ? 'border-purple-500/40 speed-up from-purple-500/10 shadow-[inset_0_0_80px_rgba(168,85,247,0.2)]' : ''}`} />
+                    <div className="absolute inset-0 -m-8 border-t border-b border-cyan-400/20 rounded-full animate-[spin_8s_linear_infinite_reverse]" />
 
                     {/* Advanced CELESTIAL Gravity Rings */}
                     {pet.level >= 50 && (
-                        <div className="absolute inset-0 -m-20 border border-fuchsia-500/20 rounded-full animate-[spin_10s_linear_infinite_reverse] drop-shadow-sm opacity-60 pointer-events-none" />
+                        <div className="absolute inset-0 -m-24 border border-fuchsia-500/10 rounded-full animate-[spin_12s_linear_infinite_reverse] drop-shadow-[0_0_15px_rgba(217,70,239,0.2)] opacity-80 pointer-events-none mix-blend-screen" />
                     )}
 
                     {/* Character Canvas Tracker */}
@@ -624,38 +636,45 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
                 )}
             </main>
 
-            {/* --- CONTROL DECK --- */}
-            <footer className="relative z-20 pb-10 px-6 flex flex-col items-center gap-8 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
+            {/* --- CONTROL DECK (GLASS HUD) --- */}
+            <footer className="relative z-20 pb-8 px-4 md:px-8 mt-auto flex justify-center w-full">
+                <div className="w-full max-w-4xl p-4 md:p-6 rounded-[2rem] bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] flex flex-col md:flex-row items-center justify-between gap-6 relative">
 
-                {/* Power Level Selector */}
-                <div className="flex justify-center mb-6">
-                    <div className="flex bg-black border border-cyan-500/30 rounded p-1">
-                        {[1, 2, 3].map(lvl => (
-                            <button
-                                key={lvl}
-                                onClick={() => setIntensity(lvl as 1 | 2 | 3)}
-                                className={`px-4 py-1 text-xs font-bold ${intensity === lvl ? 'bg-cyan-500 text-black shadow-sm' : 'text-cyan-500/40 hover:text-cyan-400'}`}
-                            >
-                                PWR_{lvl}
-                            </button>
-                        ))}
+                    {/* Glass Glare Effect */}
+                    <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-b from-white/[0.05] to-transparent pointer-events-none" />
+
+                    {/* Power Level Selector / Core Output */}
+                    <div className="flex flex-col items-center md:items-start gap-3 w-full md:w-auto">
+                        <span className="text-[10px] text-white/40 font-bold tracking-[0.2em] uppercase relative z-10">Core Output</span>
+                        <div className="flex bg-black/40 border border-white/10 rounded-xl p-1 relative overflow-hidden shadow-inner z-10">
+                            {[1, 2, 3].map(lvl => (
+                                <button
+                                    key={lvl}
+                                    onClick={() => setIntensity(lvl as 1 | 2 | 3)}
+                                    className={`relative z-10 px-5 py-2.5 text-xs font-bold tracking-widest transition-all duration-300 ${intensity === lvl ? 'text-white' : 'text-cyan-500/40 hover:text-cyan-300'}`}
+                                >
+                                    {intensity === lvl && <div className="absolute inset-0 bg-cyan-500/20 mix-blend-screen rounded blur-[1px] -z-10 shadow-[inset_0_0_10px_rgba(34,211,238,0.5)]" />}
+                                    PWR_{lvl}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                </div>
 
-                {/* Actions */}
-                <div className="flex justify-center gap-2 md:gap-4 flex-wrap">
-                    <CyberBtn icon={Pizza} label="FEED" onClick={() => handleAction('feed')} />
-                    <CyberBtn icon={Gamepad2} label="PLAY" onClick={() => setShowGameMenu(true)} />
-                    <CyberBtn icon={Sparkles} label="ORACLE" onClick={handleOracleConsult} color="purple" />
-                    <CyberBtn icon={RefreshCw} label="CLEAN" onClick={() => handleAction('clean')} />
-                    <CyberBtn icon={Target} label="MISSIONS" onClick={() => setShowMissions(true)} color="yellow" />
-                    <CyberBtn
-                        icon={pet.isSleeping ? Sun : Moon}
-                        label={pet.isSleeping ? "WAKE" : "SLEEP"}
-                        onClick={() => handleAction('sleep')}
-                        color={pet.isSleeping ? "yellow" : "cyan"}
-                    />
-                    <CyberBtn icon={LogOut} label="NEW" onClick={() => handleAction('release')} color="purple" />
+                    {/* Action Palette */}
+                    <div className="flex justify-center gap-3 md:gap-4 flex-wrap flex-1 z-10">
+                        <CyberBtn icon={Pizza} label="FEED" onClick={() => handleAction('feed')} textClass="text-cyan-400" />
+                        <CyberBtn icon={Gamepad2} label="PLAY" onClick={() => setShowGameMenu(true)} textClass="text-cyan-400" />
+                        <CyberBtn icon={Sparkles} label="ORACLE" onClick={handleOracleConsult} textClass="text-purple-400" />
+                        <CyberBtn icon={RefreshCw} label="CLEAN" onClick={() => handleAction('clean')} textClass="text-cyan-400" />
+                        <CyberBtn icon={Target} label="MISSIONS" onClick={() => setShowMissions(true)} textClass="text-yellow-400" />
+                        <CyberBtn
+                            icon={pet.isSleeping ? Sun : Moon}
+                            label={pet.isSleeping ? "WAKE" : "SLEEP"}
+                            onClick={() => handleAction('sleep')}
+                            textClass={pet.isSleeping ? "text-yellow-400" : "text-cyan-400"}
+                        />
+                        <CyberBtn icon={LogOut} label="NEW" onClick={() => handleAction('release')} textClass="text-purple-400" />
+                    </div>
                 </div>
             </footer>
 
@@ -708,28 +727,27 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
 };
 
 const StatusHolo: React.FC<{ icon: any, value: number, label: string, compact?: boolean }> = ({ icon: Icon, value, label, compact }) => (
-    <div className="flex flex-col items-center gap-2 group p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-md shadow-sm">
-        <Icon className={`w-5 h-5 text-white/80 ${value < 30 ? 'animate-pulse text-red-400' : ''}`} />
+    <div className="flex flex-col items-center gap-2 group p-3 md:p-4 bg-white/[0.03] border border-white/10 rounded-2xl backdrop-blur-xl shadow-lg hover:bg-white/[0.06] transition-colors shadow-[0_4px_16px_0_rgba(0,0,0,0.4)]">
+        <Icon className={`w-5 h-5 text-white/70 group-hover:text-white transition-colors ${value < 30 ? 'animate-pulse text-red-400 group-hover:text-red-300' : ''}`} />
         {!compact && <span className="text-[10px] font-bold text-white/50 tracking-widest uppercase">{label}</span>}
-        <div className="w-1.5 h-12 bg-black/40 rounded-full overflow-hidden shadow-inner hidden md:block">
-            <div className={`w-full bg-white/90 transition-all duration-1000`} style={{ height: `${value}%`, marginTop: `${100 - value}%` }} />
+        <div className="w-1.5 h-12 md:h-16 bg-black/60 rounded-full overflow-hidden shadow-inner hidden md:block border border-white/5 relative">
+            <div className={`w-full transition-all duration-1000 absolute bottom-0 shadow-[0_0_8px_rgba(255,255,255,0.6)] ${value < 30 ? 'bg-gradient-to-t from-red-600 to-red-400' : 'bg-gradient-to-t from-white/40 to-white/90'}`} style={{ height: `${value}%` }} />
         </div>
     </div>
 );
 
-const CyberBtn: React.FC<{ icon: any, label: string, onClick: () => void, color?: string }> = ({ icon: Icon, label, onClick, color = "white" }) => {
+const CyberBtn: React.FC<{ icon: any, label: string, onClick: () => void, textClass?: string }> = ({ icon: Icon, label, onClick, textClass = "text-cyan-400" }) => {
     return (
         <button
             onClick={onClick}
             className={`
-                group relative px-2 py-2 md:px-6 md:py-5 rounded-xl md:rounded-xl bg-white/5 border border-white/10 backdrop-blur-md flex flex-col items-center gap-1 md:gap-2
-                transition-all duration-300 active:scale-95 hover:bg-white/10 hover:shadow-sm hover:-translate-y-1
+                group relative w-[72px] h-[84px] md:w-20 md:h-24 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-white/20 hover:bg-white/[0.08] backdrop-blur-xl flex flex-col items-center justify-center gap-2
+                transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_10px_30px_-10px_rgba(34,211,238,0.2)] active:scale-95 overflow-hidden shadow-[0_4px_16px_0_rgba(0,0,0,0.4)]
             `}
         >
-            <div className={`w-8 h-8 md:w-12 md:h-12 rounded-full flex items-center justify-center bg-${color}-500/10 group-hover:bg-${color}-500/20 transition-colors`}>
-                <Icon className={`w-4 h-4 md:w-6 md:h-6 text-${color}-400 group-hover:text-${color}-300 transition-colors`} />
-            </div>
-            <span className="text-[7px] md:text-[10px] font-bold tracking-[0.2em] text-white/70 group-hover:text-white uppercase">{label}</span>
+            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <Icon className={`w-6 h-6 ${textClass} opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500 relative z-10 drop-shadow-[0_0_8px_currentColor]`} />
+            <span className="text-[9px] font-black tracking-[0.2em] text-white/50 group-hover:text-white uppercase transition-colors relative z-10 text-center leading-none mt-1">{label}</span>
         </button>
     );
 };

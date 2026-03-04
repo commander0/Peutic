@@ -332,31 +332,51 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
     };
 
     return (
-        <div className="fixed inset-0 h-[100dvh] z-[120] bg-stone-900 text-stone-100 flex flex-col font-serif animate-in fade-in duration-700 overflow-hidden">
+        <div className="fixed inset-0 h-[100dvh] z-[120] bg-[#120b08] text-stone-100 flex flex-col font-serif animate-in fade-in duration-700 overflow-hidden">
+            <style type="text/css">{`
+                @keyframes candle-flicker {
+                    0% { opacity: 0.9; transform: scale(1); }
+                    25% { opacity: 1; transform: scale(1.02); }
+                    50% { opacity: 0.85; transform: scale(0.98); }
+                    75% { opacity: 1.05; transform: scale(1.03); }
+                    100% { opacity: 0.9; transform: scale(1); }
+                }
+            `}</style>
             {/* Audio Elements bound to DOM for Autoplay Bypass */}
             <audio ref={windChimeRef} src="https://cdn.freesound.org/previews/411/411088_5121236-lq.mp3" loop preload="auto" />
 
-            {/* Living Room Background Structure */}
-            <div className="absolute inset-0 bg-stone-900 pointer-events-none z-0">
-                {/* Wall */}
-                <div className="absolute inset-x-0 top-0 h-[55%] bg-stone-800 bg-gradient-to-b from-stone-900 to-stone-800 border-b-8 border-stone-950/50 shadow-2xl">
+            {/* HYPER-REALISTIC LIVING ROOM */}
+            <div className="absolute inset-0 bg-[#0c0806] pointer-events-none z-0">
+                {/* Wall - Premium Dark Wood Panels */}
+                <div className="absolute inset-x-0 top-0 h-[60%] bg-[#1a1310] border-b-[12px] border-[#0a0705] shadow-[0_30px_80px_rgba(0,0,0,1)] z-0 overflow-hidden">
                     {localUser.unlockedDecor?.includes('digital_dojo') ? (
-                        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2048&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-screen transition-all"></div>
+                        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2048&auto=format&fit=crop')] bg-cover bg-center opacity-40 mix-blend-screen transition-all"></div>
                     ) : (
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/clean-textile.png')] opacity-20"></div>
+                        <>
+                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-wood.png')] opacity-70 mix-blend-multiply"></div>
+                            <div className="absolute inset-0 bg-[repeating-linear-gradient(to_right,transparent,transparent_120px,rgba(0,0,0,0.6)_120px,rgba(0,0,0,0.6)_124px)]"></div>
+                        </>
                     )}
-                    {/* Soft wall lighting */}
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(251,191,36,0.1),transparent_60%)]"></div>
+                    {/* Dynamic Flickering Wall Ambient Light */}
+                    <div className={`absolute inset-x-0 bottom-0 h-full bg-[radial-gradient(circle_at_50%_100%,rgba(217,119,6,0.3),transparent_70%)] transition-opacity duration-1000 ${isActive ? 'animate-[candle-flicker_4s_ease-in-out_infinite] opacity-100' : 'opacity-30'}`}></div>
                 </div>
 
-                {/* Floor */}
-                <div className="absolute inset-x-0 bottom-0 h-[45%] bg-stone-900 bg-gradient-to-t from-black to-stone-800">
-                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] opacity-30 mix-blend-multiply border-t border-white/5"></div>
+                {/* Floor - Polished Hardwood */}
+                <div className="absolute inset-x-0 bottom-0 h-[40%] bg-[#0a0705]">
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] opacity-60 mix-blend-multiply border-t border-white/5"></div>
+                    {/* Floor Reflection of the candle */}
+                    <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-[90vw] h-[70%] bg-[radial-gradient(ellipse_at_top,rgba(217,119,6,0.2),transparent_70%)] transition-opacity duration-1000 ${isActive ? 'animate-[candle-flicker_5s_ease-in-out_infinite_reverse] opacity-100' : 'opacity-20'}`}></div>
 
-                    {/* Rug */}
-                    <div className="absolute bottom-[10%] left-1/2 -translate-x-1/2 w-[90%] md:w-[600px] h-[40%] bg-stone-800 rounded-[100%] border-[4px] border-stone-700/50 shadow-[0_20px_50px_rgba(0,0,0,0.8)] opacity-90 transform shrink-0">
-                        {/* Table */}
-                        <div className="absolute top-[30%] left-1/2 -translate-x-1/2 w-[70%] h-[40%] bg-stone-950 rounded-[100%] border-t-2 border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.9)]"></div>
+                    {/* Premium Tatami/Rug */}
+                    <div className="absolute bottom-[5%] left-1/2 -translate-x-1/2 w-[95%] md:w-[700px] h-[65%] bg-[#241c18] rounded-[100%] border-[8px] border-[#120d0b] shadow-[0_40px_80px_rgba(0,0,0,1),inset_0_0_50px_rgba(0,0,0,0.9)] opacity-95 flex items-center justify-center overflow-hidden">
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/woven.png')] opacity-60 mix-blend-overlay"></div>
+
+                        {/* Meditation Table - High Gloss */}
+                        <div className="w-[65%] h-[55%] bg-[#0d0907] rounded-[100%] border-t lg:border-t-[3px] border-white/10 shadow-[0_30px_60px_rgba(0,0,0,1)] relative overflow-hidden shrink-0 mt-[10%]">
+                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10"></div>
+                            {/* Table Reflection */}
+                            <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-[90%] h-[60%] bg-[radial-gradient(ellipse_at_top,rgba(245,158,11,0.25),transparent_70%)] transition-opacity duration-1000 ${isActive ? 'animate-[candle-flicker_3s_ease-in-out_infinite]' : 'opacity-10'}`}></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -476,19 +496,28 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                             {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
                         </div>
 
-                        <div className={`w-56 h-56 md:w-72 md:h-72 rounded-full flex flex-col items-center justify-center relative transition-all duration-1000 shrink-0 ${isActive ? 'scale-105 shadow-[0_0_120px_rgba(245,158,11,0.1)]' : 'opacity-80'}`}>
+                        <div className={`w-56 h-56 md:w-72 md:h-72 rounded-full flex flex-col items-center justify-center relative transition-all duration-1000 shrink-0 z-10 ${isActive ? 'scale-[1.02]' : 'opacity-80'}`}>
                             {timerMode === 'candle' ? (
                                 <div className="absolute inset-0 flex items-center justify-center -mt-8 scale-[1.15]">
-                                    <div className={`absolute -top-10 -left-10 right-0 bottom-0 bg-orange-500/5 rounded-full blur-[80px] transition-all duration-3000 ${isActive ? 'opacity-100 scale-110' : 'opacity-0 scale-90'}`}></div>
+                                    {/* Hyper-realistic dynamic shadow depth & ambient bloom */}
+                                    <div className={`absolute -inset-[60%] bg-orange-600/15 rounded-full blur-[90px] transition-all duration-3000 pointer-events-none ${isActive ? 'opacity-100 animate-[candle-flicker_3.5s_infinite] scale-125' : 'opacity-0 scale-90'}`}></div>
+                                    <div className={`absolute -inset-[30%] bg-amber-500/25 rounded-full blur-[60px] transition-all duration-2000 pointer-events-none ${isActive ? 'opacity-100 animate-[candle-flicker_2.5s_infinite_reverse] scale-110' : 'opacity-0 scale-90'}`}></div>
+
                                     <div className="relative group flex flex-col items-center">
-                                        <div className={`absolute -top-12 left-1/2 -translate-x-1/2 w-6 h-28 origin-bottom transition-all duration-1000 ${isActive ? 'opacity-100' : 'opacity-30 grayscale'}`}>
-                                            <div className="absolute inset-0 bg-orange-500/40 blur-xl rounded-full animate-pulse-slow"></div>
-                                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3.5 h-12 bg-gradient-to-t from-orange-600 via-yellow-400 to-white rounded-[50%_50%_50%_50%_/_60%_60%_40%_40%] animate-flicker transform-gpu shadow-sm">
-                                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-3 bg-blue-600/90 rounded-full blur-[1px]"></div>
+                                        <div className={`absolute -top-12 left-1/2 -translate-x-1/2 w-6 h-28 origin-bottom transition-all duration-1000 z-10 ${isActive ? 'opacity-100' : 'opacity-30 grayscale blur-[1px]'}`}>
+                                            <div className="absolute inset-0 bg-yellow-400/60 blur-2xl rounded-full animate-[candle-flicker_2s_infinite]"></div>
+                                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3.5 h-12 bg-gradient-to-t from-[#ea580c] via-[#facc15] to-[#ffffff] rounded-[50%_50%_50%_50%_/_60%_60%_40%_40%] animate-flicker transform-gpu shadow-[0_0_20px_rgba(253,224,71,0.9)]">
+                                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[4px] h-[10px] bg-blue-500/90 rounded-full blur-[1px]"></div>
                                             </div>
                                         </div>
-                                        <div className="w-16 h-20 md:w-20 md:h-24 bg-gradient-to-r from-stone-800 via-stone-700 to-stone-800 rounded-lg relative overflow-hidden shadow-2xl border-t border-stone-600/50 mt-16">
-                                            <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-stone-600 to-stone-800 rounded-[100%] blur-[0.5px]"></div>
+                                        {/* Physical Candle Wax */}
+                                        <div className="w-16 h-20 md:w-20 md:h-24 bg-gradient-to-r from-yellow-50 via-white to-stone-200 rounded-[10px] relative overflow-hidden shadow-[0_40px_60px_rgba(0,0,0,0.9),inset_0_4px_12px_rgba(255,255,255,0.9),inset_15px_0_25px_rgba(0,0,0,0.4)] border-t border-white/50 mt-16 z-20 transition-all duration-1000" style={{ filter: isActive ? 'sepia(0.5) brightness(1.1) contrast(1.1)' : 'brightness(0.5) grayscale(0.2)' }}>
+                                            <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-white to-stone-200 rounded-[100%] shadow-[inset_0_-2px_4px_rgba(0,0,0,0.1)]">
+                                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.3),transparent_60%)]"></div>
+                                            </div>
+                                            {/* Melting wax drips */}
+                                            <div className="absolute top-3 left-[20%] w-2 h-7 bg-white rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.1)] drop-shadow-sm blur-[0.5px]"></div>
+                                            <div className="absolute top-2 left-[70%] w-2.5 h-9 bg-white rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.1)] drop-shadow-sm blur-[0.5px] opacity-90"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -502,7 +531,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                     </div>
 
                     {/* Right Panel: Koan & Mobile Control overrides */}
-                    <div className="fixed top-[10vh] left-1/2 -translate-x-1/2 w-[90%] z-50 md:static md:translate-x-0 md:w-64 flex flex-col gap-4 items-center md:items-start md:z-20">
+                    <div className="fixed top-[15vh] left-1/2 -translate-x-1/2 w-[90%] z-50 md:static md:translate-x-0 md:w-64 flex flex-col gap-4 items-center md:items-start md:z-20">
                         <div className="bg-stone-900/80 border border-white/5 p-4 md:p-6 rounded-3xl backdrop-blur-xl w-full text-center md:text-left shadow-2xl">
                             <h3 className="text-[10px] font-bold text-stone-500 tracking-widest uppercase mb-3 flex items-center justify-center md:justify-start gap-2">
                                 <BookOpen className="w-3 h-3 text-stone-400" /> Wisdom

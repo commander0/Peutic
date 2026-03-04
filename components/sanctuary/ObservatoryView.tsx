@@ -224,19 +224,36 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
         <div className="fixed inset-0 z-[120] bg-black text-indigo-50 flex flex-col animate-in fade-in duration-1000 overflow-hidden font-serif selection:bg-purple-500 selection:text-white">
             <style type="text/css">{`
                 @keyframes drawLine { to { stroke-dashoffset: 0; } }
+                @keyframes float-nebula { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-2%, 2%) scale(1.05); } }
             `}</style>
 
-            <div className={`absolute inset-0 bg-[radial-gradient(circle_at_center,_#1e1b4b_0%,_#000000_80%)] transition-colors duration-1000 ${activeTab === 'archive' ? 'bg-[radial-gradient(circle_at_center,_#0f172a_0%,_#020617_80%)]' : ''}`}></div>
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-40 animate-pulse-slow mix-blend-color-dodge pointer-events-none"></div>
+            {/* DEEP SPACE NEBULA BACKGROUND */}
+            <div className={`absolute inset-0 bg-[#050510] transition-colors duration-1000 z-0 ${activeTab === 'archive' ? 'bg-[#020510]' : ''}`}>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#000000_100%)] z-10" />
+                <div className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] bg-fuchsia-900/10 rounded-full blur-[100px] animate-[float-nebula_20s_ease-in-out_infinite] pointer-events-none" style={{ willChange: 'transform' }} />
+                <div className="absolute top-[30%] -right-[20%] w-[60vw] h-[60vw] bg-indigo-900/10 rounded-full blur-[90px] animate-[float-nebula_15s_ease-in-out_infinite_reverse] pointer-events-none" style={{ willChange: 'transform' }} />
+                <div className="absolute bottom-[-10%] left-[10%] w-[80vw] h-[50vw] bg-purple-900/5 rounded-full blur-[120px] animate-[pulse_8s_ease-in-out_infinite] pointer-events-none" style={{ willChange: 'opacity' }} />
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 animate-[pulse_6s_infinite] pointer-events-none mix-blend-screen" style={{ willChange: 'opacity' }} />
+            </div>
 
+            {/* NEON GLOWING SIGIL BACKGROUND */}
             {activeTab === 'divination' && (
-                <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none overflow-hidden transition-opacity duration-1000">
-                    <svg viewBox="0 0 100 100" className="w-[150vw] h-[150vw] md:w-[100vw] md:h-[100vw] animate-[spin_120s_linear_infinite]">
-                        <circle cx="50" cy="50" r="48" fill="none" stroke="#eab308" strokeWidth="0.5" strokeDasharray="4 8" />
-                        <circle cx="50" cy="50" r="38" fill="none" stroke="#eab308" strokeWidth="0.2" />
-                        <polygon points="50,2 98,75 2,75" fill="none" stroke="#eab308" strokeWidth="0.3" />
-                        <polygon points="50,98 98,25 2,25" fill="none" stroke="#eab308" strokeWidth="0.3" />
-                        <rect x="15" y="15" width="70" height="70" fill="none" stroke="#eab308" strokeWidth="0.2" transform="rotate(45 50 50)" />
+                <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none overflow-hidden transition-opacity duration-1000 z-0">
+                    <svg viewBox="0 0 100 100" className="w-[150vw] h-[150vw] md:w-[100vw] md:h-[100vw] animate-[spin_160s_linear_infinite]">
+                        <defs>
+                            <filter id="neonOrbGlow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="1.5" result="blur" />
+                                <feMerge><feMergeNode in="blur" /><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                            </filter>
+                        </defs>
+                        <g filter="url(#neonOrbGlow)">
+                            <circle cx="50" cy="50" r="48" fill="none" stroke="#c084fc" strokeWidth="0.2" strokeDasharray="4 8" />
+                            <circle cx="50" cy="50" r="38" fill="none" stroke="#2dd4bf" strokeWidth="0.1" />
+                            <polygon points="50,2 98,75 2,75" fill="none" stroke="#e879f9" strokeWidth="0.15" opacity="0.5" />
+                            <polygon points="50,98 98,25 2,25" fill="none" stroke="#2dd4bf" strokeWidth="0.15" opacity="0.5" />
+                            <rect x="15" y="15" width="70" height="70" fill="none" stroke="#818cf8" strokeWidth="0.1" transform="rotate(45 50 50)" />
+                            <circle cx="50" cy="50" r="25" fill="none" stroke="#c084fc" strokeWidth="0.05" strokeDasharray="1 2" />
+                        </g>
                     </svg>
                 </div>
             )}
@@ -435,36 +452,42 @@ const ObservatoryView: React.FC<ObservatoryViewProps> = ({ user, onClose }) => {
                                 }}
                                 onPointerLeave={() => { setIsDrawing(false); setPath([]); }}
                             >
-                                <div className={`absolute -inset-10 bg-indigo-600/20 rounded-full blur-3xl transition-opacity duration-1000 pointer-events-none ${isReading ? 'opacity-100 animate-pulse-fast' : 'opacity-30'}`}></div>
+                                <div className={`absolute -inset-10 bg-fuchsia-600/20 rounded-full blur-[40px] transition-opacity duration-1000 pointer-events-none ${isReading ? 'opacity-100 animate-[pulse_1s_infinite]' : 'opacity-40 hover:opacity-60'}`}></div>
+                                <div className={`absolute -inset-4 bg-cyan-500/10 rounded-full blur-[20px] transition-opacity duration-1000 pointer-events-none ${isReading ? 'opacity-80 animate-[spin_3s_linear_infinite]' : 'opacity-20'}`}></div>
 
-                                <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,_rgba(255,255,255,0.1)_0%,_rgba(79,70,229,0.05)_20%,_rgba(0,0,0,0.9)_90%)] shadow-[inset_0_0_80px_rgba(0,0,0,0.9),inset_10px_10px_20px_rgba(255,255,255,0.05),0_0_50px_rgba(79,70,229,0.2)] border border-indigo-500/10 backdrop-blur-[1px] overflow-hidden z-20 pointer-events-none">
-                                    <div className={`absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/foggy-birds.png')] mix-blend-color-dodge transition-transform duration-[20s] ease-linear ${isReading ? 'animate-[spin_4s_linear_infinite] scale-150 opacity-80' : 'animate-[spin_30s_linear_infinite] scale-125 opacity-20'}`}></div>
-                                    <div className={`absolute inset-0 bg-gradient-to-tr from-indigo-900/0 via-purple-500/10 to-indigo-900/0 mix-blend-overlay ${isReading ? 'animate-pulse' : ''}`}></div>
-                                    <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-indigo-500 rounded-full blur-[50px] mix-blend-screen transition-all duration-500 ${isReading ? 'scale-150 opacity-80' : 'scale-100 opacity-30 animate-pulse-slow'}`}></div>
+                                <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,_rgba(255,255,255,0.15)_0%,_rgba(192,132,252,0.1)_20%,_rgba(0,0,0,0.95)_90%)] shadow-[inset_0_0_80px_rgba(0,0,0,0.9),inset_0_0_30px_rgba(192,132,252,0.3),inset_10px_10px_20px_rgba(255,255,255,0.1),0_0_60px_rgba(192,132,252,0.4)] border border-fuchsia-400/20 backdrop-blur-[2px] overflow-hidden z-20 pointer-events-none">
+                                    <div className={`absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/foggy-birds.png')] mix-blend-color-dodge transition-transform duration-[20s] ease-linear ${isReading ? 'animate-[spin_4s_linear_infinite] scale-150 opacity-90' : 'animate-[spin_30s_linear_infinite] scale-125 opacity-30'}`}></div>
+                                    <div className={`absolute inset-0 bg-gradient-to-tr from-fuchsia-900/0 via-cyan-400/10 to-transparent mix-blend-overlay ${isReading ? 'animate-[pulse_2s_infinite]' : ''}`}></div>
+                                    <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-fuchsia-500 rounded-full blur-[50px] mix-blend-screen transition-all duration-500 ${isReading ? 'scale-[2] opacity-80' : 'scale-100 opacity-40 animate-[pulse_4s_infinite]'}`}></div>
 
                                     {oracleMessage && !isReading && (
-                                        <div className="absolute inset-0 rounded-full border-[3px] border-indigo-400 animate-[ping_1.5s_ease-out_forwards] opacity-0 mix-blend-screen z-20"></div>
+                                        <div className="absolute inset-0 rounded-full border-[3px] border-cyan-400 animate-[ping_1.5s_ease-out_forwards] opacity-0 mix-blend-screen z-20"></div>
                                     )}
 
+                                    {/* ETHEREAL TEXT MANIFESTATION */}
                                     {oracleMessage && !isReading && (
-                                        <div className="absolute inset-0 flex items-center justify-center p-4 md:p-12 text-center z-30 bg-indigo-950/50 backdrop-blur-xl overflow-y-auto rounded-full no-scrollbar shadow-[inset_0_0_60px_rgba(30,27,75,0.9),0_0_30px_rgba(99,102,241,0.5)] border-2 border-indigo-500/30 animate-in zoom-in-90 duration-700 pointer-events-auto">
-                                            <div className="w-full text-yellow-200 font-serif leading-snug md:leading-relaxed drop-shadow-sm tracking-wide italic text-[11px] md:text-base px-2 md:px-4 py-2 md:py-4 whitespace-pre-wrap">
+                                        <div className="absolute inset-0 flex items-center justify-center p-4 md:p-10 text-center z-30 bg-black/40 backdrop-blur-xl overflow-y-auto rounded-full no-scrollbar shadow-[inset_0_0_60px_rgba(88,28,135,0.8),0_0_40px_rgba(192,132,252,0.6)] border border-fuchsia-400/50 animate-in zoom-in-95 duration-1000 pointer-events-auto">
+                                            <div className="w-full text-cyan-100 font-serif leading-snug md:leading-relaxed drop-shadow-[0_0_10px_rgba(45,212,191,0.8)] tracking-wide italic text-xs md:text-sm px-2 md:px-4 py-2 md:py-4 whitespace-pre-wrap">
                                                 <Typewriter text={oracleMessage} speed={30} />
                                             </div>
                                         </div>
                                     )}
 
+                                    {/* DIVINING EFFECT */}
                                     {isReading && (
                                         <div className="absolute inset-0 flex flex-col items-center justify-center z-30">
-                                            <Sparkles className="w-16 h-16 text-indigo-200 animate-spin-slow opacity-90 drop-shadow-sm" />
-                                            <span className="mt-4 text-[10px] uppercase tracking-[0.3em] text-indigo-200/60 animate-pulse">Divining...</span>
+                                            <div className="absolute inset-0 bg-fuchsia-500/20 mix-blend-screen animate-[ping_2s_ease-out_infinite] rounded-full" />
+                                            <Sparkles className="w-16 h-16 text-cyan-200 animate-[spin_3s_linear_infinite] opacity-100 drop-shadow-[0_0_15px_rgba(45,212,191,0.8)]" />
+                                            <span className="mt-4 text-[10px] uppercase tracking-[0.4em] text-fuchsia-200 animate-pulse font-bold drop-shadow-[0_0_8px_rgba(232,121,249,0.8)]">Divining...</span>
                                         </div>
                                     )}
 
+                                    {/* NEON GLOWING SIGIL DRAWING */}
                                     {!isReading && !oracleMessage && path.length > 0 && (
                                         <svg className="absolute inset-0 w-full h-full z-40 pointer-events-none">
-                                            <defs><filter id="sigilGlow"><feGaussianBlur stdDeviation="3" result="coloredBlur" /><feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>
-                                            <polyline points={path.map(p => `${p.x},${p.y}`).join(' ')} fill="none" stroke="#a855f7" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" filter="url(#sigilGlow)" className="opacity-80 mix-blend-screen" />
+                                            <defs><filter id="sigilGlow"><feGaussianBlur stdDeviation="3" result="coloredBlur" /><feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>
+                                            <polyline points={path.map(p => `${p.x},${p.y}`).join(' ')} fill="none" stroke="#2dd4bf" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" filter="url(#sigilGlow)" className="opacity-100 mix-blend-screen drop-shadow-[0_0_5px_#2dd4bf]" />
+                                            {path.length > 0 && <circle cx={path[path.length - 1].x} cy={path[path.length - 1].y} r="3" fill="#fff" filter="url(#sigilGlow)" />}
                                         </svg>
                                     )}
                                 </div>

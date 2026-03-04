@@ -162,6 +162,12 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
 
         // Perform Service Action
         if (type === 'water') {
+            if (stage >= 8) {
+                showToast("Maximum growth reached. Harvest the tree to plant a new seed.", "info");
+                setInteraction(null);
+                return;
+            }
+
             const hasEnough = await UserService.deductBalance(intensity, "Watering Garden");
             if (!hasEnough) {
                 showToast(`Not enough focus minutes to water (-${intensity}m required).`, "error");
@@ -208,6 +214,11 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     });
 
     const handleClearWeeds = async () => {
+        if (stage >= 8) {
+            showToast("Maximum growth reached. Harvest the tree to plant a new seed.", "info");
+            return;
+        }
+
         const cost = 5;
         const hasEnough = await UserService.deductBalance(cost, "Cleared Garden Weeds");
         if (!hasEnough) {
@@ -222,68 +233,91 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     return (
         <div className={isEmbedded ? "relative flex flex-col w-full h-full rounded-xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm overflow-hidden bg-[#050a05] text-white animate-in fade-in duration-700 group" : "fixed inset-0 z-[100] flex flex-col overflow-hidden bg-[#050a05] text-white animate-in fade-in duration-700 pb-[90px] lg:pb-0"}>
 
-            {/* --- ATMOSPHERIC LAYERS --- */}
+            {/* --- CINEMATIC ATMOSPHERIC LAYERS --- */}
 
-            {/* 1. Deep Space / Night Sky Gradient OR Dark Rain Layer */}
-            {weather === 'sun' ? (
-                <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a] via-[#064e3b] to-[#022c22] opacity-80 pointer-events-none" />
-            ) : (
-                <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-800 to-indigo-950 opacity-90 pointer-events-none" />
-            )}
+            {/* Base Tone & Vignette */}
+            <div className={`absolute inset-0 transition-colors duration-[3000ms] ${weather === 'sun' ? 'bg-[#020617]' : 'bg-[#0b0f19]'}`} />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)] pointer-events-none z-10" />
 
-            {/* 2. Moving Fog / Mist */}
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/foggy-birds.png')] opacity-30 animate-[pulse_10s_ease-in-out_infinite] pointer-events-none mix-blend-overlay" />
+            {/* Deep Parallax Environment (Forest/Mystic background) */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40 mix-blend-screen">
+                {/* Giant distant bokeh/moons */}
+                <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-emerald-900/30 blur-[100px] animate-pulse-slow" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-teal-900/20 blur-[120px]" style={{ animationDuration: '15s', animationName: 'pulse', animationIterationCount: 'infinite' }} />
+                <div className="absolute top-[20%] right-[10%] w-32 h-32 rounded-full bg-emerald-200/5 blur-[40px] animate-[ping_10s_ease-in-out_infinite]" />
+            </div>
 
-            {/* Automatic Background Rain if weather is 'rain' */}
+            {/* Volumetric God Rays */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 mix-blend-screen">
+                {weather === 'sun' && (
+                    <>
+                        <div className="absolute -top-[20%] -left-[10%] w-[150%] h-[50%] bg-gradient-to-b from-emerald-400/10 via-teal-500/5 to-transparent blur-[60px] rotate-[-15deg] transform origin-top animate-[pulse_8s_ease-in-out_infinite]" />
+                        <div className="absolute -top-[10%] left-[20%] w-[100%] h-[70%] bg-gradient-to-b from-emerald-200/5 to-transparent blur-[80px] rotate-[25deg] transform origin-top animate-[pulse_12s_ease-in-out_infinite_alternate]" />
+                        <div className="absolute top-0 right-[-20%] w-[100%] h-[80%] bg-gradient-to-b from-blue-300/5 to-transparent blur-[90px] rotate-[45deg] transform origin-top animate-[pulse_10s_ease-in-out_infinite]" />
+                    </>
+                )}
+            </div>
+
+            {/* High-Fidelity Rain */}
             {weather === 'rain' && (
-                <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-60">
-                    {/* LIGHTNING FLASHES */}
-                    <div className="absolute inset-0 bg-white/20 mix-blend-overlay opacity-0 animate-[lightning_7s_infinite_ease-out_2s]" />
-                    <div className="absolute inset-0 bg-white/30 mix-blend-overlay opacity-0 animate-[lightning_12s_infinite_ease-out_5s]" />
-
-                    {/* SLOW CLOUDS */}
-                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-clouds.png')] opacity-20 mix-blend-multiply animate-[cloud-pan-right_60s_linear_infinite]" />
-                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-clouds.png')] opacity-15 mix-blend-multiply animate-[cloud-pan-left_45s_linear_infinite]" />
-
-                    {/* RAIN DROPS */}
-                    {[...Array(30)].map((_, i) => (
-                        <div key={i} className="absolute w-[1px] h-16 bg-blue-300/40 animate-[particle-float-up_1s_linear_infinite]"
-                            style={{ left: `${Math.random() * 100}%`, top: `-20%`, animationDelay: `${Math.random()}s`, animationDuration: `${0.4 + Math.random() * 0.4}s` }} />
-                    ))}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10 mix-blend-overlay animate-[cloud-pan-right_30s_linear_infinite]" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a]/80 to-transparent" />
+                    {/* Cinematic raindrops */}
+                    {[...Array(60)].map((_, i) => {
+                        const depth = Math.random();
+                        return (
+                            <div key={i} className={`absolute w-[1px] bg-gradient-to-b from-transparent via-blue-200/${Math.floor(depth * 50) + 10} to-transparent animate-[particle-float-up_1s_linear_infinite]`}
+                                style={{
+                                    left: `${Math.random() * 100}%`,
+                                    top: `-20%`,
+                                    height: `${Math.max(10, depth * 60)}px`,
+                                    filter: `blur(${Math.max(0, (1 - depth) * 2)}px)`,
+                                    animationDelay: `${Math.random()}s`,
+                                    animationDuration: `${0.3 + depth * 0.4}s`
+                                }} />
+                        );
+                    })}
+                    {/* Distant Lightning */}
+                    <div className="absolute inset-0 bg-blue-400/5 mix-blend-color-dodge opacity-0 animate-[lightning_9s_infinite_ease-out_2s]" />
+                    <div className="absolute top-0 left-1/4 w-1/2 h-1/2 bg-[radial-gradient(circle,rgba(255,255,255,0.8)_0%,transparent_60%)] opacity-0 animate-[lightning_14s_infinite_ease-out] blur-[50px] mix-blend-overlay" />
                 </div>
             )}
 
-            {/* 3. Dynamic Ambient Particles (CSS Fireflies & Leaves) */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                {particles.map((p) => (
-                    <div
-                        key={p.id}
-                        className={`absolute ${p.isLeaf ? 'w-2 h-2 rounded-[50%_0_50%_50%] rotate-45 animate-[bounce_5s_infinite]' : 'w-1.5 h-1.5 rounded-full blur-[1px] animate-[ping_4s_ease-in-out_infinite]'} ${isRare ? 'bg-fuchsia-200 shadow-sm' : 'bg-emerald-200 shadow-sm'}`}
-                        style={{
-                            left: p.left,
-                            top: p.top,
-                            animationDelay: p.delay,
-                            opacity: p.opacity,
-                            transform: `scale(${p.scale})`
-                        }}
-                    />
-                ))}
+            {/* Glowing Bioluminescence Particles (Fireflies / Spores) */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden z-10 transition-opacity duration-1000">
+                {particles.map((p) => {
+                    const isRareColor = isRare ? 'text-fuchsia-300 bg-fuchsia-300 shadow-[0_0_10px_rgba(217,70,239,0.8)]' : 'text-emerald-300 bg-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.8)]';
+                    return (
+                        <div
+                            key={p.id}
+                            className={`absolute rounded-full mix-blend-screen ${p.isLeaf ? 'w-3 h-3 rounded-[50%_0_50%_50%] rotate-45 animate-[bounce_5s_infinite] opacity-50 bg-emerald-700/50 backdrop-blur-sm border border-emerald-400/30' : `w-1 h-1 animate-[ping_4s_ease-in-out_infinite] ${isRareColor}`}`}
+                            style={{
+                                left: p.left,
+                                top: p.top,
+                                animationDelay: p.delay,
+                                opacity: p.isLeaf ? p.opacity : p.opacity * 2,
+                                transform: `scale(${p.scale})`,
+                                filter: p.isLeaf ? `drop-shadow(0 2px 4px rgba(0,0,0,0.5))` : 'none'
+                            }}
+                        >
+                            {!p.isLeaf && <div className={`absolute inset-0 rounded-full blur-[2px] ${isRare ? 'bg-fuchsia-400' : 'bg-emerald-400'}`} />}
+                        </div>
+                    )
+                })}
 
-                {/* Advanced Stage Atmospheric Overlays */}
+                {/* Magical Stage Overlays */}
                 {stage >= 4 && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/30 to-transparent mix-blend-overlay pointer-events-none animate-[pulse_6s_ease-in-out_infinite]" />
-                )}
-                {stage >= 5 && (
-                    <div className="absolute inset-0 bg-gradient-to-b from-fuchsia-900/20 via-transparent to-transparent mix-blend-color-dodge pointer-events-none animate-[pulse_8s_ease-in-out_infinite]" />
+                    <div className="absolute bottom-0 w-full h-[60%] bg-gradient-to-t from-emerald-900/40 via-emerald-800/10 to-transparent mix-blend-color-dodge pointer-events-none animate-[pulse_8s_ease-in-out_infinite]" />
                 )}
                 {stage >= 6 && (
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent pointer-events-none animate-[spin_30s_linear_infinite]" />
-                )}
-                {stage >= 7 && (
-                    <div className="absolute inset-0 bg-gradient-to-b from-blue-900/20 to-transparent mix-blend-color-dodge pointer-events-none animate-[pulse_3s_ease-in-out_infinite]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.05)_0%,transparent_70%)] pointer-events-none animate-[spin_40s_linear_infinite] mix-blend-screen" />
                 )}
                 {stage >= 8 && (
-                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 animate-[spin_60s_linear_infinite_reverse] pointer-events-none mix-blend-screen" />
+                    <div className="absolute inset-0 z-0">
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-40 animate-[spin_120s_linear_infinite_reverse] pointer-events-none mix-blend-screen" />
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150vw] h-[150vw] bg-[conic-gradient(from_0deg,transparent_0deg,rgba(167,139,250,0.1)_90deg,transparent_180deg,rgba(52,211,153,0.1)_270deg,transparent_360deg)] animate-[spin_60s_linear_infinite] mix-blend-screen" />
+                    </div>
                 )}
             </div>
 

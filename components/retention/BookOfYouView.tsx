@@ -162,8 +162,11 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
     const isSunny = moodRatio.sun >= moodRatio.rain;
 
     return (
-        <div className="book-of-you-wrapper fixed inset-0 z-[120] bg-zinc-950 dark:bg-black text-amber-950 dark:text-stone-200 overflow-y-auto overflow-x-hidden flex items-center justify-center animate-in zoom-in-95 duration-1000 p-2 md:p-8 lg:p-12 font-serif bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] dark:bg-[url('https://www.transparenttextures.com/patterns/dark-wood.png')] bg-blend-multiply shadow-[inset_0_0_150px_rgba(0,0,0,0.9)] print:static print:h-auto print:w-full print:bg-white print:text-black print:overflow-visible print:block print:p-0 print:shadow-none print:bg-none">
+        <div className="book-of-you-wrapper fixed inset-0 z-[120] bg-zinc-950 text-[#ebdcb3] overflow-y-auto overflow-x-hidden flex items-center justify-center animate-in zoom-in-95 duration-1000 p-2 md:p-8 lg:p-12 font-serif bg-[radial-gradient(circle_at_center,_#291a10_0%,_#000000_100%)] shadow-[inset_0_0_150px_rgba(0,0,0,0.9)] print:static print:h-auto print:w-full print:bg-white print:text-black print:overflow-visible print:block print:p-0 print:shadow-none print:bg-none">
+            {/* MAGICAL DRIFTING DUST */}
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-50 mix-blend-screen animate-[float-stardust_60s_linear_infinite] pointer-events-none" style={{ willChange: 'background-position' }} />
             <style type="text/css">{`
+                @keyframes float-stardust { 0% { background-position: 0 0; } 100% { background-position: 1000px 1000px; } }
                 @media print {
                     @page { size: landscape; margin: 0; }
                     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -190,34 +193,35 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                 <Download className="w-3 h-3 md:w-4 md:h-4 group-hover:-translate-y-1 transition-transform" />
             </button>
 
-            {/* THE PHYSICAL BOOK MOCKUP */}
-            <div className="relative w-full max-w-6xl aspect-auto md:aspect-[16/10] min-h-[85vh] md:min-h-0 bg-[#f5ebd8] dark:bg-[#1f1a18] shadow-[0_30px_60px_rgba(0,0,0,0.9),0_0_0_2px_rgba(89,61,43,0.8)] dark:shadow-[0_20px_40px_rgba(0,0,0,1),_0_0_0_2px_rgba(255,255,255,0.05)] rounded-sm flex flex-col md:flex-row print:flex print:flex-row print:h-auto print:min-h-0 print:gap-4 print:shadow-none print:max-w-none print:w-full print:bg-white after:absolute after:inset-0 after:bg-[url('https://www.transparenttextures.com/patterns/aged-paper.png')] after:opacity-[0.8] dark:after:opacity-[0.4] dark:after:bg-[url('https://www.transparenttextures.com/patterns/black-paper.png')] after:mix-blend-multiply dark:after:mix-blend-hard-light after:pointer-events-none transition-colors duration-500 overflow-hidden ring-4 ring-black/40 dark:ring-black print:overflow-visible print:ring-0 text-amber-950 dark:print:text-black">
+            {/* THE PHYSICAL BOOK MOCKUP - MYTHIC RELIC DESIGN */}
+            <div className="relative w-full max-w-6xl aspect-auto md:aspect-[16/10] min-h-[85vh] md:min-h-0 bg-[#23150d] shadow-[0_40px_80px_rgba(0,0,0,1),0_0_0_3px_rgba(218,165,32,0.5),inset_0_0_60px_rgba(0,0,0,0.9)] rounded-sm flex flex-col md:flex-row print:flex print:flex-row print:h-auto print:min-h-0 print:gap-4 print:shadow-none print:max-w-none print:w-full print:bg-white after:absolute after:inset-0 after:bg-[url('https://www.transparenttextures.com/patterns/leather.png')] after:opacity-[0.9] after:mix-blend-multiply pointer-events-none transition-colors duration-500 overflow-hidden ring-4 ring-black/80 print:overflow-visible print:ring-0 text-amber-50">
                 {/* Vintage Burn Edges */}
-                <div className="absolute inset-0 shadow-[inset_0_0_120px_rgba(139,69,19,0.3)] dark:shadow-[inset_0_0_150px_rgba(0,0,0,0.9)] pointer-events-none z-[5]"></div>
+                <div className="absolute inset-0 shadow-[inset_0_0_150px_rgba(0,0,0,0.9)] pointer-events-none z-[5]"></div>
 
                 {/* PAGE EDGES (Thickness Mockup) */}
-                <div className="absolute -bottom-1 -right-1 w-full h-full border-r-4 border-b-4 border-amber-950/20 dark:border-stone-300/5 rounded-br-md pointer-events-none hidden md:block z-0"></div>
-                <div className="absolute -bottom-2 -right-2 w-full h-full border-r-2 border-b-2 border-amber-950/10 dark:border-stone-300/5 rounded-br-lg pointer-events-none hidden md:block z-0"></div>
+                <div className="absolute -bottom-1 -right-1 w-full h-full border-r-4 border-b-4 border-[#3a2516] rounded-br-[4px] pointer-events-none hidden md:block z-0 opacity-80"></div>
+                <div className="absolute -bottom-2 -right-2 w-full h-full border-r-2 border-b-2 border-yellow-900/30 rounded-br-[8px] pointer-events-none hidden md:block z-0 opacity-50"></div>
 
-                {/* LEFT PAGE */}
-                <div className="w-full md:w-1/2 h-auto min-h-[80vh] md:min-h-0 md:h-full flex flex-col relative overflow-y-auto custom-scrollbar overflow-x-hidden border-b-2 md:border-b-0 border-amber-900/30 dark:border-stone-800 z-10 print:w-1/2 print:min-h-0 print:h-auto print:overflow-visible print:border-none print:break-inside-avoid print:m-0">
-                    <div className="absolute inset-2 md:inset-4 lg:inset-6 border-[3px] border-double border-amber-900/20 dark:border-stone-500/10 pointer-events-none rounded-sm"></div>
-                    <div key={currentVolume} className="w-full h-full flex flex-col p-6 md:p-12 lg:p-20 absolute inset-0 animate-in slide-in-from-right-8 fade-in duration-700 print:relative print:inset-auto print:h-auto print:overflow-visible print:p-4">
+                {/* LEFT PAGE - ANCIENT PARCHMENT */}
+                <div className="w-full md:w-1/2 h-auto min-h-[80vh] md:min-h-0 md:h-full flex flex-col relative overflow-y-auto custom-scrollbar overflow-x-hidden border-b-2 md:border-b-0 border-[#3a2516] z-10 print:w-1/2 print:min-h-0 print:h-auto print:overflow-visible print:border-none print:break-inside-avoid print:m-0 bg-[#e8d5b5] text-[#2c1e13] shadow-[inset_0_0_60px_rgba(139,69,19,0.4)] pointer-events-auto">
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/aged-paper.png')] opacity-60 mix-blend-multiply pointer-events-none z-0"></div>
+                    <div className="absolute inset-2 md:inset-4 lg:inset-6 border-[3px] border-double border-yellow-700/50 shadow-[0_0_8px_rgba(218,165,32,0.3)] pointer-events-none rounded-sm z-0"></div>
+                    <div key={currentVolume} className="w-full h-full flex flex-col p-6 md:p-12 lg:p-20 absolute inset-0 animate-in slide-in-from-right-8 fade-in duration-700 print:relative print:inset-auto print:h-auto print:overflow-visible print:p-4 z-10">
                         {/* Page Numbers */}
                         <div className="hidden md:block absolute top-6 left-6 lg:top-8 lg:left-8 text-amber-900/30 font-sans text-[10px] tracking-widest font-bold">1</div>
 
-                        {/* HERO COVER: Book Title Page */}
-                        <div className="text-center mt-6 lg:mt-12 mb-12 lg:mb-20 relative">
-                            <div className="inline-flex justify-center items-center w-16 h-16 lg:w-20 lg:h-20 rounded-full border border-amber-900/30 dark:border-stone-600 mb-6 lg:mb-8 relative group bg-gradient-to-br from-amber-900/10 to-transparent dark:from-stone-700/50 shadow-[rgba(0,0,0,0.1)_0px_4px_12px]">
-                                <BookOpen className="w-6 h-6 lg:w-8 lg:h-8 text-amber-900/70 dark:text-stone-300 group-hover:text-amber-900 dark:group-hover:text-white transition-colors drop-shadow-md" />
+                        {/* HERO COVER: Book Title Page (Gold Foil Effect) */}
+                        <div className="text-center mt-6 lg:mt-12 mb-12 lg:mb-20 relative z-10">
+                            <div className="inline-flex justify-center items-center w-16 h-16 lg:w-20 lg:h-20 rounded-full border-[2px] border-yellow-600/70 mb-6 lg:mb-8 relative group bg-gradient-to-br from-yellow-700/20 to-transparent shadow-[inset_0_0_10px_rgba(218,165,32,0.3),0_0_15px_rgba(218,165,32,0.4)]">
+                                <BookOpen className="w-6 h-6 lg:w-8 lg:h-8 text-yellow-600 drop-shadow-[0_2px_3px_rgba(0,0,0,0.6)] group-hover:text-yellow-400 transition-colors" />
                             </div>
-                            <div className="w-full h-px bg-gradient-to-r from-transparent via-amber-900/30 dark:via-stone-600 to-transparent mb-8 lg:mb-12"></div>
-                            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-serif text-amber-950 dark:text-stone-100 mb-4 lg:mb-6 tracking-wide drop-shadow-sm dark:drop-shadow-sm">The Book<br />of You</h1>
-                            <p className="text-lg lg:text-xl text-amber-900/70 dark:text-stone-400 font-serif italic">A chronicle of {user.name}'s journey.</p>
+                            <div className="w-full h-[2px] bg-gradient-to-r from-transparent via-yellow-600/70 to-transparent mb-8 lg:mb-12 shadow-[0_0_8px_rgba(218,165,32,0.5)]"></div>
+                            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-serif mb-4 lg:mb-6 tracking-wide bg-gradient-to-b from-[#fcd34d] via-[#eab308] to-[#92400e] text-transparent bg-clip-text drop-shadow-[0_3px_4px_rgba(0,0,0,0.8)] filter">The Book<br />of You</h1>
+                            <p className="text-lg lg:text-xl text-yellow-800 font-serif italic font-semibold tracking-wide drop-shadow-[0_1px_1px_rgba(255,255,255,0.3)]">A mythic chronicle of {user.name}'s journey.</p>
 
                             <div className="mt-12 lg:mt-16 flex flex-col items-center justify-center gap-4 lg:gap-6 z-20 relative">
-                                <div className="flex bg-gradient-to-b from-amber-900/10 to-transparent dark:from-stone-800/60 dark:to-transparent px-6 lg:px-8 py-2 lg:py-3 rounded-full border border-amber-900/20 dark:border-stone-600 shadow-[inset_0_1px_3px_rgba(0,0,0,0.1)]">
-                                    <span className="text-[10px] lg:text-xs font-sans font-black uppercase tracking-[0.3em] text-amber-900/80 dark:text-stone-300">Volume {currentVolume + 1}</span>
+                                <div className="flex bg-gradient-to-b from-yellow-900/20 to-transparent px-6 lg:px-8 py-2 lg:py-3 rounded-full border border-yellow-700/40 shadow-[inset_0_1px_3px_rgba(0,0,0,0.2),0_2px_5px_rgba(0,0,0,0.1)]">
+                                    <span className="text-[10px] lg:text-xs font-sans font-black uppercase tracking-[0.3em] text-yellow-800 drop-shadow-[0_1px_0_rgba(255,255,255,0.2)]">Volume {currentVolume + 1}</span>
                                 </div>
 
                                 <div className="flex items-center gap-6 lg:gap-12 mt-2 lg:mt-4 p-2 md:p-4 rounded-xl bg-white/50 dark:bg-black/20 backdrop-blur-md border border-amber-900/10 dark:border-white/10 shadow-lg print:hidden">
@@ -246,17 +250,17 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                         {/* CHAPTER 1: REFLECTIONS (Left Page Continued) */}
                         <div className="mt-8 lg:mt-auto relative z-10 pointer-events-auto">
                             <div className="text-center mb-8 lg:mb-10">
-                                <h2 className="text-xl lg:text-2xl font-light tracking-wide text-amber-950 dark:text-stone-200 mb-2 inline-block border-b border-amber-900/20 dark:border-stone-700 pb-2 drop-shadow-sm">Chapter I: Reflections</h2>
+                                <h2 className="text-xl lg:text-2xl font-bold tracking-wide mb-2 inline-block border-b-2 border-yellow-600/40 pb-2 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)] bg-gradient-to-r from-[#b45309] via-[#854d0e] to-[#b45309] text-transparent bg-clip-text">Chapter I: Reflections</h2>
                             </div>
                             {journals.length === 0 ? (
-                                <div className="p-8 text-center text-amber-900/40 dark:text-stone-600 italic">No notes written this week.</div>
+                                <div className="p-8 text-center text-[#785b46] italic">No notes written this week.</div>
                             ) : (
                                 <div className="space-y-6 lg:space-y-8">
                                     {journals.slice(0, 2).map((j) => (
                                         <div key={j.id}>
-                                            <h3 className="text-[9px] lg:text-[10px] font-sans font-bold text-amber-900/50 dark:text-stone-500 mb-2 uppercase tracking-widest">{new Date(j.date).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</h3>
-                                            <div className="pl-4 border-l-2 border-amber-900/10 dark:border-stone-700/50">
-                                                <p className="text-amber-950/80 dark:text-stone-300 leading-relaxed text-sm lg:text-base first-letter:text-3xl first-letter:font-bold first-letter:float-left first-letter:mr-1 first-letter:text-amber-900/60 dark:first-letter:text-stone-400">{j.content}</p>
+                                            <h3 className="text-[9px] lg:text-[10px] font-sans font-bold text-yellow-800/60 mb-2 uppercase tracking-widest">{new Date(j.date).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</h3>
+                                            <div className="pl-4 border-l-2 border-yellow-700/30">
+                                                <p className="text-[#3c2a1c] leading-relaxed text-sm lg:text-base first-letter:text-3xl first-letter:font-bold first-letter:float-left first-letter:mr-1 first-letter:text-yellow-700 first-letter:drop-shadow-sm">{j.content}</p>
                                             </div>
                                         </div>
                                     ))}
@@ -277,16 +281,17 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                 </div>
 
                 {/* RIGHT PAGE */}
-                <div className="w-full md:w-1/2 h-auto min-h-[80vh] md:min-h-0 md:h-full flex flex-col relative overflow-y-auto custom-scrollbar overflow-x-hidden z-10 print:w-1/2 print:min-h-0 print:h-auto print:overflow-visible print:m-0 print:break-inside-avoid print:border-none">
-                    <div className="absolute inset-2 md:inset-4 lg:inset-6 border-[3px] border-double border-amber-900/20 dark:border-stone-500/10 pointer-events-none rounded-sm"></div>
-                    <div key={currentVolume + "-right"} className="w-full h-full flex flex-col p-6 md:p-12 lg:p-20 absolute inset-0 animate-in slide-in-from-right-16 fade-in duration-1000 print:relative print:inset-auto print:h-auto print:overflow-visible print:p-4">
+                <div className="w-full md:w-1/2 h-auto min-h-[80vh] md:min-h-0 md:h-full flex flex-col relative overflow-y-auto custom-scrollbar overflow-x-hidden z-10 print:w-1/2 print:min-h-0 print:h-auto print:overflow-visible print:m-0 print:break-inside-avoid print:border-none bg-[#e8d5b5] text-[#2c1e13] shadow-[inset_0_0_60px_rgba(139,69,19,0.4)] pointer-events-auto">
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/aged-paper.png')] opacity-60 mix-blend-multiply pointer-events-none z-0"></div>
+                    <div className="absolute inset-2 md:inset-4 lg:inset-6 border-[3px] border-double border-yellow-700/50 shadow-[0_0_8px_rgba(218,165,32,0.3)] pointer-events-none rounded-sm z-0"></div>
+                    <div key={currentVolume + "-right"} className="w-full h-full flex flex-col p-6 md:p-12 lg:p-20 absolute inset-0 animate-in slide-in-from-right-16 fade-in duration-1000 print:relative print:inset-auto print:h-auto print:overflow-visible print:p-4 z-10">
                         {/* Page Numbers */}
                         <div className="hidden md:block absolute top-6 right-6 lg:top-8 lg:right-8 text-amber-900/30 font-sans text-[10px] tracking-widest font-bold">2</div>
 
                         {/* CHAPTER 2: EMOTIONAL CLIMATE */}
                         <div className="mb-12 lg:mb-16 mt-4 md:mt-0 relative z-10 pointer-events-auto">
                             <div className="text-center mb-8 lg:mb-10">
-                                <h2 className="text-xl lg:text-2xl font-light tracking-wide text-amber-950 dark:text-stone-200 mb-2 inline-block border-b border-amber-900/20 dark:border-stone-700 pb-2 drop-shadow-sm">Chapter II: Climate</h2>
+                                <h2 className="text-xl lg:text-2xl font-bold tracking-wide mb-2 inline-block border-b-2 border-yellow-600/40 pb-2 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)] bg-gradient-to-r from-[#b45309] via-[#854d0e] to-[#b45309] text-transparent bg-clip-text">Chapter II: Climate</h2>
                             </div>
 
                             {/* VISUAL RATIO SCALE - PAPER */}
@@ -331,22 +336,22 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
                         </div>
 
                         {/* CHAPTER 3: VISIONS & CONCLUSION */}
-                        <div className="mt-8 md:mt-auto pt-8 border-t border-amber-900/10 dark:border-stone-800 text-center relative z-10 pointer-events-auto">
-                            <div className="w-6 h-6 lg:w-8 lg:h-8 border border-amber-900/20 dark:border-stone-700 bg-transparent mx-auto mb-3 lg:mb-4 flex items-center justify-center rounded-sm rotate-45 shadow-sm pointer-events-none">
-                                <div className="-rotate-45"><BookOpen className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-amber-900/40 dark:text-stone-500" /></div>
+                        <div className="mt-8 md:mt-auto pt-8 border-t border-yellow-700/30 text-center relative z-10 pointer-events-auto">
+                            <div className="w-6 h-6 lg:w-8 lg:h-8 border border-yellow-700/50 bg-transparent mx-auto mb-3 lg:mb-4 flex items-center justify-center rounded-sm rotate-45 shadow-sm pointer-events-none">
+                                <div className="-rotate-45"><BookOpen className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-yellow-700" /></div>
                             </div>
 
                             {isGeneratingNarrative ? (
                                 <div className="py-12 flex flex-col items-center justify-center space-y-4">
-                                    <Sparkles className="w-6 h-6 animate-spin text-amber-700/60 dark:text-stone-400" />
-                                    <p className="font-serif italic text-amber-900/60 dark:text-stone-400 text-sm">Weaving your chronicle together...</p>
+                                    <Sparkles className="w-6 h-6 animate-[spin_3s_linear_infinite] text-yellow-600" />
+                                    <p className="font-serif italic text-yellow-800 text-sm">Weaving your chronicle into gold...</p>
                                 </div>
                             ) : narrative ? (
-                                <div className="text-left bg-gradient-to-b from-transparent via-[#fdfaf6]/30 to-transparent dark:via-[#1a1817]/30 p-4 lg:p-8 relative print:break-inside-avoid">
-                                    <div className="absolute top-0 left-10 w-8 h-px bg-amber-900/20 dark:bg-stone-700"></div>
-                                    <div className="absolute top-0 right-10 w-8 h-px bg-amber-900/20 dark:bg-stone-700"></div>
+                                <div className="text-left bg-gradient-to-b from-transparent via-yellow-900/5 to-transparent p-4 lg:p-8 relative print:break-inside-avoid border-l border-r border-yellow-700/10">
+                                    <div className="absolute top-0 left-10 w-8 h-px bg-yellow-700/40"></div>
+                                    <div className="absolute top-0 right-10 w-8 h-px bg-yellow-700/40"></div>
                                     {narrative.split('\n\n').map((paragraph, idx) => (
-                                        <p key={idx} className={`font-serif text-amber-950 dark:text-stone-200 text-sm lg:text-base leading-loose mb-6 last:mb-0 relative z-10 ${idx === 0 ? 'first-letter:text-4xl first-letter:font-bold first-letter:float-left first-letter:mr-2 tracking-wide' : 'tracking-wide indent-8'}`}>
+                                        <p key={idx} className={`font-serif text-[#3c2a1c] text-sm lg:text-base leading-loose mb-6 last:mb-0 relative z-10 ${idx === 0 ? 'first-letter:text-4xl first-letter:font-bold first-letter:float-left first-letter:mr-2 first-letter:text-yellow-700 first-letter:drop-shadow-sm tracking-wide' : 'tracking-wide indent-8'}`}>
                                             {paragraph}
                                         </p>
                                     ))}

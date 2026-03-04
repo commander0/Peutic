@@ -288,33 +288,33 @@ const WeatherEffectComponent: React.FC<{ type: WeatherType }> = ({ type }) => {
     if (!type) return null;
 
     return (
-        <div className="fixed inset-0 pointer-events-none z-[50]">
+        <div className="fixed inset-0 pointer-events-none z-[50]" style={{ pointerEvents: 'none', mixBlendMode: 'normal' }}>
             {type === 'rain' && (
                 <>
-                    {/* REALISTIC LIGHTNING FLASHES */}
-                    <div className="absolute inset-0 bg-white/20 mix-blend-overlay opacity-0 animate-[lightning_7s_infinite_ease-out_2s]" />
-                    <div className="absolute inset-0 bg-white/40 mix-blend-overlay opacity-0 animate-[lightning_12s_infinite_ease-out_5s]" />
+                    {/* REALISTIC LIGHTNING FLASHES - Hardware accelerated, no mix-blend */}
+                    <div className="absolute inset-0 bg-white/10 opacity-0 animate-[lightning_7s_infinite_ease-out_2s]" style={{ willChange: 'opacity' }} />
+                    <div className="absolute inset-0 bg-white/20 opacity-0 animate-[lightning_12s_infinite_ease-out_5s]" style={{ willChange: 'opacity' }} />
 
-                    {/* REALISTIC SLOW CLOUDS */}
-                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-clouds.png')] opacity-40 mix-blend-multiply animate-[cloud-pan-right_80s_linear_infinite]" />
-                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-clouds.png')] opacity-30 mix-blend-multiply animate-[cloud-pan-left_60s_linear_infinite]" />
+                    {/* REALISTIC SLOW CLOUDS - Hardware accelerated, lowered opacity */}
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-clouds.png')] opacity-10 animate-[cloud-pan-right_80s_linear_infinite]" style={{ willChange: 'background-position' }} />
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-clouds.png')] opacity-[0.05] animate-[cloud-pan-left_60s_linear_infinite]" style={{ willChange: 'background-position' }} />
                 </>
             )}
 
             {type === 'confetti' && (
                 <>
-                    {/* RADIANT SUNLIGHT BEAMS */}
-                    <div className="absolute inset-[0%] -top-[50%] -left-[50%] w-[200%] h-[200%] bg-[conic-gradient(from_0deg,transparent_0deg,rgba(253,224,71,0.1)_60deg,transparent_120deg,rgba(253,224,71,0.1)_180deg,transparent_240deg,rgba(253,224,71,0.1)_300deg,transparent_360deg)] animate-[spin_60s_linear_infinite] mix-blend-overlay" />
+                    {/* RADIANT SUNLIGHT BEAMS - Optimized */}
+                    <div className="absolute inset-[0%] -top-[50%] -left-[50%] w-[200%] h-[200%] bg-[conic-gradient(from_0deg,transparent_0deg,rgba(253,224,71,0.05)_60deg,transparent_120deg,rgba(253,224,71,0.05)_180deg,transparent_240deg,rgba(253,224,71,0.05)_300deg,transparent_360deg)] animate-[spin_60s_linear_infinite]" style={{ willChange: 'transform' }} />
 
-                    {/* WARM GOLDEN OVERLAY */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-yellow-300/20 via-yellow-100/5 to-transparent mix-blend-overlay animate-[pulse_4s_infinite]" />
+                    {/* WARM GOLDEN OVERLAY - Optimized */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-yellow-300/10 via-yellow-100/5 to-transparent animate-[pulse_4s_infinite]" style={{ willChange: 'opacity' }} />
 
-                    {/* FLOATING STARDUST */}
-                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-40 mix-blend-screen animate-[float-stardust_60s_linear_infinite]" />
+                    {/* FLOATING STARDUST - Optimized */}
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.15] animate-[float-stardust_60s_linear_infinite]" style={{ willChange: 'background-position' }} />
                 </>
             )}
 
-            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ willChange: 'transform', transform: 'translateZ(0)' }} />
         </div>
     );
 };

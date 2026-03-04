@@ -532,17 +532,25 @@ const GardenCanvas: React.FC<GardenCanvasProps> = ({ garden, width, height, inte
 
                 {/* Harvesting/Water Effects Overlay */}
                 {interactionType === 'harvest' && (
-                    <>
-                        <circle cx="50" cy="50" r="50" fill="#facc15" opacity="0.5" className="animate-[ping_1s_ease-out_forwards]" />
-                        <path d="M 50 0 L 52 30 L 80 20 L 60 45 L 90 60 L 60 70 L 50 100 L 40 70 L 10 60 L 40 45 L 20 20 L 48 30 Z" fill="#ffffff" opacity="0.8" className="animate-[spin_2s_linear_infinite] scale-50 origin-center" />
-                    </>
+                    <g className="mix-blend-screen" filter="url(#bloom-glow)">
+                        <rect x="-100" y="-100" width="300" height="300" fill="url(#glass-grad)" className="animate-[pulse_1s_ease-out_forwards]" opacity="0.8" />
+                        <circle cx="50" cy="85" r="80" fill="#facc15" className="animate-[ping_2s_ease-out_infinite]" opacity="0.9" />
+                        <circle cx="50" cy="85" r="40" fill="#ffffff" className="animate-[ping_1s_ease-out_infinite]" opacity="1" />
+                        <ellipse cx="50" cy="85" rx="5" ry="150" fill="#ffffff" className="animate-[pulse_2s_infinite]" />
+                        <ellipse cx="50" cy="85" rx="150" ry="2" fill="#fef08a" className="animate-[pulse_1.5s_infinite]" />
+                    </g>
                 )}
                 {interactionType === 'water' && (
-                    <>
-                        <path d="M 48 10 L 50 15 L 52 10 Z" fill="#60a5fa" className="animate-[bounce_1s_infinite]" />
-                        <path d="M 30 20 L 32 25 L 34 20 Z" fill="#60a5fa" className="animate-[bounce_1.2s_infinite]" />
-                        <path d="M 70 15 L 72 20 L 74 15 Z" fill="#60a5fa" className="animate-[bounce_1.1s_infinite]" />
-                    </>
+                    <g className="mix-blend-screen">
+                        {/* Ground Ripples on Pedestal */}
+                        <ellipse cx="50" cy="85" rx="30" ry="8" fill="none" stroke="#93c5fd" strokeWidth="1" className="animate-[ping_2s_ease-out_infinite]" opacity="0.6" />
+                        <ellipse cx="50" cy="85" rx="15" ry="4" fill="none" stroke="#bfdbfe" strokeWidth="0.5" className="animate-[ping_2s_ease-out_infinite]" opacity="0.8" style={{ animationDelay: '0.4s' }} />
+                        <ellipse cx="50" cy="85" rx="45" ry="12" fill="none" stroke="#60a5fa" strokeWidth="0.5" className="animate-[ping_2s_ease-out_infinite]" opacity="0.3" style={{ animationDelay: '0.8s' }} />
+                        <ellipse cx="50" cy="85" rx="25" ry="5" fill="#3b82f6" filter="url(#bloom-glow)" className="animate-[pulse_2s_infinite]" opacity="0.4" />
+
+                        {/* Celestial Raindrops */}
+                        <path d="M 49 -20 L 50 85 M 30 -10 L 32 85 M 70 -15 L 68 85" stroke="url(#glass-grad)" strokeWidth="0.5" opacity="0.5" className="animate-pulse" strokeDasharray="5 15" />
+                    </g>
                 )}
             </motion.svg>
         );
