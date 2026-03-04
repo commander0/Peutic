@@ -220,7 +220,7 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
     };
 
     return (
-        <div className={isEmbedded ? "relative flex flex-col w-full h-full rounded-xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm overflow-hidden bg-[#050a05] text-white animate-in fade-in duration-700 group" : "fixed inset-0 z-[100] overflow-hidden bg-[#050a05] text-white animate-in fade-in duration-700"}>
+        <div className={isEmbedded ? "relative flex flex-col w-full h-full rounded-xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm overflow-hidden bg-[#050a05] text-white animate-in fade-in duration-700 group" : "fixed inset-0 z-[100] flex flex-col overflow-hidden bg-[#050a05] text-white animate-in fade-in duration-700 pb-[90px] lg:pb-0"}>
 
             {/* --- ATMOSPHERIC LAYERS --- */}
 
