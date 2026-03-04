@@ -638,14 +638,14 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
 
             {/* --- CONTROL DECK (GLASS HUD) --- */}
             <footer className="relative z-20 pb-8 px-4 md:px-8 mt-auto flex justify-center w-full">
-                <div className="w-full max-w-4xl p-4 md:p-6 rounded-[2rem] bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] flex flex-col md:flex-row items-center justify-between gap-6 relative">
+                <div className="w-full max-w-4xl p-4 md:p-6 rounded-[2rem] bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] flex flex-col items-center gap-6 relative">
 
                     {/* Glass Glare Effect */}
                     <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-b from-white/[0.05] to-transparent pointer-events-none" />
 
                     {/* Power Level Selector / Core Output */}
-                    <div className="flex flex-col items-center gap-2 w-full md:w-auto">
-                        <span className="text-[10px] text-white/40 font-bold tracking-[0.2em] uppercase relative z-10 w-full text-center md:text-left">Core Output</span>
+                    <div className="flex flex-col items-center gap-3 w-full">
+                        <span className="text-[10px] text-white/40 font-bold tracking-[0.2em] uppercase relative z-10 w-full text-center">Core Output</span>
                         <div className="flex bg-black/40 border border-white/10 rounded-xl p-1 relative overflow-hidden shadow-inner z-10">
                             {[1, 2, 3].map(lvl => (
                                 <button
@@ -661,13 +661,11 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
                     </div>
 
                     {/* Action Palette */}
-                    <div className="grid grid-cols-4 md:flex md:justify-center gap-2 md:gap-4 w-full z-10">
+                    <div className="flex justify-center flex-wrap gap-2 md:gap-4 w-full z-10">
                         <CyberBtn icon={Pizza} label="FEED" onClick={() => handleAction('feed')} textClass="text-cyan-400" />
                         <CyberBtn icon={Gamepad2} label="PLAY" onClick={() => setShowGameMenu(true)} textClass="text-cyan-400" />
                         <CyberBtn icon={Sparkles} label="ORACLE" onClick={handleOracleConsult} textClass="text-purple-400" />
                         <CyberBtn icon={RefreshCw} label="CLEAN" onClick={() => handleAction('clean')} textClass="text-cyan-400" />
-
-                        {/* Second Row on Mobile */}
                         <CyberBtn icon={Target} label="MISSIONS" onClick={() => setShowMissions(true)} textClass="text-yellow-400" />
                         <CyberBtn
                             icon={pet.isSleeping ? Sun : Moon}
@@ -676,7 +674,6 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
                             textClass={pet.isSleeping ? "text-yellow-400" : "text-cyan-400"}
                         />
                         <CyberBtn icon={LogOut} label="NEW" onClick={() => handleAction('release')} textClass="text-purple-400" />
-                        <div className="md:hidden"></div> {/* Empty space for 8th slot in 4x2 grid */}
                     </div>
                 </div>
             </footer>
@@ -744,7 +741,7 @@ const CyberBtn: React.FC<{ icon: any, label: string, onClick: () => void, textCl
         <button
             onClick={onClick}
             className={`
-                group relative w-[72px] h-[84px] md:w-20 md:h-24 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-white/20 hover:bg-white/[0.08] backdrop-blur-xl flex flex-col items-center justify-center gap-2
+                group relative flex-1 min-w-[70px] max-w-[90px] h-[84px] md:h-24 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-white/20 hover:bg-white/[0.08] backdrop-blur-xl flex flex-col items-center justify-center gap-2
                 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_10px_30px_-10px_rgba(34,211,238,0.2)] active:scale-95 overflow-hidden shadow-[0_4px_16px_0_rgba(0,0,0,0.4)]
             `}
         >
