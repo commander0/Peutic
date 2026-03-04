@@ -773,7 +773,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 <div className="absolute inset-0 pointer-events-none group-hover:pointer-events-auto overflow-hidden">
                                                     {/* Scale engine UI natively to 60% of actual size to prevent cramped layout globally */}
                                                     <div className="w-[166%] h-[166%] origin-top-left scale-[0.6] transition-transform">
-                                                        <GardenFullView isEmbedded={true} garden={garden} user={dashboardUser} onClose={() => { }} onUpdate={refreshGarden} />
+                                                        {expandedCanvas !== 'garden' && <GardenFullView isEmbedded={true} garden={garden} user={dashboardUser} onClose={() => { }} onUpdate={refreshGarden} />}
                                                     </div>
                                                 </div>
                                             </div>
@@ -788,7 +788,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 <div className="absolute inset-0 pointer-events-none group-hover:pointer-events-auto overflow-hidden">
                                                     {/* Scale engine UI natively to 60% of actual size to prevent cramped layout globally */}
                                                     <div className="w-[166%] h-[166%] origin-top-left scale-[0.6] transition-transform">
-                                                        <LuminaView isEmbedded={true} user={dashboardUser} onClose={() => { }} />
+                                                        {expandedCanvas !== 'lumina' && <LuminaView isEmbedded={true} user={dashboardUser} onClose={() => { }} />}
                                                     </div>
                                                 </div>
                                             </div>
