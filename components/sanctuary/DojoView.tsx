@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Flame, Target, Trophy, Wind, BookOpen, Volume2, VolumeX, Sparkles } from 'lucide-react';
+import { X, Flame, Target, Trophy, Wind, BookOpen, Volume2, VolumeX } from 'lucide-react';
 import { User } from '../../types';
 import { useToast } from '../common/Toast';
 import { UserService } from '../../services/userService';
@@ -51,7 +51,6 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
     const [localUser, setLocalUser] = useState<User>(user);
     const [luminaPet, setLuminaPet] = useState<any>(null);
     const [luminaLevel, setLuminaLevel] = useState(1);
-    const [weather, setWeather] = useState<'sun' | 'rain'>('sun');
     const [bowlRipple, setBowlRipple] = useState(false);
     const timerRef = useRef<number | null>(null);
     const windChimeRef = useRef<HTMLAudioElement | null>(null);
@@ -95,12 +94,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                 setLuminaLevel(pet.level);
             }
 
-            // Fetch Weather
-            const moods = await UserService.getMoods(user.id);
-            if (moods.length > 0) {
-                const sunCount = moods.filter(x => ['Happy', 'Calm', 'confetti', 'sun'].includes(x.mood as any)).length;
-                setWeather((sunCount / moods.length) >= 0.5 ? 'sun' : 'rain');
-            }
+            // Removed Weather processing for Dojo as it's now an indoor living room
         };
         loadHistory();
 
@@ -342,13 +336,30 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
             {/* Audio Elements bound to DOM for Autoplay Bypass */}
             <audio ref={windChimeRef} src="https://cdn.freesound.org/previews/411/411088_5121236-lq.mp3" loop preload="auto" />
 
-            {/* Background Layers */}
-            {localUser.unlockedDecor?.includes('digital_dojo') ? (
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2048&auto=format&fit=crop')] bg-cover bg-center opacity-40 mix-blend-screen transition-all duration-[2000ms]"></div>
-            ) : (
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1545569341-9eb8b30979d9?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-25 mix-blend-luminosity"></div>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-stone-950/90 to-stone-900/60 mix-blend-multiply"></div>
+            {/* Living Room Background Structure */}
+            <div className="absolute inset-0 bg-stone-900 pointer-events-none z-0">
+                {/* Wall */}
+                <div className="absolute inset-x-0 top-0 h-[55%] bg-stone-800 bg-gradient-to-b from-stone-900 to-stone-800 border-b-8 border-stone-950/50 shadow-2xl">
+                    {localUser.unlockedDecor?.includes('digital_dojo') ? (
+                        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2048&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-screen transition-all"></div>
+                    ) : (
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/clean-textile.png')] opacity-20"></div>
+                    )}
+                    {/* Soft wall lighting */}
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(251,191,36,0.1),transparent_60%)]"></div>
+                </div>
+
+                {/* Floor */}
+                <div className="absolute inset-x-0 bottom-0 h-[45%] bg-stone-900 bg-gradient-to-t from-black to-stone-800">
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] opacity-30 mix-blend-multiply border-t border-white/5"></div>
+
+                    {/* Rug */}
+                    <div className="absolute bottom-[10%] left-1/2 -translate-x-1/2 w-[90%] md:w-[600px] h-[40%] bg-stone-800 rounded-[100%] border-[4px] border-stone-700/50 shadow-[0_20px_50px_rgba(0,0,0,0.8)] opacity-90 transform shrink-0">
+                        {/* Table */}
+                        <div className="absolute top-[30%] left-1/2 -translate-x-1/2 w-[70%] h-[40%] bg-stone-950 rounded-[100%] border-t-2 border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.9)]"></div>
+                    </div>
+                </div>
+            </div>
 
             {/* Ambient Dust Motes */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
@@ -358,25 +369,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                 ))}
             </div>
 
-            {/* Shoji Window Backdrop - Organized behind the timer */}
-            <div className="absolute inset-x-0 bottom-[15%] h-[45%] md:inset-x-[15%] lg:inset-x-[25%] border-[6px] border-stone-800 bg-stone-950/80 shadow-[inset_0_0_100px_rgba(0,0,0,0.9)] z-0 flex flex-col justify-center opacity-90 backdrop-blur-md">
-                <div className="absolute inset-0 grid grid-cols-6 grid-rows-2 opacity-30">
-                    {[...Array(12)].map((_, i) => (
-                        <div key={i} className="border-2 border-stone-800/90 bg-[#f4ebd8]/5 backdrop-blur-[2px]"></div>
-                    ))}
-                </div>
-                {weather === 'sun' ? (
-                    <div className="absolute inset-0 bg-gradient-to-br from-amber-200/20 to-transparent mix-blend-overlay z-[-1]"></div>
-                ) : (
-                    <div className="absolute inset-0 bg-slate-900/80 z-[-1] overflow-hidden">
-                        {[...Array(20)].map((_, i) => (
-                            <div key={i} className="absolute w-[1px] h-12 bg-blue-300/20 animate-[particle-float-up_1s_linear_infinite]" style={{ left: `${Math.random() * 100}%`, top: `-20%`, animationDelay: `${Math.random()}s`, animationDuration: `${0.5 + Math.random() * 0.5}s` }}></div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {/* Relaxing Dojo Pet - Unlinked from timer to stop flickering! */}
+            {/* Relaxing Dojo Pet - Sitting on the rug */}
             {luminaPet && <RelaxingDojoPet pet={luminaPet} />}
 
             {/* --- VISUAL DECORATIONS --- */}
@@ -387,12 +380,12 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
 
                     const getPositionClass = (id: string) => {
                         switch (id) {
-                            case 'scroll': return 'top-16 right-4 md:top-24 md:right-16 text-[5rem] md:text-[8rem] opacity-90 drop-shadow-2xl z-0';
-                            case 'lantern': return 'top-16 left-2 md:top-24 md:left-12 text-[4rem] md:text-8xl opacity-100 animate-[sway_6s_ease-in-out_infinite] drop-shadow-sm z-0';
-                            case 'bonsai': return 'bottom-[22%] right-2 md:bottom-[20%] md:right-12 text-[5rem] md:text-[8rem] drop-shadow-[0_30px_30px_rgba(0,0,0,0.8)] z-10 hover:scale-105 transition-transform';
-                            case 'incense': return 'bottom-[20%] left-2 md:bottom-[18%] md:left-12 text-[4rem] md:text-7xl opacity-100 animate-[sway_4s_ease-in-out_infinite] drop-shadow-[0_30px_30px_rgba(0,0,0,0.8)] z-10';
-                            case 'singing_bowl': return 'bottom-[5%] right-12 md:bottom-[8%] md:right-32 text-[3.5rem] md:text-[5rem] drop-shadow-[0_20px_20px_rgba(0,0,0,0.8)] pointer-events-auto cursor-pointer z-30 transition-transform active:scale-90 hover:scale-110';
-                            case 'stones': return 'bottom-[4%] left-10 md:bottom-[6%] md:left-28 text-[3rem] md:text-[4.5rem] drop-shadow-[0_20px_20px_rgba(0,0,0,0.8)] z-20 hover:scale-105 transition-transform';
+                            case 'scroll': return 'top-8 left-1/2 -translate-x-1/2 md:top-12 text-[5rem] md:text-[7rem] opacity-90 drop-shadow-2xl z-0'; // Hanging on center wall
+                            case 'lantern': return 'top-0 left-4 md:left-24 text-[4rem] md:text-[6rem] opacity-100 animate-[sway_6s_ease-in-out_infinite] drop-shadow-lg z-0'; // Hanging from ceiling
+                            case 'bonsai': return 'bottom-[25%] left-[2%] md:bottom-[20%] md:left-[15%] text-[5rem] md:text-[7rem] drop-shadow-[0_20px_20px_rgba(0,0,0,0.9)] z-10 hover:scale-105 transition-transform'; // Floor left
+                            case 'incense': return 'bottom-[25%] right-[2%] md:bottom-[20%] md:right-[15%] text-[4rem] md:text-[6rem] opacity-100 animate-[sway_4s_ease-in-out_infinite] drop-shadow-[0_20px_20px_rgba(0,0,0,0.9)] z-10'; // Floor right
+                            case 'singing_bowl': return 'bottom-[12%] right-[15%] md:bottom-[15%] md:right-[25%] text-[3rem] md:text-[4.5rem] drop-shadow-[0_15px_15px_rgba(0,0,0,0.9)] pointer-events-auto cursor-pointer z-30 transition-transform active:scale-90 hover:scale-110'; // Rug right
+                            case 'stones': return 'bottom-[10%] left-[15%] md:bottom-[12%] md:left-[25%] text-[2.5rem] md:text-[4rem] drop-shadow-[0_15px_15px_rgba(0,0,0,0.9)] z-20 hover:scale-105 transition-transform'; // Rug left
                             default: return 'hidden';
                         }
                     };
@@ -432,9 +425,9 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
             </header>
 
             {/* Cozy Interactive Area */}
-            <main className="flex-1 flex flex-col items-center justify-center relative z-20 pb-20 w-full max-w-5xl mx-auto px-4">
+            <main className="flex-1 flex flex-col items-center justify-[flex-end] md:justify-end relative z-20 pb-12 md:pb-24 w-full max-w-5xl mx-auto px-4 mt-[35vh] md:mt-[45vh]">
 
-                <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 w-full">
+                <div className="flex flex-col md:flex-row items-center md:items-end justify-center gap-8 md:gap-16 w-full">
 
                     {/* Left Settings Panel (Audio / Setup) */}
                     <div className="hidden md:flex flex-col gap-6 items-end text-right">
