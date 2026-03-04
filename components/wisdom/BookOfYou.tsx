@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { UserService } from '../../services/userService';
 import { User, JournalEntry, MoodEntry, ArtEntry } from '../../types';
-import { BookOpen, Heart, Sparkles, Image as ImageIcon, Lock, Sun, CloudRain } from 'lucide-react';
+import { BookOpen, Heart, Sparkles, Image as ImageIcon, Lock, Sun, CloudRain, X } from 'lucide-react';
 
 // A Printable View Component
-const BookOfYou: React.FC = () => {
+interface BookOfYouProps {
+    onClose?: () => void;
+}
+
+const BookOfYou: React.FC<BookOfYouProps> = ({ onClose }) => {
     const [user, setUser] = useState<User | null>(null);
     const [journals, setJournals] = useState<JournalEntry[]>([]);
     const [moods, setMoods] = useState<MoodEntry[]>([]);
@@ -146,6 +150,12 @@ const BookOfYou: React.FC = () => {
                 }
             `}</style>
 
+            {onClose && (
+                <button onClick={onClose} className="fixed top-4 right-4 md:top-6 md:right-6 z-[200] p-3 md:bg-[#1e1b18]/60 md:hover:bg-[#1e1b18] bg-black/40 hover:bg-black/80 text-[#8b7355] rounded-full shadow-lg backdrop-blur-sm transition-all border border-[#8b7355]/30 print:hidden hover:scale-110">
+                    <X className="w-5 h-5 md:w-6 md:h-6 text-[#d4b886]" />
+                </button>
+            )}
+
             {/* ATMOSPHERIC SURROUNDINGS */}
             <div className="fixed inset-0 pointer-events-none z-0">
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-30 mix-blend-overlay"></div>
@@ -247,7 +257,7 @@ const BookOfYou: React.FC = () => {
                                 <div className="bg-gradient-to-r from-[#6b7280] to-[#3b82f6]/80 h-full transition-all duration-1000 relative" style={{ width: `${moodRatio.rain}%` }}>
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/woven.png')] opacity-30 mix-blend-overlay"></div>
                                 </div>
-                            </div>
+                            </div >
 
                             <div className="flex justify-between w-full max-w-sm mt-6 text-[10px] font-black uppercase tracking-[0.2em] z-10">
                                 <div className={`flex items-center gap-2 ${isSunny ? 'text-[#a38051] scale-110' : 'text-[#8b7355]/60'} transition-all`}>
@@ -257,62 +267,66 @@ const BookOfYou: React.FC = () => {
                                     Stormy ({Math.round(moodRatio.rain)}%) <CloudRain className="w-4 h-4" />
                                 </div>
                             </div>
-                        </div>
+                        </div >
 
                         {currentMoods.length === 0 && <p className="text-[#a38051] italic text-center font-serif -mt-8 mb-8 relative z-10 text-sm">No inner winds tracked for this volume.</p>}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 opacity-80 hover:opacity-100 transition-opacity relative z-10">
-                            {currentMoods.slice(0, 8).map((m, i) => {
-                                const isPositive = (m.mood as any) === 'confetti' || (m.mood as any) === 'Happy' || (m.mood as any) === 'Calm' || (m.mood as any) === 'sun';
-                                const isNegative = (m.mood as any) === 'rain' || (m.mood as any) === 'Anxious' || (m.mood as any) === 'Sad';
-                                let emoji = '😐'; // Default neutral
+                        < div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 opacity-80 hover:opacity-100 transition-opacity relative z-10" >
+                            {
+                                currentMoods.slice(0, 8).map((m, i) => {
+                                    const isPositive = (m.mood as any) === 'confetti' || (m.mood as any) === 'Happy' || (m.mood as any) === 'Calm' || (m.mood as any) === 'sun';
+                                    const isNegative = (m.mood as any) === 'rain' || (m.mood as any) === 'Anxious' || (m.mood as any) === 'Sad';
+                                    let emoji = '😐'; // Default neutral
 
-                                if (isPositive) {
-                                    emoji = (m.mood as any) === 'confetti' ? '🎉' : (m.mood as any) === 'sun' ? '☀️' : '😊';
-                                } else if (isNegative) {
-                                    emoji = (m.mood as any) === 'rain' ? '🌧️' : (m.mood as any) === 'Anxious' ? '😰' : '😔';
-                                }
+                                    if (isPositive) {
+                                        emoji = (m.mood as any) === 'confetti' ? '🎉' : (m.mood as any) === 'sun' ? '☀️' : '😊';
+                                    } else if (isNegative) {
+                                        emoji = (m.mood as any) === 'rain' ? '🌧️' : (m.mood as any) === 'Anxious' ? '😰' : '😔';
+                                    }
 
-                                return (
-                                    <div key={i} className="flex flex-col items-center justify-center py-6 px-4 bg-[#ffffff]/30 border border-[#8b7355]/10 rounded-sm hover:shadow-[0_5px_15px_rgba(139,115,85,0.1)] hover:bg-[#ffffff]/50 transition-all border-b-2 border-b-transparent hover:border-b-[#d4b886]">
-                                        <span className="text-3xl block mb-3 drop-shadow-sm">{emoji}</span>
-                                        <div className="text-[9px] font-black uppercase text-[#8b7355] tracking-widest">{new Date(m.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
+                                    return (
+                                        <div key={i} className="flex flex-col items-center justify-center py-6 px-4 bg-[#ffffff]/30 border border-[#8b7355]/10 rounded-sm hover:shadow-[0_5px_15px_rgba(139,115,85,0.1)] hover:bg-[#ffffff]/50 transition-all border-b-2 border-b-transparent hover:border-b-[#d4b886]">
+                                            <span className="text-3xl block mb-3 drop-shadow-sm">{emoji}</span>
+                                            <div className="text-[9px] font-black uppercase text-[#8b7355] tracking-widest">{new Date(m.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+                                        </div>
+                                    );
+                                })
+                            }
+                        </div >
+                    </div >
 
                     {/* CHAPTER 3: VISIONS (ART) */}
-                    <div className="mb-20 break-before-page">
+                    < div className="mb-20 break-before-page" >
                         <div className="flex flex-col items-center mb-12">
                             <ImageIcon className="w-6 h-6 text-[#8b7355] mb-4" />
                             <h2 className="text-2xl md:text-3xl font-serif font-black text-[#2c241c] uppercase tracking-widest text-center">
                                 Chapter III<br /><span className="text-[#8b7355] text-xl md:text-2xl italic normal-case tracking-normal">Visions</span>
                             </h2>
                         </div>
-                        {currentArts.length === 0 ? <p className="text-[#a38051] italic text-center font-serif relative z-10">No visions bound to this volume.</p> : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
-                                {currentArts.map((a, i) => (
-                                    <div key={a.id} className="break-inside-avoid group relative">
-                                        <div className="absolute inset-0 bg-[#d4b886]/10 transform translate-x-1.5 translate-y-1.5 pointer-events-none rounded-sm"></div>
-                                        <div className={`p-4 bg-[#ffffff]/60 border border-[#8b7355]/20 shadow-md relative z-10 transition-transform duration-700 hover:scale-[1.03] hover:z-20 ${i % 2 === 0 ? '-rotate-1' : 'rotate-[0.5deg]'}`}>
-                                            <div className="aspect-[4/3] bg-black/5 overflow-hidden border border-[#8b7355]/10 shadow-[inset_0_2px_10px_rgba(0,0,0,0.05)] mb-4">
-                                                <img src={a.imageUrl} alt={a.prompt} className="w-full h-full object-cover mix-blend-multiply opacity-90 group-hover:opacity-100 transition-all duration-700" />
-                                            </div>
-                                            <div className="text-center px-1">
-                                                <p className="font-serif text-[#3e3226] italic leading-snug text-xs md:text-sm selection:bg-[#d4b886]/40 line-clamp-3" title={a.prompt}>"{a.prompt}"</p>
-                                                <div className="w-8 h-px bg-[#8b7355]/30 mx-auto my-3"></div>
-                                                <p className="text-[8px] text-[#8b7355] font-black uppercase tracking-[0.2em]">{new Date(a.createdAt).toLocaleDateString()}</p>
+                        {
+                            currentArts.length === 0 ? <p className="text-[#a38051] italic text-center font-serif relative z-10">No visions bound to this volume.</p> : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+                                    {currentArts.map((a, i) => (
+                                        <div key={a.id} className="break-inside-avoid group relative">
+                                            <div className="absolute inset-0 bg-[#d4b886]/10 transform translate-x-1.5 translate-y-1.5 pointer-events-none rounded-sm"></div>
+                                            <div className={`p-4 bg-[#ffffff]/60 border border-[#8b7355]/20 shadow-md relative z-10 transition-transform duration-700 hover:scale-[1.03] hover:z-20 ${i % 2 === 0 ? '-rotate-1' : 'rotate-[0.5deg]'}`}>
+                                                <div className="aspect-[4/3] bg-black/5 overflow-hidden border border-[#8b7355]/10 shadow-[inset_0_2px_10px_rgba(0,0,0,0.05)] mb-4">
+                                                    <img src={a.imageUrl} alt={a.prompt} className="w-full h-full object-cover mix-blend-multiply opacity-90 group-hover:opacity-100 transition-all duration-700" />
+                                                </div>
+                                                <div className="text-center px-1">
+                                                    <p className="font-serif text-[#3e3226] italic leading-snug text-xs md:text-sm selection:bg-[#d4b886]/40 line-clamp-3" title={a.prompt}>"{a.prompt}"</p>
+                                                    <div className="w-8 h-px bg-[#8b7355]/30 mx-auto my-3"></div>
+                                                    <p className="text-[8px] text-[#8b7355] font-black uppercase tracking-[0.2em]">{new Date(a.createdAt).toLocaleDateString()}</p>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                                    ))}
+                                </div>
+                            )
+                        }
+                    </div >
 
                     {/* FOOTER */}
-                    <div className="mt-32 pt-16 border-t border-[#8b7355]/20 text-center relative">
+                    < div className="mt-32 pt-16 border-t border-[#8b7355]/20 text-center relative" >
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#f4ebd8] px-4">
                             <svg width="40" height="20" viewBox="0 0 40 20" className="text-[#8b7355]/40 fill-current">
                                 <path d="M 20,0 L 40,20 L 0,20 Z" />
@@ -324,10 +338,10 @@ const BookOfYou: React.FC = () => {
                         <button onClick={() => window.print()} className="fixed bottom-6 md:bottom-10 right-6 md:right-10 bg-[#2c241c] hover:bg-[#4a3b2c] text-[#d4b886] p-4 md:p-5 rounded-full shadow-[0_10px_25px_rgba(0,0,0,0.5)] border border-[#8b7355]/50 hover:scale-110 transition-all print:hidden z-50 group">
                             <BookOpen className="w-6 h-6 group-hover:animate-pulse" />
                         </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+                    </div >
+                </div >
+            </div >
+        </div >
     );
 };
 

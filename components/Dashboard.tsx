@@ -761,18 +761,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             <Info className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                                             <p className="text-xs font-medium italic text-slate-600 dark:text-slate-400">Note: Certain interactions within the Sanctuary will spend your available minutes.</p>
                                         </div>
-                                        <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-[600px] min-h-[calc(100vh-28rem)] relative z-10 transition-all">
+                                        <div className="flex flex-row gap-2 md:gap-6 flex-1 min-h-[400px] md:min-h-[600px] md:min-h-[calc(100vh-28rem)] relative z-10 transition-all">
                                             <div
                                                 onClick={() => setExpandedCanvas('garden')}
                                                 className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#050a05]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
                                             >
-                                                <div className="absolute inset-x-0 top-0 p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <span className="font-bold tracking-widest uppercase text-xs text-white">Inner Garden</span>
-                                                    <Maximize2 className="w-5 h-5 text-white animate-pulse" />
+                                                <div className="absolute inset-x-0 top-0 p-2 md:p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <span className="font-bold tracking-widest uppercase text-[9px] md:text-xs text-white">Inner Garden</span>
+                                                    <Maximize2 className="w-3 h-3 md:w-5 md:h-5 text-white animate-pulse" />
                                                 </div>
                                                 <div className="absolute inset-0 pointer-events-none group-hover:pointer-events-auto overflow-hidden">
-                                                    {/* Desktop: Scale engine UI natively to 60% of actual size to prevent cramped layout */}
-                                                    <div className="w-full h-full md:w-[166%] md:h-[166%] md:origin-top-left md:scale-[0.6] transition-transform">
+                                                    {/* Scale engine UI natively to 60% of actual size to prevent cramped layout globally */}
+                                                    <div className="w-[166%] h-[166%] origin-top-left scale-[0.6] transition-transform">
                                                         <GardenFullView isEmbedded={true} garden={garden} user={dashboardUser} onClose={() => { }} onUpdate={refreshGarden} />
                                                     </div>
                                                 </div>
@@ -781,13 +781,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                                 onClick={() => setExpandedCanvas('lumina')}
                                                 className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#0a0a0a]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
                                             >
-                                                <div className="absolute inset-x-0 top-0 p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <span className="font-bold tracking-widest uppercase text-xs text-white">Lumina Companion</span>
-                                                    <Maximize2 className="w-5 h-5 text-white animate-pulse" />
+                                                <div className="absolute inset-x-0 top-0 p-2 md:p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <span className="font-bold tracking-widest uppercase text-[9px] md:text-xs text-white">Lumina Companion</span>
+                                                    <Maximize2 className="w-3 h-3 md:w-5 md:h-5 text-white animate-pulse" />
                                                 </div>
                                                 <div className="absolute inset-0 pointer-events-none group-hover:pointer-events-auto overflow-hidden">
-                                                    {/* Desktop: Scale engine UI natively to 60% of actual size to prevent cramped layout */}
-                                                    <div className="w-full h-full md:w-[166%] md:h-[166%] md:origin-top-left md:scale-[0.6] transition-transform">
+                                                    {/* Scale engine UI natively to 60% of actual size to prevent cramped layout globally */}
+                                                    <div className="w-[166%] h-[166%] origin-top-left scale-[0.6] transition-transform">
                                                         <LuminaView isEmbedded={true} user={dashboardUser} onClose={() => { }} />
                                                     </div>
                                                 </div>
@@ -1409,7 +1409,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                 </main >
 
                 {/* --- V3 MOBILE BOTTOM NAVIGATION --- */}
-                {createPortal(
+                {!(showGrounding || showBookFull || showDojo || showObservatory || showGardenFull || expandedCanvas === 'garden' || showPocketPet || expandedCanvas === 'lumina') && createPortal(
                     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--color-bg-surface)] backdrop-blur-2xl border-t border-[var(--color-primary-border)] flex justify-around items-center px-1 py-1 sm:py-2 z-[200] pb-[calc(env(safe-area-inset-bottom)+8px)] shadow-[0_-15px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_-5px_30px_rgba(0,0,0,0.5)] transition-colors duration-500">
                         {[
                             { id: 'hub', icon: LayoutDashboard, label: 'Dashboard' },
