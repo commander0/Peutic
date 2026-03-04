@@ -9,6 +9,28 @@ import { PetService } from '../../services/petService';
 import SanctuaryShop, { SANCTUARY_ITEMS } from './SanctuaryShop';
 import PetCanvas from '../pocket/PetCanvas';
 
+const RelaxingDojoPet = React.memo(({ pet }: { pet: any }) => {
+    const [enlightened, setEnlightened] = useState(false);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (Math.random() > 0.4) {
+                setEnlightened(true);
+                setTimeout(() => setEnlightened(false), 15000);
+            }
+        }, 40000);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className={`absolute bottom-8 right-8 md:bottom-12 md:right-16 w-40 h-40 md:w-56 md:h-56 z-[45] transition-all duration-[4000ms] pointer-events-none drop-shadow-2xl ${enlightened ? 'animate-float opacity-100 -translate-y-8' : 'opacity-85 translate-y-0'}`}>
+            <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-24 h-4 rounded-[100%] transition-all duration-[2000ms] ${enlightened ? 'bg-amber-400/50 blur-xl scale-150' : 'bg-black/60 blur-sm'}`} />
+            <div className={`absolute inset-0 transition-opacity duration-2000 ${enlightened ? 'opacity-100 mix-blend-screen bg-[radial-gradient(circle_at_center,rgba(250,204,21,0.2),transparent_70%)]' : 'opacity-0'}`} />
+            <PetCanvas pet={pet} width={200} height={200} emotion={enlightened ? 'thinker' : 'sleeping'} trick={enlightened ? 'magic' : undefined} />
+        </div>
+    );
+});
+
 interface DojoViewProps {
     user: User;
     onClose: () => void;
@@ -320,108 +342,57 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
             {/* Audio Elements bound to DOM for Autoplay Bypass */}
             <audio ref={windChimeRef} src="https://cdn.freesound.org/previews/411/411088_5121236-lq.mp3" loop preload="auto" />
 
-            {/* Real Zen Dojo Background (Unsplash) - Deepened Atmosphere or Cosmic Dojo */}
+            {/* Background Layers */}
             {localUser.unlockedDecor?.includes('digital_dojo') ? (
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2048&auto=format&fit=crop')] bg-cover bg-center opacity-40 mix-blend-screen transition-all duration-[2000ms]"></div>
             ) : (
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1545569341-9eb8b30979d9?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-luminosity"></div>
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1545569341-9eb8b30979d9?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-25 mix-blend-luminosity"></div>
             )}
-
-            {/* Parallax / Dynamic Lighting Layers */}
             <div className="absolute inset-0 bg-gradient-to-t from-black via-stone-950/90 to-stone-900/60 mix-blend-multiply"></div>
 
-            {/* Ambient Sunbeams / Dust Motes */}
-            <div className="absolute top-0 left-1/4 w-1/2 h-[150%] bg-gradient-to-b from-amber-100/10 via-amber-600/5 to-transparent origin-top -skew-x-[25deg] pointer-events-none animate-[pulse_8s_ease-in-out_infinite]" />
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {/* Ambient Dust Motes */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
                 {[...Array(12)].map((_, i) => (
-                    <div
-                        key={i}
-                        className="absolute w-1 h-1 bg-amber-100/40 rounded-full blur-[1px] animate-[sway-drop_15s_linear_infinite]"
-                        style={{
-                            left: `${Math.random() * 100}%`,
-                            top: `${Math.random() * 100}%`,
-                            animationDelay: `${Math.random() * 5}s`,
-                            opacity: Math.random() * 0.5 + 0.1
-                        }}
-                    />
+                    <div key={i} className="absolute w-1 h-1 bg-amber-100/30 rounded-full blur-[1px] animate-[sway-drop_15s_linear_infinite]"
+                        style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`, animationDelay: `${Math.random() * 5}s` }} />
                 ))}
             </div>
 
-            {/* MOCK MULTIPLAYER AVATARS */}
-            <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
-                {[...Array(isActive ? 6 : 0)].map((_, i) => (
-                    <div
-                        key={`multi-${i}`}
-                        className="absolute w-8 h-8 rounded-full bg-white/10 border border-white/20 backdrop-blur-md animate-[sway-drop_20s_ease-in-out_infinite] flex items-center justify-center mix-blend-screen"
-                        style={{
-                            left: `${10 + Math.random() * 80}%`,
-                            top: `${10 + Math.random() * 80}%`,
-                            animationDelay: `${Math.random() * 10}s`,
-                            opacity: 0.1 + Math.random() * 0.3
-                        }}
-                    >
-                        <div className="w-4 h-4 rounded-full bg-white/40 animate-pulse" style={{ animationDuration: `${2 + Math.random() * 2}s` }} />
-                    </div>
-                ))}
-            </div>
-
-            {/* Header */}
-            <header className="relative z-20 px-8 py-6 flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                    <Wind className="w-6 h-6 text-stone-400" />
-                    <span className="text-xl tracking-widest uppercase opacity-80">Zen Dojo</span>
-                </div>
-                <div className="flex items-center gap-4">
-                    <button onClick={() => setShowShop(true)} className="px-4 py-2 bg-amber-500/10 text-amber-200 border border-amber-500/30 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-amber-500/20 transition-all flex items-center gap-2">
-                        Decorate
-                    </button>
-                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                        <X className="w-6 h-6" />
-                    </button>
-                </div>
-            </header>
-
-            {/* AMBIENT WEATHER WINDOW */}
-            <div className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[80%] md:w-96 h-32 md:h-48 border-[6px] md:border-8 border-stone-800 bg-stone-900/40 shadow-[inset_0_0_50px_rgba(0,0,0,0.8),0_20px_50px_rgba(0,0,0,0.5)] z-0 overflow-hidden flex transform-gpu perspective-1000 rotate-x-6">
-                {/* Shoji Screen Grids */}
-                <div className="absolute inset-0 grid grid-cols-4 grid-rows-2 opacity-60">
-                    {[...Array(8)].map((_, i) => (
-                        <div key={i} className="border border-stone-800/80 bg-[#f4ebd8]/10 backdrop-blur-[2px]"></div>
+            {/* Shoji Window Backdrop - Organized behind the timer */}
+            <div className="absolute inset-x-0 bottom-[15%] h-[45%] md:inset-x-[15%] lg:inset-x-[25%] border-[6px] border-stone-800 bg-stone-950/80 shadow-[inset_0_0_100px_rgba(0,0,0,0.9)] z-0 flex flex-col justify-center opacity-90 backdrop-blur-md">
+                <div className="absolute inset-0 grid grid-cols-6 grid-rows-2 opacity-30">
+                    {[...Array(12)].map((_, i) => (
+                        <div key={i} className="border-2 border-stone-800/90 bg-[#f4ebd8]/5 backdrop-blur-[2px]"></div>
                     ))}
                 </div>
-
-                {/* Dynamic Weather Layer behind Shoji */}
                 {weather === 'sun' ? (
-                    <div className="absolute inset-0 bg-gradient-to-br from-amber-200/40 via-transparent to-transparent z-[-1]"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-200/20 to-transparent mix-blend-overlay z-[-1]"></div>
                 ) : (
-                    <div className="absolute inset-0 bg-slate-900/60 z-[-1] overflow-hidden">
+                    <div className="absolute inset-0 bg-slate-900/80 z-[-1] overflow-hidden">
                         {[...Array(20)].map((_, i) => (
-                            <div key={i} className="absolute w-[1px] h-12 bg-blue-300/40 animate-[particle-float-up_1s_linear_infinite]" style={{ left: `${Math.random() * 100}%`, top: `-20%`, animationDelay: `${Math.random()}s`, animationDuration: `${0.5 + Math.random() * 0.5}s` }}></div>
+                            <div key={i} className="absolute w-[1px] h-12 bg-blue-300/20 animate-[particle-float-up_1s_linear_infinite]" style={{ left: `${Math.random() * 100}%`, top: `-20%`, animationDelay: `${Math.random()}s`, animationDuration: `${0.5 + Math.random() * 0.5}s` }}></div>
                         ))}
                     </div>
                 )}
             </div>
 
+            {/* Relaxing Dojo Pet - Unlinked from timer to stop flickering! */}
+            {luminaPet && <RelaxingDojoPet pet={luminaPet} />}
+
             {/* --- VISUAL DECORATIONS --- */}
-            {/* Placed at z-10 so it's under main interactive layer but OVER all background masks */}
             <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
                 {localUser.unlockedDecor?.map(itemId => {
                     const itemData = SANCTUARY_ITEMS.find(i => i.id === itemId);
                     if (!itemData) return null;
 
-                    // Neatly aligned positioning to create a "living room" feel
                     const getPositionClass = (id: string) => {
                         switch (id) {
                             case 'scroll': return 'top-20 right-8 md:top-24 md:right-32 text-[6rem] md:text-[8rem] opacity-90 drop-shadow-2xl z-0';
                             case 'lantern': return 'top-20 left-4 md:top-24 md:left-24 text-7xl md:text-8xl opacity-100 animate-[sway_6s_ease-in-out_infinite] drop-shadow-sm z-0';
-
-                            // Floor/table layer (back)
-                            case 'bonsai': return 'bottom-[15%] right-4 md:right-32 text-[7rem] md:text-[9rem] drop-shadow-[0_30px_30px_rgba(0,0,0,0.8)] z-10 hover:scale-105 transition-transform';
-                            case 'incense': return 'bottom-[15%] left-4 md:left-24 text-6xl md:text-7xl opacity-100 animate-[sway_4s_ease-in-out_infinite] drop-shadow-[0_30px_30px_rgba(0,0,0,0.8)] z-10';
-
-                            // Floor layer (front, closer to the center candle)
-                            case 'singing_bowl': return 'bottom-[8%] right-24 md:right-48 text-[5rem] md:text-[6rem] drop-shadow-[0_40px_20px_rgba(0,0,0,0.8)] pointer-events-auto cursor-pointer z-30 transition-transform active:scale-90 hover:scale-110';
-                            case 'stones': return 'bottom-[8%] left-24 md:left-48 text-[4rem] md:text-[5rem] drop-shadow-[0_40px_20px_rgba(0,0,0,0.8)] z-20 hover:scale-105 transition-transform';
+                            case 'bonsai': return 'bottom-[15%] right-8 md:right-48 text-[7rem] md:text-[8rem] drop-shadow-[0_30px_30px_rgba(0,0,0,0.8)] z-10 hover:scale-105 transition-transform';
+                            case 'incense': return 'bottom-[12%] left-8 md:left-32 text-6xl md:text-7xl opacity-100 animate-[sway_4s_ease-in-out_infinite] drop-shadow-[0_30px_30px_rgba(0,0,0,0.8)] z-10';
+                            case 'singing_bowl': return 'bottom-[10%] right-32 md:right-64 text-[4rem] md:text-[5rem] drop-shadow-[0_20px_20px_rgba(0,0,0,0.8)] pointer-events-auto cursor-pointer z-30 transition-transform active:scale-90 hover:scale-110';
+                            case 'stones': return 'bottom-[8%] left-32 md:left-64 text-[3rem] md:text-[4rem] drop-shadow-[0_20px_20px_rgba(0,0,0,0.8)] z-20 hover:scale-105 transition-transform';
                             default: return 'hidden';
                         }
                     };
@@ -444,202 +415,158 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                 })}
             </div>
 
-            {/* Main Content */}
-            <main className="flex-1 flex flex-col items-center justify-start overflow-y-auto custom-scrollbar w-full max-w-md mx-auto p-4 md:p-6 relative z-20 pt-4 md:pt-8" style={{ maxHeight: 'calc(100dvh - 80px)' }}>
-
-                {/* Time Selection (Restored - Small) */}
-                {!isActive && (
-                    <div className="flex flex-wrap justify-center gap-2 md:gap-4 mb-8 highlight-white/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        {[5, 10, 15, 20, 25].map(m => (
-                            <button
-                                key={m}
-                                onClick={() => setTime(m)}
-                                className={`px-5 py-2 rounded-full text-xs font-bold tracking-widest border transition-all ${timeLeft === m * 60 ? 'bg-amber-500/20 border-amber-500/50 text-amber-200' : 'bg-white/5 border-white/10 hover:bg-white/10 text-stone-400'}`}
-                            >
-                                {m}M
-                            </button>
-                        ))}
-                    </div>
-                )}
-
-                {/* Digital Timer Preview (Small) & Candle Visualizer */}
-                <div className="relative mb-12 group cursor-pointer flex flex-col items-center" onClick={toggleTimer}>
-
-                    {/* Timer Text */}
-                    <div className="mb-4 text-4xl font-light text-stone-300 tracking-widest font-variant-numeric tabular-nums opacity-80">
-                        {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
-                    </div>
-
-                    {/* The Circle Frame (Candle Container) */}
-                    <div className={`w-64 h-64 md:w-80 md:h-80 rounded-full border border-white/10 flex flex-col items-center justify-center relative bg-white/5 backdrop-blur-3xl shadow-sm transition-all duration-1000 shrink-0 ${isActive ? 'scale-105 border-amber-500/30 animate-ethereal-breathe shadow-sm' : ''}`}>
-
-                        {/* Lumina Meditation Presence */}
-                        {luminaPet && isActive && (
-                            <div className="absolute -bottom-4 -left-12 md:-left-20 w-32 h-32 md:w-48 md:h-48 z-40 opacity-70 animate-in slide-in-from-left fade-in duration-1000 origin-bottom pointer-events-none">
-                                <PetCanvas pet={luminaPet} width={200} height={200} emotion="sleeping" trick="magic" />
-                            </div>
-                        )}
-
-                        {timerMode === 'candle' ? (
-                            <div className="flex flex-col items-center justify-center animate-in fade-in duration-1000 scale-125 md:scale-150 relative -mt-8">
-                                {/* Ambient Warmth Glow */}
-                                <div className={`absolute -top-20 -left-20 right-0 bottom-0 bg-orange-500/5 rounded-full blur-[100px] transition-all duration-3000 ${isActive ? 'opacity-100 scale-110' : 'opacity-20 scale-90'}`}></div>
-
-                                {/* Candle Complex */}
-                                <div className="relative group flex flex-col items-center">
-                                    {/* Flame Container */}
-                                    <div className={`absolute -top-14 left-1/2 -translate-x-1/2 w-8 h-32 origin-bottom transition-all duration-1000 ${isActive ? 'opacity-100' : 'opacity-40 grayscale'}`}>
-                                        {/* Outer Orange/Red Glow */}
-                                        <div className="absolute inset-0 bg-orange-500/30 blur-2xl rounded-full animate-pulse-slow"></div>
-
-                                        {/* Main Flame Shape */}
-                                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-14 bg-gradient-to-t from-orange-600 via-yellow-400 to-white rounded-[50%_50%_50%_50%_/_60%_60%_40%_40%] shadow-sm animate-flicker transform-gpu">
-                                            {/* Blue Core */}
-                                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-3 bg-blue-600/80 rounded-full blur-[1px]"></div>
-                                        </div>
-
-                                        {/* Sparkles/Embers */}
-                                        {isActive && (
-                                            <>
-                                                <div className="absolute bottom-2 left-1/2 w-0.5 h-0.5 bg-yellow-100 shadow-sm animate-ember-fly-1"></div>
-                                                <div className="absolute bottom-4 left-1/2 w-0.5 h-0.5 bg-orange-100 shadow-sm animate-ember-fly-2"></div>
-                                            </>
-                                        )}
-                                    </div>
-
-                                    {/* Candle Body */}
-                                    <div className="w-24 h-32 bg-gradient-to-r from-stone-800 via-stone-700 to-stone-800 rounded-lg relative overflow-hidden shadow-2xl border-t border-stone-600/50 mt-16">
-                                        <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-stone-600 to-stone-800 rounded-[100%] blur-[0.5px] opacity-90"></div>
-                                        <div className="absolute inset-x-4 top-2 h-4 bg-yellow-900/20 rounded-[100%] blur-sm opacity-60 animate-pulse-slow"></div>
-                                        <div className="absolute top-4 left-4 w-2 h-12 bg-stone-700/60 rounded-full blur-[1px] shadow-sm"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="text-center space-y-4 animate-in fade-in">
-                                <span className="block text-6xl">{isActive ? "Inhale" : "Ready"}</span>
-                                <p className="text-stone-500 text-sm tracking-widest uppercase">Tap to {isActive ? "Stop" : "Begin"}</p>
-                            </div>
-                        )}
-                    </div>
+            {/* Header */}
+            <header className="relative z-30 px-6 py-5 flex justify-between items-center bg-gradient-to-b from-stone-950 to-transparent">
+                <div className="flex items-center gap-3">
+                    <Wind className="w-5 h-5 text-stone-400" />
+                    <span className="text-lg tracking-widest uppercase text-stone-300">Zen Dojo</span>
                 </div>
-
-                {/* KOAN DISPLAY - MOVED UP FOR VISIBILITY */}
-                {koan && (
-                    <div className="mb-8 w-full max-w-lg p-8 bg-black/40 backdrop-blur-3xl border border-white/10 rounded-xl text-center animate-in zoom-in duration-500 shadow-sm relative z-20">
-                        <p className="text-xl md:text-2xl font-serif italic text-amber-200/90 leading-relaxed drop-shadow-md">"{koan}"</p>
-                        <button onClick={() => setKoan(null)} className="text-[10px] text-stone-500 hover:text-stone-300 mt-4 uppercase tracking-widest font-bold">Dismiss</button>
-                    </div>
-                )}
-
-                {/* CONTROLS */}
-                <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
-                    <button
-                        onClick={(e) => { e.stopPropagation(); nextKoan(); }}
-                        className="px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all bg-white/5 text-amber-500 border border-white/10 hover:bg-white/10 hover:text-amber-200 shadow-sm backdrop-blur-md"
-                    >
-                        <BookOpen className="w-4 h-4" />
-                        Seek Wisdom
+                <div className="flex items-center gap-3">
+                    <button onClick={() => setShowShop(true)} className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all text-stone-300">
+                        Decorate
                     </button>
-
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setSoundEnabled(!soundEnabled);
-                            if (!soundEnabled && windChimeRef.current && timerMode === 'candle' && isActive) {
-                                windChimeRef.current.play().catch(() => { });
-                            }
-                        }}
-                        className={`p-3 rounded-full transition-all border backdrop-blur-md ${soundEnabled ? 'bg-amber-500/10 text-amber-400 border-amber-500/40 shadow-sm' : 'bg-white/5 text-stone-400 border-white/10 hover:bg-white/10 hover:text-white shadow-sm'}`}
-                    >
-                        {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-stone-400 hover:text-white">
+                        <X className="w-5 h-5" />
                     </button>
-                    <span className="text-[9px] uppercase tracking-widest text-stone-600 font-bold">{soundEnabled ? 'Bells On' : 'Silent'}</span>
                 </div>
+            </header>
 
-                {/* --- NEW SOUNDSCAPE CONTROLS --- */}
-                <div className="bg-black/40 rounded-xl p-8 backdrop-blur-3xl border border-white/10 w-full max-w-lg mb-12 shadow-sm relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+            {/* Cozy Interactive Area */}
+            <main className="flex-1 flex flex-col items-center justify-center relative z-20 pb-20 w-full max-w-5xl mx-auto px-4">
 
-                    <h3 className="text-lg font-serif text-amber-200/80 mb-6 flex items-center justify-center gap-3 tracking-widest uppercase text-sm">
-                        <Volume2 className="w-5 h-5 text-amber-500" />
-                        Acoustic Atmosphere
-                        <VolumeX className="w-5 h-5 text-amber-500/30" />
-                    </h3>
+                <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 w-full">
 
-                    <div className="flex flex-col items-center gap-6 relative z-10 w-full">
-                        <div className="w-full">
-                            <label className="text-[10px] uppercase font-black tracking-widest text-stone-500 mb-3 block text-center">Singing Bowl Interval</label>
-                            <div className="grid grid-cols-3 gap-3 w-full mb-4">
+                    {/* Left Settings Panel (Audio / Setup) */}
+                    <div className="hidden md:flex flex-col gap-6 items-end text-right">
+                        <div className="bg-stone-900/80 border border-white/5 p-6 rounded-3xl w-64 backdrop-blur-xl shadow-2xl">
+                            <h3 className="text-[10px] font-bold text-amber-500/80 tracking-widest uppercase mb-4 flex items-center justify-end gap-2">
+                                Acoustic Setup <Volume2 className="w-3 h-3 text-stone-500" />
+                            </h3>
+                            <div className="flex flex-col gap-2">
                                 {[0, 60, 300].map((sec) => (
                                     <button
                                         key={sec}
                                         onClick={(e) => { e.stopPropagation(); setBellInterval(sec); }}
-                                        className={`px-2 py-3 rounded-xl text-xs font-bold tracking-wider text-center transition-all ${bellInterval === sec
-                                            ? 'bg-amber-500/20 text-amber-200 border border-amber-500/50 shadow-sm'
-                                            : 'hover:bg-white/5 text-stone-500 border border-white/5'
-                                            }`}
+                                        className={`py-2.5 px-3 rounded-xl text-[10px] font-bold tracking-widest transition-all text-right ${bellInterval === sec ? 'bg-amber-500/20 text-amber-300 border border-amber-500/20' : 'text-stone-500 hover:bg-white/5 border border-transparent'}`}
                                     >
-                                        {sec === 0 ? 'START/END' : sec === 60 ? '1 MIN' : '5 MIN'}
+                                        {sec === 0 ? 'START/END ONLY' : sec === 60 ? '1 MIN CHIME' : '5 MIN CHIME'}
+                                    </button>
+                                ))}
+                                {(luminaLevel >= 30) && (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setBellInterval(120); }}
+                                        className={`mt-2 py-2 px-3 rounded-xl text-[10px] font-bold tracking-widest transition-all text-right ${bellInterval === 120 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/20' : 'text-emerald-500/40 hover:bg-white/5 border border-transparent'}`}
+                                    >
+                                        ASCENDANT CHIMES
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {!isActive && (
+                            <div className="flex flex-col gap-2 w-64 bg-stone-900/80 p-4 border border-white/5 rounded-2xl backdrop-blur-xl">
+                                <span className="text-[9px] font-bold text-stone-500 uppercase tracking-widest text-right mb-2">Duration</span>
+                                <div className="flex flex-wrap justify-end gap-2">
+                                    {[5, 10, 15, 20, 25].map(m => (
+                                        <button key={m} onClick={(e) => { e.stopPropagation(); setTime(m); }} className={`px-4 py-1.5 rounded-full text-[10px] font-bold tracking-widest border transition-all ${timeLeft === m * 60 ? 'bg-amber-500/20 border-amber-500/50 text-amber-200' : 'bg-black/40 border-white/5 hover:bg-white/10 text-stone-400'}`}>
+                                            {m}M
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Center: The Minimalist Candle */}
+                    <div className="relative group cursor-pointer flex flex-col items-center" onClick={toggleTimer}>
+                        <div className="mb-6 text-5xl font-light text-stone-300 tracking-widest font-variant-numeric tabular-nums opacity-90 drop-shadow-2xl">
+                            {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                        </div>
+
+                        <div className={`w-56 h-56 md:w-72 md:h-72 rounded-full flex flex-col items-center justify-center relative transition-all duration-1000 shrink-0 ${isActive ? 'scale-105 shadow-[0_0_120px_rgba(245,158,11,0.1)]' : 'opacity-80'}`}>
+                            {timerMode === 'candle' ? (
+                                <div className="absolute inset-0 flex items-center justify-center -mt-8 scale-[1.15]">
+                                    <div className={`absolute -top-10 -left-10 right-0 bottom-0 bg-orange-500/5 rounded-full blur-[80px] transition-all duration-3000 ${isActive ? 'opacity-100 scale-110' : 'opacity-0 scale-90'}`}></div>
+                                    <div className="relative group flex flex-col items-center">
+                                        <div className={`absolute -top-12 left-1/2 -translate-x-1/2 w-6 h-28 origin-bottom transition-all duration-1000 ${isActive ? 'opacity-100' : 'opacity-30 grayscale'}`}>
+                                            <div className="absolute inset-0 bg-orange-500/40 blur-xl rounded-full animate-pulse-slow"></div>
+                                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3.5 h-12 bg-gradient-to-t from-orange-600 via-yellow-400 to-white rounded-[50%_50%_50%_50%_/_60%_60%_40%_40%] animate-flicker transform-gpu shadow-sm">
+                                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-3 bg-blue-600/90 rounded-full blur-[1px]"></div>
+                                            </div>
+                                        </div>
+                                        <div className="w-16 h-20 md:w-20 md:h-24 bg-gradient-to-r from-stone-800 via-stone-700 to-stone-800 rounded-lg relative overflow-hidden shadow-2xl border-t border-stone-600/50 mt-16">
+                                            <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-stone-600 to-stone-800 rounded-[100%] blur-[0.5px]"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-center space-y-2 animate-in fade-in">
+                                    <span className="block text-4xl md:text-5xl opacity-90">{isActive ? "Inhale" : "Ready"}</span>
+                                    <p className="text-amber-500/70 text-[10px] md:text-xs tracking-widest uppercase font-bold">Tap to {isActive ? "Stop" : "Begin"}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Right Panel: Koan & Mobile Control overrides */}
+                    <div className="flex flex-col gap-4 items-center md:items-start md:w-64 z-20">
+                        <div className="bg-stone-900/80 border border-white/5 p-6 rounded-3xl backdrop-blur-xl w-full text-center md:text-left shadow-2xl">
+                            <h3 className="text-[10px] font-bold text-stone-500 tracking-widest uppercase mb-3 flex items-center justify-center md:justify-start gap-2">
+                                <BookOpen className="w-3 h-3 text-stone-400" /> Wisdom
+                            </h3>
+                            <p className="text-xs md:text-sm font-serif italic text-amber-100/90 leading-relaxed min-h-[100px] flex items-center justify-center md:justify-start">
+                                {koan ? `"${koan}"` : "Silence speaks volumes when the mind is still."}
+                            </p>
+                            <div className="flex items-center justify-between mt-4 border-t border-white/5 pt-4">
+                                <button onClick={(e) => { e.stopPropagation(); setSoundEnabled(!soundEnabled); }} className={`p-1.5 rounded-full ${soundEnabled ? 'text-amber-400' : 'text-stone-500'}`}>
+                                    {soundEnabled ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); nextKoan(); }} className="text-[9px] uppercase tracking-widest font-bold text-amber-500 hover:text-amber-300 transition-colors">
+                                    Next Koan &rarr;
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Mobile Specific Setting Dupes */}
+                        {!isActive && (
+                            <div className="md:hidden flex flex-wrap justify-center gap-2 mt-4 animate-in fade-in">
+                                {[5, 10, 15, 20, 25].map(m => (
+                                    <button key={m} onClick={(e) => { e.stopPropagation(); setTime(m); }} className={`px-4 py-1.5 rounded-full text-[10px] font-bold tracking-widest border transition-all ${timeLeft === m * 60 ? 'bg-amber-500/20 border-amber-500/50 text-amber-200' : 'bg-black/40 border-white/10 hover:bg-white/10 text-stone-400'}`}>
+                                        {m}M
                                     </button>
                                 ))}
                             </div>
-
-                            {(luminaLevel >= 30 || luminaLevel >= 50) && (
-                                <>
-                                    <div className="w-full h-px bg-stone-800/50 my-4"></div>
-                                    <label className="text-[10px] uppercase font-black tracking-widest text-emerald-500/70 mb-3 block text-center flex items-center justify-center gap-2">
-                                        <Sparkles className="w-3 h-3" /> Lumina Unlocks
-                                    </label>
-                                    <div className="flex flex-wrap justify-center gap-3 w-full">
-                                        {luminaLevel >= 30 && (
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); setBellInterval(120); }} // 2 mins special
-                                                className={`px-2 py-3 rounded-xl text-xs font-bold tracking-wider text-center transition-all ${bellInterval === 120
-                                                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-sm'
-                                                    : 'bg-emerald-900/10 text-emerald-600/60 border border-emerald-900/30 hover:border-emerald-700/50'
-                                                    }`}
-                                            >
-                                                ASCENDANT CHIMES
-                                            </button>
-                                        )}
-                                        {luminaLevel >= 50 && (
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); setBellInterval(300); }} // Overrides 5 min logic dynamically
-                                                className={`px-2 py-3 rounded-xl text-xs font-bold tracking-wider text-center transition-all ${bellInterval === 300 && luminaLevel >= 50
-                                                    ? 'bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/50 shadow-sm'
-                                                    : 'bg-fuchsia-900/10 text-fuchsia-600/60 border border-fuchsia-900/30 hover:border-fuchsia-700/50'
-                                                    }`}
-                                            >
-                                                CELESTIAL VOID
-                                            </button>
-                                        )}
-                                    </div>
-                                </>
-                            )}
+                        )}
+                        <div className="md:hidden flex items-center justify-center mt-2 glass-panel bg-stone-900/60 p-2 rounded-full w-full max-w-[200px]">
+                            <select className="bg-transparent text-[10px] uppercase font-bold text-stone-300 outline-none cursor-pointer w-full text-center" value={bellInterval} onChange={(e) => setBellInterval(Number(e.target.value))}>
+                                <option value={0} className="bg-stone-900">Start/End</option>
+                                <option value={60} className="bg-stone-900">1 Min Chime</option>
+                                <option value={300} className="bg-stone-900">5 Min Chime</option>
+                            </select>
                         </div>
                     </div>
                 </div>
 
-                {/* STATS ROW */}
-                <div className="grid grid-cols-3 gap-2 md:gap-4 w-full max-w-2xl border-t border-stone-800/50 pt-6">
-                    <div className="flex flex-col items-center">
-                        <Flame className="w-5 h-5 text-orange-600 mb-1" />
-                        <span className="text-xl font-black text-stone-300">{streak}</span>
-                        <span className="text-[8px] uppercase tracking-widest text-stone-600 font-bold">Streak</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                        <Target className="w-5 h-5 text-amber-600 mb-1" />
-                        <span className="text-xl font-black text-stone-300">{totalFocus}m</span>
-                        <span className="text-[8px] uppercase tracking-widest text-stone-600 font-bold">Total Focus</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                        <Trophy className="w-5 h-5 text-yellow-600 mb-1" />
-                        <span className="text-xl font-black text-stone-300">Level {Math.floor(totalFocus / 60) + 1}</span>
-                    </div>
-                </div>
-
             </main>
+
+            {/* Stats Footer - Simplified & Cozy */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center justify-center gap-12 md:gap-24 w-full z-10 opacity-40 hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+                <div className="flex flex-col items-center gap-1">
+                    <Flame className="w-3 h-3 text-orange-500 mb-0.5" />
+                    <span className="text-xs font-black text-stone-300 tabular-nums">{streak}</span>
+                    <span className="text-[7px] uppercase tracking-widest text-stone-500 font-bold">Streak</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                    <Target className="w-3 h-3 text-amber-500 mb-0.5" />
+                    <span className="text-xs font-black text-stone-300 tabular-nums">{totalFocus}</span>
+                    <span className="text-[7px] uppercase tracking-widest text-stone-500 font-bold">Total Mins</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                    <Trophy className="w-3 h-3 text-yellow-500 mb-0.5" />
+                    <span className="text-xs font-black text-stone-300 tabular-nums">Lvl {Math.floor(totalFocus / 60) + 1}</span>
+                    <span className="text-[7px] uppercase tracking-widest text-stone-500 font-bold">Rank</span>
+                </div>
+            </div>
 
             {/* SHOP MODAL */}
             {showShop && (

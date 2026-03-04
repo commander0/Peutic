@@ -300,6 +300,20 @@ const WeatherEffectComponent: React.FC<{ type: WeatherType }> = ({ type }) => {
                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-clouds.png')] opacity-30 mix-blend-multiply animate-[cloud-pan-left_60s_linear_infinite]" />
                 </>
             )}
+
+            {type === 'confetti' && (
+                <>
+                    {/* RADIANT SUNLIGHT BEAMS */}
+                    <div className="absolute inset-[0%] -top-[50%] -left-[50%] w-[200%] h-[200%] bg-[conic-gradient(from_0deg,transparent_0deg,rgba(253,224,71,0.1)_60deg,transparent_120deg,rgba(253,224,71,0.1)_180deg,transparent_240deg,rgba(253,224,71,0.1)_300deg,transparent_360deg)] animate-[spin_60s_linear_infinite] mix-blend-overlay" />
+
+                    {/* WARM GOLDEN OVERLAY */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-yellow-300/20 via-yellow-100/5 to-transparent mix-blend-overlay animate-[pulse_4s_infinite]" />
+
+                    {/* FLOATING STARDUST */}
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-40 mix-blend-screen animate-[float-stardust_60s_linear_infinite]" />
+                </>
+            )}
+
             <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
         </div>
     );
