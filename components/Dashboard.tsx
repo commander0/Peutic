@@ -10,7 +10,7 @@ import { LanguageSelector } from './common/LanguageSelector';
 import { useLanguage } from './common/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import {
-    Clock, LayoutDashboard, Brain, BookOpen, User as UserIcon, Settings, Plus, Lock, Sun, Moon, Sparkles, Star, Mic, Heart, ShieldCheck, Leaf, LogOut, LifeBuoy, ChevronUp, ChevronDown, Megaphone, Zap, Scissors, Gamepad2, Cloud, Feather, AlertTriangle, Video, Eye, EyeOff, Edit2, Mail, RefreshCw, Save, Twitter, Instagram, Linkedin, X, Flame, Trophy, ShoppingBag, Maximize2
+    Clock, LayoutDashboard, Brain, BookOpen, User as UserIcon, Settings, Plus, Lock, Sun, Moon, Sparkles, Star, Mic, Heart, ShieldCheck, Leaf, LogOut, LifeBuoy, ChevronUp, ChevronDown, Megaphone, Zap, Scissors, Gamepad2, Cloud, Feather, AlertTriangle, Video, Eye, EyeOff, Edit2, Mail, RefreshCw, Save, Twitter, Instagram, Linkedin, X, Flame, Trophy, ShoppingBag, Maximize2, Info
 } from 'lucide-react';
 import { NotificationBell } from './common/NotificationBell';
 import { UserService } from '../services/userService';
@@ -289,6 +289,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             case 'open_shredder': setShowShredder(true); break;
             case 'open_games': setShowMatchGame(true); break;
         }
+    };
+
+    const handleTabChange = (tabId: string) => {
+        setActiveTab(tabId as any);
+        setExpandedCanvas(null);
+        setShowGardenFull(false);
+        setShowPocketPet(false);
+        setOpenSection(null);
     };
 
     useEffect(() => {
@@ -615,7 +623,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             { id: 'history', icon: Clock, label: t('dash_journal') },
                             { id: 'settings', icon: Settings, label: t('dash_settings') }
                         ].map((item) => (
-                            <button key={item.id} onClick={() => item.isModal ? setShowSerenityShop(true) : setActiveTab(item.id as any)} className={`w-full flex items-center justify-center lg:justify-start gap-3 p-3 lg:p-4 rounded-xl transition-all duration-300 group border border-transparent ${activeTab === item.id ? 'bg-primary/20 text-primary dark:bg-yellow-500/20 dark:text-yellow-400 border-primary/30 dark:border-yellow-500/30 shadow-sm' : 'text-gray-500 hover:bg-primary-light dark:hover:bg-gray-800 dark:text-gray-400'}`}>
+                            <button key={item.id} onClick={() => item.isModal ? setShowSerenityShop(true) : handleTabChange(item.id)} className={`w-full flex items-center justify-center lg:justify-start gap-3 p-3 lg:p-4 rounded-xl transition-all duration-300 group border border-transparent ${activeTab === item.id ? 'bg-primary/20 text-primary dark:bg-yellow-500/20 dark:text-yellow-400 border-primary/30 dark:border-yellow-500/30 shadow-sm' : 'text-gray-500 hover:bg-primary-light dark:hover:bg-gray-800 dark:text-gray-400'}`}>
                                 <item.icon className={`w-5 h-5 lg:w-6 lg:h-6 ${activeTab === item.id ? 'text-primary dark:text-yellow-400' : 'group-hover:text-primary dark:group-hover:text-white'}`} />
                                 <span className="hidden lg:block font-bold text-xs lg:text-sm tracking-wide">{item.label}</span>
                             </button>
@@ -748,7 +756,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                         {activeTab === 'sanctuary' && dashboardUser && garden && (
                             <>
                                 <Suspense fallback={<div className="flex-1 min-h-[600px] flex items-center justify-center"><div className="animate-pulse text-primary font-bold tracking-widest uppercase">Initializing Sanctuary...</div></div>}>
-                                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
+                                    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-5 duration-500">
+                                        <div className="flex items-center gap-2 px-2 opacity-60">
+                                            <Info className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                                            <p className="text-xs font-medium italic text-slate-600 dark:text-slate-400">Note: Certain interactions within the Sanctuary will spend your available minutes.</p>
+                                        </div>
                                         <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-[600px] min-h-[calc(100vh-28rem)] relative z-10 transition-all">
                                             <div
                                                 onClick={() => setExpandedCanvas('garden')}
@@ -1410,7 +1422,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                             return (
                                 <button
                                     key={item.id}
-                                    onClick={() => item.isModal ? setShowSerenityShop(true) : setActiveTab(item.id as any)}
+                                    onClick={() => item.isModal ? setShowSerenityShop(true) : handleTabChange(item.id)}
                                     className={`flex flex-col items-center gap-1 min-w-[60px] p-2 transition-all duration-300 ${isActive ? 'text-[var(--color-primary)] font-black scale-105' : 'text-gray-500 dark:text-gray-400 opacity-80 hover:opacity-100'}`}
                                 >
                                     <div className={`relative p-1.5 rounded-xl transition-colors duration-300 ${isActive ? 'bg-[var(--color-primary-light)] text-[var(--color-primary)] border border-[var(--color-primary-border)]' : 'bg-transparent border border-transparent'}`}>
