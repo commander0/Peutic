@@ -502,7 +502,7 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                     </div>
 
                     {/* Right Panel: Koan & Mobile Control overrides */}
-                    <div className="w-full md:w-64 flex flex-col gap-4 items-center md:items-start z-20 order-first md:order-last mb-8 md:mb-0">
+                    <div className="fixed top-[10vh] left-1/2 -translate-x-1/2 w-[90%] z-50 md:static md:translate-x-0 md:w-64 flex flex-col gap-4 items-center md:items-start md:z-20">
                         <div className="bg-stone-900/80 border border-white/5 p-4 md:p-6 rounded-3xl backdrop-blur-xl w-full text-center md:text-left shadow-2xl">
                             <h3 className="text-[10px] font-bold text-stone-500 tracking-widest uppercase mb-3 flex items-center justify-center md:justify-start gap-2">
                                 <BookOpen className="w-3 h-3 text-stone-400" /> Wisdom
