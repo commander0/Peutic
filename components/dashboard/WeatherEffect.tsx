@@ -287,7 +287,22 @@ const WeatherEffectComponent: React.FC<{ type: WeatherType }> = ({ type }) => {
 
     if (!type) return null;
 
-    return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-[50]" />;
+    return (
+        <div className="fixed inset-0 pointer-events-none z-[50]">
+            {type === 'rain' && (
+                <>
+                    {/* REALISTIC LIGHTNING FLASHES */}
+                    <div className="absolute inset-0 bg-white/20 mix-blend-overlay opacity-0 animate-[lightning_7s_infinite_ease-out_2s]" />
+                    <div className="absolute inset-0 bg-white/40 mix-blend-overlay opacity-0 animate-[lightning_12s_infinite_ease-out_5s]" />
+
+                    {/* REALISTIC SLOW CLOUDS */}
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-clouds.png')] opacity-40 mix-blend-multiply animate-[cloud-pan-right_80s_linear_infinite]" />
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-clouds.png')] opacity-30 mix-blend-multiply animate-[cloud-pan-left_60s_linear_infinite]" />
+                </>
+            )}
+            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+        </div>
+    );
 };
 
 export const WeatherEffect = memo(WeatherEffectComponent);

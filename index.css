@@ -441,6 +441,42 @@
     perspective: 1000px;
 }
 
+@keyframes lightning {
+
+    0%,
+    95%,
+    98%,
+    100% {
+        opacity: 0;
+    }
+
+    96%,
+    99% {
+        opacity: 1;
+        overflow: hidden;
+    }
+}
+
+@keyframes cloud-pan-right {
+    0% {
+        background-position: 0px 0px;
+    }
+
+    100% {
+        background-position: 1000px 0px;
+    }
+}
+
+@keyframes cloud-pan-left {
+    0% {
+        background-position: 1000px 0px;
+    }
+
+    100% {
+        background-position: 0px 0px;
+    }
+}
+
 .preserve-3d {
     transform-style: preserve-3d;
 }

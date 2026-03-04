@@ -236,7 +236,16 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
 
             {/* Automatic Background Rain if weather is 'rain' */}
             {weather === 'rain' && (
-                <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-40">
+                <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-60">
+                    {/* LIGHTNING FLASHES */}
+                    <div className="absolute inset-0 bg-white/20 mix-blend-overlay opacity-0 animate-[lightning_7s_infinite_ease-out_2s]" />
+                    <div className="absolute inset-0 bg-white/30 mix-blend-overlay opacity-0 animate-[lightning_12s_infinite_ease-out_5s]" />
+
+                    {/* SLOW CLOUDS */}
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-clouds.png')] opacity-20 mix-blend-multiply animate-[cloud-pan-right_60s_linear_infinite]" />
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-clouds.png')] opacity-15 mix-blend-multiply animate-[cloud-pan-left_45s_linear_infinite]" />
+
+                    {/* RAIN DROPS */}
                     {[...Array(30)].map((_, i) => (
                         <div key={i} className="absolute w-[1px] h-16 bg-blue-300/40 animate-[particle-float-up_1s_linear_infinite]"
                             style={{ left: `${Math.random() * 100}%`, top: `-20%`, animationDelay: `${Math.random()}s`, animationDuration: `${0.4 + Math.random() * 0.4}s` }} />
