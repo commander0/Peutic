@@ -564,8 +564,8 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
                         ))}
                         {/* Dynamic Dialogue Bubble */}
                         {luminaMessage && !isSummoning && (
-                            <div className="absolute -top-16 md:-top-24 z-[100] animate-in slide-in-from-bottom-5 fade-in duration-500">
-                                <div className="bg-black/80 backdrop-blur-md border border-cyan-500/50 p-4 rounded-xl rounded-br-none shadow-sm max-w-[250px] md:max-w-[300px]">
+                            <div className="absolute top-2 md:-top-24 z-[100] animate-in slide-in-from-bottom-5 fade-in duration-500">
+                                <div className="bg-black/80 backdrop-blur-md border border-cyan-500/50 p-3 md:p-4 rounded-xl rounded-br-none shadow-sm max-w-[220px] md:max-w-[300px]">
                                     <p className="text-sm md:text-base font-medium text-cyan-100 italic leading-snug">
                                         "{luminaMessage}"
                                     </p>
@@ -741,13 +741,13 @@ const CyberBtn: React.FC<{ icon: any, label: string, onClick: () => void, textCl
         <button
             onClick={onClick}
             className={`
-                group relative flex-1 min-w-[70px] max-w-[90px] h-[84px] md:h-24 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-white/20 hover:bg-white/[0.08] backdrop-blur-xl flex flex-col items-center justify-center gap-2
+                group relative flex-1 min-w-[56px] md:min-w-[80px] max-w-[76px] md:max-w-[96px] h-[64px] md:h-24 rounded-xl md:rounded-2xl bg-white/[0.03] border border-white/10 hover:border-white/20 hover:bg-white/[0.08] backdrop-blur-xl flex flex-col items-center justify-center gap-1 md:gap-2
                 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_10px_30px_-10px_rgba(34,211,238,0.2)] active:scale-95 overflow-hidden shadow-[0_4px_16px_0_rgba(0,0,0,0.4)]
             `}
         >
             <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <Icon className={`w-6 h-6 ${textClass} opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500 relative z-10 drop-shadow-[0_0_8px_currentColor]`} />
-            <span className="text-[9px] font-black tracking-[0.2em] text-white/50 group-hover:text-white uppercase transition-colors relative z-10 text-center leading-none mt-1">{label}</span>
+            <Icon className={`w-4 h-4 md:w-6 md:h-6 ${textClass} opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500 relative z-10 drop-shadow-[0_0_8px_currentColor]`} />
+            <span className="text-[8px] md:text-[9px] font-black tracking-[0.2em] text-white/50 group-hover:text-white uppercase transition-colors relative z-10 text-center leading-none mt-1">{label}</span>
         </button>
     );
 };
