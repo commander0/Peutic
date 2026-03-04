@@ -387,12 +387,12 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
 
                     const getPositionClass = (id: string) => {
                         switch (id) {
-                            case 'scroll': return 'top-20 right-8 md:top-24 md:right-32 text-[6rem] md:text-[8rem] opacity-90 drop-shadow-2xl z-0';
-                            case 'lantern': return 'top-20 left-4 md:top-24 md:left-24 text-7xl md:text-8xl opacity-100 animate-[sway_6s_ease-in-out_infinite] drop-shadow-sm z-0';
-                            case 'bonsai': return 'bottom-[15%] right-8 md:right-48 text-[7rem] md:text-[8rem] drop-shadow-[0_30px_30px_rgba(0,0,0,0.8)] z-10 hover:scale-105 transition-transform';
-                            case 'incense': return 'bottom-[12%] left-8 md:left-32 text-6xl md:text-7xl opacity-100 animate-[sway_4s_ease-in-out_infinite] drop-shadow-[0_30px_30px_rgba(0,0,0,0.8)] z-10';
-                            case 'singing_bowl': return 'bottom-[10%] right-32 md:right-64 text-[4rem] md:text-[5rem] drop-shadow-[0_20px_20px_rgba(0,0,0,0.8)] pointer-events-auto cursor-pointer z-30 transition-transform active:scale-90 hover:scale-110';
-                            case 'stones': return 'bottom-[8%] left-32 md:left-64 text-[3rem] md:text-[4rem] drop-shadow-[0_20px_20px_rgba(0,0,0,0.8)] z-20 hover:scale-105 transition-transform';
+                            case 'scroll': return 'top-16 right-4 md:top-24 md:right-16 text-[5rem] md:text-[8rem] opacity-90 drop-shadow-2xl z-0';
+                            case 'lantern': return 'top-16 left-2 md:top-24 md:left-12 text-[4rem] md:text-8xl opacity-100 animate-[sway_6s_ease-in-out_infinite] drop-shadow-sm z-0';
+                            case 'bonsai': return 'bottom-[22%] right-2 md:bottom-[20%] md:right-12 text-[5rem] md:text-[8rem] drop-shadow-[0_30px_30px_rgba(0,0,0,0.8)] z-10 hover:scale-105 transition-transform';
+                            case 'incense': return 'bottom-[20%] left-2 md:bottom-[18%] md:left-12 text-[4rem] md:text-7xl opacity-100 animate-[sway_4s_ease-in-out_infinite] drop-shadow-[0_30px_30px_rgba(0,0,0,0.8)] z-10';
+                            case 'singing_bowl': return 'bottom-[5%] right-12 md:bottom-[8%] md:right-32 text-[3.5rem] md:text-[5rem] drop-shadow-[0_20px_20px_rgba(0,0,0,0.8)] pointer-events-auto cursor-pointer z-30 transition-transform active:scale-90 hover:scale-110';
+                            case 'stones': return 'bottom-[4%] left-10 md:bottom-[6%] md:left-28 text-[3rem] md:text-[4.5rem] drop-shadow-[0_20px_20px_rgba(0,0,0,0.8)] z-20 hover:scale-105 transition-transform';
                             default: return 'hidden';
                         }
                     };
@@ -443,19 +443,19 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                                 Acoustic Setup <Volume2 className="w-3 h-3 text-stone-500" />
                             </h3>
                             <div className="flex flex-col gap-2">
-                                {[0, 60, 300].map((sec) => (
+                                {[0, 120, 600].map((sec) => (
                                     <button
                                         key={sec}
                                         onClick={(e) => { e.stopPropagation(); setBellInterval(sec); }}
                                         className={`py-2.5 px-3 rounded-xl text-[10px] font-bold tracking-widest transition-all text-right ${bellInterval === sec ? 'bg-amber-500/20 text-amber-300 border border-amber-500/20' : 'text-stone-500 hover:bg-white/5 border border-transparent'}`}
                                     >
-                                        {sec === 0 ? 'START/END ONLY' : sec === 60 ? '1 MIN CHIME' : '5 MIN CHIME'}
+                                        {sec === 0 ? 'START/END ONLY' : sec === 120 ? '2 MIN CHIME' : '10 MIN CHIME'}
                                     </button>
                                 ))}
                                 {(luminaLevel >= 30) && (
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); setBellInterval(120); }}
-                                        className={`mt-2 py-2 px-3 rounded-xl text-[10px] font-bold tracking-widest transition-all text-right ${bellInterval === 120 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/20' : 'text-emerald-500/40 hover:bg-white/5 border border-transparent'}`}
+                                        onClick={(e) => { e.stopPropagation(); setBellInterval(240); }}
+                                        className={`mt-2 py-2 px-3 rounded-xl text-[10px] font-bold tracking-widest transition-all text-right ${bellInterval === 240 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/20' : 'text-emerald-500/40 hover:bg-white/5 border border-transparent'}`}
                                     >
                                         ASCENDANT CHIMES
                                     </button>
@@ -540,8 +540,8 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                         <div className="md:hidden flex items-center justify-center mt-2 glass-panel bg-stone-900/60 p-2 rounded-full w-full max-w-[200px]">
                             <select className="bg-transparent text-[10px] uppercase font-bold text-stone-300 outline-none cursor-pointer w-full text-center" value={bellInterval} onChange={(e) => setBellInterval(Number(e.target.value))}>
                                 <option value={0} className="bg-stone-900">Start/End</option>
-                                <option value={60} className="bg-stone-900">1 Min Chime</option>
-                                <option value={300} className="bg-stone-900">5 Min Chime</option>
+                                <option value={120} className="bg-stone-900">2 Min Chime</option>
+                                <option value={600} className="bg-stone-900">10 Min Chime</option>
                             </select>
                         </div>
                     </div>
