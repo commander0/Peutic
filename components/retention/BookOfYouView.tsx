@@ -179,10 +179,10 @@ const BookOfYouView: React.FC<BookOfYouViewProps> = ({ user, onClose }) => {
             {/* FLOATING ACTION BAR */}
             <button
                 onClick={onClose}
-                className="fixed top-4 left-4 md:top-8 md:left-8 bg-zinc-800/80 backdrop-blur border border-white/10 hover:bg-zinc-700 text-zinc-300 py-2 md:py-2.5 px-4 md:px-5 rounded-md flex items-center gap-2 md:gap-3 transition-all shadow-xl z-[130] group"
+                className="absolute top-4 left-4 md:top-8 md:left-8 bg-zinc-800/90 backdrop-blur border border-white/20 hover:bg-zinc-700 text-amber-50 py-3 px-6 rounded-full flex items-center gap-3 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.8)] z-[200] group filter drop-shadow-lg"
             >
-                <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                <span className="font-bold text-[10px] md:text-xs uppercase tracking-widest font-sans">Close Book</span>
+                <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform font-bold" />
+                <span className="font-bold text-xs md:text-sm uppercase tracking-widest font-sans">Exit Book</span>
             </button>
 
             <button

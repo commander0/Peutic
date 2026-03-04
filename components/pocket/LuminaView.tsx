@@ -644,8 +644,8 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
                     <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-b from-white/[0.05] to-transparent pointer-events-none" />
 
                     {/* Power Level Selector / Core Output */}
-                    <div className="flex flex-col items-center md:items-start gap-3 w-full md:w-auto">
-                        <span className="text-[10px] text-white/40 font-bold tracking-[0.2em] uppercase relative z-10">Core Output</span>
+                    <div className="flex flex-col items-center gap-2 w-full md:w-auto">
+                        <span className="text-[10px] text-white/40 font-bold tracking-[0.2em] uppercase relative z-10 w-full text-center md:text-left">Core Output</span>
                         <div className="flex bg-black/40 border border-white/10 rounded-xl p-1 relative overflow-hidden shadow-inner z-10">
                             {[1, 2, 3].map(lvl => (
                                 <button
@@ -661,11 +661,13 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
                     </div>
 
                     {/* Action Palette */}
-                    <div className="flex justify-center gap-3 md:gap-4 flex-wrap flex-1 z-10">
+                    <div className="grid grid-cols-4 md:flex md:justify-center gap-2 md:gap-4 w-full z-10">
                         <CyberBtn icon={Pizza} label="FEED" onClick={() => handleAction('feed')} textClass="text-cyan-400" />
                         <CyberBtn icon={Gamepad2} label="PLAY" onClick={() => setShowGameMenu(true)} textClass="text-cyan-400" />
                         <CyberBtn icon={Sparkles} label="ORACLE" onClick={handleOracleConsult} textClass="text-purple-400" />
                         <CyberBtn icon={RefreshCw} label="CLEAN" onClick={() => handleAction('clean')} textClass="text-cyan-400" />
+
+                        {/* Second Row on Mobile */}
                         <CyberBtn icon={Target} label="MISSIONS" onClick={() => setShowMissions(true)} textClass="text-yellow-400" />
                         <CyberBtn
                             icon={pet.isSleeping ? Sun : Moon}
@@ -674,6 +676,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
                             textClass={pet.isSleeping ? "text-yellow-400" : "text-cyan-400"}
                         />
                         <CyberBtn icon={LogOut} label="NEW" onClick={() => handleAction('release')} textClass="text-purple-400" />
+                        <div className="md:hidden"></div> {/* Empty space for 8th slot in 4x2 grid */}
                     </div>
                 </div>
             </footer>
