@@ -72,11 +72,11 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
         const handleResize = () => {
             const width = window.innerWidth;
             const height = window.innerHeight;
-            // Ensure canvas fits both width and height bounds on mobile
-            const maxSizeFromWidth = width < 768 ? width - 48 : 400;
-            const maxSizeFromHeight = height < 700 ? height * 0.5 : 500;
+            // Drastically increased scale bounds so Lumina doesn't look too small
+            const maxSizeFromWidth = width < 768 ? width - 16 : 600;
+            const maxSizeFromHeight = height < 700 ? height * 0.55 : 700;
 
-            setCanvasSize(Math.min(maxSizeFromWidth, maxSizeFromHeight, 450));
+            setCanvasSize(Math.min(maxSizeFromWidth, maxSizeFromHeight, isEmbedded ? 500 : 700));
         };
         handleResize();
         window.addEventListener('resize', handleResize);
@@ -503,7 +503,7 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
                 )}
 
                 {/* CONTAINER */}
-                <div className="relative group perspective-1000 z-10 w-full max-w-[500px] mx-auto">
+                <div className="relative group perspective-1000 z-10 w-full max-w-[800px] mx-auto">
                     {/* SAPPHIRE AURA THEME (Cosmetic) */}
                     {(user.unlockedDecor || []).includes('digital-theme-sapphire') && (
                         <div className="absolute inset-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 flex items-center justify-center pointer-events-none mix-blend-screen scale-[1.2]">
