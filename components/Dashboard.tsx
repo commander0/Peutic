@@ -562,15 +562,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
             {/* GLOBAL EXPANDED CANVAS MODAL */}
             {expandedCanvas && (
-                <div className="fixed inset-y-0 right-0 left-0 md:left-20 lg:left-64 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-0 md:p-6 lg:p-8 animate-in fade-in zoom-in duration-300 overscroll-none touch-none">
-                    <div className="w-full max-w-7xl h-full max-h-none md:max-h-[95vh] bg-[var(--color-bg-base)] dark:bg-black rounded-none md:rounded-2xl shadow-2xl overflow-hidden relative border-0 md:border md:border-white/10 flex flex-col">
+                <div className="fixed inset-y-0 right-0 left-0 md:left-20 lg:left-64 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 md:p-6 lg:p-8 animate-in fade-in zoom-in duration-300">
+                    <div className="w-full max-w-7xl h-full max-h-[90vh] md:max-h-[95vh] bg-[var(--color-bg-base)] dark:bg-black rounded-2xl shadow-2xl overflow-hidden relative border border-white/10 flex flex-col">
                         <button
                             onClick={() => setExpandedCanvas(null)}
-                            className="absolute top-4 right-4 z-[300] bg-black/70 hover:bg-red-500 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-xl border border-white/10"
+                            className="absolute top-4 right-4 z-50 bg-black/50 hover:bg-red-500 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-lg"
                         >
                             <X className="w-6 h-6" />
                         </button>
-                        <div className="flex-1 w-full h-full relative overflow-hidden">
+                        <div className="flex-1 w-full h-full relative overflow-y-auto">
                             <Suspense fallback={<div className="w-full h-full flex flex-col items-center justify-center space-y-4"><div className="w-10 h-10 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin"></div><div className="text-[10px] font-bold tracking-[0.3em] uppercase opacity-50">Loading Sanctuary...</div></div>}>
                                 {expandedCanvas === 'garden' ? (
                                     <GardenFullView isEmbedded={false} garden={garden!} user={dashboardUser!} onClose={() => setExpandedCanvas(null)} onUpdate={refreshGarden} />
@@ -761,10 +761,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             <Info className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                                             <p className="text-xs font-medium italic text-slate-600 dark:text-slate-400">Note: Certain interactions within the Sanctuary will spend your available minutes.</p>
                                         </div>
-                                        <div className="flex flex-col md:flex-row gap-4 md:gap-6 flex-1 min-h-[500px] md:min-h-[600px] md:min-h-[calc(100vh-28rem)] relative z-10 transition-all">
+                                        <div className="flex flex-row gap-2 md:gap-6 flex-1 min-h-[400px] md:min-h-[600px] md:min-h-[calc(100vh-28rem)] relative z-10 transition-all">
                                             <div
                                                 onClick={() => setExpandedCanvas('garden')}
-                                                className="flex-1 md:hover:flex-[1.5] transition-all duration-300 ease-out bg-white/20 dark:bg-[#050a05]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
+                                                className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#050a05]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
                                             >
                                                 <div className="absolute inset-x-0 top-0 p-2 md:p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <span className="font-bold tracking-widest uppercase text-[9px] md:text-xs text-white">Inner Garden</span>
@@ -779,7 +779,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             </div>
                                             <div
                                                 onClick={() => setExpandedCanvas('lumina')}
-                                                className="flex-1 md:hover:flex-[1.5] transition-all duration-300 ease-out bg-white/20 dark:bg-[#0a0a0a]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
+                                                className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#0a0a0a]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
                                             >
                                                 <div className="absolute inset-x-0 top-0 p-2 md:p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <span className="font-bold tracking-widest uppercase text-[9px] md:text-xs text-white">Lumina Companion</span>
