@@ -33,14 +33,14 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return (
         <ToastContext.Provider value={{ showToast }}>
             {children}
-            <div className="fixed top-20 right-4 z-[9999] flex flex-col gap-2 pointer-events-none">
+            <div className="fixed top-12 md:top-20 left-1/2 -translate-x-1/2 md:translate-x-0 md:left-auto md:right-4 z-[9999] flex flex-col gap-2 pointer-events-none w-[90%] md:w-auto max-w-md items-center md:items-end">
                 {toasts.map(toast => (
                     <div
                         key={toast.id}
-                        className={`pointer-events-auto flex items-center justify-between gap-3 p-3 rounded-xl shadow-lg border min-w-[200px] max-w-[320px] animate-in slide-in-from-right-5 duration-300 backdrop-blur-md 
-                        ${toast.type === 'success' ? 'bg-green-50/90 border-green-100 text-green-800' :
-                                toast.type === 'error' ? 'bg-red-50/90 border-red-100 text-red-800' :
-                                    'bg-white/90 dark:bg-gray-800/90 border-gray-100 dark:border-gray-700 dark:text-gray-200'}`}
+                        className={`pointer-events-auto flex items-center justify-between gap-3 p-3 rounded-xl shadow-2xl border w-full md:min-w-[200px] md:max-w-[320px] animate-in slide-in-from-top-5 md:slide-in-from-right-5 duration-300 backdrop-blur-xl 
+                        ${toast.type === 'success' ? 'bg-green-50/95 dark:bg-green-900/90 border-green-200 dark:border-green-800 text-green-800 dark:text-green-100' :
+                                toast.type === 'error' ? 'bg-red-50/95 dark:bg-red-900/90 border-red-200 dark:border-red-800 text-red-800 dark:text-red-100' :
+                                    'bg-white/95 dark:bg-gray-800/95 border-gray-200 dark:border-gray-700 dark:text-gray-100'}`}
                     >
                         <div className="flex items-center gap-2">
                             {toast.type === 'success' && <CheckCircle className="w-4 h-4 text-green-500" />}

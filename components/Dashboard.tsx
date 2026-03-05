@@ -562,15 +562,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
             {/* GLOBAL EXPANDED CANVAS MODAL */}
             {expandedCanvas && (
-                <div className="fixed inset-y-0 right-0 left-0 md:left-20 lg:left-64 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 md:p-6 lg:p-8 animate-in fade-in zoom-in duration-300">
-                    <div className="w-full max-w-7xl h-full max-h-[90vh] md:max-h-[95vh] bg-[var(--color-bg-base)] dark:bg-black rounded-2xl shadow-2xl overflow-hidden relative border border-white/10 flex flex-col">
+                <div className="fixed inset-y-0 right-0 left-0 md:left-20 lg:left-64 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-0 md:p-6 lg:p-8 animate-in fade-in zoom-in duration-300 overscroll-none touch-none">
+                    <div className="w-full max-w-7xl h-full max-h-none md:max-h-[95vh] bg-[var(--color-bg-base)] dark:bg-black rounded-none md:rounded-2xl shadow-2xl overflow-hidden relative border-0 md:border md:border-white/10 flex flex-col">
                         <button
                             onClick={() => setExpandedCanvas(null)}
-                            className="absolute top-4 right-4 z-50 bg-black/50 hover:bg-red-500 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-lg"
+                            className="absolute top-4 right-4 z-[300] bg-black/70 hover:bg-red-500 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-xl border border-white/10"
                         >
                             <X className="w-6 h-6" />
                         </button>
-                        <div className="flex-1 w-full h-full relative overflow-y-auto">
+                        <div className="flex-1 w-full h-full relative overflow-hidden">
                             <Suspense fallback={<div className="w-full h-full flex flex-col items-center justify-center space-y-4"><div className="w-10 h-10 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin"></div><div className="text-[10px] font-bold tracking-[0.3em] uppercase opacity-50">Loading Sanctuary...</div></div>}>
                                 {expandedCanvas === 'garden' ? (
                                     <GardenFullView isEmbedded={false} garden={garden!} user={dashboardUser!} onClose={() => setExpandedCanvas(null)} onUpdate={refreshGarden} />
