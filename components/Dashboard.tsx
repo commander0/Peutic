@@ -764,7 +764,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         <div className="flex flex-row gap-2 md:gap-6 flex-1 min-h-[400px] md:min-h-[600px] md:min-h-[calc(100vh-28rem)] relative z-10 transition-all">
                                             <div
                                                 onClick={() => setExpandedCanvas('garden')}
-                                                className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#050a05]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
+                                                className="flex-1 hover:flex-[1.5] transition-all duration-300 ease-out bg-white/20 dark:bg-[#050a05]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
                                             >
                                                 <div className="absolute inset-x-0 top-0 p-2 md:p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <span className="font-bold tracking-widest uppercase text-[9px] md:text-xs text-white">Inner Garden</span>
@@ -779,7 +779,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             </div>
                                             <div
                                                 onClick={() => setExpandedCanvas('lumina')}
-                                                className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#0a0a0a]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
+                                                className="flex-1 hover:flex-[1.5] transition-all duration-300 ease-out bg-white/20 dark:bg-[#0a0a0a]/40 backdrop-blur-xl rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group"
                                             >
                                                 <div className="absolute inset-x-0 top-0 p-2 md:p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <span className="font-bold tracking-widest uppercase text-[9px] md:text-xs text-white">Lumina Companion</span>
