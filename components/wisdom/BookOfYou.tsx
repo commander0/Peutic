@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { UserService } from '../../services/userService';
 import { User, JournalEntry, MoodEntry, ArtEntry } from '../../types';
-import { BookOpen, Heart, Sparkles, Image as ImageIcon, Lock, Sun, CloudRain, X } from 'lucide-react';
+import { BookOpen, Heart, Sparkles, Image as ImageIcon, Lock, Sun, CloudRain } from 'lucide-react';
 
 // A Printable View Component
 interface BookOfYouProps {
@@ -151,8 +151,12 @@ const BookOfYou: React.FC<BookOfYouProps> = ({ onClose }) => {
             `}</style>
 
             {onClose && (
-                <button onClick={onClose} className="fixed top-4 right-4 md:top-6 md:right-6 z-[200] p-3 md:bg-[#1e1b18]/60 md:hover:bg-[#1e1b18] bg-black/40 hover:bg-black/80 text-[#8b7355] rounded-full shadow-lg backdrop-blur-sm transition-all border border-[#8b7355]/30 print:hidden hover:scale-110">
-                    <X className="w-5 h-5 md:w-6 md:h-6 text-[#d4b886]" />
+                <button
+                    onClick={onClose}
+                    className="fixed top-4 left-4 md:top-6 md:left-6 z-[200] bg-[#1e1b18]/90 backdrop-blur border border-[#8b7355]/30 hover:bg-[#2c241c] text-[#d4b886] py-3 px-6 rounded-full flex items-center gap-3 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.8)] filter drop-shadow-lg group print:hidden"
+                >
+                    <span className="font-bold text-lg md:text-xl font-serif group-hover:-translate-x-1 transition-transform">&larr;</span>
+                    <span className="font-bold text-xs md:text-sm uppercase tracking-widest font-sans">Exit Book</span>
                 </button>
             )}
 
