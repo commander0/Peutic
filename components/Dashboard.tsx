@@ -237,6 +237,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     const [hasClippedInnerGarden, setHasClippedInnerGarden] = useState(false);
     const idleTimerRef = useRef<number | null>(null);
     const logoutTimerRef = useRef<number | null>(null);
+    const headerActionsRef = useRef<HTMLDivElement>(null);
     const weeklyTarget = 100;
 
     const {
@@ -362,6 +363,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
     useEffect(() => {
         checkMoodPulse();
         loadVoiceJournals();
+        
+        // Auto-scroll mobile header actions to the far right by default
+        if (headerActionsRef.current) {
+            const scrollIt = () => {
+                if (headerActionsRef.current) {
+                    headerActionsRef.current.scrollLeft = headerActionsRef.current.scrollWidth;
+                }
+            };
+            scrollIt();
+            setTimeout(scrollIt, 100); // Failsafe after images load
+        }
     }, []);
 
     const checkMoodPulse = async () => {
@@ -688,7 +700,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                     </div>
                                 </div>
 
-                                <div className={`col-start-2 row-start-1 md:col-auto md:row-auto flex items-center justify-start md:justify-end flex-nowrap gap-2 md:gap-3 ${(dashboardUser?.unlockedDecor || []).includes('item-plushie') ? 'overflow-x-auto snap-x snap-mandatory touch-pan-x overscroll-x-contain pr-4 md:pr-0 pb-2 md:pb-0' : 'overflow-x-auto md:overflow-visible pb-1 md:pb-0'} no-scrollbar min-w-0 w-full self-center pl-1 md:pl-0`}>
+                                <div ref={headerActionsRef} className={`col-start-2 row-start-1 md:col-auto md:row-auto flex items-center justify-start md:justify-end flex-nowrap gap-2 md:gap-3 ${(dashboardUser?.unlockedDecor || []).includes('item-plushie') ? 'overflow-x-auto snap-x snap-mandatory touch-pan-x overscroll-x-contain pr-4 md:pr-0 pb-2 md:pb-0' : 'overflow-x-auto md:overflow-visible pb-1 md:pb-0'} no-scrollbar min-w-0 w-full self-center pl-1 md:pl-0 smooth-scroll`}>
                                     <div className="shrink-0 snap-start"><LanguageSelector currentLanguage={lang} onLanguageChange={setLang} /></div>
 
                                     {/* Desktop/Tablet Logout Button - next to globe */}
