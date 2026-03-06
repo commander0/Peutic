@@ -424,12 +424,12 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px] pointer-events-none" />
 
             {pet.level >= 30 && pet.level < 50 && (
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(250,204,21,0.05),transparent_70%)] animate-[pulse_10s_ease-in-out_infinite] pointer-events-none mix-blend-screen" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(250,204,21,0.05),transparent_70%)] animate-[pulse_10s_ease-in-out_infinite] pointer-events-none will-change-transform transform-gpu" />
             )}
             {pet.level >= 50 && (
-                <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-60 mix-blend-screen">
-                    <div className="absolute inset-x-0 h-[200%] w-[200%] -left-[50%] -top-[50%] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] animate-[spin_120s_linear_infinite]" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-fuchsia-900/10 via-transparent to-transparent mix-blend-color-dodge" />
+                <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40 will-change-transform transform-gpu">
+                    <div className="absolute inset-x-0 h-[200%] w-[200%] -left-[50%] -top-[50%] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] animate-[spin_120s_linear_infinite] will-change-transform transform-gpu" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-fuchsia-900/10 via-transparent to-transparent opacity-80" />
                 </div>
             )}
 
@@ -506,27 +506,27 @@ const LuminaView: React.FC<LuminaViewProps> = ({ user, onClose, isEmbedded = fal
                 <div className="relative group perspective-1000 z-10 w-full max-w-[500px] mx-auto">
                     {/* SAPPHIRE AURA THEME (Cosmetic) */}
                     {(user.unlockedDecor || []).includes('digital-theme-sapphire') && (
-                        <div className="absolute inset-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 flex items-center justify-center pointer-events-none mix-blend-screen scale-[1.2]">
-                            <div className="absolute w-[450px] h-[450px] bg-gradient-to-r from-blue-900/0 via-blue-500/20 to-blue-900/0 rounded-[40%] blur-[40px] animate-[spin_15s_linear_infinite]" />
-                            <div className="absolute w-[350px] h-[350px] bg-cyan-400/10 rounded-full blur-[30px] animate-pulse" />
+                        <div className="absolute inset-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 flex items-center justify-center pointer-events-none opacity-50 scale-[1.2] will-change-transform transform-gpu">
+                            <div className="absolute w-[450px] h-[450px] bg-[radial-gradient(circle,rgba(59,130,246,0.3)_0%,transparent_70%)] rounded-[40%] animate-[spin_15s_linear_infinite] will-change-transform transform-gpu" />
+                            <div className="absolute w-[350px] h-[350px] bg-[radial-gradient(circle,rgba(34,211,238,0.2)_0%,transparent_80%)] rounded-full animate-pulse will-change-transform transform-gpu" />
                         </div>
                     )}
 
                     {/* FLOW STATE AURA */}
                     {(user.streak || 0) >= 21 && (
-                        <div className="absolute inset-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 flex items-center justify-center pointer-events-none overflow-hidden mix-blend-screen scale-[1.5]">
-                            <div className="absolute w-[800px] h-[800px] bg-gradient-to-r from-yellow-900/0 via-yellow-500/30 to-yellow-900/0 rounded-full blur-[80px] animate-[spin_10s_linear_infinite]" />
-                            <div className="absolute w-[600px] h-[600px] bg-amber-400/20 rounded-full blur-[60px] animate-pulse-slow" />
+                        <div className="absolute inset-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 flex items-center justify-center pointer-events-none overflow-hidden opacity-60 scale-[1.5] will-change-transform transform-gpu">
+                            <div className="absolute w-[800px] h-[800px] bg-[radial-gradient(circle,rgba(234,179,8,0.2)_0%,transparent_70%)] rounded-full animate-[spin_10s_linear_infinite] will-change-transform transform-gpu" />
+                            <div className="absolute w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(251,191,36,0.15)_0%,transparent_80%)] rounded-full animate-pulse-slow will-change-transform transform-gpu" />
                         </div>
                     )}
 
                     {/* Ring System (Liquid Light Aura) */}
-                    <div className={`absolute inset-0 -m-16 rounded-full border border-cyan-500/10 bg-gradient-to-br from-cyan-500/5 to-transparent mix-blend-screen animate-[spin_20s_linear_infinite] shadow-[inset_0_0_40px_rgba(34,211,238,0.1)] backdrop-blur-sm ${isSummoning ? 'border-purple-500/40 speed-up from-purple-500/10 shadow-[inset_0_0_80px_rgba(168,85,247,0.2)]' : ''}`} />
-                    <div className="absolute inset-0 -m-8 border-t border-b border-cyan-400/20 rounded-full animate-[spin_8s_linear_infinite_reverse]" />
+                    <div className={`absolute inset-0 -m-16 rounded-full border border-cyan-500/10 bg-gradient-to-br from-cyan-500/5 to-transparent animate-[spin_20s_linear_infinite] shadow-[inset_0_0_40px_rgba(34,211,238,0.1)] will-change-transform transform-gpu ${isSummoning ? 'border-purple-500/40 speed-up from-purple-500/10 shadow-[inset_0_0_80px_rgba(168,85,247,0.2)]' : ''}`} />
+                    <div className="absolute inset-0 -m-8 border-t border-b border-cyan-400/20 rounded-full animate-[spin_8s_linear_infinite_reverse] will-change-transform transform-gpu" />
 
                     {/* Advanced CELESTIAL Gravity Rings */}
                     {pet.level >= 50 && (
-                        <div className="absolute inset-0 -m-24 border border-fuchsia-500/10 rounded-full animate-[spin_12s_linear_infinite_reverse] drop-shadow-[0_0_15px_rgba(217,70,239,0.2)] opacity-80 pointer-events-none mix-blend-screen" />
+                        <div className="absolute inset-0 -m-24 border border-fuchsia-500/10 rounded-full animate-[spin_12s_linear_infinite_reverse] opacity-60 pointer-events-none will-change-transform transform-gpu" />
                     )}
 
                     {/* Character Canvas Tracker */}

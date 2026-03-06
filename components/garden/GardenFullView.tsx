@@ -239,21 +239,21 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
             <div className={`absolute inset-0 transition-colors duration-[3000ms] ${weather === 'sun' ? 'bg-[#020617]' : 'bg-[#0b0f19]'}`} />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)] pointer-events-none z-10" />
 
-            {/* Deep Parallax Environment (Forest/Mystic background) */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40 mix-blend-screen">
+            {/* Deep Parallax Environment (Forest/Mystic background) - Changed mix-blend to opacity for performance and added will-change */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40 will-change-transform transform-gpu">
                 {/* Giant distant bokeh/moons */}
-                <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-emerald-900/30 blur-[100px] animate-pulse-slow" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-teal-900/20 blur-[120px]" style={{ animationDuration: '15s', animationName: 'pulse', animationIterationCount: 'infinite' }} />
-                <div className="absolute top-[20%] right-[10%] w-32 h-32 rounded-full bg-emerald-200/5 blur-[40px] animate-[ping_10s_ease-in-out_infinite]" />
+                <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-emerald-900/30 blur-[60px] md:blur-[100px] animate-pulse-slow will-change-transform transform-gpu" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-teal-900/20 blur-[80px] md:blur-[120px] will-change-transform transform-gpu" style={{ animationDuration: '15s', animationName: 'pulse', animationIterationCount: 'infinite' }} />
+                <div className="absolute top-[20%] right-[10%] w-32 h-32 rounded-full bg-emerald-200/5 blur-[30px] md:blur-[40px] animate-[ping_10s_ease-in-out_infinite] will-change-transform transform-gpu" />
             </div>
 
-            {/* Volumetric God Rays */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 mix-blend-screen">
+            {/* Volumetric God Rays - Removed mix-blend and lowered blur magnitude slightly for mobile GPUs */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-80 will-change-transform transform-gpu">
                 {weather === 'sun' && (
                     <>
-                        <div className="absolute -top-[20%] -left-[10%] w-[150%] h-[50%] bg-gradient-to-b from-emerald-400/10 via-teal-500/5 to-transparent blur-[60px] rotate-[-15deg] transform origin-top animate-[pulse_8s_ease-in-out_infinite]" />
-                        <div className="absolute -top-[10%] left-[20%] w-[100%] h-[70%] bg-gradient-to-b from-emerald-200/5 to-transparent blur-[80px] rotate-[25deg] transform origin-top animate-[pulse_12s_ease-in-out_infinite_alternate]" />
-                        <div className="absolute top-0 right-[-20%] w-[100%] h-[80%] bg-gradient-to-b from-blue-300/5 to-transparent blur-[90px] rotate-[45deg] transform origin-top animate-[pulse_10s_ease-in-out_infinite]" />
+                        <div className="absolute -top-[20%] -left-[10%] w-[150%] h-[50%] bg-gradient-to-b from-emerald-400/10 via-teal-500/5 to-transparent blur-[40px] md:blur-[60px] rotate-[-15deg] transform origin-top animate-[pulse_8s_ease-in-out_infinite] will-change-transform transform-gpu" />
+                        <div className="absolute -top-[10%] left-[20%] w-[100%] h-[70%] bg-gradient-to-b from-emerald-200/5 to-transparent blur-[50px] md:blur-[80px] rotate-[25deg] transform origin-top animate-[pulse_12s_ease-in-out_infinite_alternate] will-change-transform transform-gpu" />
+                        <div className="absolute top-0 right-[-20%] w-[100%] h-[80%] bg-gradient-to-b from-blue-300/5 to-transparent blur-[60px] md:blur-[90px] rotate-[45deg] transform origin-top animate-[pulse_10s_ease-in-out_infinite] will-change-transform transform-gpu" />
                     </>
                 )}
             </div>
@@ -285,38 +285,39 @@ const GardenFullView: React.FC<GardenFullViewProps> = ({ garden, user, onClose, 
             )}
 
             {/* Glowing Bioluminescence Particles (Fireflies / Spores) */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden z-10 transition-opacity duration-1000">
+            <div className="absolute inset-0 pointer-events-none overflow-hidden z-10 transition-opacity duration-1000 will-change-transform transform-gpu">
                 {particles.map((p) => {
-                    const isRareColor = isRare ? 'text-fuchsia-300 bg-fuchsia-300 shadow-[0_0_10px_rgba(217,70,239,0.8)]' : 'text-emerald-300 bg-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.8)]';
+                    // Replaced heavy shadow computation with pseudo-elements, removed mix-blend-screen on mobile
+                    const isRareColor = isRare ? 'text-fuchsia-300 bg-fuchsia-300' : 'text-emerald-300 bg-emerald-300';
                     return (
                         <div
                             key={p.id}
-                            className={`absolute rounded-full mix-blend-screen ${p.isLeaf ? 'w-3 h-3 rounded-[50%_0_50%_50%] rotate-45 animate-[bounce_5s_infinite] opacity-50 bg-emerald-700/50 backdrop-blur-sm border border-emerald-400/30' : `w-1 h-1 animate-[ping_4s_ease-in-out_infinite] ${isRareColor}`}`}
+                            className={`absolute rounded-full opacity-90 will-change-transform transform-gpu ${p.isLeaf ? 'w-3 h-3 rounded-[50%_0_50%_50%] rotate-45 animate-[bounce_5s_infinite] bg-emerald-700/80 border border-emerald-400/30' : `w-1 h-1 animate-[ping_4s_ease-in-out_infinite] ${isRareColor}`}`}
                             style={{
                                 left: p.left,
                                 top: p.top,
                                 animationDelay: p.delay,
                                 opacity: p.isLeaf ? p.opacity : p.opacity * 2,
-                                transform: `scale(${p.scale})`,
-                                filter: p.isLeaf ? `drop-shadow(0 2px 4px rgba(0,0,0,0.5))` : 'none'
+                                transform: `translateZ(0) scale(${p.scale})`
+                                // Removed heavy drop-shadow filter entirely to save GPU
                             }}
                         >
-                            {!p.isLeaf && <div className={`absolute inset-0 rounded-full blur-[2px] ${isRare ? 'bg-fuchsia-400' : 'bg-emerald-400'}`} />}
+                            {!p.isLeaf && <div className={`absolute -inset-1 rounded-full blur-[2px] opacity-70 ${isRare ? 'bg-fuchsia-400' : 'bg-emerald-400'}`} />}
                         </div>
                     )
                 })}
 
-                {/* Magical Stage Overlays */}
+                {/* Magical Stage Overlays - Removed heavy mix-blend on mobile */}
                 {stage >= 4 && (
-                    <div className="absolute bottom-0 w-full h-[60%] bg-gradient-to-t from-emerald-900/40 via-emerald-800/10 to-transparent mix-blend-color-dodge pointer-events-none animate-[pulse_8s_ease-in-out_infinite]" />
+                    <div className="absolute bottom-0 w-full h-[60%] bg-gradient-to-t from-emerald-900/40 via-emerald-800/10 to-transparent pointer-events-none animate-[pulse_8s_ease-in-out_infinite] will-change-transform transform-gpu opacity-80" />
                 )}
                 {stage >= 6 && (
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.05)_0%,transparent_70%)] pointer-events-none animate-[spin_40s_linear_infinite] mix-blend-screen" />
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.05)_0%,transparent_70%)] pointer-events-none animate-[spin_40s_linear_infinite] will-change-transform transform-gpu opacity-60" />
                 )}
                 {stage >= 8 && (
-                    <div className="absolute inset-0 z-0">
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-40 animate-[spin_120s_linear_infinite_reverse] pointer-events-none mix-blend-screen" />
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150vw] h-[150vw] bg-[conic-gradient(from_0deg,transparent_0deg,rgba(167,139,250,0.1)_90deg,transparent_180deg,rgba(52,211,153,0.1)_270deg,transparent_360deg)] animate-[spin_60s_linear_infinite] mix-blend-screen" />
+                    <div className="absolute inset-0 z-0 will-change-transform transform-gpu">
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 animate-[spin_120s_linear_infinite_reverse] pointer-events-none will-change-transform transform-gpu" />
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150vw] h-[150vw] bg-[conic-gradient(from_0deg,transparent_0deg,rgba(167,139,250,0.1)_90deg,transparent_180deg,rgba(52,211,153,0.1)_270deg,transparent_360deg)] animate-[spin_60s_linear_infinite] will-change-transform transform-gpu opacity-40" />
                     </div>
                 )}
             </div>
