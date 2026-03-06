@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, Suspense, lazy, useMemo, useTransition } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy, useMemo, useTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { useNotifications } from '../hooks/useNotifications';
 import { useDashboardUI } from '../hooks/useDashboardUI';
@@ -764,7 +764,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                         <div className="flex flex-row gap-2 md:gap-6 flex-1 min-h-[400px] md:min-h-[600px] md:min-h-[calc(100vh-28rem)] relative z-10 transition-all will-change-transform transform-gpu">
                                             <div
                                                 onClick={() => setExpandedCanvas('garden')}
-                                                className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#050a05]/40 backdrop-blur-md rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group will-change-transform transform-gpu"
+                                                className="flex-1 md:hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#050a05]/40 backdrop-blur-md rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group will-change-transform transform-gpu"
                                             >
                                                 <div className="absolute inset-x-0 top-0 p-2 md:p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <span className="font-bold tracking-widest uppercase text-[9px] md:text-xs text-white">Inner Garden</span>
@@ -779,7 +779,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                             </div>
                                             <div
                                                 onClick={() => setExpandedCanvas('lumina')}
-                                                className="flex-1 hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#0a0a0a]/40 backdrop-blur-md rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group will-change-transform transform-gpu"
+                                                className="flex-1 md:hover:flex-[1.5] transition-all duration-700 ease-out bg-white/20 dark:bg-[#0a0a0a]/40 backdrop-blur-md rounded-xl border border-yellow-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm relative cursor-pointer group will-change-transform transform-gpu"
                                             >
                                                 <div className="absolute inset-x-0 top-0 p-2 md:p-4 bg-gradient-to-b from-black/50 to-transparent z-20 text-white flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <span className="font-bold tracking-widest uppercase text-[9px] md:text-xs text-white">Lumina Companion</span>
@@ -1410,7 +1410,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                 {/* --- V3 MOBILE BOTTOM NAVIGATION --- */}
                 {!(showGrounding || showBookFull || showDojo || showObservatory || showGardenFull || expandedCanvas === 'garden' || showPocketPet || expandedCanvas === 'lumina') && createPortal(
-                    <nav className="mobile-bottom-nav md:hidden fixed bottom-0 left-0 right-0 bg-[var(--color-bg-surface)] backdrop-blur-2xl border-t border-[var(--color-primary-border)] flex justify-around items-center px-1 py-1 sm:py-2 z-[200] pb-[calc(env(safe-area-inset-bottom)+8px)] shadow-[0_-15px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_-5px_30px_rgba(0,0,0,0.5)] transition-colors duration-500">
+                    <nav className={`md:hidden fixed bottom-0 left-0 right-0 flex justify-around items-center px-1 py-1 sm:py-2 z-[200] pb-[calc(env(safe-area-inset-bottom)+8px)] shadow-[0_-15px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_-5px_30px_rgba(0,0,0,0.5)] transition-colors duration-500 ${isSapphire ? 'bg-transparent border-t border-transparent backdrop-blur-none' : 'mobile-bottom-nav bg-[var(--color-bg-surface)] backdrop-blur-2xl border-t border-[var(--color-primary-border)]'}`}>
                         {[
                             { id: 'hub', icon: LayoutDashboard, label: 'Dashboard' },
                             { id: 'sanctuary', icon: Sparkles, label: 'Sanctuary' },
@@ -1423,9 +1423,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <button
                                     key={item.id}
                                     onClick={() => item.isModal ? setShowSerenityShop(true) : handleTabChange(item.id)}
-                                    className={`flex flex-col items-center gap-1 min-w-[60px] p-2 transition-all duration-300 ${isActive ? 'text-[var(--color-primary)] font-black scale-105' : 'text-gray-500 dark:text-gray-400 opacity-80 hover:opacity-100'}`}
+                                    className={`flex flex-col items-center gap-1 min-w-[60px] p-2 transition-all duration-300 ${isActive ? (isSapphire ? 'text-blue-300 font-black scale-105' : 'text-[var(--color-primary)] font-black scale-105') : (isSapphire ? 'text-blue-100/60 hover:text-blue-100' : 'text-gray-500 dark:text-gray-400 opacity-80 hover:opacity-100')}`}
                                 >
-                                    <div className={`relative p-1.5 rounded-xl transition-colors duration-300 ${isActive ? 'bg-[var(--color-primary-light)] text-[var(--color-primary)] border border-[var(--color-primary-border)]' : 'bg-transparent border border-transparent'}`}>
+                                    <div className={`relative p-1.5 rounded-xl transition-colors duration-300 ${isActive ? (isSapphire ? 'bg-blue-900/40 text-blue-300 border border-blue-500/30' : 'bg-[var(--color-primary-light)] text-[var(--color-primary)] border border-[var(--color-primary-border)]') : 'bg-transparent border border-transparent'}`}>
                                         <item.icon className="w-5 h-5" />
                                     </div>
                                     <span className="text-[9px] font-bold uppercase tracking-wider">{item.label}</span>
