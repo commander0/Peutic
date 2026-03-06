@@ -332,54 +332,9 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
     };
 
     return (
-        <div className="fixed inset-0 h-[100dvh] z-[120] bg-[#120b08] text-stone-100 flex flex-col font-serif animate-in fade-in duration-700 overflow-hidden">
-            <style type="text/css">{`
-                @keyframes candle-flicker {
-                    0% { opacity: 0.9; transform: scale(1); }
-                    25% { opacity: 1; transform: scale(1.02); }
-                    50% { opacity: 0.85; transform: scale(0.98); }
-                    75% { opacity: 1.05; transform: scale(1.03); }
-                    100% { opacity: 0.9; transform: scale(1); }
-                }
-            `}</style>
+        <div className="fixed inset-0 h-[100dvh] z-[120] bg-stone-950 text-stone-100 flex flex-col font-serif animate-in fade-in duration-700 overflow-hidden">
             {/* Audio Elements bound to DOM for Autoplay Bypass */}
             <audio ref={windChimeRef} src="https://cdn.freesound.org/previews/411/411088_5121236-lq.mp3" loop preload="auto" />
-
-            {/* HYPER-REALISTIC LIVING ROOM */}
-            <div className="absolute inset-0 bg-[#0c0806] pointer-events-none z-0">
-                {/* Wall - Premium Dark Wood Panels */}
-                <div className="absolute inset-x-0 top-0 h-[60%] bg-[#1a1310] border-b-[12px] border-[#0a0705] shadow-[0_30px_80px_rgba(0,0,0,1)] z-0 overflow-hidden">
-                    {localUser.unlockedDecor?.includes('digital_dojo') ? (
-                        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2048&auto=format&fit=crop')] bg-cover bg-center opacity-40 mix-blend-screen transition-all"></div>
-                    ) : (
-                        <>
-                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-wood.png')] opacity-70 mix-blend-multiply"></div>
-                            <div className="absolute inset-0 bg-[repeating-linear-gradient(to_right,transparent,transparent_120px,rgba(0,0,0,0.6)_120px,rgba(0,0,0,0.6)_124px)]"></div>
-                        </>
-                    )}
-                    {/* Dynamic Flickering Wall Ambient Light */}
-                    <div className={`absolute inset-x-0 bottom-0 h-full bg-[radial-gradient(circle_at_50%_100%,rgba(217,119,6,0.3),transparent_70%)] transition-opacity duration-1000 ${isActive ? 'animate-[candle-flicker_4s_ease-in-out_infinite] opacity-100' : 'opacity-30'}`}></div>
-                </div>
-
-                {/* Floor - Polished Hardwood */}
-                <div className="absolute inset-x-0 bottom-0 h-[40%] bg-[#0a0705]">
-                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] opacity-60 mix-blend-multiply border-t border-white/5"></div>
-                    {/* Floor Reflection of the candle */}
-                    <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-[90vw] h-[70%] bg-[radial-gradient(ellipse_at_top,rgba(217,119,6,0.2),transparent_70%)] transition-opacity duration-1000 ${isActive ? 'animate-[candle-flicker_5s_ease-in-out_infinite_reverse] opacity-100' : 'opacity-20'}`}></div>
-
-                    {/* Premium Tatami/Rug */}
-                    <div className="absolute bottom-[5%] left-1/2 -translate-x-1/2 w-[95%] md:w-[700px] h-[65%] bg-[#241c18] rounded-[100%] border-[8px] border-[#120d0b] shadow-[0_40px_80px_rgba(0,0,0,1),inset_0_0_50px_rgba(0,0,0,0.9)] opacity-95 flex items-center justify-center overflow-hidden">
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/woven.png')] opacity-60 mix-blend-overlay"></div>
-
-                        {/* Meditation Table - High Gloss */}
-                        <div className="w-[65%] h-[55%] bg-[#0d0907] rounded-[100%] border-t lg:border-t-[3px] border-white/10 shadow-[0_30px_60px_rgba(0,0,0,1)] relative overflow-hidden shrink-0 mt-[10%]">
-                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10"></div>
-                            {/* Table Reflection */}
-                            <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-[90%] h-[60%] bg-[radial-gradient(ellipse_at_top,rgba(245,158,11,0.25),transparent_70%)] transition-opacity duration-1000 ${isActive ? 'animate-[candle-flicker_3s_ease-in-out_infinite]' : 'opacity-10'}`}></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             {/* Ambient Dust Motes */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
@@ -389,45 +344,6 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                 ))}
             </div>
 
-            {/* Relaxing Dojo Pet - Sitting on the rug */}
-            {luminaPet && <RelaxingDojoPet pet={luminaPet} />}
-
-            {/* --- VISUAL DECORATIONS --- */}
-            <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
-                {localUser.unlockedDecor?.map(itemId => {
-                    const itemData = SANCTUARY_ITEMS.find(i => i.id === itemId);
-                    if (!itemData) return null;
-
-                    const getPositionClass = (id: string) => {
-                        switch (id) {
-                            case 'scroll': return 'top-8 left-1/2 -translate-x-1/2 md:top-12 text-[5rem] md:text-[7rem] opacity-90 drop-shadow-2xl z-0'; // Hanging on center wall
-                            case 'lantern': return 'top-0 left-4 md:left-24 text-[4rem] md:text-[6rem] opacity-100 animate-[sway_6s_ease-in-out_infinite] drop-shadow-lg z-0'; // Hanging from ceiling
-                            case 'bonsai': return 'bottom-[25%] left-[2%] md:bottom-[20%] md:left-[15%] text-[5rem] md:text-[7rem] drop-shadow-[0_20px_20px_rgba(0,0,0,0.9)] z-10 hover:scale-105 transition-transform'; // Floor left
-                            case 'incense': return 'bottom-[25%] right-[2%] md:bottom-[20%] md:right-[15%] text-[4rem] md:text-[6rem] opacity-100 animate-[sway_4s_ease-in-out_infinite] drop-shadow-[0_20px_20px_rgba(0,0,0,0.9)] z-10'; // Floor right
-                            case 'singing_bowl': return 'bottom-[12%] right-[15%] md:bottom-[15%] md:right-[25%] text-[3rem] md:text-[4.5rem] drop-shadow-[0_15px_15px_rgba(0,0,0,0.9)] pointer-events-auto cursor-pointer z-30 transition-transform active:scale-90 hover:scale-110'; // Rug right
-                            case 'stones': return 'bottom-[10%] left-[15%] md:bottom-[12%] md:left-[25%] text-[2.5rem] md:text-[4rem] drop-shadow-[0_15px_15px_rgba(0,0,0,0.9)] z-20 hover:scale-105 transition-transform'; // Rug left
-                            default: return 'hidden';
-                        }
-                    };
-
-                    const handleBowlClick = () => {
-                        if (itemId !== 'singing_bowl') return;
-                        playBellSound();
-                        setBowlRipple(true);
-                        setTimeout(() => setBowlRipple(false), 2000);
-                    };
-
-                    return (
-                        <div key={itemId} onClick={itemId === 'singing_bowl' ? handleBowlClick : undefined} className={`absolute ${getPositionClass(itemId)}`}>
-                            {itemData.icon}
-                            {itemId === 'singing_bowl' && bowlRipple && (
-                                <div className="absolute inset-0 bg-amber-500/30 rounded-full blur-xl scale-150 animate-[ping_2s_ease-out_forwards] pointer-events-none"></div>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
-
             {/* Header */}
             <header className="relative z-30 px-6 py-5 flex justify-between items-center bg-gradient-to-b from-stone-950 to-transparent">
                 <div className="flex items-center gap-3">
@@ -435,160 +351,147 @@ const DojoView: React.FC<DojoViewProps> = ({ user, onClose, onUpdate }) => {
                     <span className="text-lg tracking-widest uppercase text-stone-300">Zen Dojo</span>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button onClick={() => setShowShop(true)} className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all text-stone-300">
+                    <button onClick={() => setShowShop(true)} className="px-3 py-1.5 bg-stone-800 border border-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-stone-700 transition-all text-stone-300 shadow-lg">
                         Decorate
                     </button>
-                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-stone-400 hover:text-white">
+                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-stone-400 hover:text-white shadow-lg bg-stone-900/50">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
             </header>
 
-            {/* Cozy Interactive Area */}
-            <main className="flex-1 flex flex-col items-center justify-[flex-end] md:justify-end relative z-20 pb-12 md:pb-24 w-full max-w-5xl mx-auto px-4 mt-[35vh] md:mt-[45vh]">
-
-                <div className="flex flex-col md:flex-row items-center md:items-end justify-center gap-8 md:gap-16 w-full">
-
-                    {/* Left Settings Panel (Audio / Setup) */}
-                    <div className="hidden md:flex flex-col gap-6 items-end text-right">
-                        <div className="bg-stone-900/80 border border-white/5 p-6 rounded-3xl w-64 backdrop-blur-xl shadow-2xl">
-                            <h3 className="text-[10px] font-bold text-amber-500/80 tracking-widest uppercase mb-4 flex items-center justify-end gap-2">
-                                Acoustic Setup <Volume2 className="w-3 h-3 text-stone-500" />
-                            </h3>
-                            <div className="flex flex-col gap-2">
-                                {[0, 120, 600].map((sec) => (
-                                    <button
-                                        key={sec}
-                                        onClick={(e) => { e.stopPropagation(); setBellInterval(sec); }}
-                                        className={`py-2.5 px-3 rounded-xl text-[10px] font-bold tracking-widest transition-all text-right ${bellInterval === sec ? 'bg-amber-500/20 text-amber-300 border border-amber-500/20' : 'text-stone-500 hover:bg-white/5 border border-transparent'}`}
-                                    >
-                                        {sec === 0 ? 'START/END ONLY' : sec === 120 ? '2 MIN CHIME' : '10 MIN CHIME'}
-                                    </button>
-                                ))}
-                                {(luminaLevel >= 30) && (
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); setBellInterval(240); }}
-                                        className={`mt-2 py-2 px-3 rounded-xl text-[10px] font-bold tracking-widest transition-all text-right ${bellInterval === 240 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/20' : 'text-emerald-500/40 hover:bg-white/5 border border-transparent'}`}
-                                    >
-                                        ASCENDANT CHIMES
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-
-                        {!isActive && (
-                            <div className="flex flex-col gap-2 w-64 bg-stone-900/80 p-4 border border-white/5 rounded-2xl backdrop-blur-xl">
-                                <span className="text-[9px] font-bold text-stone-500 uppercase tracking-widest text-right mb-2">Duration</span>
-                                <div className="flex flex-wrap justify-end gap-2">
-                                    {[5, 10, 15, 20, 25].map(m => (
-                                        <button key={m} onClick={(e) => { e.stopPropagation(); setTime(m); }} className={`px-4 py-1.5 rounded-full text-[10px] font-bold tracking-widest border transition-all ${timeLeft === m * 60 ? 'bg-amber-500/20 border-amber-500/50 text-amber-200' : 'bg-black/40 border-white/5 hover:bg-white/10 text-stone-400'}`}>
-                                            {m}M
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+            <main className="flex-1 flex flex-col items-center justify-center relative z-20 pb-12 md:pb-8 w-full max-w-5xl mx-auto px-4">
+                
+                {/* --- THE VINTAGE ZEN WINDOW --- */}
+                <div className="relative w-full max-w-3xl aspect-[4/3] md:aspect-[16/9] border-t-[14px] border-b-[24px] border-x-[16px] md:border-t-[18px] md:border-b-[32px] md:border-x-[20px] border-[#1e1511] rounded-sm shadow-[0_40px_80px_rgba(0,0,0,0.8)] bg-[#030614] overflow-hidden shrink-0 flex flex-col justify-end ring-1 ring-black/50">
+                    
+                    {/* The Background Sky & Mountains */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-indigo-950 via-[#1e293b] to-slate-900 z-0"></div>
+                    
+                    {/* Minimalist Mountains outline inside window */}
+                    <div className="absolute bottom-0 w-[120%] h-48 bg-[#0a0f1b] blur-[1px] rounded-t-[100%] -ml-[10%] opacity-90 z-0"></div>
+                    <div className="absolute bottom-[-10px] w-[80%] h-32 bg-[#05070d] blur-[0.5px] rounded-t-[100%] ml-[20%] z-0"></div>
+                    
+                    {/* Weather Rain simulation layer inside window */}
+                    <div className="absolute inset-0 opacity-40 z-10 pointer-events-none mix-blend-screen overflow-hidden">
+                        <div className="w-full h-[200%] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 animate-[sway-drop_4s_linear_infinite]"></div>
                     </div>
 
-                    {/* Center: The Minimalist Candle */}
-                    <div className="relative group cursor-pointer flex flex-col items-center" onClick={toggleTimer}>
-                        <div className="mb-6 text-5xl font-light text-stone-300 tracking-widest font-variant-numeric tabular-nums opacity-90 drop-shadow-2xl">
-                            {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
-                        </div>
+                    {/* Window Shoji Panes */}
+                    <div className="absolute inset-x-0 top-1/2 h-2 bg-[#1e1511] z-20 shadow-[0_4px_10px_rgba(0,0,0,0.5)]"></div>
+                    <div className="absolute inset-y-0 left-1/3 w-2 bg-[#1e1511] z-20 shadow-[4px_0_10px_rgba(0,0,0,0.5)]"></div>
+                    <div className="absolute inset-y-0 left-2/3 w-2 bg-[#1e1511] z-20 shadow-[4px_0_10px_rgba(0,0,0,0.5)]"></div>
 
-                        <div className={`w-56 h-56 md:w-72 md:h-72 rounded-full flex flex-col items-center justify-center relative transition-all duration-1000 shrink-0 z-10 ${isActive ? 'scale-[1.02]' : 'opacity-80'}`}>
-                            {timerMode === 'candle' ? (
-                                <div className="absolute inset-0 flex items-center justify-center -mt-8 scale-[1.15]">
-                                    {/* Hyper-realistic dynamic shadow depth & ambient bloom */}
-                                    <div className={`absolute -inset-[60%] bg-orange-600/15 rounded-full blur-[90px] transition-all duration-3000 pointer-events-none ${isActive ? 'opacity-100 animate-[candle-flicker_3.5s_infinite] scale-125' : 'opacity-0 scale-90'}`}></div>
-                                    <div className={`absolute -inset-[30%] bg-amber-500/25 rounded-full blur-[60px] transition-all duration-2000 pointer-events-none ${isActive ? 'opacity-100 animate-[candle-flicker_2.5s_infinite_reverse] scale-110' : 'opacity-0 scale-90'}`}></div>
-
-                                    <div className="relative group flex flex-col items-center">
-                                        <div className={`absolute -top-12 left-1/2 -translate-x-1/2 w-6 h-28 origin-bottom transition-all duration-1000 z-10 ${isActive ? 'opacity-100' : 'opacity-30 grayscale blur-[1px]'}`}>
-                                            <div className="absolute inset-0 bg-yellow-400/60 blur-2xl rounded-full animate-[candle-flicker_2s_infinite]"></div>
-                                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3.5 h-12 bg-gradient-to-t from-[#ea580c] via-[#facc15] to-[#ffffff] rounded-[50%_50%_50%_50%_/_60%_60%_40%_40%] animate-flicker transform-gpu shadow-[0_0_20px_rgba(253,224,71,0.9)]">
-                                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[4px] h-[10px] bg-blue-500/90 rounded-full blur-[1px]"></div>
-                                            </div>
-                                        </div>
-                                        {/* Physical Candle Wax */}
-                                        <div className="w-16 h-20 md:w-20 md:h-24 bg-gradient-to-r from-yellow-50 via-white to-stone-200 rounded-[10px] relative overflow-hidden shadow-[0_40px_60px_rgba(0,0,0,0.9),inset_0_4px_12px_rgba(255,255,255,0.9),inset_15px_0_25px_rgba(0,0,0,0.4)] border-t border-white/50 mt-16 z-20 transition-all duration-1000" style={{ filter: isActive ? 'sepia(0.5) brightness(1.1) contrast(1.1)' : 'brightness(0.5) grayscale(0.2)' }}>
-                                            <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-white to-stone-200 rounded-[100%] shadow-[inset_0_-2px_4px_rgba(0,0,0,0.1)]">
-                                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.3),transparent_60%)]"></div>
-                                            </div>
-                                            {/* Melting wax drips */}
-                                            <div className="absolute top-3 left-[20%] w-2 h-7 bg-white rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.1)] drop-shadow-sm blur-[0.5px]"></div>
-                                            <div className="absolute top-2 left-[70%] w-2.5 h-9 bg-white rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.1)] drop-shadow-sm blur-[0.5px] opacity-90"></div>
-                                        </div>
-                                    </div>
+                    {/* Relaxing Dojo Pet - Floating near window sill */}
+                    {luminaPet && <RelaxingDojoPet pet={luminaPet} />}
+                    
+                    {/* Decor items dynamically positioned inside window / sill */}
+                    <div className="absolute inset-0 pointer-events-none z-30">
+                        {localUser.unlockedDecor?.map(itemId => {
+                            const itemData = SANCTUARY_ITEMS.find(i => i.id === itemId);
+                            if (!itemData) return null;
+                            const getPositionClass = (id: string) => {
+                                switch (id) {
+                                    case 'lantern': return 'top-[-5px] left-[10%] text-5xl md:text-6xl opacity-90 animate-[sway_6s_ease-in-out_infinite] drop-shadow-xl saturate-150';
+                                    case 'scroll': return 'top-4 left-1/2 -translate-x-1/2 text-[4rem] md:text-[5rem] opacity-30 drop-shadow-xl saturate-50 -z-10 mix-blend-color-dodge';
+                                    case 'bonsai': return 'bottom-[-5px] right-[5%] text-[5rem] md:text-[7rem] drop-shadow-[0_15px_15px_rgba(0,0,0,0.9)] pointer-events-auto hover:scale-105 transition-transform origin-bottom';
+                                    case 'incense': return 'bottom-[2%] right-[25%] md:right-[30%] text-[3.5rem] md:text-[4.5rem] animate-[sway_4s_ease-in-out_infinite] drop-shadow-xl pointer-events-auto saturate-150 origin-bottom';
+                                    case 'singing_bowl': return 'bottom-[1%] left-[8%] md:left-[12%] text-[3rem] md:text-[4rem] drop-shadow-xl pointer-events-auto cursor-pointer active:scale-90 hover:scale-110 transition-transform origin-bottom';
+                                    case 'stones': return 'bottom-[-2%] left-[25%] text-[2.5rem] md:text-[3.5rem] drop-shadow-md origin-bottom';
+                                    default: return 'hidden';
+                                }
+                            };
+                            return (
+                                <div key={itemId} onClick={itemId === 'singing_bowl' ? () => { playBellSound(); setBowlRipple(true); setTimeout(() => setBowlRipple(false), 2000); } : undefined} className={`absolute flex items-end justify-center ${getPositionClass(itemId)}`}>
+                                    {itemData.icon}
+                                    {itemId === 'singing_bowl' && bowlRipple && <div className="absolute -inset-10 bg-amber-500/40 rounded-full blur-2xl scale-[2] animate-[ping_2s_ease-out_forwards] pointer-events-none" />}
                                 </div>
-                            ) : (
-                                <div className="text-center space-y-2 animate-in fade-in">
-                                    <span className="block text-4xl md:text-5xl opacity-90">{isActive ? "Inhale" : "Ready"}</span>
-                                    <p className="text-amber-500/70 text-[10px] md:text-xs tracking-widest uppercase font-bold">Tap to {isActive ? "Stop" : "Begin"}</p>
-                                </div>
-                            )}
-                        </div>
+                            );
+                        })}
                     </div>
+                </div>
 
-                    {/* Right Panel: Koan & Mobile Control overrides */}
-                    <div className="fixed top-[15vh] left-1/2 -translate-x-1/2 w-[90%] z-50 md:static md:translate-x-0 md:w-64 flex flex-col gap-4 items-center md:items-start md:z-20">
-                        <div className="bg-stone-900/80 border border-white/5 p-4 md:p-6 rounded-3xl backdrop-blur-xl w-full text-center md:text-left shadow-2xl">
-                            <h3 className="text-[10px] font-bold text-stone-500 tracking-widest uppercase mb-3 flex items-center justify-center md:justify-start gap-2">
-                                <BookOpen className="w-3 h-3 text-stone-400" /> Wisdom
-                            </h3>
-                            <p className="text-xs md:text-sm font-serif italic text-amber-100/90 leading-relaxed min-h-[100px] flex items-center justify-center md:justify-start">
-                                {koan ? `"${koan}"` : "Silence speaks volumes when the mind is still."}
-                            </p>
-                            <div className="flex items-center justify-between mt-4 border-t border-white/5 pt-4">
-                                <button onClick={(e) => { e.stopPropagation(); setSoundEnabled(!soundEnabled); }} className={`p-1.5 rounded-full ${soundEnabled ? 'text-amber-400' : 'text-stone-500'}`}>
-                                    {soundEnabled ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
-                                </button>
-                                <button onClick={(e) => { e.stopPropagation(); nextKoan(); }} className="text-[9px] uppercase tracking-widest font-bold text-amber-500 hover:text-amber-300 transition-colors">
-                                    Next Koan &rarr;
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Mobile Specific Setting Dupes */}
-                        {!isActive && (
-                            <div className="md:hidden flex flex-wrap justify-center gap-2 mt-4 animate-in fade-in">
+                {/* --- Lower Controls Layer --- */}
+                <div className="w-full max-w-3xl mt-6 flex flex-col md:flex-row items-center md:items-start justify-between gap-6 px-2">
+                    
+                    {/* Left Settings Panel */}
+                    <div className="flex flex-col gap-5 text-center md:text-left flex-1">
+                        <div className="flex flex-col gap-2">
+                            <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1 drop-shadow-md">Duration</span>
+                            <div className="flex flex-wrap justify-center md:justify-start gap-2">
                                 {[5, 10, 15, 20, 25].map(m => (
-                                    <button key={m} onClick={(e) => { e.stopPropagation(); setTime(m); }} className={`px-4 py-1.5 rounded-full text-[10px] font-bold tracking-widest border transition-all ${timeLeft === m * 60 ? 'bg-amber-500/20 border-amber-500/50 text-amber-200' : 'bg-black/40 border-white/10 hover:bg-white/10 text-stone-400'}`}>
+                                    <button key={m} onClick={() => setTime(m)} disabled={isActive} className={`px-4 py-1.5 rounded-full text-[10px] font-bold tracking-widest border transition-all ${timeLeft === m * 60 && !isActive ? 'bg-amber-500/20 border-amber-500/50 text-amber-200 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'bg-stone-900 border-stone-800 hover:bg-stone-800 text-stone-400 disabled:opacity-30'}`}>
                                         {m}M
                                     </button>
                                 ))}
                             </div>
-                        )}
-                        <div className="md:hidden flex items-center justify-center mt-2 glass-panel bg-stone-900/60 p-2 rounded-full w-full max-w-[200px]">
-                            <select className="bg-transparent text-[10px] uppercase font-bold text-stone-300 outline-none cursor-pointer w-full text-center" value={bellInterval} onChange={(e) => setBellInterval(Number(e.target.value))}>
-                                <option value={0} className="bg-stone-900">Start/End</option>
-                                <option value={120} className="bg-stone-900">2 Min Chime</option>
-                                <option value={600} className="bg-stone-900">10 Min Chime</option>
-                            </select>
+                        </div>
+
+                        <div className="flex flex-col gap-2 relative z-50">
+                            <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1 drop-shadow-md">Bell Interval</span>
+                            <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                                {[0, 120, 600].map((sec) => (
+                                    <button
+                                        key={sec}
+                                        onClick={() => setBellInterval(sec)}
+                                        className={`px-3 py-1.5 rounded-full text-[9px] font-bold tracking-widest border transition-all ${bellInterval === sec ? 'bg-stone-800 text-stone-200 border-stone-600 shadow-md' : 'bg-transparent text-stone-500 border-stone-800/80 hover:bg-stone-800'}`}
+                                    >
+                                        {sec === 0 ? 'START/END ONLY' : sec === 120 ? '2 MIN CHIME' : '10 MIN CHIME'}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
+
+                    {/* Center Meditation Timer */}
+                    <div className="flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-transform active:scale-95 px-4 shrink-0" onClick={toggleTimer}>
+                        <div className="relative group">
+                            {isActive && <div className="absolute inset-0 bg-amber-500/10 blur-3xl rounded-full scale-150 animate-pulse pointer-events-none"></div>}
+                            <div className={`text-6xl md:text-[5rem] font-light tracking-wider font-variant-numeric tabular-nums drop-shadow-2xl transition-colors duration-1000 ${isActive ? 'text-amber-100 drop-shadow-[0_0_30px_rgba(245,158,11,0.6)]' : 'text-stone-300'}`}>
+                                {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                            </div>
+                        </div>
+                        <div className={`mt-3 text-[10px] md:text-xs font-bold uppercase tracking-widest transition-colors ${isActive ? 'text-amber-400 animate-pulse' : 'text-stone-500'}`}>
+                            {isActive ? (timerMode === 'break' ? 'Resting...' : 'Meditating...') : 'Tap to Start'}
+                        </div>
+                    </div>
+
+                    {/* Right Koan Panel */}
+                    <div className="w-full md:w-64 bg-stone-900/60 border border-stone-800/80 p-5 rounded-2xl flex flex-col gap-3 shadow-xl backdrop-blur-md flex-1">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-[9px] font-bold text-stone-500 tracking-widest uppercase flex items-center gap-2">
+                                <BookOpen className="w-3 h-3 text-stone-400" /> Wisdom
+                            </h3>
+                            <button onClick={(e) => { e.stopPropagation(); setSoundEnabled(!soundEnabled); }} className={`p-1 rounded-full transition-colors ${soundEnabled ? 'text-amber-400 hover:text-amber-300' : 'text-stone-600 hover:text-stone-500'}`}>
+                                {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                            </button>
+                        </div>
+                        <p className="text-xs md:text-sm font-serif italic text-stone-300 leading-relaxed min-h-[60px] flex items-center">
+                            {koan ? `"${koan}"` : "Silence speaks volumes when the mind is still."}
+                        </p>
+                        <button onClick={(e) => { e.stopPropagation(); nextKoan(); }} className="self-end text-[9px] uppercase tracking-widest font-bold text-amber-600 hover:text-amber-500 transition-colors mt-2">
+                            Next Koan &rarr;
+                        </button>
+                    </div>
+
                 </div>
 
+                {/* Footer Stats Row aligned with the bottom */}
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center justify-center gap-12 w-full z-10 opacity-60 hover:opacity-100 transition-opacity duration-500 pointer-events-none hidden md:flex">
+                    <div className="flex flex-col items-center gap-1">
+                        <Flame className="w-3 h-3 text-orange-500 mb-0.5 drop-shadow-md" />
+                        <span className="text-xs font-black text-stone-300 tabular-nums">{streak}</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-1">
+                        <Target className="w-3 h-3 text-amber-500 mb-0.5 drop-shadow-md" />
+                        <span className="text-xs font-black text-stone-300 tabular-nums">{totalFocus}</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-1">
+                        <Trophy className="w-3 h-3 text-yellow-500 mb-0.5 drop-shadow-md" />
+                        <span className="text-xs font-black text-stone-300 tabular-nums">Lvl {Math.floor(totalFocus / 60) + 1}</span>
+                    </div>
+                </div>
             </main>
-
-            {/* Stats Footer - Simplified & Cozy */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center justify-center gap-12 md:gap-24 w-full z-10 opacity-40 hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-                <div className="flex flex-col items-center gap-1">
-                    <Flame className="w-3 h-3 text-orange-500 mb-0.5" />
-                    <span className="text-xs font-black text-stone-300 tabular-nums">{streak}</span>
-                    <span className="text-[7px] uppercase tracking-widest text-stone-500 font-bold">Streak</span>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                    <Target className="w-3 h-3 text-amber-500 mb-0.5" />
-                    <span className="text-xs font-black text-stone-300 tabular-nums">{totalFocus}</span>
-                    <span className="text-[7px] uppercase tracking-widest text-stone-500 font-bold">Total Mins</span>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                    <Trophy className="w-3 h-3 text-yellow-500 mb-0.5" />
-                    <span className="text-xs font-black text-stone-300 tabular-nums">Lvl {Math.floor(totalFocus / 60) + 1}</span>
-                    <span className="text-[7px] uppercase tracking-widest text-stone-500 font-bold">Rank</span>
-                </div>
-            </div>
 
             {/* SHOP MODAL */}
             {showShop && (
