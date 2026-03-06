@@ -403,6 +403,11 @@
     --color-primary-border: rgba(96, 165, 250, 0.2);
 }
 
+/* Make bottom mobile nav match background for Sapphire */
+[data-theme="sapphire"] .mobile-bottom-nav {
+    background-color: var(--color-bg-base) !important;
+}
+
 /* --- ANIMATIONS (Muted & Smooth) --- */
 .animate-flicker {
     animation: flicker 4s infinite alternate cubic-bezier(0.45, 0.05, 0.55, 0.95);

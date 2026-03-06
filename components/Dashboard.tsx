@@ -1410,7 +1410,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                 {/* --- V3 MOBILE BOTTOM NAVIGATION --- */}
                 {!(showGrounding || showBookFull || showDojo || showObservatory || showGardenFull || expandedCanvas === 'garden' || showPocketPet || expandedCanvas === 'lumina') && createPortal(
-                    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--color-bg-surface)] backdrop-blur-2xl border-t border-[var(--color-primary-border)] flex justify-around items-center px-1 py-1 sm:py-2 z-[200] pb-[calc(env(safe-area-inset-bottom)+8px)] shadow-[0_-15px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_-5px_30px_rgba(0,0,0,0.5)] transition-colors duration-500">
+                    <nav className="mobile-bottom-nav md:hidden fixed bottom-0 left-0 right-0 bg-[var(--color-bg-surface)] backdrop-blur-2xl border-t border-[var(--color-primary-border)] flex justify-around items-center px-1 py-1 sm:py-2 z-[200] pb-[calc(env(safe-area-inset-bottom)+8px)] shadow-[0_-15px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_-5px_30px_rgba(0,0,0,0.5)] transition-colors duration-500">
                         {[
                             { id: 'hub', icon: LayoutDashboard, label: 'Dashboard' },
                             { id: 'sanctuary', icon: Sparkles, label: 'Sanctuary' },
