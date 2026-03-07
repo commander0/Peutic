@@ -1422,7 +1422,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
 
                 {/* --- V3 MOBILE BOTTOM NAVIGATION --- */}
                 {!(showGrounding || showBookFull || showDojo || showObservatory || showGardenFull || expandedCanvas === 'garden' || showPocketPet || expandedCanvas === 'lumina') && createPortal(
-                    <nav className={`md:hidden fixed bottom-0 left-0 right-0 flex justify-around items-center px-1 py-1 sm:py-2 z-[200] pb-[calc(env(safe-area-inset-bottom)+8px)] shadow-[0_-15px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_-5px_30px_rgba(0,0,0,0.5)] transition-colors duration-500 mobile-bottom-nav bg-[var(--color-bg-surface)] backdrop-blur-2xl border-t border-[var(--color-primary-border)]`}>
+                    <nav className={`md:hidden fixed bottom-0 left-0 right-0 flex justify-around items-center px-1 py-1 sm:py-2 z-[200] pb-[calc(env(safe-area-inset-bottom)+8px)] shadow-[0_-15px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_-5px_30px_rgba(0,0,0,0.5)] transition-colors duration-500 ${isSapphire ? 'bg-[#050b14]/70 backdrop-blur-xl border-t border-[#173860]/50 mobile-bottom-sapphire' : 'mobile-bottom-nav bg-[var(--color-bg-surface)] backdrop-blur-2xl border-t border-[var(--color-primary-border)]'}`}>
                         {[
                             { id: 'hub', icon: LayoutDashboard, label: 'Dashboard' },
                             { id: 'sanctuary', icon: Sparkles, label: 'Sanctuary' },
@@ -1435,9 +1435,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
                                 <button
                                     key={item.id}
                                     onClick={() => item.isModal ? setShowSerenityShop(true) : handleTabChange(item.id)}
-                                    className={`flex flex-col items-center gap-1 min-w-[60px] p-2 transition-all duration-300 ${isActive ? 'text-[var(--color-primary)] font-black scale-105' : 'text-gray-500 dark:text-gray-400 opacity-80 hover:opacity-100'}`}
+                                    className={`flex flex-col items-center gap-1 min-w-[60px] p-2 transition-all duration-300 ${isActive ? (isSapphire ? 'text-blue-300 font-black scale-105' : 'text-[var(--color-primary)] font-black scale-105') : (isSapphire ? 'text-blue-100/60 hover:text-blue-100' : 'text-gray-500 dark:text-gray-400 opacity-80 hover:opacity-100')}`}
                                 >
-                                    <div className={`relative p-1.5 rounded-xl transition-colors duration-300 ${isActive ? 'bg-[var(--color-primary-light)] text-[var(--color-primary)] border border-[var(--color-primary-border)]' : 'bg-transparent border border-transparent'}`}>
+                                    <div className={`relative p-1.5 rounded-xl transition-colors duration-300 ${isActive ? (isSapphire ? 'bg-[#173860]/60 text-blue-300 border border-[#173860]' : 'bg-[var(--color-primary-light)] text-[var(--color-primary)] border border-[var(--color-primary-border)]') : 'bg-transparent border border-transparent'}`}>
                                         <item.icon className="w-5 h-5" />
                                     </div>
                                     <span className="text-[9px] font-bold uppercase tracking-wider">{item.label}</span>
