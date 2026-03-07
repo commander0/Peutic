@@ -596,7 +596,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartSession })
             )}
 
             {/* FLOATING CONTROLS: Separated for better ergonomics */}
-            <div className={`fixed bottom-32 md:bottom-6 left-4 md:left-6 z-[80] transition-all duration-500 ease-in-out border border-white/20 dark:border-white/10 shadow-2xl overflow-hidden backdrop-blur-md w-12 h-12 rounded-full bg-transparent`}>
+            <div className={`fixed bottom-20 md:bottom-6 left-4 md:left-6 z-[190] transition-all duration-500 ease-in-out border border-[var(--color-primary-border)] shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex overflow-hidden backdrop-blur-2xl w-12 h-12 rounded-full bg-[var(--color-bg-surface)]`}>
                 <button
                     onClick={handleVoiceCheckIn}
                     className="w-full h-full flex items-center justify-center hover:scale-110 transition-transform bg-transparent text-primary group"
